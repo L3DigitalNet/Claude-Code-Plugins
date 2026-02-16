@@ -213,16 +213,25 @@ Your worktree: .worktrees/<n>/ (branch: orchestrator/<n>)
 IMPORTANT: Your FIRST action must be: cd .worktrees/<n>/
 All file paths are relative to this worktree root.
 All reads, writes, and edits MUST target files inside .worktrees/<n>/.
-The .claude/state/ directory is shared at the project root — access via ../.claude/state/ or the absolute path.
+The .claude/state/ directory is shared at the project root — access via ../../.claude/state/ (two levels up from your worktree).
+[If worktrees disabled:]
+You work from the project root directory (no cd required).
+The .claude/state/ directory is at .claude/state/ (no path prefix needed).
 
 ## Protocol
-Read .claude/state/teammate-protocol.md for your full operating protocol. Follow it exactly.
+[If worktrees enabled:] Read ../../.claude/state/teammate-protocol.md for your full operating protocol. Follow it exactly.
+[If worktrees disabled:] Read .claude/state/teammate-protocol.md for your full operating protocol. Follow it exactly.
 
 ## Context Pointers
 Start by using a subagent to scan these paths (do NOT read them directly):
 [RELEVANT PATHS — just paths, not contents]
 
 ## Coordination
+[If worktrees enabled:]
+- Your status file: ../../.claude/state/[name]-status.md (ONLY file you update for status)
+- Your handoff file: ../../.claude/state/[name]-handoff.md
+- Shared ledger: ../../.claude/state/ledger.md (READ-ONLY — lead maintains this)
+[If worktrees disabled:]
 - Your status file: .claude/state/[name]-status.md (ONLY file you update for status)
 - Your handoff file: .claude/state/[name]-handoff.md
 - Shared ledger: .claude/state/ledger.md (READ-ONLY — lead maintains this)
