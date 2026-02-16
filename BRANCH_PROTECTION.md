@@ -1,6 +1,6 @@
 # Branch Protection and Development Workflow
 
-This repository uses a **testing branch workflow** with GitHub branch protection rules to prevent accidental modifications to production plugins.
+This repository uses GitHub branch protection on `main` to prevent accidental modifications to production plugins.
 
 ## Branch Strategy
 
@@ -9,25 +9,23 @@ This repository uses a **testing branch workflow** with GitHub branch protection
 **Purpose**: Production-ready plugins distributed via the marketplace
 
 **Protection rules**:
-- Direct pushes blocked
-- Requires pull request for all changes
-- Requires review approval before merge
-- Status checks must pass (if configured)
+- Direct pushes blocked (GitHub enforces this)
+- Direct commits blocked (GitHub rejects push)
+- Manual merge from `testing` required for updates
 
-**Access**: Read-only for development, write access only via approved PRs
+**Access**: Read-only for development, manual merge only when deploying
 
 ### `testing` Branch (Development)
 
 **Purpose**: Active development and testing of all plugins
 
-**Protection**: None - free to push, commit, and experiment
+**Protection**: None - direct commits and pushes allowed
 
 **Workflow**:
-1. All development happens here
+1. All development happens here via direct commits
 2. Test changes locally
 3. Validate with `./scripts/validate-marketplace.sh`
-4. Create PR to merge into `main`
-5. After review approval, merge to deploy
+4. When ready to deploy, manually merge to `main`
 
 ## Development Workflows
 
@@ -61,13 +59,23 @@ claude --plugin-dir ./plugins/my-plugin
 vim ../../.claude-plugin/marketplace.json
 # Add entry with version 1.0.0
 
+# Validate
+cd ../..
+./scripts/validate-marketplace.sh
+
 # Commit and push to testing
 git add plugins/my-plugin .claude-plugin/marketplace.json
 git commit -m "Add my-plugin v1.0.0"
 git push origin testing
 
-# Create PR to main
-gh pr create --base main --title "Add my-plugin v1.0.0" --body "New plugin: [description]"
+# When ready to deploy to production
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy my-plugin v1.0.0"
+git push origin main
+
+# Return to testing branch
+git checkout testing
 ```
 
 ### Workflow 2: Updating Existing Plugin
@@ -102,15 +110,12 @@ git commit -m "Update agent-orchestrator to v1.0.1
 - Updated documentation"
 git push origin testing
 
-# Create PR to main
-gh pr create --base main --title "Update agent-orchestrator to v1.0.1" \
-  --body "## Changes
-- Fixed bug in orchestrate command
-- Updated documentation
-
-## Testing
-- [ ] Tested locally
-- [ ] Validated marketplace catalog"
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy agent-orchestrator v1.0.1"
+git push origin main
+git checkout testing
 ```
 
 ### Workflow 3: Emergency Hotfix
@@ -118,10 +123,9 @@ gh pr create --base main --title "Update agent-orchestrator to v1.0.1" \
 For critical bugs that need immediate deployment:
 
 ```bash
-# Option A: Hotfix from main (preferred)
-git checkout main
-git pull origin main
-git checkout -b hotfix/critical-bug
+# Work on testing as usual
+git checkout testing
+git pull origin testing
 
 # Make minimal fix
 vim plugins/agent-orchestrator/scripts/bootstrap.sh
@@ -133,21 +137,17 @@ vim plugins/agent-orchestrator/.claude-plugin/plugin.json
 vim .claude-plugin/marketplace.json
 # Update version
 
-# Commit and create PR
+# Commit and push
 git add .
 git commit -m "Hotfix: Fix critical bootstrap script error"
-git push origin hotfix/critical-bug
-gh pr create --base main --title "Hotfix: Fix critical bootstrap script error"
-
-# After merge to main, sync back to testing
-git checkout testing
-git merge main
 git push origin testing
 
-# Option B: Quick fix on testing, fast-track PR
+# Immediately deploy to main
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Emergency deploy: Fix critical bootstrap bug"
+git push origin main
 git checkout testing
-# Make fix, bump version, commit
-# Create PR with [HOTFIX] label for priority review
 ```
 
 ## Setting Up Branch Protection
@@ -159,79 +159,107 @@ git checkout testing
 3. Enable these protection settings:
 
 **Required settings**:
+- ✅ **Lock branch** - Make the branch read-only (users can't push directly)
+  - This is the key setting that prevents accidental commits/pushes to main
+
+**Alternative approach** (if "Lock branch" not available):
 - ✅ Require a pull request before merging
-- ✅ Require approvals (at least 1)
-- ✅ Dismiss stale pull request approvals when new commits are pushed
-- ✅ Require review from Code Owners (optional, if CODEOWNERS file exists)
+- ✅ Allow specified actors to bypass (add yourself)
+- This allows you to merge manually but blocks accidental direct pushes
 
-**Optional settings**:
-- ✅ Require status checks to pass before merging
-  - Add check: `validate-marketplace` (if CI/CD configured)
-- ✅ Require conversation resolution before merging
-- ✅ Include administrators (apply rules to admins too)
+**Optional but recommended**:
+- ✅ Do not allow bypassing the above settings
+- ✅ Require status checks to pass before merging (if CI/CD configured)
 
-**Not recommended**:
-- ❌ Require linear history (makes rebasing difficult)
-- ❌ Require signed commits (unless already enforced organization-wide)
+### Preventing Accidental Edits on Main
 
-### Local Git Configuration
+GitHub branch protection prevents **pushing** to main, but won't stop you from accidentally **checking out** main and editing locally. Two approaches:
 
-No special git configuration needed! The protection happens server-side via GitHub.
-
-## Pull Request Guidelines
-
-### PR Title Format
-
-Use conventional commit style:
-
-```
-feat(plugin-name): Add new feature
-fix(plugin-name): Fix bug description
-docs(plugin-name): Update documentation
-chore: Update marketplace catalog
+**Option 1: Visual reminder** (simplest)
+Configure your shell prompt to show the current branch prominently:
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+parse_git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+PS1='\u@\h \w $(parse_git_branch)\$ '
 ```
 
-### PR Description Template
+**Option 2: Simple pre-commit hook** (warning only)
+```bash
+#!/bin/bash
+# .githooks/pre-commit-warning
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-```markdown
-## Summary
-Brief description of changes
-
-## Changes
-- Change 1
-- Change 2
-- Change 3
-
-## Version Updates
-- plugin-name: 1.0.0 → 1.0.1
-- marketplace: 1.2.0 → 1.2.1
-
-## Testing
-- [ ] Tested locally with `claude --plugin-dir`
-- [ ] Validated marketplace with `./scripts/validate-marketplace.sh`
-- [ ] Checked for conflicts with other plugins
-
-## Breaking Changes
-List any breaking changes or migration notes
+if [ "$BRANCH" = "main" ]; then
+    echo "⚠️  WARNING: You are committing to the 'main' branch!"
+    echo "   Development should happen on 'testing' branch."
+    echo ""
+    read -p "Are you sure you want to commit to main? (yes/no): " response
+    if [ "$response" != "yes" ]; then
+        echo "❌ Commit cancelled"
+        exit 1
+    fi
+fi
 ```
 
-## Validation Before PR
+Enable with:
+```bash
+mkdir -p .githooks
+# Create the file above
+chmod +x .githooks/pre-commit-warning
+git config core.hooksPath .githooks
+```
 
-Always run these checks before creating a PR:
+This hook **warns** but doesn't block (you can still confirm and commit).
+
+## Deployment Checklist
+
+Before merging `testing` → `main`:
+
+```bash
+# 1. Ensure you're on testing with latest changes
+git checkout testing
+git pull origin testing
+
+# 2. Validate marketplace
+./scripts/validate-marketplace.sh
+
+# 3. Check git status (should be clean)
+git status
+
+# 4. Verify versions match
+jq -r '.plugins[] | "\(.name): \(.version)"' .claude-plugin/marketplace.json
+# Compare with actual plugin versions
+
+# 5. Test plugins locally
+claude --plugin-dir ./plugins/<plugin-name>
+
+# 6. Deploy to main
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy: <description>"
+git push origin main
+git checkout testing
+```
+
+## Validation Before Deploy
+
+Always run these checks before merging to main:
 
 ```bash
 # 1. Validate marketplace structure
 ./scripts/validate-marketplace.sh
 
-# 2. Check git status
+# 2. Check for uncommitted changes
 git status
 
-# 3. Verify versions match
+# 3. Verify version consistency
 jq -r '.plugins[] | "\(.name): \(.version)"' .claude-plugin/marketplace.json
-# Compare with actual plugin versions
 
-# 4. Test plugin locally
-claude --plugin-dir ./plugins/<plugin-name>
+# 4. Review changes being deployed
+git log main..testing --oneline
+git diff main..testing
 ```
 
 ## Versioning Guidelines
@@ -259,77 +287,131 @@ When updating a plugin:
 
 ## Troubleshooting
 
+### Accidentally Checked Out Main
+
+If you realize you're on main before making changes:
+
+```bash
+# Just switch back to testing
+git checkout testing
+```
+
+### Accidentally Committed to Main Locally
+
+If you committed to main but haven't pushed:
+
+```bash
+# Move commits to testing
+git checkout main
+git log -1  # Note the commit hash
+
+git checkout testing
+git cherry-pick <commit-hash>
+git push origin testing
+
+# Reset main
+git checkout main
+git reset --hard origin/main
+```
+
 ### Accidentally Pushed to Main
 
-If you accidentally push to main (unlikely with protection enabled):
+If GitHub branch protection is configured correctly, this should be **blocked automatically**. You'll see:
 
+```
+! [remote rejected] main -> main (protected branch hook declined)
+error: failed to push some refs
+```
+
+If push was rejected:
 ```bash
-# If push was rejected by GitHub
-# No action needed - protection worked!
-
-# If you have direct write access and bypassed protection
+# Good - protection worked! Just merge properly:
+git checkout testing
+# Your changes are still on testing, deploy properly:
 git checkout main
-git reset --hard origin/main  # Reset to last known good state
-git checkout testing
-# Continue work on testing branch
+git merge testing --no-ff -m "Deploy: <description>"
+git push origin main
 ```
 
-### PR Conflicts with Main
+### Merge Conflicts
+
+If `testing` and `main` have diverged:
 
 ```bash
-# Update testing branch with latest main
-git checkout testing
-git pull origin testing
-git merge main
-
-# Resolve conflicts
-git status
-# Edit conflicting files
-
+git checkout main
+git merge testing
+# If conflicts occur:
+git status  # See conflicting files
+# Edit files to resolve conflicts
 git add .
-git commit -m "Merge main into testing, resolve conflicts"
-git push origin testing
-```
-
-### Version Mismatch Errors
-
-If marketplace validation fails due to version mismatch:
-
-```bash
-# Find the mismatch
-./scripts/validate-marketplace.sh
-
-# Fix the version in marketplace.json
-vim .claude-plugin/marketplace.json
-
-# Or fix the version in plugin manifest
-vim plugins/<name>/.claude-plugin/plugin.json
-
-# Re-validate
-./scripts/validate-marketplace.sh
+git commit -m "Merge testing into main, resolve conflicts"
+git push origin main
+git checkout testing
 ```
 
 ## Benefits of This Approach
 
 ### Simple
-- No git hooks to install or maintain
-- No complex scripts to run
-- Standard GitHub workflow familiar to all developers
+- Direct commits to testing (no PR overhead)
+- Familiar git workflow
+- Deploy when ready with manual merge
 
 ### Safe
 - Production branch (`main`) protected at server level
-- Can't accidentally push breaking changes
-- All changes reviewed before deployment
+- Can't accidentally push to main
+- GitHub blocks unauthorized changes
 
 ### Flexible
-- Free to experiment on `testing` branch
-- Easy to test locally before PR
-- Can create feature branches from `testing` for complex work
+- Work at your own pace on testing
+- Test locally before deploying
+- Deploy multiple changes at once or individually
 
-### Maintainable
-- GitHub enforces rules automatically
-- No per-machine setup required
-- Clear separation between dev and production
+### Fast
+- No waiting for PR approvals
+- No PR creation overhead
+- Direct push to testing for rapid iteration
+
+## Common Operations
+
+### Check which branch you're on
+
+```bash
+git branch --show-current
+# or
+git status
+```
+
+### Quick switch between branches
+
+```bash
+# Go to testing for development
+git checkout testing
+
+# Go to main for deployment
+git checkout main
+```
+
+### See what's different between branches
+
+```bash
+# See commits on testing not yet on main
+git log main..testing --oneline
+
+# See file changes
+git diff main..testing
+```
+
+### Undo accidental checkout of main
+
+```bash
+# If you're on main and haven't made changes
+git checkout testing
+
+# If you made changes on main
+git stash
+git checkout testing
+git stash pop
+```
 
 ## See Also
 

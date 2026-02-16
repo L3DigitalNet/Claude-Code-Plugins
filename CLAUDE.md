@@ -15,7 +15,7 @@ This is a **Claude Code plugin marketplace and development repository**. It serv
 - **`main`** - Protected production branch (marketplace distribution)
 - **`testing`** - Development branch (all work happens here)
 
-**Always work on the `testing` branch**. Changes to `main` require pull request approval.
+**Always work on the `testing` branch**. Changes to `main` require manual merge (GitHub blocks direct pushes).
 
 ## Repository Structure
 
@@ -206,7 +206,7 @@ Don't rely solely on behavioral instructions ("NEVER do X"). Add mechanical enfo
 
 ## Plugin Development Workflow
 
-**All development happens on the `testing` branch**. Changes to `main` require PR approval.
+**All development happens on the `testing` branch**. Deploy to `main` via manual merge when ready.
 
 ### Creating a New Plugin
 
@@ -243,9 +243,12 @@ git add plugins/my-plugin .claude-plugin/marketplace.json
 git commit -m "Add my-plugin v1.0.0"
 git push origin testing
 
-# Create PR to main
-gh pr create --base main --title "Add my-plugin v1.0.0" \
-  --body "New plugin: [description]"
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy my-plugin v1.0.0"
+git push origin main
+git checkout testing
 ```
 
 ### Updating an Existing Plugin
@@ -277,8 +280,12 @@ git commit -m "Update agent-orchestrator to v1.0.1
 - Updated documentation"
 git push origin testing
 
-# Create PR to main
-gh pr create --base main --title "Update agent-orchestrator to v1.0.1"
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy agent-orchestrator v1.0.1"
+git push origin main
+git checkout testing
 ```
 
 See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflows including emergency hotfixes.
@@ -323,19 +330,18 @@ Users can then install individual plugins:
 This repository uses GitHub branch protection to prevent accidental changes to production plugins:
 
 **`main` branch** (Protected):
-- Direct pushes blocked
-- Requires pull request with approval
-- Status checks must pass (if configured)
+- Direct pushes blocked by GitHub
+- Manual merge from `testing` required
 - Production plugins distributed from here
 
 **`testing` branch** (Development):
 - All development happens here
-- Free to commit and push
-- Create PR to merge into `main`
+- Direct commits and pushes allowed
+- Merge to `main` when ready to deploy
 
-**Validation before PR**:
+**Validation before deploy**:
 ```bash
-# Always validate before creating PR
+# Always validate before merging to main
 ./scripts/validate-marketplace.sh
 
 # Checks:
@@ -345,6 +351,19 @@ This repository uses GitHub branch protection to prevent accidental changes to p
 # - Plugin directory existence
 # - Version consistency
 # - Duplicate names
+```
+
+**Deployment workflow**:
+```bash
+# Validate on testing
+git checkout testing
+./scripts/validate-marketplace.sh
+
+# Merge to main
+git checkout main
+git merge testing --no-ff -m "Deploy: <description>"
+git push origin main
+git checkout testing
 ```
 
 **Version synchronization**:

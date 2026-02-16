@@ -17,7 +17,7 @@ main     ← Protected production branch (marketplace distribution)
 testing  ← Development branch (all work happens here)
 ```
 
-**IMPORTANT**: Always work on the `testing` branch. The `main` branch is protected and requires pull request approval for all changes.
+**IMPORTANT**: Always work on the `testing` branch. The `main` branch is protected and requires manual merge (GitHub blocks direct pushes).
 
 ### Directory Structure
 
@@ -33,15 +33,15 @@ testing  ← Development branch (all work happens here)
 ### Branch Protection
 
 **`main` branch protection**:
-- Direct pushes blocked
-- Requires pull request with approval
+- Direct pushes blocked by GitHub
+- Requires manual merge from `testing`
 - Prevents accidental production changes
 
 **Development workflow**:
-1. Work on `testing` branch
+1. Work on `testing` branch with direct commits
 2. Validate with `./scripts/validate-marketplace.sh`
-3. Create PR to merge into `main`
-4. After approval, changes go live in marketplace
+3. Merge `testing` → `main` when ready to deploy
+4. GitHub enforces protection (blocks accidental pushes)
 
 ## Development Workflow
 
@@ -80,8 +80,12 @@ git add plugins/my-plugin .claude-plugin/marketplace.json
 git commit -m "Add my-plugin v1.0.0"
 git push origin testing
 
-# Create PR to main
-gh pr create --base main --title "Add my-plugin v1.0.0"
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy my-plugin v1.0.0"
+git push origin main
+git checkout testing
 ```
 
 ### Updating Existing Plugins
@@ -109,8 +113,12 @@ git add plugins/agent-orchestrator .claude-plugin/marketplace.json
 git commit -m "Update agent-orchestrator to v1.0.1"
 git push origin testing
 
-# Create PR
-gh pr create --base main
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy agent-orchestrator v1.0.1"
+git push origin main
+git checkout testing
 ```
 
 ## Key Architectural Patterns
@@ -255,23 +263,28 @@ claude --plugin-dir ./plugins/plugin-name
 ./scripts/validate-marketplace.sh
 ```
 
-### Create PR for Production
+### Deploy to Production
 
 ```bash
 # From testing branch
 git checkout testing
-git push origin testing
+./scripts/validate-marketplace.sh
 
-# Create PR
-gh pr create --base main --title "..." --body "..."
+# Deploy to main
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy: <description>"
+git push origin main
+git checkout testing
 ```
 
 ## Important Rules
 
-1. **Never commit directly to `main`** - GitHub branch protection prevents this
+1. **Never push directly to `main`** - GitHub branch protection prevents this
 2. **Always work on `testing` branch** - This is your development workspace
-3. **Validate before PR** - Run `./scripts/validate-marketplace.sh`
+3. **Validate before deploy** - Run `./scripts/validate-marketplace.sh` before merging to main
 4. **Version synchronization** - Update both plugin manifest and marketplace.json together
 5. **Test locally first** - Use `claude --plugin-dir` before pushing
+6. **Deploy via merge** - Use `git merge testing --no-ff` when moving to production
 
 See [BRANCH_PROTECTION.md](../BRANCH_PROTECTION.md) for complete workflow documentation.

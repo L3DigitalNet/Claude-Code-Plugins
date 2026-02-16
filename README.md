@@ -99,12 +99,22 @@ To add a plugin to this marketplace:
 3. Add entry to `.claude-plugin/marketplace.json`
 4. Update marketplace version (semver)
 5. Validate with `./scripts/validate-marketplace.sh`
-6. Push to `testing` branch
-7. Create pull request to `main` for review
+6. Commit and push to `testing` branch
+7. When ready to deploy, merge `testing` → `main`
 
 **Branch workflow:**
-- **`main`** - Protected production branch (requires PR approval)
-- **`testing`** - Development branch (unrestricted)
+- **`main`** - Protected production branch (GitHub blocks direct pushes)
+- **`testing`** - Development branch (direct commits allowed)
+
+**Deployment:**
+```bash
+git checkout testing
+./scripts/validate-marketplace.sh
+git checkout main
+git merge testing --no-ff -m "Deploy: <description>"
+git push origin main
+git checkout testing
+```
 
 See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflow documentation.
 
