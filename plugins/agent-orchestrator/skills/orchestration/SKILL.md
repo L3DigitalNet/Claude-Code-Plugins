@@ -67,7 +67,7 @@ The ledger (`.claude/state/ledger.md`) is maintained exclusively by the lead orc
 When working in a worktree:
 - All file operations must target files inside `.worktrees/<name>/`
 - The `.claude/state/` directory is shared at the project root
-- Access shared state via `../.claude/state/` or the absolute path
+- Access shared state via `../../.claude/state/` (two levels up from worktree) or the absolute path
 - Your FIRST action after being spawned must be `cd .worktrees/<name>/`
 
 ## Wave Execution Model

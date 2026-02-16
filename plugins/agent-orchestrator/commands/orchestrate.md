@@ -149,6 +149,17 @@ Behavioral enforcement (protocol + prompts):
 <light ≤100k tokens | medium 100-300k | heavy 300k+>
 ```
 
+**Write the plan to disk** before stopping:
+
+```bash
+mkdir -p .claude/state
+cat > .claude/state/orchestration-plan.md << 'EOF'
+<paste the entire orchestration plan above>
+EOF
+```
+
+This ensures the plan survives context loss between Phase 1 and Phase 2.
+
 **STOP. Wait for explicit user approval before proceeding.**
 
 Revise if the user requests changes. Do not begin Phase 2 until approved.
@@ -161,7 +172,20 @@ Revise if the user requests changes. Do not begin Phase 2 until approved.
 
 ### 2.1 Initialize Infrastructure
 
-Run the bootstrap script shipped with this plugin:
+**Recover the plan from disk:**
+
+```bash
+cat .claude/state/orchestration-plan.md
+
+# Verify plan was recovered
+if [ ! -f .claude/state/orchestration-plan.md ]; then
+  echo "⚠️ Warning: Plan file not found. Did you complete Phase 1.5 plan persistence?"
+fi
+```
+
+This restores the full plan details (team roster, waves, worktree strategy) in case context was lost between Phase 1 and Phase 2.
+
+**Run the bootstrap script** shipped with this plugin:
 
 ```bash
 export ORCHESTRATOR_LEAD=1
@@ -170,7 +194,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.sh"
 
 This creates `.claude/state/`, the ledger, teammate protocol, and gitignore entries. **You do not need to memorize any of this content** — teammates read their own protocol, hooks fire automatically.
 
-After running, update the ledger placeholders (`<task summary>`, `<timestamp>`, `<mode>`) with values from the approved plan.
+After running, update the ledger placeholders (`<task summary>`, `<timestamp>`, `<mode>`) with values from the recovered plan.
 
 **Create git worktrees** (if enabled in the plan):
 
@@ -213,16 +237,25 @@ Your worktree: .worktrees/<n>/ (branch: orchestrator/<n>)
 IMPORTANT: Your FIRST action must be: cd .worktrees/<n>/
 All file paths are relative to this worktree root.
 All reads, writes, and edits MUST target files inside .worktrees/<n>/.
-The .claude/state/ directory is shared at the project root — access via ../.claude/state/ or the absolute path.
+The .claude/state/ directory is shared at the project root — access via ../../.claude/state/ (two levels up from your worktree).
+[If worktrees disabled:]
+You work from the project root directory (no cd required).
+The .claude/state/ directory is at .claude/state/ (no path prefix needed).
 
 ## Protocol
-Read .claude/state/teammate-protocol.md for your full operating protocol. Follow it exactly.
+[If worktrees enabled:] Read ../../.claude/state/teammate-protocol.md for your full operating protocol. Follow it exactly.
+[If worktrees disabled:] Read .claude/state/teammate-protocol.md for your full operating protocol. Follow it exactly.
 
 ## Context Pointers
 Start by using a subagent to scan these paths (do NOT read them directly):
 [RELEVANT PATHS — just paths, not contents]
 
 ## Coordination
+[If worktrees enabled:]
+- Your status file: ../../.claude/state/[name]-status.md (ONLY file you update for status)
+- Your handoff file: ../../.claude/state/[name]-handoff.md
+- Shared ledger: ../../.claude/state/ledger.md (READ-ONLY — lead maintains this)
+[If worktrees disabled:]
 - Your status file: .claude/state/[name]-status.md (ONLY file you update for status)
 - Your handoff file: .claude/state/[name]-handoff.md
 - Shared ledger: .claude/state/ledger.md (READ-ONLY — lead maintains this)

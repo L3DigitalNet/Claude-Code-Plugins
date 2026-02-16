@@ -1,9 +1,12 @@
 #!/bin/bash
-# PostToolUse hook: counts file reads per session (keyed by PID).
+# PostToolUse hook: counts file reads per session (keyed by parent PID).
 # Warns at 10+ reads, critical alert at 15+ to enforce context discipline.
 # Applies to all agents (lead + teammates).
 
-COUNTER_FILE=".claude/state/.read-count-$$"
+COUNTER_FILE=".claude/state/.read-count-$PPID"
+
+# Ensure state directory exists
+mkdir -p "$(dirname "$COUNTER_FILE")"
 
 # Read current count (default 0)
 COUNT=$(cat "$COUNTER_FILE" 2>/dev/null || echo 0)

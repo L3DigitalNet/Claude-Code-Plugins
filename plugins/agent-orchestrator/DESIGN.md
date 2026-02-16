@@ -114,6 +114,8 @@ The review identified 9 weaknesses. These are documented here in the order they 
 
 **#5 — Delegate mode enforcement.** The original approach was to define the lead as a subagent with tool restrictions, but subagents can't spawn other subagents (or teammates). The fix was a PreToolUse hook that blocks Write/Edit/MultiEdit when `ORCHESTRATOR_LEAD=1` is set. This is session-aware — the env var is set only in the lead's session, so teammates retain full write access. Three layers: mechanical (hook), behavioral (Shift+Tab delegate mode toggle), and instructional (self-reinforcing prompt text).
 
+**Note:** The hook matcher was later expanded to cover NotebookEdit (Jupyter notebook editing) and MCP filesystem tools. The pattern `mcp__.*__(write|edit|create|update).*` catches MCP write operations across any MCP server. The hook script checks multiple JSON field names (`file_path`, `path`, `notebook_path`) to extract the target path, as different tools use different field conventions.
+
 **#6 — Event-driven monitoring.** "Periodically check" was reframed as event-driven checkpoints. In agent teams mode: checkpoints on teammate messages. In subagent fallback: checkpoints on subagent returns.
 
 **#2 — Bootstrap script collapse.** Phase 2.1 had ~150 lines of bash heredocs (ledger, protocol, hooks, registration) consuming lead context. Collapsed into a single bash execution block. One write, one run. Context footprint cut significantly.
@@ -158,6 +160,15 @@ The design document's "Guardrails" section in the plan output communicates this 
 
 ## Known Limitations and Open Questions
 
+### System Requirements
+
+**Hook scripts require:**
+- GNU coreutils (`realpath` command) — standard on Linux systems
+- Python 3 (for JSON parsing in hooks)
+- Bash 4.0+ (for pattern matching features)
+
+If `realpath` is unavailable, the lead-write-guard hook fails open (allows all writes) rather than blocking legitimate work. This is acceptable for a development workflow tool — a rare edge case where system dependencies are missing is less disruptive than enforcing writes when the canonical path check cannot run.
+
 ### Unresolved
 
 **Agent teams is experimental.** The `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag may change behavior, gain new features, or be deprecated. The fallback mode exists to handle this, but the agent teams path is the primary design target.
@@ -170,7 +181,7 @@ The design document's "Guardrails" section in the plan output communicates this 
 
 **PreCompact hook timing.** The hook fires before compaction, giving the agent a chance to write a handoff note. But if the agent's context is already at 100% when PreCompact fires, there may not be enough room to execute the handoff write before compaction proceeds. The hook reminder is best-effort, not guaranteed.
 
-**Read counter keyed by PID.** The `read-counter.sh` hook uses `$$` (process ID) as the session key. If Claude Code reuses PIDs across sessions or if the PID doesn't map 1:1 to agent sessions, the counter may be inaccurate. This is a pragmatic approximation, not a precise per-session tracker.
+**Read counter keyed by parent PID.** The `read-counter.sh` hook uses `$PPID` (parent process ID) as the session key. Each hook invocation runs in a new bash subprocess, so `$$` would create a new counter file every time. Using `$PPID` ensures all hook invocations within the same parent session share the same counter file. If Claude Code reuses parent PIDs across sessions or if the parent PID doesn't map 1:1 to agent sessions, the counter may be inaccurate. This is a pragmatic approximation, not a precise per-session tracker.
 
 ### Tested and Validated
 
