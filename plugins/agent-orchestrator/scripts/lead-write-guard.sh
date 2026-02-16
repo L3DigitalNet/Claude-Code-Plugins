@@ -16,14 +16,33 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
-# Allow writes to orchestration state, settings, and gitignore
-case "$FILE_PATH" in
-  .claude/state/*|.claude/settings*|.gitignore)
-    exit 0
-    ;;
-  *)
-    # Block: lead cannot write source files
-    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","decision":"block","reason":"DELEGATE MODE: Lead cannot write source files. Delegate this edit to a teammate or subagent."}}'
-    exit 2
-    ;;
-esac
+# Normalize to absolute canonical path for comparison
+PROJECT_ROOT="$(pwd)"
+
+# Convert FILE_PATH to absolute if it's relative
+if [[ "$FILE_PATH" != /* ]]; then
+  FULL_PATH="$PROJECT_ROOT/$FILE_PATH"
+else
+  FULL_PATH="$FILE_PATH"
+fi
+
+# Canonicalize paths to resolve .. and . components
+# Use -m flag to allow non-existent files (we're checking write intent, not existence)
+ABS_PATH=$(realpath -m "$FULL_PATH" 2>/dev/null)
+
+# Fail open if realpath fails
+if [ -z "$ABS_PATH" ]; then
+  exit 0
+fi
+
+# Allow writes to orchestration state, settings, and gitignore in project root only
+# Block writes to worktree coordination directories (.worktrees/*/.claude/state/)
+if [[ "$ABS_PATH" == "$PROJECT_ROOT/.claude/state/"* ]] || \
+   [[ "$ABS_PATH" == "$PROJECT_ROOT/.claude/settings"* ]] || \
+   [[ "$ABS_PATH" == "$PROJECT_ROOT/.gitignore" ]]; then
+  exit 0
+fi
+
+# Block: lead cannot write source files
+echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","decision":"block","reason":"DELEGATE MODE: Lead cannot write source files. Delegate this edit to a teammate or subagent."}}'
+exit 2

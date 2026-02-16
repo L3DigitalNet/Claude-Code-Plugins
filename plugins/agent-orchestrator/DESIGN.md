@@ -158,6 +158,15 @@ The design document's "Guardrails" section in the plan output communicates this 
 
 ## Known Limitations and Open Questions
 
+### System Requirements
+
+**Hook scripts require:**
+- GNU coreutils (`realpath` command) — standard on Linux systems
+- Python 3 (for JSON parsing in hooks)
+- Bash 4.0+ (for pattern matching features)
+
+If `realpath` is unavailable, the lead-write-guard hook fails open (allows all writes) rather than blocking legitimate work. This is acceptable for a development workflow tool — a rare edge case where system dependencies are missing is less disruptive than enforcing writes when the canonical path check cannot run.
+
 ### Unresolved
 
 **Agent teams is experimental.** The `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag may change behavior, gain new features, or be deprecated. The fallback mode exists to handle this, but the agent teams path is the primary design target.
