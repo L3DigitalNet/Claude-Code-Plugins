@@ -9,8 +9,8 @@ set -euo pipefail
 BASE=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD)
 echo "Merging orchestrator branches into $BASE..."
 
-# Find orchestrator branches
-BRANCHES=$(git branch --list 'orchestrator/*' | sed 's/^[* ]*//')
+# Find orchestrator branches (trim leading and trailing whitespace)
+BRANCHES=$(git branch --list 'orchestrator/*' | sed 's/^[* ]*//; s/[[:space:]]*$//')
 
 if [ -z "$BRANCHES" ]; then
   echo "No orchestrator branches found. Nothing to merge."

@@ -10,8 +10,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p .claude/state
 
 # Gitignore orchestration artifacts
+touch .gitignore  # Ensure file exists before appending
 for pattern in ".claude/state/" ".worktrees/"; do
-  grep -qxF "$pattern" .gitignore 2>/dev/null || echo "$pattern" >> .gitignore
+  grep -qxF "$pattern" .gitignore || echo "$pattern" >> .gitignore
 done
 
 # Copy ledger template
