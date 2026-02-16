@@ -5,5 +5,11 @@
   "author": {
     "name": "Agent Orchestrator"
   },
-  "keywords": ["orchestration", "agent-teams", "subagents", "context-management", "worktrees"]
+  "keywords": [
+    "orchestration",
+    "agent-teams",
+    "subagents",
+    "context-management",
+    "worktrees"
+  ]
 }
