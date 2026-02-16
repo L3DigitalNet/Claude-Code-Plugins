@@ -80,10 +80,13 @@ This repository also serves as a development workspace for creating new plugins.
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json      # Marketplace catalog
-├── plugins/                   # Plugin implementations
+├── plugins/                   # All plugin implementations
 │   └── agent-orchestrator/    # Agent team orchestration plugin
+├── scripts/
+│   └── validate-marketplace.sh # Marketplace validation
 ├── docs/                      # Comprehensive documentation
 ├── CLAUDE.md                  # Development guidance for AI agents
+├── BRANCH_PROTECTION.md       # Branch protection and workflow guide
 └── README.md                  # This file
 ```
 
@@ -91,10 +94,19 @@ Claude-Code-Plugins/
 
 To add a plugin to this marketplace:
 
-1. Create plugin in `plugins/` directory
-2. Add entry to `.claude-plugin/marketplace.json`
-3. Update marketplace version (semver)
-4. Submit pull request
+1. **Work on the `testing` branch** (all development happens here)
+2. Create plugin in `plugins/` directory
+3. Add entry to `.claude-plugin/marketplace.json`
+4. Update marketplace version (semver)
+5. Validate with `./scripts/validate-marketplace.sh`
+6. Push to `testing` branch
+7. Create pull request to `main` for review
+
+**Branch workflow:**
+- **`main`** - Protected production branch (requires PR approval)
+- **`testing`** - Development branch (unrestricted)
+
+See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflow documentation.
 
 **Marketplace versioning:**
 - **Major** (2.0.0) - Breaking changes to marketplace structure
