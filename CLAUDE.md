@@ -8,25 +8,28 @@ This is a **Claude Code plugin marketplace and development repository**. It serv
 1. Development workspace for creating new Claude Code plugins
 2. Distribution point (marketplace) for installing plugins via `/plugin marketplace add`
 
+## Branch Strategy
+
+**IMPORTANT**: This repository uses branch protection to prevent accidental production changes.
+
+- **`main`** - Protected production branch (marketplace distribution)
+- **`testing`** - Development branch (all work happens here)
+
+**Always work on the `testing` branch**. Changes to `main` require manual merge (GitHub blocks direct pushes).
+
 ## Repository Structure
 
 ```
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog (defines available plugins)
-├── .githooks/
-│   └── pre-commit               # Version enforcement hook (run ./scripts/setup-hooks.sh)
-├── plugins/                     # Production plugins (PROTECTED by pre-commit hook)
+├── plugins/                     # All plugins (development and production)
 │   └── agent-orchestrator/      # Example: full-featured orchestration plugin
-├── plugins-dev/                 # Development plugins (unrestricted)
-│   └── README.md
 ├── scripts/
-│   ├── setup-hooks.sh           # One-time hook installation
-│   ├── validate-marketplace.sh  # Marketplace integrity validation
-│   └── promote-plugin.sh        # Dev→production promotion automation
+│   └── validate-marketplace.sh  # Marketplace integrity validation
 ├── docs/                        # Comprehensive plugin development documentation
 ├── CLAUDE.md                    # This file (AI agent guidance)
-├── PROTECTION_SYSTEM.md         # Complete protection system guide
+├── BRANCH_PROTECTION.md         # Branch protection and workflow guide
 └── README.md                    # Marketplace installation and usage
 ```
 
@@ -199,86 +202,93 @@ Don't rely solely on behavioral instructions ("NEVER do X"). Add mechanical enfo
 - **docs/hooks.md** - All hook types, event schemas, debugging
 - **docs/mcp.md** - MCP server integration in plugins
 - **docs/quickstart.md** - Claude Code installation and basics
-- **PROTECTION_SYSTEM.md** - Complete protection system guide with workflows and troubleshooting
+- **BRANCH_PROTECTION.md** - Branch protection and workflow guide
 
 ## Plugin Development Workflow
 
-### Initial Setup (One-time)
+**All development happens on the `testing` branch**. Deploy to `main` via manual merge when ready.
+
+### Creating a New Plugin
 
 ```bash
-# Enable git hooks for production plugin protection
-./scripts/setup-hooks.sh
+# Ensure you're on testing branch
+git checkout testing
+git pull origin testing
+
+# Create plugin structure
+mkdir -p plugins/my-plugin/.claude-plugin
+mkdir -p plugins/my-plugin/{commands,skills,agents,hooks}
+
+# Create manifest
+cat > plugins/my-plugin/.claude-plugin/manifest.json << 'EOF'
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "description": "Plugin description"
+}
+EOF
+
+# Test locally
+claude --plugin-dir ./plugins/my-plugin
+
+# Add to marketplace catalog
+vim .claude-plugin/marketplace.json
+# Add entry with version 1.0.0
+
+# Validate before committing
+./scripts/validate-marketplace.sh
+
+# Commit to testing branch
+git add plugins/my-plugin .claude-plugin/marketplace.json
+git commit -m "Add my-plugin v1.0.0"
+git push origin testing
+
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy my-plugin v1.0.0"
+git push origin main
+git checkout testing
 ```
 
-### Development Workflow
+### Updating an Existing Plugin
 
-**For new plugins** (recommended approach):
+```bash
+# Work on testing branch
+git checkout testing
+git pull origin testing
 
-1. **Create in development directory**:
-   ```bash
-   mkdir -p plugins-dev/my-plugin/.claude-plugin
-   mkdir -p plugins-dev/my-plugin/{commands,skills,agents,hooks}
-   ```
+# Make changes
+vim plugins/agent-orchestrator/commands/orchestrate.md
 
-2. **Create manifest**:
-   ```bash
-   cat > plugins-dev/my-plugin/.claude-plugin/manifest.json << 'EOF'
-   {
-     "name": "my-plugin",
-     "version": "0.1.0",
-     "description": "Plugin description"
-   }
-   EOF
-   ```
+# Bump version in plugin manifest
+vim plugins/agent-orchestrator/.claude-plugin/plugin.json
+# Change: "version": "1.0.0" → "1.0.1"
 
-3. **Develop and test**:
-   ```bash
-   # No version constraints, no pre-commit warnings
-   claude --plugin-dir ./plugins-dev/my-plugin
-   ```
+# Update marketplace catalog
+vim .claude-plugin/marketplace.json
+# Update matching entry version
 
-4. **Promote to production** when ready:
-   ```bash
-   ./scripts/promote-plugin.sh my-plugin --version 1.0.0
-   # This automatically:
-   # - Copies to plugins/
-   # - Adds to marketplace catalog
-   # - Sets version
-   # - Bumps marketplace version
-   ```
+# Validate
+./scripts/validate-marketplace.sh
 
-**For direct production development** (use cautiously):
+# Commit and push
+git add plugins/agent-orchestrator .claude-plugin/marketplace.json
+git commit -m "Update agent-orchestrator to v1.0.1
 
-1. **Create directly in plugins/**:
-   ```bash
-   mkdir -p plugins/my-plugin/.claude-plugin
-   ```
+- Fixed bug in orchestrate command
+- Updated documentation"
+git push origin testing
 
-2. **Pre-commit hook will enforce**:
-   - Version bump required for any changes
-   - Marketplace catalog must be updated
-   - Prevents accidental modifications
+# When ready to deploy
+git checkout main
+git pull origin main
+git merge testing --no-ff -m "Deploy agent-orchestrator v1.0.1"
+git push origin main
+git checkout testing
+```
 
-**Legacy workflow (for reference)**:
-   ```json
-   {
-     "plugins": [
-       {
-         "name": "my-plugin",
-         "displayName": "My Plugin",
-         "description": "Does something useful",
-         "version": "0.1.0",
-         "author": "Your Name",
-         "source": {
-           "type": "github",
-           "owner": "username",
-           "repo": "Claude-Code-Plugins",
-           "ref": "main"
-         }
-       }
-     ]
-   }
-   ```
+See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflows including emergency hotfixes.
 
 ## Learning from agent-orchestrator
 
@@ -315,35 +325,25 @@ Users can then install individual plugins:
 /plugin install agent-orchestrator@Claude-Code-Plugins
 ```
 
-## Protection Features
+## Branch Protection
 
-This repository implements multiple layers of protection for production plugins:
+This repository uses GitHub branch protection to prevent accidental changes to production plugins:
 
-### 1. Directory Separation
+**`main` branch** (Protected):
+- Direct pushes blocked by GitHub
+- Manual merge from `testing` required
+- Production plugins distributed from here
 
-- **`plugins/`** - Production plugins in marketplace (protected)
-- **`plugins-dev/`** - Development plugins (unrestricted)
+**`testing` branch** (Development):
+- All development happens here
+- Direct commits and pushes allowed
+- Merge to `main` when ready to deploy
 
-### 2. Git Pre-Commit Hook
-
-**Location**: `.githooks/pre-commit`
-
-**Protections**:
-- ❌ **Blocks** commits to production plugins without version bump
-- ⚠️ **Warns** when modifying production plugins
-- ✓ **Validates** marketplace.json version bumps
-- ✓ **Checks** version consistency between plugin and marketplace
-- 💡 **Suggests** promotion for ready dev plugins
-
-**Enable**: `./scripts/setup-hooks.sh`
-
-**Bypass** (not recommended): `git commit --no-verify`
-
-### 3. Validation Scripts
-
-**`scripts/validate-marketplace.sh`** - Comprehensive validation:
+**Validation before deploy**:
 ```bash
+# Always validate before merging to main
 ./scripts/validate-marketplace.sh
+
 # Checks:
 # - JSON syntax
 # - Required fields
@@ -353,40 +353,26 @@ This repository implements multiple layers of protection for production plugins:
 # - Duplicate names
 ```
 
-**`scripts/promote-plugin.sh`** - Safe promotion workflow:
+**Deployment workflow**:
 ```bash
-./scripts/promote-plugin.sh <plugin-name> --version <version>
-# Automates:
-# - Version setting
-# - Directory copying
-# - Marketplace entry creation
-# - Version bumping
+# Validate on testing
+git checkout testing
+./scripts/validate-marketplace.sh
+
+# Merge to main
+git checkout main
+git merge testing --no-ff -m "Deploy: <description>"
+git push origin main
+git checkout testing
 ```
 
-### 4. Workflow Enforcement
+**Version synchronization**:
+When updating a plugin, both files must change together:
+1. Bump version in `plugins/<name>/.claude-plugin/plugin.json`
+2. Update matching version in `.claude-plugin/marketplace.json`
+3. Commit both files together
 
-**Modifying production plugins requires**:
-1. Bump version in plugin manifest
-2. Update version in marketplace catalog
-3. Stage both files together
-4. Pre-commit hook validates changes
-
-**Example**:
-```bash
-# Wrong: Will be blocked
-vim plugins/agent-orchestrator/commands/orchestrate.md
-git commit -am "Update orchestrator"  # ❌ BLOCKED
-
-# Right: Version bump first
-vim plugins/agent-orchestrator/.claude-plugin/plugin.json
-# Change: "version": "1.0.0" → "1.0.1"
-
-vim .claude-plugin/marketplace.json
-# Update plugin version: "version": "1.0.1"
-
-git add plugins/agent-orchestrator .claude-plugin/marketplace.json
-git commit -m "Update agent-orchestrator to v1.0.1"  # ✓ ALLOWED
-```
+See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for complete workflow documentation.
 
 ## Versioning
 
