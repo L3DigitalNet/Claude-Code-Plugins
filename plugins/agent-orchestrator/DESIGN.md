@@ -170,7 +170,7 @@ The design document's "Guardrails" section in the plan output communicates this 
 
 **PreCompact hook timing.** The hook fires before compaction, giving the agent a chance to write a handoff note. But if the agent's context is already at 100% when PreCompact fires, there may not be enough room to execute the handoff write before compaction proceeds. The hook reminder is best-effort, not guaranteed.
 
-**Read counter keyed by PID.** The `read-counter.sh` hook uses `$$` (process ID) as the session key. If Claude Code reuses PIDs across sessions or if the PID doesn't map 1:1 to agent sessions, the counter may be inaccurate. This is a pragmatic approximation, not a precise per-session tracker.
+**Read counter keyed by parent PID.** The `read-counter.sh` hook uses `$PPID` (parent process ID) as the session key. Each hook invocation runs in a new bash subprocess, so `$$` would create a new counter file every time. Using `$PPID` ensures all hook invocations within the same parent session share the same counter file. If Claude Code reuses parent PIDs across sessions or if the parent PID doesn't map 1:1 to agent sessions, the counter may be inaccurate. This is a pragmatic approximation, not a precise per-session tracker.
 
 ### Tested and Validated
 
