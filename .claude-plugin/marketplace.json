@@ -1,0 +1,38 @@
+{
+  "name": "claude-code-plugins",
+  "version": "1.0.0",
+  "description": "Curated collection of Claude Code plugins for enhanced development workflows",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  },
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins",
+  "repository": "https://github.com/L3DigitalNet/Claude-Code-Plugins",
+  "license": "MIT",
+  "plugins": [
+    {
+      "name": "agent-orchestrator",
+      "displayName": "Agent Orchestrator",
+      "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks",
+      "version": "1.0.0",
+      "author": "L3DigitalNet",
+      "license": "MIT",
+      "keywords": [
+        "orchestration",
+        "agent-teams",
+        "subagents",
+        "context-management",
+        "worktrees",
+        "automation"
+      ],
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
+      "repository": "https://github.com/L3DigitalNet/Claude-Code-Plugins",
+      "source": {
+        "type": "github",
+        "owner": "L3DigitalNet",
+        "repo": "Claude-Code-Plugins",
+        "ref": "main"
+      }
+    }
+  ]
+}
