@@ -14,7 +14,7 @@
       "name": "agent-orchestrator",
       "displayName": "Agent Orchestrator",
       "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "L3DigitalNet",
       "license": "MIT",
       "keywords": [
