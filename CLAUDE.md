@@ -14,10 +14,19 @@ This is a **Claude Code plugin marketplace and development repository**. It serv
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog (defines available plugins)
-├── plugins/                     # Plugin implementations
+├── .githooks/
+│   └── pre-commit               # Version enforcement hook (run ./scripts/setup-hooks.sh)
+├── plugins/                     # Production plugins (PROTECTED by pre-commit hook)
 │   └── agent-orchestrator/      # Example: full-featured orchestration plugin
+├── plugins-dev/                 # Development plugins (unrestricted)
+│   └── README.md
+├── scripts/
+│   ├── setup-hooks.sh           # One-time hook installation
+│   ├── validate-marketplace.sh  # Marketplace integrity validation
+│   └── promote-plugin.sh        # Dev→production promotion automation
 ├── docs/                        # Comprehensive plugin development documentation
 ├── CLAUDE.md                    # This file (AI agent guidance)
+├── PROTECTION_SYSTEM.md         # Complete protection system guide
 └── README.md                    # Marketplace installation and usage
 ```
 
@@ -190,18 +199,30 @@ Don't rely solely on behavioral instructions ("NEVER do X"). Add mechanical enfo
 - **docs/hooks.md** - All hook types, event schemas, debugging
 - **docs/mcp.md** - MCP server integration in plugins
 - **docs/quickstart.md** - Claude Code installation and basics
+- **PROTECTION_SYSTEM.md** - Complete protection system guide with workflows and troubleshooting
 
 ## Plugin Development Workflow
 
-1. **Create plugin directory structure**:
+### Initial Setup (One-time)
+
+```bash
+# Enable git hooks for production plugin protection
+./scripts/setup-hooks.sh
+```
+
+### Development Workflow
+
+**For new plugins** (recommended approach):
+
+1. **Create in development directory**:
    ```bash
-   mkdir -p plugins/my-plugin/.claude-plugin
-   mkdir -p plugins/my-plugin/{commands,skills,agents,hooks,scripts,templates}
+   mkdir -p plugins-dev/my-plugin/.claude-plugin
+   mkdir -p plugins-dev/my-plugin/{commands,skills,agents,hooks}
    ```
 
-2. **Create manifest** (minimum viable):
+2. **Create manifest**:
    ```bash
-   cat > plugins/my-plugin/.claude-plugin/manifest.json << 'EOF'
+   cat > plugins-dev/my-plugin/.claude-plugin/manifest.json << 'EOF'
    {
      "name": "my-plugin",
      "version": "0.1.0",
@@ -210,14 +231,35 @@ Don't rely solely on behavioral instructions ("NEVER do X"). Add mechanical enfo
    EOF
    ```
 
-3. **Add components** as needed (commands, skills, etc.)
-
-4. **Test locally**:
+3. **Develop and test**:
    ```bash
-   claude --plugin-dir ./plugins/my-plugin
+   # No version constraints, no pre-commit warnings
+   claude --plugin-dir ./plugins-dev/my-plugin
    ```
 
-5. **Add to marketplace catalog** (`.claude-plugin/marketplace.json`):
+4. **Promote to production** when ready:
+   ```bash
+   ./scripts/promote-plugin.sh my-plugin --version 1.0.0
+   # This automatically:
+   # - Copies to plugins/
+   # - Adds to marketplace catalog
+   # - Sets version
+   # - Bumps marketplace version
+   ```
+
+**For direct production development** (use cautiously):
+
+1. **Create directly in plugins/**:
+   ```bash
+   mkdir -p plugins/my-plugin/.claude-plugin
+   ```
+
+2. **Pre-commit hook will enforce**:
+   - Version bump required for any changes
+   - Marketplace catalog must be updated
+   - Prevents accidental modifications
+
+**Legacy workflow (for reference)**:
    ```json
    {
      "plugins": [
@@ -273,6 +315,79 @@ Users can then install individual plugins:
 /plugin install agent-orchestrator@Claude-Code-Plugins
 ```
 
+## Protection Features
+
+This repository implements multiple layers of protection for production plugins:
+
+### 1. Directory Separation
+
+- **`plugins/`** - Production plugins in marketplace (protected)
+- **`plugins-dev/`** - Development plugins (unrestricted)
+
+### 2. Git Pre-Commit Hook
+
+**Location**: `.githooks/pre-commit`
+
+**Protections**:
+- ❌ **Blocks** commits to production plugins without version bump
+- ⚠️ **Warns** when modifying production plugins
+- ✓ **Validates** marketplace.json version bumps
+- ✓ **Checks** version consistency between plugin and marketplace
+- 💡 **Suggests** promotion for ready dev plugins
+
+**Enable**: `./scripts/setup-hooks.sh`
+
+**Bypass** (not recommended): `git commit --no-verify`
+
+### 3. Validation Scripts
+
+**`scripts/validate-marketplace.sh`** - Comprehensive validation:
+```bash
+./scripts/validate-marketplace.sh
+# Checks:
+# - JSON syntax
+# - Required fields
+# - Version formats
+# - Plugin directory existence
+# - Version consistency
+# - Duplicate names
+```
+
+**`scripts/promote-plugin.sh`** - Safe promotion workflow:
+```bash
+./scripts/promote-plugin.sh <plugin-name> --version <version>
+# Automates:
+# - Version setting
+# - Directory copying
+# - Marketplace entry creation
+# - Version bumping
+```
+
+### 4. Workflow Enforcement
+
+**Modifying production plugins requires**:
+1. Bump version in plugin manifest
+2. Update version in marketplace catalog
+3. Stage both files together
+4. Pre-commit hook validates changes
+
+**Example**:
+```bash
+# Wrong: Will be blocked
+vim plugins/agent-orchestrator/commands/orchestrate.md
+git commit -am "Update orchestrator"  # ❌ BLOCKED
+
+# Right: Version bump first
+vim plugins/agent-orchestrator/.claude-plugin/plugin.json
+# Change: "version": "1.0.0" → "1.0.1"
+
+vim .claude-plugin/marketplace.json
+# Update plugin version: "version": "1.0.1"
+
+git add plugins/agent-orchestrator .claude-plugin/marketplace.json
+git commit -m "Update agent-orchestrator to v1.0.1"  # ✓ ALLOWED
+```
+
 ## Versioning
 
 Use semantic versioning for both:
@@ -283,3 +398,8 @@ Use semantic versioning for both:
 - **Major** (2.0.0) - Breaking changes to marketplace structure
 - **Minor** (1.1.0) - New plugins added
 - **Patch** (1.0.1) - Plugin updates, metadata fixes
+
+**Plugin versioning**:
+- **Major** (1.0.0 → 2.0.0) - Breaking changes to plugin API
+- **Minor** (1.0.0 → 1.1.0) - New features, backwards compatible
+- **Patch** (1.0.0 → 1.0.1) - Bug fixes, documentation updates
