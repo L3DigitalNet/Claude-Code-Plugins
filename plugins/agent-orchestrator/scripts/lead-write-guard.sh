@@ -1,5 +1,6 @@
 #!/bin/bash
-# PreToolUse hook: blocks Write/Edit/MultiEdit on files outside .claude/state/
+# PreToolUse hook: blocks Write/Edit/MultiEdit/NotebookEdit and MCP write operations
+# on files outside .claude/state/
 # Only active when ORCHESTRATOR_LEAD=1 env var is set (lead session only).
 # Teammates are NOT affected.
 
@@ -9,7 +10,15 @@ if [ "$ORCHESTRATOR_LEAD" != "1" ]; then
 fi
 
 # Extract file path from hook input (JSON on stdin)
-FILE_PATH=$(cat | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))" 2>/dev/null)
+# Different tools use different field names: file_path, path, notebook_path
+FILE_PATH=$(cat | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+tool_input = d.get('tool_input', {})
+# Try multiple field names in priority order
+path = tool_input.get('file_path') or tool_input.get('path') or tool_input.get('notebook_path') or ''
+print(path)
+" 2>/dev/null)
 
 # Fail open if we can't determine the path
 if [ -z "$FILE_PATH" ]; then

@@ -114,6 +114,8 @@ The review identified 9 weaknesses. These are documented here in the order they 
 
 **#5 — Delegate mode enforcement.** The original approach was to define the lead as a subagent with tool restrictions, but subagents can't spawn other subagents (or teammates). The fix was a PreToolUse hook that blocks Write/Edit/MultiEdit when `ORCHESTRATOR_LEAD=1` is set. This is session-aware — the env var is set only in the lead's session, so teammates retain full write access. Three layers: mechanical (hook), behavioral (Shift+Tab delegate mode toggle), and instructional (self-reinforcing prompt text).
 
+**Note:** The hook matcher was later expanded to cover NotebookEdit (Jupyter notebook editing) and MCP filesystem tools. The pattern `mcp__.*__(write|edit|create|update).*` catches MCP write operations across any MCP server. The hook script checks multiple JSON field names (`file_path`, `path`, `notebook_path`) to extract the target path, as different tools use different field conventions.
+
 **#6 — Event-driven monitoring.** "Periodically check" was reframed as event-driven checkpoints. In agent teams mode: checkpoints on teammate messages. In subagent fallback: checkpoints on subagent returns.
 
 **#2 — Bootstrap script collapse.** Phase 2.1 had ~150 lines of bash heredocs (ledger, protocol, hooks, registration) consuming lead context. Collapsed into a single bash execution block. One write, one run. Context footprint cut significantly.
