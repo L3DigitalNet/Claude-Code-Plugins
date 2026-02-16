@@ -1,0 +1,9 @@
+{
+  "name": "agent-orchestrator",
+  "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agent Orchestrator"
+  },
+  "keywords": ["orchestration", "agent-teams", "subagents", "context-management", "worktrees"]
+}
