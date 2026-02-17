@@ -1,0 +1,13 @@
+{
+  "domain": "test_integration",
+  "name": "Test Integration",
+  "version": "1.0.0",
+  "codeowners": ["@test-user"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/test-user/test-integration",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/test-user/test-integration/issues",
+  "requirements": []
+}

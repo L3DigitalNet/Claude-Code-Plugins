@@ -1,0 +1,10 @@
+# Test dependencies for HA Dev Plugin
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+
+# For validation tests that check code examples
+# (ast module is built-in, no extra deps needed)
+
+# Optional: for running example integration tests
+# pytest-homeassistant-custom-component>=0.13.0

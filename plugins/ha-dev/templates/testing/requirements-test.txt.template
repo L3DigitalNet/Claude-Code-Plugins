@@ -1,0 +1,23 @@
+# Testing requirements for Home Assistant custom integrations
+#
+# Install with: pip install -r requirements-test.txt
+
+# Core testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+pytest-timeout>=2.2.0
+
+# Home Assistant testing utilities
+pytest-homeassistant-custom-component>=0.13.0
+
+# Mocking
+pytest-mock>=3.12.0
+
+# Code quality (optional but recommended)
+ruff>=0.3.0
+mypy>=1.8.0
+
+# Type stubs for mypy
+types-python-dateutil
+types-requests
