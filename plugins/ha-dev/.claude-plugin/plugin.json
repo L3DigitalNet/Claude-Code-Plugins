@@ -1,5 +1,5 @@
 {
-  "name": "home-assistant-dev",
+  "name": "ha-dev",
   "version": "2.0.0",
   "description": "Comprehensive Home Assistant integration development toolkit with 19 skills, MCP server for live HA connection, automated validation, 3 example integrations, and project templates. Covers all 52 IQS rules, HACS compliance, and HA 2025+ best practices.",
   "author": {

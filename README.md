@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A curated collection of Claude Code plugins for enhanced development workflows, featuring advanced agent orchestration, context management, and automation capabilities.
+A curated collection of Claude Code plugins for enhanced development workflows, featuring agent orchestration, Home Assistant integration development, and automation capabilities.
 
 ## Installation
 
@@ -35,6 +35,26 @@ Or using the full URL:
 ```
 
 **Learn more:** [plugins/agent-orchestrator/README.md](plugins/agent-orchestrator/README.md)
+
+### Home Assistant Dev
+
+**Comprehensive Home Assistant integration development toolkit** with 19 AI skills, an MCP server for live HA connections, automated validation, example integrations, and project templates.
+
+**Features:**
+- 19 context-aware skills covering architecture, config flows, coordinators, entities, testing, and more
+- 3 specialized agents (development, review, debugging)
+- MCP server with 12 tools for live HA connection and documentation search
+- 5 validation scripts with PostToolUse hook enforcement
+- 3 example integrations (Bronze/Silver/Gold tier)
+- 9 project templates for CI/CD, testing, and documentation
+- Full Integration Quality Scale coverage (all 52 rules)
+
+**Install:**
+```bash
+/plugin install ha-dev@claude-code-plugins
+```
+
+**Learn more:** [plugins/ha-dev/README.md](plugins/ha-dev/README.md)
 
 ## Plugin Development
 
@@ -81,7 +101,8 @@ Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json      # Marketplace catalog
 ├── plugins/                   # All plugin implementations
-│   └── agent-orchestrator/    # Agent team orchestration plugin
+│   ├── agent-orchestrator/    # Agent team orchestration plugin
+│   └── ha-dev/                # Home Assistant integration dev toolkit
 ├── scripts/
 │   └── validate-marketplace.sh # Marketplace validation
 ├── docs/                      # Comprehensive documentation
