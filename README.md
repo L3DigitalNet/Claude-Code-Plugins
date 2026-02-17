@@ -51,10 +51,10 @@ Or using the full URL:
 
 **Install:**
 ```bash
-/plugin install ha-dev@claude-code-plugins
+/plugin install home-assistant-dev@claude-code-plugins
 ```
 
-**Learn more:** [plugins/ha-dev/README.md](plugins/ha-dev/README.md)
+**Learn more:** [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
 
 ## Plugin Development
 
@@ -102,7 +102,7 @@ Claude-Code-Plugins/
 │   └── marketplace.json      # Marketplace catalog
 ├── plugins/                   # All plugin implementations
 │   ├── agent-orchestrator/    # Agent team orchestration plugin
-│   └── ha-dev/                # Home Assistant integration dev toolkit
+│   └── home-assistant-dev/     # Home Assistant integration dev toolkit
 ├── scripts/
 │   └── validate-marketplace.sh # Marketplace validation
 ├── docs/                      # Comprehensive documentation
