@@ -1,0 +1,52 @@
+# {name}
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/release/{github_user}/{github_repo}.svg)](https://github.com/{github_user}/{github_repo}/releases)
+
+{description}
+
+## Features
+
+{features}
+
+## Installation
+
+### HACS (Recommended)
+
+1. Open HACS in Home Assistant
+2. Click "Integrations"
+3. Click ⋮ → "Custom repositories"
+4. Add `https://github.com/{github_user}/{github_repo}` as category "Integration"
+5. Click "{name}" → "Download"
+6. Restart Home Assistant
+
+### Manual
+
+1. Download the latest release from [GitHub](https://github.com/{github_user}/{github_repo}/releases)
+2. Extract and copy `custom_components/{domain}` to your `custom_components` folder
+3. Restart Home Assistant
+
+## Configuration
+
+1. Go to **Settings** → **Devices & Services**
+2. Click **+ Add Integration**
+3. Search for "{name}"
+4. Follow the setup wizard
+
+{configuration_options}
+
+## Entities
+
+{entities}
+
+## Troubleshooting
+
+{troubleshooting}
+
+## Support
+
+- [GitHub Issues](https://github.com/{github_user}/{github_repo}/issues)
+
+## License
+
+{license}

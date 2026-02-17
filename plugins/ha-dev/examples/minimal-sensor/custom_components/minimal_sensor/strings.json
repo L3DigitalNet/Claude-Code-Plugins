@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Minimal Sensor",
+        "data": {
+          "name": "Sensor Name"
+        },
+        "data_description": {
+          "name": "A friendly name for this sensor"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This sensor is already configured."
+    }
+  }
+}

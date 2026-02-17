@@ -1,0 +1,33 @@
+{
+  "name": "home-assistant-dev",
+  "version": "2.0.0",
+  "description": "Comprehensive Home Assistant integration development toolkit with 19 skills, MCP server for live HA connection, automated validation, 3 example integrations, and project templates. Covers all 52 IQS rules, HACS compliance, and HA 2025+ best practices.",
+  "author": {
+    "name": "Chris",
+    "url": "https://github.com/chrisuthe"
+  },
+  "homepage": "https://developers.home-assistant.io/",
+  "repository": "https://github.com/chrisuthe/ha-dev-plugin",
+  "license": "MIT",
+  "keywords": [
+    "home-assistant",
+    "home assistant",
+    "hass",
+    "integration",
+    "custom-component",
+    "iot",
+    "smart-home",
+    "python",
+    "asyncio",
+    "DataUpdateCoordinator",
+    "config-flow",
+    "HACS",
+    "diagnostics",
+    "quality-scale",
+    "validation",
+    "testing",
+    "websocket",
+    "recorder",
+    "mcp"
+  ]
+}
