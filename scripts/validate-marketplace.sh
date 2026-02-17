@@ -99,33 +99,42 @@ for i in $(seq 0 $((PLUGIN_COUNT - 1))); do
             ((ERRORS++))
         else
             if [ "$FIELD" = "source" ]; then
-                SOURCE_TYPE=$(jq -r ".plugins[$i].source.type" "$MARKETPLACE_FILE")
-                echo -e "${GREEN}    ✓ source (type: $SOURCE_TYPE)${NC}"
+                # Check if source is a string (path) or object (external)
+                SOURCE_TYPE=$(jq -r ".plugins[$i].source | type" "$MARKETPLACE_FILE")
+                if [ "$SOURCE_TYPE" = "string" ]; then
+                    echo -e "${GREEN}    ✓ source (relative path)${NC}"
+                else
+                    SOURCE_TYPE=$(jq -r ".plugins[$i].source.type" "$MARKETPLACE_FILE")
+                    echo -e "${GREEN}    ✓ source (type: $SOURCE_TYPE)${NC}"
+                fi
             else
                 echo -e "${GREEN}    ✓ $FIELD${NC}"
             fi
         fi
     done
 
-    # Validate source structure
-    SOURCE_TYPE=$(jq -r ".plugins[$i].source.type" "$MARKETPLACE_FILE")
-    case "$SOURCE_TYPE" in
-        github)
-            REQUIRED_SOURCE=("owner" "repo")
-            for FIELD in "${REQUIRED_SOURCE[@]}"; do
-                if ! jq -e ".plugins[$i].source.$FIELD" "$MARKETPLACE_FILE" > /dev/null 2>&1; then
-                    echo -e "${RED}    ✗ Missing source.$FIELD for GitHub source${NC}"
+    # Validate source structure (only for object-type sources)
+    SOURCE_VALUE_TYPE=$(jq -r ".plugins[$i].source | type" "$MARKETPLACE_FILE")
+    if [ "$SOURCE_VALUE_TYPE" = "object" ]; then
+        SOURCE_TYPE=$(jq -r ".plugins[$i].source.type" "$MARKETPLACE_FILE")
+        case "$SOURCE_TYPE" in
+            github)
+                REQUIRED_SOURCE=("owner" "repo")
+                for FIELD in "${REQUIRED_SOURCE[@]}"; do
+                    if ! jq -e ".plugins[$i].source.$FIELD" "$MARKETPLACE_FILE" > /dev/null 2>&1; then
+                        echo -e "${RED}    ✗ Missing source.$FIELD for GitHub source${NC}"
+                        ((ERRORS++))
+                    fi
+                done
+                ;;
+            git)
+                if ! jq -e ".plugins[$i].source.url" "$MARKETPLACE_FILE" > /dev/null 2>&1; then
+                    echo -e "${RED}    ✗ Missing source.url for git source${NC}"
                     ((ERRORS++))
                 fi
-            done
-            ;;
-        git)
-            if ! jq -e ".plugins[$i].source.url" "$MARKETPLACE_FILE" > /dev/null 2>&1; then
-                echo -e "${RED}    ✗ Missing source.url for git source${NC}"
-                ((ERRORS++))
-            fi
-            ;;
-    esac
+                ;;
+        esac
+    fi
 
     # Check if plugin directory exists
     PLUGIN_DIR="$REPO_ROOT/plugins/$PLUGIN_NAME"

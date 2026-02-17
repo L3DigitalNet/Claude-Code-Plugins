@@ -48,7 +48,7 @@ Users install this marketplace with:
 Then install individual plugins:
 
 ```bash
-/plugin install agent-orchestrator@claude-code-plugins
+/plugin install agent-orchestrator@l3digitalnet-plugins
 ```
 
 ### Adding a New Plugin to the Marketplace
@@ -311,13 +311,13 @@ The `agent-orchestrator` plugin is a comprehensive reference implementation. Key
 This repository serves as a marketplace that can be installed with:
 
 ```bash
-/plugin marketplace add owner/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 ```
 
 Users can then install individual plugins:
 
 ```bash
-/plugin install agent-orchestrator@Claude-Code-Plugins
+/plugin install agent-orchestrator@l3digitalnet-plugins
 ```
 
 ## Branch Protection
@@ -384,6 +384,8 @@ Plugin versions use semantic versioning:
 - `~/.claude/plugins/marketplaces/superpowers-marketplace/` (obra/superpowers)
 
 ### Key schema rules
+
+**Reserved names**: Names like `claude-code-plugins` are reserved for official Anthropic marketplaces (repos under `github.com/anthropics/`). Use a unique prefix like `l3digitalnet-plugins`.
 
 **Root level** — required fields: `name`, `owner` (object), `plugins` (array). Optional: `description`.
 

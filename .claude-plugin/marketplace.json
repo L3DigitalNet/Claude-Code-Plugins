@@ -1,5 +1,6 @@
 {
   "name": "l3digitalnet-plugins",
+  "version": "1.1.0",
   "description": "Curated collection of Claude Code plugins for enhanced development workflows",
   "owner": {
     "name": "L3DigitalNet",
@@ -8,6 +9,7 @@
   "plugins": [
     {
       "name": "agent-orchestrator",
+      "displayName": "Agent Orchestrator",
       "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks",
       "version": "1.0.1",
       "author": {
@@ -28,6 +30,7 @@
     },
     {
       "name": "home-assistant-dev",
+      "displayName": "Home Assistant Dev",
       "description": "Comprehensive Home Assistant integration development toolkit with 19 skills, MCP server, automated validation, example integrations, and project templates",
       "version": "2.0.0",
       "author": {

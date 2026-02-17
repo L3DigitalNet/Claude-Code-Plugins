@@ -153,14 +153,7 @@ PATTERNS: list[Pattern] = [
         message="Use 'async def' instead of @asyncio.coroutine decorator",
         severity="error",
     ),
-    # Entity patterns
-    Pattern(
-        name="missing-unique-id",
-        pattern=re.compile(r"class\s+\w+Entity[^:]*:(?:(?!_attr_unique_id|unique_id).)*$", re.MULTILINE | re.DOTALL),
-        message="Entity class may be missing unique_id",
-        severity="warning",
-        skip_in_comments=True,
-    ),
+    # Entity patterns (unique_id check moved to file-level checks below)
     # Config entry patterns
     Pattern(
         name="options-flow-init",
@@ -182,12 +175,39 @@ PATTERNS: list[Pattern] = [
         message="Services should be registered in async_setup, not async_setup_entry (IQS Bronze: action-setup)",
         severity="warning",
     ),
-    # Missing future annotations
-    Pattern(
-        name="missing-future-annotations",
-        pattern=re.compile(r"^(?!.*from __future__ import annotations).*\bdef\s+\w+\s*\([^)]*:\s*\w+"),
-        message="Add 'from __future__ import annotations' for modern type syntax",
-        severity="warning",
+]
+
+
+# File-level patterns checked once per file (not per-line)
+FILE_LEVEL_CHECKS: list[tuple[str, Callable[[str], bool], str, str]] = [
+    # (name, condition_fn, message, severity)
+    # condition_fn returns True if the issue IS present
+    (
+        "missing-future-annotations",
+        lambda content: (
+            "from __future__ import annotations" not in content
+            and re.search(r"\bdef\s+\w+\s*\([^)]*:\s*\w+", content) is not None
+        ),
+        "Add 'from __future__ import annotations' for modern type syntax",
+        "warning",
+    ),
+    (
+        "missing-unique-id",
+        lambda content: (
+            # Only flag concrete entity classes (inherit from platform entities),
+            # not base entity classes (which inherit from CoordinatorEntity).
+            # Base classes intentionally delegate unique_id to subclasses.
+            re.search(
+                r"class\s+\w+\([^)]*\b(?:Sensor|Switch|BinarySensor|Light|Cover|Climate|"
+                r"Button|Number|Select|Fan|Lock|MediaPlayer|Vacuum|Event|Text|"
+                r"Update|Image|Siren|Lawn[Mm]ower)Entity",
+                content,
+            ) is not None
+            and "_attr_unique_id" not in content
+            and "unique_id" not in content
+        ),
+        "Entity class may be missing unique_id",
+        "warning",
     ),
 ]
 
@@ -210,6 +230,7 @@ def check_file(file_path: Path, patterns: list[Pattern]) -> list[Match]:
     except (OSError, UnicodeDecodeError):
         return matches
 
+    # Per-line pattern checks
     for line_num, line in enumerate(lines, 1):
         # Skip comments for most patterns
         stripped = line.lstrip()
@@ -228,6 +249,23 @@ def check_file(file_path: Path, patterns: list[Pattern]) -> list[Match]:
                         pattern=pattern,
                     )
                 )
+
+    # File-level checks (checked once per file, not per line)
+    for name, condition_fn, message, severity in FILE_LEVEL_CHECKS:
+        if condition_fn(content):
+            matches.append(
+                Match(
+                    file=file_path,
+                    line_num=1,
+                    line="(file-level check)",
+                    pattern=Pattern(
+                        name=name,
+                        pattern=re.compile(""),
+                        message=message,
+                        severity=severity,
+                    ),
+                )
+            )
 
     return matches
 
