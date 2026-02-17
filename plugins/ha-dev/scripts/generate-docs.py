@@ -11,7 +11,6 @@ Usage:
 """
 from __future__ import annotations
 
-import ast
 import json
 import re
 import sys
@@ -39,7 +38,7 @@ class IntegrationInfo:
     platforms: list[str] = field(default_factory=list)
     config_flow_fields: dict[str, list[str]] = field(default_factory=dict)
     options_flow_fields: list[str] = field(default_factory=list)
-    entity_descriptions: dict[str, list[dict]] = field(default_factory=dict)
+    entity_descriptions: dict[str, list[str]] = field(default_factory=dict)
     has_diagnostics: bool = False
     has_reauth: bool = False
     has_reconfigure: bool = False
@@ -82,7 +81,7 @@ def extract_config_flow_info(integration_path: Path) -> dict[str, Any]:
 
     content = config_flow_path.read_text()
 
-    info = {
+    info: dict[str, Any] = {
         "has_reauth": "async_step_reauth" in content,
         "has_reconfigure": "async_step_reconfigure" in content,
         "has_options": "OptionsFlow" in content,
@@ -263,8 +262,7 @@ Home Assistant integration for {info.name}.
 ## Features
 
 - Config flow setup via UI
-{"- Automatic re-authentication" if info.has_reauth else ""}
-{"- Diagnostics support" if info.has_diagnostics else ""}
+{"- Automatic re-authentication\n" if info.has_reauth else ""}{"- Diagnostics support\n" if info.has_diagnostics else ""}
 
 ## Platforms
 

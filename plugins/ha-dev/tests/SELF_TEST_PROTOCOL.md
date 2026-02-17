@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document describes how to test the HA Dev Plugin using Claude Code itself as the test harness. Claude Code should have:
+This document describes how to test the HA Dev Plugin using Claude Code itself as the
+test harness. Claude Code should have:
 
 1. The plugin installed (symlinked to source for live updates)
 2. Access to the plugin source code for modifications
@@ -28,6 +29,7 @@ cd ~/ha-plugin-test-workspace
 For each skill, verify it activates on the expected prompts.
 
 #### Test Protocol
+
 1. Start fresh conversation
 2. Use test prompt
 3. Verify skill triggered (check if response uses skill content)
@@ -36,27 +38,27 @@ For each skill, verify it activates on the expected prompts.
 
 #### Test Cases
 
-| Skill | Test Prompt | Expected Behavior | Pass/Fail |
-|-------|-------------|-------------------|-----------|
-| ha-architecture | "Explain how the Home Assistant event bus works" | Uses event bus terminology from skill | |
-| ha-integration-scaffold | "Create a new integration called test_device" | Generates proper file structure | |
-| ha-config-flow | "Add a reauth flow to my integration" | Includes `async_step_reauth` pattern | |
-| ha-coordinator | "How do I handle errors in DataUpdateCoordinator?" | Mentions UpdateFailed, ConfigEntryAuthFailed | |
-| ha-entity-platforms | "Create a sensor entity for temperature" | Uses modern patterns (_attr_*, has_entity_name) | |
-| ha-service-actions | "Add a custom service to my integration" | Shows async_setup service registration | |
-| ha-async-patterns | "How do I make async HTTP requests in HA?" | Recommends aiohttp, shows executor pattern | |
-| ha-testing | "Write tests for my config flow" | Uses MockConfigEntry, pytest patterns | |
-| ha-debugging | "My integration won't load, help me debug" | Systematic debugging approach | |
-| ha-yaml-automations | "Create an automation that turns on lights at sunset" | Valid YAML automation | |
-| ha-quality-review | "Review this integration for IQS compliance" | Runs through Bronze/Silver/Gold checklist | |
-| ha-hacs | "Prepare my integration for HACS" | Covers hacs.json, manifest requirements | |
-| ha-diagnostics | "Add diagnostics support to my integration" | Shows diagnostics.py pattern with redaction | |
-| ha-migration | "Update my integration for HA 2025" | Mentions runtime_data, ServiceInfo changes | |
-| ha-documentation | "Generate README for my integration" | Creates structured documentation | |
-| ha-repairs | "Add repair issues to my integration" | Shows async_create_issue pattern | |
-| ha-device-triggers | "Add device triggers to my integration" | Shows trigger schema and handler | |
-| ha-websocket-api | "Add a custom websocket command" | Shows websocket_api.async_register_command | |
-| ha-recorder | "Add long-term statistics to my sensor" | Shows state_class, statistics pattern | |
+| Skill                   | Test Prompt                                           | Expected Behavior                                | Pass/Fail |
+| ----------------------- | ----------------------------------------------------- | ------------------------------------------------ | --------- |
+| ha-architecture         | "Explain how the Home Assistant event bus works"      | Uses event bus terminology from skill            |           |
+| ha-integration-scaffold | "Create a new integration called test_device"         | Generates proper file structure                  |           |
+| ha-config-flow          | "Add a reauth flow to my integration"                 | Includes `async_step_reauth` pattern             |           |
+| ha-coordinator          | "How do I handle errors in DataUpdateCoordinator?"    | Mentions UpdateFailed, ConfigEntryAuthFailed     |           |
+| ha-entity-platforms     | "Create a sensor entity for temperature"              | Uses modern patterns (_attr_\*, has_entity_name) |           |
+| ha-service-actions      | "Add a custom service to my integration"              | Shows async_setup service registration           |           |
+| ha-async-patterns       | "How do I make async HTTP requests in HA?"            | Recommends aiohttp, shows executor pattern       |           |
+| ha-testing              | "Write tests for my config flow"                      | Uses MockConfigEntry, pytest patterns            |           |
+| ha-debugging            | "My integration won't load, help me debug"            | Systematic debugging approach                    |           |
+| ha-yaml-automations     | "Create an automation that turns on lights at sunset" | Valid YAML automation                            |           |
+| ha-quality-review       | "Review this integration for IQS compliance"          | Runs through Bronze/Silver/Gold checklist        |           |
+| ha-hacs                 | "Prepare my integration for HACS"                     | Covers hacs.json, manifest requirements          |           |
+| ha-diagnostics          | "Add diagnostics support to my integration"           | Shows diagnostics.py pattern with redaction      |           |
+| ha-migration            | "Update my integration for HA 2025"                   | Mentions runtime_data, ServiceInfo changes       |           |
+| ha-documentation        | "Generate README for my integration"                  | Creates structured documentation                 |           |
+| ha-repairs              | "Add repair issues to my integration"                 | Shows async_create_issue pattern                 |           |
+| ha-device-triggers      | "Add device triggers to my integration"               | Shows trigger schema and handler                 |           |
+| ha-websocket-api        | "Add a custom websocket command"                      | Shows websocket_api.async_register_command       |           |
+| ha-recorder             | "Add long-term statistics to my sensor"               | Shows state_class, statistics pattern            |           |
 
 ---
 
@@ -65,6 +67,7 @@ For each skill, verify it activates on the expected prompts.
 Test that generated code is correct and follows best practices.
 
 #### Protocol
+
 1. Request code generation
 2. Save generated code to test workspace
 3. Run validators against generated code
@@ -76,12 +79,17 @@ Test that generated code is correct and follows best practices.
 ```markdown
 ## Test: Scaffold Integration
 
-**Prompt:** "Create a new Home Assistant integration called my_weather that polls a REST API every 5 minutes for weather data"
+**Prompt:** "Create a new Home Assistant integration called my_weather that polls a REST
+API every 5 minutes for weather data"
 
 **Validation:**
-- [ ] Run: `python scripts/validate-manifest.py test_workspace/custom_components/my_weather/manifest.json`
-- [ ] Run: `python scripts/validate-strings.py test_workspace/custom_components/my_weather/strings.json`  
-- [ ] Run: `python scripts/check-patterns.py test_workspace/custom_components/my_weather/`
+
+- [ ] Run:
+      `python scripts/validate-manifest.py test_workspace/custom_components/my_weather/manifest.json`
+- [ ] Run:
+      `python scripts/validate-strings.py test_workspace/custom_components/my_weather/strings.json`
+- [ ] Run:
+      `python scripts/check-patterns.py test_workspace/custom_components/my_weather/`
 - [ ] Verify: Uses `entry.runtime_data` not `hass.data[DOMAIN]`
 - [ ] Verify: Has `_attr_has_entity_name = True`
 - [ ] Verify: Coordinator has generic type parameter
@@ -98,6 +106,7 @@ Test that generated code is correct and follows best practices.
 **Prompt:** "Add a reauthentication flow to handle expired API tokens"
 
 **Validation:**
+
 - [ ] Has `async_step_reauth` method
 - [ ] Has `async_step_reauth_confirm` method
 - [ ] Uses `self._get_reauth_entry()`
@@ -113,6 +122,7 @@ Test that generated code is correct and follows best practices.
 **Prompt:** "Add diagnostics support to my_weather"
 
 **Validation:**
+
 - [ ] Creates `diagnostics.py`
 - [ ] Has `async_get_config_entry_diagnostics` function
 - [ ] Redacts sensitive data (API keys, tokens)
@@ -129,6 +139,7 @@ Test that generated code is correct and follows best practices.
 Test that the validation scripts correctly identify issues.
 
 #### Protocol
+
 1. Create intentionally broken code
 2. Run validator
 3. Verify it catches the issue
@@ -172,9 +183,12 @@ Test the specialized agents provide appropriate guidance.
 ```markdown
 ## Test: ha-integration-dev Agent
 
-**Prompt:** "I want to create an integration for my Acme smart thermostat. It has a REST API that requires OAuth2 authentication and supports reading temperature, setting target temperature, and switching between modes."
+**Prompt:** "I want to create an integration for my Acme smart thermostat. It has a REST
+API that requires OAuth2 authentication and supports reading temperature, setting target
+temperature, and switching between modes."
 
 **Expected Behavior:**
+
 - Asks clarifying questions about device capabilities
 - Recommends appropriate iot_class (cloud_polling or cloud_push)
 - Suggests config flow with OAuth2
@@ -192,6 +206,7 @@ Test the specialized agents provide appropriate guidance.
 **Prompt:** "Review this integration for quality and best practices"
 
 **Expected Behavior:**
+
 - Checks against IQS rules
 - Identifies specific issues with file:line references
 - Provides fix examples
@@ -239,6 +254,7 @@ If Claude Code has MCP server connected to a Home Assistant instance:
 When a test fails:
 
 ### 1. Diagnose
+
 ```
 Identify which component failed:
 - Skill trigger? → Check description/triggers in SKILL.md frontmatter
@@ -248,6 +264,7 @@ Identify which component failed:
 ```
 
 ### 2. Fix
+
 ```
 Edit the source file directly:
 - ~/.claude/plugins/home-assistant-dev/skills/*/SKILL.md
@@ -256,12 +273,14 @@ Edit the source file directly:
 ```
 
 ### 3. Retest
+
 ```
 Run the same test again to verify fix.
 If symlinked, changes are immediately active.
 ```
 
 ### 4. Document
+
 ```
 Update this protocol with:
 - What failed
@@ -276,11 +295,10 @@ Update this protocol with:
 ```markdown
 # HA Dev Plugin Self-Test Results
 
-**Date:** YYYY-MM-DD
-**Claude Code Version:** X.X.X
-**Plugin Version:** 2.0.0
+**Date:** YYYY-MM-DD **Claude Code Version:** X.X.X **Plugin Version:** 2.0.0
 
 ## Summary
+
 - Skill Trigger Tests: X/19 passed
 - Code Generation Tests: X/X passed
 - Validator Tests: X/X passed
@@ -290,6 +308,7 @@ Update this protocol with:
 ## Issues Found
 
 ### Issue 1: [Title]
+
 - **Test:** [Which test failed]
 - **Expected:** [What should happen]
 - **Actual:** [What happened]
