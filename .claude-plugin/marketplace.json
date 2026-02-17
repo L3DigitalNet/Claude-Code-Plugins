@@ -35,7 +35,7 @@
       }
     },
     {
-      "name": "ha-dev",
+      "name": "home-assistant-dev",
       "displayName": "Home Assistant Dev",
       "description": "Comprehensive Home Assistant integration development toolkit with 19 skills, MCP server, automated validation, example integrations, and project templates",
       "version": "2.0.0",
@@ -53,7 +53,7 @@
         "quality-scale",
         "mcp"
       ],
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/ha-dev",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
       "repository": "https://github.com/L3DigitalNet/Claude-Code-Plugins",
       "source": {
         "type": "github",
