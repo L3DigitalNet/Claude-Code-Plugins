@@ -58,24 +58,19 @@ Then install individual plugins:
    ```json
    {
      "name": "plugin-name",
-     "displayName": "Human Readable Name",
      "description": "Brief description (1-2 sentences)",
      "version": "1.0.0",
-     "author": "Author Name",
+     "author": {
+       "name": "L3DigitalNet",
+       "url": "https://github.com/L3DigitalNet"
+     },
      "license": "MIT",
      "keywords": ["tag1", "tag2"],
      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name",
-     "repository": "https://github.com/L3DigitalNet/Claude-Code-Plugins",
-     "source": {
-       "type": "github",
-       "owner": "L3DigitalNet",
-       "repo": "Claude-Code-Plugins",
-       "ref": "main"
-     }
+     "source": "./plugins/plugin-name"
    }
    ```
-3. **Bump marketplace version** (semver in marketplace.json)
-4. **Update README.md** with plugin description
+3. **Update README.md** with plugin description
 
 ### Marketplace Validation
 
@@ -84,7 +79,7 @@ Then install individual plugins:
 jq . .claude-plugin/marketplace.json
 
 # Validate structure
-jq -e '.name and .version and .plugins' .claude-plugin/marketplace.json && echo "✓ Valid marketplace"
+jq -e '.name and .owner and .plugins' .claude-plugin/marketplace.json && echo "✓ Valid marketplace"
 ```
 
 ## Working with Plugins
@@ -376,16 +371,41 @@ See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for complete workflow documenta
 
 ## Versioning
 
-Use semantic versioning for both:
-- **Marketplace version** - Bump when adding/removing/updating plugin entries
-- **Plugin versions** - Each plugin has independent versioning
-
-**Marketplace versioning**:
-- **Major** (2.0.0) - Breaking changes to marketplace structure
-- **Minor** (1.1.0) - New plugins added
-- **Patch** (1.0.1) - Plugin updates, metadata fixes
-
-**Plugin versioning**:
+Plugin versions use semantic versioning:
 - **Major** (1.0.0 → 2.0.0) - Breaking changes to plugin API
 - **Minor** (1.0.0 → 1.1.0) - New features, backwards compatible
 - **Patch** (1.0.0 → 1.0.1) - Bug fixes, documentation updates
+
+## Marketplace Schema Reference
+
+**The Claude Code marketplace validator (Zod-based) enforces a strict schema** that differs from some community documentation. When in doubt, reference these working marketplaces installed locally:
+
+- `~/.claude/plugins/marketplaces/claude-plugins-official/` (Anthropic's official)
+- `~/.claude/plugins/marketplaces/superpowers-marketplace/` (obra/superpowers)
+
+### Key schema rules
+
+**Root level** — required fields: `name`, `owner` (object), `plugins` (array). Optional: `description`.
+
+```json
+{
+  "name": "marketplace-name",
+  "description": "...",
+  "owner": { "name": "...", "url": "..." },
+  "plugins": []
+}
+```
+
+**Plugin entries** — `author` must be an **object** (not a string). `source` for same-repo plugins uses a **relative path string**. `displayName` is **not** a valid field.
+
+```json
+{
+  "name": "plugin-name",
+  "description": "...",
+  "version": "1.0.0",
+  "author": { "name": "...", "url": "..." },
+  "source": "./plugins/plugin-name"
+}
+```
+
+**External plugin sources** use `{"source": "url", "url": "https://..."}` (note: the key is `source`, not `type`).
