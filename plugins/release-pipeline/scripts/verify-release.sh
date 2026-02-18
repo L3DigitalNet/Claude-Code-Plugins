@@ -3,7 +3,7 @@ set -euo pipefail
 
 # verify-release.sh — Verify that a release completed successfully.
 #
-# Usage: verify-release.sh <repo-path> <version>
+# Usage: verify-release.sh <repo-path> <version> [--plugin <name>]
 # Output: verification report (stdout)
 # Exit:   0 = all checks pass, 1 = any check failed
 #
@@ -16,16 +16,30 @@ set -euo pipefail
 # ---------- Argument handling ----------
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: verify-release.sh <repo-path> <version>" >&2
+  echo "Usage: verify-release.sh <repo-path> <version> [--plugin <name>]" >&2
   exit 1
 fi
 
 REPO="$1"
 VERSION="$2"
 
+# ---------- Optional --plugin flag ----------
+PLUGIN=""
+if [[ $# -ge 4 && "$3" == "--plugin" ]]; then
+  PLUGIN="$4"
+  if [[ "$PLUGIN" =~ [/\\] ]]; then
+    echo "Error: plugin name must not contain path separators" >&2
+    exit 1
+  fi
+fi
+
 # Strip leading 'v' if present, then always prefix with 'v'.
 VERSION="${VERSION#v}"
-TAG="v${VERSION}"
+if [[ -n "$PLUGIN" ]]; then
+  TAG="${PLUGIN}/v${VERSION}"
+else
+  TAG="v${VERSION}"
+fi
 
 # Verify directory exists, then resolve to absolute path.
 if [[ ! -d "$REPO" ]]; then
