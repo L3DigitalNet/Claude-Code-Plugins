@@ -4,7 +4,7 @@ import { PTHError, PTHErrorCode } from './errors.js';
 export interface ExecResult {
   stdout: string;
   stderr: string;
-  exitCode: number | undefined;
+  exitCode: number;
   signal?: string;
 }
 
