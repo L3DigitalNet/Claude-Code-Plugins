@@ -1,9 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A curated collection of Claude Code plugins for enhanced development workflows,
-featuring agent orchestration, release automation, Home Assistant integration
-development, GitHub repository maintenance, design document refinement, and Linux
-system administration.
+My collection of Claude Code plugins for fun and pleasure.
 
 ## Installation
 
@@ -118,13 +115,12 @@ pre-flight checks, changelog generation, and GitHub release creation.
 /plugin install release-pipeline@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
+**Learn more:** [plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
 
 ### Design Refine
 
-**Iterative design document refinement** through structured gap analysis,
-collaborative review, and consistency auditing.
+**Iterative design document refinement** through structured gap analysis, collaborative
+review, and consistency auditing.
 
 **Features:**
 
@@ -140,24 +136,23 @@ collaborative review, and consistency auditing.
 /plugin install design-refine@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/design-refine/README.md](plugins/design-refine/README.md)
+**Learn more:** [plugins/design-refine/README.md](plugins/design-refine/README.md)
 
 ### Linux SysAdmin MCP
 
 **Comprehensive Linux system administration MCP server** with ~100 tools across 15
-modules for managing packages, services, users, firewall, networking, security,
-storage, containers, and more.
+modules for managing packages, services, users, firewall, networking, security, storage,
+containers, and more.
 
 **Features:**
 
 - ~100 tools organized across 15 modules (packages, services, users, firewall,
-  networking, security, storage, performance, logs, containers, SSH, cron, backup,
-  docs, session)
+  networking, security, storage, performance, logs, containers, SSH, cron, backup, docs,
+  session)
 - Distro-agnostic command abstraction (Debian/RHEL auto-detection)
 - 5-tier risk classification with confirmation gates
-- YAML knowledge profiles for 8 services (sshd, nginx, docker, ufw, fail2ban,
-  pihole, unbound, crowdsec)
+- YAML knowledge profiles for 8 services (sshd, nginx, docker, ufw, fail2ban, pihole,
+  unbound, crowdsec)
 - SSH remote execution support
 - Git-backed documentation generation
 
