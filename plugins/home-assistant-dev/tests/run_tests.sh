@@ -53,10 +53,10 @@ run_test() {
     echo -n "Running $name... "
     if eval "$cmd" > /dev/null 2>&1; then
         echo -e "${GREEN}PASSED${NC}"
-        ((PASSED++))
+        PASSED=$((PASSED + 1))
     else
         echo -e "${RED}FAILED${NC}"
-        ((FAILED++))
+        FAILED=$((FAILED + 1))
         # Show output on failure
         echo "  Command: $cmd"
         eval "$cmd" 2>&1 | head -20 | sed 's/^/  /'
@@ -67,7 +67,7 @@ skip_test() {
     local name="$1"
     local reason="$2"
     echo -e "Skipping $name... ${YELLOW}$reason${NC}"
-    ((SKIPPED++))
+    SKIPPED=$((SKIPPED + 1))
 }
 
 # Check HA availability
@@ -204,7 +204,7 @@ if [ "$HA_AVAILABLE" = "true" ]; then
         echo -e "${YELLOW}Building MCP server...${NC}"
         (cd "$PLUGIN_DIR/mcp-server" && npx tsc) || {
             echo -e "${RED}MCP server build failed${NC}"
-            ((FAILED++))
+            FAILED=$((FAILED + 1))
         }
     fi
 
