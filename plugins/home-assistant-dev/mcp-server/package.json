@@ -1,5 +1,5 @@
 {
-  "name": "@anthropic/ha-dev-mcp-server",
+  "name": "ha-dev-mcp-server",
   "version": "0.1.0",
   "description": "MCP server for Home Assistant integration development",
   "main": "dist/index.js",
@@ -8,9 +8,10 @@
     "ha-dev-mcp-server": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run bundle",
+    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/server.bundle.cjs --define:import.meta.url=undefined",
     "watch": "tsc --watch",
-    "start": "node dist/index.js",
+    "start": "node dist/server.bundle.cjs",
     "dev": "ts-node src/index.ts",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
@@ -26,24 +27,25 @@
     "anthropic",
     "development"
   ],
-  "author": "Anthropic",
+  "author": "L3DigitalNet",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "home-assistant-js-websocket": "^9.0.0",
-    "zod": "^3.22.0",
-    "minisearch": "^6.3.0"
+    "minisearch": "^6.3.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.3.0",
-    "ts-node": "^10.9.0",
-    "jest": "^29.0.0",
     "@types/jest": "^29.0.0",
-    "ts-jest": "^29.0.0",
-    "eslint": "^8.0.0",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0"
+    "@typescript-eslint/parser": "^6.0.0",
+    "esbuild": "^0.27.3",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=18.0.0"
