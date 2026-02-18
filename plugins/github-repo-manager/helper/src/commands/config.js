@@ -107,6 +107,11 @@ export async function repoWrite(options) {
   const { owner, repo } = parseRepo(options.repo);
   const octokit = getOctokit();
 
+  if (process.stdin.isTTY) {
+    error('This command requires content on stdin (pipe YAML content to this command)', 400);
+    return;
+  }
+
   // Read content from stdin
   const chunks = [];
   for await (const chunk of process.stdin) {
@@ -205,6 +210,11 @@ export async function portfolioRead() {
  * Content comes from stdin.
  */
 export async function portfolioWrite(options) {
+  if (process.stdin.isTTY) {
+    error('This command requires content on stdin (pipe YAML content to this command)', 400);
+    return;
+  }
+
   const chunks = [];
   for await (const chunk of process.stdin) {
     chunks.push(chunk);

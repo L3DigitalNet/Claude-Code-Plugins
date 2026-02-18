@@ -95,12 +95,13 @@ export async function put(options) {
   const { owner, repo } = parseRepo(options.repo);
   const octokit = getOctokit();
 
-  // Read content from stdin
-  const content = await readStdin();
-  if (!content && content !== '') {
-    error('No content provided on stdin', 400);
+  if (process.stdin.isTTY) {
+    error('files put requires content on stdin (pipe content to this command)', 400);
     return;
   }
+
+  // Read content from stdin
+  const content = await readStdin();
 
   // Short-circuit before any network calls
   if (options.dryRun) {

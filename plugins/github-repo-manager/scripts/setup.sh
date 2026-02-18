@@ -6,7 +6,7 @@ HELPER_DIR="$SCRIPT_DIR/../helper"
 
 echo "📦 Installing gh-manager helper dependencies..."
 cd "$HELPER_DIR"
-npm install --production
+npm install --omit=dev
 
 echo ""
 echo "✅ gh-manager helper installed"

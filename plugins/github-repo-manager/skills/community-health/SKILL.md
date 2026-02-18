@@ -1,3 +1,7 @@
+---
+description: Audit and manage GitHub community health files (README, LICENSE, CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, ISSUE_TEMPLATE, PR_TEMPLATE). Use when asked about community profile, missing files, or community health score.
+---
+
 # Community Health Module — Skill
 
 ## Purpose

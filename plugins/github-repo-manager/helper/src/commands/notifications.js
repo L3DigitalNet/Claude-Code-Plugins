@@ -64,6 +64,9 @@ function categorizeType(notification) {
 /**
  * List notifications for a repo, categorized by priority and type.
  */
+// NOTE: GitHub's notifications API doesn't support repo-level filtering server-side.
+// We fetch one page (up to 100) of global notifications and filter client-side.
+// Users with >100 unread notifications across all repos may see incomplete results.
 export async function list(options) {
   const { owner, repo } = parseRepo(options.repo);
   const octokit = getOctokit();

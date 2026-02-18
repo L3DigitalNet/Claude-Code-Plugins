@@ -1,3 +1,7 @@
+---
+description: Orchestrate operations across multiple GitHub repositories. Use when asked to check, audit, or fix something across all repos, multiple repos, or a portfolio of repositories.
+---
+
 # Cross-Repo Orchestration — Skill
 
 ## Purpose
@@ -200,7 +204,7 @@ When the owner says "fix them all":
 
    Tier 4 (PR):
    ```bash
-   gh-manager branches create --repo owner/name --name maintenance/add-security-md --from main
+   gh-manager branches create --repo owner/name --branch maintenance/add-security-md --from main
    echo "CONTENT" | gh-manager files put --repo owner/name --path SECURITY.md --branch maintenance/add-security-md --message "Add SECURITY.md"
    gh-manager prs create --repo owner/name --head maintenance/add-security-md --base main --title "[Maintenance] Add SECURITY.md" --label maintenance
    ```
@@ -259,7 +263,7 @@ If the owner explicitly targets an archived repo:
 
 When `/repo-manager` is invoked:
 
-1. Check helper is installed (`gh-manager --version`)
+1. Check helper is installed (`bash ${CLAUDE_PLUGIN_ROOT}/scripts/ensure-deps.sh`)
 2. Verify PAT (`gh-manager auth verify`)
 3. Infer scope from owner's request
 4. Load config (portfolio + per-repo)

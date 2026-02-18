@@ -257,7 +257,7 @@ branches
   .description('Create a branch from a ref')
   .requiredOption('--repo <owner/name>', 'Repository (owner/name)')
   .requiredOption('--branch <n>', 'New branch name')
-  .requiredOption('--from <ref>', 'Source branch/tag/SHA')
+  .requiredOption('--from <ref>', 'Source branch name')
   .option('--dry-run', 'Show what would happen without executing')
   .action(handleCommand(branchesCreate));
 

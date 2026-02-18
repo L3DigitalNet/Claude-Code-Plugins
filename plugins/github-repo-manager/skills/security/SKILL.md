@@ -1,3 +1,7 @@
+---
+description: Audit repository security posture — Dependabot alerts, code scanning, secret scanning, security advisories, and branch protection rules. Use when asked about security, vulnerabilities, CVEs, or Dependabot alerts.
+---
+
 # Security Module — Skill
 
 ## Purpose
