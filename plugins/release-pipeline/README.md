@@ -1,6 +1,6 @@
 # Release Pipeline Plugin
 
-Autonomous release pipeline for any repo. Two modes:
+Autonomous release pipeline for any repo. Three modes:
 
 ## Quick Merge
 
@@ -36,6 +36,31 @@ Or say: "Release v1.2.0 for my-project"
 | 2. Preparation | Bump versions, generate changelog, show diff | Sequential |
 | 3. Release | Commit, merge, tag, push, GitHub release | Sequential |
 | 4. Verification | Confirm tag, release page, notes | Sequential |
+
+## Plugin Release (Monorepo)
+
+Release a single plugin from a marketplace monorepo:
+
+```
+/release home-assistant-dev v2.2.0
+```
+
+Or say: "Release home-assistant-dev v2.2.0", "ship linux-sysadmin-mcp 1.0.1"
+
+If you provide a version without a plugin name in a monorepo, an interactive picker shows plugins with unreleased changes.
+
+**What it does:**
+
+| Phase | Action | Parallel? |
+|-------|--------|-----------|
+| 1. Pre-flight | Run plugin tests, audit plugin docs, check git state | Yes (3 agents) |
+| 2. Preparation | Bump plugin.json + marketplace.json, generate per-plugin changelog | Sequential |
+| 3. Release | Scoped commit, merge, tag (`plugin-name/vX.Y.Z`), push, GitHub release | Sequential |
+| 4. Verification | Confirm scoped tag, release page, notes | Sequential |
+
+**Tag format:** `plugin-name/vX.Y.Z` (e.g., `home-assistant-dev/v2.1.0`)
+
+**Scoped changes:** Only `plugins/<name>/` and `.claude-plugin/marketplace.json` are staged — other plugins are untouched.
 
 ## Fail-Fast
 
