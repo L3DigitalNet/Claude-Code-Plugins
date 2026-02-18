@@ -1,3 +1,7 @@
+---
+description: Audit release health — unreleased commits, CHANGELOG drift, release cadence, and draft releases. Use when asked about releases, versioning, changelog, or release status.
+---
+
 # Release Health Module — Skill
 
 ## Purpose
@@ -149,7 +153,7 @@ gh-manager releases publish --repo owner/name --release-id 12345
 If the changelog needs updating, create a PR with the new entry:
 
 ```bash
-gh-manager branches create --repo owner/name --name maintenance/changelog-v0.3.0 --from main
+gh-manager branches create --repo owner/name --branch maintenance/changelog-v0.3.0 --from main
 gh-manager files get --repo owner/name --path CHANGELOG.md
 # (Claude prepends the new version entry to the content)
 echo "UPDATED_CONTENT" | gh-manager files put --repo owner/name --path CHANGELOG.md --branch maintenance/changelog-v0.3.0 --message "Update CHANGELOG for v0.3.0"

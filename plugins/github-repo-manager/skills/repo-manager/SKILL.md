@@ -1,3 +1,7 @@
+---
+description: Core orchestration skill for GitHub Repo Manager — session lifecycle, tier system, module coordination, and cross-module intelligence. Use when managing repositories, running health assessments, or coordinating multi-module checks.
+---
+
 # GitHub Repo Manager — Core Orchestration Skill
 
 ## Overview
@@ -134,15 +138,13 @@ If you're not sure, ask. Don't guess the scope wrong.
 
 Run this checklist on every session. Collapse steps that succeed silently — only surface steps that need owner input.
 
-#### Step 1: Verify helper is accessible
+#### Step 1: Ensure helper dependencies are installed
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/helper/bin/gh-manager.js --version
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/ensure-deps.sh
 ```
 
-If this fails, the helper isn't installed. Tell the owner:
-> The gh-manager helper doesn't seem to be installed. Run the setup script:
-> `bash ${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh`
+This automatically installs npm dependencies on first run. If it fails, report the error to the owner — it typically means Node.js 18+ is not installed.
 
 #### Step 2: Verify PAT is set and valid
 
@@ -360,9 +362,7 @@ When running a full assessment, execute modules in this order (required for cros
 9. Wiki Sync
 ```
 
-For narrow checks (owner asks about a single topic), run only the relevant module(s).
-
-**Note:** In Phase 0, individual module skills are not yet implemented. The execution order is documented here for future phases. Currently you can perform: authentication, repo listing, tier classification, community profile checks, and label management.
+All 9 modules are implemented as of v1.0. For narrow checks (owner asks about a single topic), run only the relevant module(s).
 
 ---
 
@@ -562,4 +562,4 @@ Include a "Related" column so the owner can see connections between findings.
 - ✅ Cross-repo orchestration — scope inference, batch mutations, portfolio management
 - ✅ Config system — repo config, portfolio config, merged precedence, schema validation
 - ✅ Report generation and cross-module intelligence framework
-- ⏳ Cross-repo batch operations, portfolio config (Phase 6)
+- ✅ Cross-repo batch operations, portfolio config (Phase 6)

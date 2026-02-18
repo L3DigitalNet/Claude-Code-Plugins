@@ -94,7 +94,7 @@ BRANCH_NAME="test/self-test-${TS}"
 
 assert_json_has "create branch returns name" \
   "name" \
-  "$GH_MANAGER branches create --repo $TEST_REPO --name '${BRANCH_NAME}' --from $DEFAULT_BRANCH"
+  "$GH_MANAGER branches create --repo $TEST_REPO --branch '${BRANCH_NAME}' --from $DEFAULT_BRANCH"
 
 # Verify it appears in list
 run "$GH_MANAGER branches list --repo $TEST_REPO"
@@ -106,7 +106,7 @@ fi
 
 assert_json_eq "delete branch" \
   "action" "deleted" \
-  "$GH_MANAGER branches delete --repo $TEST_REPO --name '${BRANCH_NAME}'"
+  "$GH_MANAGER branches delete --repo $TEST_REPO --branch '${BRANCH_NAME}'"
 
 # ── C4: Issue lifecycle ─────────────────────────
 # Issues can't be deleted via API — they accumulate.
@@ -187,7 +187,7 @@ if [[ -n "$ISSUE_NUM" ]]; then
 
   assert_json_eq "issues close" \
     "action" "closed" \
-    "$GH_MANAGER issues close --repo $TEST_REPO --issue $ISSUE_NUM --reason completed --comment 'Closed by self-test'"
+    "$GH_MANAGER issues close --repo $TEST_REPO --issue $ISSUE_NUM --reason completed --body 'Closed by self-test'"
 else
   skip "issues label" "no issue available"
   skip "issues comment" "no issue available"
@@ -205,7 +205,7 @@ PR_BRANCH="test/pr-self-test-${TS}"
 # Create branch
 assert_json_has "create PR branch" \
   "name" \
-  "$GH_MANAGER branches create --repo $TEST_REPO --name '${PR_BRANCH}' --from $DEFAULT_BRANCH"
+  "$GH_MANAGER branches create --repo $TEST_REPO --branch '${PR_BRANCH}' --from $DEFAULT_BRANCH"
 
 # Put a file on the branch
 assert_json_eq "put file on PR branch" \
@@ -260,10 +260,10 @@ if [[ -n "$PR_NUM" && "$PR_NUM" != "undefined" ]]; then
   # Close the PR (don't merge — test repo stays clean)
   assert_json_eq "prs close" \
     "action" "closed" \
-    "$GH_MANAGER prs close --repo $TEST_REPO --pr $PR_NUM --comment 'Closed by self-test'"
+    "$GH_MANAGER prs close --repo $TEST_REPO --pr $PR_NUM --body 'Closed by self-test'"
 
   # Cleanup: delete the branch
-  run "$GH_MANAGER branches delete --repo $TEST_REPO --name '${PR_BRANCH}'"
+  run "$GH_MANAGER branches delete --repo $TEST_REPO --branch '${PR_BRANCH}'"
   if [[ $CMD_EXIT -eq 0 ]]; then
     pass "cleanup PR branch"
   else

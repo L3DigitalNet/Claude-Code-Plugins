@@ -21,16 +21,11 @@ export async function list(options) {
   const graphql = getGraphQL();
   const limit = options.limit ? parseInt(options.limit, 10) : 25;
 
-  let categoryFilter = '';
-  if (options.category) {
-    categoryFilter = `, categoryId: "${options.category}"`;
-  }
-
   try {
     const result = await graphql(`
-      query($owner: String!, $repo: String!, $first: Int!) {
+      query($owner: String!, $repo: String!, $first: Int!, $categoryId: ID) {
         repository(owner: $owner, name: $repo) {
-          discussions(first: $first, orderBy: {field: UPDATED_AT, direction: DESC}${categoryFilter}) {
+          discussions(first: $first, orderBy: {field: UPDATED_AT, direction: DESC}, categoryId: $categoryId) {
             totalCount
             nodes {
               id
@@ -56,7 +51,7 @@ export async function list(options) {
           }
         }
       }
-    `, { owner, repo, first: limit });
+    `, { owner, repo, first: limit, categoryId: options.category || null });
 
     const repoData = result.repository;
     const discussions = repoData.discussions.nodes || [];

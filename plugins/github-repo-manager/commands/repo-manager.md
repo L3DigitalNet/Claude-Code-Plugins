@@ -6,6 +6,16 @@ description: Activate GitHub repository management. Only runs when explicitly in
 
 You are now in **GitHub Repo Manager** mode. This mode was explicitly requested by the owner via `/repo-manager`. Do NOT apply any repo management logic outside of this explicit invocation. When the owner indicates they are done or changes topic, exit this mode cleanly.
 
+## Step 0: Ensure dependencies are installed
+
+**Before doing anything else**, run this command to verify the helper dependencies are available:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/ensure-deps.sh
+```
+
+If this exits with an error, report the output to the owner and stop. Do not proceed to the skill or helper invocation until dependencies are confirmed installed.
+
 ## What to do
 
 Read the core orchestration skill at `${CLAUDE_PLUGIN_ROOT}/skills/repo-manager/SKILL.md` for complete instructions on:

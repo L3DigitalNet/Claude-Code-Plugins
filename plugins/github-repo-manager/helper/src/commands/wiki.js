@@ -69,6 +69,7 @@ export async function clone(options) {
       pages,
     });
   } catch (err) {
+    const pat = process.env.GITHUB_PAT;
     const msg = err.message || '';
     // GitHub returns 404 / "not found" when wiki repo doesn't exist
     if (
@@ -84,7 +85,10 @@ export async function clone(options) {
           'Wiki is enabled but has no pages. The wiki git repo does not exist yet.',
       });
     } else {
-      throw err;
+      const sanitizedMsg = (err.message || '').replace(pat, '***');
+      const sanitizedErr = new Error(sanitizedMsg);
+      sanitizedErr.code = err.code;
+      throw sanitizedErr;
     }
   }
 }
@@ -137,6 +141,8 @@ export async function init(options) {
     await git.addRemote('origin', wikiUrl(owner, repo));
     await git.add('.');
     await git.commit('Initialize wiki');
+    // GitHub wiki repos always use 'master' as their default branch,
+    // regardless of the parent repo's default branch setting.
     await git.push('origin', 'master', ['--force']);
 
     success({
@@ -145,6 +151,12 @@ export async function init(options) {
       page: 'Home.md',
       message: 'Wiki initialized with starter Home page',
     });
+  } catch (err) {
+    const pat = process.env.GITHUB_PAT;
+    const sanitizedMsg = (err.message || '').replace(pat, '***');
+    const sanitizedErr = new Error(sanitizedMsg);
+    sanitizedErr.code = err.code;
+    throw sanitizedErr;
   } finally {
     // Always clean up
     try {
@@ -320,8 +332,18 @@ export async function push(options) {
     return;
   }
 
-  await git.commit(message);
-  await git.push('origin', 'master');
+  try {
+    await git.commit(message);
+    // GitHub wiki repos always use 'master' as their default branch,
+    // regardless of the parent repo's default branch setting.
+    await git.push('origin', 'master');
+  } catch (err) {
+    const pat = process.env.GITHUB_PAT;
+    const sanitizedMsg = (err.message || '').replace(pat, '***');
+    const sanitizedErr = new Error(sanitizedMsg);
+    sanitizedErr.code = err.code;
+    throw sanitizedErr;
+  }
 
   success({
     action: 'pushed',

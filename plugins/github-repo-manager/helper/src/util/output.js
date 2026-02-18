@@ -34,7 +34,7 @@ export function error(message, status = 1, endpoint = null, context = null) {
   if (endpoint) err.endpoint = endpoint;
   if (context) err.context = context;
   process.stderr.write(JSON.stringify(err, null, 2) + '\n');
-  process.exit(typeof status === 'number' && status > 0 ? 1 : 1);
+  process.exit(1);
 }
 
 /**

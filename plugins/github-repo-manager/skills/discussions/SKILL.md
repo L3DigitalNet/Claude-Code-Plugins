@@ -1,3 +1,7 @@
+---
+description: Manage GitHub Discussions — find unanswered questions, stale threads, and close resolved discussions. Use when asked about discussions, Q&A, or community engagement.
+---
+
 # Discussions Module — Skill
 
 ## Purpose

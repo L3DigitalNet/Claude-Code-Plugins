@@ -1,3 +1,7 @@
+---
+description: Synchronize GitHub wiki content — clone, diff, generate, and push wiki pages. Use when asked about wiki, wiki sync, or wiki management.
+---
+
 # Wiki Sync Module — Skill
 
 ## Purpose

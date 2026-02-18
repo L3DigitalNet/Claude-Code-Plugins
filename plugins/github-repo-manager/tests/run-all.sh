@@ -15,6 +15,7 @@
 #   GH_MANAGER    — Path to gh-manager binary (default: gh-manager)
 # ─────────────────────────────────────────────────
 
+# Intentionally omit -e (errexit): tier scripts may fail and we capture their exit codes
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

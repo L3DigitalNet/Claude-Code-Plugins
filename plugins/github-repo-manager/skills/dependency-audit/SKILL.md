@@ -1,3 +1,7 @@
+---
+description: Audit dependency health via dependency graph and Dependabot PRs. Use when asked about dependencies, outdated packages, dependency vulnerabilities, or Dependabot PR backlog.
+---
+
 # Dependency Audit Module — Skill
 
 ## Purpose

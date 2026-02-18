@@ -8,6 +8,10 @@
 
 ## Installation
 
+> **Note:** All paths below are relative to the plugin directory (`plugins/github-repo-manager/`).
+> At runtime, the plugin uses `ensure-deps.sh` to automatically install dependencies on first use.
+> The manual `setup.sh` script is provided for explicit pre-installation if preferred.
+
 1. Clone or add the plugin to your Claude Code plugins directory:
 
 ```bash
@@ -15,13 +19,14 @@
 cp -r github-repo-manager /path/to/Claude-Code-Plugins/plugins/
 ```
 
-2. Run the setup script:
+2. Run the setup script (from the plugin directory):
 
 ```bash
-bash github-repo-manager/scripts/setup.sh
+cd plugins/github-repo-manager
+bash scripts/setup.sh
 ```
 
-This installs the Node.js helper dependencies.
+This installs the Node.js helper dependencies. Alternatively, `scripts/ensure-deps.sh` runs automatically at runtime to handle this.
 
 ## Create a GitHub Personal Access Token (PAT)
 
@@ -79,8 +84,16 @@ GITHUB_PAT=ghp_your_token_here
 
 ## Verify
 
+From the plugin directory (`plugins/github-repo-manager/`):
+
 ```bash
-node github-repo-manager/helper/bin/gh-manager.js auth verify
+node helper/bin/gh-manager.js auth verify
+```
+
+Or using `${CLAUDE_PLUGIN_ROOT}` if running within a Claude Code session:
+
+```bash
+node ${CLAUDE_PLUGIN_ROOT}/helper/bin/gh-manager.js auth verify
 ```
 
 You should see your GitHub login and PAT details.

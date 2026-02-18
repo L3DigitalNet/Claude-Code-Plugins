@@ -1,3 +1,7 @@
+---
+description: Run the github-repo-manager plugin self-test suite. Use when asked to test, validate, or verify the plugin installation.
+---
+
 # Self-Test — Skill
 
 ## Purpose
