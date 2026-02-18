@@ -1,0 +1,35 @@
+{
+  "name": "linux-sysadmin-mcp",
+  "version": "0.1.0",
+  "description": "Comprehensive Linux system administration MCP server for Claude Code",
+  "type": "module",
+  "bin": {
+    "linux-sysadmin-mcp": "dist/server.js"
+  },
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "ssh2": "^1.16.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@types/ssh2": "^1.15.4",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "Apache-2.0"
+}

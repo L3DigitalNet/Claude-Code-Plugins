@@ -1,0 +1,28 @@
+id: crowdsec
+name: "CrowdSec"
+schema_version: 1
+category: ids
+homepage: "https://www.crowdsec.net"
+service:
+  unit_names: ["crowdsec", "crowdsec-firewall-bouncer"]
+  type: notify
+  restart_command: "systemctl restart crowdsec"
+  reload_command: "systemctl reload crowdsec"
+config:
+  primary: "/etc/crowdsec/config.yaml"
+  additional:
+    - { path: "/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml", description: "Firewall bouncer config" }
+  backup_paths: ["/etc/crowdsec/config.yaml", "/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml"]
+logs:
+  - journald_unit: "crowdsec"
+  - journald_unit: "crowdsec-firewall-bouncer"
+ports:
+  - { port: 8080, protocol: "tcp", scope: "localhost", description: "Local API" }
+health_checks:
+  - { command: "cscli version", description: "CrowdSec agent reachable", expect_exit: 0 }
+  - { command: "cscli bouncers list", description: "Bouncer registered", expect_output: true }
+dependencies:
+  requires:
+    - { role: "firewall", reason: "Bouncer needs iptables/nftables", typical_services: ["ufw", "firewalld", "nftables"] }
+interactions:
+  - { trigger: "restart crowdsec-firewall-bouncer", warning: "Active blocks may briefly lapse", risk_escalation: "high" }

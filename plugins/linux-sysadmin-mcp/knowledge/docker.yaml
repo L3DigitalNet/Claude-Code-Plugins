@@ -1,0 +1,22 @@
+id: docker
+name: "Docker"
+schema_version: 1
+category: container
+homepage: "https://www.docker.com"
+service:
+  unit_names: ["docker", "containerd"]
+  type: notify
+  restart_command: "systemctl restart docker"
+config:
+  primary: "/etc/docker/daemon.json"
+  backup_paths: ["/etc/docker/daemon.json"]
+logs:
+  - journald_unit: "docker"
+  - journald_unit: "containerd"
+ports:
+  - { port: 2376, protocol: "tcp", scope: "localhost", description: "Docker daemon (if TCP enabled)" }
+health_checks:
+  - { command: "docker info", description: "Docker daemon reachable", expect_exit: 0 }
+  - { command: "docker ps", description: "Can list containers", expect_exit: 0 }
+interactions:
+  - { trigger: "restart docker", warning: "All running containers will be stopped briefly during restart", risk_escalation: "high" }

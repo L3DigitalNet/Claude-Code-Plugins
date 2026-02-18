@@ -1,8 +1,9 @@
 # Claude Code Plugins Marketplace
 
 A curated collection of Claude Code plugins for enhanced development workflows,
-featuring agent orchestration, Home Assistant integration development, and GitHub
-repository maintenance.
+featuring agent orchestration, release automation, Home Assistant integration
+development, GitHub repository maintenance, design document refinement, and Linux
+system administration.
 
 ## Installation
 
@@ -96,6 +97,79 @@ interactively, with owner approval at every step.
 **Learn more:**
 [plugins/github-repo-manager/docs/USAGE.md](plugins/github-repo-manager/docs/USAGE.md)
 
+### Release Pipeline
+
+**Autonomous release pipeline** — quick merge or full semver release with parallel
+pre-flight checks, changelog generation, and GitHub release creation.
+
+**Features:**
+
+- Two modes: quick merge (testing → main) or full versioned release
+- Parallel pre-flight agents (test runner, docs auditor, git validator)
+- Automatic changelog generation from conventional commits
+- Version bumping across Python, Node.js, Rust, and plugin manifests
+- GitHub release creation with release notes
+- Human-in-the-loop approval gates at critical stages
+- Fail-fast with rollback guidance on errors
+
+**Install:**
+
+```bash
+/plugin install release-pipeline@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
+
+### Design Refine
+
+**Iterative design document refinement** through structured gap analysis,
+collaborative review, and consistency auditing.
+
+**Features:**
+
+- 5-phase loop: comprehension, gap analysis, recommendations, implementation, audit
+- Severity-labeled findings (Critical, Moderate, Minor)
+- Terminology uniformity and cross-reference validation
+- Stays within existing scope — strengthens designs without expanding them
+- User approval required before every edit
+
+**Install:**
+
+```bash
+/plugin install design-refine@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/design-refine/README.md](plugins/design-refine/README.md)
+
+### Linux SysAdmin MCP
+
+**Comprehensive Linux system administration MCP server** with ~100 tools across 15
+modules for managing packages, services, users, firewall, networking, security,
+storage, containers, and more.
+
+**Features:**
+
+- ~100 tools organized across 15 modules (packages, services, users, firewall,
+  networking, security, storage, performance, logs, containers, SSH, cron, backup,
+  docs, session)
+- Distro-agnostic command abstraction (Debian/RHEL auto-detection)
+- 5-tier risk classification with confirmation gates
+- YAML knowledge profiles for 8 services (sshd, nginx, docker, ufw, fail2ban,
+  pihole, unbound, crowdsec)
+- SSH remote execution support
+- Git-backed documentation generation
+
+**Install:**
+
+```bash
+/plugin install linux-sysadmin-mcp@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/linux-sysadmin-mcp/README.md](plugins/linux-sysadmin-mcp/README.md)
+
 ## Plugin Development
 
 This repository also serves as a development workspace for creating new plugins. See
@@ -144,17 +218,20 @@ documentation.
 ```
 Claude-Code-Plugins/
 ├── .claude-plugin/
-│   └── marketplace.json      # Marketplace catalog
-├── plugins/                   # All plugin implementations
-│   ├── agent-orchestrator/    # Agent team orchestration plugin
-│   ├── home-assistant-dev/    # Home Assistant integration dev toolkit
-│   └── github-repo-manager/   # Conversational GitHub repo maintenance
+│   └── marketplace.json        # Marketplace catalog
+├── plugins/                     # All plugin implementations
+│   ├── agent-orchestrator/      # Agent team orchestration
+│   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
+│   ├── github-repo-manager/     # Conversational GitHub repo maintenance
+│   ├── release-pipeline/        # Autonomous release pipeline
+│   ├── design-refine/           # Design document refinement
+│   └── linux-sysadmin-mcp/      # Linux sysadmin MCP server
 ├── scripts/
-│   └── validate-marketplace.sh # Marketplace validation
-├── docs/                      # Comprehensive documentation
-├── CLAUDE.md                  # Development guidance for AI agents
-├── BRANCH_PROTECTION.md       # Branch protection and workflow guide
-└── README.md                  # This file
+│   └── validate-marketplace.sh  # Marketplace validation
+├── docs/                        # Comprehensive documentation
+├── CLAUDE.md                    # Development guidance for AI agents
+├── BRANCH_PROTECTION.md         # Branch protection and workflow guide
+└── README.md                    # This file
 ```
 
 ## Contributing

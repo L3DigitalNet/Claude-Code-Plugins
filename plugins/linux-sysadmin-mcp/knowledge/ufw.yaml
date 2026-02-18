@@ -1,0 +1,22 @@
+id: ufw
+name: "UFW"
+schema_version: 1
+category: firewall
+service:
+  unit_names: ["ufw"]
+  type: oneshot
+  restart_command: "sudo ufw disable && sudo ufw enable"
+  reload_command: "sudo ufw reload"
+config:
+  primary: "/etc/ufw/ufw.conf"
+  additional:
+    - { path: "/etc/ufw/user.rules", description: "User-defined rules" }
+    - { path: "/etc/ufw/user6.rules", description: "IPv6 user-defined rules" }
+  backup_paths: ["/etc/ufw/ufw.conf", "/etc/ufw/user.rules", "/etc/ufw/user6.rules"]
+logs:
+  - { path: "/var/log/ufw.log", description: "UFW firewall log" }
+  - journald_unit: "ufw"
+health_checks:
+  - { command: "sudo ufw status", description: "UFW status", expect_contains: "Status: active" }
+interactions:
+  - { trigger: "ufw disable", warning: "All firewall rules will be deactivated — system exposed", risk_escalation: "critical" }
