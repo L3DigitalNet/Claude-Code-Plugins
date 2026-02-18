@@ -1,66 +1,42 @@
 # Release Pipeline Plugin
 
-Autonomous release pipeline for any repo. Three modes:
+Interactive release pipeline for any repo. One command, six options.
 
-## Quick Merge
-
-Commit all changes and merge testing to main:
+## Usage
 
 ```
 /release
 ```
 
-Or say: "ship it", "merge to main"
+Or say: "ship it", "merge to main", "cut a release", "release v1.2.0"
 
-**What it does:**
-1. Verifies clean state and noreply email
-2. Stages and commits any pending changes
-3. Shows diff summary — waits for your GO
-4. Merges testing -> main, pushes, returns to testing
+The command auto-detects your repository state and presents a context-aware menu:
 
-## Full Release
+| Option | Description |
+|--------|-------------|
+| Quick Merge | Commit and merge testing → main (no version bump) |
+| Full Release | Semver release with pre-flight, changelog, tag, GitHub release |
+| Plugin Release | Release a single plugin from a monorepo (scoped tag + changelog) |
+| Release Status | Show unreleased commits, last tag, changelog drift |
+| Dry Run | Simulate a full release without any changes |
+| Changelog Preview | Generate and display a changelog entry |
 
-Run the complete release pipeline with a version:
+## Context-Aware
 
-```
-/release v1.2.0
-```
+The menu adapts to your repo:
+- **Monorepo?** Plugin Release option appears with unreleased plugin count
+- **Dirty tree?** Quick Merge warns about uncommitted changes
+- **Version suggestion** auto-calculated from conventional commits (feat → minor, fix → patch, BREAKING → major)
 
-Or say: "Release v1.2.0 for my-project"
-
-**What it does:**
+## Full Release Workflow
 
 | Phase | Action | Parallel? |
 |-------|--------|-----------|
+| 0. Detection | Auto-detect repo state, suggest version | Yes |
 | 1. Pre-flight | Run tests, audit docs, check git state | Yes (3 agents) |
 | 2. Preparation | Bump versions, generate changelog, show diff | Sequential |
 | 3. Release | Commit, merge, tag, push, GitHub release | Sequential |
 | 4. Verification | Confirm tag, release page, notes | Sequential |
-
-## Plugin Release (Monorepo)
-
-Release a single plugin from a marketplace monorepo:
-
-```
-/release home-assistant-dev v2.2.0
-```
-
-Or say: "Release home-assistant-dev v2.2.0", "ship linux-sysadmin-mcp 1.0.1"
-
-If you provide a version without a plugin name in a monorepo, an interactive picker shows plugins with unreleased changes.
-
-**What it does:**
-
-| Phase | Action | Parallel? |
-|-------|--------|-----------|
-| 1. Pre-flight | Run plugin tests, audit plugin docs, check git state | Yes (3 agents) |
-| 2. Preparation | Bump plugin.json + marketplace.json, generate per-plugin changelog | Sequential |
-| 3. Release | Scoped commit, merge, tag (`plugin-name/vX.Y.Z`), push, GitHub release | Sequential |
-| 4. Verification | Confirm scoped tag, release page, notes | Sequential |
-
-**Tag format:** `plugin-name/vX.Y.Z` (e.g., `home-assistant-dev/v2.1.0`)
-
-**Scoped changes:** Only `plugins/<name>/` and `.claude-plugin/marketplace.json` are staged — other plugins are untouched.
 
 ## Fail-Fast
 
