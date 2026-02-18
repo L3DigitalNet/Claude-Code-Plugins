@@ -94,10 +94,10 @@ function loadEnvConfig(): Partial<ServerConfig> {
 /**
  * Deep merge two objects
  */
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
+function deepMerge(target: ServerConfig, source: Partial<ServerConfig>): ServerConfig {
+  const result: Record<string, unknown> = { ...target };
 
-  for (const key of Object.keys(source) as Array<keyof T>) {
+  for (const key of Object.keys(source) as Array<keyof ServerConfig>) {
     const sourceValue = source[key];
     const targetValue = target[key];
 
@@ -110,16 +110,16 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
       targetValue !== null &&
       !Array.isArray(targetValue)
     ) {
-      result[key] = deepMerge(
-        targetValue as Record<string, unknown>,
-        sourceValue as Record<string, unknown>
-      ) as T[keyof T];
+      result[key] = {
+        ...targetValue,
+        ...sourceValue,
+      };
     } else if (sourceValue !== undefined) {
-      result[key] = sourceValue as T[keyof T];
+      result[key] = sourceValue;
     }
   }
 
-  return result;
+  return result as unknown as ServerConfig;
 }
 
 /**
