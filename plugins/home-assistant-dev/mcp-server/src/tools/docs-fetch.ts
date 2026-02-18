@@ -18,5 +18,10 @@ export async function handleDocsFetch(
     );
   }
 
-  return page;
+  return {
+    title: page.title,
+    content: page.content,
+    last_updated: page.lastUpdated,
+    related: page.related,
+  };
 }

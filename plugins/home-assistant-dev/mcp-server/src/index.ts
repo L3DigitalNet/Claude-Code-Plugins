@@ -270,58 +270,58 @@ async function main() {
       switch (name) {
         // Home Assistant tools
         case "ha_connect":
-          haClient = await handleHaConnect(args as HaConnectInput, config);
+          haClient = await handleHaConnect(args as unknown as HaConnectInput, config);
           return { content: [{ type: "text", text: JSON.stringify(haClient.getConnectionInfo()) }] };
 
         case "ha_get_states":
           if (!haClient?.isConnected()) {
             throw new Error("Not connected to Home Assistant. Use ha_connect first.");
           }
-          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetStates(haClient, args as HaGetStatesInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetStates(haClient, args as unknown as HaGetStatesInput)) }] };
 
         case "ha_get_services":
           if (!haClient?.isConnected()) {
             throw new Error("Not connected to Home Assistant. Use ha_connect first.");
           }
-          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetServices(haClient, args as HaGetServicesInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetServices(haClient, args as unknown as HaGetServicesInput)) }] };
 
         case "ha_call_service":
           if (!haClient?.isConnected()) {
             throw new Error("Not connected to Home Assistant. Use ha_connect first.");
           }
-          return { content: [{ type: "text", text: JSON.stringify(await handleHaCallService(haClient, safetyChecker!, args as HaCallServiceInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleHaCallService(haClient, safetyChecker!, args as unknown as HaCallServiceInput)) }] };
 
         case "ha_get_devices":
           if (!haClient?.isConnected()) {
             throw new Error("Not connected to Home Assistant. Use ha_connect first.");
           }
-          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetDevices(haClient, args as HaGetDevicesInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetDevices(haClient, args as unknown as HaGetDevicesInput)) }] };
 
         case "ha_get_logs":
           if (!haClient?.isConnected()) {
             throw new Error("Not connected to Home Assistant. Use ha_connect first.");
           }
-          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetLogs(haClient, args as HaGetLogsInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleHaGetLogs(haClient, args as unknown as HaGetLogsInput)) }] };
 
         // Documentation tools
         case "docs_search":
-          return { content: [{ type: "text", text: JSON.stringify(await handleDocsSearch(docsIndex!, args as DocsSearchInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleDocsSearch(docsIndex!, args as unknown as DocsSearchInput)) }] };
 
         case "docs_fetch":
-          return { content: [{ type: "text", text: JSON.stringify(await handleDocsFetch(docsIndex!, args as DocsFetchInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleDocsFetch(docsIndex!, args as unknown as DocsFetchInput)) }] };
 
         case "docs_examples":
-          return { content: [{ type: "text", text: JSON.stringify(await handleDocsExamples(args as { pattern: string; style?: "minimal" | "full" })) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleDocsExamples(args as unknown as { pattern: string; style?: "minimal" | "full" })) }] };
 
         // Validation tools
         case "validate_manifest":
-          return { content: [{ type: "text", text: JSON.stringify(await handleValidateManifest(args as ValidateManifestInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleValidateManifest(args as unknown as ValidateManifestInput)) }] };
 
         case "validate_strings":
-          return { content: [{ type: "text", text: JSON.stringify(await handleValidateStrings(args as ValidateStringsInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleValidateStrings(args as unknown as ValidateStringsInput)) }] };
 
         case "check_patterns":
-          return { content: [{ type: "text", text: JSON.stringify(await handleCheckPatterns(args as CheckPatternsInput)) }] };
+          return { content: [{ type: "text", text: JSON.stringify(await handleCheckPatterns(args as unknown as CheckPatternsInput)) }] };
 
         default:
           throw new Error(`Unknown tool: ${name}`);

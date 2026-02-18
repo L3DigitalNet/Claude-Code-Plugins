@@ -20,6 +20,7 @@ import {
 import type {
   HaState,
   HaService,
+  HaServiceField,
   HaDevice,
   HaLogEntry,
   HaConnectOutput,
@@ -41,13 +42,11 @@ export class HaClient {
    * Connect to Home Assistant
    */
   async connect(url: string, token: string): Promise<HaConnectOutput> {
-    // Normalize URL
-    const wsUrl = url
-      .replace(/^http:\/\//, "ws://")
-      .replace(/^https:\/\//, "wss://")
-      .replace(/\/$/, "");
+    // Normalize URL - keep as http(s):// for the HA WS library
+    // The library converts to ws:// internally
+    const hassUrl = url.replace(/\/$/, "");
 
-    const auth = createLongLivedTokenAuth(wsUrl, token);
+    const auth = createLongLivedTokenAuth(hassUrl, token);
 
     try {
       this.connection = await createConnection({ auth });
@@ -228,12 +227,23 @@ export class HaClient {
       }
 
       for (const [serviceName, serviceData] of Object.entries(domainServices)) {
+        const fields: Record<string, HaServiceField> = {};
+        for (const [fieldName, fieldData] of Object.entries(serviceData.fields || {})) {
+          fields[fieldName] = {
+            name: fieldData.name || fieldName,
+            description: fieldData.description || "",
+            required: fieldData.required || false,
+            example: fieldData.example,
+            selector: fieldData.selector,
+          };
+        }
+
         services.push({
           domain: serviceDomain,
           service: serviceName,
           name: serviceData.name || serviceName,
           description: serviceData.description || "",
-          fields: serviceData.fields || {},
+          fields,
           target: serviceData.target,
         });
       }
