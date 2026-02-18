@@ -1,0 +1,27 @@
+id: fail2ban
+name: "Fail2ban"
+schema_version: 1
+category: ids
+homepage: "https://www.fail2ban.org"
+service:
+  unit_names: ["fail2ban"]
+  type: forking
+  restart_command: "systemctl restart fail2ban"
+  reload_command: "systemctl reload fail2ban"
+config:
+  primary: "/etc/fail2ban/jail.local"
+  additional:
+    - { path: "/etc/fail2ban/jail.conf", description: "Default jail config (do not edit)" }
+    - { path: "/etc/fail2ban/jail.d/", description: "Jail drop-in directory" }
+  backup_paths: ["/etc/fail2ban/jail.local"]
+logs:
+  - { path: "/var/log/fail2ban.log", description: "Fail2ban log" }
+  - journald_unit: "fail2ban"
+health_checks:
+  - { command: "fail2ban-client status", description: "Fail2ban status", expect_exit: 0 }
+  - { command: "fail2ban-client status sshd", description: "SSH jail active", expect_exit: 0 }
+dependencies:
+  requires:
+    - { role: "firewall", reason: "Needs iptables/nftables to enforce bans", typical_services: ["ufw", "firewalld", "nftables"] }
+interactions:
+  - { trigger: "restart fail2ban", warning: "Active bans may briefly lapse during restart", risk_escalation: null }

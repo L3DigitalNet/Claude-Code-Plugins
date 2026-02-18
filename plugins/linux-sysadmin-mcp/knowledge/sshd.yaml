@@ -1,0 +1,77 @@
+id: sshd
+name: "OpenSSH Server"
+schema_version: 1
+category: remote_access
+homepage: "https://www.openssh.com"
+
+service:
+  unit_names: ["ssh", "sshd"]
+  type: notify
+  restart_command: "systemctl restart sshd"
+  reload_command: "systemctl reload sshd"
+
+config:
+  primary: "/etc/ssh/sshd_config"
+  additional:
+    - path: "/etc/ssh/sshd_config.d/"
+      description: "Drop-in config directory"
+  validate_command: "sshd -t"
+  backup_paths:
+    - "/etc/ssh/sshd_config"
+
+logs:
+  - journald_unit: "sshd"
+  - journald_unit: "ssh"
+  - path: "/var/log/auth.log"
+    description: "Authentication log (Debian)"
+  - path: "/var/log/secure"
+    description: "Authentication log (RHEL)"
+
+ports:
+  - port: 22
+    protocol: "tcp"
+    scope: "network"
+    description: "SSH"
+
+health_checks:
+  - command: "systemctl is-active sshd 2>/dev/null || systemctl is-active ssh"
+    description: "SSH service running"
+    expect_output: "active"
+  - command: "sshd -t 2>&1"
+    description: "SSH config syntax valid"
+    expect_exit: 0
+
+cli_tools:
+  - command: "ssh"
+    subcommands:
+      - "-V"
+  - command: "sshd"
+    subcommands:
+      - "-t"
+      - "-T"
+
+dependencies:
+  requires: []
+  required_by:
+    - role: "remote_access"
+      reason: "SSH is the primary remote access method for all administration"
+
+interactions:
+  - trigger: "restart sshd"
+    warning: "Active SSH sessions may be briefly interrupted"
+    risk_escalation: null
+  - trigger: "edit /etc/ssh/sshd_config"
+    warning: "Invalid config changes can lock out SSH access. Always validate with sshd -t before reloading."
+    risk_escalation: "high"
+
+troubleshooting:
+  - symptom: "Cannot connect via SSH"
+    checks:
+      - "systemctl is-active sshd || systemctl is-active ssh"
+      - "ss -tlnp | grep :22"
+      - "sudo ufw status | grep 22"
+    common_causes:
+      - "SSH service not running"
+      - "Firewall blocking port 22"
+      - "ListenAddress misconfigured"
+      - "Key-only auth with no valid key"

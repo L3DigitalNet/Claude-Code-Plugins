@@ -1,0 +1,31 @@
+id: nginx
+name: "nginx"
+schema_version: 1
+category: proxy
+homepage: "https://nginx.org"
+service:
+  unit_names: ["nginx"]
+  type: forking
+  restart_command: "systemctl restart nginx"
+  reload_command: "systemctl reload nginx"
+  reload_notes: "Reload is graceful — no downtime"
+config:
+  primary: "/etc/nginx/nginx.conf"
+  additional:
+    - { path: "/etc/nginx/sites-enabled/", description: "Active site configurations" }
+    - { path: "/etc/nginx/conf.d/", description: "Additional config fragments" }
+  validate_command: "nginx -t"
+  backup_paths: ["/etc/nginx/nginx.conf", "/etc/nginx/sites-enabled/", "/etc/nginx/conf.d/"]
+logs:
+  - { path: "/var/log/nginx/access.log", description: "Access log" }
+  - { path: "/var/log/nginx/error.log", description: "Error log" }
+  - journald_unit: "nginx"
+ports:
+  - { port: 80, protocol: "tcp", scope: "network", description: "HTTP" }
+  - { port: 443, protocol: "tcp", scope: "network", description: "HTTPS" }
+health_checks:
+  - { command: "nginx -t", description: "Config syntax valid", expect_exit: 0 }
+  - { command: "curl -sf http://localhost/ -o /dev/null", description: "HTTP response", expect_exit: 0 }
+interactions:
+  - { trigger: "restart nginx", warning: "Active connections will be dropped during restart (use reload for graceful)", risk_escalation: null }
+  - { trigger: "edit /etc/nginx", warning: "Validate with nginx -t before reloading", risk_escalation: null }

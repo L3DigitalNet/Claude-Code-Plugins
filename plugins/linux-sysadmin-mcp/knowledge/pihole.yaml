@@ -1,0 +1,80 @@
+id: pihole
+name: "Pi-hole"
+schema_version: 1
+version_notes: "v6+ uses pihole.toml; v5 used setupVars.conf"
+category: dns
+homepage: "https://pi-hole.net"
+
+service:
+  unit_names: ["pihole-FTL"]
+  type: notify
+  restart_command: "systemctl restart pihole-FTL"
+  reload_command: "systemctl restart pihole-FTL"
+  reload_notes: "FTL requires full restart for TOML config changes"
+
+config:
+  primary: "/etc/pihole/pihole.toml"
+  additional:
+    - path: "/etc/pihole/gravity.db"
+      description: "Blocklist database"
+      mutable: false
+  validate_command: null
+  backup_paths:
+    - "/etc/pihole/pihole.toml"
+
+logs:
+  - path: "/var/log/pihole/pihole.log"
+    description: "Query log"
+  - path: "/var/log/pihole/FTL.log"
+    description: "FTL engine log"
+  - journald_unit: "pihole-FTL"
+
+ports:
+  - port: 53
+    protocol: "tcp/udp"
+    scope: "network"
+    description: "DNS"
+  - port: 80
+    protocol: "tcp"
+    scope: "network"
+    description: "Web interface"
+
+health_checks:
+  - command: "pihole status"
+    description: "Overall Pi-hole status"
+    expect_exit: 0
+  - command: "dig @127.0.0.1 example.com +short"
+    description: "DNS resolution test"
+    expect_output: true
+
+cli_tools:
+  - command: "pihole"
+    subcommands: ["status", "enable", "disable", "-g", "-q <domain>", "-t"]
+
+dependencies:
+  requires:
+    - role: "upstream_dns"
+      reason: "Upstream DNS resolver"
+      impact_if_down: "All DNS queries fail"
+      typical_services: ["unbound", "cloudflared", "stubby"]
+  required_by:
+    - role: "dns_clients"
+      reason: "Network-wide DNS resolution and ad blocking"
+
+interactions:
+  - trigger: "restart pihole-FTL"
+    warning: "Brief DNS outage for all network clients during restart"
+    risk_escalation: "high"
+  - trigger: "edit /etc/pihole/pihole.toml"
+    warning: "Requires pihole-FTL restart to take effect"
+
+troubleshooting:
+  - symptom: "DNS queries failing"
+    checks:
+      - "systemctl is-active pihole-FTL"
+      - "dig @127.0.0.1 example.com"
+      - "ss -ulnp | grep :53"
+    common_causes:
+      - "Upstream resolver not running"
+      - "pihole-FTL crashed"
+      - "Port 53 conflict with systemd-resolved"

@@ -24,7 +24,12 @@ Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog (defines available plugins)
 ├── plugins/                     # All plugins (development and production)
-│   └── agent-orchestrator/      # Example: full-featured orchestration plugin
+│   ├── agent-orchestrator/      # Agent team orchestration
+│   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
+│   ├── github-repo-manager/     # Conversational GitHub repo maintenance
+│   ├── release-pipeline/        # Autonomous release pipeline
+│   ├── design-refine/           # Design document refinement
+│   └── linux-sysadmin-mcp/      # Linux sysadmin MCP server (~100 tools)
 ├── scripts/
 │   └── validate-marketplace.sh  # Marketplace integrity validation
 ├── docs/                        # Comprehensive plugin development documentation
@@ -64,10 +69,9 @@ Then install individual plugins:
        "name": "L3DigitalNet",
        "url": "https://github.com/L3DigitalNet"
      },
-     "license": "MIT",
-     "keywords": ["tag1", "tag2"],
-     "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name",
-     "source": "./plugins/plugin-name"
+     "source": "./plugins/plugin-name",
+     "category": "development",
+     "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name"
    }
    ```
 3. **Update README.md** with plugin description
@@ -114,6 +118,19 @@ Every plugin requires `.claude-plugin/manifest.json` (or `plugin.json`):
 - **hooks/** - Lifecycle event handlers (PreToolUse, PostToolUse, PreCompact, etc.)
 - **scripts/** - External shell scripts (for hooks or commands)
 - **templates/** - Files copied to projects during plugin operation
+- **.mcp.json** - MCP server config (at plugin root, not inside `.claude-plugin/`)
+
+**MCP server plugins** additionally require `.mcp.json` at the plugin root:
+```json
+{
+  "server-name": {
+    "command": "node",
+    "args": ["dist/server.js"]
+  }
+}
+```
+For npm-published servers, use `"command": "npx", "args": ["-y", "@scope/package"]`.
+For HTTP-based servers, use `"type": "http", "url": "...", "headers": {...}`.
 
 ### Validation
 
@@ -341,11 +358,14 @@ This repository uses GitHub branch protection to prevent accidental changes to p
 
 # Checks:
 # - JSON syntax
-# - Required fields
-# - Version formats
-# - Plugin directory existence
-# - Version consistency
-# - Duplicate names
+# - Required root fields (name, owner, plugins)
+# - Invalid root fields (version, homepage, repository, license)
+# - Required plugin fields (name, description, source)
+# - Invalid plugin fields (displayName, keywords, license)
+# - author is object (not string)
+# - Plugin directory and manifest existence
+# - Version consistency (marketplace vs plugin.json)
+# - Duplicate plugin names
 ```
 
 **Deployment workflow**:
@@ -385,9 +405,12 @@ Plugin versions use semantic versioning:
 
 ### Key schema rules
 
+**Ground truth**: Always compare against `~/.claude/plugins/marketplaces/claude-plugins-official/.claude-plugin/marketplace.json` — the Anthropic official marketplace is the authoritative schema reference.
+
 **Reserved names**: Names like `claude-code-plugins` are reserved for official Anthropic marketplaces (repos under `github.com/anthropics/`). Use a unique prefix like `l3digitalnet-plugins`.
 
 **Root level** — required fields: `name`, `owner` (object), `plugins` (array). Optional: `description`.
+**Root level — INVALID fields** (Zod rejects these): `version`, `homepage`, `repository`, `license`.
 
 ```json
 {
@@ -398,7 +421,10 @@ Plugin versions use semantic versioning:
 }
 ```
 
-**Plugin entries** — `author` must be an **object** (not a string). `source` for same-repo plugins uses a **relative path string**. `displayName` is **not** a valid field.
+**Plugin entries** — required: `name`, `description`, `source`. Optional valid: `version`, `author` (object), `category`, `homepage`, `tags`, `strict`.
+**Plugin entries — INVALID fields** (Zod rejects these): `displayName`, `keywords`, `license`.
+
+**Plugin manifests (plugin.json) are lenient** — unlike marketplace.json, the plugin.json schema tolerates extra fields like `keywords`, `license`, `repository`, `homepage`. The strict Zod validation only applies to marketplace.json entries.
 
 ```json
 {
@@ -411,3 +437,9 @@ Plugin versions use semantic versioning:
 ```
 
 **External plugin sources** use `{"source": "url", "url": "https://..."}` (note: the key is `source`, not `type`).
+
+## Gotchas
+
+- **Installed marketplace cache is stale** — `~/.claude/plugins/marketplaces/<name>/` doesn't auto-update from the source repo. After changing marketplace.json, users must re-add the marketplace or manually update the cached copy.
+- **Bash `((var++))` with `set -e`** — returns exit code 1 when var=0 (pre-increment value is falsy). Use `var=$((var + 1))` instead in scripts with `set -e`.
+- **MCP server plugins need `npm install`** — the plugin install process doesn't install Node.js dependencies. Ensure `node_modules/` exists or use `npx` in `.mcp.json`.

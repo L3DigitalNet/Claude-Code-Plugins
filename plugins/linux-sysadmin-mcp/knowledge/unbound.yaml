@@ -1,0 +1,34 @@
+id: unbound
+name: "Unbound"
+schema_version: 1
+category: dns
+homepage: "https://nlnetlabs.nl/projects/unbound"
+service:
+  unit_names: ["unbound"]
+  type: simple
+  restart_command: "systemctl restart unbound"
+  reload_command: "systemctl reload unbound"
+config:
+  primary: "/etc/unbound/unbound.conf"
+  additional:
+    - path: "/etc/unbound/unbound.conf.d/"
+      description: "Drop-in config directory"
+  validate_command: "unbound-checkconf"
+  backup_paths: ["/etc/unbound/unbound.conf"]
+logs:
+  - journald_unit: "unbound"
+ports:
+  - { port: 5335, protocol: "tcp/udp", scope: "localhost", description: "DNS (custom port for Pi-hole integration)" }
+health_checks:
+  - { command: "unbound-control status", description: "Unbound status", expect_exit: 0 }
+  - { command: "dig @127.0.0.1 -p 5335 example.com +short", description: "DNS resolution test", expect_output: true }
+dependencies:
+  requires: []
+  required_by:
+    - { role: "upstream_dns", reason: "Recursive DNS resolver for Pi-hole or other forwarders" }
+interactions:
+  - { trigger: "restart unbound", warning: "Brief DNS resolution interruption for downstream resolvers", risk_escalation: null }
+troubleshooting:
+  - symptom: "DNS resolution failures"
+    checks: ["systemctl is-active unbound", "dig @127.0.0.1 -p 5335 example.com", "unbound-checkconf"]
+    common_causes: ["Config syntax error", "Port conflict", "DNSSEC validation failure"]
