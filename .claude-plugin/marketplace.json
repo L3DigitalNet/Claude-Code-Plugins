@@ -74,6 +74,26 @@
       ],
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/github-repo-manager",
       "source": "./plugins/github-repo-manager"
+    },
+    {
+      "name": "release-pipeline",
+      "displayName": "Release Pipeline",
+      "description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation",
+      "version": "1.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "license": "MIT",
+      "keywords": [
+        "release",
+        "versioning",
+        "changelog",
+        "deployment",
+        "ci"
+      ],
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+      "source": "./plugins/release-pipeline"
     }
   ]
 }
