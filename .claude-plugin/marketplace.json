@@ -1,6 +1,6 @@
 {
   "name": "l3digitalnet-plugins",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Curated collection of Claude Code plugins for enhanced development workflows",
   "owner": {
     "name": "L3DigitalNet",
@@ -52,6 +52,28 @@
       ],
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
       "source": "./plugins/home-assistant-dev"
+    },
+    {
+      "name": "github-repo-manager",
+      "displayName": "GitHub Repo Manager",
+      "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "license": "MIT",
+      "keywords": [
+        "github",
+        "maintenance",
+        "wiki",
+        "security",
+        "community-health",
+        "pull-requests",
+        "repository-management"
+      ],
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/github-repo-manager",
+      "source": "./plugins/github-repo-manager"
     }
   ]
 }

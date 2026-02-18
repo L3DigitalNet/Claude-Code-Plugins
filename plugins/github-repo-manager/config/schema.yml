@@ -1,0 +1,174 @@
+# schema.yml — Validation schema for .github-repo-manager.yml
+#
+# Used by the skill layer (not the helper) to validate config on read.
+# Behavior per design doc Section 8.1:
+#   - Unknown keys: noted and ignored (suggest correction)
+#   - Invalid values: reported, fall back to tier defaults
+#   - Type mismatches: coerced where obvious, flagged where ambiguous
+#   - Config errors never block a session
+
+repo:
+  tier:
+    type: string_or_integer
+    enum: ["auto", 1, 2, 3, 4]
+    default: "auto"
+
+settings:
+  report_format:
+    type: string
+    enum: ["markdown", "json"]
+    default: "markdown"
+  verbose:
+    type: boolean
+    default: true
+  deferred_items:
+    persist:
+      type: boolean
+      default: true
+    pin_issue:
+      type: boolean
+      default: true
+    auto_resolve:
+      type: boolean
+      default: true
+
+modules:
+  wiki_sync:
+    enabled:
+      type: boolean
+      default: true
+      tier_restriction: [3, 4]
+    orphan_handling:
+      type: string
+      enum: ["warn", "delete", "archive"]
+      default: "warn"
+    doc_sources:
+      type: array
+      items: string
+      default: ["docs/", "README.md"]
+    exclude_patterns:
+      type: array
+      items: string
+      default: []
+    page_map:
+      type: array
+      default: []
+    auto_generate:
+      type: array
+      items: string
+      enum_items: ["functions", "cli", "config", "api"]
+      default: []
+
+  community_health:
+    enabled:
+      type: boolean
+      default: true
+    templates_dir:
+      type: string
+      default: "templates/"
+    required_files:
+      type: array
+      items: string
+      default: ["README.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "LICENSE"]
+
+  pr_management:
+    enabled:
+      type: boolean
+      default: true
+    staleness_threshold_days:
+      type: string_or_integer
+      enum_if_string: ["auto"]
+      min_if_integer: 1
+      default: "auto"
+    ignore_labels:
+      type: array
+      items: string
+      default: ["do-not-close", "long-running"]
+    size_thresholds:
+      small:
+        type: integer
+        min: 1
+        default: 50
+      medium:
+        type: integer
+        min: 1
+        default: 200
+      large:
+        type: integer
+        min: 1
+        default: 500
+      xlarge:
+        type: integer
+        min: 1
+        default: 1000
+
+  notifications:
+    enabled:
+      type: boolean
+      default: true
+    priority_filter:
+      type: string
+      enum: ["all", "low", "medium", "high", "critical"]
+      default: "high"
+
+  security:
+    enabled:
+      type: boolean
+      default: true
+    audit_branch_protection:
+      type: boolean
+      default: true
+    required_branch_protections:
+      type: array
+      items: string
+      default: ["require_pull_request_reviews", "require_status_checks", "enforce_admins"]
+
+  discussions:
+    enabled:
+      type: boolean
+      default: true
+    staleness_threshold_days:
+      type: string_or_integer
+      enum_if_string: ["auto"]
+      min_if_integer: 1
+      default: "auto"
+
+  dependency_audit:
+    enabled:
+      type: boolean
+      default: true
+    max_dependabot_pr_age_days:
+      type: integer
+      min: 1
+      default: 7
+
+  issue_triage:
+    enabled:
+      type: boolean
+      default: true
+    staleness_threshold_days:
+      type: string_or_integer
+      enum_if_string: ["auto"]
+      min_if_integer: 1
+      default: "auto"
+    require_labels:
+      type: boolean
+      default: true
+    ignore_labels:
+      type: array
+      items: string
+      default: ["long-term", "backlog"]
+
+  release_health:
+    enabled:
+      type: boolean
+      default: true
+      tier_restriction: [4]
+    changelog_files:
+      type: array
+      items: string
+      default: ["CHANGELOG.md", "CHANGES.md", "HISTORY.md"]
+    cadence_warning_multiplier:
+      type: number
+      min: 1.0
+      default: 2.0
