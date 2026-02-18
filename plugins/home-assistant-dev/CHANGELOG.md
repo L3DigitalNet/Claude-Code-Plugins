@@ -2,6 +2,24 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.1.0] - 2026-02-18
+
+### Added
+- MCP server now wired into plugin via `.mcp.json` — registers `ha-dev-mcp` with 12 tools for live HA connection, documentation search, and code validation
+- esbuild bundling for MCP server — single 630KB self-contained `dist/server.bundle.cjs` requires no `npm install` post-plugin-install
+- `.gitignore` for plugin directory — tracks only the distributable bundle, ignores build artifacts and `node_modules/`
+
+### Fixed
+- `commands/scaffold-integration.md` — added missing `name` frontmatter field
+- `plugin.json` — updated author from `Chris/chrisuthe` to `L3DigitalNet` to match marketplace
+- `plugin.json` — fixed `repository` URL to point to `L3DigitalNet/Claude-Code-Plugins`
+- `marketplace.json` — restored MCP server mention in description now that it's wired in
+- `README.md` — replaced stale `chrisuthe/ha-dev-plugin` install URLs with correct marketplace install instructions
+- `README.md` — fixed directory tree root name from `ha-dev-plugin/` to `home-assistant-dev/`
+- `README.md` — fixed skill count in directory tree from 18 to 19
+- `mcp-server/package.json` — changed package name from `@anthropic/ha-dev-mcp-server` to `ha-dev-mcp-server`
+- `mcp-server/package.json` — changed author from `Anthropic` to `L3DigitalNet`
+
 ## [2.0.4] - 2026-02-17
 
 ### Fixed

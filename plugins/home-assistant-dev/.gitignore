@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Coverage
+.coverage
+
+# MCP server — override root .gitignore for distributable bundle
+# The bundle must be committed because Claude Code plugin install
+# does NOT run npm install or build steps.
+mcp-server/node_modules/
+!mcp-server/dist/
+mcp-server/dist/*
+!mcp-server/dist/server.bundle.cjs
+
+# MCP server build artifacts (not needed for distribution)
+mcp-server/dist/**/*.js
+mcp-server/dist/**/*.js.map
+mcp-server/dist/**/*.d.ts
+
+# Package lock (development only)
+mcp-server/package-lock.json

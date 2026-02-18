@@ -81,21 +81,24 @@ Scripts that run automatically or on demand:
 
 ## Installation
 
-### From GitHub
+### From Marketplace (Recommended)
 
 ```bash
-# Install directly
-/plugin add github:chrisuthe/ha-dev-plugin
+# Add the L3DigitalNet marketplace
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+
+# Install the plugin
+/plugin install home-assistant-dev@l3digitalnet-plugins
 ```
 
-### Local Installation
+### Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/chrisuthe/ha-dev-plugin.git
+# Clone the marketplace repository
+git clone https://github.com/L3DigitalNet/Claude-Code-Plugins.git
 
 # Install from local path
-claude --plugin-dir ./ha-dev-plugin
+claude --plugin-dir ./Claude-Code-Plugins/plugins/home-assistant-dev
 ```
 
 ### Verify Installation
@@ -175,10 +178,10 @@ The plugin tracks all major deprecations:
 ## Directory Structure
 
 ```
-ha-dev-plugin/
+home-assistant-dev/
 ├── .claude-plugin/
 │   └── plugin.json
-├── skills/                    # 18 skills
+├── skills/                    # 19 skills
 │   ├── ha-architecture/
 │   ├── ha-integration-scaffold/
 │   ├── ha-config-flow/

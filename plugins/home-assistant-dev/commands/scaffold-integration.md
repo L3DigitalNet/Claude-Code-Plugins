@@ -1,4 +1,5 @@
 ---
+name: scaffold-integration
 description: Scaffold a new Home Assistant integration with all required files
 disable-model-invocation: true
 ---
