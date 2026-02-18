@@ -1,0 +1,17 @@
+{
+  "name": "github-repo-manager",
+  "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, security posture, and community file management via PAT.",
+  "version": "0.1.0",
+  "author": {
+    "name": "L3DigitalNet"
+  },
+  "keywords": [
+    "github",
+    "maintenance",
+    "wiki",
+    "security",
+    "community-health",
+    "pull-requests",
+    "repository-management"
+  ]
+}

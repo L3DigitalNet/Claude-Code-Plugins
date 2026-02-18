@@ -1,0 +1,98 @@
+# default.yml — Built-in default maintenance policies per tier
+#
+# These are the baseline settings used when no repo or portfolio config
+# overrides them. This is the lowest-priority config source (Section 8.2).
+#
+# Config precedence (highest → lowest):
+#   1. Portfolio per-repo overrides (portfolio.yml → repos → {name})
+#   2. Per-repo config (.github-repo-manager.yml in repo root)
+#   3. Portfolio defaults (portfolio.yml → defaults)
+#   4. Tier defaults (this file)
+
+tier_1:
+  name: "Private, Docs Only"
+  staleness:
+    pr_stale_days: 7
+    pr_close_days: 30
+    discussion_stale_days: 14
+    issue_stale_days: 14
+  modules:
+    wiki_sync: false
+    community_health: true
+    pr_management: true
+    notifications: true
+    security: true
+    discussions: true
+    dependency_audit: false      # No code to audit
+    issue_triage: true
+    release_health: false        # No releases expected
+
+tier_2:
+  name: "Private, Runnable Code"
+  staleness:
+    pr_stale_days: 14
+    pr_close_days: 60
+    discussion_stale_days: 21
+    issue_stale_days: 21
+  modules:
+    wiki_sync: false
+    community_health: true
+    pr_management: true
+    notifications: true
+    security: true
+    discussions: true
+    dependency_audit: true
+    issue_triage: true
+    release_health: false        # Tier 4 only (Tier 2 even if releases exist)
+
+tier_3:
+  name: "Public, No Releases"
+  staleness:
+    pr_stale_days: 21
+    pr_close_days: null          # Owner decision
+    discussion_stale_days: 30
+    issue_stale_days: 30
+  modules:
+    wiki_sync: true
+    community_health: true
+    pr_management: true
+    notifications: true
+    security: true
+    discussions: true
+    dependency_audit: true       # Skipped automatically on docs-only repos
+    issue_triage: true
+    release_health: false        # Informational only if tags exist
+
+tier_4:
+  name: "Public, Releases"
+  staleness:
+    pr_stale_days: 30
+    pr_close_days: null          # Owner decision
+    discussion_stale_days: 30
+    issue_stale_days: 30
+  modules:
+    wiki_sync: true
+    community_health: true
+    pr_management: true
+    notifications: true
+    security: true
+    discussions: true
+    dependency_audit: true
+    issue_triage: true
+    release_health: true
+
+# Label definitions used by the plugin for PR/issue management.
+# Created during label bootstrapping (Community Health module).
+maintenance_labels:
+  - name: "maintenance"
+    color: "0E8A16"
+    description: "Maintenance task created by repo manager"
+  - name: "stale"
+    color: "FBCA04"
+    description: "No recent activity"
+  - name: "ready-to-merge"
+    color: "0E8A16"
+    description: "Approved and ready to merge"
+  - name: "needs-rebase"
+    color: "E11D48"
+    description: "Has merge conflicts, needs rebase"
