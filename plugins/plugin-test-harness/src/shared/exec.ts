@@ -4,7 +4,8 @@ import { PTHError, PTHErrorCode } from './errors.js';
 export interface ExecResult {
   stdout: string;
   stderr: string;
-  exitCode: number;
+  exitCode: number | undefined;
+  signal?: string;
 }
 
 export async function run(
@@ -15,21 +16,19 @@ export async function run(
   try {
     const result = await execa(command, args, {
       cwd: options?.cwd,
-      env: options?.env ? { ...process.env, ...options.env } : undefined,
+      env: options?.env,
       timeout: options?.timeoutMs,
       reject: false,
     });
     return {
-      stdout: typeof result.stdout === 'string' ? result.stdout : '',
-      stderr: typeof result.stderr === 'string' ? result.stderr : '',
-      exitCode: result.exitCode ?? 0,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+      exitCode: result.exitCode ?? (result.isTerminated ? 128 : 0),
+      signal: result.signal ?? undefined,
     };
   } catch (err) {
-    const execaErr = err as { stdout?: string; stderr?: string; exitCode?: number };
-    throw new PTHError(PTHErrorCode.BUILD_FAILED, `Command failed: ${command}`, {
-      stdout: execaErr.stdout,
-      stderr: execaErr.stderr,
-      exitCode: execaErr.exitCode,
+    throw new PTHError(PTHErrorCode.BUILD_FAILED, `Command failed to spawn: ${command}`, {
+      cause: err instanceof Error ? err.message : String(err),
     });
   }
 }
