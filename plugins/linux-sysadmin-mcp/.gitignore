@@ -1,0 +1,16 @@
+# Override root .gitignore for distributable bundle
+# The bundle must be committed because Claude Code plugin install
+# does NOT run npm install or build steps.
+!dist/
+dist/*
+!dist/server.bundle.cjs
+
+# Ignore TypeScript compilation output (not needed for distribution)
+dist/server.js
+dist/server.js.map
+dist/**/*.js
+dist/**/*.js.map
+dist/**/*.d.ts
+
+# Node modules (development only)
+node_modules/

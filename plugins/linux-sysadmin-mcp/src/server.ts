@@ -35,7 +35,9 @@ import { registerBackupTools } from "./tools/backup/index.js";
 import { registerSSHTools } from "./tools/ssh/index.js";
 import { registerDocTools } from "./tools/docs/index.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = typeof import.meta?.url === "string"
+  ? dirname(fileURLToPath(import.meta.url))
+  : __filename ? dirname(__filename) : process.cwd();
 
 async function main(): Promise<void> {
   logger.info("Starting linux-sysadmin-mcp server");

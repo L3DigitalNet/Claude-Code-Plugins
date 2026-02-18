@@ -2,6 +2,15 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.0.4] - 2026-02-17
+
+### Fixed
+- `hooks/hooks.json` rewritten to use correct record schema with dispatcher pattern
+- Replaced invalid trigger/action format with proper `PostToolUse` matcher and `${CLAUDE_PLUGIN_ROOT}` path variable
+
+### Added
+- `scripts/post-write-hook.sh` — dispatcher script that routes PostToolUse events to the appropriate validation script based on file path
+
 ## [2.0.0] - 2026-02-17
 
 ### Added

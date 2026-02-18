@@ -19,7 +19,7 @@ Documentation is a first-class output of every state-changing operation. Every c
 
 The plugin adapts to any supported Linux distribution by detecting and abstracting over package managers, init systems, firewall backends, and filesystem conventions at runtime. It targets a single host per session — either the local machine or a remote host connected via SSH.
 
-The plugin is designed to operate standalone or alongside existing MCP servers (Red Hat Linux MCP, Canonical Ubuntu Server MCP, Filesystem MCP), adapting its behavior based on what is already available in the tool chain. It prioritizes operational safety through mandatory confirmation gates and dry-run previews for all state-changing operations.
+The plugin operates standalone, using Claude Code's built-in tools (Read, Write, Edit, Bash) for all file I/O and shell execution. It prioritizes operational safety through mandatory confirmation gates and dry-run previews for all state-changing operations.
 
 The target audience spans home lab enthusiasts managing a handful of machines to enterprise/professional sysadmins responsible for production infrastructure.
 
@@ -82,12 +82,6 @@ graph TB
             CRONM[Cron/Scheduler Manager]
             DOC[Documentation Tools]
         end
-    end
-
-    subgraph "External MCP Servers - Optional"
-        RHMCP[Red Hat Linux MCP]
-        UBMCP[Ubuntu Server MCP]
-        FSMCP[Filesystem MCP]
     end
 
     subgraph "Target Host - local or remote"
@@ -188,7 +182,7 @@ Installation:
 
 ### 3.5 Implementation Language
 
-The MCP server is implemented in **TypeScript** running on **Node.js**. This choice is driven by alignment with the broader MCP ecosystem — the MCP SDK, most reference MCP servers (including the Filesystem MCP), and Claude Code itself are TypeScript-based. This maximizes compatibility, contributor accessibility, and access to the best-documented MCP patterns.
+The MCP server is implemented in **TypeScript** running on **Node.js**. This choice is driven by alignment with the broader MCP ecosystem — the MCP SDK, most reference MCP servers, and Claude Code itself are TypeScript-based. This maximizes compatibility, contributor accessibility, and access to the best-documented MCP patterns.
 
 Key dependencies:
 
@@ -1421,7 +1415,7 @@ The generation process:
 
 Claude fills in the rationale sections by combining its knowledge of the tool (from the embedded knowledge base), the actual configuration values it can read, and conversation with the user about why things are set up the way they are. Over time, as Claude performs more operations and the user explains their reasoning, the documentation grows richer.
 
-**Prose Section Authoring:** The `doc_generate_host` and `doc_generate_service` tools create the files; Claude edits them afterward using standard file operations. The plugin does not provide dedicated tools for writing prose into documentation sections — this is intentional. Claude uses shell file operations (`sed`, heredoc redirects) or, when the Filesystem MCP is available, its `write_file` tool to update the generated READMEs with rationale, purpose, and architecture content. This keeps the documentation tools focused on structured generation and backup, while leveraging Claude's natural ability to compose prose through general-purpose file editing.
+**Prose Section Authoring:** The `doc_generate_host` and `doc_generate_service` tools create the files; Claude edits them afterward using standard file operations. The plugin does not provide dedicated tools for writing prose into documentation sections — this is intentional. Claude uses its built-in Write and Edit tools to update the generated READMEs with rationale, purpose, and architecture content. This keeps the documentation tools focused on structured generation and backup, while leveraging Claude's natural ability to compose prose through general-purpose file editing.
 
 **6.13.6 Config Drift Detection**
 
@@ -1519,7 +1513,7 @@ The documentation system is distinct from but complementary to other plugin capa
 - **Config Drift Detection vs. Knowledge Profiles** — `doc_diff` compares live config against the *user's documented state*. Knowledge profiles tell the plugin *where* config files live; `doc_diff` tells it whether they match the last known-good state.
 - **OS-Level Audit and Rollback** — The plugin does not maintain its own audit log or rollback infrastructure. When audit trails are needed, Claude can help the user work with OS-native tools: `journalctl` for service logs, `auditd` for system call auditing, `etckeeper` for config change tracking, and package manager history (`dnf history`, `apt` logs) for package operations. When rollback is needed, Claude and the user determine the right approach together — whether that is package manager rollback, restoring from a documentation config backup, LVM/btrfs snapshots, or manual reversal. The documentation system's config backups (Section 6.13) serve as the permanent, versioned record of known-good state.
 
-**Complementary Mode Limitation (Principle 3 + Principle 6):** When running in complementary mode alongside other MCP servers, the plugin cannot intercept or observe tool calls that Claude routes to those servers (Section 8.1). If Claude uses the Ubuntu MCP's `ufw_add_rule` instead of the plugin's `fw_add_rule`, the documentation trigger never fires and the change is undocumented. This is an inherent trade-off of the peer architecture. Mitigation: the plugin's routing guidance (Section 8.3) notes that plugin tools should be preferred when documentation tracking matters. Users can also run `doc_diff` periodically to catch config drift from any source — including changes made through other MCP servers, manual edits, or package updates.
+**External Change Limitation (Principle 3 + Principle 6):** If Claude uses built-in Bash commands to make system changes instead of plugin tools (e.g., `Bash(sudo ufw allow 443)` instead of `fw_add_rule`), the documentation trigger never fires and the change is undocumented. Mitigation: skills and prompts guide Claude to prefer plugin tools when documentation tracking matters. Users can also run `doc_diff` periodically to catch config drift from any source — including manual edits, direct Bash commands, or package updates.
 
 **Remote Host Documentation:** When the active target is a remote host, the documentation tools operate across a boundary: they read config files from the remote host (via the SSH execution layer, like any other tool) and write documentation and config backups to the local documentation repo. The documentation repo is always local to the machine running the plugin. This means `doc_backup_config` fetches file contents over SSH and writes them locally, and `doc_generate_service` gathers facts from the remote host's tools and profiles but writes the README to the local repo under the remote host's directory (`<repo_root>/<remote_hostname>/`).
 
@@ -1728,168 +1722,64 @@ For tools without native dry-run support (e.g., `svc_restart`, `user_create`), t
 
 ---
 
-## 8. Integration Patterns with Existing MCP Servers
+## 8. Integration with Claude Code Built-in Tools
 
-The plugin is designed to coexist gracefully with the Red Hat Linux MCP server, the Ubuntu Server MCP server, and the Filesystem MCP server. Three integration modes are supported, with routing decisions guided by dynamic tool descriptions and a session context tool.
+The plugin operates standalone, relying on Claude Code's built-in tools for file I/O and general shell execution. No external MCP servers are required.
 
-### 8.1 Architectural Constraint
-
-MCP servers are independent processes. Claude Code communicates with each one over a separate transport (stdio or SSE). The Linux SysAdmin plugin cannot intercept, wrap, or proxy calls to other MCP servers — they are peers, not subordinates. Routing decisions are ultimately made by Claude, not by the plugin.
-
-The integration strategy is therefore **advisory**: the plugin provides Claude with strong, context-aware routing guidance so that Claude makes informed choices about which tool to invoke for a given task.
-
-### 8.2 Standalone Mode
-
-No other MCP servers are present. The plugin handles all operations using its own distro abstraction layer and shell commands. This is the default and requires no configuration.
+### 8.1 Architecture
 
 ```
-Claude Code --> Linux SysAdmin Plugin --> Target Host
+Claude Code --> Linux SysAdmin Plugin (distro abstraction + knowledge base)
+                 +-- Shell execution via Bash tool (all operations)
+
+Claude Code --> Built-in tools (Read, Write, Edit, Glob, Grep)
+                 +-- Direct file I/O (config files, logs, etc.)
 ```
 
-Tool descriptions use standard language with no references to alternative tools.
+The plugin provides domain-specific sysadmin tools (package management, service control, firewall configuration, security auditing, etc.) while Claude Code's built-in tools handle general-purpose file operations. This separation avoids tool duplication and keeps the plugin focused on its core value: distro abstraction, knowledge base integration, and structured sysadmin workflows.
 
-### 8.3 Complementary Mode
+### 8.2 Tool Routing
 
-One or more MCP servers are also present. The plugin detects their availability at session initialization and adjusts its behavior in two ways:
+| Domain | Plugin | Claude Code Built-in |
+|---|---|---|
+| Package management | Yes (distro-abstracted) | — |
+| Service management | Yes | — |
+| Firewall | Yes (ufw/firewalld/nftables) | — |
+| User management | Yes | — |
+| Security auditing | Yes | — |
+| Backup/recovery | Yes | — |
+| LVM/storage | Yes | — |
+| Container management | Yes | — |
+| Performance diagnostics | Yes | — |
+| Documentation & config backup | Yes | — |
+| Config file read/write | — | Read, Write, Edit |
+| File/directory browsing | — | Glob, Bash(ls), Bash(tree) |
+| File search | — | Grep, Glob |
+| Log viewing | — | Read, Bash(journalctl) |
+| General shell commands | — | Bash |
 
-**Dynamic Tool Descriptions:** Each plugin tool's MCP description is generated at registration time based on which other servers are active. When overlap exists, descriptions include routing guidance. For example:
+### 8.3 Session Context Tool
 
-- Standalone: `pkg_install` — "Install one or more packages using the system package manager."
-- Complementary (Ubuntu MCP detected): `pkg_install` — "Install packages with distro abstraction and structured error handling. Use this for cross-distro compatibility and consistent error responses. Use Ubuntu MCP tools directly for Ubuntu-specific operations."
-
-This ensures Claude always has routing context embedded in the tool metadata it sees, without requiring an extra tool call.
-
-**Session Context Tool:** The plugin exposes `sysadmin_session_info`, a read-only tool that returns the full integration context:
+The plugin exposes `sysadmin_session_info`, a read-only tool that returns the current session context:
 
 ```json
 {
   "target_host": "localhost",
-  "distro": {"family": "debian", "name": "Ubuntu", "version": "24.04", "codename": "noble"},
+  "distro": {"family": "rhel", "name": "Fedora", "version": "43"},
   "sudo_available": true,
-  "mac_system": {"type": "apparmor", "mode": "enforcing"},
+  "mac_system": {"type": "selinux", "mode": "enforcing"},
   "detected_profiles": [
-    {"id": "pihole", "name": "Pi-hole", "status": "active", "roles_resolved": {"upstream_dns": "unbound"}},
-    {"id": "unbound", "name": "Unbound", "status": "active", "roles_resolved": {}},
-    {"id": "ufw", "name": "UFW", "status": "active", "roles_resolved": {}},
-    {"id": "fail2ban", "name": "Fail2ban", "status": "active", "roles_resolved": {"firewall": "ufw"}},
     {"id": "sshd", "name": "OpenSSH Server", "status": "active", "roles_resolved": {}}
   ],
   "unresolved_roles": [],
   "documentation": {
     "enabled": true,
     "repo_path": "~/homelab",
-    "host_dir": "raspi5",
-    "last_commit": "2026-02-15T22:30:00Z",
-    "services_documented": 5,
-    "services_undocumented": 0,
-    "uncommitted_changes": false,
-    "stale_configs": []
-  },
-  "integration_mode": "complementary",
-  "detected_mcp_servers": [
-    {"name": "ubuntu-server-mcp", "tools_detected": ["apt_install", "apt_remove", "ufw_status", "ufw_add_rule", "systemctl_status", "systemctl_restart"]},
-    {"name": "filesystem-mcp", "tools_detected": ["read_file", "write_file", "list_directory", "search_files"]}
-  ],
-  "routing_guidance": {
-    "package_management": "Both plugin (pkg_install) and Ubuntu MCP (apt_install) available. Plugin adds distro abstraction and structured error handling. Ubuntu MCP is Ubuntu-specific.",
-    "firewall": "Both plugin (fw_add_rule) and Ubuntu MCP (ufw_add_rule) available. Plugin adds distro abstraction across ufw/firewalld/nftables.",
-    "file_operations": "Filesystem MCP available for raw file reads/writes/searches. Plugin uses shell commands for file operations. Filesystem MCP preferred for browsing and searching; plugin preferred when file operations are part of a larger sysadmin workflow.",
-    "security_auditing": "Plugin only. No MCP server coverage.",
-    "backup_recovery": "Plugin only. Filesystem MCP can assist with file-level reads for snapshot creation.",
-    "storage_lvm": "Plugin only.",
-    "containers": "Plugin only.",
-    "performance": "Plugin only.",
-    "documentation": "Plugin only. Changes made through other MCP servers bypass documentation triggers. Use plugin tools when documentation tracking matters."
+    "host_dir": "workstation",
+    "last_commit": "2026-02-17T22:30:00Z"
   }
 }
 ```
-
-Claude can call `sysadmin_session_info` at any time to refresh its understanding of the routing landscape, but the dynamic tool descriptions provide passive guidance on every tool invocation without requiring this extra call.
-
-**Filesystem MCP Delegation:** When the Filesystem MCP is present, the plugin can leverage it for file operations that would otherwise use shell commands. This is particularly useful for config file inspection during security audits and backup operations. The plugin documents in its tool descriptions when it internally benefits from the Filesystem MCP, but the user does not need to configure this — it happens transparently.
-
-```
-Claude Code --> Linux SysAdmin Plugin (distro abstraction + knowledge base)
-                 |-- Delegates to Filesystem MCP (where useful for file I/O)
-                 +-- Direct shell execution (all other operations)
-
-Claude Code --> Ubuntu/Red Hat MCP (direct, distro-specific)
-```
-
-### 8.4 Override Mode
-
-User explicitly configures the plugin to handle all operations regardless of MCP server availability. In this mode, tool descriptions do not reference other MCP servers and `sysadmin_session_info` reports `"integration_mode": "override"` with guidance directing Claude to use plugin tools exclusively.
-
-Useful when the user wants consistent distro abstraction and knowledge base integration across all operations and is willing to forgo the lighter-weight MCP server tools.
-
-```
-Claude Code --> Linux SysAdmin Plugin --> Target Host
-               (MCP servers available but not referenced in tool descriptions)
-```
-
-### 8.5 Detection and Negotiation
-
-At session initialization, the plugin:
-
-1. Queries its own MCP transport context for the list of other registered MCP servers and their tool manifests
-2. Matches known MCP server tool names against a built-in capability map (e.g., `apt_install` maps to Ubuntu MCP package management)
-3. Builds an overlap matrix
-4. Applies the configured integration mode from `config.yaml`
-5. Generates dynamic tool descriptions incorporating routing guidance
-6. Populates the `sysadmin_session_info` response with the full routing context
-
-The capability map is maintained as a configuration file within the plugin (`mcp-overlap-map.yaml`) so it can be updated without code changes as external MCP servers evolve.
-
-### 8.6 Error Normalization Across MCP Boundaries
-
-When the plugin delegates file operations to the Filesystem MCP, errors from that server are caught and normalized into the plugin's structured error format (Section 7.2). This ensures Claude always receives a consistent error shape regardless of which underlying system performed the operation.
-
-```json
-{
-  "status": "error",
-  "tool": "sec_check_ssh",
-  "target_host": "localhost",
-  "duration_ms": 84,
-  "command_executed": null,
-  "error_code": "FILE_NOT_FOUND",
-  "error_category": "not_found",
-  "message": "File /etc/ssh/sshd_config does not exist",
-  "source": "filesystem-mcp",
-  "original_error": "ENOENT: no such file or directory",
-  "transient": false,
-  "retried": false,
-  "retry_count": 0,
-  "remediation": [
-    "Verify OpenSSH server is installed: pkg_info openssh-server",
-    "Check if sshd is running: svc_status sshd"
-  ]
-}
-```
-
-The `source` field indicates when an error originated from a delegated MCP server rather than the plugin's own execution. The `original_error` preserves the upstream error message for debugging. Both are additional fields specific to delegated errors — they are absent from errors produced by the plugin's own execution.
-
-For operations that Claude routes directly to an external MCP server (bypassing the plugin), the plugin has no visibility into errors. Those flow directly between Claude and the MCP server in whatever format that server uses. This is an inherent trade-off of the peer architecture and is documented in the routing guidance as a reason to prefer plugin tools when error consistency matters.
-
-### 8.7 MCP Server Capability Overlap Map
-
-| Domain | Red Hat MCP | Ubuntu MCP | Filesystem MCP | Plugin Native |
-|---|---|---|---|---|
-| Package management | Yes (dnf) | Yes (apt) | — | Yes (both + abstraction) |
-| Service management | Yes | Yes | — | Yes |
-| Firewall | Yes (firewalld) | Yes (ufw) | — | Yes (both + nftables) |
-| User management | Partial | Partial | — | Yes (full) |
-| Security auditing | — | — | — | Yes |
-| Backup/recovery | — | — | Partial (file copy/read) | Yes |
-| LVM/storage | — | — | — | Yes |
-| Container management | — | — | — | Yes |
-| Performance diagnostics | — | — | — | Yes |
-| **Documentation & config backup** | — | — | Partial (file read/write) | **Yes (full system)** |
-| Distro abstraction | — | — | — | Yes |
-| Config file read/write | — | — | Yes | Yes |
-| File/directory browsing | — | — | Yes | Partial (via specific tools) |
-| File search | — | — | Yes | — |
-
-*This map is maintained in `mcp-overlap-map.yaml` within the plugin source. It should be updated as external MCP servers add capabilities.*
 
 ---
 

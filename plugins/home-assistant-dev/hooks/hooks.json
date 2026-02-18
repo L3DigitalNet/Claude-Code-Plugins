@@ -1,66 +1,15 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Claude Code hooks for Home Assistant integration development. Automatically validates files on save.",
-  "hooks": [
-    {
-      "name": "validate-manifest",
-      "description": "Validate manifest.json when modified",
-      "trigger": {
-        "event": "PostToolUse",
-        "tools": ["Write", "Edit", "str_replace_editor"],
-        "filePatterns": ["**/manifest.json"]
-      },
-      "action": {
-        "command": "python3",
-        "args": ["${pluginDir}/scripts/validate-manifest.py", "${file}"],
-        "workingDirectory": "${projectRoot}"
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/post-write-hook.sh"
+          }
+        ]
       }
-    },
-    {
-      "name": "validate-strings",
-      "description": "Validate strings.json and sync with config_flow.py",
-      "trigger": {
-        "event": "PostToolUse",
-        "tools": ["Write", "Edit", "str_replace_editor"],
-        "filePatterns": ["**/strings.json", "**/config_flow.py"]
-      },
-      "action": {
-        "command": "python3",
-        "args": ["${pluginDir}/scripts/validate-strings.py", "${file}"],
-        "workingDirectory": "${projectRoot}"
-      }
-    },
-    {
-      "name": "check-patterns",
-      "description": "Check for anti-patterns in Python files",
-      "trigger": {
-        "event": "PostToolUse",
-        "tools": ["Write", "Edit", "str_replace_editor"],
-        "filePatterns": ["**/custom_components/**/*.py"]
-      },
-      "action": {
-        "command": "python3",
-        "args": ["${pluginDir}/scripts/check-patterns.py", "${file}"],
-        "workingDirectory": "${projectRoot}"
-      }
-    }
-  ],
-  "commands": [
-    {
-      "name": "lint",
-      "description": "Run all linters on the integration",
-      "command": "bash",
-      "args": ["${pluginDir}/scripts/lint-integration.sh", "${projectRoot}"]
-    },
-    {
-      "name": "validate",
-      "description": "Validate manifest and strings files",
-      "command": "bash",
-      "args": [
-        "-c",
-        "python3 ${pluginDir}/scripts/validate-manifest.py $(find . -name manifest.json | head -1) && python3 ${pluginDir}/scripts/validate-strings.py $(find . -name strings.json | head -1)"
-      ],
-      "workingDirectory": "${projectRoot}"
-    }
-  ]
+    ]
+  }
 }

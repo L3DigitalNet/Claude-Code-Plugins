@@ -1,6 +1,6 @@
 {
   "linux-sysadmin-mcp": {
     "command": "node",
-    "args": ["dist/server.js"]
+    "args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.bundle.cjs"]
   }
 }

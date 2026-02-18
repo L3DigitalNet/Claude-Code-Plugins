@@ -1,0 +1,14 @@
+services:
+  linux-sysadmin-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linux-sysadmin-test
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - ../../:/plugin:ro
+    tmpfs:
+      - /run
+      - /tmp
+    stop_signal: SIGRTMIN+3

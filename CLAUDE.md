@@ -170,7 +170,38 @@ When designing plugins, understand what enters the AI's context window:
 
 ### Hooks Best Practices
 
-From agent-orchestrator implementation:
+From agent-orchestrator implementation. Reference: `plugins/agent-orchestrator/hooks/hooks.json`
+
+**hooks.json schema** — `hooks` must be a **record** (object keyed by event name), NOT an array:
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/my-hook.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Hook scripts receive JSON on stdin** with tool context (not variable substitution):
+```bash
+# Extract file path from stdin JSON — only ${CLAUDE_PLUGIN_ROOT} is available in command strings
+FILE_PATH=$(cat | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(d.get('tool_input', {}).get('file_path') or d.get('tool_input', {}).get('path') or '')
+")
+```
+
+**Dispatcher pattern** — prefer one hook per event type with a bash dispatcher that routes by file path, rather than multiple hooks with custom file pattern matching (which doesn't exist in the schema).
 
 **PreToolUse hooks** - Mechanical enforcement (blocking unwanted tool calls)
 ```bash
@@ -401,7 +432,6 @@ Plugin versions use semantic versioning:
 **The Claude Code marketplace validator (Zod-based) enforces a strict schema** that differs from some community documentation. When in doubt, reference these working marketplaces installed locally:
 
 - `~/.claude/plugins/marketplaces/claude-plugins-official/` (Anthropic's official)
-- `~/.claude/plugins/marketplaces/superpowers-marketplace/` (obra/superpowers)
 
 ### Key schema rules
 
@@ -441,5 +471,7 @@ Plugin versions use semantic versioning:
 ## Gotchas
 
 - **Installed marketplace cache is stale** — `~/.claude/plugins/marketplaces/<name>/` doesn't auto-update from the source repo. After changing marketplace.json, users must re-add the marketplace or manually update the cached copy.
+- **Marketplace cache is a full git clone** — updating one file in the cache doesn't update the tree. Use `cd ~/.claude/plugins/marketplaces/<name> && git fetch origin && git reset --hard origin/main` to properly refresh.
+- **settings.json `enabledPlugins` has stale refs** — removing a marketplace doesn't clean up enabled plugin entries. Stale entries like `"plugin@removed-marketplace": true` cause "failed to load" errors. Manually remove from `~/.claude/settings.json`.
 - **Bash `((var++))` with `set -e`** — returns exit code 1 when var=0 (pre-increment value is falsy). Use `var=$((var + 1))` instead in scripts with `set -e`.
 - **MCP server plugins need `npm install`** — the plugin install process doesn't install Node.js dependencies. Ensure `node_modules/` exists or use `npx` in `.mcp.json`.
