@@ -1,49 +1,11 @@
 ---
 name: release
-description: "Release pipeline — no args for quick merge (testing->main), provide version for full release, or provide plugin name + version for monorepo per-plugin release (e.g., /release home-assistant-dev v2.2.0)."
+description: "Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview."
 ---
 
 # Release Pipeline
 
-You are the release orchestrator. Parse the user's arguments and execute the appropriate mode.
-
-## Argument Parsing
-
-1. Extract a version from the arguments matching pattern `v?[0-9]+\.[0-9]+\.[0-9]+`.
-2. Extract a plugin name — any non-version word before or after the version.
-3. If no plugin name was given, check for monorepo context:
-   - Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-unreleased.sh .`
-   - If the script succeeds (monorepo detected) and outputs results, present an interactive picker.
-   - If not a monorepo, or user declines to pick a plugin, fall through to existing modes.
-
-**Routing:**
-
-- **No version, no plugin** → Mode 1: Quick Merge
-- **Version, no plugin, not monorepo** → Mode 2: Full Release
-- **Version + plugin name** → Mode 3: Plugin Release
-- **Version, no plugin, IS monorepo** → Interactive picker → Mode 3: Plugin Release
-
-Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` for tags and display. For Mode 3, use `plugin-name/vX.Y.Z` for tags.
-
-## Interactive Plugin Picker (Monorepo)
-
-When a version is provided but no plugin name in a monorepo context:
-
-1. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-unreleased.sh .` and capture the output.
-2. Present the results to the user:
-
-```
-UNRELEASED CHANGES DETECTED
-============================
-  1. home-assistant-dev  v2.1.0  (3 commits since home-assistant-dev/v2.1.0)
-  2. release-pipeline    v1.0.0  (12 commits since release-pipeline/v1.0.0)
-
-Which plugin are you releasing? Enter the number or name:
-```
-
-3. Wait for user selection. Use the selected plugin name for Mode 3.
-4. If no plugins have unreleased changes, report "All plugins are up to date — nothing to release." and stop.
-5. If the detect-unreleased.sh script fails (not a monorepo), fall through to Mode 2.
+You are the release orchestrator. When invoked, first gather context about the current repository, then present an interactive menu tailored to that context.
 
 ## CRITICAL RULES
 
@@ -55,9 +17,105 @@ Which plugin are you releasing? Enter the number or name:
 
 ---
 
+## Phase 0: Context Detection
+
+Before showing the menu, run these commands to gather context. Execute them in parallel where possible (all are read-only).
+
+**Step 1 — Monorepo check:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-unreleased.sh .
+```
+
+Capture result:
+- Exit code 0 with output → `is_monorepo = true`, parse TSV output into `unreleased_plugins` list
+- Exit code 0 with "No plugins with unreleased changes" on stderr → `is_monorepo = true`, `unreleased_plugins = []`
+- Exit code 1 → `is_monorepo = false`
+
+**Step 2 — Git state:**
+
+```bash
+git status --porcelain
+git branch --show-current
+git log --oneline -1
+```
+
+Capture: `is_dirty` (status output non-empty), `current_branch`, `last_commit_summary`.
+
+**Step 3 — Version suggestion:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-version.sh .
+```
+
+Capture output: `suggested_version` (first field), `feat_count`, `fix_count`, `other_count` (remaining fields).
+
+If the script exits 1 (no previous tag), set `suggested_version = "0.1.0"` and counts to 0.
+
+**Step 4 — Last tag:**
+
+```bash
+git describe --tags --abbrev=0 2>/dev/null || echo "(none)"
+```
+
+Capture: `last_tag`.
+
+**Step 5 — Commit count since last tag:**
+
+If `last_tag` is not "(none)":
+```bash
+git log <last_tag>..HEAD --oneline | wc -l
+```
+Capture: `commit_count`.
+
+If `last_tag` is "(none)", set `commit_count` to total commit count.
+
+---
+
+## Menu Presentation
+
+Use **AskUserQuestion** to present the release menu. Build the options dynamically from context:
+
+**Always include these options:**
+
+1. **Quick Merge**
+   - label: `"Quick Merge"`
+   - description: If `is_dirty`: `"Stage, commit, and merge testing → main (⚠ uncommitted changes will be staged)"`
+   - description: If clean: `"Merge testing → main — <commit_count> commits since <last_tag>"`
+
+2. **Full Release**
+   - label: `"Full Release"`
+   - description: `"Semver release with pre-flight checks, changelog, tag, and GitHub release (suggested: v<suggested_version> — <feat_count> feat, <fix_count> fix)"`
+
+3. **Release Status**
+   - label: `"Release Status"`
+   - description: `"Show unreleased commits, last tag, changelog drift (last tag: <last_tag>, <commit_count> commits since)"`
+
+4. **Dry Run**
+   - label: `"Dry Run"`
+   - description: `"Simulate a full release without committing, tagging, or pushing"`
+
+5. **Changelog Preview**
+   - label: `"Changelog Preview"`
+   - description: `"Generate and display changelog entry without committing"`
+
+**Conditionally include (monorepo only — when `is_monorepo` is true):**
+
+6. **Plugin Release**
+   - label: `"Plugin Release"`
+   - description: `"Release a single plugin with scoped tag and changelog (<N> plugins with unreleased changes)"` where N is `len(unreleased_plugins)`
+   - If `unreleased_plugins` is empty: `"Release a single plugin with scoped tag and changelog (all plugins up to date)"`
+
+**Question text:** `"What would you like to do?"`
+**Header:** `"Release"`
+
+After the user selects, route to the corresponding mode below.
+
+---
+
 ## Mode 1: Quick Merge (no version)
 
-Use this mode when the user runs `/release` with no version argument. This merges `testing` into `main` and pushes.
+Merges `testing` into `main` and pushes. No version bumps.
 
 ### Step 1 — Pre-flight
 
@@ -78,7 +136,7 @@ git branch --show-current
 git config user.email
 ```
 
-If the working tree is dirty, on `main`, or email is not noreply: STOP and report the issue.
+If on `main` or email is not noreply: STOP and report the issue.
 
 ### Step 2 — Stage and Commit (only if uncommitted changes exist)
 
@@ -118,9 +176,24 @@ Display:
 
 ---
 
-## Mode 2: Full Release (version provided)
+## Mode 2: Full Release
 
-Use this mode when the user provides a version (e.g., `/release v1.2.0`). This runs parallel pre-flight checks, bumps versions, generates a changelog, creates a git tag, pushes, and creates a GitHub release.
+Full semver release with parallel pre-flight checks, version bumps, changelog, git tag, and GitHub release.
+
+### Step 0 — Version Selection
+
+Present the auto-suggested version to the user:
+
+Use **AskUserQuestion**:
+- question: `"Which version should this release be?"`
+- header: `"Version"`
+- options:
+  1. label: `"v<suggested_version> (Recommended)"`, description: `"Based on commits: <feat_count> feat, <fix_count> fix, <other_count> other since <last_tag>"`
+  2. label: `"Custom version"`, description: `"Enter a specific version number"`
+
+If "Custom version" selected, ask: `"Enter the version (e.g., 1.2.0 or v1.2.0):"`
+
+Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` for tags and display.
 
 ### Phase 1 — Pre-flight (Parallel)
 
@@ -171,7 +244,7 @@ Docs:     PASS | WARN | FAIL  — <one-line summary>
 Git:      PASS | FAIL  — <one-line summary>
 ```
 
-- If **ANY agent reports FAIL** → STOP. Display the failure details and suggest: "Fix the issues above and re-run `/release <version>`."
+- If **ANY agent reports FAIL** → STOP. Display the failure details and suggest: "Fix the issues above and re-run `/release`."
 - If **all PASS or WARN** → proceed to Phase 2.
 
 ### Phase 2 — Preparation (Sequential)
@@ -270,7 +343,38 @@ gh release view "v<version>" --json url -q '.url'
 
 ## Mode 3: Plugin Release (monorepo per-plugin)
 
-Use this mode when a plugin name is identified (directly or via picker). This runs scoped pre-flight checks, bumps versions in the plugin manifest and marketplace.json, generates a per-plugin changelog, creates a scoped git tag, and creates a GitHub release.
+Scoped release for a single plugin. Uses scoped tags, scoped changelog, and only stages plugin files.
+
+### Step 0 — Plugin Selection
+
+Use **AskUserQuestion** to present the plugin picker:
+
+- question: `"Which plugin are you releasing?"`
+- header: `"Plugin"`
+- options: Build from `unreleased_plugins` list. For each plugin:
+  - label: `"<plugin-name>"`
+  - description: `"v<current-version> → <commit-count> commits since <last-tag>"`
+
+If `unreleased_plugins` is empty, show all plugins from marketplace.json instead with description: `"v<current-version> (no unreleased changes detected)"`.
+
+### Step 1 — Version Selection
+
+Run suggest-version.sh scoped to the selected plugin:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-version.sh . --plugin <plugin-name>
+```
+
+Use **AskUserQuestion**:
+- question: `"Which version for <plugin-name>?"`
+- header: `"Version"`
+- options:
+  1. label: `"v<suggested_version> (Recommended)"`, description: `"Based on commits: <feat_count> feat, <fix_count> fix, <other_count> other"`
+  2. label: `"Custom version"`, description: `"Enter a specific version number"`
+
+If "Custom version" selected, ask the user to enter it.
+
+Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `<plugin-name>/vX.Y.Z` for tags and `vX.Y.Z` for display.
 
 ### Phase 1 — Scoped Pre-flight (Parallel)
 
@@ -316,18 +420,7 @@ prompt: |
 
 **After all three return:**
 
-Display each agent's summary in a consolidated pre-flight report:
-
-```
-PRE-FLIGHT RESULTS
-==================
-Tests:    PASS | FAIL  — <one-line summary>
-Docs:     PASS | WARN | FAIL  — <one-line summary>
-Git:      PASS | FAIL  — <one-line summary>
-```
-
-- If **ANY agent reports FAIL** → STOP. Display the failure details and suggest: "Fix the issues above and re-run `/release <plugin-name> <version>`."
-- If **all PASS or WARN** → proceed to Phase 2.
+Display consolidated pre-flight report (same format as Mode 2). If ANY FAIL → STOP.
 
 ### Phase 2 — Scoped Preparation (Sequential)
 
@@ -337,9 +430,7 @@ Git:      PASS | FAIL  — <one-line summary>
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version> --plugin <plugin-name>
 ```
 
-This bumps:
-- `plugins/<plugin-name>/.claude-plugin/plugin.json`
-- The matching entry in `.claude-plugin/marketplace.json`
+This bumps `plugins/<plugin-name>/.claude-plugin/plugin.json` and the matching entry in `.claude-plugin/marketplace.json`.
 
 **Step 2 — Generate changelog (plugin-scoped):**
 
@@ -368,7 +459,6 @@ WAIT for user response. If not approval → run `git checkout -- .` and report "
 Execute each command sequentially. If any command fails, STOP and report with rollback suggestion.
 
 ```bash
-# Scoped git add — only the plugin directory and marketplace.json
 git add plugins/<plugin-name>/ .claude-plugin/marketplace.json
 git commit -m "Release <plugin-name> v<version>"
 ```
@@ -391,8 +481,6 @@ git push origin main --tags
 git checkout testing
 ```
 
-Then create the GitHub release. Use the changelog entry generated in Phase 2 as the release notes:
-
 ```bash
 gh release create "<plugin-name>/v<version>" --title "<plugin-name> v<version>" --notes "<changelog entry>"
 ```
@@ -403,11 +491,7 @@ gh release create "<plugin-name>/v<version>" --title "<plugin-name> v<version>" 
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/verify-release.sh . <version> --plugin <plugin-name>
 ```
 
-Display the verification report. If verification fails → WARN the user but do NOT attempt automatic rollback (the release is already public).
-
 ### Final Summary
-
-Display a completion report:
 
 ```
 RELEASE COMPLETE: <plugin-name> v<version>
@@ -430,12 +514,169 @@ gh release view "<plugin-name>/v<version>" --json url -q '.url'
 
 ---
 
+## Mode 4: Release Status (read-only)
+
+Shows the current release state without making any changes.
+
+### Step 1 — Repository Overview
+
+Display:
+
+```
+RELEASE STATUS
+==============
+Branch:     <current_branch>
+Last tag:   <last_tag>
+Commits:    <commit_count> since <last_tag>
+Suggested:  v<suggested_version> (<feat_count> feat, <fix_count> fix, <other_count> other)
+Tree:       clean | dirty (<N> uncommitted files)
+```
+
+### Step 2 — Commit Breakdown
+
+List commits since last tag, categorized:
+
+```bash
+git log <last_tag>..HEAD --oneline --no-merges
+```
+
+Display them grouped by conventional commit type (feat, fix, chore, docs, etc.).
+
+### Step 3 — Monorepo Breakdown (if applicable)
+
+If `is_monorepo` is true, show per-plugin status from the `unreleased_plugins` list:
+
+```
+PLUGIN STATUS
+=============
+  home-assistant-dev   v2.1.0   3 commits since home-assistant-dev/v2.1.0
+  release-pipeline     v1.1.0   8 commits since release-pipeline/v1.1.0
+  linux-sysadmin-mcp   v1.0.0   (up to date)
+```
+
+### Step 4 — Changelog Drift Check
+
+Check if CHANGELOG.md exists. If it does, compare the latest version header in CHANGELOG.md against `last_tag`:
+
+```bash
+head -20 CHANGELOG.md
+```
+
+If the latest `## [X.Y.Z]` in CHANGELOG.md matches the last tag version → "Changelog is up to date."
+If it doesn't → "⚠ Changelog may be out of date — last entry is vA.B.C but last tag is vX.Y.Z."
+
+### Done
+
+No further action. Display: "Status check complete. Run `/release` again to perform a release."
+
+---
+
+## Mode 5: Dry Run
+
+Simulates a Full Release without committing, tagging, or pushing. All changes are reverted at the end.
+
+### Step 0 — Version Selection
+
+Same as Mode 2 Step 0 — present auto-suggested version via AskUserQuestion. If monorepo, first ask if this is a repo-wide or plugin dry run using AskUserQuestion, then scope accordingly.
+
+### Phase 1 — Pre-flight (Parallel)
+
+Same as Mode 2 Phase 1 — launch all three agents. Display consolidated report.
+
+If ANY agent reports FAIL → report the failures. Do NOT stop here (this is a dry run — show what would fail).
+
+### Phase 2 — Simulated Preparation
+
+**Step 1 — Bump versions:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version>
+```
+
+(For plugin dry run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version> --plugin <plugin-name>`)
+
+**Step 2 — Generate changelog:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version>
+```
+
+(For plugin dry run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name>`)
+
+**Step 3 — Show what WOULD happen:**
+
+```bash
+git diff --stat
+```
+
+Display:
+- Files that would be committed
+- The changelog entry that would be added
+- Tag that would be created: `v<version>` (or `<plugin-name>/v<version>`)
+- GitHub release that would be created
+
+### Phase 3 — Revert
+
+```bash
+git checkout -- .
+```
+
+Display: **"Dry run complete. No changes were made to the repository."**
+
+If pre-flight had failures, remind: "⚠ Pre-flight issues were detected — see above. Fix them before a real release."
+
+---
+
+## Mode 6: Changelog Preview
+
+Generates and displays a changelog entry without modifying any files (unless the user opts in).
+
+### Step 1 — Version Selection
+
+Same as Mode 2 Step 0 — present auto-suggested version via AskUserQuestion.
+
+For monorepo: first ask if this is repo-wide or per-plugin using AskUserQuestion. If per-plugin, use suggest-version.sh with --plugin flag.
+
+### Step 2 — Generate Preview
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --preview
+```
+
+(For plugin: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name> --preview`)
+
+Display the full formatted changelog entry.
+
+### Step 3 — Save Option
+
+Use **AskUserQuestion**:
+- question: `"Save this changelog entry to CHANGELOG.md?"`
+- header: `"Save"`
+- options:
+  1. label: `"Yes, save it"`, description: `"Write the entry to CHANGELOG.md and stage the file"`
+  2. label: `"No, discard"`, description: `"Don't save — this was just a preview"`
+
+If "Yes":
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version>
+git add CHANGELOG.md
+```
+(For plugin: add `--plugin <plugin-name>` and stage `plugins/<plugin-name>/CHANGELOG.md`)
+
+Display: "Changelog entry saved and staged."
+
+If "No":
+Display: "Preview discarded. No changes made."
+
+---
+
 ## Rollback Suggestions
 
 If a failure occurs, suggest the appropriate rollback based on what phase failed:
 
 | Phase | What happened | Rollback command |
 |-------|--------------|-----------------|
+| Phase 0 (Detection) | Context gathering failed | Nothing to roll back. Check script paths and retry. |
 | Phase 1 (Pre-flight) | Checks failed before any changes | Nothing to roll back. Fix the reported issues and retry. |
 | Phase 2 (Preparation) | Version bump or changelog failed | `git checkout -- .` |
 | Phase 3 (Before push) | Commit, merge, or tag failed locally | `git tag -d v<version> && git checkout testing && git reset HEAD~1` |
