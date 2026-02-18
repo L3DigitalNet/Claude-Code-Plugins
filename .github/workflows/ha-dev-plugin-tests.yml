@@ -31,7 +31,7 @@ jobs:
           pip install pytest pytest-asyncio pytest-cov pyyaml
 
       - name: Run unit tests
-        run: python3 -m pytest tests/scripts/ -v -m unit --tb=short
+        run: python3 -m pytest tests/scripts/ -v -m unit --tb=short --cov=scripts --cov-report=term-missing
 
       - name: Run validation tests
         run: python3 -m pytest tests/validation/ -v --tb=short
@@ -127,7 +127,7 @@ jobs:
         ports:
           - 8123:8123
         options: >-
-          --health-cmd "curl -sf http://localhost:8123/api/ || exit 1"
+          --health-cmd "curl -sf http://localhost:8123/ -o /dev/null || exit 1"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 60

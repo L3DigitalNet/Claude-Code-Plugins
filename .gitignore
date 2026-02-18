@@ -4,7 +4,8 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
-package-lock.json
+# package-lock.json — track lockfiles in plugin subdirs for CI reproducibility
+# (use per-directory .gitignore to ignore specific ones if needed)
 
 # ─── Python (utility scripts) ────────────────────────────────────────────────
 __pycache__/
