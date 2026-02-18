@@ -77,6 +77,18 @@
       "category": "infrastructure",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/linux-sysadmin-mcp",
       "source": "./plugins/linux-sysadmin-mcp"
+    },
+    {
+      "name": "design-assistant",
+      "description": "Principled design document authoring and enforcement. /design-draft guides principles discovery and document generation. /design-review enforces principles across passes with auto-fix. Warm handoff transfers full context between commands.",
+      "version": "0.2.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "development",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/design-assistant",
+      "source": "./plugins/design-assistant"
     }
   ]
 }
