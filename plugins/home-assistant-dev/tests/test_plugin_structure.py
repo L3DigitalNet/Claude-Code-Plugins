@@ -358,62 +358,51 @@ class TestHooksValidation:
         assert isinstance(data, dict), "hooks/hooks.json root must be a JSON object"
 
     def test_hooks_scripts_exist(self, plugin_root: Path) -> None:
-        """Each hook's action references scripts that exist on disk.
-
-        Validates that validate-manifest.py, validate-strings.py, and
-        check-patterns.py all exist in the scripts/ directory.
-        """
+        """Each hook's command references scripts that exist on disk."""
         hooks_path = plugin_root / "hooks" / "hooks.json"
         data = json.loads(hooks_path.read_text(encoding="utf-8"))
 
-        hooks = data.get("hooks", [])
-        assert len(hooks) > 0, "hooks/hooks.json has no hooks defined"
+        hooks_record = data.get("hooks", {})
+        assert isinstance(hooks_record, dict), "hooks must be a record keyed by event name"
+        assert len(hooks_record) > 0, "hooks/hooks.json has no hooks defined"
 
-        for hook in hooks:
-            action = hook.get("action", {})
-            args = action.get("args", [])
-
-            # Extract script filenames from args that reference ${pluginDir}/scripts/
-            for arg in args:
-                if isinstance(arg, str) and "${pluginDir}/scripts/" in arg:
-                    # Extract the script name from the template variable path
-                    script_name = arg.replace("${pluginDir}/scripts/", "")
-                    script_path = plugin_root / "scripts" / script_name
-                    assert script_path.is_file(), (
-                        f"Hook '{hook.get('name')}' references script "
-                        f"'{script_name}' but scripts/{script_name} does not exist"
-                    )
+        for event_name, matchers in hooks_record.items():
+            for matcher_entry in matchers:
+                for hook_def in matcher_entry.get("hooks", []):
+                    cmd = hook_def.get("command", "")
+                    # Extract script path from command string
+                    if "${CLAUDE_PLUGIN_ROOT}/scripts/" in cmd:
+                        script_name = cmd.split("${CLAUDE_PLUGIN_ROOT}/scripts/")[-1]
+                        script_path = plugin_root / "scripts" / script_name
+                        assert script_path.is_file(), (
+                            f"Hook '{event_name}' references script "
+                            f"'{script_name}' but scripts/{script_name} does not exist"
+                        )
 
         # Also verify all expected hook scripts exist independently
         for script_name in EXPECTED_HOOK_SCRIPTS:
             script_path = plugin_root / "scripts" / script_name
             assert script_path.is_file(), f"Expected hook script scripts/{script_name} not found"
 
-    def test_hooks_have_triggers(self, plugin_root: Path) -> None:
-        """Each hook has trigger.event, trigger.tools, and trigger.filePatterns."""
+    def test_hooks_have_matchers(self, plugin_root: Path) -> None:
+        """Each hook event has matcher entries with tool patterns and hook definitions."""
         hooks_path = plugin_root / "hooks" / "hooks.json"
         data = json.loads(hooks_path.read_text(encoding="utf-8"))
 
-        hooks = data.get("hooks", [])
-        for hook in hooks:
-            name = hook.get("name", "<unnamed>")
-            trigger = hook.get("trigger", {})
+        hooks_record = data.get("hooks", {})
+        assert isinstance(hooks_record, dict), "hooks must be a record keyed by event name"
 
-            assert "event" in trigger, (
-                f"Hook '{name}' missing trigger.event"
+        for event_name, matchers in hooks_record.items():
+            assert isinstance(matchers, list) and len(matchers) > 0, (
+                f"Hook event '{event_name}' must have at least one matcher entry"
             )
-            assert "tools" in trigger, (
-                f"Hook '{name}' missing trigger.tools"
-            )
-            assert "filePatterns" in trigger, (
-                f"Hook '{name}' missing trigger.filePatterns"
-            )
-            assert isinstance(trigger["tools"], list) and len(trigger["tools"]) > 0, (
-                f"Hook '{name}' trigger.tools must be a non-empty list"
-            )
-            assert isinstance(trigger["filePatterns"], list) and len(trigger["filePatterns"]) > 0, (
-                f"Hook '{name}' trigger.filePatterns must be a non-empty list"
-            )
+            for matcher_entry in matchers:
+                assert "matcher" in matcher_entry, (
+                    f"Hook event '{event_name}' entry missing 'matcher' field"
+                )
+                assert "hooks" in matcher_entry, (
+                    f"Hook event '{event_name}' entry missing 'hooks' field"
+                )
 
 
 # ---------------------------------------------------------------------------
