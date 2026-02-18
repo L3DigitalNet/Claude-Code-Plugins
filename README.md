@@ -1,6 +1,8 @@
 # Claude Code Plugins Marketplace
 
-A curated collection of Claude Code plugins for enhanced development workflows, featuring agent orchestration, Home Assistant integration development, and automation capabilities.
+A curated collection of Claude Code plugins for enhanced development workflows,
+featuring agent orchestration, Home Assistant integration development, and GitHub
+repository maintenance.
 
 ## Installation
 
@@ -20,9 +22,11 @@ Or using the full URL:
 
 ### Agent Orchestrator
 
-**General-purpose agent team orchestration** with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks.
+**General-purpose agent team orchestration** with automatic context management, file
+isolation via git worktrees, and mechanical enforcement hooks.
 
 **Features:**
+
 - Triage gate for simple vs complex tasks
 - Parallel execution via agent teams (or sequential fallback)
 - Git worktree isolation for concurrent work
@@ -30,18 +34,24 @@ Or using the full URL:
 - Quality gate with integration checking
 
 **Install:**
+
 ```bash
 /plugin install agent-orchestrator@claude-code-plugins
 ```
 
-**Learn more:** [plugins/agent-orchestrator/README.md](plugins/agent-orchestrator/README.md)
+**Learn more:**
+[plugins/agent-orchestrator/README.md](plugins/agent-orchestrator/README.md)
 
 ### Home Assistant Dev
 
-**Comprehensive Home Assistant integration development toolkit** with 19 AI skills, an MCP server for live HA connections, automated validation, example integrations, and project templates.
+**Comprehensive Home Assistant integration development toolkit** with 19 AI skills, an
+MCP server for live HA connections, automated validation, example integrations, and
+project templates.
 
 **Features:**
-- 19 context-aware skills covering architecture, config flows, coordinators, entities, testing, and more
+
+- 19 context-aware skills covering architecture, config flows, coordinators, entities,
+  testing, and more
 - 3 specialized agents (development, review, debugging)
 - MCP server with 12 tools for live HA connection and documentation search
 - 5 validation scripts with PostToolUse hook enforcement
@@ -50,25 +60,59 @@ Or using the full URL:
 - Full Integration Quality Scale coverage (all 52 rules)
 
 **Install:**
+
 ```bash
 /plugin install home-assistant-dev@claude-code-plugins
 ```
 
-**Learn more:** [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
+**Learn more:**
+[plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
+
+### GitHub Repo Manager
+
+**Conversational GitHub repository maintenance** — assess and fix repo health
+interactively, with owner approval at every step.
+
+**Features:**
+
+- Wiki sync — keeps wiki pages in sync with in-repo docs and code
+- Community health — audits and updates CONTRIBUTING, SECURITY, CODE_OF_CONDUCT,
+  issue/PR templates
+- PR triage — conflict detection, staleness checks, review summaries
+- Issue triage — labels, assignees, staleness, linked PRs
+- Release health — unreleased commits, changelog drift, draft releases
+- Security posture — Dependabot alerts, code scanning, secret scanning
+- Dependency audit — outdated packages, license concerns
+- Notifications & discussions — triage and summarise
+- Cross-repo mode — scan all accessible repos for a specific concern and fix in batch
+- Structured maintenance report generated at session end
+
+**Install:**
+
+```bash
+/plugin install github-repo-manager@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/github-repo-manager/docs/USAGE.md](plugins/github-repo-manager/docs/USAGE.md)
 
 ## Plugin Development
 
-This repository also serves as a development workspace for creating new plugins. See [CLAUDE.md](CLAUDE.md) for architectural guidance and [docs/](docs/) for comprehensive documentation.
+This repository also serves as a development workspace for creating new plugins. See
+[CLAUDE.md](CLAUDE.md) for architectural guidance and [docs/](docs/) for comprehensive
+documentation.
 
 ### Quick Start
 
 1. **Create a new plugin:**
+
    ```bash
    mkdir -p plugins/my-plugin/.claude-plugin
    cd plugins/my-plugin
    ```
 
 2. **Add manifest:**
+
    ```json
    {
      "name": "my-plugin",
@@ -78,6 +122,7 @@ This repository also serves as a development workspace for creating new plugins.
    ```
 
 3. **Test locally:**
+
    ```bash
    claude --plugin-dir ./plugins/my-plugin
    ```
@@ -102,7 +147,8 @@ Claude-Code-Plugins/
 │   └── marketplace.json      # Marketplace catalog
 ├── plugins/                   # All plugin implementations
 │   ├── agent-orchestrator/    # Agent team orchestration plugin
-│   └── home-assistant-dev/     # Home Assistant integration dev toolkit
+│   ├── home-assistant-dev/    # Home Assistant integration dev toolkit
+│   └── github-repo-manager/   # Conversational GitHub repo maintenance
 ├── scripts/
 │   └── validate-marketplace.sh # Marketplace validation
 ├── docs/                      # Comprehensive documentation
@@ -124,10 +170,12 @@ To add a plugin to this marketplace:
 7. When ready to deploy, merge `testing` → `main`
 
 **Branch workflow:**
+
 - **`main`** - Protected production branch (GitHub blocks direct pushes)
 - **`testing`** - Development branch (direct commits allowed)
 
 **Deployment:**
+
 ```bash
 git checkout testing
 ./scripts/validate-marketplace.sh
@@ -140,6 +188,7 @@ git checkout testing
 See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflow documentation.
 
 **Marketplace versioning:**
+
 - **Major** (2.0.0) - Breaking changes to marketplace structure
 - **Minor** (1.1.0) - New plugins added
 - **Patch** (1.0.1) - Plugin updates, metadata fixes
