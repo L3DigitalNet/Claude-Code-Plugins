@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto';
 import { run, runOrThrow } from '../shared/exec.js';
+import { PTHError, PTHErrorCode } from '../shared/errors.js';
+import { warn } from '../shared/logger.js';
 import type { FixCommitTrailers } from './types.js';
 
 export function generateSessionBranch(pluginName: string): string {
@@ -30,7 +32,13 @@ export function parseTrailers(commitMessage: string): Record<string, string> {
 }
 
 export async function createBranch(repoPath: string, branchName: string): Promise<void> {
-  await runOrThrow('git', ['checkout', '-b', branchName], { cwd: repoPath });
+  try {
+    await runOrThrow('git', ['checkout', '-b', branchName], { cwd: repoPath });
+  } catch (err) {
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to create branch: ${branchName}`, {
+      cause: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export async function checkBranchExists(repoPath: string, branchName: string): Promise<boolean> {
@@ -39,11 +47,20 @@ export async function checkBranchExists(repoPath: string, branchName: string): P
 }
 
 export async function addWorktree(repoPath: string, worktreePath: string, branch: string): Promise<void> {
-  await runOrThrow('git', ['worktree', 'add', worktreePath, branch], { cwd: repoPath });
+  try {
+    await runOrThrow('git', ['worktree', 'add', worktreePath, branch], { cwd: repoPath });
+  } catch (err) {
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to add worktree at: ${worktreePath}`, {
+      cause: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export async function removeWorktree(repoPath: string, worktreePath: string): Promise<void> {
-  await run('git', ['worktree', 'remove', '--force', worktreePath], { cwd: repoPath });
+  const result = await run('git', ['worktree', 'remove', '--force', worktreePath], { cwd: repoPath });
+  if (result.exitCode !== 0) {
+    warn(`git worktree remove failed (exit ${result.exitCode}): ${result.stderr}`);
+  }
 }
 
 export async function pruneWorktrees(repoPath: string): Promise<void> {
@@ -54,21 +71,37 @@ export async function commitAll(
   worktreePath: string,
   message: string
 ): Promise<string> {
-  await run('git', ['add', '-A'], { cwd: worktreePath });
-  const result = await runOrThrow('git', ['commit', '-m', message], { cwd: worktreePath });
-  // extract commit hash from output: "[branch abc1234] ..."
-  const match = result.stdout.match(/\[[\w/]+ ([a-f0-9]+)\]/);
-  return match?.[1] ?? '';
+  try {
+    await run('git', ['add', '-A'], { cwd: worktreePath });
+    const result = await runOrThrow('git', ['commit', '-m', message], { cwd: worktreePath });
+    // extract commit hash from output: "[branch abc1234] ..."
+    const match = result.stdout.match(/\[[\w/.-]+ ([a-f0-9]+)\]/);
+    if (!match?.[1]) {
+      throw new PTHError(PTHErrorCode.GIT_ERROR, `Could not extract commit hash from git output: ${result.stdout}`);
+    }
+    return match[1];
+  } catch (err) {
+    if (err instanceof PTHError) throw err;
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to commit changes in: ${worktreePath}`, {
+      cause: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export async function getLog(
   worktreePath: string,
   options?: { since?: string; maxCount?: number }
 ): Promise<string> {
-  const args = ['log', '--format=%H %s%n%b'];
-  if (options?.maxCount) args.push(`-n${options.maxCount}`);
-  const result = await runOrThrow('git', args, { cwd: worktreePath });
-  return result.stdout;
+  try {
+    const args = ['log', '--format=%H %s%n%b'];
+    if (options?.maxCount) args.push(`-n${options.maxCount}`);
+    const result = await runOrThrow('git', args, { cwd: worktreePath });
+    return result.stdout;
+  } catch (err) {
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to get git log in: ${worktreePath}`, {
+      cause: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export async function getDiff(
@@ -83,5 +116,11 @@ export async function revertCommit(
   worktreePath: string,
   commitHash: string
 ): Promise<void> {
-  await runOrThrow('git', ['revert', '--no-edit', commitHash], { cwd: worktreePath });
+  try {
+    await runOrThrow('git', ['revert', '--no-edit', commitHash], { cwd: worktreePath });
+  } catch (err) {
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to revert commit: ${commitHash}`, {
+      cause: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
