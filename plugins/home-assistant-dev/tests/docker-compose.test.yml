@@ -1,0 +1,206 @@
+# Containerized full test suite for HA Dev Plugin
+#
+# Spins up Home Assistant with demo integration, runs onboarding,
+# then executes all MCP e2e tests automatically.
+#
+# Usage:
+#   cd plugins/home-assistant-dev/tests
+#   docker compose -f docker-compose.test.yml up --abort-on-container-exit
+#   docker compose -f docker-compose.test.yml down -v
+#
+# Or with podman:
+#   podman compose -f docker-compose.test.yml up --abort-on-container-exit
+#   podman compose -f docker-compose.test.yml down -v
+
+services:
+  homeassistant:
+    container_name: ha-test-instance
+    image: ghcr.io/home-assistant/home-assistant:stable
+    volumes:
+      - ha-test-config:/config
+    ports:
+      - "18123:8123"  # Use non-standard port to avoid conflicts
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8123/api/"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 30s
+    environment:
+      - TZ=America/New_York
+    restart: "no"
+
+  ha-config-init:
+    # Writes configuration.yaml before HA starts reading it
+    image: busybox:latest
+    volumes:
+      - ha-test-config:/config
+    command: >
+      sh -c '
+        cat > /config/configuration.yaml << EOF
+        homeassistant:
+          name: HA Dev Plugin Test
+          unit_system: metric
+          time_zone: America/New_York
+        demo:
+        api:
+        default_config:
+        logger:
+          default: info
+          logs:
+            homeassistant.components.demo: debug
+        EOF
+        echo "HA config written"
+      '
+    restart: "no"
+
+  test-runner:
+    image: node:20-slim
+    depends_on:
+      homeassistant:
+        condition: service_healthy
+    volumes:
+      - ../:/plugin:ro
+    working_dir: /plugin
+    environment:
+      - HA_URL=http://homeassistant:8123
+      - HA_TEST_PORT=8123
+      - NODE_OPTIONS=--experimental-vm-modules
+    entrypoint: >
+      sh -c '
+        set -e
+        echo "========================================="
+        echo "  HA Dev Plugin - Containerized Tests"
+        echo "========================================="
+        echo ""
+
+        HA_HOST="homeassistant"
+        HA_PORT="8123"
+        HA_BASE="http://$${HA_HOST}:$${HA_PORT}"
+
+        # Install test dependencies
+        apt-get update -qq && apt-get install -y -qq curl python3 python3-pip > /dev/null 2>&1
+        pip3 install aiohttp --break-system-packages -q 2>/dev/null || pip3 install aiohttp -q
+
+        echo "=== Step 1: Complete HA Onboarding ==="
+
+        # Create owner account
+        echo -n "Creating owner account... "
+        ONBOARD_RESP=$$(curl -sf -X POST "$${HA_BASE}/api/onboarding/users" \
+          -H "Content-Type: application/json" \
+          -d "{\"client_id\":\"$${HA_BASE}/\",\"name\":\"Test\",\"username\":\"test\",\"password\":\"test1234\",\"language\":\"en\"}")
+        AUTH_CODE=$$(echo "$$ONBOARD_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"auth_code\"])")
+        echo "done"
+
+        # Exchange auth code for tokens
+        echo -n "Exchanging auth code... "
+        TOKEN_RESP=$$(curl -sf -X POST "$${HA_BASE}/auth/token" \
+          -d "grant_type=authorization_code&code=$${AUTH_CODE}&client_id=$${HA_BASE}/")
+        ACCESS_TOKEN=$$(echo "$$TOKEN_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"access_token\"])")
+        echo "done"
+
+        # Complete remaining onboarding steps
+        echo -n "Completing onboarding... "
+        curl -sf -X POST "$${HA_BASE}/api/onboarding/core_config" \
+          -H "Authorization: Bearer $${ACCESS_TOKEN}" \
+          -H "Content-Type: application/json" -d "{}" > /dev/null
+        curl -sf -X POST "$${HA_BASE}/api/onboarding/analytics" \
+          -H "Authorization: Bearer $${ACCESS_TOKEN}" \
+          -H "Content-Type: application/json" -d "{}" > /dev/null
+        curl -sf -X POST "$${HA_BASE}/api/onboarding/integration" \
+          -H "Authorization: Bearer $${ACCESS_TOKEN}" \
+          -H "Content-Type: application/json" \
+          -d "{\"client_id\":\"$${HA_BASE}/\",\"redirect_uri\":\"$${HA_BASE}/\"}" > /dev/null
+        echo "done"
+
+        # Create LLAT via WebSocket
+        echo -n "Creating long-lived access token... "
+        LLAT=$$(python3 -c "
+        import asyncio, aiohttp, json
+        async def create_llat():
+            async with aiohttp.ClientSession() as session:
+                async with session.ws_connect(\"ws://$${HA_HOST}:$${HA_PORT}/api/websocket\") as ws:
+                    await ws.receive_json()
+                    await ws.send_json({\"type\": \"auth\", \"access_token\": \"$${ACCESS_TOKEN}\"})
+                    await ws.receive_json()
+                    await ws.send_json({
+                        \"id\": 1,
+                        \"type\": \"auth/long_lived_access_token\",
+                        \"client_name\": \"HA Test Runner\",
+                        \"lifespan\": 365
+                    })
+                    msg = await ws.receive_json()
+                    print(msg[\"result\"])
+        asyncio.run(create_llat())
+        ")
+        echo "done"
+
+        # Write MCP config
+        mkdir -p /root/.config/ha-dev-mcp
+        cat > /root/.config/ha-dev-mcp/config.json << EOF
+        {
+          "homeAssistant": {
+            "url": "$${HA_BASE}",
+            "token": "$${LLAT}"
+          },
+          "safety": {
+            "allowServiceCalls": true,
+            "requireDryRun": false,
+            "blockedServices": [
+              "homeassistant.restart", "homeassistant.stop",
+              "homeassistant.reload_all",
+              "recorder.purge", "recorder.disable",
+              "hassio.host_shutdown"
+            ]
+          },
+          "features": {
+            "docs": true,
+            "validation": true
+          }
+        }
+        EOF
+
+        # Verify setup
+        echo -n "Verifying HA connection... "
+        HA_VER=$$(curl -sf "$${HA_BASE}/api/config" \
+          -H "Authorization: Bearer $${LLAT}" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"version\"])")
+        echo "HA v$${HA_VER}"
+
+        # Wait for entity subscription to populate
+        echo "Waiting for demo entities to load..."
+        sleep 3
+
+        echo ""
+        echo "=== Step 2: Install MCP Server Dependencies ==="
+        cd /plugin/mcp-server
+        npm ci --ignore-scripts 2>&1 | tail -1
+
+        echo ""
+        echo "=== Step 3: Run MCP Unit Tests ==="
+        npm test 2>&1 || true
+
+        echo ""
+        echo "=== Step 4: Run MCP E2E Tests ==="
+        cd /plugin
+
+        echo "--- REST API Tests ---"
+        node tests/e2e/test-mcp-rest.mjs 2>&1 || REST_FAIL=1
+
+        echo ""
+        echo "--- WebSocket Tests ---"
+        node tests/e2e/test-mcp-websocket.mjs 2>&1 || WS_FAIL=1
+
+        echo ""
+        echo "========================================="
+        if [ "$${REST_FAIL:-0}" = "1" ] || [ "$${WS_FAIL:-0}" = "1" ]; then
+          echo "  SOME TESTS FAILED"
+          exit 1
+        else
+          echo "  ALL TESTS PASSED"
+          exit 0
+        fi
+      '
+    restart: "no"
+
+volumes:
+  ha-test-config:
