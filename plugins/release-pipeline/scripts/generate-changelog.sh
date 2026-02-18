@@ -3,7 +3,7 @@ set -euo pipefail
 
 # generate-changelog.sh — Generate a Keep a Changelog entry from git commits.
 #
-# Usage: generate-changelog.sh <repo-path> <new-version>
+# Usage: generate-changelog.sh <repo-path> <new-version> [--plugin <name>]
 # Output: the formatted changelog entry (stdout)
 # Side effect: prepends entry to CHANGELOG.md (creates if missing)
 # Exit:   0 = success, 1 = error
@@ -17,12 +17,22 @@ set -euo pipefail
 # ---------- Argument handling ----------
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: generate-changelog.sh <repo-path> <new-version>" >&2
+  echo "Usage: generate-changelog.sh <repo-path> <new-version> [--plugin <name>]" >&2
   exit 1
 fi
 
 REPO="$1"
 VERSION="$2"
+
+# ---------- Optional --plugin flag ----------
+PLUGIN=""
+if [[ $# -ge 4 && "$3" == "--plugin" ]]; then
+  PLUGIN="$4"
+  if [[ "$PLUGIN" =~ [/\\] ]]; then
+    echo "Error: plugin name must not contain path separators" >&2
+    exit 1
+  fi
+fi
 
 # Strip leading 'v' if present (v1.2.0 -> 1.2.0).
 VERSION="${VERSION#v}"
@@ -38,14 +48,26 @@ TODAY="$(date +%Y-%m-%d)"
 
 # ---------- Collect commits ----------
 
-# Find the last tag. If none exists, use all commits.
 last_tag=""
-if git -C "$REPO" describe --tags --abbrev=0 &>/dev/null; then
-  last_tag="$(git -C "$REPO" describe --tags --abbrev=0)"
+path_filter=""
+
+if [[ -n "$PLUGIN" ]]; then
+  # Plugin mode: find the last plugin-name/v* tag and filter by plugin path
+  last_tag=$(git -C "$REPO" tag -l "${PLUGIN}/v*" --sort=-v:refname | head -1) || true
+  path_filter="plugins/${PLUGIN}/"
+else
+  # Single-repo mode: find the last v* tag
+  if git -C "$REPO" describe --tags --abbrev=0 &>/dev/null; then
+    last_tag="$(git -C "$REPO" describe --tags --abbrev=0)"
+  fi
 fi
 
-if [[ -n "$last_tag" ]]; then
+if [[ -n "$last_tag" && -n "$path_filter" ]]; then
+  commits="$(git -C "$REPO" log "${last_tag}..HEAD" --oneline --no-merges -- "$path_filter")"
+elif [[ -n "$last_tag" ]]; then
   commits="$(git -C "$REPO" log "${last_tag}..HEAD" --oneline --no-merges)"
+elif [[ -n "$path_filter" ]]; then
+  commits="$(git -C "$REPO" log --oneline --no-merges -- "$path_filter")"
 else
   commits="$(git -C "$REPO" log --oneline --no-merges)"
 fi
@@ -101,7 +123,11 @@ printf '%s' "$entry"
 
 # ---------- Prepend to CHANGELOG.md ----------
 
-changelog="$REPO/CHANGELOG.md"
+if [[ -n "$PLUGIN" ]]; then
+  changelog="$REPO/plugins/$PLUGIN/CHANGELOG.md"
+else
+  changelog="$REPO/CHANGELOG.md"
+fi
 
 if [[ -f "$changelog" ]]; then
   # Insert the new entry before the first existing ## line.
