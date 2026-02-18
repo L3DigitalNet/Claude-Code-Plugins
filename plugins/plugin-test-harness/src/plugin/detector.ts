@@ -96,15 +96,15 @@ export async function detectBuildSystem(pluginPath: string): Promise<BuildSystem
 export async function readMcpConfig(pluginPath: string): Promise<McpConfig | null> {
   const mcpJsonPath = path.join(pluginPath, '.mcp.json');
 
-  // If file doesn't exist, return null (not an MCP plugin)
+  // Read file directly — return null only on ENOENT, throw on other errors
+  let raw: string;
   try {
-    await fs.access(mcpJsonPath);
-  } catch {
-    return null;
+    raw = await fs.readFile(mcpJsonPath, 'utf-8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw err;
   }
 
-  // File exists — parse it, throwing on malformed content
-  const raw = await fs.readFile(mcpJsonPath, 'utf-8');
   let config: Record<string, { command: string; args: string[]; env?: Record<string, string> }>;
   try {
     config = JSON.parse(raw) as typeof config;
