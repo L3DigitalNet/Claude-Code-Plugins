@@ -26,7 +26,7 @@ export async function detectPluginMode(pluginPath: string): Promise<PluginMode> 
     return 'plugin';
   } catch {
     throw new PTHError(
-      PTHErrorCode.PLUGIN_NOT_FOUND,
+      PTHErrorCode.INVALID_PLUGIN,
       `Not a valid plugin: no .mcp.json or .claude-plugin/ found at ${pluginPath}`
     );
   }
@@ -63,6 +63,27 @@ export async function detectBuildSystem(pluginPath: string): Promise<BuildSystem
     };
   }
 
+  // Standalone TypeScript project (tsconfig.json without package.json)
+  if (await fileExists(path.join(pluginPath, 'tsconfig.json'))) {
+    return {
+      installCommand: null,
+      buildCommand: ['npx', 'tsc'],
+      startCommand: null,
+      language: 'typescript',
+    };
+  }
+
+  // Shell plugin (Makefile or .sh entry points)
+  if (await fileExists(path.join(pluginPath, 'Makefile')) ||
+      await fileExists(path.join(pluginPath, 'install.sh'))) {
+    return {
+      installCommand: null,
+      buildCommand: null,
+      startCommand: null,
+      language: 'shell',
+    };
+  }
+
   // No recognized build system
   return {
     installCommand: null,
@@ -74,17 +95,32 @@ export async function detectBuildSystem(pluginPath: string): Promise<BuildSystem
 
 export async function readMcpConfig(pluginPath: string): Promise<McpConfig | null> {
   const mcpJsonPath = path.join(pluginPath, '.mcp.json');
+
+  // If file doesn't exist, return null (not an MCP plugin)
   try {
-    const raw = await fs.readFile(mcpJsonPath, 'utf-8');
-    const config = JSON.parse(raw) as Record<string, { command: string; args: string[]; env?: Record<string, string> }>;
-    const entries = Object.entries(config);
-    if (entries.length === 0) return null;
-    const [serverName, serverConfig] = entries[0];
-    if (!serverName || !serverConfig) return null;
-    return { serverName, ...serverConfig };
+    await fs.access(mcpJsonPath);
   } catch {
     return null;
   }
+
+  // File exists — parse it, throwing on malformed content
+  const raw = await fs.readFile(mcpJsonPath, 'utf-8');
+  let config: Record<string, { command: string; args: string[]; env?: Record<string, string> }>;
+  try {
+    config = JSON.parse(raw) as typeof config;
+  } catch (err) {
+    throw new PTHError(
+      PTHErrorCode.INVALID_PLUGIN,
+      `Failed to parse .mcp.json at ${mcpJsonPath}: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+
+  const entry = Object.entries(config)[0];
+  if (!entry) {
+    throw new PTHError(PTHErrorCode.INVALID_PLUGIN, `.mcp.json at ${mcpJsonPath} has no server entries`);
+  }
+  const [serverName, serverConfig] = entry;
+  return { serverName, ...serverConfig };
 }
 
 export async function detectPluginName(pluginPath: string): Promise<string> {
