@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "Iterative live testing harness for Claude Code plugins and MCP servers",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
-    "test": "jest",
-    "test:unit": "jest --testPathPattern=test/unit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=test/unit",
     "lint": "eslint src test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.0",
@@ -24,6 +25,7 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.0.0"
   }
 }
