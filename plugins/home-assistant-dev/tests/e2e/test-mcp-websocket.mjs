@@ -6,7 +6,8 @@ import { writeFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
-const MCP_DIST = "/home/chris/projects/Claude-Code-Plugins/plugins/home-assistant-dev/mcp-server/dist";
+// Resolve MCP dist relative to this test file
+const MCP_DIST = join(new URL(".", import.meta.url).pathname, "../../mcp-server/dist");
 
 const results = [];
 function record(name, pass, detail = "") {

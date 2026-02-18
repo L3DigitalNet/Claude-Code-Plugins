@@ -17,12 +17,12 @@ set -euo pipefail
 
 REPO="${1:-.}"
 
-# Resolve to absolute path and verify it exists.
-REPO="$(cd "$REPO" && pwd)"
+# Verify directory exists, then resolve to absolute path.
 if [[ ! -d "$REPO" ]]; then
   echo "Error: directory '$REPO' does not exist" >&2
   exit 1
 fi
+REPO="$(cd "$REPO" && pwd)"
 
 # ---------- 1. Python pytest ----------
 if [[ -f "$REPO/pyproject.toml" ]]; then
@@ -49,18 +49,18 @@ if [[ -f "$REPO/package.json" ]]; then
   # Use python or node to parse JSON; fall back to grep.
   has_test=false
   if command -v python3 &>/dev/null; then
-    has_test=$(python3 -c "
-import json, sys
+    has_test=$(PACKAGE_JSON="$REPO/package.json" python3 -c "
+import json, sys, os
 try:
-    d = json.load(open('$REPO/package.json'))
+    d = json.load(open(os.environ['PACKAGE_JSON']))
     print('true' if d.get('scripts',{}).get('test') else 'false')
 except Exception:
     print('false')
 ")
   elif command -v node &>/dev/null; then
-    has_test=$(node -e "
+    has_test=$(PACKAGE_JSON="$REPO/package.json" node -e "
 try {
-  const p = require('$REPO/package.json');
+  const p = require(process.env.PACKAGE_JSON);
   console.log(p.scripts && p.scripts.test ? 'true' : 'false');
 } catch { console.log('false'); }
 ")
@@ -98,32 +98,11 @@ if [[ -f "$REPO/go.mod" ]]; then
 fi
 
 # ---------- 6. Fallback: CLAUDE.md ----------
+# Extract the actual test command the user documented (preserving flags/args).
 if [[ -f "$REPO/CLAUDE.md" ]]; then
-  claude_md="$REPO/CLAUDE.md"
-
-  # Search for common test command patterns (first match wins).
-  if grep -qE '\bpytest\b' "$claude_md" 2>/dev/null; then
-    echo "pytest --tb=short -q"
-    exit 0
-  fi
-  if grep -qE '\bnpm test\b' "$claude_md" 2>/dev/null; then
-    echo "npm test"
-    exit 0
-  fi
-  if grep -qE '\bcargo test\b' "$claude_md" 2>/dev/null; then
-    echo "cargo test"
-    exit 0
-  fi
-  if grep -qE '\bmake test\b' "$claude_md" 2>/dev/null; then
-    echo "make test"
-    exit 0
-  fi
-  if grep -qE '\bgo test\b' "$claude_md" 2>/dev/null; then
-    echo "go test ./..."
-    exit 0
-  fi
-  if grep -qE '\bbun test\b' "$claude_md" 2>/dev/null; then
-    echo "bun test"
+  cmd=$(grep -oP '(?:pytest|npm test|cargo test|make test|go test|bun test)[^\n`]*' "$REPO/CLAUDE.md" | head -1)
+  if [[ -n "$cmd" ]]; then
+    echo "$cmd"
     exit 0
   fi
 fi
