@@ -3,26 +3,40 @@ set -euo pipefail
 
 # bump-version.sh — Find and replace version strings across common project files.
 #
-# Usage: bump-version.sh <repo-path> <new-version>
+# Usage: bump-version.sh <repo-path> <new-version> [--plugin <name>]
 # Output: list of files changed (stdout)
 # Exit:   0 = at least one file updated, 1 = no version strings found or bad args
 #
-# Version targets (in order):
+# Version targets (single-repo mode, no --plugin):
 #   1. pyproject.toml          — version = "X.Y.Z"
 #   2. package.json            — "version": "X.Y.Z"
 #   3. Cargo.toml              — version = "X.Y.Z" (first occurrence only)
 #   4. .claude-plugin/plugin.json — "version": "X.Y.Z"
 #   5. __init__.py (recursive) — __version__ = "X.Y.Z"
+#
+# Version targets (monorepo mode, --plugin <name>):
+#   6. plugins/<name>/.claude-plugin/plugin.json
+#   7. .claude-plugin/marketplace.json (matching entry)
 
 # ---------- Argument handling ----------
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: bump-version.sh <repo-path> <new-version>" >&2
+  echo "Usage: bump-version.sh <repo-path> <new-version> [--plugin <name>]" >&2
   exit 1
 fi
 
 REPO="$1"
 VERSION="$2"
+
+# ---------- Optional --plugin flag ----------
+PLUGIN=""
+if [[ $# -ge 4 && "$3" == "--plugin" ]]; then
+  PLUGIN="$4"
+  if [[ "$PLUGIN" =~ [/\\] ]]; then
+    echo "Error: plugin name must not contain path separators" >&2
+    exit 1
+  fi
+fi
 
 # Strip leading 'v' if present (v1.2.0 -> 1.2.0).
 VERSION="${VERSION#v}"
@@ -59,6 +73,9 @@ bump_file() {
     updated=$((updated + 1))
   fi
 }
+
+# ---------- Sections 1-5: single-repo mode (skip when --plugin is set) ----------
+if [[ -z "$PLUGIN" ]]; then
 
 # ---------- 1. pyproject.toml ----------
 bump_file "$REPO/pyproject.toml" \
@@ -97,6 +114,46 @@ if command -v find &>/dev/null; then
     -path '*/.venv' -prune -o \
     -path '*/node_modules' -prune -o \
     -name '__init__.py' -print0)
+fi
+
+fi  # end single-repo mode
+
+# ---------- 6. Monorepo plugin mode ----------
+if [[ -n "$PLUGIN" ]]; then
+  # 6a. Bump plugins/<name>/.claude-plugin/plugin.json
+  bump_file "$REPO/plugins/$PLUGIN/.claude-plugin/plugin.json" \
+    "s/(\"version\"[[:space:]]*:[[:space:]]*\").*(\")/\1${VERSION}\2/"
+
+  # Also try manifest.json (some plugins use this name)
+  bump_file "$REPO/plugins/$PLUGIN/.claude-plugin/manifest.json" \
+    "s/(\"version\"[[:space:]]*:[[:space:]]*\").*(\")/\1${VERSION}\2/"
+
+  # 6b. Bump the matching entry in marketplace.json
+  MARKETPLACE="$REPO/.claude-plugin/marketplace.json"
+  if [[ -f "$MARKETPLACE" ]]; then
+    local_file="$MARKETPLACE"
+    before=$(md5sum "$local_file")
+
+    # Use python3 for precise JSON manipulation (sed can't target specific array entries)
+    python3 -c "
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+for p in data.get('plugins', []):
+    if p['name'] == sys.argv[2]:
+        p['version'] = sys.argv[3]
+        break
+with open(sys.argv[1], 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" "$local_file" "$PLUGIN" "$VERSION"
+
+    after=$(md5sum "$local_file")
+    if [[ "$before" != "$after" ]]; then
+      echo "Updated: $local_file (plugin: $PLUGIN)"
+      updated=$((updated + 1))
+    fi
+  fi
 fi
 
 # ---------- Summary ----------
