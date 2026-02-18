@@ -3,9 +3,9 @@ set -euo pipefail
 
 # generate-changelog.sh — Generate a Keep a Changelog entry from git commits.
 #
-# Usage: generate-changelog.sh <repo-path> <new-version> [--plugin <name>]
+# Usage: generate-changelog.sh <repo-path> <new-version> [--plugin <name>] [--preview]
 # Output: the formatted changelog entry (stdout)
-# Side effect: prepends entry to CHANGELOG.md (creates if missing)
+# Side effect: prepends entry to CHANGELOG.md (creates if missing; skipped with --preview)
 # Exit:   0 = success, 1 = error
 #
 # Categorizes commits by conventional-commit prefix:
@@ -17,7 +17,7 @@ set -euo pipefail
 # ---------- Argument handling ----------
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: generate-changelog.sh <repo-path> <new-version> [--plugin <name>]" >&2
+  echo "Usage: generate-changelog.sh <repo-path> <new-version> [--plugin <name>] [--preview]" >&2
   exit 1
 fi
 
@@ -33,6 +33,15 @@ if [[ $# -ge 4 && "$3" == "--plugin" ]]; then
     exit 1
   fi
 fi
+
+# ---------- Optional --preview flag ----------
+PREVIEW=false
+for arg in "$@"; do
+  if [[ "$arg" == "--preview" ]]; then
+    PREVIEW=true
+    break
+  fi
+done
 
 # Strip leading 'v' if present (v1.2.0 -> 1.2.0).
 VERSION="${VERSION#v}"
@@ -121,7 +130,11 @@ fi
 
 printf '%s' "$entry"
 
-# ---------- Prepend to CHANGELOG.md ----------
+# ---------- Prepend to CHANGELOG.md (skip in preview mode) ----------
+
+if [[ "$PREVIEW" == true ]]; then
+  exit 0
+fi
 
 if [[ -n "$PLUGIN" ]]; then
   changelog="$REPO/plugins/$PLUGIN/CHANGELOG.md"

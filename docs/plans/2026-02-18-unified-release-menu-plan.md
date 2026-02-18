@@ -1,3 +1,336 @@
+# Unified /release Menu — Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Redesign the `/release` command as an interactive, context-aware menu that auto-detects repo state and walks the user through the selected release workflow.
+
+**Architecture:** Single command file rewrite (Approach A). The existing `commands/release.md` is replaced with a new version containing: context detection phase → AskUserQuestion menu → six mode workflows. Supporting changes: new `suggest-version.sh` script, `--preview` flag on `generate-changelog.sh`, simplified `release-detection` skill.
+
+**Tech Stack:** Bash scripts, Claude Code plugin command markdown, AskUserQuestion tool
+
+---
+
+### Task 1: Create `suggest-version.sh` script
+
+**Files:**
+- Create: `plugins/release-pipeline/scripts/suggest-version.sh`
+
+**Step 1: Write the script**
+
+Create `plugins/release-pipeline/scripts/suggest-version.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# suggest-version.sh — Suggest a semver bump based on conventional commits.
+#
+# Usage: suggest-version.sh <repo-path> [--plugin <name>]
+# Output: <suggested-version> <feat-count> <fix-count> <other-count>
+#   e.g., "1.2.0 3 1 2"
+# Exit:   0 = suggestion made, 1 = no previous tag or error
+
+# ---------- Argument handling ----------
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: suggest-version.sh <repo-path> [--plugin <name>]" >&2
+  exit 1
+fi
+
+REPO="$1"
+
+# ---------- Optional --plugin flag ----------
+PLUGIN=""
+if [[ $# -ge 3 && "$2" == "--plugin" ]]; then
+  PLUGIN="$3"
+  if [[ "$PLUGIN" =~ [/\\] ]]; then
+    echo "Error: plugin name must not contain path separators" >&2
+    exit 1
+  fi
+fi
+
+# Verify directory exists, then resolve to absolute path.
+if [[ ! -d "$REPO" ]]; then
+  echo "Error: directory '$REPO' does not exist" >&2
+  exit 1
+fi
+REPO="$(cd "$REPO" && pwd)"
+
+# ---------- Find last tag ----------
+
+last_tag=""
+path_filter=""
+
+if [[ -n "$PLUGIN" ]]; then
+  last_tag=$(git -C "$REPO" tag -l "${PLUGIN}/v*" --sort=-v:refname | head -1) || true
+  path_filter="plugins/${PLUGIN}/"
+else
+  if git -C "$REPO" describe --tags --abbrev=0 &>/dev/null; then
+    last_tag="$(git -C "$REPO" describe --tags --abbrev=0)"
+  fi
+fi
+
+# ---------- Parse current version from last tag ----------
+
+if [[ -z "$last_tag" ]]; then
+  # No previous tag — default to 0.1.0
+  current_major=0
+  current_minor=1
+  current_patch=0
+else
+  # Extract version digits from tag (strip plugin prefix and 'v')
+  tag_version="${last_tag##*/}"   # strip plugin-name/ prefix if present
+  tag_version="${tag_version#v}"  # strip leading v
+  IFS='.' read -r current_major current_minor current_patch <<< "$tag_version"
+fi
+
+# ---------- Collect commits since last tag ----------
+
+if [[ -n "$last_tag" && -n "$path_filter" ]]; then
+  commits="$(git -C "$REPO" log "${last_tag}..HEAD" --oneline --no-merges -- "$path_filter")"
+elif [[ -n "$last_tag" ]]; then
+  commits="$(git -C "$REPO" log "${last_tag}..HEAD" --oneline --no-merges)"
+elif [[ -n "$path_filter" ]]; then
+  commits="$(git -C "$REPO" log --oneline --no-merges -- "$path_filter")"
+else
+  commits="$(git -C "$REPO" log --oneline --no-merges)"
+fi
+
+if [[ -z "$commits" ]]; then
+  echo "No commits since last tag." >&2
+  exit 1
+fi
+
+# ---------- Categorize commits ----------
+
+feat_count=0
+fix_count=0
+other_count=0
+has_breaking=false
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  msg="${line#* }"
+
+  # Check for breaking changes
+  if [[ "$msg" =~ ^[a-z]+(\(.*\))?!: ]] || [[ "$msg" =~ BREAKING\ CHANGE ]]; then
+    has_breaking=true
+  fi
+
+  if [[ "$msg" =~ ^feat(\(.*\))?\!?:  ]]; then
+    feat_count=$((feat_count + 1))
+  elif [[ "$msg" =~ ^fix(\(.*\))?\!?: ]]; then
+    fix_count=$((fix_count + 1))
+  else
+    other_count=$((other_count + 1))
+  fi
+done <<< "$commits"
+
+# ---------- Determine bump type ----------
+
+if [[ "$has_breaking" == true ]]; then
+  new_major=$((current_major + 1))
+  new_version="${new_major}.0.0"
+elif [[ "$feat_count" -gt 0 ]]; then
+  new_minor=$((current_minor + 1))
+  new_version="${current_major}.${new_minor}.0"
+else
+  new_patch=$((current_patch + 1))
+  new_version="${current_major}.${current_minor}.${new_patch}"
+fi
+
+# ---------- Output ----------
+
+printf '%s %s %s %s\n' "$new_version" "$feat_count" "$fix_count" "$other_count"
+
+exit 0
+```
+
+**Step 2: Make the script executable and test it**
+
+Run:
+```bash
+chmod +x plugins/release-pipeline/scripts/suggest-version.sh
+bash plugins/release-pipeline/scripts/suggest-version.sh .
+```
+
+Expected: outputs something like `1.2.0 5 2 8` (a version and three counts).
+
+Test plugin mode:
+```bash
+bash plugins/release-pipeline/scripts/suggest-version.sh . --plugin release-pipeline
+```
+
+Expected: outputs a version suggestion scoped to release-pipeline commits.
+
+**Step 3: Commit**
+
+```bash
+git add plugins/release-pipeline/scripts/suggest-version.sh
+git commit -m "feat(release-pipeline): add suggest-version.sh for auto semver suggestion"
+```
+
+---
+
+### Task 2: Add `--preview` flag to `generate-changelog.sh`
+
+**Files:**
+- Modify: `plugins/release-pipeline/scripts/generate-changelog.sh:17-35` (argument handling)
+- Modify: `plugins/release-pipeline/scripts/generate-changelog.sh:120-165` (output section)
+
+**Step 1: Add PREVIEW flag parsing after the PLUGIN block**
+
+In argument handling section (after the `--plugin` block at line 35), add parsing for `--preview`. The flag can appear in position 3 or 5 depending on whether `--plugin` was used.
+
+Add after line 35:
+```bash
+# ---------- Optional --preview flag ----------
+PREVIEW=false
+for arg in "$@"; do
+  if [[ "$arg" == "--preview" ]]; then
+    PREVIEW=true
+    break
+  fi
+done
+```
+
+**Step 2: Guard the file-write section with the preview flag**
+
+Replace lines 120-165 (from `# ---------- Output to stdout ----------` through end) with:
+
+```bash
+# ---------- Output to stdout ----------
+
+printf '%s' "$entry"
+
+# ---------- Prepend to CHANGELOG.md (skip in preview mode) ----------
+
+if [[ "$PREVIEW" == true ]]; then
+  exit 0
+fi
+
+if [[ -n "$PLUGIN" ]]; then
+  changelog="$REPO/plugins/$PLUGIN/CHANGELOG.md"
+else
+  changelog="$REPO/CHANGELOG.md"
+fi
+
+if [[ -f "$changelog" ]]; then
+  # Insert the new entry before the first existing ## line.
+  tmpfile="$(mktemp)"
+  trap 'rm -f "$tmpfile"' EXIT
+
+  inserted=false
+  while IFS= read -r cline; do
+    if [[ "$inserted" == false && "$cline" =~ ^##\  ]]; then
+      # Insert new entry with a trailing blank line before the old entry.
+      printf '%s\n\n' "$entry" >> "$tmpfile"
+      inserted=true
+    fi
+    printf '%s\n' "$cline" >> "$tmpfile"
+  done < "$changelog"
+
+  # If no ## line was found (unusual), append the entry at the end.
+  if [[ "$inserted" == false ]]; then
+    printf '\n%s\n' "$entry" >> "$tmpfile"
+  fi
+
+  mv "$tmpfile" "$changelog"
+  trap - EXIT
+else
+  # Create a new CHANGELOG.md with a standard header.
+  {
+    printf '# Changelog\n\n'
+    printf 'All notable changes to this project will be documented in this file.\n\n'
+    printf 'The format is based on [Keep a Changelog](https://keepachangelog.com/).\n\n'
+    printf '%s\n' "$entry"
+  } > "$changelog"
+fi
+
+echo "CHANGELOG.md updated." >&2
+
+exit 0
+```
+
+**Step 3: Test the preview flag**
+
+Run:
+```bash
+bash plugins/release-pipeline/scripts/generate-changelog.sh . 99.99.99 --preview
+```
+
+Expected: outputs changelog entry to stdout, does NOT modify CHANGELOG.md. Verify with `git status` — no file changes.
+
+Run without preview to verify existing behavior preserved:
+```bash
+# Don't actually run this — just verify the code path exists
+# bash plugins/release-pipeline/scripts/generate-changelog.sh . 99.99.99
+```
+
+**Step 4: Commit**
+
+```bash
+git add plugins/release-pipeline/scripts/generate-changelog.sh
+git commit -m "feat(release-pipeline): add --preview flag to generate-changelog.sh"
+```
+
+---
+
+### Task 3: Rewrite `commands/release.md` — Context Detection and Menu
+
+This is the main deliverable. Rewrite the entire file with the new structure.
+
+**Files:**
+- Rewrite: `plugins/release-pipeline/commands/release.md`
+
+**Step 1: Write the new command file**
+
+Replace the entire contents of `plugins/release-pipeline/commands/release.md` with the new unified menu command. The file structure is:
+
+```
+---
+name: release
+description: "Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview."
+---
+
+# Release Pipeline
+
+You are the release orchestrator. When invoked, gather context about the repository, then present an interactive menu of release options.
+
+## CRITICAL RULES
+[Same 5 rules as current — TodoWrite, fail-fast, no force-push, noreply email, GO approval]
+
+## Phase 0: Context Detection
+[Run detection commands, set internal variables]
+
+## Menu Presentation
+[AskUserQuestion with context-aware options]
+
+## Mode 1: Quick Merge
+[Same as current Mode 1 — unchanged]
+
+## Mode 2: Full Release
+[Same as current Mode 2 but version auto-suggested, user confirms or overrides]
+
+## Mode 3: Plugin Release
+[Same as current Mode 3 but plugin picker uses AskUserQuestion, version auto-suggested per-plugin]
+
+## Mode 4: Release Status
+[NEW — read-only status report]
+
+## Mode 5: Dry Run
+[NEW — simulate full release, revert all changes]
+
+## Mode 6: Changelog Preview
+[NEW — generate and optionally save changelog]
+
+## Rollback Suggestions
+[Same table as current]
+```
+
+The full content for this file is detailed below. Write this exact content:
+
+````markdown
 ---
 name: release
 description: "Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview."
@@ -176,7 +509,7 @@ Display:
 
 ---
 
-## Mode 2: Full Release
+## Mode 2: Full Release (version provided)
 
 Full semver release with parallel pre-flight checks, version bumps, changelog, git tag, and GitHub release.
 
@@ -430,23 +763,17 @@ Display consolidated pre-flight report (same format as Mode 2). If ANY FAIL → 
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version> --plugin <plugin-name>
 ```
 
-This bumps `plugins/<plugin-name>/.claude-plugin/plugin.json` and the matching entry in `.claude-plugin/marketplace.json`.
-
 **Step 2 — Generate changelog (plugin-scoped):**
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name>
 ```
 
-This collects only commits touching `plugins/<plugin-name>/` since the last `<plugin-name>/v*` tag and writes to `plugins/<plugin-name>/CHANGELOG.md`.
-
 **Step 3 — Show diff summary:**
 
 ```bash
 git diff --stat
 ```
-
-Display: version changes, changelog preview (first 30 lines), marketplace.json change.
 
 **Step 4 — Approval gate:**
 
@@ -455,8 +782,6 @@ Print: **"Review the changes above. Reply GO to proceed with the <plugin-name> v
 WAIT for user response. If not approval → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
 
 ### Phase 3 — Scoped Release (Sequential)
-
-Execute each command sequentially. If any command fails, STOP and report with rollback suggestion.
 
 ```bash
 git add plugins/<plugin-name>/ .claude-plugin/marketplace.json
@@ -504,12 +829,6 @@ Changelog: plugins/<plugin-name>/CHANGELOG.md
 Tag:       <plugin-name>/v<version>
 GitHub:    <release URL>
 Branch:    <current branch>
-```
-
-Get the release URL with:
-
-```bash
-gh release view "<plugin-name>/v<version>" --json url -q '.url'
 ```
 
 ---
@@ -684,3 +1003,220 @@ If a failure occurs, suggest the appropriate rollback based on what phase failed
 | Phase 3 (Before push, plugin) | Scoped commit/merge/tag failed locally | `git tag -d <name>/v<version> && git checkout testing && git reset HEAD~1` |
 | Phase 3 (After push, plugin) | Push succeeded but something else failed | Manual: `git push origin --delete <name>/v<version>`. May need revert commit. |
 | Phase 4 (Verification) | Post-release checks failed | No automatic rollback. Verify manually what failed and address individually. |
+````
+
+**Step 2: Verify the command is valid**
+
+After writing, verify:
+- YAML frontmatter has `name` and `description`
+- All `${CLAUDE_PLUGIN_ROOT}` references are correct
+- All script paths match existing files
+- All AskUserQuestion structures are valid
+
+**Step 3: Commit**
+
+```bash
+git add plugins/release-pipeline/commands/release.md
+git commit -m "feat(release-pipeline): rewrite /release as interactive context-aware menu
+
+Replaces argument-based routing with:
+- Phase 0 context detection (monorepo, git state, version suggestion)
+- AskUserQuestion menu with 6 options (Quick Merge, Full Release,
+  Plugin Release, Release Status, Dry Run, Changelog Preview)
+- Auto-suggested versions from conventional commit analysis
+- Context annotations on menu descriptions"
+```
+
+---
+
+### Task 4: Update release-detection skill
+
+**Files:**
+- Modify: `plugins/release-pipeline/skills/release-detection/SKILL.md`
+
+**Step 1: Rewrite the skill to route to menu**
+
+Replace the entire contents of `plugins/release-pipeline/skills/release-detection/SKILL.md` with:
+
+```markdown
+---
+name: release-detection
+description: >
+  Detect release intent in natural language and route to the /release command menu.
+  Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main",
+  "deploy to production", "push to main", "release for <repo>",
+  "release <plugin-name> vX.Y.Z", "ship <plugin-name>".
+---
+
+# Release Detection
+
+You detected release intent in the user's message. Route to the `/release` command.
+
+## Action
+
+Invoke the `/release` command. The command will gather context and present an interactive menu — do NOT try to parse arguments or select a mode yourself.
+
+Simply tell the user: "I detected release intent. Let me bring up the release menu." Then invoke `/release`.
+
+If the user mentioned a specific repo (e.g., "for HA-Light-Controller"), `cd` to that repo first before invoking `/release`.
+```
+
+**Step 2: Commit**
+
+```bash
+git add plugins/release-pipeline/skills/release-detection/SKILL.md
+git commit -m "feat(release-pipeline): simplify release-detection skill to route to menu"
+```
+
+---
+
+### Task 5: Bump plugin version and update README
+
+**Files:**
+- Modify: `plugins/release-pipeline/.claude-plugin/plugin.json:4`
+- Modify: `plugins/release-pipeline/README.md`
+
+**Step 1: Bump version in plugin.json**
+
+Change `"version": "1.1.0"` to `"version": "1.2.0"` in `plugins/release-pipeline/.claude-plugin/plugin.json`.
+
+**Step 2: Update marketplace.json**
+
+Find the `release-pipeline` entry in `.claude-plugin/marketplace.json` and update its `version` to `"1.2.0"`.
+
+Also update the `description` field to: `"Interactive release pipeline — context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview."`.
+
+**Step 3: Rewrite README.md**
+
+Replace `plugins/release-pipeline/README.md` with updated documentation reflecting the new menu-driven UX:
+
+```markdown
+# Release Pipeline Plugin
+
+Interactive release pipeline for any repo. One command, six options.
+
+## Usage
+
+```
+/release
+```
+
+Or say: "ship it", "merge to main", "cut a release", "release v1.2.0"
+
+The command auto-detects your repository state and presents a context-aware menu:
+
+| Option | Description |
+|--------|-------------|
+| Quick Merge | Commit and merge testing → main (no version bump) |
+| Full Release | Semver release with pre-flight, changelog, tag, GitHub release |
+| Plugin Release | Release a single plugin from a monorepo (scoped tag + changelog) |
+| Release Status | Show unreleased commits, last tag, changelog drift |
+| Dry Run | Simulate a full release without any changes |
+| Changelog Preview | Generate and display a changelog entry |
+
+## Context-Aware
+
+The menu adapts to your repo:
+- **Monorepo?** Plugin Release option appears with unreleased plugin count
+- **Dirty tree?** Quick Merge warns about uncommitted changes
+- **Version suggestion** auto-calculated from conventional commits (feat → minor, fix → patch, BREAKING → major)
+
+## Full Release Workflow
+
+| Phase | Action | Parallel? |
+|-------|--------|-----------|
+| 0. Detection | Auto-detect repo state, suggest version | Yes |
+| 1. Pre-flight | Run tests, audit docs, check git state | Yes (3 agents) |
+| 2. Preparation | Bump versions, generate changelog, show diff | Sequential |
+| 3. Release | Commit, merge, tag, push, GitHub release | Sequential |
+| 4. Verification | Confirm tag, release page, notes | Sequential |
+
+## Fail-Fast
+
+If anything fails, the pipeline stops immediately and suggests rollback steps. No destructive auto-recovery.
+
+## Supported Test Runners
+
+Auto-detected from project files:
+
+- **Python**: pytest (pyproject.toml, pytest.ini, setup.cfg)
+- **Node.js**: npm test (package.json)
+- **Rust**: cargo test (Cargo.toml)
+- **Go**: go test (go.mod)
+- **Make**: make test (Makefile)
+- **Fallback**: reads CLAUDE.md for test commands
+
+## Installation
+
+```
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin install release-pipeline@l3digitalnet-plugins
+```
+```
+
+**Step 4: Commit**
+
+```bash
+git add plugins/release-pipeline/.claude-plugin/plugin.json \
+      plugins/release-pipeline/README.md \
+      .claude-plugin/marketplace.json
+git commit -m "chore(release-pipeline): bump version to v1.2.0 and update docs
+
+- Updated plugin manifest and marketplace entry
+- Rewrote README for menu-driven UX"
+```
+
+---
+
+### Task 6: Final verification
+
+**Step 1: Validate marketplace**
+
+```bash
+bash scripts/validate-marketplace.sh
+```
+
+Expected: all checks pass.
+
+**Step 2: Validate JSON files**
+
+```bash
+jq . plugins/release-pipeline/.claude-plugin/plugin.json
+jq . .claude-plugin/marketplace.json
+```
+
+Expected: both parse without errors.
+
+**Step 3: Test suggest-version.sh in both modes**
+
+```bash
+bash plugins/release-pipeline/scripts/suggest-version.sh .
+bash plugins/release-pipeline/scripts/suggest-version.sh . --plugin release-pipeline
+```
+
+Expected: both output a version suggestion line.
+
+**Step 4: Test generate-changelog.sh --preview**
+
+```bash
+bash plugins/release-pipeline/scripts/generate-changelog.sh . 99.99.99 --preview
+git status  # should show no changes
+```
+
+Expected: changelog printed to stdout, no file modifications.
+
+**Step 5: Verify command file structure**
+
+```bash
+head -5 plugins/release-pipeline/commands/release.md
+```
+
+Expected: valid YAML frontmatter with `name: release` and updated `description`.
+
+**Step 6: Review all changes**
+
+```bash
+git log --oneline -10
+```
+
+Verify 5 commits were created in the right order.
