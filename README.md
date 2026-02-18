@@ -16,6 +16,27 @@ Or using the full URL:
 /plugin marketplace add https://github.com/L3DigitalNet/Claude-Code-Plugins.git
 ```
 
+### Staying Up to Date
+
+**Auto-update** keeps plugins current automatically. To verify it's enabled:
+
+1. Run `/plugin` in Claude Code
+2. Go to the **Marketplaces** tab
+3. Select **l3digitalnet-plugins**
+4. Look for **Disable auto-update** (meaning it's already on)
+
+When auto-update is enabled, Claude Code refreshes the marketplace catalog and updates
+installed plugins at the start of each session.
+
+**Manual update** if you prefer to control when updates happen:
+
+```bash
+# Refresh the marketplace catalog
+/plugin marketplace update l3digitalnet-plugins
+
+# Then update individual plugins via /plugin → Installed tab → Update now
+```
+
 ## Available Plugins
 
 ### Agent Orchestrator
@@ -34,7 +55,7 @@ isolation via git worktrees, and mechanical enforcement hooks.
 **Install:**
 
 ```bash
-/plugin install agent-orchestrator@claude-code-plugins
+/plugin install agent-orchestrator@l3digitalnet-plugins
 ```
 
 **Learn more:**
@@ -60,7 +81,7 @@ project templates.
 **Install:**
 
 ```bash
-/plugin install home-assistant-dev@claude-code-plugins
+/plugin install home-assistant-dev@l3digitalnet-plugins
 ```
 
 **Learn more:**
