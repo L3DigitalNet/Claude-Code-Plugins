@@ -95,6 +95,7 @@ export async function getLog(
   try {
     const args = ['log', '--format=%H %s%n%b'];
     if (options?.maxCount) args.push(`-n${options.maxCount}`);
+    if (options?.since) args.push(`${options.since}..HEAD`);
     const result = await runOrThrow('git', args, { cwd: worktreePath });
     return result.stdout;
   } catch (err) {
