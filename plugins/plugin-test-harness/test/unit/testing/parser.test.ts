@@ -1,4 +1,4 @@
-import { parseTest, parseTestFile } from '../../../src/testing/parser.js';
+import { parseTest } from '../../../src/testing/parser.js';
 import { PTHError } from '../../../src/shared/errors.js';
 
 describe('parseTest', () => {

@@ -12,7 +12,7 @@ import { PTHError, PTHErrorCode } from '../shared/errors.js';
 
 // In-memory state shared with server.ts
 export let testStore = new TestStore();
-export let iterationHistory: Array<{ passing: number; failing: number; fixesApplied: number }> = [];
+export const iterationHistory: Array<{ passing: number; failing: number; fixesApplied: number }> = [];
 
 export async function preflight(args: { pluginPath: string }): Promise<string> {
   const lines: string[] = ['PTH Preflight Check', ''];
@@ -73,7 +73,7 @@ export interface StartSessionResult {
 export async function startSession(args: { pluginPath: string; sessionNote?: string }): Promise<StartSessionResult> {
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
-  const _buildSystem = await detectBuildSystem(args.pluginPath);
+  await detectBuildSystem(args.pluginPath);
 
   // Create session branch
   const branch = generateSessionBranch(pluginName);

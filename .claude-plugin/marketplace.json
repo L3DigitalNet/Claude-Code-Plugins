@@ -77,6 +77,18 @@
       "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/design-assistant",
       "source": "./plugins/design-assistant"
+    },
+    {
+      "name": "plugin-test-harness",
+      "description": "Iterative live testing framework for Claude Code plugins and MCP servers. Run a session branch, generate tests, record results, apply fixes, and iterate until convergence.",
+      "version": "1.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/plugin-test-harness",
+      "category": "development",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-test-harness"
     }
   ]
 }

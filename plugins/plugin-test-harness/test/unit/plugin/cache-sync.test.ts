@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs/promises';
-import { syncToCache, detectCachePath } from '../../../src/plugin/cache-sync.js';
+import { syncToCache } from '../../../src/plugin/cache-sync.js';
 
 describe('syncToCache', () => {
   let src: string;
