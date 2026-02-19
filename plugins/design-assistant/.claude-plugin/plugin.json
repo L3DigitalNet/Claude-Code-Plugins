@@ -6,12 +6,4 @@
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"
   },
-  "commands": [
-    "commands/design-draft.md",
-    "commands/design-review.md"
-  ],
-  "skills": [
-    "skills/design-draft",
-    "skills/design-review"
-  ]
 }
