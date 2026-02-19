@@ -5,10 +5,12 @@ on:
     branches: [testing, main]
     paths:
       - 'plugins/plugin-test-harness/**'
+      - '.github/workflows/plugin-test-harness-ci.yml'
   pull_request:
     branches: [testing, main]
     paths:
       - 'plugins/plugin-test-harness/**'
+      - '.github/workflows/plugin-test-harness-ci.yml'
 
 jobs:
   test:
