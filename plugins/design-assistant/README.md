@@ -183,3 +183,4 @@ plugins/design-assistant/
 - **Large documents cause context pressure** — documents over ~500 lines may push review context near limits during Track B; use `pause/continue` to checkpoint and resume across sessions
 - **Cold-start review has limited analysis** — without a principles section and without a warm handoff from `/design-draft`, Track B (principle enforcement) is skipped entirely
 - **`pause/continue` state is session-local** — session snapshots are held in the active conversation context; starting a new Claude Code session requires a fresh run of `/design-draft` or `/design-review`
+- **Interview phases produce walls of text and multi-question prompts** — both commands currently present large blocks of output and ask several questions at once, which is poorly suited to Claude Code's UI. Both should be refactored to use `AskUserQuestion` for structured single-question prompts and to break responses into smaller, digestible steps
