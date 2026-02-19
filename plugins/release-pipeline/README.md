@@ -6,6 +6,18 @@ Interactive release pipeline for any repo. One command, six options.
 
 Release Pipeline streamlines the full release lifecycle into a single `/release` command. It auto-detects your repository state, suggests a semantic version from conventional commits, runs pre-flight checks in parallel (tests, docs, git state), generates a changelog entry, and creates a tagged GitHub release — all with fail-fast behavior and no destructive auto-recovery.
 
+## Principles
+
+**[P1] Fail Fast, No Auto-Recovery** — If any pre-flight check fails, the pipeline stops immediately and reports. It never attempts to repair problems autonomously or continue past a known failure.
+
+**[P2] Human Gates at Critical Points** — Version bumps, changelogs, tags, and GitHub releases each require explicit human approval before proceeding. Silent deployments are not possible.
+
+**[P3] Conventional Commits as Ground Truth** — Version bump suggestions and changelog entries are derived from commit message prefixes (`feat:`, `fix:`, `BREAKING CHANGE:`). The history is the specification; the pipeline reads it, not the developer's memory.
+
+**[P4] Parallel Where Possible** — Pre-flight checks (tests, docs, git state) run in parallel agents. Concurrency is exploited where safe; sequential logic is preserved at critical approval gates.
+
+**[P5] Dry Run is Always Available** — Every release type supports a simulation that exercises full pipeline logic without any mutations. A clean dry run is a prerequisite, not a courtesy.
+
 ## Installation
 
 ```

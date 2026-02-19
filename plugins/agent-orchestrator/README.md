@@ -6,6 +6,18 @@ General-purpose agent team orchestration for Claude Code. Decomposes complex tas
 
 Agent Orchestrator addresses Claude Code's core limitation on complex multi-file tasks: context degradation. It spawns isolated teammate agents in separate git worktrees — each with a clean context window — and coordinates them through a shared task ledger. The lead agent handles planning and synthesis only; teammates handle all implementation work. The result is higher-quality output on tasks that would otherwise exhaust a single session's context window.
 
+## Principles
+
+**[P1] Triage Before Orchestration** — Never spin up a team for a task a single agent can handle. The overhead of orchestration must be earned by task complexity, not habit.
+
+**[P2] The Lead Never Implements** — The lead orchestrator decomposes, delegates, and synthesises. It never writes or edits files directly; all implementation work is owned by teammates.
+
+**[P3] File Ownership is Exclusive** — No two teammates ever edit the same file. Concurrent writes are prevented through structural assignment in the task ledger, not by trusting instruction alone.
+
+**[P4] Disposable Context, Durable Artifacts** — Subagent and teammate context windows are throwaway; only their outputs matter. Large exploration tasks run in disposable context to keep the lead window clean for synthesis.
+
+**[P5] Mechanical Enforcement Over Instruction** — Critical constraints (lead write guard, read counter, compaction safety) are enforced by hooks that fire deterministically, not by asking the lead to remember rules under pressure.
+
 ## Installation
 
 ```
