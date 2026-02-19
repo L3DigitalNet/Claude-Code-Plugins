@@ -86,15 +86,17 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 
   // Create worktree
   const worktreePath = path.join(os.tmpdir(), `pth-worktree-${branch.split('/')[1]}`);
-  await createBranch(args.pluginPath, branch);
-  await addWorktree(args.pluginPath, worktreePath, branch);
-
-  // Write session lock
   const lockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
-  await fs.mkdir(path.join(args.pluginPath, '.pth'), { recursive: true });
-  await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: new Date().toISOString() }), 'utf-8');
 
+  // All resource acquisition inside try so we can roll back fully on failure
   try {
+    await createBranch(args.pluginPath, branch);
+    await addWorktree(args.pluginPath, worktreePath, branch);
+
+    // Write session lock
+    await fs.mkdir(path.join(args.pluginPath, '.pth'), { recursive: true });
+    await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: new Date().toISOString() }), 'utf-8');
+
     // Load existing tests if any
     testStore = new TestStore();
     const existingTests = await loadTestsFromDir(path.join(worktreePath, '.pth', 'tests'));
@@ -136,8 +138,10 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 
     return { state, message: lines.join('\n') };
   } catch (err) {
-    // Clean up lock so future sessions aren't blocked
+    // Best-effort rollback: clean up all acquired resources
     await fs.rm(lockPath, { force: true });
+    await removeWorktree(args.pluginPath, worktreePath).catch(() => { /* ignore if not yet added */ });
+    await run('git', ['branch', '-D', branch], { cwd: args.pluginPath }).catch(() => { /* ignore if not yet created */ });
     throw err;
   }
 }
