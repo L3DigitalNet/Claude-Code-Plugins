@@ -15,12 +15,13 @@ Add the marketplace and install the plugin from within a Claude Code session:
 /plugin install plugin-test-harness@l3digitalnet-plugins
 ```
 
-The plugin exposes its `pth_*` tools through an MCP server (`dist/index.js`). Build it once after install:
+The plugin exposes its `pth_*` tools through an MCP server (`dist/index.js`). The `dist/` directory ships prebuilt, so a build step is only needed if you modify the source.
+
+After installation, navigate to the plugin directory in Claude's plugin cache and run `npm install` to install dependencies:
 
 ```bash
-cd ~/.claude/plugins/plugin-test-harness
+cd ~/.claude/plugins/<marketplace>/<plugin-name>
 npm install
-npm run build
 ```
 
 ---
@@ -66,18 +67,20 @@ PTH supports two plugin types:
 
 Use this when the target is an MCP server (has a `.mcp.json` and exposes tools via the MCP protocol). PTH connects to the server as a native MCP client and can introspect its tool schemas via `tools/list`.
 
-During `pth_preflight`, provide the target plugin's `.mcp.json` path so PTH can discover available tools:
+PTH auto-detects whether the plugin is MCP or plugin-based during `pth_preflight`. No `mode` parameter is required:
 
 ```
-pth_preflight({ pluginPath: "/path/to/my-plugin", mode: "mcp" })
+pth_preflight({ pluginPath: "/path/to/my-plugin" })
 ```
 
-### `hook` / `plugin` mode — Hook-based and command-based plugins
+### `plugin` mode — Hook-based and command-based plugins
 
 Use this when the target is a hook-based plugin or a plugin with slash commands but no MCP server. PTH analyses the plugin's source files (hooks, commands, skills) to generate tests and infer expected behavior.
 
+PTH auto-detects whether the plugin is MCP or plugin-based — no `mode` parameter is needed:
+
 ```
-pth_preflight({ pluginPath: "/path/to/my-plugin", mode: "hook" })
+pth_preflight({ pluginPath: "/path/to/my-plugin" })
 ```
 
 ---
@@ -101,12 +104,24 @@ PTH will detect the plugin type, check for a manifest, and report any issues.
 ```
 pth_start_session({
   pluginPath: "/home/user/projects/Claude-Code-Plugins/plugins/my-plugin",
-  sessionName: "my-plugin-v1-testing",
-  description: "Initial test pass for my-plugin v1.0.0"
+  sessionNote: "Initial test pass for my-plugin v1.0.0"
 })
 ```
 
-PTH creates a git branch named `pth/<sessionName>-<timestamp>` in the plugin's repo. All fixes applied during the session are committed to this branch, leaving your working branch untouched.
+PTH creates a git branch named `pth/<plugin>-<timestamp>` in the plugin's repo. All fixes applied during the session are committed to this branch, leaving your working branch untouched.
+
+### Resuming an Interrupted Session
+
+If a session is interrupted, resume it with the session branch name:
+
+```
+pth_resume_session({
+  pluginPath: "/home/user/projects/Claude-Code-Plugins/plugins/my-plugin",
+  branch: "pth/my-plugin-2026-02-18-abc123"
+})
+```
+
+Find the branch name from `pth_get_session_status` output or by running `git branch | grep pth/` in the plugin repository.
 
 ---
 
@@ -118,16 +133,14 @@ Tests are stored as YAML files in the session's test directory. Each test descri
 id: "list-tools-returns-array"
 name: "tools/list returns an array"
 description: "The MCP server must respond to tools/list with a non-empty array of tool definitions."
-pluginType: "mcp"
-category: "protocol"
-severity: "critical"
+mode: "mcp"
+type: "scenario"
 steps:
-  - action: "call_tool"
-    tool: "tools/list"
-    args: {}
+  - tool: "tools/list"
+    input: {}
     expect:
-      type: "array"
-      minLength: 1
+      success: true
+      output_contains: "tools"
 tags:
   - "smoke"
   - "protocol"
@@ -136,12 +149,13 @@ tags:
 Fields:
 - `id` — unique identifier (slug format)
 - `name` — short human-readable label
-- `description` — what the test verifies
-- `pluginType` — `mcp`, `hook`, or `command`
-- `category` — `protocol`, `behavior`, `error-handling`, `performance`, etc.
-- `severity` — `critical`, `high`, `medium`, or `low`
-- `steps` — ordered list of actions and assertions
+- `mode` — `mcp` or `plugin`
+- `type` — `single`, `scenario`, `hook-script`, `validate`, or `exec`
+- `description` — what the test verifies (optional)
+- `steps` — ordered list of steps; each step has `tool` (string), `input` (object), and optional `expect`
 - `tags` — optional labels for filtering
+
+Each `expect` block supports: `success`, `output_contains`, `output_equals`, `output_matches`, `output_json`, `error_contains`, `exit_code`, `stdout_contains`, `stdout_matches`.
 
 ---
 
@@ -198,7 +212,7 @@ Fields:
 Every PTH session creates a dedicated git branch:
 
 ```
-pth/<sessionName>-<timestamp>
+pth/<plugin>-<timestamp>
 ```
 
 This branch belongs to the **target plugin's repository** (not the PTH plugin repo). All fixes applied during the session are committed there, giving you a complete history of changes ordered by iteration.
