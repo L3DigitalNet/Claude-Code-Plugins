@@ -6,6 +6,26 @@ A comprehensive Linux system administration MCP server for Claude Code. Provides
 
 Linux Sysadmin MCP gives Claude Code a structured, risk-aware interface for administering Linux systems. Tools are grouped into modules by domain, classified by risk level, and require explicit confirmation for state-changing operations above a configurable threshold. YAML knowledge profiles encode service-specific expertise (config paths, health checks, restart risks) so Claude can make informed decisions without requiring you to explain your stack each session.
 
+## Principles
+
+**[P1] Composable, Not Monolithic** — Each tool does one thing well. Complex workflows are assembled from atomic tools at runtime, not baked into mega-commands.
+
+**[P2] Universal Knowledge, Not Environment Configuration** — Embedded knowledge contains only facts true for any standard installation of a tool. IP addresses, hostnames, custom scripts, and environment-specific details are the user's responsibility.
+
+**[P3] Documentation-Driven Reproducibility** — Every system Claude administers must be fully reproducible from its documentation alone. Documentation is a first-class output of every state-changing operation — the disaster recovery plan, not an afterthought.
+
+**[P4] Distro-Agnostic** — Abstract over package managers, init systems, firewall backends, and filesystem conventions. Detect and adapt at runtime; never assume a specific distro.
+
+**[P5] Safety by Default** — Destructive or state-changing operations require explicit confirmation. Dry-run is always available.
+
+**[P6] Graceful Coexistence** — Detect and defer to existing MCP servers when present. Fill gaps rather than duplicate.
+
+**[P7] Observable** — Every tool returns structured output Claude can reason over. No silent failures; no ambiguous states.
+
+**[P8] Least Privilege** — Request only the permissions needed for the specific operation. Escalate explicitly and visibly.
+
+**[P9] Sudo-First Execution** — All commands requiring elevated privileges are executed via `sudo`. The plugin never assumes it is running as root.
+
 ## Installation
 
 ```bash

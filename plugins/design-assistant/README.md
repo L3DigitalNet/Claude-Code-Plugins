@@ -6,6 +6,18 @@ Full design document lifecycle in two commands.
 
 Design Assistant provides a structured approach to technical design — from blank page to reviewed document. `/design-draft` conducts a guided interview that discovers and stress-tests your design principles before writing a single line of architecture. `/design-review` then enforces those principles across multiple passes, surfacing violations, gaps, and ambiguities until the document converges. Both commands share a common principles registry format, enabling automatic warm handoff from draft to review.
 
+## Principles
+
+**[P1] Principles Before Architecture** — No architecture, diagrams, or design decisions are committed until principles have been discovered, stress-tested, and locked by the human. Architecture serves principles, not the other way around.
+
+**[P2] Tensions Are Resolved, Not Hidden** — Every conflict between candidate principles is surfaced explicitly and traced to a stable tiebreaker rule before drafting begins. Unresolved tensions become design debt.
+
+**[P3] Principles Are the Review Standard** — Design review enforces the document's own stated principles, not an external checklist. A proposed fix that closes a gap while violating a principle is not a valid resolution.
+
+**[P4] PRINCIPLE Findings Are Never Auto-Fixed** — Principle violations always require individual human review, regardless of auto-fix mode or the principle's own eligibility setting. The human who locked the principles decides when to break them.
+
+**[P5] Convergence, Not Single-Pass** — A document is not complete when a review pass finishes — it is complete when zero findings remain across all tracks. The review loop runs until convergence is measured.
+
 ## Installation
 
 ```

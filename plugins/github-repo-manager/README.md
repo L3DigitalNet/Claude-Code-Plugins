@@ -6,6 +6,22 @@ Conversational GitHub repository health assessment and maintenance.
 
 GitHub Repo Manager provides a single `/repo-manager` command that assesses and fixes repository health interactively, with owner approval at every step. State what you want in natural language — Claude determines the scope, auto-detects the repository tier, and guides you through a structured session covering 9 assessment modules: security, release health, community health, PR management, issue triage, dependency audit, notifications, discussions, and wiki sync. A structured maintenance report is generated at session end.
 
+## Principles
+
+**[P1] Explanatory Context** — Before proposing any action, briefly explain what it is and why it matters — enough to make an informed decision, not a tutorial.
+
+**[P2] Implication Warnings** — When an action has consequences the owner may not anticipate, surface them before acting. This applies especially to publicly visible actions.
+
+**[P3] Irreversibility Flags** — Actions that cannot be easily undone are called out clearly and unmissably before execution, with specific guidance on what becomes hard to recover.
+
+**[P4] Jargon Translation** — GitHub concepts are explained in plain language alongside technical terms, on first mention per session. The goal is building the owner's understanding over time, not delivering a glossary.
+
+**[P5] Tier-Aware Sensitivity** — Explanation depth and warning level scale with the repository tier. Private docs repos get minimal friction; public repos with releases get full ceremony.
+
+**[P6] Teaching Moments** — When Claude detects a gap representing a learning opportunity, it explains why the issue matters, not just that it exists.
+
+**[P7] Progressive Depth** — Concise explanations by default; deeper detail available on request. Avoids information overload while keeping comprehensive context accessible.
+
 ## Installation
 
 ```

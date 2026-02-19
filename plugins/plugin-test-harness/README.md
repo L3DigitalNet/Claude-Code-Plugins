@@ -6,6 +6,18 @@ An MCP-based iterative testing framework for Claude Code plugins and MCP servers
 
 PTH treats plugin testing as an iterative convergence problem rather than a one-shot process. Each session creates a dedicated git branch in the target plugin's repository, giving you a complete audit trail of every test added and fix applied. Sessions persist to disk and can be resumed after interruption. Claude drives the loop interactively — you can inspect results, override decisions, or add tests at any point.
 
+## Principles
+
+**[P1] Claude's Judgment, Not Mechanical Rules** — No rigid enforcement gates or hard-coded safety thresholds. Claude assesses risk, decides approval workflows, and manages safety contextually — because tests span wildly varying plugin domains and environment configurations where rigid rules would be either too restrictive or too permissive.
+
+**[P2] Convergence Over Single-Pass** — Testing is an iterative convergence problem. PTH drives successive test/fix/reload cycles and measures the trend (improving, plateau, oscillating, diverging) across iterations. A plugin is not done when the first run passes.
+
+**[P3] Durable Session Assets** — The git branch and test definitions are the session's durable assets. If the environment fails catastrophically, the session can always be resumed from these.
+
+**[P4] Transparent Errors** — PTH always surfaces raw error output alongside its own interpretation. Exceptions are never silently swallowed; Claude always has enough context to decide the next step.
+
+**[P5] Audit Trail by Default** — Every fix is committed to the session branch immediately. The full debug history is always recoverable via `git log` — no extra logging or manual export required.
+
 ## Installation
 
 ```bash

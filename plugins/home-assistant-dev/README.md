@@ -6,6 +6,18 @@ A comprehensive Claude Code plugin for Home Assistant integration development. P
 
 This plugin brings deep Home Assistant integration expertise into Claude Code — covering the full development lifecycle from scaffolding a new integration through HACS publishing. Skills load automatically when Claude detects relevant context, providing current guidance on async patterns, entity platforms, config flows, the DataUpdateCoordinator, and all 52 Integration Quality Scale rules. Includes three specialized agents and five validation scripts.
 
+## Principles
+
+**[P1] Skills Over Monolith** — Knowledge is partitioned into 19 focused skills rather than one large document. Each skill loads only when Claude detects relevant context, minimising context cost on every task.
+
+**[P2] IQS Compliance from Day One** — Integration Quality Scale coverage (all 52 rules) is a first-class requirement, not a post-publication concern. The plugin guides toward Gold tier from the first line of code.
+
+**[P3] Modern Patterns Only** — The plugin tracks and enforces current HA APIs. Deprecated code paths (`hass.data`, `OptionsFlow.__init__`, etc.) are flagged and replaced — the plugin never silently tolerates outdated patterns.
+
+**[P4] Safety for Live Connections** — The MCP server connects to live Home Assistant instances in read-mostly mode. Destructive service calls require explicit dry-run bypass. The plugin never risks unintended home automation state changes.
+
+**[P5] Quality by Example** — Abstract guidance is backed by three concrete reference integrations at Bronze, Silver, and Gold tier — copy-paste starting points that already meet their tier requirements in full.
+
 ## Installation
 
 ```bash
