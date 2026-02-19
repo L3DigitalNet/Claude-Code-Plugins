@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-My collection of Claude Code plugins for fun and pleasure.
+A Claude Code plugin marketplace covering orchestration, release automation, design review, Home Assistant development, Linux system administration, GitHub repository management, and plugin testing.
 
 ## Installation
 
@@ -14,6 +14,12 @@ Or using the full URL:
 
 ```bash
 /plugin marketplace add https://github.com/L3DigitalNet/Claude-Code-Plugins.git
+```
+
+Then install individual plugins:
+
+```bash
+/plugin install agent-orchestrator@l3digitalnet-plugins
 ```
 
 ### Staying Up to Date
@@ -39,6 +45,18 @@ installed plugins at the start of each session.
 
 ## Available Plugins
 
+| Plugin | Type | Command | Description |
+|--------|------|---------|-------------|
+| [Agent Orchestrator](#agent-orchestrator) | Commands + Hooks | `/orchestrate` | Delegates complex tasks to agent teams with context management |
+| [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
+| [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
+| [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 19 skills |
+| [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | ~100 tools | Linux system administration across 15 modules |
+| [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
+| [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
+
+---
+
 ### Agent Orchestrator
 
 **General-purpose agent team orchestration** with automatic context management, file
@@ -61,31 +79,34 @@ isolation via git worktrees, and mechanical enforcement hooks.
 **Learn more:**
 [plugins/agent-orchestrator/README.md](plugins/agent-orchestrator/README.md)
 
-### Home Assistant Dev
+---
 
-**Comprehensive Home Assistant integration development toolkit** with 19 AI skills, an
-MCP server for live HA connections, automated validation, example integrations, and
-project templates.
+### Design Assistant
+
+**Full design document lifecycle in two commands** — guided authoring from blank page through
+principle-enforced iterative review.
 
 **Features:**
 
-- 19 context-aware skills covering architecture, config flows, coordinators, entities,
-  testing, and more
-- 3 specialized agents (development, review, debugging)
-- MCP server with 12 tools for live HA connection and documentation search
-- 5 validation scripts with PostToolUse hook enforcement
-- 3 example integrations (Bronze/Silver/Gold tier)
-- 9 project templates for CI/CD, testing, and documentation
-- Full Integration Quality Scale coverage (all 52 rules)
+- `/design-draft` — 5-phase interview: context deep dive, principles discovery, scope
+  confirmation, gap-filling, and draft generation
+- Principle stress-testing and tension resolution before any architecture is committed
+- `/design-review` — multi-pass principle enforcement, gap analysis, and optional auto-fix
+- Principle Conflict Screening: all proposed fixes checked against established principles
+  before presentation
+- Automatic warm handoff from draft to review (principles registry transferred)
+- Runs until the document converges to zero findings across all review tracks
 
 **Install:**
 
 ```bash
-/plugin install home-assistant-dev@l3digitalnet-plugins
+/plugin install design-assistant@l3digitalnet-plugins
 ```
 
 **Learn more:**
-[plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
+[plugins/design-assistant/README.md](plugins/design-assistant/README.md)
+
+---
 
 ### GitHub Repo Manager
 
@@ -113,51 +134,37 @@ interactively, with owner approval at every step.
 ```
 
 **Learn more:**
-[plugins/github-repo-manager/docs/USAGE.md](plugins/github-repo-manager/docs/USAGE.md)
+[plugins/github-repo-manager/README.md](plugins/github-repo-manager/README.md)
 
-### Release Pipeline
+---
 
-**Autonomous release pipeline** — quick merge or full semver release with parallel
-pre-flight checks, changelog generation, and GitHub release creation.
+### Home Assistant Dev
+
+**Comprehensive Home Assistant integration development toolkit** with 19 AI skills, an
+MCP server for live HA connections, automated validation, example integrations, and
+project templates.
 
 **Features:**
 
-- Two modes: quick merge (testing → main) or full versioned release
-- Parallel pre-flight agents (test runner, docs auditor, git validator)
-- Automatic changelog generation from conventional commits
-- Version bumping across Python, Node.js, Rust, and plugin manifests
-- GitHub release creation with release notes
-- Human-in-the-loop approval gates at critical stages
-- Fail-fast with rollback guidance on errors
+- 19 context-aware skills covering architecture, config flows, coordinators, entities,
+  testing, and more
+- 3 specialized agents (development, review, debugging)
+- MCP server with 12 tools for live HA connection and documentation search
+- 5 validation scripts with PostToolUse hook enforcement
+- 3 example integrations (Bronze/Silver/Gold tier)
+- 9 project templates for CI/CD, testing, and documentation
+- Full Integration Quality Scale coverage (all 52 rules)
 
 **Install:**
 
 ```bash
-/plugin install release-pipeline@l3digitalnet-plugins
+/plugin install home-assistant-dev@l3digitalnet-plugins
 ```
 
-**Learn more:** [plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
+**Learn more:**
+[plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
 
-### Design Refine
-
-**Iterative design document refinement** through structured gap analysis, collaborative
-review, and consistency auditing.
-
-**Features:**
-
-- 5-phase loop: comprehension, gap analysis, recommendations, implementation, audit
-- Severity-labeled findings (Critical, Moderate, Minor)
-- Terminology uniformity and cross-reference validation
-- Stays within existing scope — strengthens designs without expanding them
-- User approval required before every edit
-
-**Install:**
-
-```bash
-/plugin install design-refine@l3digitalnet-plugins
-```
-
-**Learn more:** [plugins/design-refine/README.md](plugins/design-refine/README.md)
+---
 
 ### Linux SysAdmin MCP
 
@@ -185,6 +192,70 @@ containers, and more.
 
 **Learn more:**
 [plugins/linux-sysadmin-mcp/README.md](plugins/linux-sysadmin-mcp/README.md)
+
+---
+
+### Plugin Test Harness
+
+**Iterative plugin testing framework** — generates tests, records pass/fail results,
+applies source fixes, reloads the target plugin, and retests until convergence.
+
+**Features:**
+
+- Auto-generates tests from plugin source and schema introspection
+- Test/fix/reload loop with convergence tracking (improving, plateau, oscillating,
+  diverging)
+- Dedicated git branch per session for a complete audit trail of fixes
+- Sessions persist to disk and can be resumed after interruption
+- Native MCP client for MCP-mode plugins; source analysis for hook/command plugins
+- 18 tools across session management, test management, execution, and fix management
+
+**Install:**
+
+```bash
+/plugin install plugin-test-harness@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/plugin-test-harness/README.md](plugins/plugin-test-harness/README.md)
+
+---
+
+### Release Pipeline
+
+**Autonomous release pipeline** — quick merge or full semver release with parallel
+pre-flight checks, changelog generation, and GitHub release creation.
+
+**Features:**
+
+- Two modes: quick merge (testing → main) or full versioned release
+- Parallel pre-flight agents (test runner, docs auditor, git validator)
+- Automatic changelog generation from conventional commits
+- Version bumping across Python, Node.js, Rust, and plugin manifests
+- GitHub release creation with release notes
+- Human-in-the-loop approval gates at critical stages
+- Fail-fast with rollback guidance on errors
+
+**Install:**
+
+```bash
+/plugin install release-pipeline@l3digitalnet-plugins
+```
+
+**Learn more:** [plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
+
+---
+
+## Coming Soon
+
+These plugins are in development and not yet available in the marketplace.
+
+| Plugin | Description |
+|--------|-------------|
+| `performance-profiler` | Latency measurement, flamegraph generation, and regression tracking for MCP servers |
+| `docs-manager` | Documentation lifecycle management — audit, index, and organise project docs |
+
+---
 
 ## Plugin Development
 
@@ -237,11 +308,14 @@ Claude-Code-Plugins/
 │   └── marketplace.json        # Marketplace catalog
 ├── plugins/                     # All plugin implementations
 │   ├── agent-orchestrator/      # Agent team orchestration
-│   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
+│   ├── design-assistant/        # Design document lifecycle
+│   ├── docs-manager/            # Documentation management (in development)
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
-│   ├── release-pipeline/        # Autonomous release pipeline
-│   ├── design-refine/           # Design document refinement
-│   └── linux-sysadmin-mcp/      # Linux sysadmin MCP server
+│   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
+│   ├── linux-sysadmin-mcp/      # Linux sysadmin MCP server (~100 tools)
+│   ├── performance-profiler/    # MCP performance profiling (in development)
+│   ├── plugin-test-harness/     # Iterative plugin testing framework
+│   └── release-pipeline/        # Autonomous release pipeline
 ├── scripts/
 │   └── validate-marketplace.sh  # Marketplace validation
 ├── docs/                        # Comprehensive documentation
@@ -257,10 +331,9 @@ To add a plugin to this marketplace:
 1. **Work on the `testing` branch** (all development happens here)
 2. Create plugin in `plugins/` directory
 3. Add entry to `.claude-plugin/marketplace.json`
-4. Update marketplace version (semver)
-5. Validate with `./scripts/validate-marketplace.sh`
-6. Commit and push to `testing` branch
-7. When ready to deploy, merge `testing` → `main`
+4. Validate with `./scripts/validate-marketplace.sh`
+5. Commit and push to `testing` branch
+6. When ready to deploy, merge `testing` → `main`
 
 **Branch workflow:**
 
@@ -279,12 +352,6 @@ git checkout testing
 ```
 
 See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflow documentation.
-
-**Marketplace versioning:**
-
-- **Major** (2.0.0) - Breaking changes to marketplace structure
-- **Minor** (1.1.0) - New plugins added
-- **Patch** (1.0.1) - Plugin updates, metadata fixes
 
 ## License
 
