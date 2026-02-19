@@ -1,4 +1,4 @@
-# Plugin Test Harness (PTH)
+# Plugin Test Harness (PTH) — v0.1.0
 
 An MCP-based iterative testing framework for Claude Code plugins and MCP servers. PTH drives a tight test/fix/reload loop — starting from zero tests, generating proposals, recording pass/fail results, applying source fixes, reloading the target plugin, and retesting — until your plugin converges to a stable, passing state.
 
