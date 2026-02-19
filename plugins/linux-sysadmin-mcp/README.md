@@ -1,29 +1,21 @@
-# linux-sysadmin-mcp
+# Linux Sysadmin MCP
 
 A comprehensive Linux system administration MCP server for Claude Code. Provides ~100 tools across 15 modules for managing packages, services, users, firewall, networking, containers, storage, security, performance, logs, cron, backups, SSH, and documentation — all through a unified, distro-agnostic interface.
 
-## Design Principles
+## Summary
 
-1. **Composable, not monolithic** — Atomic tools that Claude composes into workflows
-2. **Universal tool knowledge** — YAML knowledge profiles describe services, not environments
-3. **Documentation-driven reproducibility** — Git-backed host/service READMEs for disaster recovery
-4. **Distro-agnostic** — Automatic Debian/RHEL detection with unified command abstraction
-5. **Safety by default** — Risk-classified tools with confirmation gates and dry-run support
-6. **Graceful coexistence** — Works alongside other MCP servers
-7. **Observable** — Structured JSON responses with consistent envelope
-8. **Least privilege** — Degrades gracefully without sudo
-9. **Sudo-first** — Never assumes root; always uses explicit sudo
+Linux Sysadmin MCP gives Claude Code a structured, risk-aware interface for administering Linux systems. Tools are grouped into modules by domain, classified by risk level, and require explicit confirmation for state-changing operations above a configurable threshold. YAML knowledge profiles encode service-specific expertise (config paths, health checks, restart risks) so Claude can make informed decisions without requiring you to explain your stack each session.
 
-## Quick Start
+## Installation
 
 ```bash
-# Install
 npm install
-
-# Build
 npm run build
+```
 
-# Add to Claude Code config (~/.claude/claude_desktop_config.json)
+Add to Claude Code config (`~/.claude/mcp.json`):
+
+```json
 {
   "mcpServers": {
     "linux-sysadmin": {
@@ -34,29 +26,24 @@ npm run build
 }
 ```
 
-On first run, a default config is generated at `~/.config/linux-sysadmin/config.yaml`.
+## Installation Notes
 
-## Architecture
+On first run, a default configuration file is generated at `~/.config/linux-sysadmin/config.yaml`. Review it before first use — particularly `safety.confirmation_threshold` and `documentation.repo_path` if you want git-backed host documentation.
 
-```
-┌──────────────────────────────────────────┐
-│           MCP Server (stdio)             │
-├──────────────────────────────────────────┤
-│         Tool Registry (~100 tools)       │
-├──────┬───────┬───────┬───────┬───────────┤
-│ Pkgs │ Svcs  │ Users │ Fire  │ Net  │... │
-├──────┴───────┴───────┴───────┴───────────┤
-│   Safety Gate  │  Knowledge Base (YAML)  │
-├────────────────┼─────────────────────────┤
-│ DistroCommands │  Executor (local/SSH)   │
-│ (Debian/RHEL)  │                         │
-└────────────────┴─────────────────────────┘
-```
+## Usage
 
-## Tool Modules
+Once the MCP server is running, Claude can invoke any of the ~100 tools directly in conversation. Tools that modify system state require `confirmed: true`; use `dry_run: true` to preview changes without applying them.
 
-| Module | Tools | Examples |
-|--------|-------|---------|
+Example prompts:
+- "Show me which services are failing"
+- "Install nginx and enable it on boot"
+- "Check for SUID binaries and security misconfigurations"
+- "Generate a host README for this server"
+
+## Tools
+
+| Module | Count | Example Tools |
+|--------|-------|--------------|
 | Session | 1 | `sysadmin_session_info` |
 | Packages | 10 | `pkg_install`, `pkg_search`, `pkg_rollback` |
 | Services | 10 | `svc_status`, `svc_restart`, `svc_logs` |
@@ -108,6 +95,41 @@ documentation:
   auto_suggest: true                  # Suggest doc updates after changes
 ```
 
+## Requirements
+
+- Node.js 18+
+- Linux system (Debian/RHEL-based; other distros may have limited tool support)
+- `sudo` access for state-changing tools (the server never assumes root)
+
+## Architecture
+
+```
+┌──────────────────────────────────────────┐
+│           MCP Server (stdio)             │
+├──────────────────────────────────────────┤
+│         Tool Registry (~100 tools)       │
+├──────┬───────┬───────┬───────┬───────────┤
+│ Pkgs │ Svcs  │ Users │ Fire  │ Net  │... │
+├──────┴───────┴───────┴───────┴───────────┤
+│   Safety Gate  │  Knowledge Base (YAML)  │
+├────────────────┼─────────────────────────┤
+│ DistroCommands │  Executor (local/SSH)   │
+│ (Debian/RHEL)  │                         │
+└────────────────┴─────────────────────────┘
+```
+
+## Design Principles
+
+1. **Composable, not monolithic** — Atomic tools that Claude composes into workflows
+2. **Universal tool knowledge** — YAML knowledge profiles describe services, not environments
+3. **Documentation-driven reproducibility** — Git-backed host/service READMEs for disaster recovery
+4. **Distro-agnostic** — Automatic Debian/RHEL detection with unified command abstraction
+5. **Safety by default** — Risk-classified tools with confirmation gates and dry-run support
+6. **Graceful coexistence** — Works alongside other MCP servers
+7. **Observable** — Structured JSON responses with consistent envelope
+8. **Least privilege** — Degrades gracefully without sudo
+9. **Sudo-first** — Never assumes root; always uses explicit sudo
+
 ## Response Format
 
 Every tool returns a consistent JSON envelope:
@@ -122,6 +144,21 @@ Every tool returns a consistent JSON envelope:
   "data": { ... }
 }
 ```
+
+## Planned Features
+
+- **Remote SSH execution** — target remote hosts directly from tool calls without a local SSH session
+- **Additional knowledge profiles** — PostgreSQL, Apache, Redis, Nginx Unit, Podman, and Wireguard
+- **WSL (Windows Subsystem for Linux) support** — detect WSL environment and adjust distro commands accordingly
+- **Ansible playbook generation** — convert a session's executed commands into a reproducible playbook
+- **Multi-host batch operations** — run the same tool against a list of hosts in parallel
+
+## Known Issues
+
+- **Sudo escalation is not automatic** — tools that require root will return a `permission_denied` error rather than prompting for a password; run `sudo -v` in your shell before starting a session if elevated access is needed
+- **Docker container tools assume upstream Docker** — systems using Podman with a Docker compatibility shim may return unexpected output from container inspection tools
+- **Knowledge profiles are not auto-updated** — built-in profiles (nginx, sshd, etc.) reflect the state at release time; service config paths may drift between distro versions
+- **`dry_run` is best-effort** — not all tools support true dry-run simulation; some will skip the operation silently rather than printing a preview
 
 ## License
 

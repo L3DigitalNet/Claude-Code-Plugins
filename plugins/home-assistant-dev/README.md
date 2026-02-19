@@ -1,87 +1,12 @@
-# Home Assistant Development Plugin for Claude Code
+# Home Assistant Development
 
 A comprehensive Claude Code plugin for Home Assistant integration development. Provides skills, agents, and commands aligned with the official [Home Assistant Developer Documentation](https://developers.home-assistant.io/) and the [Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/).
 
-## Features
+## Summary
 
-### 19 Agent Skills
-
-Skills are automatically invoked when Claude detects relevant context:
-
-| Skill | Description |
-|-------|-------------|
-| `ha-architecture` | Core HA internals: event bus, state machine, entity lifecycle |
-| `ha-integration-scaffold` | Scaffold integrations with correct structure |
-| `ha-config-flow` | Config flows, options flows, reauth, discovery |
-| `ha-coordinator` | DataUpdateCoordinator patterns and error handling |
-| `ha-entity-platforms` | Entity platforms (sensor, switch, light, etc.) |
-| `ha-service-actions` | Service actions in Python and YAML |
-| `ha-async-patterns` | Async Python patterns for HA |
-| `ha-testing` | pytest patterns with hass fixture |
-| `ha-debugging` | Troubleshooting and diagnostics |
-| `ha-yaml-automations` | YAML automations, scripts, blueprints |
-| `ha-quality-review` | Integration Quality Scale (all 52 rules) |
-| `ha-hacs` | HACS compliance, hacs.json, brands, publishing |
-| `ha-diagnostics` | Diagnostics implementation (Gold tier) |
-| `ha-migration` | Version migration, deprecation fixes |
-| `ha-documentation` | README and documentation generation |
-| `ha-repairs` | Repair issues and fix flows (Gold tier) |
-| `ha-device-triggers` | Device triggers, conditions, actions |
-| `ha-websocket-api` | Custom WebSocket API commands |
-| `ha-recorder` | Statistics and history integration |
-
-### Automated Validation
-
-Scripts that run automatically or on demand:
-
-| Script | Description |
-|--------|-------------|
-| `validate-manifest.py` | Validates required fields, iot_class, version |
-| `validate-strings.py` | Syncs config_flow.py steps with strings.json |
-| `check-patterns.py` | Detects 20+ anti-patterns and deprecations |
-| `lint-integration.sh` | Runs ruff, mypy, and all validators |
-| `generate-docs.py` | Generates README and info.md from code |
-
-### Example Templates
-
-| Example | Tier | Description |
-|---------|------|-------------|
-| `polling-hub` | Gold | Complete reference with DataUpdateCoordinator, diagnostics, tests |
-| `minimal-sensor` | Bronze | Simplest possible integration for learning |
-| `push-integration` | Silver | Push-based updates with dispatcher pattern |
-
-### Project Templates
-
-| Template | Purpose |
-|----------|---------|
-| `testing/conftest.py` | Test fixtures template |
-| `testing/test_config_flow.py` | Config flow tests |
-| `testing/test_init.py` | Setup/unload tests |
-| `testing/pytest.ini` | pytest configuration |
-| `ci/github-actions.yml` | CI/CD workflow |
-| `ci/pre-commit-config.yaml` | Pre-commit hooks |
-| `ci/ruff.toml` | Ruff linter config |
-| `docs/README.md` | Documentation template |
-
-### 3 Specialized Agents
-
-| Agent | Purpose |
-|-------|---------|
-| `ha-integration-dev` | Full integration development guidance |
-| `ha-integration-reviewer` | Code review against Quality Scale |
-| `ha-integration-debugger` | Systematic debugging assistance |
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/home-assistant-dev:scaffold-integration` | Scaffold a new integration interactively |
-| `/home-assistant-dev:generate-integration` | Generate complete integration from prompts |
-| `/home-assistant-dev:ha-quality-review` | Run Quality Scale assessment |
+This plugin brings deep Home Assistant integration expertise into Claude Code — covering the full development lifecycle from scaffolding a new integration through HACS publishing. Skills load automatically when Claude detects relevant context, providing current guidance on async patterns, entity platforms, config flows, the DataUpdateCoordinator, and all 52 Integration Quality Scale rules. Includes three specialized agents and five validation scripts.
 
 ## Installation
-
-### From Marketplace (Recommended)
 
 ```bash
 # Add the L3DigitalNet marketplace
@@ -91,31 +16,25 @@ Scripts that run automatically or on demand:
 /plugin install home-assistant-dev@l3digitalnet-plugins
 ```
 
-### Local Development
-
+Or for local development:
 ```bash
-# Clone the marketplace repository
 git clone https://github.com/L3DigitalNet/Claude-Code-Plugins.git
-
-# Install from local path
 claude --plugin-dir ./Claude-Code-Plugins/plugins/home-assistant-dev
 ```
 
-### Verify Installation
+## Installation Notes
 
+Verify the plugin loaded correctly after installation:
 ```bash
-# Check plugin is loaded
 /plugin list
-
-# View available skills
-/skills
+/skills    # Shows all available skills including the 19 ha-* skills
 ```
+
+Validation scripts (`scripts/`) require Python 3.13+ and are run directly from the plugin cache directory or the source tree.
 
 ## Usage
 
-### Automatic Invocation
-
-Skills trigger automatically based on your prompts:
+Skills trigger automatically based on your prompts — no manual invocation needed:
 
 ```
 "Create a new integration for my smart thermostat"
@@ -128,20 +47,70 @@ Skills trigger automatically based on your prompts:
 → Loads ha-hacs, ha-quality-review
 ```
 
-### Running Validation
+For interactive workflows, use the commands directly:
+```
+/home-assistant-dev:generate-integration
+/home-assistant-dev:ha-quality-review
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `/home-assistant-dev:scaffold-integration` | Scaffold a new integration interactively with guided prompts |
+| `/home-assistant-dev:generate-integration` | Generate a complete integration from a description |
+| `/home-assistant-dev:ha-quality-review` | Run a full Integration Quality Scale assessment |
+
+## Skills
+
+Skills are automatically invoked when Claude detects relevant context:
+
+| Skill | Description |
+|-------|-------------|
+| `ha-architecture` | Core HA internals: event bus, state machine, entity lifecycle |
+| `ha-integration-scaffold` | Scaffold integrations with correct file structure |
+| `ha-config-flow` | Config flows, options flows, reauth, discovery |
+| `ha-coordinator` | DataUpdateCoordinator patterns and error handling |
+| `ha-entity-platforms` | Entity platforms (sensor, switch, light, cover, climate, etc.) |
+| `ha-service-actions` | Service actions in Python and YAML |
+| `ha-async-patterns` | Async Python patterns for Home Assistant |
+| `ha-testing` | pytest patterns with the hass fixture |
+| `ha-debugging` | Troubleshooting and diagnostics |
+| `ha-yaml-automations` | YAML automations, scripts, and blueprints |
+| `ha-quality-review` | Integration Quality Scale (all 52 rules) |
+| `ha-hacs` | HACS compliance, hacs.json, brands, publishing |
+| `ha-diagnostics` | Diagnostics implementation (Gold tier) |
+| `ha-migration` | Version migration and deprecation fixes |
+| `ha-documentation` | README and documentation generation |
+| `ha-repairs` | Repair issues and fix flows (Gold tier) |
+| `ha-device-triggers` | Device triggers, conditions, and actions |
+| `ha-websocket-api` | Custom WebSocket API commands |
+| `ha-recorder` | Statistics and history integration |
+
+## Agents
+
+| Agent | Description |
+|-------|-------------|
+| `ha-integration-dev` | Full integration development — scaffolding, entities, config flow, coordinator |
+| `ha-integration-reviewer` | Code review against all 52 Integration Quality Scale rules |
+| `ha-integration-debugger` | Systematic debugging with structured diagnostics |
+
+## Validation Scripts
+
+Scripts that run automatically via hooks or on demand from your integration directory:
+
+| Script | Description |
+|--------|-------------|
+| `validate-manifest.py` | Validates required fields, iot_class, version |
+| `validate-strings.py` | Syncs config_flow.py steps with strings.json |
+| `check-patterns.py` | Detects 20+ anti-patterns and deprecations |
+| `lint-integration.sh` | Runs ruff, mypy, and all validators |
+| `generate-docs.py` | Generates README and info.md from code |
 
 ```bash
-# Validate manifest
 python scripts/validate-manifest.py custom_components/my_integration/manifest.json
-
-# Check for anti-patterns
 python scripts/check-patterns.py custom_components/my_integration/
-
-# Run all linters
 bash scripts/lint-integration.sh custom_components/my_integration/
-
-# Generate documentation
-python scripts/generate-docs.py custom_components/my_integration/
 ```
 
 ## What This Plugin Knows
@@ -167,7 +136,6 @@ The plugin covers all 52 IQS rules across 4 tiers:
 
 ### Deprecation Coverage
 
-The plugin tracks all major deprecations:
 - ServiceInfo import relocation (2025.1 → 2026.2)
 - `hass.data[DOMAIN]` → `entry.runtime_data`
 - OptionsFlow `__init__` deprecation
@@ -182,41 +150,33 @@ home-assistant-dev/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/                    # 19 skills
-│   ├── ha-architecture/
-│   ├── ha-integration-scaffold/
-│   ├── ha-config-flow/
-│   ├── ha-coordinator/
-│   ├── ha-entity-platforms/
-│   ├── ha-service-actions/
-│   ├── ha-async-patterns/
-│   ├── ha-testing/
-│   ├── ha-debugging/
-│   ├── ha-yaml-automations/
-│   ├── ha-quality-review/
-│   ├── ha-hacs/
-│   ├── ha-diagnostics/
-│   ├── ha-migration/
-│   ├── ha-documentation/
-│   ├── ha-repairs/
-│   ├── ha-device-triggers/
-│   ├── ha-websocket-api/
-│   └── ha-recorder/
 ├── agents/                    # 3 agents
-├── commands/                  # 2 commands
+├── commands/                  # 3 commands
 ├── scripts/                   # 5 validation scripts
 ├── hooks/                     # Automation hooks
-├── examples/                  # 3 example integrations
-│   ├── polling-hub/
-│   ├── minimal-sensor/
-│   └── push-integration/
-├── templates/                 # Project templates
-│   ├── testing/
-│   ├── ci/
-│   └── docs/
+├── examples/                  # 3 reference integrations
+│   ├── polling-hub/           # Gold tier reference with DataUpdateCoordinator
+│   ├── minimal-sensor/        # Bronze tier starter
+│   └── push-integration/      # Silver tier push-based
+├── templates/                 # CI, testing, and docs templates
 ├── README.md
 ├── CHANGELOG.md
 └── LICENSE
 ```
+
+## Planned Features
+
+- **Live HA instance integration** — connect to a running HA instance via REST API to inspect real entity states during development
+- **Auto-test generation** — generate pytest test stubs from a finished integration's config flow and coordinator code
+- **IQS progress dashboard** — interactive checklist showing which Quality Scale rules are satisfied vs. outstanding for the current integration
+- **More deprecation tracking** — auto-detect and suggest fixes for newly deprecated APIs as HA versions advance
+
+## Known Issues
+
+- **IQS rule coverage may lag** — the 52 rules tracked reflect HA up to the 2025.x cycle; new rules added in future HA releases will need skill updates before they appear in quality reviews
+- **`generate-integration` can time out on large specs** — very detailed generation prompts may hit context limits; break the request into multiple passes using the scaffold command followed by targeted skill invocations
+- **Scripts require a Python environment** — validation scripts must be run in an environment where `python3` is available; they are not installed as executables
+- **`ha-quality-review` skill is read-only** — the skill identifies rule violations but does not auto-fix them; apply fixes manually or invoke the relevant implementation skills
 
 ## References
 
@@ -234,4 +194,4 @@ Contributions welcome! Please ensure changes align with the official Home Assist
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT License — see [LICENSE](LICENSE)

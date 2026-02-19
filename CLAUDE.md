@@ -454,7 +454,7 @@ Plugin versions use semantic versioning:
 **Plugin entries** — required: `name`, `description`, `source`. Optional valid: `version`, `author` (object), `category`, `homepage`, `tags`, `strict`.
 **Plugin entries — INVALID fields** (Zod rejects these): `displayName`, `keywords`, `license`.
 
-**Plugin manifests (plugin.json) are lenient** — unlike marketplace.json, the plugin.json schema tolerates extra fields like `keywords`, `license`, `repository`, `homepage`. The strict Zod validation only applies to marketplace.json entries.
+**Plugin manifests (plugin.json) also use strict Zod validation** — `category` is rejected (confirmed). `homepage` is tolerated. Avoid adding fields not in the core schema (`name`, `version`, `description`, `author`).
 
 ```json
 {
