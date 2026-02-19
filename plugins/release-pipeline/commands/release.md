@@ -197,7 +197,9 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` f
 
 ### Phase 1 — Pre-flight (Parallel)
 
-Launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
+**IMPORTANT:** Before making any tool calls, output this line: `"Launching pre-flight checks for v<version> in parallel..."`
+
+Then launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
 
 **Agent A — Test Runner:**
 ```
@@ -365,12 +367,20 @@ Run suggest-version.sh scoped to the selected plugin:
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-version.sh . --plugin <plugin-name>
 ```
 
+Also read `plugins/<plugin-name>/.claude-plugin/plugin.json` to get `current_version`.
+
+Build options for **AskUserQuestion**:
+- If `suggested_version != current_version` AND `current_version` is semver-greater: use `current_version` as option 1 (Recommended) and `suggested_version` as option 2.
+- Otherwise: use `suggested_version` as option 1 (Recommended).
+- Always include `"Custom version"` as the last option.
+
 Use **AskUserQuestion**:
 - question: `"Which version for <plugin-name>?"`
 - header: `"Version"`
-- options:
-  1. label: `"v<suggested_version> (Recommended)"`, description: `"Based on commits: <feat_count> feat, <fix_count> fix, <other_count> other"`
-  2. label: `"Custom version"`, description: `"Enter a specific version number"`
+- options (up to 3):
+  1. label: `"v<recommended_version> (Recommended)"`, description: `"<context>: <feat_count> feat, <fix_count> fix, <other_count> other"` where context is "Based on commits" or "Current plugin.json version" as appropriate
+  2. *(only if both versions differ)* label: `"v<other_version>"`, description: `"Alternative: commit-based suggestion"` or `"Alternative: current plugin.json version"` as appropriate
+  3. label: `"Custom version"`, description: `"Enter a specific version number"`
 
 If "Custom version" selected, ask the user to enter it.
 
@@ -378,7 +388,9 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `<plugin-n
 
 ### Phase 1 — Scoped Pre-flight (Parallel)
 
-Launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
+**IMPORTANT:** Before making any tool calls, output this line: `"Launching pre-flight checks for <plugin-name> v<version> in parallel..."`
+
+Then launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
 
 **Agent A — Test Runner (scoped):**
 ```
@@ -550,7 +562,7 @@ If `is_monorepo` is true, show per-plugin status from the `unreleased_plugins` l
 PLUGIN STATUS
 =============
   home-assistant-dev   v2.1.0   3 commits since home-assistant-dev/v2.1.0
-  release-pipeline     v1.1.0   8 commits since release-pipeline/v1.1.0
+  release-pipeline     v1.3.0   8 commits since release-pipeline/v1.3.0
   linux-sysadmin-mcp   v1.0.0   (up to date)
 ```
 
@@ -580,6 +592,8 @@ Simulates a Full Release without committing, tagging, or pushing. All changes ar
 Same as Mode 2 Step 0 — present auto-suggested version via AskUserQuestion. If monorepo, first ask if this is a repo-wide or plugin dry run using AskUserQuestion, then scope accordingly.
 
 ### Phase 1 — Pre-flight (Parallel)
+
+**IMPORTANT:** Before making any tool calls, output this line: `"Launching pre-flight checks for v<version> in parallel (dry run)..."`
 
 Same as Mode 2 Phase 1 — launch all three agents. Display consolidated report.
 
