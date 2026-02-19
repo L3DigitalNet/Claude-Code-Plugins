@@ -3,6 +3,7 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { ToolRegistry } from './tool-registry.js';
 import type { SessionState } from './session/types.js';
 
@@ -25,7 +26,7 @@ export function createServer(): Server {
     tools: registry.getActiveTools().map(t => ({
       name: t.name,
       description: t.description,
-      inputSchema: t.inputSchema,
+      inputSchema: zodToJsonSchema(t.inputSchema),
     })),
   }));
 
