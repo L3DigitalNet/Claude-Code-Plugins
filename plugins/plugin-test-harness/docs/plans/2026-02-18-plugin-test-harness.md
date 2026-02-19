@@ -3328,7 +3328,7 @@ Expected: JSON response listing 3 dormant tools.
 **Step 6: Final commit**
 ```bash
 git add plugins/plugin-test-harness/ .claude-plugin/marketplace.json
-git commit -m "feat(pth): complete plugin-test-harness v1.0.0 implementation"
+git commit -m "feat(pth): complete plugin-test-harness v0.1.0 implementation"
 ```
 
 ---
