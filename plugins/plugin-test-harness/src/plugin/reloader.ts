@@ -33,12 +33,30 @@ export async function reloadPlugin(
     }
   }
 
-  // Step 2: Find PID via ps aux
-  const psResult = await run('ps', ['aux']);
-  const lines = psResult.stdout.split('\n');
-  const matchingLine = lines.find(l => l.includes(pluginStartPattern) && !l.includes('grep'));
+  // Step 2: Find PID — prefer pgrep, fall back to ps aux
+  let pid: number | undefined;
 
-  if (!matchingLine) {
+  const pgrepResult = await run('pgrep', ['-f', pluginStartPattern]);
+  if (pgrepResult.exitCode === 0 && pgrepResult.stdout.trim()) {
+    // pgrep returns one PID per line; take the first
+    const firstPid = parseInt(pgrepResult.stdout.trim().split('\n')[0], 10);
+    if (!isNaN(firstPid)) pid = firstPid;
+  }
+
+  if (pid === undefined) {
+    // pgrep not available or no match — fall back to ps aux
+    const psResult = await run('ps', ['aux']);
+    const lines = psResult.stdout.split('\n');
+    const matchingLine = lines.find(l =>
+      l.includes(pluginStartPattern) && !l.includes('pgrep') && !l.includes('ps aux')
+    );
+    if (matchingLine) {
+      const parsed = parseInt(matchingLine.trim().split(/\s+/)[1], 10);
+      if (!isNaN(parsed)) pid = parsed;
+    }
+  }
+
+  if (pid === undefined) {
     return {
       buildSucceeded: true,
       buildOutput,
@@ -47,51 +65,47 @@ export async function reloadPlugin(
     };
   }
 
-  const pid = parseInt(matchingLine.trim().split(/\s+/)[1], 10);
-  if (isNaN(pid)) {
-    return {
-      buildSucceeded: true,
-      buildOutput,
-      processTerminated: false,
-      message: `Build succeeded but could not parse PID from ps output.`,
-    };
-  }
-
   // Step 3: SIGTERM with SIGKILL fallback
+  let terminated = false;
   try {
     process.kill(pid, 'SIGTERM');
-    await waitForProcessExit(pid, 5000);
+    terminated = await waitForProcessExit(pid, 5000);
   } catch {
-    // Process already gone — fine
+    terminated = true; // Process already gone
   }
 
-  // Try SIGKILL if still running
-  try {
-    process.kill(pid, 0);  // throws if process doesn't exist
-    process.kill(pid, 'SIGKILL');
-  } catch {
-    // Already gone — success
+  if (!terminated) {
+    // SIGTERM didn't work — try SIGKILL
+    try {
+      process.kill(pid, 'SIGKILL');
+      terminated = await waitForProcessExit(pid, 2000);
+    } catch {
+      terminated = true; // Already gone
+    }
   }
 
   return {
     buildSucceeded: true,
     buildOutput,
-    processTerminated: true,
+    processTerminated: terminated,
     pid,
-    message: `Build succeeded. Process ${pid} terminated. Claude Code should restart the plugin automatically. Please verify by calling one of the plugin's tools before continuing.`,
+    message: terminated
+      ? `Build succeeded. Process ${pid} terminated. Claude Code should restart the plugin automatically. Please verify by calling one of the plugin's tools before continuing.`
+      : `Build succeeded but process ${pid} did not exit after SIGTERM + SIGKILL. Manual restart may be required.`,
   };
 }
 
-async function waitForProcessExit(pid: number, timeoutMs: number): Promise<void> {
+async function waitForProcessExit(pid: number, timeoutMs: number): Promise<boolean> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
       process.kill(pid, 0);  // throws ESRCH if process doesn't exist
       await sleep(200);
     } catch {
-      return;  // process is gone
+      return true;  // process is gone
     }
   }
+  return false;  // timed out
 }
 
 function sleep(ms: number): Promise<void> {
