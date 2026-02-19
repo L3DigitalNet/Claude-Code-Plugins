@@ -25,6 +25,10 @@ export function parseTest(yamlText: string): PthTest {
     throw new PTHError(PTHErrorCode.INVALID_TEST, 'Test must have mode: mcp | plugin');
   }
 
+  if (!obj['expect'] || typeof obj['expect'] !== 'object') {
+    throw new PTHError(PTHErrorCode.INVALID_TEST, 'Test must have an "expect" block');
+  }
+
   const mode = obj['mode'] as 'mcp' | 'plugin';
   const name = obj['name'] as string;
 
@@ -58,25 +62,33 @@ export function parseTest(yamlText: string): PthTest {
 }
 
 export async function parseTestFile(filePath: string): Promise<PthTest[]> {
-  const raw = await fs.readFile(filePath, 'utf-8');
+  let raw: string;
+  try {
+    raw = await fs.readFile(filePath, 'utf-8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw err;
+  }
   // Support multi-document YAML (--- separator) or single test
   const docs = raw.split(/^---$/m).filter(d => d.trim().length > 0);
   return docs.map(doc => parseTest(doc));
 }
 
 export async function loadTestsFromDir(dirPath: string): Promise<PthTest[]> {
-  const tests: PthTest[] = [];
+  let entries: string[];
   try {
-    const entries = await fs.readdir(dirPath);
-    for (const entry of entries) {
-      if (entry.endsWith('.yaml') || entry.endsWith('.yml')) {
-        const filePath = path.join(dirPath, entry);
-        const filTests = await parseTestFile(filePath);
-        tests.push(...filTests);
-      }
+    entries = await fs.readdir(dirPath);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw err;
+  }
+  const tests: PthTest[] = [];
+  for (const entry of entries) {
+    if (entry.endsWith('.yaml') || entry.endsWith('.yml')) {
+      const filePath = path.join(dirPath, entry);
+      const fileTests = await parseTestFile(filePath);
+      tests.push(...fileTests);
     }
-  } catch {
-    // dir doesn't exist yet — return empty
   }
   return tests;
 }

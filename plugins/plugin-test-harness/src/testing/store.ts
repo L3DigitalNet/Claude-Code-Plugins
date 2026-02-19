@@ -7,6 +7,9 @@ export class TestStore {
   private tests: Map<string, PthTest> = new Map();
 
   add(test: PthTest): void {
+    if (this.tests.has(test.id)) {
+      throw new Error(`Test with id "${test.id}" already exists. Use update() to replace it.`);
+    }
     this.tests.set(test.id, test);
   }
 

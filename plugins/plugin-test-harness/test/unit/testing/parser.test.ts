@@ -1,4 +1,5 @@
 import { parseTest, parseTestFile } from '../../../src/testing/parser.js';
+import { PTHError } from '../../../src/shared/errors.js';
 
 describe('parseTest', () => {
   it('parses a minimal MCP single-tool test', () => {
@@ -41,6 +42,6 @@ expect:
   });
 
   it('throws on missing required field name', () => {
-    expect(() => parseTest('mode: mcp\ntool: foo')).toThrow();
+    expect(() => parseTest('mode: mcp\ntool: foo')).toThrow(PTHError);
   });
 });
