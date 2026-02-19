@@ -93,7 +93,7 @@ Sort PRs into categories:
 
 ### Step 4: Present Findings
 
-Present by category, most actionable first:
+Present by category, most actionable first. After presenting findings with ≥2 action-relevant details, apply the progressive depth offer once per findings block (Communication Principle #7 in the core skill; skip for advanced owners).
 
 > 🔀 PR Management — ha-light-controller
 >
@@ -122,6 +122,8 @@ gh-manager prs label --repo owner/name --pr 42 --add "stale"
 ```
 
 ### Post Activity Check Comments
+
+An activity check is a gentle ping posted as a comment on the PR thread — it asks whether work is still in progress and gives the author a chance to respond before any stale-close action. On public repos, external contributors will see this comment.
 
 For stale PRs, post a reminder comment. **Always check for existing dedup markers first:**
 
@@ -156,6 +158,8 @@ gh-manager prs label --repo owner/name --pr 42 --add "ready-to-merge"
 
 ### Request Reviewers
 
+Requesting a reviewer sends them a notification and adds their name to the PR's review panel — they'll receive an email (subject to their notification settings) and are expected to review the code.
+
 ```bash
 gh-manager prs request-review --repo owner/name --pr 42 --reviewers "username"
 ```
@@ -164,7 +168,11 @@ gh-manager prs request-review --repo owner/name --pr 42 --reviewers "username"
 
 ⚠️ **Only on explicit owner request.** Never auto-merge.
 
-When the owner asks to merge, use `AskUserQuestion` with merge method options:
+When the owner asks to merge, surface the irreversibility note first — this is the owner-visible ⚠️:
+
+> ⚠️ Merging is permanent — commits become part of the branch history. To undo, you'd need a separate revert commit. How would you like to merge this PR?
+
+Then use `AskUserQuestion` with merge method options:
 
 - "Squash and merge" (recommended for most repos — clean history)
 - "Merge commit" — preserves full commit history

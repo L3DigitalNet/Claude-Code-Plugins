@@ -99,6 +99,8 @@ From the releases list, calculate:
 
 ### Step 6: Present Findings
 
+After presenting findings with ≥2 action-relevant details, apply the progressive depth offer once per findings block (Communication Principle #7 in the core skill; skip for advanced owners).
+
 > 📦 Release Health — ha-light-controller
 >
 > **Last release:** v0.2.2 (Feb 10, 2026 — 7 days ago)
