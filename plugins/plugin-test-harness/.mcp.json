@@ -1,0 +1,6 @@
+{
+  "plugin-test-harness": {
+    "command": "node",
+    "args": ["dist/index.js"]
+  }
+}

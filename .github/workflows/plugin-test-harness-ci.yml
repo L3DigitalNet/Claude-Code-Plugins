@@ -1,0 +1,42 @@
+name: Plugin Test Harness CI
+
+on:
+  push:
+    branches: [testing, main]
+    paths:
+      - 'plugins/plugin-test-harness/**'
+      - '.github/workflows/plugin-test-harness-ci.yml'
+  pull_request:
+    branches: [testing, main]
+    paths:
+      - 'plugins/plugin-test-harness/**'
+      - '.github/workflows/plugin-test-harness-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/plugin-test-harness
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: plugins/plugin-test-harness/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test

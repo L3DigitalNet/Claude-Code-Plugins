@@ -1,0 +1,9 @@
+{
+  "name": "sample-mcp-plugin",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "build": "tsc" },
+  "main": "dist/index.js",
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.15.0" },
+  "devDependencies": { "typescript": "^5.8.0" }
+}
