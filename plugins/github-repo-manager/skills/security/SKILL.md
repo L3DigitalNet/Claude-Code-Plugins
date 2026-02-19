@@ -35,6 +35,8 @@ gh-manager security branch-rules --repo owner/name --branch main
 
 ---
 
+> **Full assessment mode:** Do not output the Security Posture Scorecard below during a full assessment. Collect findings and feed them into the unified 📊 view in the core skill. Use the scorecard format only for narrow security checks.
+
 ## Assessment Flow
 
 ### Step 1: Dependabot Alerts

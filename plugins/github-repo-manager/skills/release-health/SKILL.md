@@ -42,6 +42,8 @@ gh-manager releases publish --repo owner/name --release-id 12345
 
 ---
 
+> **Full assessment mode:** Do not output the 📦 Release Health banner during a full assessment. Collect findings and feed them into the unified 📊 view. Use the per-module banner format only for narrow release checks.
+
 ## Assessment Flow
 
 ### Step 1: Check for Releases

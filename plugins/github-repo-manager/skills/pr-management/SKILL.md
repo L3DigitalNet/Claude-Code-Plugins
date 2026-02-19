@@ -40,6 +40,8 @@ gh-manager prs close --repo owner/name --pr 42 --body "Closing: superseded by #5
 
 ---
 
+> **Full assessment mode:** Do not output the 🔀 PR Management banner during a full assessment. Collect findings and feed them into the unified 📊 view. Use the per-module banner format only for narrow PR checks.
+
 ## Assessment Flow
 
 ### Step 1: Fetch All Open PRs
@@ -162,8 +164,14 @@ gh-manager prs request-review --repo owner/name --pr 42 --reviewers "username"
 
 ⚠️ **Only on explicit owner request.** Never auto-merge.
 
-> PR #42 is approved with passing CI. Want me to merge it?
-> Merge method options: merge commit, squash, or rebase.
+When the owner asks to merge, use `AskUserQuestion` with merge method options:
+
+- "Squash and merge" (recommended for most repos — clean history)
+- "Merge commit" — preserves full commit history
+- "Rebase and merge" — linear history without a merge commit
+- "Don't merge yet" — cancel
+
+Then execute on confirmation:
 
 ```bash
 gh-manager prs merge --repo owner/name --pr 42 --method squash

@@ -14,6 +14,17 @@ allowed-tools: Read, Write, Glob
 # DESIGN DOCUMENT AUTHORING PROTOCOL
 *Principles-First Edition | Guided Interview | Tension Analysis | Draft Generation*
 
+## INTERACTION CONVENTIONS
+
+For every decision point in this command that presents 2–4 labeled
+options (A), (B), (C), etc., present them using `AskUserQuestion`
+rather than as code blocks. Derive the question text, a short header
+(≤12 chars), and option descriptions from the surrounding context.
+`AskUserQuestion` includes a built-in "Other" fallback — do not add a
+redundant "(X) Other" option to bounded lists.
+
+For prompts with 5 or more options, present as formatted text.
+
 ## ENTRY POINT
 
 $ARGUMENTS has been provided. Handle as follows:
@@ -348,13 +359,14 @@ mid-session, it flags it before continuing:
 
 ## PHASE 0 — ORIENTATION
 
-Begin with a brief framing statement, then ask the core orientation
-questions. Never ask more than three questions at once. Wait for answers
-before continuing.
+Begin with a brief framing statement, then ask Q1 and Q2 together.
+After receiving those answers, ask Q3 using `AskUserQuestion`.
 
 You can type `pause` at any point to emit a full session snapshot.
 Paste the snapshot into a new session with `continue` to resume exactly
 where you left off.
+
+**Step 1 — Ask Q1 and Q2 together:**
 
 ```
 DESIGN DOCUMENT AUTHORING — PHASE 0: ORIENTATION
@@ -368,29 +380,23 @@ Q1. What is the name of this project or system?
 
 Q2. In one or two sentences, what problem does it solve — and for whom?
     (Don't describe the solution yet, just the problem and who has it.)
-
-Q3. What is the primary trigger for writing this design document now?
-    [ ] Starting a new project from scratch
-    [ ] Existing project that needs to be formally documented
-    [ ] Proposing a significant change to an existing system
-    [ ] Design review / audit of current state
-    [ ] Other — describe
 ```
 
-After receiving answers, run the PHASE 0 COMPLETION CHECK before
-presenting the summary:
+**Step 2 — After receiving answers, ask Q3 using `AskUserQuestion`:**
 
-```
-PHASE 0 COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  Project name provided
-✓/✗  Problem statement provided (problem + who has it)
-✓/✗  Document trigger selected
-All three required before advancing to Phase 1.
-──────────────────────────────────────────────────────────────────────
-```
+Use `AskUserQuestion` with:
+- question: "What is the primary trigger for writing this design document now?"
+- header: "Trigger"
+- options (4 defined; AskUserQuestion provides "Other" automatically):
+  1. Starting a new project from scratch
+  2. Existing project needing formal documentation
+  3. Proposing a significant change to an existing system
+  4. Design review / audit of current state
 
-If all pass, summarize and confirm:
+After receiving answers, verify internally that project_name,
+problem_statement, and document_trigger are all present. If any are
+missing, ask only for the missing items before continuing. Then
+summarize and confirm:
 
 ```
 ORIENTATION SUMMARY
@@ -515,22 +521,10 @@ Q9. Are there any existing standards, patterns, or reference
 ──────────────────────────────────────────────────────────────────────
 ```
 
-After all three rounds, run the PHASE 1 COMPLETION CHECK:
-
-```
-PHASE 1 COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  Q1–Q3b answered or explicitly skipped with reason
-✓/✗  Q4–Q6b answered or explicitly skipped with reason
-✓/✗  Q7–Q9 answered or explicitly skipped with reason
-✓/✗  Tension scan run after Round 1 (even if none found)
-✓/✗  Tension scan run after Round 2 (even if none found)
-All five required before advancing to Phase 2.
-Skipped questions must have a recorded reason.
-──────────────────────────────────────────────────────────────────────
-```
-
-If all pass, emit Context Synthesis:
+After all three rounds, verify internally that all questions are
+answered or marked SKIPPED with a reason, and that tension scans ran
+after Rounds 1 and 2. Any UNANSWERED entry must become SKIPPED before
+continuing. Resolve any gaps, then emit Context Synthesis:
 
 ```
 CONTEXT SYNTHESIS
@@ -606,19 +600,10 @@ Initial reaction:
 ══════════════════════════════════════════════════════════════════════
 ```
 
-Run PHASE 2A COMPLETION CHECK before presenting confirmation:
-
-```
-PHASE 2A COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-For each candidate PC[N], verify all fields populated:
-✓/✗  PC[N]: Inferred from [quote present]
-✓/✗  PC[N]: In practice this means [≥2 examples]
-✓/✗  PC[N]: Cost of violation [non-empty]
-✓/✗  PC[N]: Tension flag [set or explicitly "None"]
-Any candidate with an empty field must be completed before Phase 2B.
-──────────────────────────────────────────────────────────────────────
-```
+Before presenting confirmation, verify internally that every candidate
+has all required fields: a quote in Inferred from, ≥2 practice
+examples, non-empty Cost of violation, and Tension flag set or
+explicitly "None". Complete any empty fields before presenting.
 
 ### Step 2B — Individual Stress Testing
 
@@ -705,20 +690,12 @@ When a SPLIT verdict is issued:
    current principle's slot. They are treated as new candidates for
    all purposes including Phase 2C tension scenarios.
 
-Run PHASE 2B COMPLETION CHECK before advancing to Phase 2C:
-
-```
-PHASE 2B COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  All candidates have a verdict (STRONG / NEEDS REFINEMENT /
-      TOO VAGUE / SPLIT / DROPPED)
-✓/✗  No candidates remain in Pending status
-✓/✗  All STRONG verdicts have a non-empty Cost of following field
-✓/✗  All SPLIT verdicts have produced two named child candidates
-      queued for stress testing
-All four required before advancing to Phase 2C.
-──────────────────────────────────────────────────────────────────────
-```
+Before advancing to Phase 2C, verify internally that all candidates
+have a verdict (STRONG / NEEDS REFINEMENT / TOO VAGUE / SPLIT /
+DROPPED), no candidates remain Pending, all STRONG verdicts have a
+non-empty Cost of following, and all SPLIT verdicts produced two child
+candidates queued for stress testing. Resolve any gaps before
+continuing.
 
 ### Step 2C — Tension Resolution
 
@@ -774,21 +751,11 @@ Resolution options:
 ──────────────────────────────────────────────────────────────────────
 ```
 
-Process all tensions sequentially. Run PHASE 2C COMPLETION CHECK:
-
-```
-PHASE 2C COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  Tension flag reconciliation (Step 2C-0) completed
-✓/✗  All active tension flags have a scenario presented
-✓/✗  All tension scenarios have a resolution selected (A)–(E);
-      none remain at "Pending"
-All three required before advancing to Phase 2D.
-Retired flags do not require resolution — only Active flags.
-──────────────────────────────────────────────────────────────────────
-```
-
-After all tensions are resolved, emit the tension resolution log:
+Process all tensions sequentially. Before advancing to Phase 2D,
+verify internally that reconciliation ran (Step 2C-0), all Active
+tension flags have scenarios, and all scenarios have a resolution
+selected (A)–(E). Retired flags are excluded. Resolve any outstanding
+items, then emit the tension resolution log:
 
 ```
 TENSION RESOLUTION LOG
@@ -800,26 +767,42 @@ T2: [PC C] vs [PC D] → [Resolution type] — [one-line summary]
 
 ### Step 2D — Principles Registry Lock
 
-Present the final registry for confirmation. Run PHASE 2D COMPLETION
-CHECK before presenting the lock option:
+Before presenting the registry for lock, verify internally that every
+principle has all required fields populated (Statement, Intent,
+Enforcement Heuristic, Auto-Fix Heuristic, Cost of Following,
+Tiebreaker or "None", Risk Areas). Complete any missing fields. The
+registry is not locked until the human confirms (A) below.
 
-```
-PHASE 2D COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  All principles have all required fields: Statement, Intent,
-      Enforcement Heuristic, Auto-Fix Heuristic, Cost of Following,
-      Tiebreaker (or explicit "None"), Risk Areas
-✓/✗  Human has not yet confirmed — awaiting (A) below
-Both required. Registry is not locked until (A) is received.
-──────────────────────────────────────────────────────────────────────
-```
+Present the registry in compact summary form by default:
 
 ```
 PHASE 2D: PRINCIPLES REGISTRY — FINAL CONFIRMATION
 ══════════════════════════════════════════════════════════════════════
-These are the design principles for [project name]. Once confirmed,
-they will be embedded in the design document and enforced during review.
+These are the [N] design principles for [project name].
+Review and lock to proceed to Phase 3.
 
+[P1] [Principle Name]
+     Statement: "[declarative statement]"
+     Cost: "[what the team gives up when following this under pressure]"
+     [Tiebreaker: "[rule]"  ← omit this line if Tiebreaker is None]
+
+[P2] [Principle Name]
+     [same 2-3 line format]
+
+[...one compact block per principle...]
+══════════════════════════════════════════════════════════════════════
+
+  (A) Lock registry — proceed to Phase 3: Document Scaffolding
+  (B) Show full details before deciding
+  (C) I want to make changes before locking
+  (D) Add one more principle I thought of
+```
+
+If the human selects **(B) Show full details**, emit the complete
+registry with all fields for every principle, then re-present the
+(A)/(C)/(D) options:
+
+```
 ──────────────────────────────────────────────────────────────────────
 [P1] [Principle Name]
 ──────────────────────────────────────────────────────────────────────
@@ -839,17 +822,14 @@ Auto-Fix Heuristic:
   violation be corrected? Specific enough to apply without judgment.]
 
 Cost of Following This Principle:
-  [Carried forward from Phase 2B stress test verdict. What the team
-  gives up or finds uncomfortable when they honour this principle
-  under pressure. Required — cannot be empty.]
+  [Carried forward from Phase 2B stress test verdict.]
 
 Tiebreaker (if any):
-  [If this principle conflicts with another, the resolution rule
-  established in Phase 2C. "None" if no tiebreaker was set.]
+  [Resolution rule from Phase 2C, or "None".]
 
 Risk Areas:
-  [Which sections of the design document are most likely to
-  violate this principle under implementation pressure?]
+  [Sections most likely to violate this principle under
+  implementation pressure.]
 
 [Dissent note, if any:]
   *Note: refinement was proposed during design and kept as-is
@@ -858,12 +838,9 @@ Risk Areas:
 ──────────────────────────────────────────────────────────────────────
 [P2] ... [same format]
 ──────────────────────────────────────────────────────────────────────
-
-  (A) Lock registry — proceed to Phase 3: Document Scaffolding
-  (B) I want to make changes before locking
-  (C) Add one more principle I thought of
-══════════════════════════════════════════════════════════════════════
 ```
+
+Then re-present the lock options (A)/(C)/(D) as `AskUserQuestion`.
 
 ---
 
@@ -872,18 +849,10 @@ Risk Areas:
 Before generating the document scaffold, establish what sections the
 document needs.
 
-Run PHASE 3 COMPLETION CHECK before advancing to Phase 4:
-
-```
-PHASE 3 COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  Section structure presented to human
-✓/✗  Human has explicitly confirmed (A) or provided modifications
-      that were incorporated and re-confirmed
-✓/✗  At least one Required section is in the confirmed list
-All three required before advancing to Phase 4.
-──────────────────────────────────────────────────────────────────────
-```
+Before advancing to Phase 4, verify internally that the section
+structure was presented, the human has confirmed it (with any
+modifications incorporated), and at least one Required section is
+present. Do not advance until confirmed.
 
 ```
 PHASE 3: SCOPE & STRUCTURE
@@ -995,21 +964,12 @@ coverage state variables (constraints_coverage{}, risks_coverage{},
 governance_requirements[]) become fully populated and the Phase 4
 completion check runs.
 
-Run PHASE 4 COMPLETION CHECK:
-
-```
-PHASE 4 COMPLETION CHECK
-──────────────────────────────────────────────────────────────────────
-✓/✗  Every Required section has either sufficient content answers
-      or an accepted stub with a recorded stub description
-✓/✗  No Required section is in an ambiguous state (questions asked
-      but no answer received and no stub accepted)
-✓/✗  Pre-Phase-5 coverage sweep complete — all constraints, risks,
-      and governance requirements are Covered or Open-Question
-Recommended and Optional sections may be unanswered without
-blocking advancement — they will be stubbed automatically.
-──────────────────────────────────────────────────────────────────────
-```
+Before advancing to Phase 5, verify internally that every Required
+section has either sufficient content answers or an accepted stub, no
+Required section is in an ambiguous state (question asked but neither
+answered nor stubbed), and the coverage sweep is complete.
+Recommended and Optional sections may be unanswered — they will be
+stubbed automatically.
 
 ---
 

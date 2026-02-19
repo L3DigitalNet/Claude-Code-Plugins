@@ -30,6 +30,8 @@ Close reasons: `RESOLVED`, `OUTDATED`, `DUPLICATE`.
 
 ---
 
+> **Full assessment mode:** Do not output the 💬 Discussions banner during a full assessment. Collect findings and feed them into the unified 📊 view (unanswered Q&A goes to ⚠️ Needs Attention). Use the per-module banner format only for narrow discussion checks.
+
 ## Assessment Flow
 
 ### Step 1: Check for Discussions
@@ -95,10 +97,12 @@ Based on the triage:
 ```bash
 gh-manager discussions comment --repo owner/name --discussion 5 --body "Great question! You can configure multi-zone by...
 
-*Posted via GitHub Repo Manager*"
+*Posted by GitHub Repo Manager*"
 ```
 
 ### Close Resolved Discussions
+
+⚠️ **Closing a discussion is immediately visible to all participants and cannot be undone** (it can be reopened, but the close notification is already sent). On public repos, prefer posting a resolution comment first and letting the author close it if possible.
 
 ```bash
 gh-manager discussions close --repo owner/name --discussion 3 --reason RESOLVED
@@ -115,7 +119,7 @@ For stale closures, consider posting a comment first:
 ```bash
 gh-manager discussions comment --repo owner/name --discussion 7 --body "Closing this as it's been inactive for 30+ days. Feel free to open a new discussion if this is still relevant.
 
-*Posted via GitHub Repo Manager*"
+*Posted by GitHub Repo Manager*"
 gh-manager discussions close --repo owner/name --discussion 7 --reason OUTDATED
 ```
 

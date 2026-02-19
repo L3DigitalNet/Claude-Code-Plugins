@@ -52,6 +52,8 @@ gh-manager repo labels create --repo owner/name --name "maintenance" --color "0E
 
 ---
 
+> **Full assessment mode:** Do not output the 🌱 Community Health banner during a full assessment. Collect findings and feed them into the unified 📊 view. Use the per-module banner format only for narrow community health checks.
+
 ## Assessment Flow
 
 ### Step 1: Community Profile Quick Check
@@ -109,32 +111,17 @@ For existing files, note when they were last updated relative to the repo's over
 
 ## Label Bootstrapping
 
-**When to run:** On first assessment of any repo, and whenever a module attempts to use a label.
+Label bootstrapping is handled during onboarding (Step 6 of the core `repo-manager` skill). Community Health does not duplicate this flow.
 
-**Required labels:**
+If Community Health needs to apply a label that doesn't exist, report it:
+> Label `maintenance` not found — run label bootstrapping first (or it may have been skipped during onboarding).
 
-| Label | Color | Description | Used By |
-|-------|-------|-------------|---------|
-| `maintenance` | `0E8A16` | Maintenance task created by repo manager | All modules (PR labeling) |
-| `stale` | `FBCA04` | No recent activity | PR Management, Issue Triage |
-| `ready-to-merge` | `0E8A16` | Approved and ready to merge | PR Management |
-| `needs-rebase` | `E11D48` | Has merge conflicts, needs rebase | PR Management |
+To create labels directly from this module:
+```bash
+gh-manager repo labels create --repo owner/name --name "maintenance" --color "0E8A16" --description "Maintenance task created by repo manager"
+```
 
-**Flow:**
-
-1. Fetch current labels: `gh-manager repo labels list --repo owner/name`
-2. Compare against required set
-3. If any missing, present them to the owner:
-
-> I use a few custom labels for maintenance tracking. Your repo is missing:
-> • maintenance — marks PRs created by this plugin
-> • stale — flags PRs/issues with no recent activity
->
-> Want me to create these, or would you prefer different names?
-
-4. On approval: `gh-manager repo labels create --repo owner/name --name "maintenance" --color "0E8A16" --description "Maintenance task created by repo manager"`
-
-**Idempotent:** The create command is a no-op if the label already exists. Safe to run repeatedly.
+**Idempotent:** The create command is a no-op if the label already exists.
 
 ---
 
@@ -238,7 +225,7 @@ When assessing a repo that belongs to an org:
 
 Present as a summary with action items:
 
-> 📋 Community Health — ha-light-controller (Tier 4)
+> 🌱 Community Health — ha-light-controller (Tier 4)
 >
 > GitHub Community Score: 57%
 >
@@ -253,7 +240,7 @@ Present as a summary with action items:
 
 Group findings by concern:
 
-> 📋 Community Health — Cross-Repo Report
+> 🌱 Community Health — Cross-Repo Report
 >
 > Scanned 15 repos (2 forks skipped, 1 archived skipped)
 >

@@ -24,6 +24,8 @@ gh-manager deps dependabot-prs --repo owner/name
 
 ---
 
+> **Full assessment mode:** Do not output the 🔗 Dependency Audit banner during a full assessment. Collect findings and feed them into the unified 📊 view. Use the per-module banner format only for narrow dependency checks.
+
 ## Assessment Flow
 
 ### Step 1: Dependency Graph Overview
@@ -38,7 +40,7 @@ If the dependency graph is not enabled (`enabled: false`), note it:
 
 If enabled, summarize:
 
-> 📦 Dependency Graph — ha-light-controller
+> 🔗 Dependency Graph — ha-light-controller
 > Total packages: 142
 > By ecosystem: npm (128), pip (14)
 
@@ -58,7 +60,7 @@ This is the core of the dependency audit. Evaluate:
 
 ### Step 3: Present Findings
 
-> 📦 Dependency Audit — ha-light-controller
+> 🔗 Dependency Audit — ha-light-controller
 >
 > **Dependabot PR Backlog:** 8 open PRs
 > • 2 security fixes (already covered in Security findings)
@@ -79,13 +81,25 @@ This is the core of the dependency audit. Evaluate:
 
 ### Step 4: Batch Merge (Owner Approval Required)
 
-On approval, merge each candidate:
+After presenting the candidates, use `AskUserQuestion`:
+
+- "Merge all N candidates" (recommended if CI passing for all)
+- "Let me review each PR first" — skip batch merge, owner handles manually
+- "Skip dependency merges for now"
+
+On approval, merge each candidate (squash by default for Dependabot PRs):
 
 ```bash
 gh-manager prs merge --repo owner/name --pr 68 --method squash
 gh-manager prs merge --repo owner/name --pr 69 --method squash
 gh-manager prs merge --repo owner/name --pr 70 --method squash
 gh-manager prs merge --repo owner/name --pr 71 --method squash
+```
+
+**Partial approval:** If the owner specifies a subset (e.g., "merge 68 and 69 but skip 70"), merge only those. List skipped PRs briefly:
+```
+✅ Merged: PR #68, #69
+⏭ Skipped: PR #70 (owner decision), #71 (owner decision)
 ```
 
 Report results:

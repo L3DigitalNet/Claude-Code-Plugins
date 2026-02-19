@@ -177,11 +177,24 @@ Check the response:
 - If `skip_reason` is "archived": note it's archived (read-only) and offer assessment-only
 - Otherwise: present the `suggested_tier` with reasoning based on the signals
 
-**Present the tier proposal conversationally:**
+**Present the tier proposal and confirm with AskUserQuestion:**
 
-> Based on what I see — public repo, 14 releases, CI workflows, Python package — I'd classify this as Tier 4 (Public with Releases). That means I'll use pull requests for any file changes and give you detailed context before any actions.
->
-> Does Tier 4 sound right, or would you prefer a different level?
+Summarize your reasoning briefly (1-2 sentences), then use `AskUserQuestion` with these options:
+
+| Option | Description |
+|--------|-------------|
+| "Confirm — Tier N (auto-detected)" | Use the suggested tier. Mark as recommended. |
+| "Tier 1 — Private, Docs Only" | Low ceremony, batch approvals, direct commits |
+| "Tier 2 — Private, Runnable Code" | Show diffs, individual approvals for code changes |
+| "Tier 3 — Public, No Releases" | Direct commits with full diff review |
+| "Tier 4 — Public, Releases" | Maximum ceremony — PRs for all file changes |
+
+Only show tier options that differ from the auto-detected one. Pre-select the auto-detected tier as the recommended option.
+
+Example lead-in (adapt to the actual repo):
+> Based on what I see — public repo, 14 releases, CI workflows, Python package — I'd classify this as Tier 4.
+
+Then ask: "Does that sound right?" with the AskUserQuestion options above.
 
 #### Step 5: Check for config file
 
@@ -204,16 +217,15 @@ node ${CLAUDE_PLUGIN_ROOT}/helper/bin/gh-manager.js repo labels list --repo owne
 
 Check if these labels exist: `maintenance`, `stale`, `ready-to-merge`, `needs-rebase`.
 
-If any are missing, present them to the owner:
-> I noticed your repo doesn't have some labels I use for maintenance tracking:
->
-> Missing labels I'd like to create:
-> • maintenance — marks PRs created by this plugin
-> • stale — flags PRs/issues with no recent activity
-> • ready-to-merge — approved PRs awaiting merge
-> • needs-rebase — PRs with merge conflicts
->
-> Want me to create these, or would you prefer different names?
+If any are missing, list them briefly, then use `AskUserQuestion`:
+
+> I noticed your repo is missing some labels I use for maintenance tracking:
+> • maintenance, stale, ready-to-merge, needs-rebase
+
+Options to offer:
+- "Create them now" (recommended) — create all missing labels with defaults
+- "Skip for now" — proceed without the labels (some features may be limited)
+- "I'll customize them" — skip automatic creation; owner will name/configure manually
 
 This is a one-time setup per repo. Once labels exist, skip this in future sessions.
 
@@ -221,7 +233,19 @@ This is a one-time setup per repo. Once labels exist, skip this in future sessio
 
 All checks passed — proceed to the requested work.
 
-**Collapse on success:** If PAT is valid, tier is already known (from config), and labels exist — skip straight to work with no onboarding output. A fully configured repo should have zero onboarding friction.
+**Collapse on success:** If PAT is valid, tier is already known (from config), and labels exist — emit a single confirmation line and start immediately:
+
+```
+✓ owner/repo-name — Tier 4 · labels OK · running assessment...
+```
+
+If any step needed interaction (tier was confirmed, labels were created), summarize what was set up in one line before starting:
+
+```
+✓ Set up: Tier 4 confirmed, 4 labels created · running assessment...
+```
+
+A fully configured repo should produce zero multi-line onboarding output.
 
 ---
 
@@ -295,14 +319,22 @@ The owner's expertise level controls how much explanation you provide. Default i
    - Deleting wiki pages
    - Dismissing security alerts
    - Closing and locking discussions
+   - Merging a PR (merge commit alters git history; reverting requires a revert commit)
+   - Publishing a release (publicly visible, triggers notifications; cannot be cleanly un-published)
+   - Closing issues or PRs on Tier 3/4 repos (visible to all; "closed as not planned" signals intent to external contributors)
 
-4. **Jargon Translation** — Use plain language alongside GitHub terminology on first mention in a session.
+4. **Jargon Translation** — Use plain language alongside GitHub terminology whenever the owner may not be familiar with a term. Scale with expertise level — beginners get explanations, advanced owners get none.
 
 5. **Tier-Aware Sensitivity** — Scale explanation and warning level with the repo tier. Label change on Tier 1 = no warning. Label change on Tier 4 = note about subscriber notifications.
 
 6. **Teaching Moments** — When you detect a gap (missing SECURITY.md, no branch protection), briefly explain *why* it matters, not just that it's missing.
 
 7. **Progressive Depth** — Default to concise explanations but offer to go deeper when warranted.
+
+   **When to offer depth:** After presenting a finding that has ≥2 action-relevant details (e.g., a security finding with multiple CVEs, a PR with both conflicts and CI failures), append a short offer inline:
+   > *Want the full details on any of these?*
+
+   Do this at most once per findings block — not after every finding. Advanced-level owners: skip the offer entirely.
 
 ### Mid-Session Expertise Change
 
@@ -348,6 +380,8 @@ Collect errors as you go. If multiple errors accumulate, summarize them together
 
 ## Module Execution Order
 
+### Full Assessment Mode
+
 When running a full assessment, execute modules in this order (required for cross-module deduplication):
 
 ```
@@ -362,7 +396,21 @@ When running a full assessment, execute modules in this order (required for cros
 9. Wiki Sync
 ```
 
-All 9 modules are implemented as of v1.0. For narrow checks (owner asks about a single topic), run only the relevant module(s).
+**Critical: During a full assessment, do NOT present each module's findings separately as it completes.** Run all modules first, collect all findings, then present one consolidated view using the Unified Findings Presentation format (see Cross-Module Intelligence Framework below).
+
+**Exceptions — surface immediately without waiting:**
+- 🔴 Any open secret scanning alert
+- 🔴 Critical Dependabot vulnerability with no fix PR
+- 🔴 An error that would prevent the rest of the assessment from running (e.g., rate limit hit)
+
+**Progress indicator:** As each module completes, emit a single-line status so the owner knows the assessment is progressing:
+```
+✓ Security  ✓ Release Health  ✓ Community Health  ✓ PR Management ...
+```
+
+### Narrow Check Mode
+
+For narrow checks (owner asks about a single topic), run only the relevant module(s) and use the module's own presentation format — no unified rollup needed.
 
 ---
 
@@ -385,11 +433,14 @@ When the owner asks about something across all repos:
 When the owner indicates they're done:
 
 1. **Check for deferred items.** Note anything assessed but not acted on.
-2. **Offer a report** if the session had significant findings or actions.
-3. **Summarize actions:** "I created 2 PRs, labeled 1 issue, and pushed wiki updates."
+2. **Summarize actions** in one sentence: "I created 2 PRs, labeled 1 issue, and pushed wiki updates."
+3. **Offer a report** if the session had significant findings or actions — use `AskUserQuestion`:
+   - "Show report inline" — present the markdown report in conversation
+   - "Save to file" — write to `~/github-repo-manager-reports/`
+   - "Skip the report" — done
 4. **Exit cleanly.** Return to normal operation.
 
-Match wrap-up depth to session depth. Full assessment = full summary + report offer. Quick "how are the PRs?" = one-liner.
+**Match depth to scope:** Full assessment → summary + report offer. Quick narrow check ("how are the PRs?") → one-liner, no report offer.
 
 ---
 
@@ -508,22 +559,35 @@ When assembling the findings summary, apply these rules:
 
 ### Unified Findings Presentation
 
-Present findings by priority, not by module:
+**This is the required output format for full assessments.** After all modules complete, present a single consolidated view — do not use per-module banners (📋, 🔀, 📦, etc.) during full assessment mode. Those formats are for narrow checks only.
 
 ```
 📊 Repository Health — repo-name (Tier N)
 
-🔴 Critical
-• [critical findings]
+🔴 Critical (N)
+• [finding] — [source module] [action available?]
+• ...
 
-⚠️ Needs Attention
-• [findings needing action]
+⚠️ Needs Attention (N)
+• [finding] — [source module]
+• ...
 
 ✅ Healthy
-• [things that look good]
+• Security posture: no alerts
+• [other passing items]
 
-[Recommendation for what to tackle first]
+Errors / Skipped
+• Code scanning: not enabled (404)
+• ...
+
+[1-2 sentence recommendation for where to start]
 ```
+
+**Rules:**
+- Group by severity, not by module. A finding from Security and one from PR Management can both appear under 🔴 Critical.
+- Include source module attribution (e.g., "Security", "PR #42") so the owner can ask for details.
+- ✅ Healthy items are listed briefly — don't expand them unless the owner asks.
+- Keep the full view to ≤ 20 bullet points. If more than 20 findings exist, show the top 20 by severity and note "N more in the detailed report."
 
 ### Cross-Module References in Reports
 

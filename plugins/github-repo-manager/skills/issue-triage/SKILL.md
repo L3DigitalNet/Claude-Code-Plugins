@@ -34,6 +34,8 @@ gh-manager issues assign --repo owner/name --issue 12 --assignees "username"
 
 ---
 
+> **Full assessment mode:** Do not output the 📋 Issue Triage banner during a full assessment. Collect findings and feed them into the unified 📊 view. Use the per-module banner format only for narrow issue checks.
+
 ## Assessment Flow
 
 ### Step 1: Fetch All Open Issues
@@ -91,7 +93,12 @@ Assess each issue on:
 > **Active (3):**
 > • Issue #20, #21, #22 — all recently updated, properly triaged
 >
-> Issue #12 looks resolved — want me to close it with a note linking to PR #15?
+> Issue #12 looks resolved — linked PR #15 was merged 3 days ago.
+
+Use `AskUserQuestion` for resolved issues (can batch if multiple):
+- "Close N resolved issue(s)" (recommended) — close with a note linking to the merged PR
+- "Leave them open" — owner will close manually
+- "Mark as won't fix instead" — close with `not_planned` reason
 
 ---
 
@@ -99,12 +106,18 @@ Assess each issue on:
 
 ### Close Resolved Issues
 
-When a linked PR has been merged:
+When a linked PR has been merged, close with a note:
 
 ```bash
 gh-manager issues close --repo owner/name --issue 12 --body "Resolved by PR #15. Closing this issue.
 
 *Closed by GitHub Repo Manager*" --reason completed
+```
+
+**Partial approval:** If the owner specifies only some issues to close (e.g., "close 12 and 19 but not 5"), close only those and note what was skipped:
+```
+✅ Closed: Issue #12, #19
+⏭ Skipped: Issue #5 (owner decision — left open)
 ```
 
 ### Label Suggestions
@@ -143,6 +156,8 @@ If this is a long-term item, add the \`backlog\` label and I won't flag it again
 ```
 
 ### Close Stale Issues (Not Planned)
+
+⚠️ **On Tier 3/4 (public repos): closing an issue is publicly visible** — external contributors will see a "closed as not planned" status. For issues opened by external contributors, consider posting an activity check comment first rather than closing directly.
 
 For issues the owner wants to close as stale:
 
