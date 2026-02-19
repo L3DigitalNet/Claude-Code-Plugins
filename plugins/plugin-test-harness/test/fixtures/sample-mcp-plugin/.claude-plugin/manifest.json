@@ -1,1 +1,1 @@
-{"name": "sample-mcp-plugin", "version": "1.0.0", "description": "Fixture plugin for PTH tests"}
+{ "name": "sample-mcp-plugin", "version": "1.0.0", "description": "Sample MCP plugin fixture for PTH tests" }

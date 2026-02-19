@@ -1,5 +1,5 @@
 {
-  "name": "sample-mcp-plugin",
+  "name": "broken-mcp-plugin",
   "version": "1.0.0",
   "type": "module",
   "scripts": { "build": "tsc" },

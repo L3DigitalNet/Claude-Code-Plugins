@@ -1,0 +1,1 @@
+{ "broken-mcp-plugin": { "command": "node", "args": ["dist/index.js"] } }
