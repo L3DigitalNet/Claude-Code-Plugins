@@ -3,10 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { PTHError, PTHErrorCode } from '../shared/errors.js';
 import type { PthTest } from './types.js';
-
-function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-}
+import { slugify } from './utils.js';
 
 export function parseTest(yamlText: string): PthTest {
   let raw: unknown;

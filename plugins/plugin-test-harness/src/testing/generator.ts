@@ -1,6 +1,7 @@
 // src/testing/generator.ts
 import type { PthTest } from './types.js';
 import type { ToolSchema } from '../shared/source-analyzer.js';
+import { slugify } from './utils.js';
 
 export interface GenerateMcpOptions {
   pluginPath: string;
@@ -47,7 +48,7 @@ export async function generateMcpTests(options: GenerateMcpOptions): Promise<Pth
   return tests;
 }
 
-export function generatePluginTests(pluginPath: string, hookScripts: string[]): PthTest[] {
+export function generatePluginTests(hookScripts: string[]): PthTest[] {
   const tests: PthTest[] = [];
 
   for (const script of hookScripts) {
@@ -83,6 +84,3 @@ function buildValidInput(tool: ToolSchema): Record<string, unknown> {
   return input;
 }
 
-function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-}
