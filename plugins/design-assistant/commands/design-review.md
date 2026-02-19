@@ -244,6 +244,10 @@ mid-session, it flags it before continuing:
 
 1. No finding may be Auto-Fixed if the relevant principle has
    auto_fix_eligible: false — regardless of auto_fix_mode.
+   No `PRINCIPLE: Pn` type finding may EVER be Auto-Fixed — regardless
+   of auto_fix_mode or the principle's auto_fix_eligible setting.
+   Principle violations represent design decisions that must be
+   consciously resolved by the author, not silently applied.
 2. No finding with severity Critical may ever be Auto-Fixed.
 3. global_finding_counter never decreases within a session. Retiring
    a deferred finding (RETIRED → see #N) does not decrement the counter.
@@ -257,6 +261,14 @@ mid-session, it flags it before continuing:
    but must be listed in the Completion Declaration.
 8. auto_fix_heuristic values from principles_registry[] must never
    appear in user-facing output — they are internal tooling only.
+9. Before any proposed resolution is presented to the human (whether
+   for manual review or auto-fix), the proposed fix must be screened
+   against all principles in principles_registry[]. If the fix would
+   violate any established principle, the conflict must be surfaced
+   explicitly before the fix is offered. A resolution that closes one
+   finding while introducing a principle violation is not a valid
+   resolution — it must be modified, rejected, or explicitly
+   acknowledged as a deliberate exception by the author.
 
 ---
 
@@ -501,6 +513,10 @@ Auto-Fix Eligible principles: [list]
 Auto-Fix Ineligible principles (always reviewed): [list]
 
 Note: Regardless of mode, these ALWAYS require individual review:
+  - PRINCIPLE: Pn type findings (never auto-fixed — principle violations
+    are design decisions requiring conscious author resolution)
+  - Any finding whose proposed fix fails Principle Conflict Screening
+    (fix disqualified from auto-fix, surfaced for manual review)
   - Critical severity findings
   - SYSTEMIC and SYSTEMIC: Health findings
   - Cross-section findings affecting 3+ sections
@@ -587,13 +603,24 @@ SYSTEMIC: Health resolved before SYSTEMIC at any pass boundary.
 
 ## AUTO-FIX ELIGIBILITY
 
-A finding is **Auto-Fix Eligible** when ALL are true:
+**`PRINCIPLE: Pn` type findings are NEVER Auto-Fix Eligible.** They always
+require individual human review regardless of auto_fix_mode or the
+principle's auto_fix_eligible setting. Principle violations are design
+decisions — the author must consciously choose the resolution. This mirrors
+the rigour of /design-draft, where every principle is human-confirmed through
+stress testing and tension resolution before being locked.
+
+`STRUCTURAL` and `GAP: Gn` findings are **Auto-Fix Eligible** only when
+ALL of the following are true:
 1. Principle-aligned resolution clearly prescribed by Auto-Fix Heuristic
 2. Single-section scope
 3. Claude confidence is HIGH
 4. Severity is not Critical
-5. Principle is Auto-Fix Eligible
+5. Relevant principle (the one guiding the fix) is Auto-Fix Eligible
 6. No new design decision required
+7. Proposed fix passes Principle Conflict Screening (see below) — a fix
+   that resolves the finding but violates an established principle fails
+   this criterion and is moved to manual review
 
 **Auto-Fix Confidence:**
 - HIGH — heuristic directly and unambiguously prescribes the resolution
@@ -601,6 +628,52 @@ A finding is **Auto-Fix Eligible** when ALL are true:
 - LOW — context-dependent or involves unresolved tradeoffs
 
 Only HIGH confidence findings are auto-fixed.
+
+---
+
+## PRINCIPLE CONFLICT SCREENING
+
+**Mandatory for every proposed resolution before it is presented to the
+human** — whether the finding is STRUCTURAL, GAP, PRINCIPLE, or SYSTEMIC,
+and whether the resolution mode is interactive, auto-fix, or bulk.
+
+Before presenting any proposed fix, Claude screens it against the full
+principles_registry[]. This step is **silent** — it does not produce output
+unless a conflict is detected. The result is recorded in the session log
+entry for the finding: `Conflict Screening: Passed` or
+`Conflict Screening: Conflict with [Pn] — [resolution chosen]`.
+
+**When no conflict is found:** Proceed to present the resolution normally.
+
+**When a conflict is found:** Do not present the resolution as clean.
+Instead, disqualify it from auto-fix (if applicable) and surface the
+conflict explicitly:
+
+```
+⚠ PROPOSED FIX CONFLICTS WITH [Pn]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Finding #[N]: [original finding type and section]
+Proposed fix: [what would resolve the finding]
+Principle conflict: [Pn] — [one sentence: how the proposed fix
+  violates this principle's enforcement heuristic]
+
+Options:
+  (A) Accept the fix — deliberate exception to [Pn]
+      [Tiebreaker rule or cost-of-violation recorded in session log]
+  (B) Modify the fix to honour [Pn]
+      [Alternative approach that resolves both the finding and
+       respects the principle — Claude provides a concrete proposal]
+  (C) Revise [Pn] — the principle needs updating to accommodate this
+      [Triggers update principle [Pn] flow + health check]
+  (D) Defer — flag both the original finding and this conflict for later
+  (E) Reject the fix — original finding remains open
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Auto-fix disqualification:** If a proposed auto-fix fails Principle
+Conflict Screening, it is removed from the auto-fix list and added to
+"REQUIRES YOUR REVIEW" with reason `Proposed fix conflicts with [Pn]`.
+The conflict is surfaced in the review queue, not silently discarded.
 
 ---
 
@@ -617,6 +690,9 @@ FINDINGS QUEUE — PASS [N]
 #  | Type          | Sev  | Scope         | Section  | Auto-Fix
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
+Auto-Fix column values: `✓ Eligible` | `✗ Ineligible` |
+`MANUAL ONLY` (all PRINCIPLE: Pn findings) |
+`✗ Conflict: Pn` (auto-fix disqualified by Principle Conflict Screening)
 
 ---
 
@@ -653,10 +729,15 @@ AUTO-FIX ELIGIBLE — Claude proposes to fix these automatically:
   #[N] | [TYPE] | [Sev] | [Section]
        Violation: [plain-language description]
        Auto-fix: [what will be changed and why it's principle-aligned]
+       Conflict Screening: Passed
        Confidence: HIGH
 
 REQUIRES YOUR REVIEW — will surface individually after:
   #[N] | [TYPE] | [Sev] | [Section] | Reason: [why review required]
+  Note: ALL PRINCIPLE: Pn findings appear here — they are never
+  auto-fixed. Any finding whose proposed fix failed Principle Conflict
+  Screening also appears here, with "Reason: Proposed fix conflicts
+  with [Pn]" and the conflict presented inline.
 
   (A) Approve auto-fixes — implement all, then surface review findings
   (B) Approve with exclusions — exclude #[list]
