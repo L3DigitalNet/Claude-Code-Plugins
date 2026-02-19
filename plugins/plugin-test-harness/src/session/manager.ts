@@ -7,6 +7,8 @@ import { writeSessionState, readSessionState } from './state-persister.js';
 import { TestStore } from '../testing/store.js';
 import { loadTestsFromDir } from '../testing/parser.js';
 import type { SessionState } from './types.js';
+import { run } from '../shared/exec.js';
+import { PTHError, PTHErrorCode } from '../shared/errors.js';
 
 // In-memory state shared with server.ts
 export let testStore = new TestStore();
@@ -32,8 +34,14 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
   }
 
   // Check plugin mode
-  const mode = await detectPluginMode(args.pluginPath);
-  lines.push(`✓ Plugin mode: ${mode}`);
+  let pluginValid = false;
+  try {
+    const mode = await detectPluginMode(args.pluginPath);
+    lines.push(`✓ Plugin mode: ${mode}`);
+    pluginValid = true;
+  } catch {
+    lines.push(`✗ Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
+  }
 
   // Check for active session lock
   const lockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
@@ -49,7 +57,11 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
     lines.push(`✓ No active session lock`);
   }
 
-  lines.push('', 'OK — ready to start a session.');
+  if (pluginValid) {
+    lines.push('', 'OK — ready to start a session.');
+  } else {
+    lines.push('', 'Cannot start session — fix the issues above first.');
+  }
   return lines.join('\n');
 }
 
@@ -69,7 +81,7 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 
   // Check branch doesn't exist (regenerate if collision)
   if (await checkBranchExists(args.pluginPath, branch)) {
-    throw new Error(`Branch ${branch} already exists — this should be extremely rare`);
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Branch ${branch} already exists — this should be extremely rare. Try again.`);
   }
 
   // Create worktree
@@ -82,46 +94,52 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
   await fs.mkdir(path.join(args.pluginPath, '.pth'), { recursive: true });
   await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: new Date().toISOString() }), 'utf-8');
 
-  // Load existing tests if any
-  testStore = new TestStore();
-  const existingTests = await loadTestsFromDir(path.join(worktreePath, '.pth', 'tests'));
-  existingTests.forEach(t => testStore.add(t));
+  try {
+    // Load existing tests if any
+    testStore = new TestStore();
+    const existingTests = await loadTestsFromDir(path.join(worktreePath, '.pth', 'tests'));
+    existingTests.forEach(t => testStore.add(t));
 
-  const state: SessionState = {
-    sessionId: branch,
-    branch,
-    worktreePath,
-    pluginPath: args.pluginPath,
-    pluginName,
-    pluginMode,
-    startedAt: new Date().toISOString(),
-    iteration: 0,
-    testCount: testStore.count(),
-    passingCount: 0,
-    failingCount: 0,
-    convergenceTrend: 'unknown',
-    activeFailures: [],
-  };
+    const state: SessionState = {
+      sessionId: branch,
+      branch,
+      worktreePath,
+      pluginPath: args.pluginPath,
+      pluginName,
+      pluginMode,
+      startedAt: new Date().toISOString(),
+      iteration: 0,
+      testCount: testStore.count(),
+      passingCount: 0,
+      failingCount: 0,
+      convergenceTrend: 'unknown',
+      activeFailures: [],
+    };
 
-  await writeSessionState(worktreePath, state);
+    await writeSessionState(worktreePath, state);
 
-  const mcpConfig = pluginMode === 'mcp' ? await readMcpConfig(args.pluginPath) : null;
+    const mcpConfig = pluginMode === 'mcp' ? await readMcpConfig(args.pluginPath) : null;
 
-  const lines = [
-    `PTH session started.`,
-    ``,
-    `Branch:    ${branch}`,
-    `Worktree:  ${worktreePath}`,
-    `Mode:      ${pluginMode}`,
-    `Plugin:    ${pluginName}`,
-    existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
-    ``,
-    pluginMode === 'mcp' && mcpConfig
-      ? `MCP server: ${mcpConfig.command} ${mcpConfig.args.join(' ')}\nMake sure this plugin is loaded in your Claude Code session, then call pth_generate_tests with the tools/list output.`
-      : `Plugin mode: run pth_generate_tests to analyze hook scripts and manifest.`,
-  ];
+    const lines = [
+      `PTH session started.`,
+      ``,
+      `Branch:    ${branch}`,
+      `Worktree:  ${worktreePath}`,
+      `Mode:      ${pluginMode}`,
+      `Plugin:    ${pluginName}`,
+      existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
+      ``,
+      pluginMode === 'mcp' && mcpConfig
+        ? `MCP server: ${mcpConfig.command} ${mcpConfig.args.join(' ')}\nMake sure this plugin is loaded in your Claude Code session, then call pth_generate_tests with the tools/list output.`
+        : `Plugin mode: run pth_generate_tests to analyze hook scripts and manifest.`,
+    ];
 
-  return { state, message: lines.join('\n') };
+    return { state, message: lines.join('\n') };
+  } catch (err) {
+    // Clean up lock so future sessions aren't blocked
+    await fs.rm(lockPath, { force: true });
+    throw err;
+  }
 }
 
 export async function resumeSession(args: { branch: string; pluginPath: string }): Promise<StartSessionResult> {
@@ -129,11 +147,14 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
 
   // Check branch exists
   if (!await checkBranchExists(args.pluginPath, args.branch)) {
-    throw new Error(`Branch ${args.branch} not found in ${args.pluginPath}`);
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Branch ${args.branch} not found in ${args.pluginPath}`);
   }
 
   await pruneWorktrees(args.pluginPath);
-  await addWorktree(args.pluginPath, worktreePath, args.branch);
+  const worktreeExists = await fs.access(worktreePath).then(() => true).catch(() => false);
+  if (!worktreeExists) {
+    await addWorktree(args.pluginPath, worktreePath, args.branch);
+  }
 
   // Load state
   const savedState = await readSessionState(worktreePath);
@@ -180,8 +201,11 @@ export async function endSession(state: SessionState): Promise<string> {
   // Persist tests
   await testStore.persistToDir(path.join(state.worktreePath, '.pth', 'tests'));
 
-  // Commit test suite + state
-  await commitAll(state.worktreePath, buildCommitMessage('chore: persist PTH test suite', { 'PTH-Type': 'session-end' }));
+  // Commit test suite + state (only if there are changes to commit)
+  const status = await run('git', ['status', '--porcelain'], { cwd: state.worktreePath });
+  if (status.stdout.trim()) {
+    await commitAll(state.worktreePath, buildCommitMessage('chore: persist PTH test suite', { 'PTH-Type': 'session-end' }));
+  }
 
   // Remove worktree
   await removeWorktree(state.pluginPath, state.worktreePath);
