@@ -122,6 +122,15 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 
     const mcpConfig = pluginMode === 'mcp' ? await readMcpConfig(args.pluginPath) : null;
 
+    const nextStep = pluginMode === 'mcp' && mcpConfig
+      ? [
+          `MCP server: ${mcpConfig.command} ${mcpConfig.args.join(' ')}`,
+          ``,
+          `Next: verify the plugin is loaded in your session, then call pth_generate_tests`,
+          `      with toolSchemas from its tools/list response.`,
+        ].join('\n')
+      : `Next: call pth_generate_tests to analyze hook scripts and manifest.`;
+
     const lines = [
       `PTH session started.`,
       ``,
@@ -131,9 +140,7 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
       `Plugin:    ${pluginName}`,
       existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
       ``,
-      pluginMode === 'mcp' && mcpConfig
-        ? `MCP server: ${mcpConfig.command} ${mcpConfig.args.join(' ')}\nMake sure this plugin is loaded in your Claude Code session, then call pth_generate_tests with the tools/list output.`
-        : `Plugin mode: run pth_generate_tests to analyze hook scripts and manifest.`,
+      nextStep,
     ];
 
     return { state, message: lines.join('\n') };
@@ -227,8 +234,8 @@ export async function endSession(state: SessionState): Promise<string> {
     `Final status: ${state.passingCount} passing, ${state.failingCount} failing`,
     ``,
     `Branch ${state.branch} remains in your repo with full session history.`,
-    `Review: git log ${state.branch}`,
-    `Diff:   git diff origin/$(git rev-parse --abbrev-ref HEAD)...${state.branch}`,
+    `Review: git log ${state.branch}  (run from ${state.pluginPath})`,
+    `Diff:   git diff $(git merge-base HEAD ${state.branch})...${state.branch}`,
   ].join('\n');
 }
 

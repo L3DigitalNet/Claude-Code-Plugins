@@ -55,6 +55,26 @@ installed plugins at the start of each session.
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 
+## Principles
+
+These principles apply across all plugins in this collection. Individual plugins may define additional principles scoped to their domain.
+
+**[P1] Composable Over Monolithic** — Functionality is partitioned into focused, independently useful units. Complex workflows emerge from combining atomic components at runtime — not from monolithic mega-commands or mega-documents. Each unit does one thing well; orchestration is assembled from the outside, not baked in.
+
+**[P2] Scope Fidelity** — A plugin does exactly what it was invoked to do — no more. Observations outside the declared scope are surfaced as notes, never acted upon. Mutations outside the session's stated purpose require explicit re-invocation. Scope creep is a trust violation.
+
+**[P3] Safe Default, Explicit Escalation** — The default posture of every operation is the minimal, reversible, lowest-impact option available. Destructive modes, broad scopes, and irreversible paths are never the default; the user must take an explicit step to reach them. Dry-run before live, read before write, preview before execute, narrow scope before wide.
+
+**[P4] Human Consent Before Consequence** — No plugin autonomously performs a destructive or irreversible action. Every high-impact operation is announced with enough context to make an informed decision, and irreversible actions are flagged unmissably before execution. Silent mutations — deployments, deletions, pushes, or state changes — are not possible. Confirming once in one context does not authorise the same action in another.
+
+**[P5] Explainability Precedes Action** — Before a plugin acts, it explains what it is about to do and why — in plain language, with technical jargon translated on first mention and consequences surfaced before execution. A user's understanding of an operation is a prerequisite for meaningful consent, not a bonus. Explanations are proportionate: brief for routine actions, detailed for high-impact ones.
+
+**[P6] Conversation-Native Interaction** — Plugins are experienced through Claude Code's terminal conversation, and every UX decision must honour that medium. Prefer bounded `AskUserQuestion` choices over open-ended text prompts. Lead with the answer — most important information first, context after. Use progressive disclosure over walls of text; any output longer than ~10 lines should be restructured or chunked. Format purposefully (headers, bold, status symbols) but never decoratively. Smart defaults eliminate questions the user shouldn't need to answer. Errors are actionable: say what went wrong and what to do about it — never a raw stack trace.
+
+**[P7] Fail Fast, Never Silently** — When something goes wrong, stop immediately and surface the complete failure. Raw output is always shown alongside any interpretation; errors are never swallowed or softened into ambiguity. No autonomous recovery attempts, no continuing past a known failure. The user should never wonder whether an operation succeeded.
+
+**[P8] Done is Measured, Not Declared** — Plugins that perform iterative work define completion as a measurable state — zero findings, all checks green, all tests passing — and drive toward that state across successive cycles. Success is not declared after a single pass; the plugin reports the trend and continues until the criterion is met or the user stops it.
+
 ---
 
 ### Agent Orchestrator
