@@ -32,7 +32,7 @@
     },
     {
       "name": "github-repo-manager",
-      "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
+      "description": "Conversational GitHub repository maintenance \u2014 health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
       "version": "0.2.0",
       "author": {
         "name": "L3DigitalNet",
@@ -44,7 +44,7 @@
     },
     {
       "name": "release-pipeline",
-      "description": "Interactive release pipeline — context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
+      "description": "Interactive release pipeline \u2014 context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
       "version": "1.2.0",
       "author": {
         "name": "L3DigitalNet",
@@ -56,7 +56,7 @@
     },
     {
       "name": "linux-sysadmin-mcp",
-      "description": "Comprehensive Linux system administration MCP server with ~100 tools across 15 modules — packages, services, users, firewall, networking, security, storage, containers, and more",
+      "description": "Comprehensive Linux system administration MCP server with ~100 tools across 15 modules \u2014 packages, services, users, firewall, networking, security, storage, containers, and more",
       "version": "1.0.0",
       "author": {
         "name": "L3DigitalNet",
