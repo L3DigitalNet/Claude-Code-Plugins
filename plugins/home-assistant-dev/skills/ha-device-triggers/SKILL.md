@@ -1,6 +1,6 @@
 ---
 name: ha-device-triggers
-description: Implement device triggers and conditions for Home Assistant integrations. Use when asked about device triggers, device conditions, device actions, automation triggers from devices, or hardware events.
+description: Device triggers for Home Assistant automation. Use when implementing device_trigger.py, allowing automations to fire on hardware events like button presses or motion detection.
 ---
 
 # Home Assistant Device Triggers
@@ -19,17 +19,15 @@ Use device triggers when:
 
 ```
 custom_components/{domain}/
-├── __init__.py
 ├── device_trigger.py    # Trigger implementation
-├── device_condition.py  # Condition implementation (optional)
-├── device_action.py     # Action implementation (optional)
+├── device_condition.py  # See ha-device-conditions-actions
+├── device_action.py     # See ha-device-conditions-actions
 └── strings.json         # Trigger labels
 ```
 
-## Basic Device Trigger
+## device_trigger.py Template
 
 ```python
-# device_trigger.py
 """Device triggers for {Name}."""
 from __future__ import annotations
 
@@ -112,10 +110,9 @@ async def async_attach_trigger(
 
 ## Firing Triggers
 
-When your device generates an event, fire it:
+When your device generates an event, fire it from the coordinator or entity:
 
 ```python
-# In your coordinator or entity
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 
 def handle_device_event(self, event_type: str) -> None:
@@ -143,137 +140,6 @@ def handle_device_event(self, event_type: str) -> None:
 }
 ```
 
-## Device Conditions
-
-```python
-# device_condition.py
-"""Device conditions for {Name}."""
-from __future__ import annotations
-
-from typing import Any
-
-import voluptuous as vol
-
-from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
-
-from .const import DOMAIN
-
-CONDITION_TYPES = {"is_on", "is_off", "is_connected"}
-
-CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
-    }
-)
-
-
-async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
-    """Return conditions for device."""
-    conditions = []
-    for condition_type in CONDITION_TYPES:
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: condition_type,
-            }
-        )
-    return conditions
-
-
-@callback
-def async_condition_from_config(
-    hass: HomeAssistant, config: ConfigType
-) -> condition.ConditionCheckerType:
-    """Create a condition from config."""
-    
-    @callback
-    def test_condition(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
-        """Test the condition."""
-        # Implement your condition logic
-        # Return True if condition is met
-        return True
-
-    return test_condition
-```
-
-## Device Actions
-
-```python
-# device_action.py
-"""Device actions for {Name}."""
-from __future__ import annotations
-
-from typing import Any
-
-import voluptuous as vol
-
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-
-from .const import DOMAIN
-
-ACTION_TYPES = {"turn_on", "turn_off", "toggle"}
-
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-    }
-)
-
-
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
-    """Return actions for device."""
-    actions = []
-    for action_type in ACTION_TYPES:
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: action_type,
-            }
-        )
-    return actions
-
-
-async def async_call_action_from_config(
-    hass: HomeAssistant,
-    config: ConfigType,
-    variables: dict[str, Any],
-    context: Context | None,
-) -> None:
-    """Execute action."""
-    action_type = config[CONF_TYPE]
-    device_id = config[CONF_DEVICE_ID]
-
-    # Implement your action logic
-    if action_type == "turn_on":
-        # Call your service or method
-        pass
-```
-
-## Registering in manifest.json
-
-Device automation modules are auto-discovered, but ensure your manifest is correct:
-
-```json
-{
-  "domain": "my_integration",
-  "name": "My Integration",
-  "integration_type": "device"
-}
-```
-
 ## Testing Device Triggers
 
 ```python
@@ -281,7 +147,6 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
     """Test we get triggers."""
     from custom_components.my_domain.device_trigger import async_get_triggers
 
-    # Create a device
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id="test",
@@ -289,13 +154,13 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
     )
 
     triggers = await async_get_triggers(hass, device.id)
-    
+
     assert len(triggers) == 3
     assert triggers[0]["type"] == "button_press"
 ```
 
 ## Related Skills
 
+- Device conditions and actions → `ha-device-conditions-actions`
 - Automations → `ha-yaml-automations`
 - Entity platforms → `ha-entity-platforms`
-- Service actions → `ha-service-actions`

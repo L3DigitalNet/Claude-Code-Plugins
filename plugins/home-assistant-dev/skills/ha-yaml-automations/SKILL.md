@@ -1,6 +1,6 @@
 ---
 name: ha-yaml-automations
-description: Generate valid Home Assistant YAML automations, scripts, and blueprints. Use when asked to write an automation, create a script, build a blueprint, or needing help with Home Assistant YAML syntax.
+description: Home Assistant YAML automations — triggers, conditions, and actions. Use when writing or fixing an automation, choosing a trigger type, or structuring automation logic.
 ---
 
 # Home Assistant YAML Automations
@@ -100,7 +100,7 @@ automation:
 ## Common Actions
 
 ```yaml
-# Service call (now called "action")
+# Service call
 - action: light.turn_on
   target:
     entity_id: light.living_room
@@ -148,79 +148,6 @@ automation:
           seconds: 1
 ```
 
-## Script Template
-
-```yaml
-script:
-  morning_routine:
-    alias: "Morning Routine"
-    mode: single
-    fields:
-      brightness:
-        description: "Light brightness"
-        default: 100
-        selector:
-          number:
-            min: 0
-            max: 100
-    sequence:
-      - action: light.turn_on
-        target:
-          area_id: kitchen
-        data:
-          brightness_pct: "{{ brightness }}"
-```
-
-## Blueprint Template
-
-```yaml
-blueprint:
-  name: "Motion-Activated Light"
-  description: "Turn on light when motion detected"
-  domain: automation
-  input:
-    motion_entity:
-      name: "Motion Sensor"
-      selector:
-        entity:
-          filter:
-            domain: binary_sensor
-            device_class: motion
-    light_target:
-      name: "Light"
-      selector:
-        target:
-          entity:
-            domain: light
-    no_motion_wait:
-      name: "Wait time"
-      default: 120
-      selector:
-        number:
-          min: 0
-          max: 3600
-          unit_of_measurement: seconds
-
-trigger:
-  - trigger: state
-    entity_id: !input motion_entity
-    to: "on"
-
-action:
-  - action: light.turn_on
-    target: !input light_target
-  - wait_for_trigger:
-      - trigger: state
-        entity_id: !input motion_entity
-        to: "off"
-  - delay:
-      seconds: !input no_motion_wait
-  - action: light.turn_off
-    target: !input light_target
-
-mode: restart
-```
-
 ## Key Rules
 
 1. Use `action:` not `service:` (modern syntax)
@@ -228,3 +155,9 @@ mode: restart
 3. Always include `alias` and `description`
 4. Use `target:` for entity/area/device targeting
 5. Templates use Jinja2: `"{{ states('sensor.x') }}"`
+
+## Related Skills
+
+- Scripts → `ha-scripts`
+- Blueprints → `ha-blueprints`
+- Device triggers → `ha-device-triggers`

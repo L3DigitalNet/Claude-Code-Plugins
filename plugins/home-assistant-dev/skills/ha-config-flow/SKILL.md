@@ -1,13 +1,13 @@
 ---
 name: ha-config-flow
-description: Generate or fix Home Assistant config flow code (config_flow.py, options flow, reauth flow, strings.json). Use when mentioning config flow, options flow, reauth, UI setup, configuration flow, setup wizard, or creating/debugging the user-facing setup experience for an integration.
+description: Home Assistant config flow for initial integration setup. Use when creating or debugging config_flow.py, the user-facing setup wizard, unique_id handling, or strings.json for the setup steps.
 ---
 
 # Home Assistant Config Flow Development
 
 Config flows are **mandatory** for all new integrations. They provide a guided UI-based setup experience that replaces YAML configuration.
 
-## Complete config_flow.py Template (2025)
+## config_flow.py Template (2025)
 
 ```python
 """Config flow for {Name} integration."""
@@ -68,39 +68,6 @@ class {Name}ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth when credentials expire."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Collect new credentials for reauth."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
-            data = {**reauth_entry.data, **user_input}
-            try:
-                await self._async_validate_input(data)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            else:
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }),
-            errors=errors,
-        )
-
     async def _async_validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate credentials and return device info."""
         client = MyClient(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
@@ -110,30 +77,8 @@ class {Name}ConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        # See ha-options-flow for the OptionsFlow implementation
         return {Name}OptionsFlow()
-
-
-class {Name}OptionsFlow(OptionsFlow):
-    """Handle options."""
-
-    # NOTE: Do NOT use __init__ to store config_entry - deprecated since 2025.12
-    # Access via self.config_entry (automatically set by HA)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({
-                vol.Optional(
-                    "scan_interval",
-                    default=self.config_entry.options.get("scan_interval", 30),
-                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=300)),
-            }),
-        )
 
 
 class CannotConnect(Exception):
@@ -143,7 +88,7 @@ class InvalidAuth(Exception):
     """Error indicating invalid credentials."""
 ```
 
-## strings.json Template
+## strings.json — Config Section
 
 ```json
 {
@@ -162,14 +107,6 @@ class InvalidAuth(Exception):
           "username": "Username for authentication",
           "password": "Password for authentication"
         }
-      },
-      "reauth_confirm": {
-        "title": "Re-authenticate",
-        "description": "Your credentials have expired.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
       }
     },
     "error": {
@@ -181,19 +118,6 @@ class InvalidAuth(Exception):
       "already_configured": "This device is already configured.",
       "reauth_successful": "Re-authentication successful."
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Settings",
-        "data": {
-          "scan_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "scan_interval": "How often to poll the device (10-300 seconds)"
-        }
-      }
-    }
   }
 }
 ```
@@ -204,8 +128,7 @@ class InvalidAuth(Exception):
 2. **Validate before saving** — attempt real connection in flow
 3. **Set unique_id** — `async_set_unique_id()` + `_abort_if_unique_id_configured()`
 4. **Store connection in `entry.data`**, preferences in `entry.options`
-5. **Implement reauth** — raise `ConfigEntryAuthFailed` in coordinator to trigger
-6. **VERSION field** — increment when schema changes, implement migration
+5. **VERSION field** — increment when schema changes, implement migration
 
 ## Discovery Support
 
