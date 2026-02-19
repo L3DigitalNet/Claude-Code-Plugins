@@ -1,9 +1,14 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { commitAll } from '../session/git.js';
+import { PTHError, PTHErrorCode } from '../shared/errors.js';
 import type { FixRequest } from './types.js';
 
 export async function applyFix(request: FixRequest): Promise<string> {
+  if (request.files.length === 0) {
+    throw new PTHError(PTHErrorCode.INVALID_PLUGIN, 'applyFix requires at least one file change');
+  }
+
   // Write all file changes, creating parent directories as needed
   for (const file of request.files) {
     const fullPath = path.join(request.worktreePath, file.path);
