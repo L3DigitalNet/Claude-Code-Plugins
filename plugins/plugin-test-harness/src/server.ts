@@ -232,8 +232,15 @@ export function createServer(): Server {
         });
         const pass = resultsTracker.getPassCount();
         const fail = resultsTracker.getFailCount();
-        const pending = all.length - pass - fail;
-        return respond(`${pass} passing / ${fail} failing / ${pending} pending\n\n${lines.join('\n')}`);
+        const skipped = all.filter(t => resultsTracker.getLatest(t.id)?.status === 'skipped').length;
+        const pending = all.length - pass - fail - skipped;
+        const summary = [
+          `${pass} passing`,
+          `${fail} failing`,
+          skipped > 0 ? `${skipped} skipped` : '',
+          `${pending} pending`,
+        ].filter(Boolean).join(' / ');
+        return respond(`${summary}\n\n${lines.join('\n')}`);
       }
 
       case 'pth_get_test_impact': {
@@ -314,7 +321,7 @@ export function createServer(): Server {
       }
 
       case 'pth_diff_session': {
-        const diff = await getDiff(session.worktreePath, `origin/${session.branch.split('/')[0]}`);
+        const diff = await getDiff(session.worktreePath, 'origin/HEAD');
         if (!diff.trim()) return respond('No changes on session branch yet.');
         return respond(`Session diff (${diff.split('\n').length} lines):\n\n${diff}`);
       }
