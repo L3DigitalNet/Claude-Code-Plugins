@@ -37,6 +37,8 @@ gh-manager wiki cleanup --dir /tmp/wiki-xyz
 
 ---
 
+> **Full assessment mode:** Wiki sync runs last. Report sync status to the unified 📊 view (e.g., "Wiki: N pages out of date") before presenting the change list and asking for push approval. Use the per-module banner format only for narrow wiki checks.
+
 ## Assessment Flow
 
 ### Step 1: Check Wiki Status
@@ -196,6 +198,8 @@ To archive, move it to a clearly marked section and update the sidebar.
 
 ### Step 7: Apply Changes
 
+**Before applying**, use `AskUserQuestion` (options defined in the ⚠️ Irreversibility Warning section below). For Tier 4, default to "Show me the diffs first". Do not proceed until the owner explicitly selects "Push changes" or "Push new pages only".
+
 On owner approval, copy generated content into the wiki clone directory:
 
 ```bash
@@ -315,11 +319,17 @@ Without explicit page_map, use sensible defaults:
 
 ### ⚠️ Irreversibility Warning
 
-Wiki pushes overwrite content. Always warn before pushing:
+Wiki pushes overwrite content and are immediately publicly visible. Always use `AskUserQuestion` before pushing:
 
-> ⚠️ This will update 3 wiki pages and remove 1 orphaned page. Wiki changes take effect immediately and are publicly visible. Proceed?
+> ⚠️ This will update 3 wiki pages and remove 1 orphaned page. Changes are live immediately.
 
-For Tier 4, be especially explicit about what changes.
+Options:
+- "Push changes" — apply all updates
+- "Show me the diffs first" — display all modified page diffs, then ask again
+- "Push new pages only, skip updates/removals" — safer partial push
+- "Skip wiki sync" — cancel
+
+For Tier 4, default the recommended option to "Show me the diffs first" rather than "Push changes".
 
 ---
 

@@ -14,7 +14,7 @@ GitHub Repo Manager provides a single `/repo-manager` command that assesses and 
 
 **[P3] Irreversibility Flags** — Actions that cannot be easily undone are called out clearly and unmissably before execution, with specific guidance on what becomes hard to recover.
 
-**[P4] Jargon Translation** — GitHub concepts are explained in plain language alongside technical terms, on first mention per session. The goal is building the owner's understanding over time, not delivering a glossary.
+**[P4] Jargon Translation** — GitHub concepts are explained in plain language alongside technical terms whenever there's reason to think the owner may not be familiar with them. The goal is building understanding, not delivering a glossary — explanation depth adjusts with the configured expertise level.
 
 **[P5] Tier-Aware Sensitivity** — Explanation depth and warning level scale with the repository tier. Private docs repos get minimal friction; public repos with releases get full ceremony.
 
@@ -107,6 +107,10 @@ See [docs/POLICIES.md](docs/POLICIES.md) for all customizable settings and [docs
 - Node.js 20+
 - GitHub PAT with `repo`, `read:org`, and `notifications` scopes
 - Target repositories must be accessible via the authenticated GitHub account
+
+## Architecture Note
+
+This plugin intentionally runs entirely in the owner's main context window — no subagents are spawned during a session. This is a deliberate design choice: the owner must stay in the conversation loop at every step (tier confirmation, action approvals, module redirects), which requires continuous access to the shared context. The trade-off is that a full 9-module assessment consumes more context than a subagent-isolated design would. This is mitigated by keeping command files thin, delegating all API interaction to the external `gh-manager` helper (which runs outside the context window), and structured module presentation that avoids redundant output.
 
 ## Planned Features
 

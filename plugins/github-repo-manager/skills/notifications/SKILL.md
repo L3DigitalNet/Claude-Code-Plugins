@@ -30,6 +30,8 @@ gh-manager notifications mark-read --repo owner/name
 
 ---
 
+> **Full assessment mode:** Do not output the 🔔 Notifications banner during a full assessment. Collect findings and feed them into the unified 📊 view. Only surface critical/high priority unread items — medium/low are omitted from the rollup. Use the per-module banner format only for narrow notification checks.
+
 ## Assessment Flow
 
 ### Step 1: Fetch Notifications
