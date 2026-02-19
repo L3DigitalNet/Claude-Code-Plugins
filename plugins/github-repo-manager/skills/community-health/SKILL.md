@@ -157,6 +157,8 @@ Templates contain `{{PLACEHOLDER}}` variables that you fill in from context:
 >
 > Does this look right? I can adjust the contact email, response timeline, or anything else before saving.
 
+⚠️ **Tiers 3 and 4 (public repos):** Once committed, these files are immediately publicly visible to all visitors. Review the content carefully — especially contact addresses, response timelines, and any org-specific wording — before confirming.
+
 **Tier 1-3: Direct commit**
 ```bash
 echo "<content>" | gh-manager files put --repo owner/name --path SECURITY.md --message "Add SECURITY.md"

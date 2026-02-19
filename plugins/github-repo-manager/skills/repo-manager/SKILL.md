@@ -115,6 +115,8 @@ echo "YAML" | gh-manager config portfolio-write [--dry-run]
 gh-manager config resolve --repo X/Y
 ```
 
+⚠️ **`config portfolio-write`** affects behavior across **all repos in the portfolio** — staleness thresholds, module toggles, expertise level, and per-repo overrides all inherit from portfolio defaults. Always run `config portfolio-read` first and preview with `--dry-run` before writing.
+
 ---
 
 ## Session Flow
@@ -411,6 +413,11 @@ When running a full assessment, execute modules in this order (required for cros
 ### Narrow Check Mode
 
 For narrow checks (owner asks about a single topic), run only the relevant module(s) and use the module's own presentation format — no unified rollup needed.
+
+**Session state for narrow checks:** If the owner invokes a narrow check without a prior full session (i.e., without running onboarding), two pieces of state may be missing:
+
+- **Tier**: Ask briefly before running the module — "Which repo? And is it public or private, and does it have releases?" is usually enough. Apply tier heuristics: public + releases = Tier 4, public + no releases = Tier 3, private = Tier 1 or 2.
+- **Expertise level**: Default to **beginner** for narrow checks unless the owner has indicated otherwise earlier in this conversation. Do not ask — just use conservative explanation depth and translate jargon by default.
 
 ---
 

@@ -112,6 +112,8 @@ See [docs/POLICIES.md](docs/POLICIES.md) for all customizable settings and [docs
 
 This plugin intentionally runs entirely in the owner's main context window — no subagents are spawned during a session. This is a deliberate design choice: the owner must stay in the conversation loop at every step (tier confirmation, action approvals, module redirects), which requires continuous access to the shared context. The trade-off is that a full 9-module assessment consumes more context than a subagent-isolated design would. This is mitigated by keeping command files thin, delegating all API interaction to the external `gh-manager` helper (which runs outside the context window), and structured module presentation that avoids redundant output.
 
+The core approval invariant ("no action without owner approval") is enforced behaviorally — conversational approval happens in prose and cannot be captured as a programmatic signal for PreToolUse hooks. The PostToolUse audit trail in `scripts/gh-manager-monitor.sh` is the practical ceiling for mechanical enforcement in this approval model.
+
 ## Planned Features
 
 - **GitLab support** — `glab`-backed equivalent for GitLab repositories and merge requests

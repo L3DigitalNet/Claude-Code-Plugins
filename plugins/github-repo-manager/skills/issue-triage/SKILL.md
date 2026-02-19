@@ -77,6 +77,8 @@ Assess each issue on:
 
 ### Step 4: Present Findings
 
+After presenting findings with ≥2 action-relevant details, apply the progressive depth offer once per findings block (Communication Principle #7 in the core skill; skip for advanced owners).
+
 > 📋 Issue Triage — ha-light-controller
 >
 > **Likely resolved (1):**
@@ -168,6 +170,8 @@ gh-manager issues close --repo owner/name --issue 8 --body "Closing due to inact
 ```
 
 ### Assign Issues
+
+Assigning an issue adds the specified user to the "Assignees" field — publicly visible on the issue and signals who's responsible for addressing it. On public repos, the assignee will receive a notification.
 
 ```bash
 gh-manager issues assign --repo owner/name --issue 12 --assignees "owner-username"

@@ -129,7 +129,7 @@ If missing, note it as a security policy gap. Don't duplicate the finding if Com
 
 ## Security Posture Scorecard
 
-Present a unified security summary:
+Present a unified security summary. After presenting findings with ≥2 action-relevant details, apply the progressive depth offer once per findings block (Communication Principle #7 in the core skill; skip for advanced owners).
 
 > 🔒 Security Posture — ha-light-controller (Tier 4)
 >
