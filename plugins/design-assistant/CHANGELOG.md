@@ -6,6 +6,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.0] - 2026-02-18
+
+### Added
+- add design-assistant plugin v0.2.0
+
+### Fixed
+- remove trailing comma in plugin.json
+- remove invalid commands/skills fields from plugin.json
+
+
 ## [0.2.0] — 2026-02-18
 
 ### Fixed
