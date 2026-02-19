@@ -12,6 +12,18 @@ allowed-tools: Read, Write, Glob, Grep
 # DESIGN DOCUMENT REVIEW & ITERATIVE REFINEMENT PROTOCOL
 *Large Document Edition | Principle-Enforced | Gap-Analyzed | Interactive Q&A Resolution | Auto-Fix Capable*
 
+## INTERACTION CONVENTIONS
+
+For every decision point in this command that presents 2–4 labeled
+options (A), (B), (C), etc., present them using `AskUserQuestion`
+rather than as code blocks. Derive the question text, a short header
+(≤12 chars), and option descriptions from the surrounding context.
+`AskUserQuestion` includes a built-in "Other" fallback — do not add a
+redundant "(X) Other" option to bounded lists.
+
+For prompts with 5 or more options (e.g., finding resolution modes,
+tension scenarios, escalation choices), present as formatted text.
+
 ## ENTRY POINT
 
 $ARGUMENTS has been provided. Handle entry as follows:
