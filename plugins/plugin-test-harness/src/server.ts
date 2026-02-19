@@ -17,7 +17,12 @@ import { reloadPlugin } from './plugin/reloader.js';
 import { writeSessionState } from './session/state-persister.js';
 import { writeToolSchemasCache } from './shared/source-analyzer.js';
 import type { ToolSchema } from './shared/source-analyzer.js';
+import { PTHError } from './shared/errors.js';
 import * as mgr from './session/manager.js';
+
+function formatTs(iso: string): string {
+  return iso.replace('T', ' ').slice(0, 16) + ' UTC';
+}
 
 export function createServer(): Server {
   const registry = new ToolRegistry();
@@ -57,54 +62,60 @@ export function createServer(): Server {
     toolName: string,
     args: Record<string, unknown>
   ): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
-    // Lazy import session manager
-    if (!sessionManager) {
-      sessionManager = await import('./session/manager.js');
-    }
-
     const respond = (text: string) => ({ content: [{ type: 'text' as const, text }] });
 
-    switch (toolName) {
-      case 'pth_preflight': {
-        const result = await sessionManager.preflight(args as { pluginPath: string });
-        return respond(result);
+    try {
+      // Lazy import session manager
+      if (!sessionManager) {
+        sessionManager = await import('./session/manager.js');
       }
-      case 'pth_start_session': {
-        const result = await sessionManager.startSession(
-          args as { pluginPath: string; sessionNote?: string }
-        );
-        currentSession = result.state;
-        resultsTracker = new ResultsTracker();  // fresh tracker for new session
-        registry.activate();
-        try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
-        return respond(result.message);
-      }
-      case 'pth_resume_session': {
-        const result = await sessionManager.resumeSession(
-          args as { branch: string; pluginPath: string }
-        );
-        currentSession = result.state;
-        resultsTracker = new ResultsTracker();  // fresh tracker for resumed session
-        registry.activate();
-        try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
-        return respond(result.message);
-      }
-      case 'pth_end_session': {
-        if (!currentSession) return respond('No active session.');
-        const result = await sessionManager.endSession(currentSession);
-        currentSession = null;
-        registry.deactivate();
-        try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
-        return respond(result);
-      }
-      default: {
-        // fix #3: guard on currentSession (not registry.isActive()) — eliminates ! assertion
-        if (!currentSession) {
-          return respond(`No PTH session active. Call pth_start_session first.`);
+
+      switch (toolName) {
+        case 'pth_preflight': {
+          const result = await sessionManager.preflight(args as { pluginPath: string });
+          return respond(result);
         }
-        // Delegate to session handlers
-        return handleSessionTool(toolName, args, currentSession);
+        case 'pth_start_session': {
+          const result = await sessionManager.startSession(
+            args as { pluginPath: string; sessionNote?: string }
+          );
+          currentSession = result.state;
+          resultsTracker = new ResultsTracker();  // fresh tracker for new session
+          registry.activate();
+          try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
+          return respond(result.message);
+        }
+        case 'pth_resume_session': {
+          const result = await sessionManager.resumeSession(
+            args as { branch: string; pluginPath: string }
+          );
+          currentSession = result.state;
+          resultsTracker = new ResultsTracker();  // fresh tracker for resumed session
+          registry.activate();
+          try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
+          return respond(result.message);
+        }
+        case 'pth_end_session': {
+          if (!currentSession) return respond('No active session.');
+          const result = await sessionManager.endSession(currentSession);
+          currentSession = null;
+          registry.deactivate();
+          try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
+          return respond(result);
+        }
+        default: {
+          if (!currentSession) {
+            return respond('No PTH session active. Call pth_start_session first.');
+          }
+          return handleSessionTool(toolName, args, currentSession);
+        }
       }
+    } catch (err) {
+      if (err instanceof PTHError) {
+        return respond(`PTH Error [${err.code}]: ${err.message}`);
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      return respond(`PTH Error: ${msg}`);
     }
   }
 
@@ -124,12 +135,12 @@ export function createServer(): Server {
         const fail = resultsTracker.getFailCount();
         const trend = detectConvergence(mgr.iterationHistory);
         return respond([
-          `Session: ${session.branch}`,
-          `Mode:     ${session.pluginMode}`,
+          `Session:   ${session.branch}`,
+          `Mode:      ${session.pluginMode}`,
           `Iteration: ${session.iteration}`,
-          `Tests:    ${store.count()} total, ${pass} passing, ${fail} failing`,
-          `Trend:    ${trend}`,
-          `Started:  ${session.startedAt}`,
+          `Tests:     ${store.count()} total, ${pass} passing, ${fail} failing`,
+          `Trend:     ${trend}`,
+          `Started:   ${formatTs(session.startedAt)}`,
         ].join('\n'));
       }
 
@@ -144,7 +155,13 @@ export function createServer(): Server {
           tests = generatePluginTests([]);
         }
         tests.forEach(t => store.add(t));
-        return respond(`Generated ${tests.length} tests.\n\n${tests.map(t => `- ${t.name}`).join('\n')}`);
+        if (tests.length === 0) {
+          const guidance = session.pluginMode === 'mcp'
+            ? 'No tool schemas found. Pass toolSchemas from the plugin\'s tools/list response.'
+            : 'No hook scripts found in the plugin. Create tests manually with pth_create_test.';
+          return respond(`Generated 0 tests.\n\n${guidance}`);
+        }
+        return respond(`Generated ${tests.length} tests:\n\n${tests.map(t => `- ${t.name}`).join('\n')}`);
       }
 
       case 'pth_list_tests': {
@@ -167,7 +184,15 @@ export function createServer(): Server {
           const icon = status === 'passing' ? '✓' : status === 'failing' ? '✗' : '○';
           return `${icon} [${t.id}] ${t.name}`;
         });
-        return respond(`${tests.length} tests:\n\n${lines.join('\n')}`);
+        const filterParts = [
+          mode ? `mode=${mode}` : '',
+          filterStatus ? `status=${filterStatus}` : '',
+          tag ? `tag=${tag}` : '',
+        ].filter(Boolean);
+        const header = filterParts.length > 0
+          ? `${tests.length} tests (${filterParts.join(', ')}):`
+          : `${tests.length} tests:`;
+        return respond(`${header}\n\n${lines.join('\n')}`);
       }
 
       case 'pth_create_test': {
@@ -218,7 +243,10 @@ export function createServer(): Server {
         }));
         await writeSessionState(session.worktreePath, session);
 
-        return respond(`Recorded: ${test.name} → ${status}${failureReason ? ` (${failureReason})` : ''}`);
+        return respond(
+          `Recorded: ${test.name} → ${status}${failureReason ? ` (${failureReason})` : ''}\n` +
+          `Totals:   ${pass} passing, ${fail} failing`
+        );
       }
 
       case 'pth_get_results': {
@@ -276,7 +304,7 @@ export function createServer(): Server {
           commitTitle,
           trailers,
         });
-        return respond(`Fix committed: ${hash}\n${commitTitle}\nFiles: ${files.map(f => f.path).join(', ')}`);
+        return respond(`Fix committed: ${hash.slice(0, 7)} (iteration ${session.iteration})\n${commitTitle}\nFiles: ${files.map(f => f.path).join(', ')}`);
       }
 
       case 'pth_sync_to_cache': {
@@ -308,8 +336,8 @@ export function createServer(): Server {
         if (history.length === 0) return respond('No fix commits on this session branch yet.');
         const lines = history.map(fix =>
           `${fix.commitHash.slice(0, 7)} ${fix.commitTitle}` +
-          (fix.trailers['PTH-Test'] ? `\n  Test: ${fix.trailers['PTH-Test']}` : '') +
-          (fix.trailers['PTH-Category'] ? ` | ${fix.trailers['PTH-Category']}` : '')
+          (fix.trailers['PTH-Test'] ? `\n  Test:     ${fix.trailers['PTH-Test']}` : '') +
+          (fix.trailers['PTH-Category'] ? `\n  Category: ${fix.trailers['PTH-Category']}` : '')
         );
         return respond(`${history.length} fix commits:\n\n${lines.join('\n')}`);
       }
@@ -323,7 +351,14 @@ export function createServer(): Server {
       case 'pth_diff_session': {
         const diff = await getDiff(session.worktreePath, 'origin/HEAD');
         if (!diff.trim()) return respond('No changes on session branch yet.');
-        return respond(`Session diff (${diff.split('\n').length} lines):\n\n${diff}`);
+        const diffLines = diff.split('\n');
+        const MAX_DIFF_LINES = 200;
+        const truncated = diffLines.length > MAX_DIFF_LINES;
+        const display = truncated ? diffLines.slice(0, MAX_DIFF_LINES).join('\n') : diff;
+        const suffix = truncated
+          ? `\n\n[Truncated: showing ${MAX_DIFF_LINES} of ${diffLines.length} lines. Use pth_get_fix_history for a structured summary.]`
+          : '';
+        return respond(`Session diff (${diffLines.length} lines):\n\n${display}${suffix}`);
       }
 
       // ── Iteration ──────────────────────────────────────────────────
@@ -334,7 +369,7 @@ export function createServer(): Server {
           `| ${i + 1} | ${s.passing} | ${s.failing} | ${s.fixesApplied} |`
         ).join('\n');
         return respond([
-          `Iteration ${session.iteration} | Trend: ${trend}`,
+          `Iteration: ${session.iteration}    Trend: ${trend}`,
           ``,
           `| Iteration | Passing | Failing | Fixes |`,
           `|-----------|---------|---------|-------|`,
