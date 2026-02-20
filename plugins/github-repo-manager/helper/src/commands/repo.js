@@ -150,11 +150,9 @@ export async function labelsCreate(options) {
 
     success({
       action: 'created',
-      label: {
-        name: data.name,
-        color: data.color,
-        description: data.description || null,
-      },
+      name: data.name,
+      color: data.color,
+      description: data.description || null,
     });
   } catch (err) {
     if (err.status === 422) {
@@ -167,11 +165,9 @@ export async function labelsCreate(options) {
 
         success({
           action: 'already_exists',
-          label: {
-            name: existing.name,
-            color: existing.color,
-            description: existing.description || null,
-          },
+          name: existing.name,
+          color: existing.color,
+          description: existing.description || null,
         });
       } catch {
         throw err; // Re-throw original if we can't verify
@@ -213,10 +209,8 @@ export async function labelsUpdate(options) {
 
   success({
     action: 'updated',
-    label: {
-      name: data.name,
-      color: data.color,
-      description: data.description || null,
-    },
+    name: data.name,
+    color: data.color,
+    description: data.description || null,
   });
 }

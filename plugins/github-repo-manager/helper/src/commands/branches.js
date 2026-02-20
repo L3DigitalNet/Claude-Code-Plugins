@@ -83,6 +83,7 @@ export async function create(options) {
 
     success({
       action: 'created',
+      name: options.branch,
       branch: options.branch,
       sha: data.object.sha,
       from: options.from,
@@ -99,6 +100,7 @@ export async function create(options) {
         if (existing.object.sha === sourceSha) {
           success({
             action: 'already_exists',
+            name: options.branch,
             branch: options.branch,
             sha: existing.object.sha,
             from: options.from,
@@ -106,6 +108,7 @@ export async function create(options) {
         } else {
           success({
             action: 'conflict',
+            name: options.branch,
             branch: options.branch,
             existing_sha: existing.object.sha,
             requested_sha: sourceSha,
