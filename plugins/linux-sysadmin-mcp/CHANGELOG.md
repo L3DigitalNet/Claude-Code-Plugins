@@ -2,7 +2,7 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
-## [1.0.5] — 2026-02-20 *(plugin review pass 2)*
+## [1.0.5] — 2026-02-20
 
 ### Changed
 - **UX — Q-1: Section 13 `moderate+` corrected** — "Risk level annotations" row in design doc now
@@ -29,10 +29,6 @@ All notable changes to the linux-sysadmin-mcp plugin are documented here.
   `/home`. Returns `LOCK_OUT_RISK` error with remediation steps if none is found, preventing the
   scenario where a syntactically valid sshd config locks out remote access by disabling the only
   available auth method.
-
-## [1.0.5] — 2026-02-20
-
-### Changed
 - **UX — Q1: `sysadmin_session_info` duration_ms** — Changed from `0` to `null`; no command is
   executed by this tool, and `null` is the correct sentinel for "no duration measured".
 - **UX — Q2: `sec_audit` timing** — Duration now uses `Math.max()` across all parallel sub-checks
