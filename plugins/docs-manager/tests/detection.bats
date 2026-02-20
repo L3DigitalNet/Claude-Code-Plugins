@@ -71,3 +71,32 @@ post_tool_json() {
     run bash -c 'echo "" | bash "$SCRIPTS_DIR/post-tool-use.sh"'
     [ "$status" -eq 0 ]
 }
+
+# --- Stop Hook Tests ---
+
+@test "stop: outputs queue summary when items exist" {
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/stop.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"1"* ]]
+    [[ "$output" == *"documentation"* ]] || [[ "$output" == *"queued"* ]]
+}
+
+@test "stop: silent when queue is empty" {
+    run bash "$SCRIPTS_DIR/stop.sh"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "stop: writes last-fired timestamp" {
+    run bash "$SCRIPTS_DIR/stop.sh"
+    [ "$status" -eq 0 ]
+    [ -f "$DOCS_MANAGER_HOME/hooks/stop.last-fired" ]
+}
+
+@test "stop: always exits 0" {
+    # Even with corrupted queue
+    echo "bad json" > "$DOCS_MANAGER_HOME/queue.json"
+    run bash "$SCRIPTS_DIR/stop.sh"
+    [ "$status" -eq 0 ]
+}
