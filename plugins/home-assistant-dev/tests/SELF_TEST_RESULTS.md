@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-17 (Categories 1-4), 2026-02-18 (Category 5)
 **Claude Code Model:** Claude Opus 4.6
-**Plugin Version:** 2.0.2
+**Plugin Version:** 2.2.1
 
 ## Summary
 

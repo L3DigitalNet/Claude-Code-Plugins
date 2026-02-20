@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { commitAll } from '../session/git.js';
+import { commitFiles } from '../session/git.js';
 import { PTHError, PTHErrorCode } from '../shared/errors.js';
 import type { FixRequest } from './types.js';
 
@@ -9,11 +9,15 @@ export async function applyFix(request: FixRequest): Promise<string> {
     throw new PTHError(PTHErrorCode.INVALID_PLUGIN, 'applyFix requires at least one file change');
   }
 
-  // Write all file changes, creating parent directories as needed
+  // Write all file changes, creating parent directories as needed.
+  // Files are relative to the plugin root; prepend pluginRelPath to resolve
+  // within the worktree (which is the git repo root, not the plugin dir).
+  const worktreeRelPaths: string[] = [];
   for (const file of request.files) {
-    const fullPath = path.join(request.worktreePath, file.path);
+    const fullPath = path.join(request.worktreePath, request.pluginRelPath, file.path);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
     await fs.writeFile(fullPath, file.content, 'utf-8');
+    worktreeRelPaths.push(path.join(request.pluginRelPath, file.path));
   }
 
   // Build commit message with PTH trailers
@@ -24,5 +28,8 @@ export async function applyFix(request: FixRequest): Promise<string> {
     ? `${request.commitTitle}\n\n${trailerLines}`
     : request.commitTitle;
 
-  return commitAll(request.worktreePath, message);
+  // Stage ONLY the specific changed files — avoids including .pth/session-state.json
+  // (always dirty during active sessions) in fix commits, which would cause conflicts
+  // when later reverting those commits via pth_revert_fix.
+  return commitFiles(request.worktreePath, worktreeRelPaths, message);
 }

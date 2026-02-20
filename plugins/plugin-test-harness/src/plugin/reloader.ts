@@ -12,7 +12,8 @@ export interface ReloadResult {
 export async function reloadPlugin(
   worktreePath: string,
   buildSystem: BuildSystem,
-  pluginStartPattern: string   // pattern to find process, e.g. path component of start command
+  pluginStartPattern: string,   // pattern to find process, e.g. path component of start command
+  onBuildSuccess?: () => Promise<void>  // called after build succeeds, before process kill (e.g. cache sync)
 ): Promise<ReloadResult> {
   // Step 1: Build
   let buildOutput = '';
@@ -29,6 +30,21 @@ export async function reloadPlugin(
         buildOutput,
         processTerminated: false,
         message: `Build failed (exit ${result.exitCode}). Fix build errors before reloading.`,
+      };
+    }
+  }
+
+  // Step 1b: Post-build hook (e.g. sync dist to versioned cache) — must run before kill
+  // so the restarted process loads the new binary, not the old cached one.
+  if (onBuildSuccess) {
+    try {
+      await onBuildSuccess();
+    } catch (err) {
+      return {
+        buildSucceeded: true,
+        buildOutput,
+        processTerminated: false,
+        message: `Build succeeded but post-build step failed: ${err instanceof Error ? err.message : String(err)}`,
       };
     }
   }

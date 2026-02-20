@@ -36,8 +36,12 @@ export function parseTest(yamlText: string): PthTest {
     type = (obj['type'] as PthTest['type']) ?? 'exec';
   }
 
+  // Honour explicit id from YAML if present and slug-safe; fall back to derived slug.
+  const rawId = typeof obj['id'] === 'string' ? obj['id'].trim() : '';
+  const id = rawId && /^[a-z0-9_-]+$/i.test(rawId) ? rawId : slugify(name);
+
   return {
-    id: slugify(name),
+    id,
     name,
     mode,
     type,

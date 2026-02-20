@@ -21,7 +21,7 @@
     {
       "name": "home-assistant-dev",
       "description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -81,7 +81,7 @@
     {
       "name": "plugin-test-harness",
       "description": "Iterative live testing framework for Claude Code plugins and MCP servers. Run a session branch, generate tests, record results, apply fixes, and iterate until convergence.",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"

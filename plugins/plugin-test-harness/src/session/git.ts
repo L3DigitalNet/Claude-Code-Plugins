@@ -31,9 +31,20 @@ export function parseTrailers(commitMessage: string): Record<string, string> {
   return result;
 }
 
+// Returns the absolute path of the git repository root containing dirPath.
+export async function getGitRepoRoot(dirPath: string): Promise<string> {
+  const result = await run('git', ['rev-parse', '--show-toplevel'], { cwd: dirPath });
+  if (result.exitCode !== 0) {
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Not a git repository: ${dirPath}`);
+  }
+  return result.stdout.trim();
+}
+
 export async function createBranch(repoPath: string, branchName: string): Promise<void> {
+  // Use 'git branch' not 'git checkout -b' — we must NOT switch HEAD because
+  // git worktree add will immediately fail if the branch is already checked out.
   try {
-    await runOrThrow('git', ['checkout', '-b', branchName], { cwd: repoPath });
+    await runOrThrow('git', ['branch', branchName], { cwd: repoPath });
   } catch (err) {
     throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to create branch: ${branchName}`, {
       cause: err instanceof Error ? err.message : String(err),
@@ -88,6 +99,32 @@ export async function commitAll(
   }
 }
 
+// Stage only specific files (paths relative to worktree root) then commit.
+// Prefer this over commitAll for fix commits — avoids capturing .pth/session-state.json
+// (always dirty during active sessions), which would create revert conflicts later.
+export async function commitFiles(
+  worktreePath: string,
+  filePaths: string[],
+  message: string
+): Promise<string> {
+  try {
+    for (const filePath of filePaths) {
+      await run('git', ['add', filePath], { cwd: worktreePath });
+    }
+    const result = await runOrThrow('git', ['commit', '-m', message], { cwd: worktreePath });
+    const match = result.stdout.match(/\[[\w/.-]+ ([a-f0-9]+)\]/);
+    if (!match?.[1]) {
+      throw new PTHError(PTHErrorCode.GIT_ERROR, `Could not extract commit hash from git output: ${result.stdout}`);
+    }
+    return match[1];
+  } catch (err) {
+    if (err instanceof PTHError) throw err;
+    throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to commit changes in: ${worktreePath}`, {
+      cause: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 export async function getLog(
   worktreePath: string,
   options?: { since?: string; maxCount?: number }
@@ -113,15 +150,67 @@ export async function getDiff(
   return result.stdout;
 }
 
+// .pth/session-state.json is an internal PTH file that is always written during active
+// sessions. It ends up in fix commits via commitAll (git add -A). When reverting those
+// commits, this file consistently conflicts with the current session state.
+// Strategy: stash dirty files first; after conflict, resolve session-state.json with
+// --ours (keep current session state); error on any other conflicted file.
+const SESSION_STATE_FILE = '.pth/session-state.json';
+
 export async function revertCommit(
   worktreePath: string,
   commitHash: string
 ): Promise<void> {
+  let stashed = false;
   try {
-    await runOrThrow('git', ['revert', '--no-edit', commitHash], { cwd: worktreePath });
+    const stashOut = await run('git', ['stash'], { cwd: worktreePath });
+    stashed = stashOut.exitCode === 0 && stashOut.stdout.trim() !== 'No local changes to save';
+
+    // --no-edit skips the editor; exits non-zero on conflict, leaving repo in merge state.
+    const revertResult = await run('git', ['revert', '--no-edit', commitHash], { cwd: worktreePath });
+
+    if (revertResult.exitCode !== 0) {
+      // Identify conflicted files via porcelain status (UU = both modified, AA/DD = add/delete conflicts)
+      const statusResult = await run('git', ['status', '--porcelain'], { cwd: worktreePath });
+      const conflicted = statusResult.stdout.split('\n')
+        .filter(l => /^(UU|AA|DD) /.test(l))
+        .map(l => l.slice(3).trim());
+
+      const otherConflicts = conflicted.filter(f => f !== SESSION_STATE_FILE);
+      if (otherConflicts.length > 0) {
+        await run('git', ['revert', '--abort'], { cwd: worktreePath });
+        throw new PTHError(PTHErrorCode.GIT_ERROR,
+          `Revert conflicts in: ${otherConflicts.join(', ')} — commit may be entangled with later changes`
+        );
+      }
+
+      if (conflicted.includes(SESSION_STATE_FILE)) {
+        // Safe to keep current session state — this file is PTH-internal, not user data.
+        await run('git', ['checkout', '--ours', SESSION_STATE_FILE], { cwd: worktreePath });
+        await run('git', ['add', SESSION_STATE_FILE], { cwd: worktreePath });
+        const short = commitHash.slice(0, 7);
+        // --allow-empty handles the case where the commit was already neutralized by a
+        // later commit (no net file changes remain after conflict resolution).
+        await runOrThrow('git', ['commit', '--allow-empty', '-m',
+          `Revert ${short}\n\nThis reverts commit ${commitHash}.\n(session-state.json resolved with --ours)`
+        ], { cwd: worktreePath });
+        return;
+      }
+
+      // No conflicts found but exit code was non-zero — surface raw output
+      throw new PTHError(PTHErrorCode.GIT_ERROR,
+        `git revert exited ${revertResult.exitCode}: ${revertResult.stderr || revertResult.stdout}`
+      );
+    }
   } catch (err) {
+    await run('git', ['revert', '--abort'], { cwd: worktreePath }).catch(() => {});
+    if (err instanceof PTHError) throw err;
     throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to revert commit: ${commitHash}`, {
       cause: err instanceof Error ? err.message : String(err),
     });
+  } finally {
+    if (stashed) {
+      await run('git', ['stash', 'pop'], { cwd: worktreePath });
+    }
   }
 }

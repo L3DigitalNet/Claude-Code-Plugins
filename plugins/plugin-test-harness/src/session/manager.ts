@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { detectPluginMode, detectPluginName, detectBuildSystem, readMcpConfig } from '../plugin/detector.js';
-import { generateSessionBranch, createBranch, addWorktree, removeWorktree, pruneWorktrees, commitAll, checkBranchExists } from './git.js';
+import { generateSessionBranch, createBranch, addWorktree, removeWorktree, pruneWorktrees, commitAll, checkBranchExists, getGitRepoRoot } from './git.js';
 import { writeSessionState, readSessionState } from './state-persister.js';
 import { TestStore } from '../testing/store.js';
 import { loadTestsFromDir } from '../testing/parser.js';
@@ -25,9 +25,9 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
     return `✗ Plugin path not found: ${args.pluginPath}`;
   }
 
-  // Check git repo
+  // Check git repo (plugin may be a subdirectory of a larger repo)
   try {
-    await fs.access(path.join(args.pluginPath, '.git'));
+    await getGitRepoRoot(args.pluginPath);
     lines.push(`✓ Git repository detected`);
   } catch {
     lines.push(`⚠ Not a git repository — PTH requires git for session branch management`);
@@ -75,12 +75,18 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
   const pluginMode = await detectPluginMode(args.pluginPath);
   await detectBuildSystem(args.pluginPath);
 
+  // Resolve git repo root — plugin may be a subdirectory of a larger mono-repo.
+  // pluginRelPath is the relative path from the repo root to the plugin directory.
+  // All file writes (pth_apply_fix, sync, build) use path.join(worktreePath, pluginRelPath, ...).
+  const repoRoot = await getGitRepoRoot(args.pluginPath);
+  const pluginRelPath = path.relative(repoRoot, args.pluginPath);
+
   // Create session branch
   const branch = generateSessionBranch(pluginName);
-  await pruneWorktrees(args.pluginPath);
+  await pruneWorktrees(repoRoot);
 
   // Check branch doesn't exist (regenerate if collision)
-  if (await checkBranchExists(args.pluginPath, branch)) {
+  if (await checkBranchExists(repoRoot, branch)) {
     throw new PTHError(PTHErrorCode.GIT_ERROR, `Branch ${branch} already exists — this should be extremely rare. Try again.`);
   }
 
@@ -90,8 +96,8 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 
   // All resource acquisition inside try so we can roll back fully on failure
   try {
-    await createBranch(args.pluginPath, branch);
-    await addWorktree(args.pluginPath, worktreePath, branch);
+    await createBranch(repoRoot, branch);
+    await addWorktree(repoRoot, worktreePath, branch);
 
     // Write session lock
     await fs.mkdir(path.join(args.pluginPath, '.pth'), { recursive: true });
@@ -109,6 +115,7 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
       pluginPath: args.pluginPath,
       pluginName,
       pluginMode,
+      pluginRelPath,
       startedAt: new Date().toISOString(),
       iteration: 0,
       testCount: testStore.count(),
@@ -138,39 +145,42 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
       `Worktree:  ${worktreePath}`,
       `Mode:      ${pluginMode}`,
       `Plugin:    ${pluginName}`,
+      pluginRelPath ? `Subpath:   ${pluginRelPath}` : '',
       existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
       ``,
       nextStep,
-    ];
+    ].filter(l => l !== undefined) as string[];
 
     return { state, message: lines.join('\n') };
   } catch (err) {
     // Best-effort rollback: clean up all acquired resources
     await fs.rm(lockPath, { force: true });
-    await removeWorktree(args.pluginPath, worktreePath).catch(() => { /* ignore if not yet added */ });
-    await run('git', ['branch', '-D', branch], { cwd: args.pluginPath }).catch(() => { /* ignore if not yet created */ });
+    await removeWorktree(repoRoot, worktreePath).catch(() => { /* ignore if not yet added */ });
+    await run('git', ['branch', '-D', branch], { cwd: repoRoot }).catch(() => { /* ignore if not yet created */ });
     throw err;
   }
 }
 
 export async function resumeSession(args: { branch: string; pluginPath: string }): Promise<StartSessionResult> {
+  const repoRoot = await getGitRepoRoot(args.pluginPath);
   const worktreePath = path.join(os.tmpdir(), `pth-worktree-${args.branch.split('/')[1]}`);
 
   // Check branch exists
-  if (!await checkBranchExists(args.pluginPath, args.branch)) {
+  if (!await checkBranchExists(repoRoot, args.branch)) {
     throw new PTHError(PTHErrorCode.GIT_ERROR, `Branch ${args.branch} not found in ${args.pluginPath}`);
   }
 
-  await pruneWorktrees(args.pluginPath);
+  await pruneWorktrees(repoRoot);
   const worktreeExists = await fs.access(worktreePath).then(() => true).catch(() => false);
   if (!worktreeExists) {
-    await addWorktree(args.pluginPath, worktreePath, args.branch);
+    await addWorktree(repoRoot, worktreePath, args.branch);
   }
 
   // Load state
   const savedState = await readSessionState(worktreePath);
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
+  const pluginRelPath = path.relative(repoRoot, args.pluginPath);
 
   testStore = new TestStore();
   const tests = await loadTestsFromDir(path.join(worktreePath, '.pth', 'tests'));
@@ -183,6 +193,7 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
     pluginPath: args.pluginPath,
     pluginName,
     pluginMode,
+    pluginRelPath,
     startedAt: new Date().toISOString(),
     iteration: 0,
     testCount: testStore.count(),
@@ -193,6 +204,8 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
   };
 
   state.worktreePath = worktreePath;
+  // Ensure pluginRelPath is set even for sessions created before this field existed
+  state.pluginRelPath = state.pluginRelPath ?? pluginRelPath;
 
   const lines = [
     `PTH session resumed.`,
@@ -219,7 +232,8 @@ export async function endSession(state: SessionState): Promise<string> {
   }
 
   // Remove worktree
-  await removeWorktree(state.pluginPath, state.worktreePath);
+  const repoRoot = await getGitRepoRoot(state.pluginPath);
+  await removeWorktree(repoRoot, state.worktreePath);
 
   // Remove lock
   const lockPath = path.join(state.pluginPath, '.pth', 'active-session.lock');

@@ -157,22 +157,16 @@ const sessionTools: ToolDef[] = [
   },
 ];
 
+// All tools are always exposed — Claude Code caches the tool list at session start,
+// so dynamic activation via notifications/tools/list_changed is unreliable.
+// Session-gating is enforced at dispatch time (server.ts default case).
 export class ToolRegistry {
-  private active = false;
-
-  getActiveTools(): ToolDef[] {
-    return this.active ? [...dormantTools, ...sessionTools] : [...dormantTools];
+  getAllTools(): ToolDef[] {
+    return [...dormantTools, ...sessionTools];
   }
 
-  activate(): void {
-    this.active = true;
-  }
-
-  deactivate(): void {
-    this.active = false;
-  }
-
-  isActive(): boolean {
-    return this.active;
-  }
+  // Kept for API compatibility; no-ops now that gating is runtime-only.
+  activate(): void {}
+  deactivate(): void {}
+  isActive(): boolean { return true; }
 }

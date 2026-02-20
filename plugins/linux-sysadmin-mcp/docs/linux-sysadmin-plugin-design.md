@@ -2121,4 +2121,4 @@ All original open questions have been resolved through collaborative review:
 
 ---
 
-*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.0.4. This document describes the implemented system.*
+*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.0.5. This document describes the implemented system.*

@@ -3234,8 +3234,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path14) {
-      let input = path14;
+    function removeDotSegments(path15) {
+      let input = path15;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3434,8 +3434,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path14, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path14 && path14 !== "/" ? path14 : void 0;
+        const [path15, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path15 && path15 !== "/" ? path15 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6887,17 +6887,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path14) {
-      const ctrl = callVisitor(key, node, visitor, path14);
+    function visit_(key, node, visitor, path15) {
+      const ctrl = callVisitor(key, node, visitor, path15);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path14, ctrl);
-        return visit_(key, ctrl, visitor, path14);
+        replaceNode(key, path15, ctrl);
+        return visit_(key, ctrl, visitor, path15);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path14 = Object.freeze(path14.concat(node));
+          path15 = Object.freeze(path15.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = visit_(i2, node.items[i2], visitor, path14);
+            const ci = visit_(i2, node.items[i2], visitor, path15);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6908,13 +6908,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path14 = Object.freeze(path14.concat(node));
-          const ck = visit_("key", node.key, visitor, path14);
+          path15 = Object.freeze(path15.concat(node));
+          const ck = visit_("key", node.key, visitor, path15);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path14);
+          const cv = visit_("value", node.value, visitor, path15);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6935,17 +6935,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path14) {
-      const ctrl = await callVisitor(key, node, visitor, path14);
+    async function visitAsync_(key, node, visitor, path15) {
+      const ctrl = await callVisitor(key, node, visitor, path15);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path14, ctrl);
-        return visitAsync_(key, ctrl, visitor, path14);
+        replaceNode(key, path15, ctrl);
+        return visitAsync_(key, ctrl, visitor, path15);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path14 = Object.freeze(path14.concat(node));
+          path15 = Object.freeze(path15.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = await visitAsync_(i2, node.items[i2], visitor, path14);
+            const ci = await visitAsync_(i2, node.items[i2], visitor, path15);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6956,13 +6956,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path14 = Object.freeze(path14.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path14);
+          path15 = Object.freeze(path15.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path15);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path14);
+          const cv = await visitAsync_("value", node.value, visitor, path15);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6989,23 +6989,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path14) {
+    function callVisitor(key, node, visitor, path15) {
       if (typeof visitor === "function")
-        return visitor(key, node, path14);
+        return visitor(key, node, path15);
       if (identity3.isMap(node))
-        return visitor.Map?.(key, node, path14);
+        return visitor.Map?.(key, node, path15);
       if (identity3.isSeq(node))
-        return visitor.Seq?.(key, node, path14);
+        return visitor.Seq?.(key, node, path15);
       if (identity3.isPair(node))
-        return visitor.Pair?.(key, node, path14);
+        return visitor.Pair?.(key, node, path15);
       if (identity3.isScalar(node))
-        return visitor.Scalar?.(key, node, path14);
+        return visitor.Scalar?.(key, node, path15);
       if (identity3.isAlias(node))
-        return visitor.Alias?.(key, node, path14);
+        return visitor.Alias?.(key, node, path15);
       return void 0;
     }
-    function replaceNode(key, path14, node) {
-      const parent = path14[path14.length - 1];
+    function replaceNode(key, path15, node) {
+      const parent = path15[path15.length - 1];
       if (identity3.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity3.isPair(parent)) {
@@ -7613,10 +7613,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity3 = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path14, value) {
+    function collectionFromPath(schema, path15, value) {
       let v = value;
-      for (let i2 = path14.length - 1; i2 >= 0; --i2) {
-        const k = path14[i2];
+      for (let i2 = path15.length - 1; i2 >= 0; --i2) {
+        const k = path15[i2];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a2 = [];
           a2[k] = v;
@@ -7635,7 +7635,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path14) => path14 == null || typeof path14 === "object" && !!path14[Symbol.iterator]().next().done;
+    var isEmptyPath = (path15) => path15 == null || typeof path15 === "object" && !!path15[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -7665,11 +7665,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path14, value) {
-        if (isEmptyPath(path14))
+      addIn(path15, value) {
+        if (isEmptyPath(path15))
           this.add(value);
         else {
-          const [key, ...rest] = path14;
+          const [key, ...rest] = path15;
           const node = this.get(key, true);
           if (identity3.isCollection(node))
             node.addIn(rest, value);
@@ -7683,8 +7683,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path14) {
-        const [key, ...rest] = path14;
+      deleteIn(path15) {
+        const [key, ...rest] = path15;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -7698,8 +7698,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path14, keepScalar) {
-        const [key, ...rest] = path14;
+      getIn(path15, keepScalar) {
+        const [key, ...rest] = path15;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity3.isScalar(node) ? node.value : node;
@@ -7717,8 +7717,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path14) {
-        const [key, ...rest] = path14;
+      hasIn(path15) {
+        const [key, ...rest] = path15;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -7728,8 +7728,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path14, value) {
-        const [key, ...rest] = path14;
+      setIn(path15, value) {
+        const [key, ...rest] = path15;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -10233,9 +10233,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path14, value) {
+      addIn(path15, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path14, value);
+          this.contents.addIn(path15, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -10310,14 +10310,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path14) {
-        if (Collection.isEmptyPath(path14)) {
+      deleteIn(path15) {
+        if (Collection.isEmptyPath(path15)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path14) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path15) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -10332,10 +10332,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path14, keepScalar) {
-        if (Collection.isEmptyPath(path14))
+      getIn(path15, keepScalar) {
+        if (Collection.isEmptyPath(path15))
           return !keepScalar && identity3.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity3.isCollection(this.contents) ? this.contents.getIn(path14, keepScalar) : void 0;
+        return identity3.isCollection(this.contents) ? this.contents.getIn(path15, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -10346,10 +10346,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path14) {
-        if (Collection.isEmptyPath(path14))
+      hasIn(path15) {
+        if (Collection.isEmptyPath(path15))
           return this.contents !== void 0;
-        return identity3.isCollection(this.contents) ? this.contents.hasIn(path14) : false;
+        return identity3.isCollection(this.contents) ? this.contents.hasIn(path15) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -10366,13 +10366,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path14, value) {
-        if (Collection.isEmptyPath(path14)) {
+      setIn(path15, value) {
+        if (Collection.isEmptyPath(path15)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path14), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path15), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path14, value);
+          this.contents.setIn(path15, value);
         }
       }
       /**
@@ -12324,9 +12324,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path14) => {
+    visit.itemAtPath = (cst, path15) => {
       let item = cst;
-      for (const [field, index] of path14) {
+      for (const [field, index] of path15) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -12335,23 +12335,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path14) => {
-      const parent = visit.itemAtPath(cst, path14.slice(0, -1));
-      const field = path14[path14.length - 1][0];
+    visit.parentCollection = (cst, path15) => {
+      const parent = visit.itemAtPath(cst, path15.slice(0, -1));
+      const field = path15[path15.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path14, item, visitor) {
-      let ctrl = visitor(item, path14);
+    function _visit(path15, item, visitor) {
+      let ctrl = visitor(item, path15);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i2 = 0; i2 < token.items.length; ++i2) {
-            const ci = _visit(Object.freeze(path14.concat([[field, i2]])), token.items[i2], visitor);
+            const ci = _visit(Object.freeze(path15.concat([[field, i2]])), token.items[i2], visitor);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -12362,10 +12362,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path14);
+            ctrl = ctrl(item, path15);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path14) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path15) : ctrl;
     }
     exports.visit = visit;
   }
@@ -14155,8 +14155,10 @@ function parseTest(yamlText) {
   } else {
     type = obj["type"] ?? "exec";
   }
+  const rawId = typeof obj["id"] === "string" ? obj["id"].trim() : "";
+  const id = rawId && /^[a-z0-9_-]+$/i.test(rawId) ? rawId : slugify(name);
   return {
-    id: slugify(name),
+    id,
     name,
     mode,
     type,
@@ -15178,7 +15180,7 @@ var require_windows = __commonJS({
     module.exports = isexe;
     isexe.sync = sync;
     var fs9 = __require("fs");
-    function checkPathExt(path14, options) {
+    function checkPathExt(path15, options) {
       var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -15189,25 +15191,25 @@ var require_windows = __commonJS({
       }
       for (var i2 = 0; i2 < pathext.length; i2++) {
         var p = pathext[i2].toLowerCase();
-        if (p && path14.substr(-p.length).toLowerCase() === p) {
+        if (p && path15.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat, path14, options) {
+    function checkStat(stat, path15, options) {
       if (!stat.isSymbolicLink() && !stat.isFile()) {
         return false;
       }
-      return checkPathExt(path14, options);
+      return checkPathExt(path15, options);
     }
-    function isexe(path14, options, cb) {
-      fs9.stat(path14, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, path14, options));
+    function isexe(path15, options, cb) {
+      fs9.stat(path15, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path15, options));
       });
     }
-    function sync(path14, options) {
-      return checkStat(fs9.statSync(path14), path14, options);
+    function sync(path15, options) {
+      return checkStat(fs9.statSync(path15), path15, options);
     }
   }
 });
@@ -15218,13 +15220,13 @@ var require_mode = __commonJS({
     module.exports = isexe;
     isexe.sync = sync;
     var fs9 = __require("fs");
-    function isexe(path14, options, cb) {
-      fs9.stat(path14, function(er, stat) {
+    function isexe(path15, options, cb) {
+      fs9.stat(path15, function(er, stat) {
         cb(er, er ? false : checkStat(stat, options));
       });
     }
-    function sync(path14, options) {
-      return checkStat(fs9.statSync(path14), options);
+    function sync(path15, options) {
+      return checkStat(fs9.statSync(path15), options);
     }
     function checkStat(stat, options) {
       return stat.isFile() && checkMode(stat, options);
@@ -15257,7 +15259,7 @@ var require_isexe = __commonJS({
     }
     module.exports = isexe;
     isexe.sync = sync;
-    function isexe(path14, options, cb) {
+    function isexe(path15, options, cb) {
       if (typeof options === "function") {
         cb = options;
         options = {};
@@ -15267,7 +15269,7 @@ var require_isexe = __commonJS({
           throw new TypeError("callback not provided");
         }
         return new Promise(function(resolve, reject) {
-          isexe(path14, options || {}, function(er, is) {
+          isexe(path15, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
@@ -15276,7 +15278,7 @@ var require_isexe = __commonJS({
           });
         });
       }
-      core(path14, options || {}, function(er, is) {
+      core(path15, options || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options && options.ignoreErrors) {
             er = null;
@@ -15286,9 +15288,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync(path14, options) {
+    function sync(path15, options) {
       try {
-        return core.sync(path14, options || {});
+        return core.sync(path15, options || {});
       } catch (er) {
         if (options && options.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -15304,7 +15306,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports, module) {
     var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path14 = __require("path");
+    var path15 = __require("path");
     var COLON = isWindows ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -15342,7 +15344,7 @@ var require_which = __commonJS({
           return opt.all && found.length ? resolve(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path14.join(pathPart, cmd);
+        const pCmd = path15.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         resolve(subStep(p, i2, 0));
       });
@@ -15369,7 +15371,7 @@ var require_which = __commonJS({
       for (let i2 = 0; i2 < pathEnv.length; i2++) {
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path14.join(pathPart, cmd);
+        const pCmd = path15.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -15417,7 +15419,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports, module) {
     "use strict";
-    var path14 = __require("path");
+    var path15 = __require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -15435,7 +15437,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env[getPathKey({ env })],
-          pathExt: withoutPathExt ? path14.delimiter : void 0
+          pathExt: withoutPathExt ? path15.delimiter : void 0
         });
       } catch (e) {
       } finally {
@@ -15444,7 +15446,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path14.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path15.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -15498,8 +15500,8 @@ var require_shebang_command = __commonJS({
       if (!match) {
         return null;
       }
-      const [path14, argument] = match[0].replace(/#! ?/, "").split(" ");
-      const binary = path14.split("/").pop();
+      const [path15, argument] = match[0].replace(/#! ?/, "").split(" ");
+      const binary = path15.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -15534,7 +15536,7 @@ var require_readShebang = __commonJS({
 var require_parse = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports, module) {
     "use strict";
-    var path14 = __require("path");
+    var path15 = __require("path");
     var resolveCommand = require_resolveCommand();
     var escape2 = require_escape();
     var readShebang = require_readShebang();
@@ -15559,7 +15561,7 @@ var require_parse = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path14.normalize(parsed.command);
+        parsed.command = path15.normalize(parsed.command);
         parsed.command = escape2.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -19689,13 +19691,13 @@ var init_output_sync = __esm({
       }
     };
     writeToFiles = (serializedResult, stdioItems, outputFiles) => {
-      for (const { path: path14, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
-        const pathString = typeof path14 === "string" ? path14 : path14.toString();
+      for (const { path: path15, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
+        const pathString = typeof path15 === "string" ? path15 : path15.toString();
         if (append || outputFiles.has(pathString)) {
-          appendFileSync(path14, serializedResult);
+          appendFileSync(path15, serializedResult);
         } else {
           outputFiles.add(pathString);
-          writeFileSync(path14, serializedResult);
+          writeFileSync(path15, serializedResult);
         }
       }
     };
@@ -22521,9 +22523,16 @@ function parseTrailers(commitMessage) {
   }
   return result;
 }
+async function getGitRepoRoot(dirPath) {
+  const result = await run("git", ["rev-parse", "--show-toplevel"], { cwd: dirPath });
+  if (result.exitCode !== 0) {
+    throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Not a git repository: ${dirPath}`);
+  }
+  return result.stdout.trim();
+}
 async function createBranch(repoPath, branchName) {
   try {
-    await runOrThrow("git", ["checkout", "-b", branchName], { cwd: repoPath });
+    await runOrThrow("git", ["branch", branchName], { cwd: repoPath });
   } catch (err) {
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Failed to create branch: ${branchName}`, {
       cause: err instanceof Error ? err.message : String(err)
@@ -22568,25 +22577,86 @@ async function commitAll(worktreePath, message) {
     });
   }
 }
+async function commitFiles(worktreePath, filePaths, message) {
+  try {
+    for (const filePath of filePaths) {
+      await run("git", ["add", filePath], { cwd: worktreePath });
+    }
+    const result = await runOrThrow("git", ["commit", "-m", message], { cwd: worktreePath });
+    const match = result.stdout.match(/\[[\w/.-]+ ([a-f0-9]+)\]/);
+    if (!match?.[1]) {
+      throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Could not extract commit hash from git output: ${result.stdout}`);
+    }
+    return match[1];
+  } catch (err) {
+    if (err instanceof PTHError) throw err;
+    throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Failed to commit changes in: ${worktreePath}`, {
+      cause: err instanceof Error ? err.message : String(err)
+    });
+  }
+}
 async function getDiff(worktreePath, base) {
   const result = await run("git", ["diff", base], { cwd: worktreePath });
   return result.stdout;
 }
 async function revertCommit(worktreePath, commitHash) {
+  let stashed = false;
   try {
-    await runOrThrow("git", ["revert", "--no-edit", commitHash], { cwd: worktreePath });
+    const stashOut = await run("git", ["stash"], { cwd: worktreePath });
+    stashed = stashOut.exitCode === 0 && stashOut.stdout.trim() !== "No local changes to save";
+    const revertResult = await run("git", ["revert", "--no-edit", commitHash], { cwd: worktreePath });
+    if (revertResult.exitCode !== 0) {
+      const statusResult = await run("git", ["status", "--porcelain"], { cwd: worktreePath });
+      const conflicted = statusResult.stdout.split("\n").filter((l) => /^(UU|AA|DD) /.test(l)).map((l) => l.slice(3).trim());
+      const otherConflicts = conflicted.filter((f) => f !== SESSION_STATE_FILE);
+      if (otherConflicts.length > 0) {
+        await run("git", ["revert", "--abort"], { cwd: worktreePath });
+        throw new PTHError(
+          "GIT_ERROR" /* GIT_ERROR */,
+          `Revert conflicts in: ${otherConflicts.join(", ")} \u2014 commit may be entangled with later changes`
+        );
+      }
+      if (conflicted.includes(SESSION_STATE_FILE)) {
+        await run("git", ["checkout", "--ours", SESSION_STATE_FILE], { cwd: worktreePath });
+        await run("git", ["add", SESSION_STATE_FILE], { cwd: worktreePath });
+        const short = commitHash.slice(0, 7);
+        await runOrThrow("git", [
+          "commit",
+          "--allow-empty",
+          "-m",
+          `Revert ${short}
+
+This reverts commit ${commitHash}.
+(session-state.json resolved with --ours)`
+        ], { cwd: worktreePath });
+        return;
+      }
+      throw new PTHError(
+        "GIT_ERROR" /* GIT_ERROR */,
+        `git revert exited ${revertResult.exitCode}: ${revertResult.stderr || revertResult.stdout}`
+      );
+    }
   } catch (err) {
+    await run("git", ["revert", "--abort"], { cwd: worktreePath }).catch(() => {
+    });
+    if (err instanceof PTHError) throw err;
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Failed to revert commit: ${commitHash}`, {
       cause: err instanceof Error ? err.message : String(err)
     });
+  } finally {
+    if (stashed) {
+      await run("git", ["stash", "pop"], { cwd: worktreePath });
+    }
   }
 }
+var SESSION_STATE_FILE;
 var init_git = __esm({
   "src/session/git.ts"() {
     "use strict";
     init_exec();
     init_errors();
     init_logger();
+    SESSION_STATE_FILE = ".pth/session-state.json";
   }
 });
 
@@ -22832,7 +22902,7 @@ async function preflight(args) {
     return `\u2717 Plugin path not found: ${args.pluginPath}`;
   }
   try {
-    await fs7.access(path12.join(args.pluginPath, ".git"));
+    await getGitRepoRoot(args.pluginPath);
     lines.push(`\u2713 Git repository detected`);
   } catch {
     lines.push(`\u26A0 Not a git repository \u2014 PTH requires git for session branch management`);
@@ -22868,16 +22938,18 @@ async function startSession(args) {
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
   await detectBuildSystem(args.pluginPath);
+  const repoRoot = await getGitRepoRoot(args.pluginPath);
+  const pluginRelPath = path12.relative(repoRoot, args.pluginPath);
   const branch = generateSessionBranch(pluginName);
-  await pruneWorktrees(args.pluginPath);
-  if (await checkBranchExists(args.pluginPath, branch)) {
+  await pruneWorktrees(repoRoot);
+  if (await checkBranchExists(repoRoot, branch)) {
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${branch} already exists \u2014 this should be extremely rare. Try again.`);
   }
   const worktreePath = path12.join(os.tmpdir(), `pth-worktree-${branch.split("/")[1]}`);
   const lockPath = path12.join(args.pluginPath, ".pth", "active-session.lock");
   try {
-    await createBranch(args.pluginPath, branch);
-    await addWorktree(args.pluginPath, worktreePath, branch);
+    await createBranch(repoRoot, branch);
+    await addWorktree(repoRoot, worktreePath, branch);
     await fs7.mkdir(path12.join(args.pluginPath, ".pth"), { recursive: true });
     await fs7.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: (/* @__PURE__ */ new Date()).toISOString() }), "utf-8");
     testStore = new TestStore();
@@ -22890,6 +22962,7 @@ async function startSession(args) {
       pluginPath: args.pluginPath,
       pluginName,
       pluginMode,
+      pluginRelPath,
       startedAt: (/* @__PURE__ */ new Date()).toISOString(),
       iteration: 0,
       testCount: testStore.count(),
@@ -22913,33 +22986,36 @@ async function startSession(args) {
       `Worktree:  ${worktreePath}`,
       `Mode:      ${pluginMode}`,
       `Plugin:    ${pluginName}`,
+      pluginRelPath ? `Subpath:   ${pluginRelPath}` : "",
       existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
       ``,
       nextStep
-    ];
+    ].filter((l) => l !== void 0);
     return { state, message: lines.join("\n") };
   } catch (err) {
     await fs7.rm(lockPath, { force: true });
-    await removeWorktree(args.pluginPath, worktreePath).catch(() => {
+    await removeWorktree(repoRoot, worktreePath).catch(() => {
     });
-    await run("git", ["branch", "-D", branch], { cwd: args.pluginPath }).catch(() => {
+    await run("git", ["branch", "-D", branch], { cwd: repoRoot }).catch(() => {
     });
     throw err;
   }
 }
 async function resumeSession(args) {
+  const repoRoot = await getGitRepoRoot(args.pluginPath);
   const worktreePath = path12.join(os.tmpdir(), `pth-worktree-${args.branch.split("/")[1]}`);
-  if (!await checkBranchExists(args.pluginPath, args.branch)) {
+  if (!await checkBranchExists(repoRoot, args.branch)) {
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${args.branch} not found in ${args.pluginPath}`);
   }
-  await pruneWorktrees(args.pluginPath);
+  await pruneWorktrees(repoRoot);
   const worktreeExists = await fs7.access(worktreePath).then(() => true).catch(() => false);
   if (!worktreeExists) {
-    await addWorktree(args.pluginPath, worktreePath, args.branch);
+    await addWorktree(repoRoot, worktreePath, args.branch);
   }
   const savedState = await readSessionState(worktreePath);
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
+  const pluginRelPath = path12.relative(repoRoot, args.pluginPath);
   testStore = new TestStore();
   const tests = await loadTestsFromDir(path12.join(worktreePath, ".pth", "tests"));
   tests.forEach((t) => testStore.add(t));
@@ -22950,6 +23026,7 @@ async function resumeSession(args) {
     pluginPath: args.pluginPath,
     pluginName,
     pluginMode,
+    pluginRelPath,
     startedAt: (/* @__PURE__ */ new Date()).toISOString(),
     iteration: 0,
     testCount: testStore.count(),
@@ -22959,6 +23036,7 @@ async function resumeSession(args) {
     activeFailures: []
   };
   state.worktreePath = worktreePath;
+  state.pluginRelPath = state.pluginRelPath ?? pluginRelPath;
   const lines = [
     `PTH session resumed.`,
     ``,
@@ -22977,7 +23055,8 @@ async function endSession(state) {
   if (status.stdout.trim()) {
     await commitAll(state.worktreePath, buildCommitMessage("chore: persist PTH test suite", { "PTH-Type": "session-end" }));
   }
-  await removeWorktree(state.pluginPath, state.worktreePath);
+  const repoRoot = await getGitRepoRoot(state.pluginPath);
+  await removeWorktree(repoRoot, state.worktreePath);
   const lockPath = path12.join(state.pluginPath, ".pth", "active-session.lock");
   await fs7.rm(lockPath, { force: true });
   return [
@@ -23019,6 +23098,7 @@ var init_manager = __esm({
 var cache_sync_exports = {};
 __export(cache_sync_exports, {
   detectCachePath: () => detectCachePath,
+  getInstallPath: () => getInstallPath,
   syncToCache: () => syncToCache
 });
 import fs8 from "fs/promises";
@@ -23046,6 +23126,26 @@ async function syncToCache(worktreePath, cachePath) {
 }
 function detectCachePath(pluginName) {
   return path13.join(os2.homedir(), ".claude", "plugins", "cache", pluginName);
+}
+async function getInstallPath(pluginName) {
+  const installedPluginsPath = path13.join(os2.homedir(), ".claude", "plugins", "installed_plugins.json");
+  let raw;
+  try {
+    raw = await fs8.readFile(installedPluginsPath, "utf-8");
+  } catch {
+    return null;
+  }
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!data.plugins) return null;
+  const entry = Object.entries(data.plugins).find(([key]) => key.startsWith(pluginName + "@"));
+  if (!entry) return null;
+  const [, records] = entry;
+  return records[0]?.installPath ?? null;
 }
 var init_cache_sync = __esm({
   "src/plugin/cache-sync.ts"() {
@@ -23253,10 +23353,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path14) {
-  if (!path14)
+function getElementAtPath(obj, path15) {
+  if (!path15)
     return obj;
-  return path14.reduce((acc, key) => acc?.[key], obj);
+  return path15.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -23576,11 +23676,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path14, issues) {
+function prefixIssues(path15, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path14);
+    iss.path.unshift(path15);
     return iss;
   });
 }
@@ -28382,6 +28482,9 @@ var StdioServerTransport = class {
   }
 };
 
+// src/server.ts
+import path14 from "path";
+
 // node_modules/zod/v3/external.js
 var external_exports = {};
 __export(external_exports, {
@@ -28860,8 +28963,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path14, errorMaps, issueData } = params;
-  const fullPath = [...path14, ...issueData.path || []];
+  const { data, path: path15, errorMaps, issueData } = params;
+  const fullPath = [...path15, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -28977,11 +29080,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path14, key) {
+  constructor(parent, value, path15, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path14;
+    this._path = path15;
     this._key = key;
   }
   get path() {
@@ -35446,18 +35549,16 @@ var sessionTools = [
   }
 ];
 var ToolRegistry = class {
-  active = false;
-  getActiveTools() {
-    return this.active ? [...dormantTools, ...sessionTools] : [...dormantTools];
+  getAllTools() {
+    return [...dormantTools, ...sessionTools];
   }
+  // Kept for API compatibility; no-ops now that gating is runtime-only.
   activate() {
-    this.active = true;
   }
   deactivate() {
-    this.active = false;
   }
   isActive() {
-    return this.active;
+    return true;
   }
 };
 
@@ -35609,16 +35710,18 @@ async function applyFix(request) {
   if (request.files.length === 0) {
     throw new PTHError("INVALID_PLUGIN" /* INVALID_PLUGIN */, "applyFix requires at least one file change");
   }
+  const worktreeRelPaths = [];
   for (const file of request.files) {
-    const fullPath = path7.join(request.worktreePath, file.path);
+    const fullPath = path7.join(request.worktreePath, request.pluginRelPath, file.path);
     await fs2.mkdir(path7.dirname(fullPath), { recursive: true });
     await fs2.writeFile(fullPath, file.content, "utf-8");
+    worktreeRelPaths.push(path7.join(request.pluginRelPath, file.path));
   }
   const trailerLines = Object.entries(request.trailers).map(([k, v]) => `${k}: ${v}`).join("\n");
   const message = trailerLines ? `${request.commitTitle}
 
 ${trailerLines}` : request.commitTitle;
-  return commitAll(request.worktreePath, message);
+  return commitFiles(request.worktreePath, worktreeRelPaths, message);
 }
 
 // src/fix/tracker.ts
@@ -35658,7 +35761,7 @@ init_git();
 
 // src/plugin/reloader.ts
 init_exec();
-async function reloadPlugin(worktreePath, buildSystem, pluginStartPattern) {
+async function reloadPlugin(worktreePath, buildSystem, pluginStartPattern, onBuildSuccess) {
   let buildOutput = "";
   if (buildSystem.buildCommand) {
     const result = await run(
@@ -35673,6 +35776,18 @@ async function reloadPlugin(worktreePath, buildSystem, pluginStartPattern) {
         buildOutput,
         processTerminated: false,
         message: `Build failed (exit ${result.exitCode}). Fix build errors before reloading.`
+      };
+    }
+  }
+  if (onBuildSuccess) {
+    try {
+      await onBuildSuccess();
+    } catch (err) {
+      return {
+        buildSucceeded: true,
+        buildOutput,
+        processTerminated: false,
+        message: `Build succeeded but post-build step failed: ${err instanceof Error ? err.message : String(err)}`
       };
     }
   }
@@ -35767,7 +35882,7 @@ function createServer() {
     { capabilities: { tools: {} } }
   );
   server2.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: registry2.getActiveTools().map((t) => ({
+    tools: registry2.getAllTools().map((t) => ({
       name: t.name,
       description: t.description,
       inputSchema: zodToJsonSchema(t.inputSchema)
@@ -35795,11 +35910,6 @@ function createServer() {
           );
           currentSession = result.state;
           resultsTracker = new ResultsTracker();
-          registry2.activate();
-          try {
-            await server2.notification({ method: "notifications/tools/list_changed" });
-          } catch {
-          }
           return respond(result.message);
         }
         case "pth_resume_session": {
@@ -35808,22 +35918,12 @@ function createServer() {
           );
           currentSession = result.state;
           resultsTracker = new ResultsTracker();
-          registry2.activate();
-          try {
-            await server2.notification({ method: "notifications/tools/list_changed" });
-          } catch {
-          }
           return respond(result.message);
         }
         case "pth_end_session": {
           if (!currentSession) return respond("No active session.");
           const result = await sessionManager.endSession(currentSession);
           currentSession = null;
-          registry2.deactivate();
-          try {
-            await server2.notification({ method: "notifications/tools/list_changed" });
-          } catch {
-          }
           return respond(result);
         }
         default: {
@@ -36002,6 +36102,7 @@ ${impacted.map((t) => `- ${t.name}`).join("\n")}`);
         };
         const hash = await applyFix({
           worktreePath: session.worktreePath,
+          pluginRelPath: session.pluginRelPath,
           files,
           commitTitle,
           trailers
@@ -36011,10 +36112,11 @@ ${commitTitle}
 Files: ${files.map((f) => f.path).join(", ")}`);
       }
       case "pth_sync_to_cache": {
-        const { syncToCache: syncToCache2, detectCachePath: detectCachePath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
-        const cachePath = detectCachePath2(session.pluginName);
+        const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
+        const cachePath = await getInstallPath2(session.pluginName) ?? detectCachePath2(session.pluginName);
+        const pluginWorktreePath = path14.join(session.worktreePath, session.pluginRelPath);
         try {
-          await syncToCache2(session.worktreePath, cachePath);
+          await syncToCache2(pluginWorktreePath, cachePath);
           return respond(`Synced worktree to cache: ${cachePath}
 Hook script changes are now live.`);
         } catch (e) {
@@ -36024,10 +36126,16 @@ Cache path: ${cachePath}`);
       }
       case "pth_reload_plugin": {
         const { detectBuildSystem: detectBuildSystem2 } = await Promise.resolve().then(() => (init_detector(), detector_exports));
-        const buildSystem = await detectBuildSystem2(session.worktreePath);
+        const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
+        const pluginWorktreePath = path14.join(session.worktreePath, session.pluginRelPath);
+        const buildSystem = await detectBuildSystem2(pluginWorktreePath);
         const { processPattern } = args;
-        const pattern = processPattern ?? session.worktreePath;
-        const result = await reloadPlugin(session.worktreePath, buildSystem, pattern);
+        const installPath = await getInstallPath2(session.pluginName);
+        const pattern = processPattern ?? (installPath ? `${installPath}/dist/index.js` : pluginWorktreePath);
+        const cachePath = installPath ?? detectCachePath2(session.pluginName);
+        const result = await reloadPlugin(pluginWorktreePath, buildSystem, pattern, async () => {
+          await syncToCache2(pluginWorktreePath, cachePath);
+        });
         return respond([
           result.buildSucceeded ? "\u2713 Build succeeded" : "\u2717 Build failed",
           result.buildOutput ? `Build output:

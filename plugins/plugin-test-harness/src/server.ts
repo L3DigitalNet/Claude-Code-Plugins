@@ -1,3 +1,4 @@
+import path from 'path';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   ListToolsRequestSchema,
@@ -41,9 +42,9 @@ export function createServer(): Server {
     { capabilities: { tools: {} } }
   );
 
-  // Dynamic tool list
+  // Static tool list — all tools always exposed; session-gating enforced at dispatch time.
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: registry.getActiveTools().map(t => ({
+    tools: registry.getAllTools().map(t => ({
       name: t.name,
       description: t.description,
       inputSchema: zodToJsonSchema(t.inputSchema),
@@ -81,8 +82,6 @@ export function createServer(): Server {
           );
           currentSession = result.state;
           resultsTracker = new ResultsTracker();  // fresh tracker for new session
-          registry.activate();
-          try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
           return respond(result.message);
         }
         case 'pth_resume_session': {
@@ -91,16 +90,12 @@ export function createServer(): Server {
           );
           currentSession = result.state;
           resultsTracker = new ResultsTracker();  // fresh tracker for resumed session
-          registry.activate();
-          try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
           return respond(result.message);
         }
         case 'pth_end_session': {
           if (!currentSession) return respond('No active session.');
           const result = await sessionManager.endSession(currentSession);
           currentSession = null;
-          registry.deactivate();
-          try { await server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
           return respond(result);
         }
         default: {
@@ -300,6 +295,7 @@ export function createServer(): Server {
         };
         const hash = await applyFix({
           worktreePath: session.worktreePath,
+          pluginRelPath: session.pluginRelPath,
           files,
           commitTitle,
           trailers,
@@ -308,10 +304,14 @@ export function createServer(): Server {
       }
 
       case 'pth_sync_to_cache': {
-        const { syncToCache, detectCachePath } = await import('./plugin/cache-sync.js');
-        const cachePath = detectCachePath(session.pluginName);
+        const { syncToCache, detectCachePath, getInstallPath } = await import('./plugin/cache-sync.js');
+        // Prefer the versioned marketplace install path over the legacy non-versioned heuristic —
+        // the running MCP server process is always launched from the versioned install path.
+        const cachePath = (await getInstallPath(session.pluginName)) ?? detectCachePath(session.pluginName);
+        // Sync from the plugin subdirectory within the worktree, not the worktree root.
+        const pluginWorktreePath = path.join(session.worktreePath, session.pluginRelPath);
         try {
-          await syncToCache(session.worktreePath, cachePath);
+          await syncToCache(pluginWorktreePath, cachePath);
           return respond(`Synced worktree to cache: ${cachePath}\nHook script changes are now live.`);
         } catch (e) {
           return respond(`Cache sync failed: ${(e as Error).message}\nCache path: ${cachePath}`);
@@ -320,10 +320,21 @@ export function createServer(): Server {
 
       case 'pth_reload_plugin': {
         const { detectBuildSystem } = await import('./plugin/detector.js');
-        const buildSystem = await detectBuildSystem(session.worktreePath);
+        const { syncToCache, detectCachePath, getInstallPath } = await import('./plugin/cache-sync.js');
+        // Build from the plugin subdirectory within the worktree, not the worktree root.
+        const pluginWorktreePath = path.join(session.worktreePath, session.pluginRelPath);
+        const buildSystem = await detectBuildSystem(pluginWorktreePath);
         const { processPattern } = args as { processPattern?: string };
-        const pattern = processPattern ?? session.worktreePath;
-        const result = await reloadPlugin(session.worktreePath, buildSystem, pattern);
+        // Default pattern: the versioned install path's dist/index.js — matches the actual
+        // running process. The worktree path is wrong because the live server runs from cache.
+        const installPath = await getInstallPath(session.pluginName);
+        const pattern = processPattern ?? (installPath ? `${installPath}/dist/index.js` : pluginWorktreePath);
+        // Sync the new build to cache BEFORE killing the process — so the auto-restarted
+        // server loads the new binary, not the stale one in cache.
+        const cachePath = installPath ?? detectCachePath(session.pluginName);
+        const result = await reloadPlugin(pluginWorktreePath, buildSystem, pattern, async () => {
+          await syncToCache(pluginWorktreePath, cachePath);
+        });
         return respond([
           result.buildSucceeded ? '✓ Build succeeded' : '✗ Build failed',
           result.buildOutput ? `Build output:\n${result.buildOutput}` : '',
