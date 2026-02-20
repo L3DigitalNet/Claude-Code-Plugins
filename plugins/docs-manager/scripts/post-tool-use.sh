@@ -26,8 +26,10 @@ except:
 " 2>/dev/null) || true
     [[ -z "$file_path" ]] && return 0
 
-    # Quick filter: only .md files
-    [[ "$file_path" != *.md ]] && return 0
+    # Quick filter: only process files that could be docs or source-files
+    # Non-.md files skip Path A but still check Path B (source-file association)
+    local is_md=false
+    [[ "$file_path" == *.md ]] && is_md=true
 
     # Quick filter: skip noise directories
     case "$file_path" in
@@ -37,8 +39,8 @@ except:
     # File must exist (may have been a delete operation)
     [[ ! -f "$file_path" ]] && return 0
 
-    # Path A: check for docs-manager frontmatter
-    if bash "$SCRIPTS_DIR/frontmatter-read.sh" "$file_path" --has-frontmatter 2>/dev/null; then
+    # Path A: check for docs-manager frontmatter (only .md files)
+    if $is_md && bash "$SCRIPTS_DIR/frontmatter-read.sh" "$file_path" --has-frontmatter 2>/dev/null; then
         local library
         library=$(bash "$SCRIPTS_DIR/frontmatter-read.sh" "$file_path" library 2>/dev/null || echo "unknown")
         bash "$SCRIPTS_DIR/queue-append.sh" \
@@ -48,7 +50,19 @@ except:
             --trigger "direct-write"
     fi
 
-    # Path B: source-file association (requires index — added in Phase 6, Task 16)
+    # Path B: source-file association — check if edited file is tracked as a source-file
+    local associated
+    associated=$(bash "$SCRIPTS_DIR/index-source-lookup.sh" "$file_path" 2>/dev/null || echo "[]")
+    if [[ "$associated" != "[]" ]]; then
+        echo "$associated" | jq -r '.[] | .path + "|" + .library' 2>/dev/null | while IFS='|' read -r doc_path lib; do
+            bash "$SCRIPTS_DIR/queue-append.sh" \
+                --type "source-file-changed" \
+                --doc-path "$doc_path" \
+                --library "$lib" \
+                --trigger "source-file-association" \
+                --source-file "$file_path"
+        done
+    fi
 
     # Queue threshold warning
     local count

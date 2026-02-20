@@ -72,6 +72,41 @@ post_tool_json() {
     [ "$status" -eq 0 ]
 }
 
+# --- Path B Detection Tests ---
+
+@test "post-tool-use: Path B — source-file edit triggers queue item" {
+    # Set up index with a doc that references a source file
+    local src_file="$DOCS_MANAGER_HOME/Caddyfile"
+    echo "# Caddy config" > "$src_file"
+    cat > "$DOCS_MANAGER_HOME/docs-index.json" << INDEXEOF
+{"version":"1.0","last-updated":"2026-01-01T00:00:00Z","libraries":[],"documents":[
+  {"id":"doc-001","path":"/tmp/caddy-readme.md","title":"Caddy","library":"homelab",
+   "machine":"test","doc-type":"sysadmin","status":"active","last-verified":null,
+   "template":null,"upstream-url":null,"source-files":["$src_file"],
+   "cross-refs":[],"incoming-refs":[],"summary":null}
+]}
+INDEXEOF
+    # Edit the source file (not a .md file)
+    printf '{"tool_name":"Write","tool_input":{"file_path":"%s","content":"updated"}}\n' "$src_file" \
+        | bash "$SCRIPTS_DIR/post-tool-use.sh"
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "1" ]
+    run jq -r '.items[0].type' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "source-file-changed" ]
+}
+
+@test "post-tool-use: Path B — no match produces no queue item" {
+    # Empty index
+    echo '{"version":"1.0","last-updated":"2026-01-01T00:00:00Z","libraries":[],"documents":[]}' \
+        > "$DOCS_MANAGER_HOME/docs-index.json"
+    local src_file="$DOCS_MANAGER_HOME/random.conf"
+    echo "config" > "$src_file"
+    printf '{"tool_name":"Write","tool_input":{"file_path":"%s","content":"x"}}\n' "$src_file" \
+        | bash "$SCRIPTS_DIR/post-tool-use.sh"
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "0" ]
+}
+
 # --- Stop Hook Tests ---
 
 @test "stop: outputs queue summary when items exist" {

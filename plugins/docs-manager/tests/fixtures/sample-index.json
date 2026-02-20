@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "last-updated": "2026-02-20T00:00:00Z",
+  "libraries": [
+    {
+      "name": "raspi5-homelab",
+      "machine": "raspi5",
+      "description": "Raspberry Pi 5 homelab documentation",
+      "root-path": "~/projects/homelab/raspi5/"
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-001",
+      "path": "~/projects/homelab/raspi5/caddy/README.md",
+      "title": "Caddy Reverse Proxy",
+      "library": "raspi5-homelab",
+      "machine": "raspi5",
+      "doc-type": "sysadmin",
+      "status": "active",
+      "last-verified": "2026-02-18",
+      "template": "homelab-service-runbook",
+      "upstream-url": "https://caddyserver.com/docs/",
+      "source-files": ["/etc/caddy/Caddyfile"],
+      "cross-refs": [],
+      "incoming-refs": [],
+      "summary": "Reverse proxy configuration for homelab services"
+    }
+  ]
+}
