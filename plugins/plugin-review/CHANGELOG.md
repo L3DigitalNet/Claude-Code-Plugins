@@ -10,6 +10,10 @@
 ### Added
 - `docs/DESIGN.md`: new "Hook Design: PostToolUse Agent Frontmatter Validator" section documenting the always-active frontmatter validation gate, its disallowed tool list, and its relationship to primary structural enforcement via agent YAML frontmatter
 
+### Fixed
+- `scripts/doc-write-tracker.sh` fallback initializer: added `pass_number` to the fallback JSON schema (`{"impl_files":[],"doc_files":[],"pass_number":1}`) so it matches `review.md`'s initialization — prevents silent counter reset if the state file is deleted mid-session and the hook's fallback fires
+- `scripts/doc-write-tracker.sh` warning output: modified file paths are now printed one per indented line instead of comma-joined, preventing line wrapping at 80–120 column terminals when file paths are long
+
 ### Changed
 - `commands/review.md` Phase 1.1: bounded plugin selection — uses `AskUserQuestion` with up to 4 options; fallback provides format hint rather than open-ended free-text prompt
 - `commands/review.md` Phase 1.3: principles and checkpoints now formatted as markdown tables (ID | Name | Definition), not a flat list

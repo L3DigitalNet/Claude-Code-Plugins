@@ -35,7 +35,9 @@ mkdir -p "$STATE_DIR"
 
 # Initialize state file if missing
 if [ ! -f "$STATE_FILE" ]; then
-  echo '{"impl_files":[],"doc_files":[]}' > "$STATE_FILE"
+  # Include pass_number in fallback schema to match review.md's initialization.
+  # Omitting it would cause Phase 2's read-back to silently default to 1, resetting the counter.
+  echo '{"impl_files":[],"doc_files":[],"pass_number":1}' > "$STATE_FILE"
 fi
 
 # Categorize the file and update state
@@ -73,10 +75,14 @@ with open(state_file, 'w') as f:
 # Warn if impl files exist but no doc files yet
 if state['impl_files'] and not state['doc_files']:
     count = len(state['impl_files'])
-    recent = ', '.join(state['impl_files'][-3:])
+    recent = state['impl_files'][-3:]
     print(f'')
     print(f'\u26a0\ufe0f [P6] Doc co-mutation: {count} implementation file(s) modified \u2014 no documentation updates yet.')
-    print(f'  Modified: {recent}')
+    # Print paths one-per-line to avoid wrapping at 80-120 column terminals.
+    for path in recent:
+        print(f'  {path}')
+    if count > 3:
+        print(f'  ... and {count - 3} more')
     print(f'  Update README.md, DESIGN.md, or CHANGELOG.md before completing this pass.')
     print(f'')
 " 2>/dev/null

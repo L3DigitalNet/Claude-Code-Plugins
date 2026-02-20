@@ -22,7 +22,7 @@ Audits a Claude Code plugin against twelve context efficiency principles across 
 
 **Stage 4 — Implementation Plan.** Claude sequences the approved options in dependency order and presents a numbered plan for your review. No changes happen at this stage — only planning.
 
-**Stage 5 — Implementation.** Claude executes the approved plan one step at a time, confirming each change before moving to the next. Scope is strictly limited to the approved plan. At the end, Claude lists all instruction markdown files as candidates for `/tighten-markdown`.
+**Stage 5 — Implementation.** Claude executes the approved plan in sequence, reporting a brief progress note after each step. Scope is strictly limited to the approved plan. At the end, Claude may optionally note instruction markdown files as candidates for `/tighten-markdown`.
 
 ### How to run it
 
@@ -34,6 +34,8 @@ From a Claude Code session in your plugin workspace:
 
 When prompted, either provide the path to your plugin's root directory or list the specific files you want reviewed.
 
+> **Note:** The review command loads two skill files: `CONTEXT_EFFICIENCY_REFERENCE.md` (principle definitions) and `CONTEXT_EFFICIENCY_REVIEW.md` (workflow). Both are required; the workflow references principles by ID from the reference skill. The reference skill can also be loaded independently when you want to look up what a specific principle means.
+
 ### What to expect
 
 Expect the review to surface findings across multiple principles. A finding is not necessarily a defect in your plugin's intent — it may reflect a tradeoff you made deliberately. Claude will flag ambiguous patterns as questions rather than violations, giving you the chance to clarify before anything is proposed for change.
@@ -44,7 +46,7 @@ Expect the review to surface findings across multiple principles. A finding is n
 
 ### What it does
 
-Applies a three-pass rewrite process to one instruction markdown file at a time. The three passes are sequential and each has its own checkpoint. Pass one cuts sentences that fail the behavioral standard. Pass two compresses surviving sentences. Pass three restructures the file for reading-order efficiency.
+Applies a five-step process to one instruction markdown file at a time: Step 1 inventories the file and proceeds automatically, Steps 2–4 apply the cut/compress/structure passes (each with an approval checkpoint), and Step 5 writes the result. Three approval checkpoints gate the process — after Step 2 (before cuts), after Step 3 (before compression is finalized), and at Step 4 (before the file is written).
 
 ### The three-pass standard
 
@@ -56,11 +58,11 @@ Every sentence in an instruction file must satisfy at least one of three tests: 
 /tighten-markdown
 ```
 
-When prompted, provide either a specific file path or a directory. If you provide a directory, Claude will list the markdown files it contains and ask you to confirm which ones to process.
+When prompted, provide either a specific file path or a directory path. If you provide a directory, Claude will list the markdown files it contains as a numbered list and ask you to reply with the numbers of the files to process, in order.
 
 ### File-by-file processing
 
-Claude processes one file at a time in the order you specify. After each file is complete, Claude confirms the word count reduction before moving to the next. A typical well-written but unoptimized instruction file sees a 30–50% word count reduction without any loss of behavioral information.
+Claude processes one file at a time in the order you specify. After each file is complete, Claude reports the word count reduction and approximate token savings before moving to the next. A typical well-written but unoptimized instruction file sees a 30–50% word count reduction without any loss of behavioral information. For a directory with multiple files, expect three interaction checkpoints per file (Steps 2, 3, and 4); Claude presents a numbered list of discovered files and asks you to reply with the numbers you want to process, in order.
 
 ### What not to worry about
 
@@ -69,6 +71,8 @@ Claude is instructed not to cut content that looks like explanation but is actua
 ---
 
 ## Frequently Asked Questions
+
+**A command ran but produced no structured output or stages — what went wrong?** Both commands work by instructing Claude to read a skill file from the plugin's skills directory. If the plugin is not correctly installed or the skill path is not resolved, the command will silently fail to load its behavioral instructions. Check that the plugin is installed (`/plugin list`), then try re-installing. If the problem persists, you can run the skill directly by pasting the contents of `skills/CONTEXT_EFFICIENCY_REVIEW.md` or `skills/MARKDOWN_TIGHTEN.md` into your session manually.
 
 **Should I run both commands on the same session?** You can, but be aware that a long structural review followed by tightening multiple files will accumulate significant context. If your plugin has many files, consider running `/review-context-efficiency` in one session and `/tighten-markdown` in a fresh session using the file list the review produced.
 

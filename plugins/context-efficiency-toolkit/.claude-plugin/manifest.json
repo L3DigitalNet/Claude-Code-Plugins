@@ -8,24 +8,29 @@
     {
       "name": "review-context-efficiency",
       "description": "Run a five-stage structured audit of a plugin against twelve context efficiency principles. Produces findings, consequence maps, remediation options, an implementation plan, and executes approved changes.",
-      "file": ".claude/commands/review-context-efficiency.md"
+      "file": "commands/review-context-efficiency.md"
     },
     {
       "name": "tighten-markdown",
       "description": "Rewrite one or more instruction markdown files to eliminate waste and maximize token efficiency without losing behavioral information.",
-      "file": ".claude/commands/tighten-markdown.md"
+      "file": "commands/tighten-markdown.md"
     }
   ],
   "skills": [
     {
+      "name": "CONTEXT_EFFICIENCY_REFERENCE",
+      "description": "Definitions of the twelve context efficiency principles (P1–P12) used to audit Claude Code plugins.",
+      "file": "skills/CONTEXT_EFFICIENCY_REFERENCE.md"
+    },
+    {
       "name": "CONTEXT_EFFICIENCY_REVIEW",
-      "description": "Twelve context efficiency principles and five-stage review workflow for auditing Claude Code plugins.",
-      "file": ".claude/skills/CONTEXT_EFFICIENCY_REVIEW.md"
+      "description": "Five-stage structured audit workflow for reviewing a plugin against the twelve context efficiency principles.",
+      "file": "skills/CONTEXT_EFFICIENCY_REVIEW.md"
     },
     {
       "name": "MARKDOWN_TIGHTEN",
-      "description": "Three-pass process for cutting, compressing, and restructuring instruction markdown files to minimize token usage.",
-      "file": ".claude/skills/MARKDOWN_TIGHTEN.md"
+      "description": "Five-step process (inventory, cut, compress, structure, write) for rewriting instruction markdown files to minimize token usage without losing behavioral information.",
+      "file": "skills/MARKDOWN_TIGHTEN.md"
     }
   ],
   "keywords": ["token-efficiency", "context-management", "plugin-quality", "markdown", "code-review"],
