@@ -1,0 +1,14 @@
+{
+  "waivers": [
+    {
+      "check": "noreply_email",
+      "plugin": "*",
+      "reason": "Repo owner uses personal email for all commits — GitHub noreply address not configured"
+    },
+    {
+      "check": "dirty_working_tree",
+      "plugin": "release-pipeline",
+      "reason": "Scoped plugin release — dirty files are in other plugins (plugin-test-harness, linux-sysadmin-mcp) and will not be staged"
+    }
+  ]
+}

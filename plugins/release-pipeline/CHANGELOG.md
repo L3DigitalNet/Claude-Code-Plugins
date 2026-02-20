@@ -7,6 +7,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.6.0] - 2026-02-20
 
 ### Added
+- v1.6.0 — resilience layer (tag reconcile, retry, waivers, batch release)
+- add Batch Release option to /release menu
+- add mode-7-batch-release.md template
+- add tag reconciliation and retry to mode-3 plugin release
+- add tag reconciliation and retry to mode-2 full release
+- add waiver support and remote tag check to pre-flight agents
+- wrap gh release view calls with api-retry in verify-release.sh
+- add check-waivers.sh for pre-flight check waivers
+- add api-retry.sh with exponential backoff and jitter
+- add reconcile-tags.sh for local/remote tag reconciliation
+- update changelog format, enhance sync scripts, and improve user prompts
+- update version to 0.2.0 and enhance documentation with new hooks and validation features
+
+### Changed
+- fix README version ref and add release waivers
+- align plugin principles with trust-based philosophy
+
+### Fixed
+- correct LOCAL_ONLY branch logic and minor hardening
+- guard BASE_DELAY_MS=0, add EXIT trap, bc fallback in api-retry.sh
+- use grep -qF for tag matching; update test mocks with peeled refs
+
+
+## [1.6.0] - 2026-02-20
+
+### Added
 - `scripts/reconcile-tags.sh` — compare local/remote tag state; auto-fetch REMOTE_ONLY tags before push
 - `scripts/api-retry.sh` — exponential backoff + jitter retry wrapper (3 attempts) for `gh` CLI calls
 - `scripts/check-waivers.sh` — look up pre-flight check waivers from `.release-waivers.json`
