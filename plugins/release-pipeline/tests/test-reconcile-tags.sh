@@ -39,7 +39,7 @@ assert_eq "$(echo "$result" | head -1)" "LOCAL_ONLY" "LOCAL_ONLY when tag only l
 result=$(
   git() {
     if [[ "$*" == *"tag -l"* ]]; then echo "v1.0.0"
-    elif [[ "$*" == *"ls-remote"* ]]; then echo "abc123 refs/tags/v1.0.0"; fi
+    elif [[ "$*" == *"ls-remote"* ]]; then printf "abc123 refs/tags/v1.0.0\nabc123 refs/tags/v1.0.0^{}\n"; fi
   }
   export -f git
   bash "$SCRIPT" /tmp v1.0.0 2>/dev/null
@@ -50,7 +50,7 @@ assert_eq "$(echo "$result" | head -1)" "BOTH" "BOTH when tag on local and remot
 result=$(
   git() {
     if [[ "$*" == *"tag -l"* ]]; then echo ""
-    elif [[ "$*" == *"ls-remote"* ]]; then echo "abc123 refs/tags/v1.0.0"
+    elif [[ "$*" == *"ls-remote"* ]]; then printf "abc123 refs/tags/v1.0.0\nabc123 refs/tags/v1.0.0^{}\n"
     elif [[ "$*" == *"fetch"* ]]; then echo ""; fi  # fetch succeeds
   }
   export -f git

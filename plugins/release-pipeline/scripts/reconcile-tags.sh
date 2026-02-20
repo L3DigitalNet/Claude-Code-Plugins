@@ -28,14 +28,17 @@ REPO="$(cd "$REPO" && pwd)"
 local_exists=false
 remote_exists=false
 
-# Check local tags
-if git -C "$REPO" tag -l "$TAG" | grep -q "^${TAG}$" 2>/dev/null; then
+# Check local tags — use fixed-string matching to avoid regex injection
+# from tag names containing dots, brackets, or other metacharacters
+if git -C "$REPO" tag -l "$TAG" | grep -qF "${TAG}" 2>/dev/null; then
   local_exists=true
 fi
 
 # Check remote tags (ls-remote outputs "SHA refs/tags/TAG" when found)
+# -F: fixed-string match avoids metacharacter issues; no anchor needed since
+# "refs/tags/TAG" is unique enough in ls-remote output
 if git -C "$REPO" ls-remote --tags origin "refs/tags/${TAG}" 2>/dev/null \
-    | grep -q "refs/tags/${TAG}$"; then
+    | grep -qF "refs/tags/${TAG}"; then
   remote_exists=true
 fi
 
