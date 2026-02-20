@@ -72,6 +72,7 @@ export function registerSessionTools(ctx: PluginContext): void {
       data.degraded_reason = "Passwordless sudo not configured. State-changing tools are disabled.";
     }
 
-    return success("sysadmin_session_info", ctx.targetHost, 0, null, data);
+    // null = no command executed; 0 would be ambiguous with "ran instantly" (see gate.ts:87)
+    return success("sysadmin_session_info", ctx.targetHost, null, null, data);
   });
 }

@@ -57,10 +57,22 @@ export function registerSecurityTools(ctx: PluginContext): void {
         }
       }
     }
-    return success("sec_audit", ctx.targetHost, failedR.durationMs, "multiple", {
+    // Parse SSH warning lines: journalctl "short" format is "MMM DD HH:MM:SS host unit[pid]: message".
+    // Lines that don't match (boot markers, dividers) are counted as unparsed.
+    const sshLines = loginR.stdout.trim().split("\n").filter(Boolean);
+    const recent_ssh_warnings: Array<{ timestamp: string; message: string }> = [];
+    let ssh_unparsed = 0;
+    for (const line of sshLines) {
+      const m = line.match(/^(\w{3}\s+\d+\s+[\d:]+)\s+\S+\s+\S+:\s+(.+)$/);
+      if (m) recent_ssh_warnings.push({ timestamp: m[1], message: m[2] });
+      else if (line !== "No SSH logs available") ssh_unparsed++;
+    }
+    // Three commands ran in parallel — report actual wall-clock time, not just the first sub-command's duration.
+    return success("sec_audit", ctx.targetHost, Math.max(failedR.durationMs, listeningR.durationMs, loginR.durationMs), "multiple", {
       failed_services: failedServices.length > 0 ? failedServices : "none",
       listening_ports,
-      recent_ssh_warnings: loginR.stdout.trim(),
+      recent_ssh_warnings,
+      ...(ssh_unparsed > 0 ? { ssh_warnings_unparsed_count: ssh_unparsed } : {}),
       profile_health: profileResults,
     }, { summary: `${failedCount} failed services. ${profileResults.length} profiles checked.`, severity });
   });
@@ -84,8 +96,10 @@ export function registerSecurityTools(ctx: PluginContext): void {
   });
 
   registerTool(ctx, {
-    name: "sec_harden_ssh", description: "Apply SSH hardening (disable password auth, root login, etc.). High risk.",
-    module: "security", riskLevel: "high", duration: "normal",
+    // Moderate (not high): SSH config edits are reversible — rollback restores sshd_config.bak on failure.
+    // Confirmed: true still required because the gate threshold default is "high" and this is "moderate".
+    name: "sec_harden_ssh", description: "Apply SSH hardening (disable password auth, root login, etc.). Moderate risk.",
+    module: "security", riskLevel: "moderate", duration: "normal",
     inputSchema: z.object({
       actions: z.array(z.enum(["disable_root_login", "disable_password_auth", "set_max_auth_tries", "disable_x11"])).min(1).describe("SSH hardening actions to apply (select one or more)"),
       confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
@@ -105,12 +119,29 @@ export function registerSecurityTools(ctx: PluginContext): void {
     }
     const cmd = `sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak && sudo sed -i '${sedCmds.join(";")}' /etc/ssh/sshd_config && sudo sshd -t && sudo systemctl reload sshd`;
     const gate = ctx.safetyGate.check({
-      toolName: "sec_harden_ssh", toolRiskLevel: "high", targetHost: ctx.targetHost,
+      toolName: "sec_harden_ssh", toolRiskLevel: "moderate", targetHost: ctx.targetHost,
       command: cmd, description: `SSH hardening: ${descriptions.join(", ")}`,
       confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean,
     });
     if (gate) return gate;
     if (args.dry_run) return success("sec_harden_ssh", ctx.targetHost, null, null, { preview_command: cmd, preview_actions: descriptions }, { dry_run: true });
+    // Pre-flight: if disable_password_auth is in the action list, verify at least one authorized_keys
+    // file exists for a non-root user. Disabling password auth without a key means remote lock-out —
+    // sshd -t passes (syntactically valid) but the user cannot authenticate over SSH.
+    if (actions.includes("disable_password_auth")) {
+      const keyCheck = await executeBash(ctx, "sudo -n find /home -name authorized_keys -not -empty 2>/dev/null | head -1", "quick");
+      if (!keyCheck.stdout.trim()) {
+        return error("sec_harden_ssh", ctx.targetHost, keyCheck.durationMs, {
+          code: "LOCK_OUT_RISK", category: "validation",
+          message: "Pre-flight failed: no authorized_keys found in /home/*/. Disabling password auth without an SSH key would lock out remote access.",
+          remediation: [
+            "Add your public key to ~/.ssh/authorized_keys before disabling password authentication",
+            "Verify key auth works in a separate session before applying this change",
+            "Remove 'disable_password_auth' from actions if key-based auth is not configured",
+          ],
+        });
+      }
+    }
     const r = await executeBash(ctx, cmd, "normal");
     if (r.exitCode !== 0) {
       // Rollback on failure

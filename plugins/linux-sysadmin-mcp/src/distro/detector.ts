@@ -1,3 +1,7 @@
+// Distro detector — probes the local system at startup and populates DistroContext.
+// Called once by server.ts; result flows into every tool via ctx.distro.
+// Detection result determines which commands are built (see distro/commands/factory.ts).
+// Config overrides (config.yaml distro: section) let users pin fields without re-detection.
 import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import type { DistroContext, DistroFamily, PackageManager, FirewallBackend, MACSystem, MACMode, ContainerRuntime, LogSystem, UserManagement } from "../types/distro.js";

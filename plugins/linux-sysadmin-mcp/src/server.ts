@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+// MCP server entry point — initializes all subsystems and connects to Claude Code via stdio.
+// Startup sequence: config → distro → sudo check → commands → executor → knowledge base →
+// safety gate → tool module registration → MCP server connect.
+// Add new tool modules at Phase 10; they must be imported above and called with ctx here.
+// In degraded mode (no passwordless sudo), only read-only tools are registered and callable.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";

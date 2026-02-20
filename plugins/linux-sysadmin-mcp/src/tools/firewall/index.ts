@@ -26,13 +26,14 @@ export function registerFirewallTools(ctx: PluginContext): void {
     return success("fw_list_rules", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { rules: r.stdout.trim(), backend: ctx.distro.firewall_backend });
   });
 
-  registerTool(ctx, { name: "fw_add_rule", description: "Add a firewall rule. High risk.", module: "firewall", riskLevel: "high", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
+  // Moderate (not high): firewall rule adds are reversible — fw_remove_rule undoes this exactly.
+  registerTool(ctx, { name: "fw_add_rule", description: "Add a firewall rule. Moderate risk.", module: "firewall", riskLevel: "moderate", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const rule: FirewallRule = { action: args.action as "allow"|"deny"|"reject", direction: args.direction as "in"|"out", port: args.port as number|string, protocol: args.protocol as "tcp"|"udp"|"any"|undefined, source: args.source as string|undefined, destination: args.destination as string|undefined, comment: args.comment as string|undefined };
     const cmd = ctx.commands.firewallAddRule(rule, { dryRun: args.dry_run as boolean });
-    const gate = ctx.safetyGate.check({ toolName: "fw_add_rule", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Add firewall rule: ${rule.action} ${rule.direction} port ${rule.port}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "fw_add_rule", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Add firewall rule: ${rule.action} ${rule.direction} port ${rule.port}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
     // Dry-run guard: return command preview without executing (matches fw_remove_rule pattern)
-    if (args.dry_run) return success("fw_add_rule", ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+    if (args.dry_run) return success("fw_add_rule", ctx.targetHost, 0, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
     const r = await executeCommand(ctx, "fw_add_rule", cmd, "quick");
     if (r.exitCode !== 0) return buildCategorizedResponse("fw_add_rule", ctx.targetHost, r.durationMs, r.stderr, ctx);
     const docHint = ctx.config.documentation.repo_path
@@ -41,15 +42,19 @@ export function registerFirewallTools(ctx: PluginContext): void {
     return success("fw_add_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { added: rule }, docHint);
   });
 
-  registerTool(ctx, { name: "fw_remove_rule", description: "Remove a firewall rule. High risk.", module: "firewall", riskLevel: "high", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
+  // Moderate (not high): firewall rule removals are reversible — fw_add_rule re-adds the same rule.
+  registerTool(ctx, { name: "fw_remove_rule", description: "Remove a firewall rule. Moderate risk.", module: "firewall", riskLevel: "moderate", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const rule: FirewallRule = { action: args.action as "allow"|"deny"|"reject", direction: args.direction as "in"|"out", port: args.port as number|string, protocol: args.protocol as "tcp"|"udp"|"any"|undefined, source: args.source as string|undefined };
     const cmd = ctx.commands.firewallRemoveRule(rule);
-    const gate = ctx.safetyGate.check({ toolName: "fw_remove_rule", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Remove firewall rule: port ${rule.port}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "fw_remove_rule", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Remove firewall rule: port ${rule.port}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("fw_remove_rule", ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+    if (args.dry_run) return success("fw_remove_rule", ctx.targetHost, 0, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
     const r = await executeCommand(ctx, "fw_remove_rule", cmd, "quick");
     if (r.exitCode !== 0) return error("fw_remove_rule", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("fw_remove_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { removed: rule });
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "firewall_changed", suggested_actions: ["doc_generate_host"] } }
+      : undefined;
+    return success("fw_remove_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { removed: rule }, docHint);
   });
 
   registerTool(ctx, { name: "fw_enable", description: "Enable the firewall. Critical risk.", module: "firewall", riskLevel: "critical", duration: "quick", inputSchema: z.object({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {

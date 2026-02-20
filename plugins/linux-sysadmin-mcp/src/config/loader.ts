@@ -1,3 +1,7 @@
+// Config loader — reads ~/.config/linux-sysadmin/config.yaml and deep-merges with defaults.
+// On first run (no config file), generates DEFAULT_CONFIG_YAML and returns firstRun: true.
+// deepMerge lets users override only the keys they specify; unset keys inherit defaults.
+// Config shape is defined in src/types/config.ts — add new fields there and in DEFAULT_CONFIG.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { homedir } from "node:os";

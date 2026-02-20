@@ -33,7 +33,7 @@ export function registerContainerTools(ctx: PluginContext): void {
       const cmd = `${rt(ctx)} ${action} ${args.container}`;
       const gate = ctx.safetyGate.check({ toolName: `ctr_${action}`, toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `${action} container ${args.container}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
       if (gate) return gate;
-      if (args.dry_run) return success(`ctr_${action}`, ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+      if (args.dry_run) return success(`ctr_${action}`, ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
       const r = await executeBash(ctx, cmd, "quick");
       if (r.exitCode !== 0) return error(`ctr_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
       return success(`ctr_${action}`, ctx.targetHost, r.durationMs, cmd, { container: args.container, action });
@@ -44,7 +44,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     const cmd = `${rt(ctx)} rm ${args.force ? "-f" : ""} ${args.container}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove container ${args.container}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("ctr_remove", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("ctr_remove", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("ctr_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.container });
@@ -54,7 +54,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     const cmd = `${rt(ctx)} pull ${args.image}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_image_pull", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Pull image ${args.image}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("ctr_image_pull", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("ctr_image_pull", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "slow");
     if (r.exitCode !== 0) return error("ctr_image_pull", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_image_pull", ctx.targetHost, r.durationMs, cmd, { pulled: args.image });
@@ -64,7 +64,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     const cmd = `${rt(ctx)} rmi ${args.image}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_image_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove image ${args.image}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("ctr_image_remove", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("ctr_image_remove", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("ctr_image_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_image_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.image });
@@ -80,7 +80,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose up ${args.detach ? "-d" : ""}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_compose_up", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Start compose project in ${args.project_dir}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("ctr_compose_up", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("ctr_compose_up", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "slow");
     if (r.exitCode !== 0) return error("ctr_compose_up", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_compose_up", ctx.targetHost, r.durationMs, cmd, { started: true });
@@ -90,7 +90,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose down ${args.volumes ? "-v" : ""}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_compose_down", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Stop compose project in ${args.project_dir}${args.volumes ? " (with volume removal)" : ""}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("ctr_compose_down", ctx.targetHost, 0, null, { would_run: cmd, volumes_would_be_deleted: args.volumes === true }, { dry_run: true });
+    if (args.dry_run) return success("ctr_compose_down", ctx.targetHost, 0, null, { preview_command: cmd, volumes_would_be_deleted: args.volumes === true }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "normal");
     if (r.exitCode !== 0) return error("ctr_compose_down", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_compose_down", ctx.targetHost, r.durationMs, cmd, { stopped: true });
