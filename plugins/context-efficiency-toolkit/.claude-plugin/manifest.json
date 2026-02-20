@@ -18,13 +18,18 @@
   ],
   "skills": [
     {
+      "name": "CONTEXT_EFFICIENCY_REFERENCE",
+      "description": "Definitions of the twelve context efficiency principles (P1–P12) used to audit Claude Code plugins.",
+      "file": "skills/CONTEXT_EFFICIENCY_REFERENCE.md"
+    },
+    {
       "name": "CONTEXT_EFFICIENCY_REVIEW",
-      "description": "Twelve context efficiency principles and five-stage review workflow for auditing Claude Code plugins.",
+      "description": "Five-stage structured audit workflow for reviewing a plugin against the twelve context efficiency principles.",
       "file": "skills/CONTEXT_EFFICIENCY_REVIEW.md"
     },
     {
       "name": "MARKDOWN_TIGHTEN",
-      "description": "Three-pass process for cutting, compressing, and restructuring instruction markdown files to minimize token usage.",
+      "description": "Five-step process (inventory, cut, compress, structure, write) for rewriting instruction markdown files to minimize token usage without losing behavioral information.",
       "file": "skills/MARKDOWN_TIGHTEN.md"
     }
   ],

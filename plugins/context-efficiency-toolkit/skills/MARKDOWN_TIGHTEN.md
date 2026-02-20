@@ -1,12 +1,12 @@
+<!--
+Invoked by: commands/tighten-markdown.md (which reads this file before executing).
+Provides: All behavioral logic for the five-step markdown tightening process.
+Scope: Prose-level rewriting only — no architecture or design evaluation (that is CONTEXT_EFFICIENCY_REVIEW.md's domain).
+Operates on one file at a time; commands/tighten-markdown.md handles file targeting and ordering.
+If step structure or checkpoint behavior changes here, update commands/tighten-markdown.md and docs/USAGE.md to match.
+-->
+
 # Markdown Tightening
-
-Read this file in full before beginning.
-
-## Purpose
-
-Rewrite instruction markdown files to be as token-efficient as possible without losing behavioral information. This skill operates on one file at a time. It does not evaluate plugin architecture or agent design — that is the job of CONTEXT_EFFICIENCY_REVIEW.md.
-
----
 
 ## The Standard
 
@@ -17,8 +17,6 @@ Every sentence in an instruction file must satisfy at least one of these three t
 - **Specifies a format:** describes the structure, schema, or shape of something
 
 Any sentence that fails all three tests is waste. Cut it.
-
----
 
 ## Sentence-Level Rules
 
@@ -34,15 +32,13 @@ Any sentence that fails all three tests is waste. Cut it.
 
 **Consolidate lists.** If a bulleted list contains items that could be expressed as a single sentence with inline enumeration, collapse it. Reserve lists for genuinely parallel, enumerable items where the list structure itself carries meaning.
 
----
-
 ## Process
 
 ### Step 1 — Inventory
 
 Read the target file in full. Count the sections and estimate the total number of sentences. Identify which sections are likely to have the most waste (motivation-heavy introductions, repeated definitions, explanatory asides).
 
-Report the inventory: section names, sentence count per section, and your assessment of where the most waste lives. Ask the user to confirm before proceeding.
+Report the inventory: section names, sentence count per section, and your assessment of where the most waste lives. Proceed automatically to Step 2.
 
 ### Step 2 — First Pass: Cut
 
@@ -62,13 +58,11 @@ Present the compressed version. Show the before and after word counts for each s
 
 Review the compressed file for structural efficiency. Confirm that YAML or markdown tables are used for any structured data that survived as prose. Confirm that section headers are necessary — remove any header whose section could be folded into an adjacent section without confusion. Confirm that the file's reading order matches the order Claude will need the information during execution.
 
-Present the final version. State the total word count reduction as a percentage. Ask for explicit approval before writing the file.
+Present the final version. Ask for explicit approval before writing the file.
 
 ### Step 5 — Write
 
-Overwrite the target file with the approved version. Confirm the write and state the final word count and reduction percentage.
-
----
+Overwrite the target file with the approved version. Confirm the write and state the final word count, reduction percentage, and approximate token savings relative to the original.
 
 ## What Not to Cut
 
@@ -77,8 +71,6 @@ Do not cut content that looks like explanation but is actually constraint. "Do t
 Do not cut examples if the example is the only way to make an ambiguous instruction unambiguous. A concrete example that resolves genuine ambiguity earns its tokens. An example that illustrates something already clear does not.
 
 Do not cut warning or prohibition statements even if they seem obvious. Explicit prohibitions are cheaper than the cost of Claude inferring a boundary incorrectly.
-
----
 
 ## Uncertainty Protocol
 
