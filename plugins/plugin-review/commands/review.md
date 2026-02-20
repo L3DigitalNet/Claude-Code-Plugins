@@ -40,7 +40,7 @@ You will need this path when spawning subagents (see Phase 2).
 - `plugins/<n>/README.md` (principles, usage, architecture)
 - `plugins/<n>/docs/DESIGN.md` if it exists (rationale, architectural intent)
 - `plugins/<n>/hooks/hooks.json` if it exists (mechanical enforcement surface)
-- Root `CLAUDE.md` sections: "Key Architectural Patterns", "Component Context Cost", "Enforcement Layers", "Hooks Best Practices"
+- Root `README.md` — the `## Principles` section (root architectural principles P1–Pn that apply across all plugins in this collection)
 
 **1.3 Build the principles and checkpoints list.** List every principle (root architectural + plugin-specific `[P1]`–`[Pn]`) with ID, short name, and one-line definition. Then list any checkpoints (`[C1]`–`[Cn]`) — these are cross-cutting quality checks applied to the target plugin (as distinct from this review plugin's own architectural principles). Print the combined list for the user.
 

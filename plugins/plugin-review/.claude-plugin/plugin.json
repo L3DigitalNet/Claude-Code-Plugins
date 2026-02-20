@@ -1,7 +1,7 @@
 {
   "name": "plugin-review",
   "description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"
