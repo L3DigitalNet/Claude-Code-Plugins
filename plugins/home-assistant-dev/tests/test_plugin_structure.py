@@ -25,19 +25,27 @@ except ImportError:
 EXPECTED_SKILLS = sorted([
     "ha-architecture",
     "ha-async-patterns",
+    "ha-blueprints",
     "ha-config-flow",
+    "ha-config-migration",
     "ha-coordinator",
     "ha-debugging",
+    "ha-deprecation-fixes",
+    "ha-device-conditions-actions",
     "ha-device-triggers",
     "ha-diagnostics",
     "ha-documentation",
+    "ha-entity-lifecycle",
     "ha-entity-platforms",
     "ha-hacs",
+    "ha-hacs-publishing",
     "ha-integration-scaffold",
     "ha-migration",
+    "ha-options-flow",
     "ha-quality-review",
     "ha-recorder",
     "ha-repairs",
+    "ha-scripts",
     "ha-service-actions",
     "ha-testing",
     "ha-websocket-api",
@@ -173,14 +181,14 @@ class TestSkillValidation:
     """Validate all 19 skill directories and their SKILL.md files."""
 
     def test_skill_count(self, plugin_root: Path) -> None:
-        """Exactly 19 skill directories exist."""
+        """Exactly 27 skill directories exist."""
         skills_dir = plugin_root / "skills"
         skill_dirs = sorted([
             d.name for d in skills_dir.iterdir()
             if d.is_dir() and not d.name.startswith(".")
         ])
-        assert len(skill_dirs) == 19, (
-            f"Expected 19 skill directories, found {len(skill_dirs)}: {skill_dirs}"
+        assert len(skill_dirs) == 27, (
+            f"Expected 27 skill directories, found {len(skill_dirs)}: {skill_dirs}"
         )
         assert skill_dirs == EXPECTED_SKILLS, (
             f"Skill directories do not match expected.\n"
