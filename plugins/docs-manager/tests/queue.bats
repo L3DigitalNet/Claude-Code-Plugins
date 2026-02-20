@@ -146,3 +146,72 @@ teardown() { teardown_test_env; }
     [ "$status" -eq 0 ]
     [ "$output" = "1" ]
 }
+
+# --- Queue Clear Tests ---
+
+@test "queue-clear empties queue and writes history log" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-clear.sh" --reason "Testing clear"
+    [ "$status" -eq 0 ]
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "0" ]
+}
+
+@test "queue-clear requires a reason" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-clear.sh"
+    [ "$status" -eq 1 ]
+}
+
+@test "queue-clear writes cleared items to session history" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    bash "$SCRIPTS_DIR/queue-clear.sh" --reason "Test"
+    [ -f "$DOCS_MANAGER_HOME/session-history.jsonl" ]
+    # Verify the history entry contains the reason
+    run bash -c "head -1 '$DOCS_MANAGER_HOME/session-history.jsonl' | jq -r '.reason'"
+    [ "$output" = "Test" ]
+}
+
+@test "queue-clear reports count of cleared items" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/b.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-clear.sh" --reason "Bulk clear"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"2"* ]]
+}
+
+# --- Queue Merge Fallback Tests ---
+
+@test "queue-merge-fallback combines fallback into main queue" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    printf '{"created":"2026-01-01T00:00:00Z","items":[{"id":"fb-001","type":"doc-modified","doc-path":"/tmp/fb.md","library":"lib","detected-at":"2026-01-01T00:00:00Z","trigger":"direct-write","priority":"standard","status":"pending","note":null}]}\n' \
+        > "$DOCS_MANAGER_HOME/queue.fallback.json"
+    run bash "$SCRIPTS_DIR/queue-merge-fallback.sh"
+    [ "$status" -eq 0 ]
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "2" ]
+    [ ! -f "$DOCS_MANAGER_HOME/queue.fallback.json" ]
+}
+
+@test "queue-merge-fallback exits 0 when no fallback exists" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    run bash "$SCRIPTS_DIR/queue-merge-fallback.sh"
+    [ "$status" -eq 0 ]
+}
+
+@test "queue-merge-fallback deduplicates during merge" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    # Fallback has same doc-path + type
+    printf '{"created":"2026-01-01T00:00:00Z","items":[{"id":"fb-001","type":"doc-modified","doc-path":"/tmp/a.md","library":"lib","detected-at":"2026-01-01T00:00:00Z","trigger":"direct-write","priority":"standard","status":"pending","note":null}]}\n' \
+        > "$DOCS_MANAGER_HOME/queue.fallback.json"
+    run bash "$SCRIPTS_DIR/queue-merge-fallback.sh"
+    [ "$status" -eq 0 ]
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "1" ]
+}
