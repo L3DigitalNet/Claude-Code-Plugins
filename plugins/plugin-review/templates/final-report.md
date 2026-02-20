@@ -9,6 +9,10 @@
     change, update the Pass History table here to match.
   Cross-file dependency: pass-report.md defines the data format for each row in Pass History.
     The Principle Status table uses the same status vocabulary as track-a-criteria.md.
+  Cross-file dependency (new): Assertion Coverage table uses confidence score from
+    .claude/state/review-assertions.json read in Phase 6 of commands/review.md.
+    Column names (ID / Track / Type / Status / Description) must match the schema
+    defined in run-assertions.sh and review-assertions.json.
 -->
 
 Use this template when the review loop terminates (Phase 6).
@@ -48,6 +52,15 @@ Use this template when the review loop terminates (Phase 6).
 | README.md        | ✅ Current   |       |
 | docs/DESIGN.md   | ✅ Updated   | Updated in Pass 2 |
 
+### Assertion Coverage
+Confidence: N% (N/N assertions passing)
+(omit if no assertions were generated — all findings were judgment-only)
+
+| ID    | Track | Type             | Status | Description                        |
+|-------|-------|------------------|--------|------------------------------------|
+| A-001 | A     | grep_not_match   | ✅     | <description>                      |
+| A-002 | C     | file_content     | ❌     | <description> — <failure note>     |
+
 ### Accepted Gaps
 (omit if none)
 - **[Pn] <Principle>**: <description and rationale>
@@ -59,3 +72,5 @@ Use this template when the review loop terminates (Phase 6).
 ## Rules
 
 Every principle from the original checklist must appear in Principle Status. Every checkpoint must appear in Checkpoint Status. Touchpoints clean from Pass 1 can be summarized in one line. Documentation Status lists every reviewed file. Accepted Gaps includes enough context for someone reading months later.
+
+Assertion Coverage is included when assertions were generated. If zero assertions were generated (all findings were judgment-only with no machine-verifiable check), omit the section and note "No machine-verifiable assertions generated."
