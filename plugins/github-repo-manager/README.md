@@ -8,19 +8,15 @@ GitHub Repo Manager provides a single `/repo-manager` command that assesses and 
 
 ## Principles
 
-**[P1] Explanatory Context** — Before proposing any action, briefly explain what it is and why it matters — enough to make an informed decision, not a tutorial.
+**[P1] Context at Decision Points** — Surface relevant context when a decision is required — enough to act, not a tutorial. Skip explanation for actions whose purpose is obvious from the invocation.
 
-**[P2] Implication Warnings** — When an action has consequences the owner may not anticipate, surface them before acting. This applies especially to publicly visible actions.
+**[P2] Implication Warnings** — When an action has consequences the owner may not anticipate, name them before acting. This applies especially to publicly visible or hard-to-reverse actions.
 
-**[P3] Irreversibility Flags** — Actions that cannot be easily undone are called out clearly and unmissably before execution, with specific guidance on what becomes hard to recover.
+**[P3] Irreversibility Flags** — Actions that cannot be easily undone are called out clearly before execution, with specific guidance on what becomes hard to recover.
 
-**[P4] Jargon Translation** — GitHub concepts are explained in plain language alongside technical terms whenever there's reason to think the owner may not be familiar with them. The goal is building understanding, not delivering a glossary — explanation depth adjusts with the configured expertise level.
+**[P4] Risk-Proportional Friction** — Confirmation depth scales with the repository's public footprint and action reversibility. Private internal repos get minimal friction; public repos with active releases warrant additional care before irreversible operations.
 
-**[P5] Tier-Aware Sensitivity** — Explanation depth and warning level scale with the repository tier. Private docs repos get minimal friction; public repos with releases get full ceremony.
-
-**[P6] Teaching Moments** — When Claude detects a gap representing a learning opportunity, it explains why the issue matters, not just that it exists.
-
-**[P7] Progressive Depth** — Concise explanations by default; deeper detail available on request. Avoids information overload while keeping comprehensive context accessible.
+**[P5] Progressive Depth** — Concise by default; deeper detail available on request.
 
 ## Installation
 
