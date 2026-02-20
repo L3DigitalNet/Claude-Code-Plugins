@@ -57,7 +57,7 @@
     {
       "name": "linux-sysadmin-mcp",
       "description": "Comprehensive Linux system administration MCP server with ~100 tools across 15 modules \u2014 packages, services, users, firewall, networking, security, storage, containers, and more",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -93,7 +93,7 @@
     {
       "name": "plugin-review",
       "description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -101,6 +101,18 @@
       "source": "./plugins/plugin-review",
       "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-review"
+    },
+    {
+      "name": "context-efficiency-toolkit",
+      "description": "Audits Claude Code plugins for token and context efficiency, then rewrites instruction files to be as lean as possible without losing behavioral information.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/context-efficiency-toolkit",
+      "category": "development",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/context-efficiency-toolkit"
     }
   ]
 }

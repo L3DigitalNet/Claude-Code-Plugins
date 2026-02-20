@@ -9,6 +9,15 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/doc-write-tracker.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate-agent-frontmatter.sh"
+          }
+        ]
       }
     ]
   }

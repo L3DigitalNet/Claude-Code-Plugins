@@ -18,7 +18,7 @@ Plugin Review addresses the challenge of systematically auditing a Claude Code p
 
 **[P5] Pass Budget Enforcement** — The review targets convergence within 3 passes. Exceeding this budget requires an explicit user decision — the orchestrator does not silently continue looping.
 
-**[P6] Documentation Co-mutation** — Every implementation change must include corresponding documentation updates in the same pass. The `doc-write-tracker` hook provides mechanical enforcement for the most common failure mode (forgetting to update docs entirely).
+**[P6] Documentation Co-mutation** — Every implementation change must include corresponding documentation updates in the same pass. The `doc-write-tracker` hook mechanically warns when implementation files are modified without any documentation updates in the session — catching the most common failure mode (forgetting to update docs entirely). Full blocking enforcement of this rule requires a manual pre-completion check.
 
 **[P7] Cross-Track Impact Awareness** — Before implementation, each proposed change must note which other tracks it could affect. This catches regressions before they happen rather than discovering them on re-audit.
 
@@ -84,7 +84,8 @@ All hooks register declaratively via `hooks/hooks.json` — no runtime setup nee
 
 | Hook | Event | What it does |
 |------|-------|-------------|
-| **Doc write tracker** | PostToolUse (Write\|Edit\|MultiEdit\|MCP writes) | Tracks which file categories (impl vs. doc) are being written during a review session; warns when implementation files are modified without any documentation files in the same pass |
+| **Doc write tracker** | PostToolUse (Write\|Edit\|MultiEdit\|NotebookEdit\|MCP writes) | Tracks which file categories (impl vs. doc) are being written during a review session; warns when implementation files are modified without any documentation files in the same pass |
+| **Agent frontmatter validator** | PostToolUse (Write\|Edit\|MultiEdit) | Checks agent definition files for disallowed tools (Write, Edit, Bash, etc.) after each write; warns if tools beyond the read-only allowlist are present in the YAML frontmatter |
 
 ## Context Management Strategy
 

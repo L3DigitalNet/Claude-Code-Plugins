@@ -1,5 +1,19 @@
 # Track A: Principles Alignment Criteria
 
+<!-- architectural-context
+  Loaded by: agents/principles-analyst.md — the agent receives this file path in its prompt
+    and reads it with the Read tool at the start of its analysis session.
+  Never loaded by: the orchestrator (commands/review.md). If the orchestrator reads this,
+    it violates [P3] On-Demand Template Loading.
+  Output contract: the status vocabulary (Upheld / Partially Upheld / Violated) defined here
+    must match what review.md Phase 3 expects in the subagent's returned analysis table.
+    Changing status labels here requires updating the pass-report.md template and
+    final-report.md's Principle Status table to match.
+  Cross-file dependency: the enforcement layer hierarchy (Mechanical > Structural > Behavioral)
+    defined here is also referenced in docs/DESIGN.md's Enforcement Layer Mapping table.
+    Changes to layer definitions require updating DESIGN.md to stay consistent.
+-->
+
 Load this template when performing principles alignment analysis. It defines what to examine in each component type and the rules for determining principle status.
 
 ## Component Examination Table

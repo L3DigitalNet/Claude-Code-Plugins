@@ -18,11 +18,11 @@ The plugin splits work into an orchestrator (the `review` command) and three dis
 
 | Constraint | Layer | Mechanism |
 |-----------|-------|-----------|
-| Doc co-mutation (forgot to update) | Mechanical | `doc-write-tracker` PostToolUse hook tracks impl-vs-doc writes, warns on imbalance |
+| Doc co-mutation (forgot to update) | Mechanical (warn-only) | `doc-write-tracker` PostToolUse hook tracks impl-vs-doc writes, warns on imbalance — does not block |
 | Doc co-mutation (content accuracy) | Behavioral | Orchestrator verifies doc content matches new behavior — can't be mechanically checked |
 | Pass budget (3-pass limit) | Structural | Orchestrator command explicitly checks pass count before spawning next round |
 | Scoped re-audit | Structural | `scoped-reaudit` skill encodes file→track mapping; orchestrator consults it before spawning |
-| Subagents don't implement | Structural | Agent YAML frontmatter `tools:` line restricts to `Read, Grep, Glob` — no Write/Edit access |
+| Subagents don't implement | Structural + Mechanical (warn) | Agent YAML frontmatter `tools:` line restricts to `Read, Grep, Glob` — no Write/Edit access. PostToolUse hook `validate-agent-frontmatter.sh` warns if disallowed tools are added to agent files. |
 | Report format consistency | Structural | Report templates are externalized; agents are instructed to follow them exactly |
 | Severity-led reporting | Behavioral | Instruction in report template to lead with open findings, roll up clean items |
 | Cross-track impact check | Behavioral | Instruction in orchestrator to annotate proposals with affected tracks |
@@ -55,8 +55,16 @@ Three passes chosen as default based on the typical review arc: Pass 1 discovers
 
 ## Hook Design: PostToolUse Doc Write Tracker
 
-The `doc-write-tracker` hook runs on every Write, Edit, MultiEdit, NotebookEdit, and MCP write tool use during a review session. It categorizes each written file path as either "implementation" (commands, agents, skills, scripts, src, templates) or "documentation" (README.md, DESIGN.md, CHANGELOG.md). It tracks these categories in a state file at `.claude/state/plugin-review-writes.json`.
+The `doc-write-tracker` hook runs on every Write, Edit, MultiEdit, NotebookEdit, and MCP write tool use during a review session. It categorizes each written file path as "implementation" or "documentation" using two matching strategies: implementation paths are matched by directory prefix (`commands/`, `agents/`, `skills/`, `scripts/`, `hooks/scripts/`, `src/`, `templates/`); documentation is matched by basename (`README.md`, `DESIGN.md`, `CHANGELOG.md`). It tracks these categories in a state file at `.claude/state/plugin-review-writes.json`.
+
+**Known gap**: `hooks/hooks.json` does not match any implementation directory prefix and is not tracked by the co-mutation check. This is an accepted gap — the orchestrator is not expected to edit hook declarations during review sessions, so the omission has no practical impact during normal use.
 
 When an implementation file is written and the state file shows zero documentation writes in the current session, it emits a warning to the agent context. This catches the most common documentation co-mutation failure (forgetting to update docs entirely) while accepting that content accuracy verification must remain behavioral.
 
 The hook uses `PLUGIN_REVIEW_ACTIVE=1` as a session-awareness gate — it only activates during review sessions, not normal development work.
+
+## Hook Design: PostToolUse Agent Frontmatter Validator
+
+The `validate-agent-frontmatter.sh` hook runs on every Write, Edit, and MultiEdit tool use. Unlike the doc-write-tracker, it is always active (not gated by `PLUGIN_REVIEW_ACTIVE`) because agent frontmatter correctness is a permanent invariant — not session-scoped.
+
+When an `agents/*.md` file is written, the hook parses the YAML frontmatter `tools:` line and checks for disallowed tools (Write, Edit, MultiEdit, Bash, Task, NotebookEdit). If found, it emits a warning naming the disallowed tools and the corrective action. This is a secondary layer behind the primary structural enforcement (agent YAML frontmatter tool restrictions enforced by the Claude Code platform). The hook catches accidental additions before they persist unnoticed.

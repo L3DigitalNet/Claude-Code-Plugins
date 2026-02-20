@@ -1,5 +1,19 @@
 # Track B: Terminal UX Criteria
 
+<!-- architectural-context
+  Loaded by: agents/ux-analyst.md — receives this file path in its prompt and reads it
+    at the start of its analysis session.
+  Never loaded by: the orchestrator (commands/review.md). If the orchestrator reads this,
+    it violates [P3] On-Demand Template Loading.
+  Output contract: the severity classification (🔴 High / 🟡 Medium / 🟢 Low) defined here
+    must match how review.md Phase 3 formats the "Open Findings — UX" section in the pass
+    report. Changing the severity symbols or labels requires updating pass-report.md.
+  Cross-file dependency: four evaluation categories (Information Density, User Input,
+    Progress/Feedback, Terminal-Specific) are the same categories the orchestrator uses
+    when mapping touchpoints in Phase 1.4. Adding a fifth category here requires updating
+    the touchpoint map instructions in review.md Phase 1.4.
+-->
+
 Load this template when performing terminal UX analysis. It defines the four evaluation categories and their specific criteria for Claude Code plugin interfaces.
 
 ## Category 1: Information Density & Readability

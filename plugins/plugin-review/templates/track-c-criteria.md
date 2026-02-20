@@ -1,5 +1,18 @@
 # Track C: Documentation Freshness Criteria
 
+<!-- architectural-context
+  Loaded by: agents/docs-analyst.md — receives this file path in its prompt and reads it
+    at the start of its analysis session.
+  Never loaded by: the orchestrator (commands/review.md). If the orchestrator reads this,
+    it violates [P3] On-Demand Template Loading.
+  Output contract: the trigger classification (Pre-existing drift / Introduced by Pass N)
+    defined here must match the field used in review.md Phase 3's "Open Findings —
+    Documentation" section. Changing the classification labels requires updating pass-report.md.
+  Cross-file dependency: Track C always runs on re-audit regardless of which files changed,
+    per the rule in skills/scoped-reaudit/SKILL.md. If Track C scope changes (e.g., it no
+    longer always runs), the scoped-reaudit skill must be updated to match.
+-->
+
 Load this template when performing documentation freshness analysis. It defines the five drift categories and the methodology for detecting each one.
 
 ## Drift Category 1: Accuracy
