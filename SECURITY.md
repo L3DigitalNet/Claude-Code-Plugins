@@ -1,40 +1,40 @@
 # Security Policy
 
+## Supported Versions
+
+Security fixes are applied to the latest release of each plugin only.
+Older plugin versions are not patched — please update to the latest release.
+
+| Plugin | Supported |
+|--------|-----------|
+| Latest release | ✅ |
+| Prior releases | ❌ |
+
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in any plugin in this marketplace, please report
-it responsibly.
+**Please do not report security vulnerabilities via public GitHub issues.**
 
-**Do NOT open a public issue.** Instead, use one of these methods:
+To report a vulnerability, use GitHub's private vulnerability reporting:
+1. Go to the [Security tab](https://github.com/L3DigitalNet/Claude-Code-Plugins/security)
+2. Click **"Report a vulnerability"**
+3. Fill in the details
 
-- **GitHub Security Advisory**: [Report a vulnerability](https://github.com/L3DigitalNet/Claude-Code-Plugins/security/advisories/new) (preferred)
-- **Email**: Send details to the repository owner via their GitHub profile
-
-## What to Include
-
-- Which plugin is affected
-- Steps to reproduce the vulnerability
-- Potential impact
-- Suggested fix (if you have one)
-
-## Response Timeline
-
-- **Acknowledgment**: Within 48 hours
-- **Assessment**: Within 1 week
-- **Fix**: Depends on severity; critical issues are prioritized
+You can expect:
+- **Acknowledgement** within 48 hours
+- **Status update** within 7 days
+- **Fix or mitigation** as soon as reasonably possible, depending on severity
 
 ## Scope
 
-This policy covers all plugins distributed through this marketplace:
+This repository distributes Claude Code plugins — scripts and configuration
+files that execute within the Claude Code environment. Security concerns
+relevant to this project include:
 
-- agent-orchestrator
-- home-assistant-dev
-- github-repo-manager
-- release-pipeline
-- design-refine
-- linux-sysadmin-mcp
+- Hooks or scripts that could execute unexpected commands
+- Plugin manifests that could be abused to load malicious content
+- MCP server configurations that expose sensitive system access
 
-## Supported Versions
+## Out of Scope
 
-Only the latest version of each plugin (as listed in `marketplace.json`) receives security
-updates. There is no backport policy for older versions.
+- Vulnerabilities in Claude Code itself (report to [Anthropic](https://www.anthropic.com/security))
+- Issues in third-party dependencies (report upstream)
