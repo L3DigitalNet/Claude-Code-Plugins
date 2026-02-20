@@ -60,9 +60,9 @@ You will need this path when spawning subagents (see Phase 2).
 
 Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
 
-- **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-a-criteria.md`.
-- **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-b-criteria.md`.
-- **Docs Analyst** (`agents/docs-analyst.md`): provide the list of all documentation files, a directory listing of implementation files (NOT full source), and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-c-criteria.md`.
+- **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-a-criteria.md`.
+- **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-b-criteria.md`.
+- **Docs Analyst** (`agents/docs-analyst.md`): provide the list of all documentation files, a directory listing of implementation files (NOT full source), and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-c-criteria.md`.
 
 Do NOT load those templates yourself — the subagents handle it.
 
@@ -74,14 +74,14 @@ Each analyst's output contains an `## Assertions` block with a JSON array. Extra
 
 1. Read `.claude/state/review-assertions.json`
 2. Set `plugin` to the current plugin name and `current_pass` to the current pass number
-3. For each assertion from each analyst, add it to the `assertions` array **only if its `id` is not already present** — this prevents duplicate assertions on re-audit passes
+3. For each assertion from each analyst, add it to the `assertions` array **only if its `id` is not already present** — this preserves existing pass/fail status for assertions whose tracks were not re-audited this pass, preventing the same assertion from being reset and re-evaluated when nothing relevant changed
 4. Write the updated file
 
 After merging, report the assertion count: "Pass N: N total assertions (N new, N carried forward)."
 
 ### Phase 3 — Present Findings
 
-Load `<CLAUDE_PLUGIN_ROOT>/templates/pass-report.md` and format the unified report. Key rules:
+Load `$CLAUDE_PLUGIN_ROOT/templates/pass-report.md` and format the unified report. Key rules:
 - Lead with a severity-sorted summary of **open findings only**
 - Upheld principles and clean touchpoints go in a compact roll-up line
 - Only partially upheld, violated, and issue findings get full detail blocks
@@ -95,7 +95,7 @@ For each open finding, propose and immediately implement a concrete fix. Do **no
 
 For each fix:
 1. State the plan — files, changes, gap closure.
-2. Load `<CLAUDE_PLUGIN_ROOT>/templates/cross-track-impact.md` and note which other tracks are affected.
+2. Load `$CLAUDE_PLUGIN_ROOT/templates/cross-track-impact.md` and note which other tracks are affected.
 3. Implement the code change.
 4. Update documentation — identify any docs referencing the modified behavior and update them in the same pass. A code change without a doc update is incomplete.
 5. Summarize in 1–2 sentences.
@@ -150,7 +150,7 @@ for a in fails:
 
 **If any assertions fail**, spawn the fix-agent (`agents/fix-agent.md`) with:
 - The list of failing assertion objects (full JSON from `.claude/state/review-assertions.json` where `status == "fail"`)
-- The original analyst finding context for each (from Phase 2 summaries)
+- The analyst finding context for each assertion: include the relevant section from the Phase 3 pass report (the finding block that generated this assertion), so the fix-agent understands why the assertion was written
 - The specific files likely needing changes per assertion
 
 After the fix-agent returns, re-run assertions and update confidence:
@@ -181,7 +181,11 @@ if pass_num >= max_passes and review['confidence']['score'] < 1.0:
 
 If `pass_number >= max_passes` and confidence < 100%, proceed to Phase 6 with convergence reason "Budget reached."
 
-Otherwise, if open findings remain, loop back to Phase 2 (scoped re-audit).
+Loop back to Phase 2 (scoped re-audit) only if ALL of these are true:
+- `confidence < 100%` (assertions still failing)
+- `pass_number < max_passes` (budget not yet reached)
+
+Do not loop based on subjective "findings remain" — confidence is the sole convergence criterion.
 
 ### Phase 6 — Convergence
 
@@ -192,7 +196,7 @@ The loop terminates when any condition is met:
 4. **Plateau** — two identical consecutive passes. Report and ask how to proceed.
 5. **Divergence** — more new findings than resolved. Report immediately, recommend reverting.
 
-Load `<CLAUDE_PLUGIN_ROOT>/templates/final-report.md` and produce the final summary. Read the final confidence score and include it in the final report:
+Load `$CLAUDE_PLUGIN_ROOT/templates/final-report.md` and produce the final summary. Read the final confidence score and include it in the final report:
 
 ```bash
 python3 -c "
