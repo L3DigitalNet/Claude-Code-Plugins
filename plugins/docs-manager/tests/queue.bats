@@ -89,3 +89,60 @@ teardown() { teardown_test_env; }
     run bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
     [ "$status" -eq 0 ]
 }
+
+# --- Queue Read Tests ---
+
+@test "queue-read outputs empty message for empty queue" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    run bash "$SCRIPTS_DIR/queue-read.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"empty"* ]] || [[ "$output" == *"0 items"* ]]
+}
+
+@test "queue-read outputs item count and details" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-read.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"1"* ]]
+    [[ "$output" == *"/tmp/a.md"* ]]
+}
+
+@test "queue-read --json outputs valid JSON" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-read.sh" --json
+    [ "$status" -eq 0 ]
+    echo "$output" | jq . > /dev/null 2>&1
+}
+
+@test "queue-read --count outputs integer count" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/b.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-read.sh" --count
+    [ "$status" -eq 0 ]
+    [ "$output" = "2" ]
+}
+
+@test "queue-read merges fallback queue before reading" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    printf '{"created":"2026-01-01T00:00:00Z","items":[{"id":"fb-001","type":"doc-modified","doc-path":"/tmp/fb.md","library":"lib","detected-at":"2026-01-01T00:00:00Z","trigger":"direct-write","priority":"standard","status":"pending","note":null}]}\n' \
+        > "$DOCS_MANAGER_HOME/queue.fallback.json"
+    run bash "$SCRIPTS_DIR/queue-read.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"/tmp/fb.md"* ]]
+    [ ! -f "$DOCS_MANAGER_HOME/queue.fallback.json" ]
+}
+
+@test "queue-read --status filters by status" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    # Manually set one item to deferred
+    jq '.items[0].status = "deferred"' "$DOCS_MANAGER_HOME/queue.json" > "$DOCS_MANAGER_HOME/queue.json.tmp" \
+        && mv "$DOCS_MANAGER_HOME/queue.json.tmp" "$DOCS_MANAGER_HOME/queue.json"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/b.md" --library "lib" --trigger "direct-write"
+    run bash "$SCRIPTS_DIR/queue-read.sh" --count --status pending
+    [ "$status" -eq 0 ]
+    [ "$output" = "1" ]
+}
