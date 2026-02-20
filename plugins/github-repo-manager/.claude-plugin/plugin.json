@@ -1,7 +1,7 @@
 {
   "name": "github-repo-manager",
   "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, security posture, and community file management via PAT.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "L3DigitalNet"
   },

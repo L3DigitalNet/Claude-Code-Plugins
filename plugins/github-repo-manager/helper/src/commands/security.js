@@ -46,12 +46,13 @@ export async function dependabot(options) {
     alerts = data;
   } catch (err) {
     if (err.status === 403 || err.status === 404) {
-      error(
-        'Dependabot alerts not accessible — Dependabot may not be enabled or PAT lacks security_events scope',
-        err.status,
-        `GET /repos/${owner}/${repo}/dependabot/alerts`,
-        'Enable Dependabot in repo Settings → Security, or add security_events scope to PAT'
-      );
+      success({
+        count: 0,
+        accessible: false,
+        by_severity: { critical: 0, high: 0, medium: 0, low: 0 },
+        alerts: [],
+        context: 'Dependabot alerts not accessible — Dependabot may not be enabled or PAT lacks security_events scope',
+      });
       return;
     }
     throw err;
@@ -110,12 +111,13 @@ export async function codeScanning(options) {
     alerts = data;
   } catch (err) {
     if (err.status === 403) {
-      error(
-        'Code scanning alerts not accessible — code scanning may not be enabled or PAT lacks security_events scope',
-        403,
-        `GET /repos/${owner}/${repo}/code-scanning/alerts`,
-        'Enable code scanning in repo Settings → Security → Code scanning'
-      );
+      success({
+        count: 0,
+        enabled: false,
+        accessible: false,
+        alerts: [],
+        context: 'Code scanning alerts not accessible — code scanning may not be enabled or PAT lacks security_events scope',
+      });
       return;
     }
     if (err.status === 404) {

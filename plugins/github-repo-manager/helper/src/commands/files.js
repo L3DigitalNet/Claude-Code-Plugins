@@ -39,8 +39,9 @@ export async function exists(options) {
     });
   } catch (err) {
     if (err.status === 404) {
-      // Not found is a valid result, not an error
+      // Not found is a valid result, not an error — exit 1 signals absence to scripts
       success({ exists: false, path: options.path });
+      process.exit(1);
     } else {
       throw err;
     }

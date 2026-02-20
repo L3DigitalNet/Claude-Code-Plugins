@@ -201,5 +201,5 @@ export async function classify(options) {
     }
   }
 
-  success(signals);
+  success({ ...signals, tier: signals.suggested_tier });
 }
