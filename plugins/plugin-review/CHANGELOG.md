@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased] - 2026-02-20 (integration test self-review)
+
+### Fixed
+- `README.md` [P5] description: corrected stale "3 passes" reference to "configured pass budget (default 5, overridden by `--max-passes=N`)" — drift introduced with 0.3.0 `--max-passes` flag
+- `README.md` Key Design Decisions: updated "3-pass budget" entry to "Configurable pass budget" — same stale reference
+- `docs/DESIGN.md` Pass Budget Rationale: updated "Three passes chosen as default" to reflect 5-pass default and `--max-passes=N` configurability
+
+### Changed
+- `commands/review.md` Phase 2: added progress signal instruction ("Pass N: spawning analyst subagents...") before subagent spawn to address silent gap between activation echo and Phase 3 report
+
 ## [0.3.0] - 2026-02-20
 
 ### Added

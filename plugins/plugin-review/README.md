@@ -16,7 +16,7 @@ Plugin Review addresses the challenge of systematically auditing a Claude Code p
 
 **[P4] Scoped Re-audit** — Pass 2+ never re-runs the full three-track analysis. Only tracks affected by files changed in the previous pass are re-analyzed. Unchanged findings carry forward without re-analysis.
 
-**[P5] Pass Budget Enforcement** — The review targets convergence within 3 passes. Exceeding this budget requires an explicit user decision — the orchestrator does not silently continue looping.
+**[P5] Pass Budget Enforcement** — The review targets convergence within the configured pass budget (default 5, overridden by `--max-passes=N`). Exceeding this budget requires an explicit user decision — the orchestrator does not silently continue looping.
 
 **[P6] Documentation Co-mutation** — Every implementation change must include corresponding documentation updates in the same pass. The `doc-write-tracker` hook mechanically warns when implementation files are modified without any documentation updates in the session — catching the most common failure mode (forgetting to update docs entirely). Full blocking enforcement of this rule requires a manual pre-completion check.
 
@@ -100,7 +100,7 @@ Three-layer defense against context degradation:
 See [docs/DESIGN.md](docs/DESIGN.md) for full architectural rationale.
 
 - **Orchestrator + subagent split:** The orchestrator never reads full plugin source files. Three focused subagents each load only the files and criteria for their track, then return compact summaries.
-- **3-pass budget:** Reviews that haven't converged by Pass 3 usually have findings that represent accepted trade-offs. The budget is a structural checkpoint, not a hard wall.
+- **Configurable pass budget:** Reviews that haven't converged within the budget (default 5, `--max-passes=N` to override) usually have findings that represent accepted trade-offs. The budget is a structural checkpoint, not a hard wall.
 - **Scoped re-audit:** Pass 2+ only spawns subagents for tracks affected by changed files. The Docs track always runs since any change can introduce documentation drift.
 - **Cross-track impact annotation:** Proposals are annotated with affected tracks before implementation, catching regressions at proposal time rather than on re-audit.
 - **Severity-led reporting:** Pass 1 reports roll up clean items into a single line. Only open findings get full detail blocks.

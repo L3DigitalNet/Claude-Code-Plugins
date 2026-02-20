@@ -58,7 +58,7 @@ You will need this path when spawning subagents (see Phase 2).
 
 ### Phase 2 — Analyze
 
-Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
+Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Before spawning subagents, emit a brief progress signal: `"Pass <N>: spawning analyst subagents..."`. Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
 
 - **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-a-criteria.md`.
 - **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-b-criteria.md`.
