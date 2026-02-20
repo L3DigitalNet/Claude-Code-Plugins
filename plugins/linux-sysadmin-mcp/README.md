@@ -18,7 +18,7 @@ Linux Sysadmin MCP gives Claude Code a structured, risk-aware interface for admi
 
 **[P5] Gate Genuine Irreversibility** — Gate only on operations that are truly irreversible at the system level: data destruction, partition changes, user deletion. Routine state-changing operations — service restarts, config edits, package installs — execute on clear intent.
 
-**[P6] Graceful Coexistence** — Detect and defer to existing MCP servers when present. Fill gaps rather than duplicate.
+**[P6] Graceful Coexistence** — Fill gaps rather than duplicate where other MCP servers are present. Runtime detection of other MCP servers is a planned future feature; currently, coexistence is a design principle that guides what this plugin does, not an active runtime mechanism.
 
 **[P7] Observable** — Every tool returns structured output Claude can reason over. No silent failures; no ambiguous states.
 
@@ -52,7 +52,7 @@ On first run, a default configuration file is generated at `~/.config/linux-sysa
 
 ## Usage
 
-Once the MCP server is running, Claude can invoke any of the ~100 tools directly in conversation. Tools that modify system state require `confirmed: true`; use `dry_run: true` to preview changes without applying them.
+Once the MCP server is running, Claude can invoke any of the ~107 tools directly in conversation. Tools that modify system state require `confirmed: true`; use `dry_run: true` to preview changes without applying them.
 
 Example prompts:
 - "Show me which services are failing"
@@ -127,7 +127,7 @@ documentation:
 ┌──────────────────────────────────────────┐
 │           MCP Server (stdio)             │
 ├──────────────────────────────────────────┤
-│         Tool Registry (~100 tools)       │
+│         Tool Registry (~107 tools)       │
 ├──────┬───────┬───────┬───────┬───────────┤
 │ Pkgs │ Svcs  │ Users │ Fire  │ Net  │... │
 ├──────┴───────┴───────┴───────┴───────────┤

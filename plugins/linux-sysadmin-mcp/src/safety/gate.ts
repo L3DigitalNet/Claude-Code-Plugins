@@ -1,3 +1,7 @@
+// Safety gate — intercepts every state-changing tool invocation before execution.
+// Three-step classification: tool default risk → profile escalation → threshold check.
+// Consumed by all tool modules via ctx.safetyGate.check(); changing threshold logic here
+// affects ALL tools regardless of their own riskLevel annotation.
 import type { RiskLevel } from "../types/risk.js";
 import { RISK_ORDER } from "../types/risk.js";
 import type { ConfirmationResponse } from "../types/response.js";

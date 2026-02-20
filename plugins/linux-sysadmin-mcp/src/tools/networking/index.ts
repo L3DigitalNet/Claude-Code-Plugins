@@ -39,7 +39,7 @@ export function registerNetworkingTools(ctx: PluginContext): void {
     const cmd = `sudo cp /etc/resolv.conf /etc/resolv.conf.bak && echo '${ns}' | sudo tee /etc/resolv.conf`;
     const gate = ctx.safetyGate.check({ toolName: "net_dns_modify", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Set DNS servers: ${(args.nameservers as string[]).join(", ")}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("net_dns_modify", ctx.targetHost, 0, null, { would_set: args.nameservers }, { dry_run: true });
+    if (args.dry_run) return success("net_dns_modify", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "normal");
     if (r.exitCode !== 0) return error("net_dns_modify", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("net_dns_modify", ctx.targetHost, r.durationMs, cmd, { nameservers: args.nameservers, backup: "/etc/resolv.conf.bak" });
@@ -51,7 +51,7 @@ export function registerNetworkingTools(ctx: PluginContext): void {
     if (args.interface) cmd += ` dev ${args.interface}`;
     const gate = ctx.safetyGate.check({ toolName: "net_routes_modify", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `${args.action} route ${args.destination}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("net_routes_modify", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("net_routes_modify", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("net_routes_modify", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("net_routes_modify", ctx.targetHost, r.durationMs, cmd, { action: args.action, destination: args.destination });

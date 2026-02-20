@@ -1,6 +1,6 @@
 {
   "name": "linux-sysadmin-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Comprehensive Linux system administration MCP server for Claude Code",
   "type": "module",
   "bin": {

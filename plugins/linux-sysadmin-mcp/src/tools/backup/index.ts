@@ -23,7 +23,7 @@ export function registerBackupTools(ctx: PluginContext): void {
     }
     const gate = ctx.safetyGate.check({ toolName: "bak_create", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Backup ${(args.paths as string[]).join(", ")} to ${dest}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("bak_create", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("bak_create", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "slow");
     if (r.exitCode !== 0) return error("bak_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("bak_create", ctx.targetHost, r.durationMs, cmd, { destination: dest, method: args.method });
@@ -38,9 +38,11 @@ export function registerBackupTools(ctx: PluginContext): void {
     const gate = ctx.safetyGate.check({ toolName: "bak_restore", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Restore ${src} to ${dest}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
     if (args.dry_run) {
+      // bak_restore dry_run executes a listing/simulation command to provide a real preview of what would be restored.
+      // preview_command: the actual restore command that would run; preview_output: result of the listing simulation.
       const dryCmd = src.endsWith(".tar.gz") ? `tar tzf '${src}' | head -20` : `rsync -avzn '${src}/' '${dest}/'`;
       const r = await executeBash(ctx, dryCmd, "normal");
-      return success("bak_restore", ctx.targetHost, r.durationMs, dryCmd, { preview: r.stdout.trim() }, { dry_run: true });
+      return success("bak_restore", ctx.targetHost, r.durationMs, dryCmd, { preview_command: cmd, preview_output: r.stdout.trim() }, { dry_run: true });
     }
     const r = await executeBash(ctx, cmd, "slow");
     if (r.exitCode !== 0) return error("bak_restore", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });

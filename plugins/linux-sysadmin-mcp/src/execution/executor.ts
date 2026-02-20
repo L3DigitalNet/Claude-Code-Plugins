@@ -1,3 +1,7 @@
+// Command execution layer — every tool command passes through this module.
+// Provides the Executor interface; LocalExecutor is the sole implementation today.
+// LocalExecutor.execute() is the hard boundary between tool code and the OS —
+// changing shell/timeout/buffer behavior here affects every registered tool.
 import { execFile } from "node:child_process";
 import type { Command } from "../types/command.js";
 import { logger } from "../logger.js";
@@ -27,8 +31,13 @@ export class LocalExecutor implements Executor {
         args,
         {
           timeout: timeoutMs,
-          maxBuffer: 10 * 1024 * 1024, // 10MB
+          // 10MB ceiling: generous enough for large package/log output (typical: <1MB),
+          // but prevents unbounded memory growth from runaway commands.
+          maxBuffer: 10 * 1024 * 1024,
           env: command.env ? { ...process.env, ...command.env } : process.env,
+          // Security boundary: shell parsing only when argv[0] is explicitly "bash".
+          // All other commands run via execFile without shell, preventing injection
+          // through argument values. Tools that need pipelines must use execBash().
           shell: cmd === "bash",
         },
         (error, stdout, stderr) => {

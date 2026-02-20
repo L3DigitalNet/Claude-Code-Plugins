@@ -26,7 +26,7 @@ export function registerUserTools(ctx: PluginContext): void {
     if (r.exitCode !== 0) return error("user_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     const docHint = ctx.config.documentation.repo_path
       ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } }
-      : { documentation_tip: "Set documentation.repo_path in config.yaml to track user changes" };
+      : undefined;
     return success("user_create", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { created: args.username }, docHint);
   });
 
@@ -49,7 +49,7 @@ export function registerUserTools(ctx: PluginContext): void {
     if (r.exitCode !== 0) return error("user_delete", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     const docHint = ctx.config.documentation.repo_path
       ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } }
-      : { documentation_tip: "Set documentation.repo_path in config.yaml to track user changes" };
+      : undefined;
     return success("user_delete", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { deleted: args.username }, docHint);
   });
 
@@ -65,7 +65,10 @@ export function registerUserTools(ctx: PluginContext): void {
     if (args.dry_run) return success("group_create", ctx.targetHost, null, null, { preview_command: `sudo groupadd ${args.name}` }, { dry_run: true });
     const r = await executeBash(ctx, `sudo groupadd ${args.name}`, "quick");
     if (r.exitCode !== 0) return error("group_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("group_create", ctx.targetHost, r.durationMs, `sudo groupadd ${args.name}`, { created: args.name });
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } }
+      : undefined;
+    return success("group_create", ctx.targetHost, r.durationMs, `sudo groupadd ${args.name}`, { created: args.name }, docHint);
   });
 
   registerTool(ctx, { name: "group_delete", description: "Delete a group. High risk.", module: "users", riskLevel: "high", duration: "quick", inputSchema: z.object({ name: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
@@ -74,12 +77,30 @@ export function registerUserTools(ctx: PluginContext): void {
     if (args.dry_run) return success("group_delete", ctx.targetHost, null, null, { preview_command: `sudo groupdel ${args.name}` }, { dry_run: true });
     const r = await executeBash(ctx, `sudo groupdel ${args.name}`, "quick");
     if (r.exitCode !== 0) return error("group_delete", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("group_delete", ctx.targetHost, r.durationMs, `sudo groupdel ${args.name}`, { deleted: args.name });
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } }
+      : undefined;
+    return success("group_delete", ctx.targetHost, r.durationMs, `sudo groupdel ${args.name}`, { deleted: args.name }, docHint);
   });
 
   registerTool(ctx, { name: "perms_check", description: "Check file/directory permissions.", module: "users", riskLevel: "read-only", duration: "quick", inputSchema: z.object({ path: z.string().min(1) }), annotations: { readOnlyHint: true } }, async (args) => {
     const r = await executeBash(ctx, `stat -c '%A %U:%G %s %n' '${args.path}' && ls -la '${args.path}' 2>/dev/null | head -20`, "quick");
-    return success("perms_check", ctx.targetHost, r.durationMs, "stat+ls", { output: r.stdout.trim() });
+    // Parse stat output (first line: "mode owner:group size name") and ls -la entries.
+    const [statLine, ...lsLines] = r.stdout.trim().split("\n");
+    const result: Record<string, unknown> = { path: args.path };
+    const statParts = (statLine ?? "").split(" ");
+    if (statParts.length >= 3) {
+      result.mode = statParts[0];
+      const [owner, group] = (statParts[1] ?? "").split(":");
+      result.owner = owner;
+      result.group = group;
+      result.size_bytes = parseInt(statParts[2] ?? "0");
+    }
+    const entries = lsLines
+      .filter((l) => l.match(/^[dlrwx-]/))
+      .map((l) => { const p = l.split(/\s+/); return { mode: p[0], owner: p[2], group: p[3], size: p[4], name: p[p.length - 1] }; });
+    if (entries.length) result.entries = entries;
+    return success("perms_check", ctx.targetHost, r.durationMs, "stat+ls", result);
   });
 
   registerTool(ctx, { name: "perms_set", description: "Set permissions/ownership. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ path: z.string().min(1), mode: z.string().optional().describe("Permission mode in octal or symbolic notation (e.g. '755', '644', 'u+x')"), owner: z.string().optional().describe("Owner in user[:group] format (e.g. 'www-data', 'deploy:www-data')"), recursive: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
@@ -93,6 +114,9 @@ export function registerUserTools(ctx: PluginContext): void {
     if (args.dry_run) return success("perms_set", ctx.targetHost, null, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("perms_set", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("perms_set", ctx.targetHost, r.durationMs, cmd, { path: args.path });
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "permissions_changed", suggested_actions: ["doc_generate_host"] } }
+      : undefined;
+    return success("perms_set", ctx.targetHost, r.durationMs, cmd, { path: args.path }, docHint);
   });
 }

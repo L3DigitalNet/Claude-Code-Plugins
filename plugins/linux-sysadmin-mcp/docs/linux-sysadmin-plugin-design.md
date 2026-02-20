@@ -126,9 +126,9 @@ The Tool Router dispatches to the Safety Gate, which classifies each operation b
 
 **Knowledge Base** — Read-only data layer of structured YAML profiles for common sysadmin tools and services. Consumed by tool modules at runtime to inform command construction, log path lookup, dependency analysis, health checks, and risk escalation. Profiles are loaded at startup: built-in profiles from the plugin's `knowledge/` directory, user profiles from `~/.config/linux-sysadmin/knowledge/` and any additional configured paths. See Section 5 for full specification.
 
-**Safety Gate** — Intercepts state-changing operations. Classifies each operation by risk level (read-only, low-risk, moderate, high, critical). Operations at moderate risk or above require explicit user confirmation. All state-changing operations support a `dry_run` parameter that previews what would happen without executing. See Section 7.4 for the full confirmation flow, dry-run behavior, and risk classification pipeline.
+**Safety Gate** — Intercepts state-changing operations. Classifies each operation by risk level (read-only, low-risk, moderate, high, critical). Operations at or above the configured threshold (default: `high`) require explicit user confirmation. All state-changing operations support a `dry_run` parameter that previews what would happen without executing. See Section 7.4 for the full confirmation flow, dry-run behavior, and risk classification pipeline.
 
-**SSH Connection Manager** — *[Planned]* Infrastructure component that will provide the remote execution channel. When implemented, remote tool invocations will submit commands through SSH rather than local `child_process`. Currently, all tools execute locally only; remote SSH targeting is a planned v2 feature.
+**SSH Connection Manager** — Infrastructure component that provides the remote execution channel. When connected to a remote host, tool invocations submit commands through SSH rather than local `child_process`. See Section 6.10 for the full connection lifecycle, keepalive, and auto-reconnect behavior.
 
 **Documentation Manager** — Manages the user's documentation repository. Writes and updates host-level and per-service READMEs, copies config file backups, and commits changes via git. Receives documentation triggers from other tool modules after state-changing operations and surfaces suggested documentation actions in tool responses for Claude to act on. See Section 6.13 for full specification.
 
@@ -636,7 +636,7 @@ When a profiled tool has a major version change (e.g., Pi-hole v5 to v6 changed 
 
 ## 6. Tool Module Specifications
 
-Each tool module exposes one or more discrete tools to Claude. Tools follow a consistent schema: they accept structured input and return structured output. Each tool declares a risk level (read-only, low, moderate, high, critical) that the Safety Gate (Sections 3.2, 7.4) enforces at invocation time. Operations at moderate risk or above require explicit user confirmation before execution. All state-changing tools support a `dry_run` parameter that returns a preview of what would happen without executing (Section 7.4).
+Each tool module exposes one or more discrete tools to Claude. Tools follow a consistent schema: they accept structured input and return structured output. Each tool declares a risk level (read-only, low, moderate, high, critical) that the Safety Gate (Sections 3.2, 7.4) enforces at invocation time. Operations at or above the configured threshold (default: `high`) require explicit user confirmation before execution. All state-changing tools support a `dry_run` parameter that returns a preview of what would happen without executing (Section 7.4).
 
 **Analysis Response Pattern:** Tools that perform diagnostic or audit functions (e.g., `log_summary`, `perf_bottleneck`, `sec_audit`, `sec_mac_status`) return a hybrid response containing both structured data and a pre-computed `summary` field. The structured data gives Claude the raw facts to reason over, while the summary provides a starting-point interpretation that Claude can refine, challenge, or expand upon using its broader context about the user's goals. Example:
 
@@ -853,8 +853,10 @@ The response has a stable base schema (target host, distro, sudo status, MAC sys
 |---|---|---|
 | `fw_status` | Show current firewall rules and status | Read-only |
 | `fw_list_rules` | List all rules in detail | Read-only |
-| `fw_add_rule` | Add a firewall rule | High |
-| `fw_remove_rule` | Remove a firewall rule | High |
+| `fw_add_rule` | Add a firewall rule | Moderate (reversible — fw_remove_rule undoes exactly) |
+| `fw_remove_rule` | Remove a firewall rule | Moderate (reversible — fw_add_rule re-adds the same rule) |
+| `fw_enable` | Enable the firewall | Critical |
+| `fw_disable` | Disable the firewall | Critical |
 
 `fw_add_rule` and `fw_remove_rule` operate on a unified `FirewallRule` schema that abstracts over both ufw and firewalld backends:
 
@@ -870,7 +872,6 @@ The response has a stable base schema (target host, distro, sudo status, MAC sys
 
 On ufw, this maps to `ufw allow/deny/reject [in|out] [from <source>] [to <destination>] port <port> proto <protocol> comment '<comment>'`. On firewalld, this maps to rich rules via `firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="<source>" port port="<port>" protocol="<protocol>" accept/reject/drop'` followed by `firewall-cmd --reload`. The `fw_list_rules` tool returns rules in this same normalized schema regardless of backend, so Claude always works with a consistent model. Backend-specific features not covered by the unified schema (e.g., firewalld zones) can be accessed via raw commands through Claude's shell access.
 
-| `fw_enable` / `fw_disable` | Enable or disable the firewall | Critical |
 | `net_interfaces` | List network interfaces and their config | Read-only |
 | `net_connections` | Show active connections (like ss/netstat) | Read-only |
 | `net_dns_show` | Show current DNS configuration (resolv.conf, systemd-resolved) | Read-only |
@@ -889,7 +890,6 @@ These are general-purpose log tools that operate on explicit journald units, log
 | `log_search` | Search logs by pattern/regex | Read-only |
 | `log_summary` | Summarize log activity (errors, warnings, frequency) | Read-only |
 | `log_disk_usage` | Report log storage consumption | Read-only |
-| `log_rotate_status` | Check logrotate configuration and status | Read-only |
 
 ### 6.6 Security Hardening and Auditing
 
@@ -902,7 +902,7 @@ Each security check is exposed as an independent, atomic tool so Claude can run 
 | `sec_check_users` | Find accounts with no password, expired, etc. | Read-only |
 | `sec_check_suid` | Find SUID/SGID binaries | Read-only |
 | `sec_check_listening` | Report on all listening ports and processes | Read-only |
-| `sec_harden_ssh` | Apply SSH hardening recommendations | High |
+| `sec_harden_ssh` | Apply SSH hardening recommendations | Moderate (knowledge profile may escalate to High for sshd restart) |
 
 `sec_harden_ssh` accepts an explicit list of named hardening actions to apply. It does not make autonomous decisions about what to change — the user and Claude agree on the actions, then Claude invokes the tool with those specific actions. The supported actions are:
 
@@ -1618,7 +1618,7 @@ The plugin never automatically kills a competing process. That decision is alway
 
 ### 7.4 Safety Gate
 
-The Safety Gate is the enforcement mechanism for Principle 5. It intercepts every state-changing tool invocation, classifies the effective risk level, and requires explicit user confirmation before execution for operations at moderate risk or above. This section specifies the full confirmation and dry-run flows.
+The Safety Gate is the enforcement mechanism for Principle 5. It intercepts every state-changing tool invocation, classifies the effective risk level, and requires explicit user confirmation before execution for operations at or above the configured threshold (default: `high`). This section specifies the full confirmation and dry-run flows.
 
 **7.4.1 Risk Classification Pipeline**
 
@@ -1626,7 +1626,7 @@ When a tool is invoked, the Safety Gate determines the effective risk level thro
 
 1. **Tool default** — Each tool declares a base risk level in its metadata (read-only, low, moderate, high, critical). This is the starting point.
 2. **Profile escalation** — If the operation matches a knowledge profile's `interactions` entry with a `risk_escalation` value, the risk level is escalated to the higher of the two. For example, `svc_restart` has a base risk of moderate, but restarting `pihole-FTL` escalates to high because the profile declares `risk_escalation: "high"` for that trigger.
-3. **Threshold check** — The effective risk level is compared against the user's `safety.confirmation_threshold` in `config.yaml` (default: `moderate`). If the effective risk is at or above the threshold, confirmation is required.
+3. **Threshold check** — The effective risk level is compared against the user's `safety.confirmation_threshold` in `config.yaml` (default: `high`). If the effective risk is at or above the threshold, confirmation is required.
 
 Risk levels are ordered: `read-only < low < moderate < high < critical`. Escalation can only raise the level, never lower it.
 
@@ -1852,8 +1852,8 @@ errors:
 safety:
   # Minimum risk level that requires explicit user confirmation
   # Options: low, moderate, high, critical
-  # "moderate" means moderate, high, and critical all require confirmation
-  confirmation_threshold: moderate
+  # "high" means high and critical require confirmation; moderate operations run without a gate
+  confirmation_threshold: high
   # Allow dry-run to bypass confirmation (user can preview without confirming)
   dry_run_bypass_confirmation: true
 
@@ -1964,11 +1964,7 @@ sequenceDiagram
 
     U->>CC: "Install nginx and harden SSH"
     CC->>P: pkg_install(packages=["nginx"])
-    P->>P: Safety Gate: risk=moderate, threshold=moderate → confirmation required
-    P-->>CC: {status: "confirmation_required", risk_level: "moderate", preview: {command: "sudo apt install nginx", ...}}
-    CC-->>U: "I'll install nginx via apt. This is a moderate-risk operation. Proceed?"
-    U->>CC: "Yes"
-    CC->>P: pkg_install(packages=["nginx"], confirmed=true)
+    P->>P: Safety Gate: risk=moderate, threshold=high → executes directly
     P->>OS: sudo apt install -y nginx
     P-->>CC: {status: "success", data: {packages_installed: ["nginx 1.24.0"]}, documentation_action: {type: "service_added", ...}}
 
@@ -1984,7 +1980,7 @@ sequenceDiagram
     P-->>CC: Findings: root login enabled, password auth enabled
 
     CC->>P: sec_harden_ssh(actions=["disable_root_login", "disable_password_auth"])
-    P->>P: Safety Gate: risk=high, threshold=moderate → confirmation required
+    P->>P: Safety Gate: base=moderate, sshd profile escalation→high, threshold=high → confirmation required
     P-->>CC: {status: "confirmation_required", risk_level: "high", preview: {command: "modify sshd_config", warnings: ["Brief SSH disruption during restart"], ...}}
     CC-->>U: "This will disable root login and password auth in sshd_config, then restart sshd. Risk: high. Proceed?"
     U->>CC: "Yes"
@@ -2095,12 +2091,12 @@ All original open questions have been resolved through collaborative review:
 | Output size management | Summary-first with count + default limit (50) + filter/re-request. | 6 (intro) |
 | Standard response envelope | Consistent shape for all responses: status, tool, target_host, data, plus contextual fields. | 6 (intro) |
 | Analysis pattern | Hybrid: structured data + summary field for Claude to build on | 6 (intro) |
-| Risk level annotations | Each tool declares risk level. Profile `interactions` provide service-specific warnings and risk escalation. Safety Gate enforces confirmation for moderate+ operations via three-step classification pipeline. Dry-run available on all state-changing tools. | 3.2, 5.4, 6 (intro), 7.4 |
+| Risk level annotations | Each tool declares risk level. Profile `interactions` provide service-specific warnings and risk escalation. Safety Gate enforces confirmation for high+ operations (default threshold; configurable) via three-step classification pipeline. Dry-run available on all state-changing tools. | 3.2, 5.4, 6 (intro), 7.4 |
 | Command timeouts | Tools self-declare duration category. Plugin adjusts timeout automatically. Config ceiling available. | 7.1 |
 | Error handling | Structured errors + auto-retry transient + remediation suggestions | 7.2 |
 | Concurrent access | Detect lock holder and advise. Never auto-kill. | 7.3 |
 | Audit and rollback | No plugin-level audit log or rollback manager. Rely on OS-native tools (journald, auditd, etckeeper, package manager history, filesystem snapshots). Claude and user determine the right approach per situation. Documentation config backups serve as permanent known-good state. | 2 (P5), 6.13.9 |
-| Safety gate | v1 feature. Intercepts state-changing operations. Classifies risk level via three-step pipeline (tool default → profile escalation → threshold check). Moderate+ operations require explicit user confirmation. Dry-run available on all state-changing tools. Dynamic risk escalation from knowledge profile `interactions` entries. | 3.2, 5.4, 7.4 |
+| Safety gate | v1 feature. Intercepts state-changing operations. Classifies risk level via three-step pipeline (tool default → profile escalation → threshold check). High+ operations require explicit user confirmation (default threshold; configurable). Dry-run available on all state-changing tools. Dynamic risk escalation from knowledge profile `interactions` entries. | 3.2, 5.4, 7.4 |
 | SELinux/AppArmor | Detection and status only in v1. Management in future. | 6.6, 12 |
 | Backup destinations | Local, rsync/scp, NFS/CIFS in v1. Cloud in future. | 6.7, 12 |
 | SSH/remote hosts | Connection manager as core infrastructure, not a tool module. Single active target. | 3.2, 6.10 |
@@ -2125,4 +2121,4 @@ All original open questions have been resolved through collaborative review:
 
 ---
 
-*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Ready for implementation.*
+*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.0.4. This document describes the implemented system.*

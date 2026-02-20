@@ -3,7 +3,6 @@ import type { PluginContext } from "../context.js";
 import { registerTool, success, error, executeCommand, categorizeError, buildCategorizedResponse } from "../helpers.js";
 
 export function registerPackageTools(ctx: PluginContext): void {
-  // ── pkg_list_installed ──────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_list_installed", description: "List installed packages, optionally filtered by name.",
     module: "packages", riskLevel: "read-only", duration: "quick",
@@ -27,7 +26,6 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
   });
 
-  // ── pkg_search ──────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_search", description: "Search available packages by name/keyword.",
     module: "packages", riskLevel: "read-only", duration: "normal",
@@ -38,12 +36,20 @@ export function registerPackageTools(ctx: PluginContext): void {
     const r = await executeCommand(ctx, "pkg_search", cmd, "normal");
     const lines = r.stdout.trim().split("\n").filter(Boolean);
     const limit = (args.limit as number) ?? 20;
-    return success("pkg_search", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { results: lines.slice(0, limit) }, {
+    // Parse "name - description" (apt) or "name.arch : description" (dnf) into structured records.
+    // raw lines preserved in case parsing heuristic misses an unconventional format.
+    const parsed = lines.slice(0, limit).map((line) => {
+      const dashIdx = line.indexOf(" - ");
+      if (dashIdx !== -1) return { name: line.slice(0, dashIdx).trim(), description: line.slice(dashIdx + 3).trim() };
+      const colonIdx = line.indexOf(" : ");
+      if (colonIdx !== -1) return { name: line.slice(0, colonIdx).trim().split(".")[0], description: line.slice(colonIdx + 3).trim() };
+      return { name: line.trim(), description: "" };
+    });
+    return success("pkg_search", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { results: parsed }, {
       total: lines.length, returned: Math.min(lines.length, limit), truncated: lines.length > limit,
     });
   });
 
-  // ── pkg_info ────────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_info", description: "Show detailed info for a specific package.",
     module: "packages", riskLevel: "read-only", duration: "quick",
@@ -53,10 +59,28 @@ export function registerPackageTools(ctx: PluginContext): void {
     const cmd = ctx.commands.packageInfo(args.package as string);
     const r = await executeCommand(ctx, "pkg_info", cmd, "quick");
     if (r.exitCode !== 0) return error("pkg_info", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() || `Package '${args.package}' not found` });
-    return success("pkg_info", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { info: r.stdout.trim() });
+    // Parse "Key: value" (apt) or "Key   : value" (dnf) into a structured record.
+    // Multi-line description continuation lines (leading space in apt output) are appended to the previous key.
+    const parsed: Record<string, string> = {};
+    let lastKey = "";
+    for (const line of r.stdout.trim().split("\n")) {
+      const m = line.match(/^(\S[^:]+?)\s*:\s+(.*)/);
+      if (m) {
+        lastKey = m[1].trim().toLowerCase().replace(/\s+/g, "_");
+        parsed[lastKey] = m[2].trim();
+      } else if (lastKey && line.startsWith(" ")) {
+        parsed[lastKey] = (parsed[lastKey] ?? "") + " " + line.trim();
+      }
+    }
+    return success("pkg_info", ctx.targetHost, r.durationMs, cmd.argv.join(" "), {
+      name: parsed.package ?? parsed.name ?? (args.package as string),
+      version: parsed.version,
+      description: parsed.description,
+      installed: "installed-size" in parsed || (parsed.status?.includes("installed") ?? false),
+      depends: parsed.depends,
+    });
   });
 
-  // ── pkg_install ─────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_install", description: "Install one or more packages. Moderate risk — requires confirmation.",
     module: "packages", riskLevel: "moderate", duration: "slow",
@@ -78,14 +102,13 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_install", ctx.targetHost, r.durationMs, r.stderr, ctx);
     const docHint = ctx.config.documentation.repo_path
       ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
-      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+      : undefined;
     return success("pkg_install", ctx.targetHost, r.durationMs, cmd.argv.join(" "),
       { packages_installed: pkgs, output: r.stdout.trim() },
       args.dry_run ? { dry_run: true } : docHint,
     );
   });
 
-  // ── pkg_remove ──────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_remove", description: "Remove a package (preserve config files). High risk.",
     module: "packages", riskLevel: "high", duration: "normal",
@@ -106,11 +129,10 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_remove", ctx.targetHost, r.durationMs, r.stderr, ctx);
     const docHint = ctx.config.documentation.repo_path
       ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
-      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+      : undefined;
     return success("pkg_remove", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_removed: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : docHint);
   });
 
-  // ── pkg_purge ───────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_purge", description: "Remove a package AND its config files. Critical risk.",
     module: "packages", riskLevel: "critical", duration: "normal",
@@ -131,11 +153,10 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_purge", ctx.targetHost, r.durationMs, r.stderr, ctx);
     const docHint = ctx.config.documentation.repo_path
       ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
-      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+      : undefined;
     return success("pkg_purge", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_purged: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : docHint);
   });
 
-  // ── pkg_update ──────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_update", description: "Update specific packages or all packages. Moderate risk.",
     module: "packages", riskLevel: "moderate", duration: "slow",
@@ -164,14 +185,13 @@ export function registerPackageTools(ctx: PluginContext): void {
       : "Update completed — check raw output for details.";
     const docHint = ctx.config.documentation.repo_path
       ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
-      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+      : undefined;
     return success("pkg_update", ctx.targetHost, r.durationMs, cmd.argv.join(" "), {
       ...(packages_updated_count !== undefined ? { packages_updated_count } : {}),
       raw_output: stdout,
     }, args.dry_run ? { dry_run: true } : { summary, ...docHint });
   });
 
-  // ── pkg_check_updates ───────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_check_updates", description: "List available updates without applying them.",
     module: "packages", riskLevel: "read-only", duration: "normal",
@@ -185,7 +205,6 @@ export function registerPackageTools(ctx: PluginContext): void {
     return success("pkg_check_updates", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { updates: lines, count: lines.length });
   });
 
-  // ── pkg_history ─────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_history", description: "Show package transaction history.",
     module: "packages", riskLevel: "read-only", duration: "quick",
@@ -201,7 +220,6 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
   });
 
-  // ── pkg_rollback ────────────────────────────────────────────────
   registerTool(ctx, {
     name: "pkg_rollback", description: "Roll back to a previous package version. High risk.",
     module: "packages", riskLevel: "high", duration: "slow",
@@ -213,7 +231,8 @@ export function registerPackageTools(ctx: PluginContext): void {
   }, async (args) => {
     const pkg = args.package as string;
     const ver = args.version as string | undefined;
-    // Build rollback command per Section 6.1
+    // Debian: `apt install pkg=version` pins to version; omitting version reverts to previous (uses apt pinning).
+    // RHEL: `dnf downgrade pkg-version` installs the named version; `dnf history undo last` reverts last transaction.
     const cmdStr = ctx.distro.family === "debian"
       ? ver ? `sudo apt install -y ${pkg}=${ver}` : `sudo apt install -y ${pkg}-`
       : ver ? `sudo dnf downgrade -y ${pkg}-${ver}` : `sudo dnf history undo -y last`;

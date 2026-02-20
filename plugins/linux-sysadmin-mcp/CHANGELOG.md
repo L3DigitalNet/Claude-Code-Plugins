@@ -2,6 +2,87 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
+## [1.0.5] — 2026-02-20 *(plugin review pass 2)*
+
+### Changed
+- **UX — Q-1: Section 13 `moderate+` corrected** — "Risk level annotations" row in design doc now
+  consistently says `high+` threshold, matching every other threshold reference in the document.
+- **UX — Q-2: Decorative dividers removed** — 10 `// ── tool_name ──` comment lines removed from
+  `packages/index.ts`; they wasted tokens without conveying information.
+- **UX — Q-3: Section reference replaced** — `"// Build rollback command per Section 6.1"` replaced
+  with inline explanation of the Debian `apt install pkg=ver` / RHEL `dnf downgrade` logic.
+- **UX — Q-4: `fw_remove_rule` doc_action added** — Success response now conditionally emits
+  `documentation_action` hint matching `fw_add_rule`, making the pair symmetric.
+- **UX — Q-5: `bak_restore` dry_run field naming fixed** — dry_run now returns both
+  `preview_command` (the restore command that would run) and `preview_output` (listing from the
+  `tar tzf`/`rsync -n` simulation). Previous `preview` field removed.
+- **UX — S-1: `lvm_status` structured records** — `pvs`, `vgs`, `lvs` now return
+  `Record<string, string>[]` (headers as keys) instead of raw `string[]` lines with header included.
+  Uses 2+-space splitting to handle variable column widths.
+- **UX — S-2: `disk_usage_top` structured output** — Returns `{size, path}[]` records parsed from
+  `du` tab-separated output instead of a raw string blob.
+- **UX — S-3: `sec_audit` SSH warnings structured** — `recent_ssh_warnings` is now
+  `Array<{timestamp, message}>` parsed from journalctl short format. `ssh_warnings_unparsed_count`
+  emitted when lines don't match the expected format (e.g., boot markers).
+- **Security — D-1: `sec_harden_ssh` lock-out pre-flight** — Before applying
+  `disable_password_auth`, the tool checks for at least one non-empty `authorized_keys` file in
+  `/home`. Returns `LOCK_OUT_RISK` error with remediation steps if none is found, preventing the
+  scenario where a syntactically valid sshd config locks out remote access by disabling the only
+  available auth method.
+
+## [1.0.5] — 2026-02-20
+
+### Changed
+- **UX — Q1: `sysadmin_session_info` duration_ms** — Changed from `0` to `null`; no command is
+  executed by this tool, and `null` is the correct sentinel for "no duration measured".
+- **UX — Q2: `sec_audit` timing** — Duration now uses `Math.max()` across all parallel sub-checks
+  (failed services, listening ports, login history) rather than 0, reflecting true wall-clock time.
+- **UX — Q3: Tool count corrected** — README description and architecture diagram updated from
+  `~100 tools` to `~107 tools` to match the actual registered count.
+- **UX — Q10: `documentation_tip` removed** — Removed `documentation_tip` freeform text from
+  `pkg_install`, `pkg_remove`, `pkg_purge`, `pkg_update`, `user_create`, and `user_delete`
+  responses. Replaced with `documentation_action` structured hints on state-changing tools.
+- **UX — S1: `preview_command` standardized** — All dry-run responses now use the consistent
+  field name `preview_command` (was `would_run`, `would_add`, `would_set` in various tools).
+  Affects: firewall, containers, networking, storage, backup tools.
+- **UX — S2: `pkg_info` structured output** — Response now parses "Key: value" apt/dnf output
+  into structured `{name, version, description, installed, depends}` rather than a raw string.
+- **UX — S3: `pkg_search` structured output** — Parses "name - desc" (apt) and
+  "name.arch : desc" (dnf) formats into `{name, description}` record array.
+- **UX — S4: `perms_check` structured output** — Parses `stat` + `ls -la` output into
+  `{mode, owner, group, size_bytes, entries}` rather than raw strings.
+- **UX — S5: Storage tool structured output** — `disk_usage`, `mount_list`, and `lvm_status` now
+  return parsed structures (`{filesystems}`, `{mounts}`, `{pvs, vgs, lvs}`) instead of raw blobs.
+- **UX — S6: `documentation_action` hints added** — `group_create`, `group_delete`, `perms_set`,
+  `mount_remove`, `lvm_create_lv`, and `lvm_resize` now include `documentation_action` hints to
+  signal documentation update opportunities to Claude.
+- **UX — S7: Risk reclassifications** — `sec_harden_ssh`, `fw_add_rule`, and `fw_remove_rule`
+  reclassified from `high` to `moderate`. These operations are reversible: SSH config has backup
+  rollback; firewall rules can be re-added/removed. Knowledge profiles may still escalate to high
+  (e.g., sshd restart via the sshd profile's `risk_escalation` field).
+- **Docs — D1: `sec_harden_ssh` risk corrected** — Section 6.6 now shows Moderate (with escalation
+  note) rather than High, matching the updated tool implementation.
+- **Docs — D2: `log_rotate_status` ghost entry removed** — Section 6.5 table no longer lists this
+  tool (never implemented; 4 log tools exist).
+- **Docs — D3: Architectural role headers** — Added role headers to `executor.ts`, `server.ts`,
+  `gate.ts`, `loader.ts`, and `detector.ts` explaining their purpose, callers, and what breaks if
+  they change.
+- **Docs — D4: Security boundary annotations** — `executor.ts` now documents the `shell` and
+  `maxBuffer` design decisions inline (injection prevention, 10MB ceiling rationale).
+- **Docs — D5: P6 Graceful Coexistence corrected** — README Principle P6 now accurately describes
+  runtime MCP detection as a planned future feature, not a current mechanism.
+- **Docs — Q5: Config default corrected** — Design doc Section 9.2 config block now shows
+  `confirmation_threshold: high` (was `moderate`), matching the actual default in `config/loader.ts`.
+- **Docs — Q6: Safety Gate threshold language** — Section 7.4 intro, Section 7.4.1 step 3, and
+  Section 13 table now consistently use `high` (not `moderate`) as the stated default threshold.
+- **Docs — Q7: Sequence diagram corrected** — Section 10 diagram updated: `pkg_install` (moderate
+  risk) now executes directly at threshold=high without a confirmation round-trip; `sec_harden_ssh`
+  gate note clarifies base=moderate escalated to high via sshd knowledge profile.
+- **Docs — Q8: Firewall table consolidated** — `fw_enable`/`fw_disable` moved into the main
+  Section 6.4 table (Critical risk); orphaned inline row removed.
+- **Docs — Q9: Closing footnote updated** — Design doc footer now reads "Implementation complete
+  as of v1.0.5" rather than "Ready for implementation".
+
 ## [1.0.4] — 2026-02-20
 
 ### Changed
