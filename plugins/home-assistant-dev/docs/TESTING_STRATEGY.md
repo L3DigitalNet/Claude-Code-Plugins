@@ -1,4 +1,4 @@
-# Testing Strategy: Home Assistant Development Plugin v2.0
+# Testing Strategy: Home Assistant Development Plugin v2.2
 
 ## Overview
 

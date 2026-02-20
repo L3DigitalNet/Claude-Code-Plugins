@@ -1,9 +1,9 @@
 # Home Assistant Development Plugin for Claude Code
 
-## Design Document v2.0
+## Design Document v2.2
 
-**Document Version:** 2.0  
-**Plugin Version:** 2.0.0  
+**Document Version:** 2.2
+**Plugin Version:** 2.2.1
 **Last Updated:** February 2026  
 **Status:** Complete
 
@@ -336,7 +336,7 @@ User Query
 ```json
 {
   "name": "home-assistant-dev",
-  "version": "2.0.0",
+  "version": "2.2.1",
   "description": "Comprehensive Home Assistant integration development toolkit...",
   "author": "Anthropic",
   "skills": "skills/",
@@ -954,7 +954,10 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ### 14.3 Changelog Summary
 
-**v2.0.0** (Current)
+**v2.2.1** (Current)
+- Incremental improvements and fixes since v2.2.0
+
+**v2.0.0**
 - 19 skills (up from 11)
 - MCP server with 12 tools
 - 3 example integrations
@@ -973,5 +976,6 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.2 | Feb 2026 | Claude | Version sync to v2.2.1 |
 | 2.0 | Feb 2026 | Claude | Complete rewrite for v2.0 |
 | 1.0 | Feb 2026 | Claude | Initial design |
