@@ -54,3 +54,37 @@ Expected: <what the user should see>
 ```
 
 Do not deviate from this format. The orchestrator parses it to build the unified report.
+
+## Assertions Output
+
+After your findings, append an `## Assertions` section containing a JSON array of
+machine-verifiable checks, one per open finding:
+
+```
+## Assertions
+
+```json
+[
+  {
+    "id": "A-B-<number>",
+    "finding_id": "<touchpoint or criterion ID>",
+    "track": "B",
+    "type": "<grep_not_match | grep_match | file_exists | file_content | shell_exit_zero>",
+    "description": "One sentence: what this assertion verifies",
+    "command": "<bash command to run — use full relative paths from repo root>",
+    "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
+    "path": "<file path — only for file_exists and file_content types>",
+    "needle": "<search string — only for file_content type>"
+  }
+]
+```
+```
+
+**Assertion type guide:**
+- `grep_not_match`: the finding is a pattern that should NOT appear (e.g., open-ended prompt text instead of AskUserQuestion, disallowed UX construct). Command greps for the bad pattern; expect empty output.
+- `grep_match`: the finding is a pattern that SHOULD appear (e.g., a required structured output keyword, expected AskUserQuestion call). Command greps for it; expect non-empty output.
+- `file_exists`: the finding is a missing file. Use `path` field (no `command`).
+- `file_content`: the finding is missing content in an existing file. Use `path` + `needle` fields.
+- `shell_exit_zero`: the finding is a script or command that should run cleanly. Command is the test invocation.
+
+For touchpoint violations, the command should grep the specific file containing the touchpoint (use the source file from your touchpoint map). Only include assertions that will currently FAIL.
