@@ -29,3 +29,63 @@ teardown() { teardown_test_env; }
     run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
     [ "$output" = "1" ]
 }
+
+# --- Queue Append Tests ---
+
+@test "queue-append adds item to empty queue" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    run bash "$SCRIPTS_DIR/queue-append.sh" \
+        --type "doc-modified" \
+        --doc-path "/tmp/test.md" \
+        --library "test-lib" \
+        --trigger "direct-write"
+    [ "$status" -eq 0 ]
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "1" ]
+    run jq -r '.items[0].type' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "doc-modified" ]
+}
+
+@test "queue-append generates sequential IDs" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/b.md" --library "lib" --trigger "direct-write"
+    run jq -r '.items[1].id' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "q-002" ]
+}
+
+@test "queue-append deduplicates same doc-path + type" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    run jq '.items | length' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "1" ]
+}
+
+@test "queue-append includes source-file when provided" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    run bash "$SCRIPTS_DIR/queue-append.sh" \
+        --type "source-file-changed" \
+        --doc-path "/tmp/readme.md" \
+        --library "lib" \
+        --trigger "source-file-association" \
+        --source-file "/etc/caddy/Caddyfile"
+    [ "$status" -eq 0 ]
+    run jq -r '.items[0]["source-file"]' "$DOCS_MANAGER_HOME/queue.json"
+    [ "$output" = "/etc/caddy/Caddyfile" ]
+}
+
+@test "queue-append writes to fallback on main queue parse failure" {
+    bash "$SCRIPTS_DIR/bootstrap.sh"
+    # Corrupt queue.json so jq can't parse it for the append step
+    echo "not valid json" > "$DOCS_MANAGER_HOME/queue.json"
+    run bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    [ "$status" -eq 0 ]
+    [ -f "$DOCS_MANAGER_HOME/queue.fallback.json" ]
+}
+
+@test "queue-append always exits 0 even on error" {
+    export DOCS_MANAGER_HOME="$BATS_TMPDIR/nonexistent-$$"
+    run bash "$SCRIPTS_DIR/queue-append.sh" --type "doc-modified" --doc-path "/tmp/a.md" --library "lib" --trigger "direct-write"
+    [ "$status" -eq 0 ]
+}
