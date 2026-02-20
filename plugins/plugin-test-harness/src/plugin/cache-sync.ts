@@ -33,3 +33,33 @@ export async function syncToCache(worktreePath: string, cachePath: string): Prom
 export function detectCachePath(pluginName: string): string {
   return path.join(os.homedir(), '.claude', 'plugins', 'cache', pluginName);
 }
+
+// Reads ~/.claude/plugins/installed_plugins.json to find the versioned install path
+// for a named plugin. Returns null if the file is missing or the plugin is not installed.
+// The versioned path (e.g. .../cache/l3digitalnet-plugins/my-plugin/0.1.0) is where the
+// running MCP server process lives — different from the legacy non-versioned detectCachePath.
+export async function getInstallPath(pluginName: string): Promise<string | null> {
+  const installedPluginsPath = path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json');
+  let raw: string;
+  try {
+    raw = await fs.readFile(installedPluginsPath, 'utf-8');
+  } catch {
+    return null;
+  }
+
+  let data: { plugins?: Record<string, Array<{ installPath: string }>> };
+  try {
+    data = JSON.parse(raw) as typeof data;
+  } catch {
+    return null;
+  }
+
+  if (!data.plugins) return null;
+
+  // Key format: "pluginName@marketplace" — search by plugin name prefix.
+  const entry = Object.entries(data.plugins).find(([key]) => key.startsWith(pluginName + '@'));
+  if (!entry) return null;
+
+  const [, records] = entry;
+  return records[0]?.installPath ?? null;
+}

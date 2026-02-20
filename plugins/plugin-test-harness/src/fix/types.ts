@@ -1,10 +1,11 @@
 export interface FileChange {
-  path: string;     // relative to worktree root
+  path: string;     // relative to plugin root (not worktree root)
   content: string;  // new full file content
 }
 
 export interface FixRequest {
   worktreePath: string;
+  pluginRelPath: string;  // path from worktree root to plugin dir ('' when plugin IS the repo root)
   files: FileChange[];
   commitTitle: string;
   trailers: Record<string, string>;
