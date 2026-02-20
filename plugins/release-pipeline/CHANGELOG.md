@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.6.0] - 2026-02-20
+
+### Added
+- `scripts/reconcile-tags.sh` — compare local/remote tag state; auto-fetch REMOTE_ONLY tags before push
+- `scripts/api-retry.sh` — exponential backoff + jitter retry wrapper (3 attempts) for `gh` CLI calls
+- `scripts/check-waivers.sh` — look up pre-flight check waivers from `.release-waivers.json`
+- `.release-waivers.json` support — permanently waive checks per-plugin (`dirty_working_tree`, `protected_branch`, `noreply_email`, `tag_exists`, `missing_tests`, `stale_docs`)
+- Mode 7: Batch Release All Plugins — release all unreleased plugins sequentially with quarantine-and-continue semantics and summary report
+- `agents/git-preflight.md`: remote tag check (check 6) and waiver support for all git checks
+- `agents/test-runner.md`: waiver support for `missing_tests`
+- `agents/docs-auditor.md`: waiver support for `stale_docs`
+
+### Changed
+- `templates/mode-2-full-release.md` Phase 3: tag reconciliation before push, retry on `gh release create`
+- `templates/mode-3-plugin-release.md` Phase 3: same as mode-2
+- `scripts/verify-release.sh`: `gh release view` calls now use retry wrapper
+
 ## [1.5.0] - 2026-02-19
 
 ### Added
