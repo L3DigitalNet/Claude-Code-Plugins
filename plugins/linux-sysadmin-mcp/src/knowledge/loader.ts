@@ -51,6 +51,8 @@ export interface KnowledgeBase {
   readonly profiles: Map<string, KnowledgeProfile>;
   readonly resolved: ResolvedProfile[];
   readonly escalations: Escalation[];
+  /** Profiles that failed to parse — surfaced in sysadmin_session_info so users can fix syntax errors. */
+  readonly loadErrors: readonly string[];
   getProfile(id: string): KnowledgeProfile | undefined;
   getActiveProfiles(): ResolvedProfile[];
 }
@@ -138,6 +140,7 @@ export function loadKnowledgeBase(options: LoadOptions): KnowledgeBase {
     profiles,
     resolved,
     escalations,
+    loadErrors: errors,
     getProfile: (id) => profiles.get(id),
     getActiveProfiles: () => resolved.filter((r) => r.status === "active"),
   };

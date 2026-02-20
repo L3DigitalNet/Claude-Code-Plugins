@@ -72,11 +72,17 @@ except Exception:
 
     [ "$has_build" = "yes" ] || continue
 
-    echo "Building $plugin before commit..."
+    # Disclose what we are about to do before doing it — this hook both builds
+    # and stages files, which is a side-effect beyond the user's explicit commit.
+    printf '[release-pipeline] Auto-building %s and staging dist/ before commit...\n' "$plugin"
     if (cd "$plugin_dir" && npm run build 2>&1); then
       built+=("$plugin")
-      # Stage dist/ so the built files land in this commit
-      git -C "$repo_root" add "plugins/$plugin/dist/" 2>/dev/null || true
+      # Stage dist/ so the built files land in this commit.
+      # A silent staging failure would leave an outdated dist/ in the commit without
+      # any indication, so we surface it rather than swallowing it with || true.
+      if ! git -C "$repo_root" add "plugins/$plugin/dist/" 2>/dev/null; then
+        printf '[release-pipeline] Warning: failed to stage dist/ for %s — check git status.\n' "$plugin"
+      fi
     else
       failed+=("$plugin")
     fi
@@ -84,12 +90,15 @@ except Exception:
 done <<< "$staged"
 
 if [ ${#failed[@]} -gt 0 ]; then
-  printf 'Build failed for: %s\nFix build errors before releasing.\n' "${failed[*]}" >&2
+  # Use JSON block format (matching force-push-guard.sh) so the reason is visible
+  # in Claude's context regardless of how stderr is handled by the hook runner.
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","decision":"block","reason":"[release-pipeline] Build failed for: %s — fix build errors before committing."}}\n' "${failed[*]}"
   exit 2
 fi
 
 if [ ${#built[@]} -gt 0 ]; then
-  printf 'Auto-built and staged dist/ for: %s\n' "${built[*]}"
+  printf '[release-pipeline] Auto-built and staged dist/ for %d plugin(s):\n' "${#built[@]}"
+  printf '  - %s\n' "${built[@]}"
 fi
 
 exit 0

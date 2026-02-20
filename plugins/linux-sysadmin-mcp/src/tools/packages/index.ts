@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { PluginContext } from "../context.js";
-import { registerTool, success, error, executeCommand, categorizeError } from "../helpers.js";
+import { registerTool, success, error, executeCommand, categorizeError, buildCategorizedResponse } from "../helpers.js";
 
 export function registerPackageTools(ctx: PluginContext): void {
   // ── pkg_list_installed ──────────────────────────────────────────
@@ -75,7 +75,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_install", cmd, "slow");
-    if (r.exitCode !== 0) return error("pkg_install", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() });
+    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_install", ctx.targetHost, r.durationMs, r.stderr, ctx);
     return success("pkg_install", ctx.targetHost, r.durationMs, cmd.argv.join(" "),
       { packages_installed: pkgs, output: r.stdout.trim() },
       args.dry_run ? { dry_run: true } : undefined,
@@ -100,7 +100,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_remove", cmd, "normal");
-    if (r.exitCode !== 0) return error("pkg_remove", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() });
+    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_remove", ctx.targetHost, r.durationMs, r.stderr, ctx);
     return success("pkg_remove", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_removed: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : undefined);
   });
 
@@ -122,7 +122,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_purge", cmd, "normal");
-    if (r.exitCode !== 0) return error("pkg_purge", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() });
+    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_purge", ctx.targetHost, r.durationMs, r.stderr, ctx);
     return success("pkg_purge", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_purged: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : undefined);
   });
 
@@ -145,7 +145,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_update", cmd, "slow");
-    if (r.exitCode !== 0) return error("pkg_update", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() });
+    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_update", ctx.targetHost, r.durationMs, r.stderr, ctx);
     return success("pkg_update", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : undefined);
   });
 
@@ -202,7 +202,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     });
     if (gate) return gate;
     const r = await ctx.executor.execute({ argv: ["bash", "-c", cmdStr] }, 60_000);
-    if (r.exitCode !== 0) return error("pkg_rollback", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() });
+    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_rollback", ctx.targetHost, r.durationMs, r.stderr, ctx);
     return success("pkg_rollback", ctx.targetHost, r.durationMs, cmdStr, { output: r.stdout.trim() });
   });
 }

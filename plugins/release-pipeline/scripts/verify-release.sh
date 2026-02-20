@@ -59,10 +59,10 @@ check() {
   local result="$2"
 
   if [[ "$result" == "pass" ]]; then
-    echo "  PASS: $description"
+    echo "  ✓ $description"
     passed=$((passed + 1))
   else
-    echo "  FAIL: $description"
+    echo "  ✗ $description"
     failed=$((failed + 1))
   fi
 }

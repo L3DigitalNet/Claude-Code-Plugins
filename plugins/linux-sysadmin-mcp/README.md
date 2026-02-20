@@ -1,6 +1,6 @@
 # Linux Sysadmin MCP
 
-A comprehensive Linux system administration MCP server for Claude Code. Provides ~100 tools across 15 modules for managing packages, services, users, firewall, networking, containers, storage, security, performance, logs, cron, backups, SSH, and documentation — all through a unified, distro-agnostic interface.
+A comprehensive Linux system administration MCP server for Claude Code. Provides ~107 tools across 15 modules for managing packages, services, users, firewall, networking, containers, storage, security, performance, logs, cron, backups, SSH, and documentation — all through a unified, distro-agnostic interface.
 
 ## Summary
 
@@ -33,14 +33,14 @@ npm install
 npm run build
 ```
 
-Add to Claude Code config (`~/.claude/mcp.json`):
+Add to Claude Code config (`~/.claude/settings.json` under `mcpServers`):
 
 ```json
 {
   "mcpServers": {
     "linux-sysadmin": {
       "command": "node",
-      "args": ["/path/to/linux-sysadmin-mcp/dist/server.js"]
+      "args": ["/path/to/linux-sysadmin-mcp/dist/server.bundle.cjs"]
     }
   }
 }
@@ -117,7 +117,7 @@ documentation:
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - Linux system (Debian/RHEL-based; other distros may have limited tool support)
 - `sudo` access for state-changing tools (the server never assumes root)
 

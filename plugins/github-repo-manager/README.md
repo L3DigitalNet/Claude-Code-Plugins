@@ -31,11 +31,13 @@ GitHub Repo Manager provides a single `/repo-manager` command that assesses and 
 
 ## Installation Notes
 
-After installation, install Node.js dependencies for the helper CLI:
+After installation, the plugin's `ensure-deps.sh` script runs automatically on first use and installs the Node.js helper dependencies — no manual step required.
+
+To pre-install explicitly (optional):
 
 ```bash
-cd ~/.claude/plugins/<marketplace>/github-repo-manager
-npm install
+cd ~/.claude/plugins/cache/l3digitalnet-plugins/github-repo-manager
+bash scripts/setup.sh
 ```
 
 A GitHub Personal Access Token (PAT) with `repo`, `read:org`, and `notifications` scopes is required. See [docs/SETUP.md](docs/SETUP.md) for full setup instructions.
@@ -80,6 +82,7 @@ After activation, state what you need — Claude infers the mode:
 | `release-health` | Audit release health — unreleased commits, CHANGELOG drift, release cadence |
 | `security` | Audit security posture — Dependabot alerts, code scanning, secret scanning |
 | `wiki-sync` | Synchronize GitHub wiki content with in-repo docs |
+| `self-test` | Self-diagnostics — verify PAT scopes, gh-manager install, and API connectivity |
 
 ## Tier System
 
@@ -107,7 +110,7 @@ See [docs/POLICIES.md](docs/POLICIES.md) for all customizable settings and [docs
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 18+
 - GitHub PAT with `repo`, `read:org`, and `notifications` scopes
 - Target repositories must be accessible via the authenticated GitHub account
 
@@ -115,7 +118,7 @@ See [docs/POLICIES.md](docs/POLICIES.md) for all customizable settings and [docs
 
 This plugin intentionally runs entirely in the owner's main context window — no subagents are spawned during a session. This is a deliberate design choice: the owner must stay in the conversation loop at every step (tier confirmation, action approvals, module redirects), which requires continuous access to the shared context. The trade-off is that a full 9-module assessment consumes more context than a subagent-isolated design would. This is mitigated by keeping command files thin, delegating all API interaction to the external `gh-manager` helper (which runs outside the context window), and structured module presentation that avoids redundant output.
 
-The core approval invariant ("no action without owner approval") is enforced behaviorally — conversational approval happens in prose and cannot be captured as a programmatic signal for PreToolUse hooks. The PostToolUse audit trail in `scripts/gh-manager-monitor.sh` is the practical ceiling for mechanical enforcement in this approval model.
+The core approval invariant ("no action without owner approval") is enforced behaviorally — conversational approval happens in prose and cannot be captured as a programmatic signal for hooks. Two mechanical layers complement the behavioral enforcement: a **PreToolUse guard** (`scripts/gh-manager-guard.sh`) that warns the agent when a mutation command is about to execute so it can abort if no prior approval exists, and a **PostToolUse audit trail** (`scripts/gh-manager-monitor.sh`) that logs completed mutations to `~/.github-repo-manager-audit.log` for recovery. Both hooks also provide rate-limit awareness via the `_rate_limit` field in gh-manager JSON output.
 
 ## Planned Features
 
@@ -125,6 +128,6 @@ The core approval invariant ("no action without owner approval") is enforced beh
 
 ## Known Issues
 
-- **`npm install` must be run manually** — the plugin installer does not execute `npm install`; dependencies are not available until you run it in the plugin cache directory (see Installation Notes above)
 - **Insufficient PAT scopes cause silent module failures** — if the PAT lacks `notifications` scope, the notifications module returns empty results with no error; verify scopes with `gh-manager auth verify`
 - **Cross-repo operations are rate-limited** — large portfolios may hit GitHub API rate limits during batch scans; check status with `gh-manager auth rate-limit` and use per-module checks to stay within limits
+- **No dry-run for most mutation types** — only wiki operations (`wiki init`, `wiki push`) support `--dry-run`. PR merges, issue closes, label operations, and direct file commits do not have a dry-run preview; the tier system and owner approval flows are the primary safeguards for these actions

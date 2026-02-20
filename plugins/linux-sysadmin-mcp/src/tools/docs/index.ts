@@ -121,11 +121,20 @@ ${osR.stdout.trim()}
     const cmds = [`mkdir -p '${backupDir}'`];
     for (const p of paths) {
       const fname = p.replace(/\//g, "_").replace(/^_/, "");
-      cmds.push(`sudo -n cp '${p}' '${backupDir}/${fname}' 2>/dev/null || cp '${p}' '${backupDir}/${fname}' 2>/dev/null || echo 'Skipped: ${p}'`);
+      // Each cp attempt echoes a result line so we can parse backed_up vs skipped below.
+      // Use SKIPPED_SENTINEL format so it's unambiguous in mixed stdout.
+      cmds.push(`sudo -n cp '${p}' '${backupDir}/${fname}' 2>/dev/null && echo "BACKED_UP:${p}" || cp '${p}' '${backupDir}/${fname}' 2>/dev/null && echo "BACKED_UP:${p}" || echo "SKIPPED:${p}"`);
     }
     cmds.push(`cd '${rp}' && git add -A && git commit -m '${ctx.config.documentation.commit_prefix}: backup configs for ${svc} on ${hostname}' 2>/dev/null || true`);
-    const r = await executeBash(ctx, cmds.join(" && "), "quick");
-    return success("doc_backup_config", ctx.targetHost, r.durationMs, "config backup", { backed_up: paths, backup_dir: backupDir });
+    const r = await executeBash(ctx, cmds.join("; "), "quick");
+    // Parse outcome lines to report accurate backed_up / skipped counts
+    const backedUp = r.stdout.split("\n").filter((l) => l.startsWith("BACKED_UP:")).map((l) => l.slice(10));
+    const skipped = r.stdout.split("\n").filter((l) => l.startsWith("SKIPPED:")).map((l) => l.slice(8));
+    return success("doc_backup_config", ctx.targetHost, r.durationMs, "config backup", {
+      backed_up: backedUp,
+      backup_dir: backupDir,
+      ...(skipped.length > 0 ? { skipped, skipped_reason: "File not readable or does not exist" } : {}),
+    });
   });
 
   registerTool(ctx, { name: "doc_diff", description: "Show uncommitted documentation changes.", module: "docs", riskLevel: "read-only", duration: "quick", inputSchema: z.object({}), annotations: { readOnlyHint: true } }, async () => {

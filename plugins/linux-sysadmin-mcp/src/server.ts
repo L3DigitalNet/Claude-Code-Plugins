@@ -117,12 +117,16 @@ async function main(): Promise<void> {
   // ── Phase 11: Create MCP server ───────────────────────────────
   const server = new McpServer({
     name: "linux-sysadmin-mcp",
-    version: "0.1.0",
+    version: "1.0.3",
   });
 
   // ── Phase 12: Register tools on MCP server ────────────────────
+  // In degraded mode (no passwordless sudo), skip state-changing tools so that
+  // the degraded_mode warning in sysadmin_session_info is actually true — only
+  // read-only tools are registered and therefore callable by Claude.
   for (const [name, tool] of registry.getAll()) {
     const meta = tool.metadata;
+    if (!sudoAvailable && meta.riskLevel !== "read-only") continue;
 
     // Build Zod input schema with proper shape
     const inputShape: Record<string, z.ZodType> = {};
@@ -172,8 +176,6 @@ async function main(): Promise<void> {
                 error_category: "state",
                 message,
                 transient: false,
-                retried: false,
-                retry_count: 0,
                 remediation: ["Check server logs for details"],
               }),
             }],

@@ -130,11 +130,17 @@ When suggesting labels for unlabeled issues, analyze the title and body:
 - Keywords like "docs", "documentation", "readme" → suggest `documentation`
 - Urgency words like "critical", "urgent", "blocking" → suggest a priority label
 
-Present suggestions and let the owner confirm:
+Present the suggestion and use `AskUserQuestion` to confirm:
 
-> Issue #19 "Crash on startup" — I'd suggest labeling this as `bug` and `priority-high` based on the content. Sound right?
+> Issue #19 "Crash on startup" — based on content I'd suggest `bug` and `priority-high`.
+
+Options:
+- **"Apply bug + priority-high"** — apply the suggested labels now
+- **"Pick different labels"** — I'll list available labels for manual selection
+- **"Skip labeling this issue"** — move on without labeling
 
 ```bash
+# On approval of suggested labels:
 gh-manager issues label --repo owner/name --issue 19 --add "bug,priority-high"
 ```
 

@@ -89,7 +89,10 @@ export function registerServiceTools(ctx: PluginContext): void {
       if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
       const r = await executeCommand(ctx, `svc_${action}`, cmd, "quick");
       if (r.exitCode !== 0) return error(`svc_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-      return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action, result: "ok" });
+      const docHint = ctx.config.documentation.repo_path
+        ? { documentation_action: { type: "service_changed", service: svc, suggested_actions: [`doc_generate_service service=${svc}`, `doc_backup_config service=${svc}`] } }
+        : undefined;
+      return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action, result: "ok" }, docHint);
     });
   }
 

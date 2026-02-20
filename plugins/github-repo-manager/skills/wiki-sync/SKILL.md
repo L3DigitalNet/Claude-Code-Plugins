@@ -184,7 +184,12 @@ Present the diff summary conversationally:
 Based on the config `orphan_handling` setting:
 
 **`warn` (default):**
-> The wiki has a page "Old-Setup-Guide" that doesn't map to any current documentation. This sometimes happens when docs are reorganized. Want me to remove it, archive it, or leave it?
+> The wiki has a page "Old-Setup-Guide" that doesn't map to any current documentation. This sometimes happens when docs are reorganized.
+
+Use `AskUserQuestion` with options:
+- **"Remove it"** — delete the page from the wiki (irreversible)
+- **"Archive it"** — move it to an Archive section in the sidebar
+- **"Leave it"** — keep the orphan as-is and skip this page
 
 **`delete`:**
 > I'll remove "Old-Setup-Guide" from the wiki since it no longer has a source file.
@@ -312,6 +317,7 @@ Without explicit page_map, use sensible defaults:
 |-------|----------|
 | Wiki not enabled | Inform owner, offer to skip. Don't error. |
 | Wiki not initialized | Offer to initialize with Home page. |
+| Temp directory creation fails | "I couldn't create a working directory in /tmp. Check available disk space (`df -h /tmp`). You can also set a custom temp path in your portfolio config (`wiki.temp_dir: ~/my-wiki-staging`)." |
 | Git clone fails (auth) | "I can't access the wiki repo. Check that your PAT has Contents read/write permission." |
 | Git push fails (conflict) | "Someone else may have pushed to the wiki since I cloned it. Want me to re-clone and try again?" |
 | Git push fails (auth) | "I don't have permission to push to the wiki. Check that your PAT has Contents write access." |
@@ -323,13 +329,17 @@ Wiki pushes overwrite content and are immediately publicly visible. Always use `
 
 > ⚠️ This will update 3 wiki pages and remove 1 orphaned page. Changes are live immediately.
 
-Options:
-- "Push changes" — apply all updates
+**For Tier 3 repos**, present options with "Push changes" first (direct commit is standard):
+- "Push changes" (recommended) — apply all updates
 - "Show me the diffs first" — display all modified page diffs, then ask again
 - "Push new pages only, skip updates/removals" — safer partial push
 - "Skip wiki sync" — cancel
 
-For Tier 4, default the recommended option to "Show me the diffs first" rather than "Push changes".
+**For Tier 4 repos**, present options with "Show me the diffs first" first (maximum ceremony):
+- "Show me the diffs first" (recommended) — review all changes before committing
+- "Push changes" — apply all updates immediately
+- "Push new pages only, skip updates/removals" — safer partial push
+- "Skip wiki sync" — cancel
 
 ---
 

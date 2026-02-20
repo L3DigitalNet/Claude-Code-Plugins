@@ -22,6 +22,13 @@ export function registerSessionTools(ctx: PluginContext): void {
       ...(r.unresolved_roles.length ? { unresolved_roles: r.unresolved_roles } : {}),
     }));
 
+    // Build per-module tool count for capability discovery (B-013 fix)
+    const toolsByModule: Record<string, number> = {};
+    for (const [, tool] of ctx.registry.getAll()) {
+      const mod = tool.metadata.module;
+      toolsByModule[mod] = (toolsByModule[mod] ?? 0) + 1;
+    }
+
     const data: Record<string, unknown> = {
       target_host: ctx.targetHost,
       distro: {
@@ -33,12 +40,17 @@ export function registerSessionTools(ctx: PluginContext): void {
       sudo_available: ctx.sudoAvailable,
       mac_system: { type: ctx.distro.mac_system, mode: ctx.distro.mac_mode },
       detected_profiles: profiles,
+      // Profile parse failures — non-empty means a knowledge file has a syntax error
+      profile_load_errors: ctx.knowledgeBase.loadErrors.length > 0 ? ctx.knowledgeBase.loadErrors : undefined,
       unresolved_roles: profiles.flatMap((p) => (p as Record<string, unknown>).unresolved_roles as string[] ?? []),
       documentation: ctx.config.documentation.repo_path
         ? { enabled: true, repo_path: ctx.config.documentation.repo_path }
         : { enabled: false, reason: "No documentation repo configured. Set documentation.repo_path in config.yaml." },
+      // integration_mode is a behavioral hint to Claude — it signals intent for how this
+      // server should coexist with other MCPs, but has no runtime enforcement effect.
       integration_mode: ctx.config.integration_mode,
       tools_registered: ctx.registry.size,
+      tools_by_module: toolsByModule,
     };
 
     if (ctx.firstRun) {

@@ -3,6 +3,15 @@ description: Full assessment orchestration for GitHub Repo Manager. Use when run
 ---
 
 # GitHub Repo Manager — Full Assessment Mode
+#
+# Orchestration layer — coordinates 9 assessment modules and produces the unified findings view.
+# Called by repo-manager/SKILL.md Step 7 ("proceed to assessment").
+# The unified findings format produced here is the authoritative presentation format — module
+# skills produce raw data; this skill owns the consolidated output. If the module execution
+# order changes, cross-module deduplication rules (Section 2) MUST be updated to match.
+#
+# Architectural constraint: modules MUST run in the declared order (Security first) because
+# later modules defer duplicates to earlier ones. Reordering breaks deduplication silently.
 
 ## Module Execution Order
 
@@ -27,9 +36,12 @@ When running a full assessment, execute modules in this order (required for cros
 - 🔴 Critical Dependabot vulnerability with no fix PR
 - 🔴 An error that would prevent the rest of the assessment from running (e.g., rate limit hit)
 
-**Progress indicator:** As each module completes, emit a single-line status so the owner knows the assessment is progressing:
+**Progress indicator:** As each module completes, emit one line so the owner knows the assessment is progressing:
 ```
-✓ Security  ✓ Release Health  ✓ Community Health  ✓ PR Management ...
+✓ Security (1/9)
+✓ Release Health (2/9)
+✓ Community Health (3/9)
+...
 ```
 
 ### Narrow Check Mode
@@ -38,7 +50,17 @@ For narrow checks (owner asks about a single topic), run only the relevant modul
 
 **Session state for narrow checks:** If the owner invokes a narrow check without a prior full session, two pieces of state may be missing:
 
-- **Tier**: Ask briefly before running the module — "Which repo? And is it public or private, and does it have releases?" is usually enough. Apply tier heuristics: public + releases = Tier 4, public + no releases = Tier 3, private = Tier 1 or 2.
+- **Tier**: Collect via two bounded questions before running the module. First, get the repo name (free text is unavoidable — take it from the owner's message if present). Then use `AskUserQuestion`:
+
+  Question 1: "Is this a public or private repo?"
+  - "Public" / "Private"
+
+  Question 2: "Does it have published releases (tags/releases on GitHub)?"
+  - "Yes — it has releases" → public + releases = Tier 4; private + releases = Tier 2
+  - "No releases yet" → public = Tier 3, private = Tier 1
+
+  Apply tier heuristics based on the combination. Skip the second question if the first answer and context make the tier obvious.
+
 - **Expertise level**: Default to **beginner** unless the owner has indicated otherwise. Do not ask.
 
 ---
@@ -105,7 +127,14 @@ Errors / Skipped
 - Group by severity, not by module. A finding from Security and one from PR Management can both appear under 🔴 Critical.
 - Include source module attribution (e.g., "Security", "PR #42") so the owner can ask for details.
 - ✅ Healthy items are listed briefly — don't expand them unless the owner asks.
-- Keep the full view to ≤ 20 bullet points. If more than 20 findings exist, show the top 20 by severity and note "N more in the detailed report."
+- Keep the full view to ≤ 20 bullet points. If more than 20 findings exist, show the top 20 by severity, then use `AskUserQuestion`:
+
+  > N more findings below this threshold. What would you like to do?
+
+  Options:
+  - **"Show me all findings"** — present the full list before moving to action proposals
+  - **"Continue to action proposals"** — work with the top 20 and defer the rest to the report
+  - **"Generate the full report"** — produce the detailed report now
 
 ---
 

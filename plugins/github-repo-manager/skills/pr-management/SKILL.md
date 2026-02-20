@@ -107,7 +107,12 @@ Present by category, most actionable first. After presenting findings with ≥2 
 > **Waiting (1):**
 > • PR #63 "WIP: New feature" — draft, 2 days old
 >
-> PR #42 looks ready to go. Want me to merge it?
+> PR #42 looks ready to go.
+
+Use `AskUserQuestion`:
+- **"Merge PR #42"** — proceed to merge method selection
+- **"Not yet"** — leave open, flag as deferred
+- **"Tell me more"** — show full diff and CI details first
 
 ---
 
@@ -187,9 +192,18 @@ gh-manager prs merge --repo owner/name --pr 42 --method squash
 
 ### Close Stale PRs
 
-⚠️ **Irreversible in practice** (PRs can be reopened but branch may be deleted).
+⚠️ **Closing a PR is visible to all contributors and watchers.** The PR enters "closed" state — on Tier 3/4 repos, external contributors receive a notification. PRs can be reopened, but their associated branch may be deleted if "delete head branches on close" is enabled in repo settings.
 
-> PR #57 has been idle for 45 days with unresolved conflicts. Want me to close it with a comment explaining why?
+Use `AskUserQuestion` before closing:
+
+> PR #57 has been idle for 45 days with unresolved conflicts.
+
+Options:
+- **"Close with comment"** — post an explanation, then close
+- **"Skip — leave it open"** — move on without closing this PR
+- **"Cancel stale cleanup"** — stop closing stale PRs for this session
+
+On "Close with comment":
 
 ```bash
 gh-manager prs close --repo owner/name --pr 42 --body "Closing this PR due to extended inactivity (45 days). The branch has merge conflicts that haven't been resolved. Feel free to reopen if you'd like to continue work on this.
