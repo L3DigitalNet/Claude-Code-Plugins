@@ -21,6 +21,11 @@ MAX_ATTEMPTS="$1"
 BASE_DELAY_MS="$2"
 shift 2
 
+if ! [[ "$MAX_ATTEMPTS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Error: max_attempts must be a positive integer, got '${MAX_ATTEMPTS}'" >&2
+  exit 1
+fi
+
 # Consume the '--' separator
 if [[ "${1:-}" == "--" ]]; then
   shift

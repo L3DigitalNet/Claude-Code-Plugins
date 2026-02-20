@@ -36,7 +36,7 @@ Audit all documentation files in the repository for release readiness.
 
 ## Waiver Lookup
 
-When the audit would result in FAIL status (stale versions or broken links found), before reporting FAIL run:
+When the audit would result in FAIL status **due to stale version references only** (not broken links — those are never waivable), before reporting FAIL run:
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json stale_docs [plugin-name]

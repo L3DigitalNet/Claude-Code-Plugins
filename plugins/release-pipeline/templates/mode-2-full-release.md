@@ -152,8 +152,8 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "v<version>"
 ```
 
 Capture the first line of stdout as `tag_status`. Branch based on value:
-- `MISSING` or `LOCAL_ONLY`: proceed to `git tag -a` step normally
-- `BOTH` or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists on remote; proceed directly to `git push origin main --tags`
+- `MISSING`: proceed to `git tag -a` step normally
+- `LOCAL_ONLY`, `BOTH`, or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists locally or remotely; proceed directly to `git push origin main --tags`
 
 ```bash
 git tag -a "v<version>" -m "Release v<version>"

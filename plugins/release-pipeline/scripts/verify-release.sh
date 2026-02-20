@@ -77,7 +77,7 @@ echo "=========================="
 
 # ---------- 1. Tag exists on remote ----------
 
-if git -C "$REPO" ls-remote --tags origin "$TAG" 2>/dev/null | grep -q "$TAG"; then
+if git -C "$REPO" ls-remote --tags origin "$TAG" 2>/dev/null | grep -qF "$TAG"; then
   check "Tag exists on remote" "pass"
 else
   check "Tag exists on remote" "fail"
