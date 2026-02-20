@@ -1,7 +1,7 @@
 {
   "name": "linux-sysadmin-mcp",
   "description": "Comprehensive Linux system administration MCP server with ~107 tools across 15 modules — packages, services, users, firewall, networking, security, storage, containers, and more.",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"

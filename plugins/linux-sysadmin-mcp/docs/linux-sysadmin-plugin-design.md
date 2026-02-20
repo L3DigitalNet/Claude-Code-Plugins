@@ -1,6 +1,6 @@
 # Linux SysAdmin — Claude Code Plugin Design Document
 
-**Version:** 1.0.4 (Implemented — 2026-02-20)
+**Version:** 1.1.0 (Implemented — 2026-02-20)
 **Status:** Implemented — sections marked *[Planned]* describe features not yet implemented
 **Target Runtime:** Claude Code (CLI)
 **Implementation:** TypeScript / Node.js >= 20 LTS
@@ -31,7 +31,7 @@ The target audience spans home lab enthusiasts managing a handful of machines to
 2. **Universal Tool Knowledge, Not Environment-Specific Configuration** — The plugin's embedded knowledge contains only facts that are true for any standard installation of a tool on any supported distro: default config paths, standard management commands, well-known ports, conventional log locations, and typical dependency roles. It never encodes IP addresses, hostnames, VLAN layouts, custom scripts, mount points, user-created automation, or anything tied to a particular deployment. Environment-specific details are the user's responsibility and live in the plugin's config file, SSH host definitions, and user-authored knowledge profiles.
 3. **Documentation-Driven Reproducibility** — Every system Claude administers must be fully reproducible from its documentation alone. Configuration changes produce documentation as a first-class output — not as an afterthought, not as optional, not as a log to be read later. The documentation captures what is configured, why it was configured that way, and how to rebuild it from scratch. A human with a fresh OS install and the documentation repo can reconstruct the entire working system without Claude's assistance. Documentation is the disaster recovery plan.
 4. **Distro-Agnostic** — Abstract over package managers, init systems, firewall backends, and filesystem conventions. Detect and adapt; never assume.
-5. **Safety by Default** — Destructive or state-changing operations require explicit confirmation. Dry-run is always available. When rollback or audit capabilities are needed, the plugin works with the user to leverage OS-native tools (package manager history, filesystem snapshots, journald, auditd) rather than building parallel infrastructure.
+5. **Safety by Default** — Destructive or state-changing operations require explicit confirmation. Dry-run is always available. When rollback or audit capabilities are needed, the plugin works with the user to use OS-native tools (package manager history, filesystem snapshots, journald, auditd) rather than building parallel infrastructure.
 6. **Graceful Coexistence** — Detect and defer to existing MCP servers when present. Fill gaps rather than duplicate. Operate fully standalone when they are absent.
 7. **Observable** — Every tool returns structured output that Claude can reason over. No silent failures; no ambiguous states.
 8. **Least Privilege** — Request only the permissions needed for the specific operation. Escalate explicitly and visibly.
@@ -2121,4 +2121,4 @@ All original open questions have been resolved through collaborative review:
 
 ---
 
-*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.0.5. This document describes the implemented system.*
+*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.1.0. This document describes the implemented system.*

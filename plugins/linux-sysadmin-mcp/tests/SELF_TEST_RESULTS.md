@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-17 23:41 EST
 **Claude Code Model:** Claude Opus 4.6
-**Plugin Version:** 0.1.0 *(results from initial v0.1.0 release; current version is 1.0.3. Subsequent 1.0.x releases added parameter descriptions, dry_run additions, documentation_action hints, structured output for perf/sec/net tools, and confirmation_threshold default change — behavioral changes that would affect some Layer 3 assertions. A re-run against 1.0.3 is pending.)*
+**Plugin Version:** 0.1.0 *(results from initial v0.1.0 release; current version is 1.1.0. Subsequent 1.0.x releases added parameter descriptions, dry_run additions, documentation_action hints, structured output for perf/sec/net tools, and confirmation_threshold default change — behavioral changes that would affect some Layer 3 assertions. A re-run against 1.0.3 is pending.)*
 
 ## Summary
 
