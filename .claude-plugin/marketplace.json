@@ -125,6 +125,17 @@
       "category": "documentation",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
       "source": "./plugins/docs-manager"
+    },
+    {
+      "name": "repo-hygiene",
+      "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
+      "version": "1.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/repo-hygiene",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
     }
   ]
 }
