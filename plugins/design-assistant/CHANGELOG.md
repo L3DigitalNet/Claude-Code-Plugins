@@ -6,6 +6,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] - 2026-02-19
+
+### Added
+- audit and split wide-scope skills across all plugins
+
+### Changed
+- release: 5 plugin releases — design-assistant 0.3.0, linux-sysadmin-mcp 1.0.2, agent-orchestrator 1.0.2, release-pipeline 1.4.0, home-assistant-dev 2.2.0
+- ux(design-assistant): silent completion checks, AskUserQuestion conventions, compact Phase 2D
+- add Known Issue for multi-question wall-of-text UX
+- add Principles section to all 7 plugin READMEs
+- standardise all plugin READMEs with consistent sections
+
+
 ## [0.3.0] — 2026-02-19
 
 ### Added
