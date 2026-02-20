@@ -2,6 +2,21 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
+## [1.0.6] — 2026-02-20
+
+### Fixed
+- **Critical: All multi-word bash commands failed silently** — `executor.ts` used
+  `shell: cmd === "bash"` which set `shell: true` for bash invocations. Node.js's
+  `execFile` with `shell: true` wraps execution in `/bin/sh -c "bash cmd args..."`,
+  causing the outer shell to split command strings by whitespace and lose arguments
+  (e.g. `ip route show` → `ip` with `route`/`show` as positional `$0`/`$1` params).
+  Changed to `shell: false` — bash handles shell features (pipes, redirects, globs)
+  natively without needing a wrapper shell. Fixes: `net_test` (target not passed to
+  ping), `net_routes_show` (empty routes), `user_info` (ignored username param),
+  `group_list` (usage text as group name), `perms_check` (missing permission fields),
+  `cron_next_runs` (expression not passed to systemd-analyze), `ssh_key_list`
+  (project directory listed instead of `~/.ssh/`). Confirmed by 96/96 PTH tests passing.
+
 ## [1.0.5] — 2026-02-20
 
 ### Changed
