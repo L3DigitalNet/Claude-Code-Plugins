@@ -69,7 +69,7 @@ machine-verifiable checks, one per open finding:
     "id": "A-B-<number>",
     "finding_id": "<touchpoint or criterion ID>",
     "track": "B",
-    "type": "<grep_not_match | grep_match | file_exists | file_content | shell_exit_zero>",
+    "type": "<grep_not_match | grep_match | file_exists | file_content | typescript_compile | shell_exit_zero>",
     "description": "One sentence: what this assertion verifies",
     "command": "<bash command to run — use full relative paths from repo root>",
     "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
