@@ -2,6 +2,13 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [0.2.2] - 2026-02-20
+
+### Changed
+- align plugin principles with trust-based philosophy
+- pre-release staging — update github-repo-manager, linux-sysadmin-mcp, release-pipeline
+
+
 ## [Unreleased]
 
 ### Added
