@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.1] - 2026-02-19
+
+### Fixed
+- source root principles from README.md not CLAUDE.md
+
+
 ## [0.1.0] - 2026-02-19 — Initial Release
 
 ### Added
