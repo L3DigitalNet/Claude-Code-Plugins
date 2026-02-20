@@ -85,7 +85,12 @@ with open('$FIXTURE', 'w') as f:
 "
 
 echo "Running run-assertions.sh..."
-ASSERTIONS_FILE="$FIXTURE" bash "$RUNNER"
+RUNNER_EXIT=0
+ASSERTIONS_FILE="$FIXTURE" bash "$RUNNER" || RUNNER_EXIT=$?
+if [ "$RUNNER_EXIT" -ne 0 ]; then
+  echo "FAIL: run-assertions.sh exited with code $RUNNER_EXIT (expected 0)"
+  exit 1
+fi
 
 echo ""
 echo "Checking results..."
