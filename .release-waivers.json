@@ -9,6 +9,41 @@
       "check": "dirty_working_tree",
       "plugin": "release-pipeline",
       "reason": "Scoped plugin release — dirty files are in other plugins (plugin-test-harness, linux-sysadmin-mcp) and will not be staged"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "agent-orchestrator",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "github-repo-manager",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "design-assistant",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "plugin-review",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "context-efficiency-toolkit",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "docs-manager",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "repo-hygiene",
+      "reason": "Markdown/script-only plugin — no executable test suite by design"
     }
   ]
 }
