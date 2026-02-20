@@ -26,6 +26,10 @@ if [[ "${1:-}" == "--" ]]; then
   shift
 fi
 
+# Declare stderr_file so the trap can reference it even before first mktemp call
+stderr_file=""
+trap 'rm -f "${stderr_file:-}"' EXIT
+
 attempt=0
 while [[ $attempt -lt $MAX_ATTEMPTS ]]; do
   attempt=$((attempt + 1))
@@ -53,9 +57,13 @@ while [[ $attempt -lt $MAX_ATTEMPTS ]]; do
 
   # Exponential delay with jitter: base * 2^(attempt-1) + random[0, base)
   delay_ms=$(( BASE_DELAY_MS * (1 << (attempt - 1)) ))
-  jitter=$(( RANDOM % BASE_DELAY_MS ))
+  jitter=$(( BASE_DELAY_MS > 0 ? RANDOM % BASE_DELAY_MS : 0 ))
   total_ms=$(( delay_ms + jitter ))
-  total_s=$(echo "scale=3; $total_ms / 1000" | bc)
+  if command -v bc &>/dev/null; then
+    total_s=$(echo "scale=3; $total_ms / 1000" | bc)
+  else
+    total_s=$(( total_ms / 1000 ))
+  fi
 
   echo "Attempt ${attempt} failed. Retrying in ${total_s}s..." >&2
   sleep "$total_s"

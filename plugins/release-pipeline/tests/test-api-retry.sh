@@ -26,6 +26,7 @@ assert_eq "$RES" "1" "exits 1 when all attempts exhausted"
 COUNT_FILE=$(mktemp)
 echo "0" > "$COUNT_FILE"
 CMD=$(mktemp)
+trap 'rm -f "$COUNT_FILE" "$CMD"' EXIT
 cat > "$CMD" <<CMDEOF
 #!/usr/bin/env bash
 count=\$(cat "$COUNT_FILE")
