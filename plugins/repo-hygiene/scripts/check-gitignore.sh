@@ -2,9 +2,17 @@
 # check-gitignore.sh — Check 1 of 5 in the repo-hygiene sweep.
 # Scans all non-auto-generated .gitignore files for:
 #   - Missing patterns (node_modules, Python cache) — auto-fixable
-#   - Stale patterns that match nothing in the repo — needs-approval
 # Called from repo root by the /hygiene command. Emits one JSON object on stdout.
 # Non-zero exit + stderr message on failure.
+#
+# NOTE: .claude/state/ coverage check was intentionally omitted — the root
+# .gitignore already has **/.claude/state/ which covers all plugin subdirectories
+# via gitignore inheritance. A per-plugin check would be redundant.
+#
+# NOTE: Stale pattern detection was intentionally removed. Defensive patterns
+# (.env, .DS_Store, .vscode/, etc.) are valid even when no matching file currently
+# exists in the working tree, so any git ls-files based stale check produces
+# systematic false positives against well-maintained .gitignore files.
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -13,7 +21,6 @@ cd "$REPO_ROOT"
 python3 - "$REPO_ROOT" << 'PYEOF'
 import sys
 import os
-import subprocess
 import json
 
 repo_root = sys.argv[1]
@@ -24,7 +31,7 @@ def rel(path):
 
 def is_auto_generated(gitignore_path):
     """Return True if ALL non-empty, non-comment lines are just '*'.
-    
+
     Matches pytest-generated .gitignore files that only contain '*'.
     """
     with open(gitignore_path) as f:
@@ -38,41 +45,6 @@ def get_patterns(gitignore_path):
     """Return all non-empty, non-comment lines from a .gitignore."""
     with open(gitignore_path) as f:
         return [l.strip() for l in f if l.strip() and not l.strip().startswith('#')]
-
-def pattern_has_glob(pattern):
-    """Patterns with * or ** are unreliable to test — skip them in stale check."""
-    return '*' in pattern
-
-def pattern_is_negation(pattern):
-    return pattern.startswith('!')
-
-def pattern_matches_something(pattern, gitignore_dir):
-    """Check if pattern matches any untracked-ignored or cached-ignored file.
-    
-    Returns True if the pattern is active (matches something), False if stale.
-    Uses git -C to run relative to the .gitignore's directory.
-    """
-    try:
-        # Check untracked files that would be ignored
-        r1 = subprocess.run(
-            ['git', '-C', gitignore_dir, 'ls-files', '--others', '--ignored',
-             '--exclude=' + pattern, '--directory'],
-            capture_output=True, text=True, timeout=10
-        )
-        if r1.returncode == 0 and r1.stdout.strip():
-            return True
-        # Check cached (tracked) files that match the ignore pattern
-        r2 = subprocess.run(
-            ['git', '-C', gitignore_dir, 'ls-files', '--cached', '-i',
-             '--exclude=' + pattern],
-            capture_output=True, text=True, timeout=10
-        )
-        if r2.returncode == 0 and r2.stdout.strip():
-            return True
-    except (subprocess.TimeoutExpired, OSError):
-        # On error, assume it matches (avoid false stale positives)
-        return True
-    return False
 
 def python_files_exist_nearby(directory):
     """Check for *.py files up to 3 levels deep under directory."""
@@ -105,11 +77,11 @@ def find_gitignores():
     return sorted(result)
 
 findings = []
-is_root = True  # first .gitignore encountered will be the root one (sorted, root comes first)
 
 for gi_path in find_gitignores():
     gi_dir = os.path.dirname(gi_path)
     gi_rel = rel(gi_path)
+    gi_abs = gi_path  # absolute path for use in fix_cmd to avoid CWD sensitivity
     is_root_gi = (gi_dir == repo_root)
     patterns = get_patterns(gi_path)
 
@@ -125,7 +97,7 @@ for gi_path in find_gitignores():
                     'path': gi_rel,
                     'detail': "package.json present but 'node_modules/' not in .gitignore",
                     'auto_fix': True,
-                    'fix_cmd': f"echo 'node_modules/' >> {gi_rel}",
+                    'fix_cmd': f"echo 'node_modules/' >> '{gi_abs}'",
                 })
 
     # Python cache — if *.py files exist in tree (up to 3 levels)
@@ -138,27 +110,8 @@ for gi_path in find_gitignores():
                     'path': gi_rel,
                     'detail': "Python files detected but no __pycache__/ or *.pyc pattern in .gitignore",
                     'auto_fix': True,
-                    'fix_cmd': f"printf '__pycache__/\\n*.pyc\\n' >> {gi_rel}",
+                    'fix_cmd': f"printf '__pycache__/\\n*.pyc\\n' >> '{gi_abs}'",
                 })
-
-    # ── Stale pattern checks (needs-approval) ─────────────────────────────
-    for pattern in patterns:
-        # Skip negations, globs, and empty — unreliable or special-purpose
-        if pattern_is_negation(pattern):
-            continue
-        if pattern_has_glob(pattern):
-            continue
-        if not pattern:
-            continue
-
-        if not pattern_matches_something(pattern, gi_dir):
-            findings.append({
-                'severity': 'warn',
-                'path': gi_rel,
-                'detail': f"Pattern '{pattern}' appears stale — matches no tracked or ignorable files",
-                'auto_fix': False,
-                'fix_cmd': None,
-            })
 
 print(json.dumps({'check': 'gitignore', 'findings': findings}, indent=2))
 PYEOF

@@ -59,6 +59,26 @@ for plugin in marketplace.get("plugins", []):
     source  = plugin.get("source", "")
     mp_ver  = plugin.get("version")
 
+    # Check 0: trailing slash in source path (auto-fixable normalisation)
+    # A trailing slash causes os.path.isdir to behave unexpectedly on some paths
+    # and indicates a copy-paste error in marketplace.json — fix before resolving.
+    if source.endswith('/'):
+        clean_source = source.rstrip('/')
+        findings.append({
+            "severity": "warn",
+            "path": marketplace_rel,
+            "detail": f"Plugin '{name}' source has trailing slash: '{source}' — should be '{clean_source}'",
+            "auto_fix": True,
+            "fix_cmd": (
+                f"python3 -c \""
+                f"import json; f=open('{marketplace_path}','r+'); "
+                f"d=json.load(f); "
+                f"next(p for p in d['plugins'] if p['name']=='{name}')['source']='{clean_source}'; "
+                f"f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
+            ),
+        })
+        continue  # don't do further checks with the malformed path
+
     # Resolve source relative to repo root
     if source.startswith("./") or source.startswith("../"):
         source_abs = os.path.normpath(os.path.join(repo_root, source))

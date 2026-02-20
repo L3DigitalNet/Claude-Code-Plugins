@@ -16,6 +16,12 @@ echo $CLAUDE_PLUGIN_ROOT
 ```
 Store the output as `PLUGIN_ROOT`.
 
+Establish repo root as working directory for all subsequent bash commands:
+```bash
+git rev-parse --show-toplevel
+```
+Store the output as `REPO_ROOT`. All bash commands in subsequent steps must be run from `REPO_ROOT`.
+
 ## Step 1: Run Mechanical Scans (parallel)
 
 Run all four scripts using the Bash tool. Execute them in parallel (make all four Bash tool calls in a single response turn):
@@ -120,11 +126,20 @@ Then use `AskUserQuestion` with multi-select to let the user choose actions:
 
 For each approved item, apply based on check type:
 
-**`orphans` (temp directories):** SAFETY CHECK FIRST — verify the path begins with the user's home directory and contains `plugins/cache/temp_`. If it passes:
+**`orphans` (temp directories):** Extract the full absolute path from the `detail` field (it contains the complete path after "delete: ").
+
+SAFETY CHECK: Verify the path satisfies ALL of:
+1. Starts with the user's home directory + `/.claude/plugins/cache/temp_` as a complete prefix (not just a substring)
+2. Does not contain `..` (no path traversal)
+3. The basename starts with `temp_`
+
+If ALL checks pass:
 ```bash
-rm -rf <full_path>
+rm -rf "<full_path_from_detail>"
 ```
 Report: `🗑 Deleted: <path>`
+
+If ANY check fails: refuse the deletion and report the specific check that failed.
 
 **`stale-commits` (uncommitted files):** Stage the file:
 ```bash

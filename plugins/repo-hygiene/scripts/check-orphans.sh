@@ -110,7 +110,7 @@ if os.path.isdir(cache_dir):
                     finding(
                         "warn",
                         tilde(abs_path),
-                        f"Orphaned temp directory in plugin cache — safe to delete: {abs_path}",
+                        f"Orphaned temp directory — delete: {abs_path}",
                     )
     except OSError as e:
         finding("warn", tilde(cache_dir), f"Could not read plugin cache directory: {e}")
