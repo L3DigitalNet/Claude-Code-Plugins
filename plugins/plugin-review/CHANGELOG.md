@@ -7,6 +7,9 @@
 - Architectural role headers (`<!-- -->` comment blocks) to all six template files documenting which component loads each template, output format contracts, and cross-file dependencies
 - Architectural role header to `skills/scoped-reaudit/SKILL.md` documenting the orchestrator-skill contract and what breaks if the mapping table changes
 
+### Added
+- `docs/DESIGN.md`: new "Hook Design: PostToolUse Agent Frontmatter Validator" section documenting the always-active frontmatter validation gate, its disallowed tool list, and its relationship to primary structural enforcement via agent YAML frontmatter
+
 ### Changed
 - `commands/review.md` Phase 1.1: bounded plugin selection — uses `AskUserQuestion` with up to 4 options; fallback provides format hint rather than open-ended free-text prompt
 - `commands/review.md` Phase 1.3: principles and checkpoints now formatted as markdown tables (ID | Name | Definition), not a flat list
