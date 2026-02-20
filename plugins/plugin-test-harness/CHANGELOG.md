@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.3] - 2026-02-20
+
+### Fixed
+- fix(plugin-test-harness): `revertCommit` now handles session-state.json conflicts — stashes dirty state before reverting, resolves session-state.json with `--ours`, uses `--allow-empty` for already-neutralised commits that are net no-ops after conflict resolution
+- fix(plugin-test-harness): `applyFix` now uses `commitFiles` (stage only written files) instead of `commitAll` (git add -A), preventing session-state.json from contaminating fix commits and causing conflicts during later reverts
+- fix(plugin-test-harness): `pth_reload_plugin` now syncs new build to versioned cache via `onBuildSuccess` callback before killing the process — previously the restarted process loaded the stale binary from cache
+- fix(plugin-test-harness): `detectBuildSystem` is now called on the plugin subdirectory path within the worktree, not the worktree root — previously no package.json was found and the build step was silently skipped
+- fix(plugin-test-harness): parser now honours explicit `id` field in YAML test definitions; falls back to `slugify(name)` only when `id` is absent or not a slug-safe string
+- feat(plugin-test-harness): added `commitFiles()` to git.ts for staging a specific list of files (replaces `commitAll` in fix commits)
+- feat(plugin-test-harness): added `getInstallPath()` to cache-sync.ts — reads `installed_plugins.json` to resolve the versioned cache path for a plugin (e.g. `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`)
+- feat(plugin-test-harness): added `getAllTools()` to tool-registry.ts — returns all registered tools statically; session-gating is enforced at dispatch time
+
+## [0.1.2] - 2026-02-20
+
+### Fixed
+- fix(plugin-test-harness): expose all tools statically at startup — Claude Code caches the MCP tool list at session start, so dynamic activation via `notifications/tools/list_changed` was unreliable; session-gating is now enforced at dispatch time instead
+- fix(plugin-test-harness): `createBranch` now uses `git branch` instead of `git checkout -b` to avoid switching HEAD before `git worktree add`, which caused the worktree creation to fail and left the repo on the pth branch
+
 ## [0.1.1] - 2026-02-19
 
 ### Changed
