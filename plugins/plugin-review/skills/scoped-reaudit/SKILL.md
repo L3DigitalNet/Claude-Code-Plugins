@@ -1,5 +1,19 @@
 # Skill: Scoped Re-audit
 
+<!-- architectural-context
+  Loaded by: commands/review.md (orchestrator) at Phase 2, Pass 2+ only — not on Pass 1.
+  Consumer: the orchestrator reads this file and applies the mapping table manually;
+    there is no programmatic parsing of this file's output.
+  Output contract: the orchestrator extracts the Track A / Track B / Track C determination
+    from the File-to-Track Mapping section. Track letters (A, B, C) must match the agent
+    names used in review.md Phase 2's spawn instructions.
+  Cross-file dependency: if the mapping table changes, review.md Phase 2 instructions
+    must be re-read to verify consistency with the new track scope definitions.
+  What breaks if format changes: the orchestrator reading this skill expects the mapping
+    to cover commands/, agents/, skills/, hooks/, scripts/, src/, templates/ as patterns.
+    Adding new plugin component types requires a corresponding mapping entry here.
+-->
+
 Determines which analysis tracks need re-running based on files modified in the previous pass. The orchestrator consults this skill before spawning subagents on Pass 2+.
 
 ## Trigger

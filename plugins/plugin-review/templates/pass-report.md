@@ -1,5 +1,16 @@
 # Pass Report Template
 
+<!-- architectural-context
+  Loaded by: commands/review.md (orchestrator) at Phase 3, after receiving subagent summaries.
+  Not loaded by subagents — subagents return structured text; the orchestrator formats it
+    using this template. If subagents load this template, it violates [P3].
+  Output contract: the Convergence table columns (Upheld / Partial / Violated / Checkpoints /
+    UX Issues / Stale Docs / Trend) must be consistent across all passes so that
+    final-report.md's Pass History table can aggregate them correctly.
+  Cross-file dependency: final-report.md's Pass History table uses the same column names.
+    Changing column headers here requires updating final-report.md's Pass History section.
+-->
+
 Use this template to format the unified findings report after collecting subagent summaries.
 
 ## Pass 1 Format

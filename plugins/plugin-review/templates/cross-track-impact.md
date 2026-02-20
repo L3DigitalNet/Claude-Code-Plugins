@@ -1,5 +1,16 @@
 # Cross-Track Impact Check
 
+<!-- architectural-context
+  Loaded by: commands/review.md (orchestrator) at Phase 4, before annotating each proposal.
+  Not loaded by subagents — this is an orchestrator-only template.
+  Output contract: the annotation format defined in the "Annotation Format" section is appended
+    to each proposal in the Phase 4 output. If the format changes, the orchestrator's Phase 4
+    presentation changes shape.
+  Cross-file dependency: the track letters (A, B, C) used here must match the agent names
+    in review.md Phase 2 and the track labels in pass-report.md and final-report.md.
+    Adding a new track requires updating all four files simultaneously.
+-->
+
 Use this template in Phase 4 when annotating proposed changes.
 
 ## Impact Mapping
@@ -24,9 +35,12 @@ Use this template in Phase 4 when annotating proposed changes.
 
 ## Annotation Format
 
-For each proposal, append:
+For each proposal, append the annotation as an indented block to visually distinguish it from the proposal body:
 ```
-**Cross-track impact**: <Track(s) affected> — <brief reason>
+  > **Cross-track impact**: <Track(s) affected> — <brief reason>
 ```
 
-If no cross-track impact, explicitly state "None" — don't omit the annotation.
+If no cross-track impact, explicitly state `None` — don't omit the annotation:
+```
+  > **Cross-track impact**: None
+```

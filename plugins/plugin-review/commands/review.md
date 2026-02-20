@@ -19,7 +19,8 @@ You are the **orchestrator** for a multi-pass plugin review. You manage the conv
 ```bash
 export PLUGIN_REVIEW_ACTIVE=1
 mkdir -p .claude/state
-echo '{"impl_files":[],"doc_files":[]}' > .claude/state/plugin-review-writes.json
+# State file tracks impl/doc writes AND pass_number so the counter survives context compaction.
+echo '{"impl_files":[],"doc_files":[],"pass_number":1}' > .claude/state/plugin-review-writes.json
 echo "✓ Plugin review session activated"
 ```
 
@@ -33,7 +34,7 @@ You will need this path when spawning subagents (see Phase 2).
 
 ### Phase 1 — Setup
 
-**1.1 Identify the plugin.** If the user didn't specify one, list available plugins and ask the user to pick one. If you can't enumerate them, ask the user to name one directly.
+**1.1 Identify the plugin.** If the user didn't specify one, list available plugins and use `AskUserQuestion` with bounded options (up to 4). If there are more than 4 plugins, list the 3 most recently modified and add an "Other" option so the user can type the name. If you cannot enumerate plugins at all, prompt for the plugin path with a format hint: "Enter the plugin directory path (e.g. `plugins/my-plugin`)."
 
 **1.2 Triage read.** Read only structural files — do NOT deep-read implementation source:
 - The plugin's directory listing (understand scope and file count)
@@ -42,13 +43,15 @@ You will need this path when spawning subagents (see Phase 2).
 - `plugins/<n>/hooks/hooks.json` if it exists (mechanical enforcement surface)
 - Root `README.md` — the `## Principles` section (root architectural principles P1–Pn that apply across all plugins in this collection)
 
-**1.3 Build the principles and checkpoints list.** List every principle (root architectural + plugin-specific `[P1]`–`[Pn]`) with ID, short name, and one-line definition. Then list any checkpoints (`[C1]`–`[Cn]`) — these are cross-cutting quality checks applied to the target plugin (as distinct from this review plugin's own architectural principles). Print the combined list for the user.
+**Triage boundary**: the files listed above are the only files the orchestrator reads directly. `hooks.json` is treated as structural metadata — its schema reveals the enforcement surface without requiring implementation analysis. All other plugin files (commands, agents, skills, scripts, templates, src) must be read only by analyst subagents, not the orchestrator.
 
-**1.4 Map user-facing touchpoints.** From the directory listing, README, and any tool/command definitions visible in the triage read, identify every tool that produces user-visible output, every input collection point, every status/progress/error message, and any long-form text blocks. Print the touchpoint map for the user.
+**1.3 Build the principles and checkpoints list.** List every principle (root architectural + plugin-specific `[P1]`–`[Pn]`) and every checkpoint (`[C1]`–`[Cn]`). Format as two markdown tables: one for root principles and one for plugin-specific principles, each with columns **ID | Name | Definition** (one line per row). Follow with a checkpoint table using the same format. Keep definitions to one line each.
+
+**1.4 Map user-facing touchpoints.** From the directory listing, README, and any tool/command definitions visible in the triage read, identify every tool that produces user-visible output, every input collection point, every status/progress/error message, and any long-form text blocks. Format as a markdown table with columns: **# | Touchpoint | Type (Output/Input/Error/Progress) | Source File**. Keep one entry per row.
 
 ### Phase 2 — Analyze
 
-Initialize `pass_number = 1`. Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
+Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
 
 - **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-a-criteria.md`.
 - **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-b-criteria.md`.
@@ -74,7 +77,7 @@ For each open finding, propose a concrete fix grouped by effort (quick wins, str
 
 **Cross-track impact check**: for each proposal, load `<CLAUDE_PLUGIN_ROOT>/templates/cross-track-impact.md` and note which other tracks could be affected.
 
-If zero open findings remain, skip to Phase 6. Present the proposals grouped by effort and ask the user which ones to proceed with. **STOP. Wait for explicit user approval before implementing.**
+If zero open findings remain, skip to Phase 6. Present proposals as a numbered list grouped by effort. Then use `AskUserQuestion` with bounded options: (1) "All quick wins only", (2) "Quick wins + structural changes", (3) "All proposals", (4) "None / review only". If the user needs finer-grained selection (specific proposal numbers), they can answer "Other" with a comma-separated list. **STOP. Wait for explicit user approval before implementing.**
 
 ### Phase 5 — Implement and Re-audit
 
@@ -85,7 +88,7 @@ For each approved proposal:
 4. Verify — confirm code correctness AND doc accuracy.
 5. Summarize in 1–2 sentences.
 
-After all changes, increment `pass_number` and check the **pass budget**: if `pass_number > 3` and open findings remain, present the current state and ask the user whether to continue (with context budget warning), accept remaining gaps, or prioritize highest-impact items for one final pass. **STOP. Do NOT silently continue.** Otherwise, loop back to Phase 2 (scoped re-audit).
+After all changes, increment `pass_number` and persist it: read `.claude/state/plugin-review-writes.json`, update the `pass_number` field, and write the file back. Then check the **pass budget**: if `pass_number > 3` and open findings remain, use `AskUserQuestion` with three options: (1) "Continue — review all remaining findings" (note how many passes have been consumed and that context budget is a concern), (2) "Accept gaps — generate final report now", (3) "Final focused pass — re-audit only the highest-severity open findings." **STOP. Do NOT silently continue.** Otherwise, loop back to Phase 2 (scoped re-audit).
 
 ### Phase 6 — Convergence
 
