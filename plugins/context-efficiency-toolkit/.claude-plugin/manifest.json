@@ -1,0 +1,33 @@
+{
+  "name": "context-efficiency-toolkit",
+  "version": "0.1.0",
+  "description": "Audits Claude Code plugins for token and context efficiency, and rewrites instruction markdown files to be tightly worded and token-efficient.",
+  "author": "L3DigitalNet",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "review-context-efficiency",
+      "description": "Run a five-stage structured audit of a plugin against twelve context efficiency principles. Produces findings, consequence maps, remediation options, an implementation plan, and executes approved changes.",
+      "file": ".claude/commands/review-context-efficiency.md"
+    },
+    {
+      "name": "tighten-markdown",
+      "description": "Rewrite one or more instruction markdown files to eliminate waste and maximize token efficiency without losing behavioral information.",
+      "file": ".claude/commands/tighten-markdown.md"
+    }
+  ],
+  "skills": [
+    {
+      "name": "CONTEXT_EFFICIENCY_REVIEW",
+      "description": "Twelve context efficiency principles and five-stage review workflow for auditing Claude Code plugins.",
+      "file": ".claude/skills/CONTEXT_EFFICIENCY_REVIEW.md"
+    },
+    {
+      "name": "MARKDOWN_TIGHTEN",
+      "description": "Three-pass process for cutting, compressing, and restructuring instruction markdown files to minimize token usage.",
+      "file": ".claude/skills/MARKDOWN_TIGHTEN.md"
+    }
+  ],
+  "keywords": ["token-efficiency", "context-management", "plugin-quality", "markdown", "code-review"],
+  "claudeCodeVersion": ">=1.0.0"
+}

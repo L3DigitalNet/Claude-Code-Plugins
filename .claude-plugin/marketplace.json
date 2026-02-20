@@ -101,6 +101,18 @@
       "source": "./plugins/plugin-review",
       "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-review"
+    },
+    {
+      "name": "context-efficiency-toolkit",
+      "description": "Audits Claude Code plugins for token and context efficiency, then rewrites instruction files to be as lean as possible without losing behavioral information.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/context-efficiency-toolkit",
+      "category": "development",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/context-efficiency-toolkit"
     }
   ]
 }
