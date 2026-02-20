@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.0] - 2026-02-19
+
+### Added
+- sync local plugins to cache on SessionStart
+- auto-build TypeScript plugins before git commit
+
+### Changed
+- pre-release staging — update github-repo-manager, linux-sysadmin-mcp, release-pipeline
+- release: 6 plugin releases — agent-orchestrator 1.0.2, home-assistant-dev 2.2.0, release-pipeline 1.4.0, linux-sysadmin-mcp 1.0.2, design-assistant 0.3.0, plugin-test-harness 0.1.1
+
+### Fixed
+- remove redundant release-detection skill, show changelog before approval
+
+
 ## [1.4.2] - 2026-02-19
 
 ### Fixed
