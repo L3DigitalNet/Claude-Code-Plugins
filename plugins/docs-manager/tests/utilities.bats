@@ -44,3 +44,44 @@ teardown() { teardown_test_env; }
     run bash "$SCRIPTS_DIR/frontmatter-read.sh" "/tmp/nonexistent-file-$$.md" library
     [ "$status" -eq 1 ]
 }
+
+# --- Survival-Context Classifier Tests ---
+
+@test "is-survival-context: sysadmin + human = true" {
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" "$BATS_TEST_DIRNAME/fixtures/doc-with-frontmatter.md"
+    [ "$status" -eq 0 ]
+    [ "$output" = "true" ]
+}
+
+@test "is-survival-context: sysadmin + ai audience = false" {
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" "$BATS_TEST_DIRNAME/fixtures/doc-ai-audience.md"
+    [ "$status" -eq 0 ]
+    [ "$output" = "false" ]
+}
+
+@test "is-survival-context: file without frontmatter = false" {
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" "$BATS_TEST_DIRNAME/fixtures/doc-without-frontmatter.md"
+    [ "$status" -eq 0 ]
+    [ "$output" = "false" ]
+}
+
+@test "is-survival-context: accepts --doc-type and --audience flags" {
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" --doc-type sysadmin --audience human
+    [ "$status" -eq 0 ]
+    [ "$output" = "true" ]
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" --doc-type ai-artifact --audience human
+    [ "$status" -eq 0 ]
+    [ "$output" = "false" ]
+}
+
+@test "is-survival-context: dev type is survival" {
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" --doc-type dev --audience human
+    [ "$status" -eq 0 ]
+    [ "$output" = "true" ]
+}
+
+@test "is-survival-context: audience both is survival" {
+    run bash "$SCRIPTS_DIR/is-survival-context.sh" --doc-type sysadmin --audience both
+    [ "$status" -eq 0 ]
+    [ "$output" = "true" ]
+}
