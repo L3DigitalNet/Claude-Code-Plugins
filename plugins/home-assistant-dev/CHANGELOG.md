@@ -2,6 +2,16 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.1] - 2026-02-20
+
+### Changed
+- update version numbers in design and testing documents to v2.2.1 and v1.0.5
+- release: 6 plugin releases — agent-orchestrator 1.0.2, home-assistant-dev 2.2.0, release-pipeline 1.4.0, linux-sysadmin-mcp 1.0.2, design-assistant 0.3.0, plugin-test-harness 0.1.1
+
+### Fixed
+- update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
+
+
 ## [2.2.0] - 2026-02-19
 
 ### Added
