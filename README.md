@@ -50,7 +50,7 @@ installed plugins at the start of each session.
 | [Agent Orchestrator](#agent-orchestrator) | Commands + Hooks | `/orchestrate` | Delegates complex tasks to agent teams with context management |
 | [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
-| [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 19 skills |
+| [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | ~100 tools | Linux system administration across 15 modules |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
@@ -74,6 +74,8 @@ These principles apply across all plugins in this collection. Individual plugins
 **[P7] Fail Fast, Never Silently** — When something goes wrong, stop immediately and surface the complete failure. Raw output is always shown alongside any interpretation; errors are never swallowed or softened into ambiguity. No autonomous recovery attempts, no continuing past a known failure. The user should never wonder whether an operation succeeded.
 
 **[P8] Done is Measured, Not Declared** — Plugins that perform iterative work define completion as a measurable state — zero findings, all checks green, all tests passing — and drive toward that state across successive cycles. Success is not declared after a single pass; the plugin reports the trend and continues until the criterion is met or the user stops it.
+
+**[P9] One Concept Per Skill** — Every skill covers a single, tightly-scoped concept — narrow enough that its trigger description fits in one sentence without "or". Skills load in full when triggered; a skill spanning five related topics loads all five even when only one applies. Wide-scope skills silently tax every loosely related task with tokens that do no work. If a skill's trigger description requires "or" to cover its own content, it's two skills.
 
 ---
 
@@ -166,7 +168,7 @@ project templates.
 
 **Features:**
 
-- 19 context-aware skills covering architecture, config flows, coordinators, entities,
+- 27 context-aware skills covering architecture, config flows, coordinators, entities,
   testing, and more
 - 3 specialized agents (development, review, debugging)
 - MCP server with 12 tools for live HA connection and documentation search

@@ -38,3 +38,6 @@ Thumbs.db
 # ─── Plugin runtime state (temporary files created during plugin execution) ──
 plugins/*/state/
 plugins/*/tmp/
+
+# ─── Claude Code session state ─────────────────────────────────────────────
+**/.claude/state/

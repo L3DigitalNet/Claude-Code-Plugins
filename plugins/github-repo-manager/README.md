@@ -66,9 +66,12 @@ After activation, state what you need — Claude infers the mode:
 
 | Skill | Description |
 |-------|-------------|
-| `repo-manager` | Core orchestration — session lifecycle, tier system, module coordination |
+| `repo-manager` | Session onboarding, tier system, communication style, and error handling |
+| `repo-manager-assessment` | Full assessment orchestration — module order, cross-module dedup, unified findings, reports |
+| `repo-manager-reference` | gh-manager helper command reference |
+| `repo-config` | Configuration system — per-repo, portfolio config, precedence, validation |
 | `community-health` | Audit and manage CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue/PR templates |
-| `cross-repo` | Orchestrate operations across multiple repositories |
+| `cross-repo` | Scope inference, batch mutations, and portfolio scanning across multiple repos |
 | `dependency-audit` | Audit dependency health via dependency graph and Dependabot PRs |
 | `discussions` | Manage GitHub Discussions — find unanswered questions, close resolved threads |
 | `issue-triage` | Triage issues — label, categorize, detect linked PRs, identify stale issues |

@@ -1,105 +1,18 @@
 ---
-description: Orchestrate operations across multiple GitHub repositories. Use when asked to check, audit, or fix something across all repos, multiple repos, or a portfolio of repositories.
+description: Cross-repository operations for GitHub Repo Manager — scope inference, batch mutations, and portfolio scanning. Use when asked to check or fix something across multiple repos.
 ---
 
 # Cross-Repo Orchestration — Skill
-
-## Purpose
-
-Manage portfolio-level operations: cross-repo checks, batch mutations, scope inference, config management, and session lifecycle. This skill extends the core repo-manager skill with multi-repo capabilities.
 
 ## When This Skill Applies
 
 - Owner asks about multiple repos ("check all my repos", "which repos need X")
 - Owner asks a question scoped to a concern, not a repo ("any open PRs?", "security posture")
-- Owner references portfolio config or repo configuration
-- Owner asks to set up or modify configuration
+- Owner asks to set up or modify configuration for multiple repos
 
 ---
 
-## Helper Commands
-
-```bash
-# Config management
-gh-manager config repo-read --repo owner/name
-gh-manager config repo-write --repo owner/name [--branch BRANCH] [--dry-run]
-gh-manager config portfolio-read
-gh-manager config portfolio-write [--dry-run]
-gh-manager config resolve --repo owner/name
-
-# Cross-repo discovery (from Phase 0)
-gh-manager repos list [--type TYPE] [--limit N]
-gh-manager repos classify --repo owner/name
-```
-
----
-
-## Configuration System
-
-### Per-Repo Config (`.github-repo-manager.yml`)
-
-Lives in the repository root. Read with:
-
-```bash
-gh-manager config repo-read --repo owner/name
-```
-
-If it exists, the `parsed` field contains the config. If `parse_error` is set, tell the owner and fall back to tier defaults.
-
-### Portfolio Config (`~/.config/github-repo-manager/portfolio.yml`)
-
-Local-only. Read with:
-
-```bash
-gh-manager config portfolio-read
-```
-
-### Resolved Config
-
-Get the effective merged config for any repo:
-
-```bash
-gh-manager config resolve --repo owner/name
-```
-
-Returns the fully merged result with source tracking (which setting came from which level).
-
-### Config Precedence (highest to lowest)
-
-1. **Portfolio per-repo overrides** — owner's local config always wins
-2. **Per-repo `.github-repo-manager.yml`** — travels with the repo
-3. **Portfolio defaults** — baseline for all repos
-4. **Built-in tier defaults** — from `config/default.yml`
-
-### Creating/Updating Config
-
-**Private repos (Tiers 1-2):** Offer to create `.github-repo-manager.yml` directly in the repo:
-
-```bash
-echo "CONFIG_YAML" | gh-manager config repo-write --repo owner/name
-```
-
-**Public repos (Tiers 3-4):** Suggest using the portfolio config to avoid committing a config file to a public repo. If the owner prefers in-repo config, create via PR on Tier 4:
-
-```bash
-echo "CONFIG_YAML" | gh-manager config repo-write --repo owner/name --branch maintenance/add-config
-gh-manager prs create --repo owner/name --head maintenance/add-config --base main --title "[Maintenance] Add .github-repo-manager.yml" --label maintenance
-```
-
-### Config Validation (Skill Layer)
-
-When loading config, validate against `config/schema.yml`:
-
-- **Unknown keys:** Note and ignore. Suggest correction: "Your config has `relase_health` — did you mean `release_health`?"
-- **Invalid values:** Report and fall back to tier defaults: "Staleness threshold is -3 days, using Tier 3 default of 21 days."
-- **Type mismatches:** Coerce where obvious (e.g., `"true"` → `true`), flag where ambiguous.
-- **Never block on config errors.** Report, use fallbacks, continue.
-
----
-
-## Cross-Repo Checks
-
-### Scope Inference
+## Scope Inference
 
 Infer which repos and modules to check from the owner's request:
 
@@ -124,7 +37,9 @@ Infer which repos and modules to check from the owner's request:
 - Release readiness → Tier 4 primarily; also Tier 3 with releases (informational)
 - Discussions → repos with discussions enabled
 
-### Execution Flow
+---
+
+## Execution Flow
 
 1. **Discover repos:**
    ```bash
@@ -162,9 +77,6 @@ Missing SECURITY.md (5 repos):
   DFBU-Dotfiles-Backup-Utility (Tier 4)
   Markdown-Keeper (Tier 3)
   ...
-
-Missing CODE_OF_CONDUCT.md (5 repos):
-  [same repos]
 
 Skipped:
   forks: integration_blueprint, brands
@@ -257,55 +169,7 @@ If the owner explicitly targets an archived repo:
 
 ---
 
-## Session Lifecycle
-
-### Session Start
-
-When `/repo-manager` is invoked:
-
-1. Check helper is installed (`bash ${CLAUDE_PLUGIN_ROOT}/scripts/ensure-deps.sh`)
-2. Verify PAT (`gh-manager auth verify`)
-3. Infer scope from owner's request
-4. Load config (portfolio + per-repo)
-5. Proceed to assessment
-
-### Session Wrap-Up
-
-When the owner is done:
-
-1. **Deferred items:** Note anything assessed but not acted on
-2. **Report offer:** Offer to generate maintenance report (skip for narrow checks)
-3. **Summary:** Brief statement of what changed
-4. **Exit cleanly:** Return to normal conversation
-
-### Mid-Session Directives
-
-The owner can redirect at any time:
-- "Skip the rest, move to wiki sync"
-- "Show me the diff before you push"
-- "How many API calls have we used?"
-- "Generate a partial report"
-- "Switch to repo X"
-
----
-
-## Owner Expertise Level
-
-From portfolio config `owner.expertise`:
-
-| Level | Explanation Style |
-|-------|------------------|
-| **beginner** (default) | Full explanations, jargon translation, teaching moments |
-| **intermediate** | Uncommon concepts only, assumes PR/branch familiarity |
-| **advanced** | Terse, peer-level. Only irreversibility warnings remain |
-
-The owner can change mid-session:
-> "You don't need to explain what PRs are anymore"
-> → "Got it — I'll dial back the explanations. You can set this permanently in your portfolio config."
-
----
-
-## Error Handling for Cross-Repo Operations
+## Error Handling
 
 | Situation | Response |
 |-----------|----------|

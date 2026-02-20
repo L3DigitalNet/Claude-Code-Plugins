@@ -1,6 +1,6 @@
 ---
 name: ha-architecture
-description: Explain Home Assistant core architecture including event bus, state machine, service registry, entity lifecycle, and how integrations hook into them. Use when asking about HA internals, event propagation, state management, hass object, entity/device registries, or how integrations work under the hood.
+description: Home Assistant core internals — event bus, state machine, service registry, and integration loading. Use when asking about the hass object, event propagation, state management, service registration, or how integrations load.
 ---
 
 # Home Assistant Core Architecture
@@ -71,49 +71,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "my_action", handle_action)
     return True
 ```
-
-## Entity Lifecycle
-
-1. **Platform discovery**: `async_setup_entry` called on platform
-2. **Entity creation**: Entities instantiated, passed to `async_add_entities`
-3. **Registration**: HA assigns `entity_id`, registers in entity registry
-4. **First update**: `async_added_to_hass` called, initial state written
-5. **Updates**: Coordinator triggers `_handle_coordinator_update`
-6. **Removal**: `async_will_remove_from_hass` for cleanup
-
-```python
-class MyEntity(CoordinatorEntity):
-    async def async_added_to_hass(self) -> None:
-        await super().async_added_to_hass()
-        # Restore previous state
-        if (last_state := await self.async_get_last_state()) is not None:
-            self._attr_native_value = last_state.state
-
-    async def async_will_remove_from_hass(self) -> None:
-        await super().async_will_remove_from_hass()
-        # Cleanup resources
-```
-
-## Device and Entity Registries
-
-Device registry groups entities under physical/logical devices:
-
-```python
-from homeassistant.helpers.device_registry import DeviceInfo
-
-@property
-def device_info(self) -> DeviceInfo:
-    return DeviceInfo(
-        identifiers={(DOMAIN, self._serial)},  # Stable, unique tuple
-        name="My Device",
-        manufacturer="Acme",
-        model="Widget Pro",
-        sw_version="1.2.3",
-        configuration_url="http://192.168.1.100",
-    )
-```
-
-`identifiers` must be stable across restarts — this is how HA knows entities belong together.
 
 ## Integration Loading Order
 

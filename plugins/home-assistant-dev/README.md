@@ -8,7 +8,7 @@ This plugin brings deep Home Assistant integration expertise into Claude Code �
 
 ## Principles
 
-**[P1] Skills Over Monolith** — Knowledge is partitioned into 19 focused skills rather than one large document. Each skill loads only when Claude detects relevant context, minimising context cost on every task.
+**[P1] Skills Over Monolith** — Knowledge is partitioned into 27 focused skills rather than one large document. Each skill loads only when Claude detects relevant context, minimising context cost on every task.
 
 **[P2] IQS Compliance from Day One** — Integration Quality Scale coverage (all 52 rules) is a first-class requirement, not a post-publication concern. The plugin guides toward Gold tier from the first line of code.
 
@@ -39,7 +39,7 @@ claude --plugin-dir ./Claude-Code-Plugins/plugins/home-assistant-dev
 Verify the plugin loaded correctly after installation:
 ```bash
 /plugin list
-/skills    # Shows all available skills including the 19 ha-* skills
+/skills    # Shows all available skills including the 27 ha-* skills
 ```
 
 Validation scripts (`scripts/`) require Python 3.13+ and are run directly from the plugin cache directory or the source tree.
@@ -79,23 +79,31 @@ Skills are automatically invoked when Claude detects relevant context:
 
 | Skill | Description |
 |-------|-------------|
-| `ha-architecture` | Core HA internals: event bus, state machine, entity lifecycle |
+| `ha-architecture` | Core HA internals: event bus, state machine, service registry, and integration loading |
+| `ha-entity-lifecycle` | Entity lifecycle and device/entity registries — async_added_to_hass, device_info, identifiers |
 | `ha-integration-scaffold` | Scaffold integrations with correct file structure |
-| `ha-config-flow` | Config flows, options flows, reauth, discovery |
+| `ha-config-flow` | Config flow for initial integration setup — user step, unique_id, discovery |
+| `ha-options-flow` | Options flow for post-setup preferences, and reauth when credentials expire |
 | `ha-coordinator` | DataUpdateCoordinator patterns and error handling |
 | `ha-entity-platforms` | Entity platforms (sensor, switch, light, cover, climate, etc.) |
 | `ha-service-actions` | Service actions in Python and YAML |
 | `ha-async-patterns` | Async Python patterns for Home Assistant |
 | `ha-testing` | pytest patterns with the hass fixture |
 | `ha-debugging` | Troubleshooting and diagnostics |
-| `ha-yaml-automations` | YAML automations, scripts, and blueprints |
+| `ha-yaml-automations` | YAML automations — triggers, conditions, and actions |
+| `ha-scripts` | YAML scripts — callable, reusable action sequences with optional parameters |
+| `ha-blueprints` | YAML blueprints — reusable automation templates with configurable inputs |
 | `ha-quality-review` | Integration Quality Scale (all 52 rules) |
-| `ha-hacs` | HACS compliance, hacs.json, brands, publishing |
+| `ha-hacs` | HACS metadata — hacs.json, manifest.json fields, and repository structure |
+| `ha-hacs-publishing` | Publish to HACS — GitHub Actions, release workflow, brands submission |
 | `ha-diagnostics` | Diagnostics implementation (Gold tier) |
-| `ha-migration` | Version migration and deprecation fixes |
+| `ha-migration` | Integration upgrade guide — entry point for version migration and deprecation fixes |
+| `ha-config-migration` | Config entry version migration — VERSION, MINOR_VERSION, async_migrate_entry |
+| `ha-deprecation-fixes` | Fix deprecation warnings for HA 2024.x/2025.x compatibility |
 | `ha-documentation` | README and documentation generation |
 | `ha-repairs` | Repair issues and fix flows (Gold tier) |
-| `ha-device-triggers` | Device triggers, conditions, and actions |
+| `ha-device-triggers` | Device triggers — allow automations to fire on hardware events |
+| `ha-device-conditions-actions` | Device conditions and actions for automation — device_condition.py, device_action.py |
 | `ha-websocket-api` | Custom WebSocket API commands |
 | `ha-recorder` | Statistics and history integration |
 
@@ -161,7 +169,7 @@ The plugin covers all 52 IQS rules across 4 tiers:
 home-assistant-dev/
 ├── .claude-plugin/
 │   └── plugin.json
-├── skills/                    # 19 skills
+├── skills/                    # 27 skills
 ├── agents/                    # 3 agents
 ├── commands/                  # 3 commands
 ├── scripts/                   # 5 validation scripts

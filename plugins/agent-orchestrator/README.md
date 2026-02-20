@@ -50,7 +50,9 @@ For complex tasks, the orchestrator will:
 
 | Skill | Description |
 |-------|-------------|
-| `orchestration` | Context management patterns, teammate protocol, and ledger format — invoked when coordinating agent teams |
+| `orchestration-context` | Compaction and handoff rules for lead/teammates/subagents |
+| `orchestration-execution` | Wave-based parallel execution and teammate health monitoring |
+| `orchestration-state` | Single-writer ledger, worktree paths, and structured return templates |
 
 ## Agents
 
