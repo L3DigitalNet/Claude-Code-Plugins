@@ -15,9 +15,18 @@ You are the test runner agent for a release pipeline pre-flight check.
 4. Parse the output for: total tests, passed, failed, skipped
 5. If a coverage tool is available (pytest-cov, nyc, coverage), report the coverage percentage
 
-## Output Format
+## Waiver Lookup
 
-Report a structured summary:
+When no test runner is detected (step 2 fails and CLAUDE.md has no test command), before reporting FAIL run:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json missing_tests [plugin-name]
+```
+
+If exit 0 (waived): report `⊘ missing_tests WAIVED — <reason>` and set status to PASS.
+If exit 1 (not waived): proceed with original FAIL behavior ("No test runner found").
+
+## Output Format
 
 ```
 TEST RESULTS
@@ -32,5 +41,5 @@ Details: [any failure messages, truncated to 20 lines max]
 
 - Run the tests ONCE. Do not retry failures.
 - If tests fail, still report the full summary — do not stop at the first failure.
-- If no test runner is detected and CLAUDE.md has no test command, report FAIL with "No test runner found".
+- If no test runner is detected and CLAUDE.md has no test command, check waiver before reporting FAIL.
 - Do not modify any files. You are read-only except for running the test command.
