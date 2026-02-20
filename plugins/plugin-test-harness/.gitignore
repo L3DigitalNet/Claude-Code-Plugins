@@ -1,5 +1,10 @@
 node_modules/
-dist/
-*.js.map
+# Override root .gitignore: commit dist/ so installed plugin and test fixtures have built JS
+!dist/
+!test/fixtures/*/dist/
+dist/**/*.js.map
+dist/**/*.d.ts.map
+test/fixtures/*/dist/**/*.js.map
+test/fixtures/*/dist/**/*.d.ts.map
 .pth/
 .claude/

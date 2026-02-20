@@ -1,7 +1,7 @@
 {
   "name": "release-pipeline",
   "description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"
