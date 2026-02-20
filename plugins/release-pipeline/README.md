@@ -16,7 +16,7 @@ Release Pipeline streamlines the full release lifecycle into a single `/release`
 
 **[P4] Parallel Where Possible** — Pre-flight checks (tests, docs, git state) run in parallel agents. Concurrency is exploited where safe; sequential logic is preserved at critical approval gates.
 
-**[P5] Dry Run is Always Available** — Every release type supports a simulation that exercises full pipeline logic without any mutations. A clean dry run is a prerequisite, not a courtesy.
+**[P5] Dry Run for Tag-Creating Paths** — All release paths that create tags or GitHub releases (Full Release, Plugin Release) support a full simulation via Dry Run that exercises complete pipeline logic without any mutations. Release Status provides a read-only preview for Quick Merge.
 
 ## Installation
 

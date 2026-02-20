@@ -12,7 +12,21 @@
       }
     },
     "abort": {
-      "already_configured": "This device is already configured."
+      "already_configured": "This device is already configured.",
+      "reauth_successful": "Reauthentication successful."
+    }
+  },
+  "reauth": {
+    "step": {
+      "reauth_confirm": {
+        "title": "Reconnect to Push Device",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "The updated IP address or hostname of your push device"
+        }
+      }
     }
   },
   "entity": {

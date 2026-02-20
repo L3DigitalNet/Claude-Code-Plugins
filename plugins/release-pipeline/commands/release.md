@@ -106,6 +106,12 @@ Use **AskUserQuestion** to present the release menu. Build the options dynamical
    - description: `"Release a single plugin with scoped tag and changelog (<N> plugins with unreleased changes)"` where N is `len(unreleased_plugins)`
    - If `unreleased_plugins` is empty: `"Release a single plugin with scoped tag and changelog (all plugins up to date)"`
 
+Before calling `AskUserQuestion`, output one context line:
+
+```
+Branch: <current_branch>  |  Last tag: <last_tag>  |  <commit_count> commits since last tag
+```
+
 **Question text:** `"What would you like to do?"`
 **Header:** `"Release"`
 
@@ -144,10 +150,15 @@ If `git status --porcelain` returned output:
 
 1. Stage all changes: `git add -A`
 2. Generate a commit message from `git diff --cached --stat` (summarize the changes)
-3. Show the user: file count, change summary, proposed commit message
-4. Print: **"Review the changes above. Reply GO to proceed, or anything else to abort."**
-5. WAIT for user response. If not "GO" → report "Quick merge aborted." and stop.
-6. Commit with the generated message.
+3. Show the user the `git diff --cached --stat` output and the proposed commit message
+4. Use **AskUserQuestion**:
+   - question: `"Stage and commit these changes?"`
+   - header: `"Commit"`
+   - options:
+     1. label: `"Proceed"`, description: `"Commit all staged changes with the message above"`
+     2. label: `"Abort"`, description: `"Cancel — do not stage or commit anything"`
+   If "Abort" → report "Quick merge aborted." and stop.
+5. Commit with the generated message.
 
 If the working tree is clean, skip directly to Step 3.
 
@@ -155,9 +166,13 @@ If the working tree is clean, skip directly to Step 3.
 
 Show the user a summary of what will happen: commit count on testing ahead of main, files changed.
 
-Print: **"Ready to merge testing into main. Reply GO to proceed, or anything else to abort."**
-
-WAIT for user response. If not "GO" → report "Quick merge aborted." and stop.
+Use **AskUserQuestion**:
+- question: `"Merge testing into main and push?"`
+- header: `"Merge"`
+- options:
+  1. label: `"Proceed"`, description: `"Merge testing → main and push to origin"`
+  2. label: `"Abort"`, description: `"Cancel — no changes will be made"`
+If "Abort" → report "Quick merge aborted." and stop.
 
 ```bash
 git checkout main
@@ -236,14 +251,14 @@ prompt: |
 
 **After all three return:**
 
-Display each agent's summary in a consolidated pre-flight report:
+Display each agent's summary in a consolidated pre-flight report. Use ✓ for PASS, ⚠ for WARN, and ✗ for FAIL:
 
 ```
 PRE-FLIGHT RESULTS
 ==================
-Tests:    PASS | FAIL  — <one-line summary>
-Docs:     PASS | WARN | FAIL  — <one-line summary>
-Git:      PASS | FAIL  — <one-line summary>
+<✓|✗> Tests:  PASS|FAIL  — <one-line summary>
+<✓|⚠|✗> Docs: PASS|WARN|FAIL  — <one-line summary>
+<✓|✗> Git:   PASS|FAIL  — <one-line summary>
 ```
 
 - If **ANY agent reports FAIL** → STOP. Display the failure details and suggest: "Fix the issues above and re-run `/release`."
@@ -273,9 +288,13 @@ Display: version file changes, changelog preview (first 30 lines of the generate
 
 **Step 4 — Approval gate:**
 
-Print: **"Review the changes above. Reply GO to proceed with the release, or anything else to abort."**
-
-WAIT for user response. If not approval → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
+Use **AskUserQuestion**:
+- question: `"Proceed with the v<version> release?"`
+- header: `"Release"`
+- options:
+  1. label: `"Proceed"`, description: `"Commit, tag, merge to main, and push"`
+  2. label: `"Abort"`, description: `"Cancel — revert all changes (git checkout -- .)"`
+If "Abort" → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
 
 ### Phase 3 — Release (Sequential)
 
@@ -325,9 +344,9 @@ Display a completion report:
 ```
 RELEASE COMPLETE: v<version>
 ============================
-Tests:     <result from Phase 1>
-Docs:      <result from Phase 1>
-Git:       <result from Phase 1>
+Tests:     ✓ PASS | ✗ FAIL — <one-line summary from Phase 1>
+Docs:      ✓ PASS | ⚠ WARN | ✗ FAIL — <one-line summary from Phase 1>
+Git:       ✓ PASS | ✗ FAIL — <one-line summary from Phase 1>
 Version:   <files bumped>
 Changelog: updated
 Tag:       v<version>
@@ -462,9 +481,13 @@ Display: version changes, changelog preview (first 30 lines), marketplace.json c
 
 **Step 4 — Approval gate:**
 
-Print: **"Review the changes above. Reply GO to proceed with the <plugin-name> v<version> release, or anything else to abort."**
-
-WAIT for user response. If not approval → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
+Use **AskUserQuestion**:
+- question: `"Proceed with the <plugin-name> v<version> release?"`
+- header: `"Release"`
+- options:
+  1. label: `"Proceed"`, description: `"Commit, tag, merge to main, and push"`
+  2. label: `"Abort"`, description: `"Cancel — revert all changes (git checkout -- .)"`
+If "Abort" → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
 
 ### Phase 3 — Scoped Release (Sequential)
 
@@ -508,9 +531,9 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/verify-release.sh . <version> --plugin <plugi
 ```
 RELEASE COMPLETE: <plugin-name> v<version>
 ==========================================
-Tests:     <result from Phase 1>
-Docs:      <result from Phase 1>
-Git:       <result from Phase 1>
+Tests:     ✓ PASS | ✗ FAIL — <one-line summary from Phase 1>
+Docs:      ✓ PASS | ⚠ WARN | ✗ FAIL — <one-line summary from Phase 1>
+Git:       ✓ PASS | ✗ FAIL — <one-line summary from Phase 1>
 Version:   plugins/<plugin-name>/.claude-plugin/plugin.json, marketplace.json
 Changelog: plugins/<plugin-name>/CHANGELOG.md
 Tag:       <plugin-name>/v<version>
@@ -552,7 +575,7 @@ List commits since last tag, categorized:
 git log <last_tag>..HEAD --oneline --no-merges
 ```
 
-Display them grouped by conventional commit type (feat, fix, chore, docs, etc.).
+Display them grouped by conventional commit type (feat, fix, chore, docs, etc.). If there are more than 15 commits, show 15 and add: `…and <N> more commits`.
 
 ### Step 3 — Monorepo Breakdown (if applicable)
 
@@ -579,13 +602,20 @@ If it doesn't → "⚠ Changelog may be out of date — last entry is vA.B.C but
 
 ### Done
 
-No further action. Display: "Status check complete. Run `/release` again to perform a release."
+No further action. Display: "Status check complete. Use `/release` to start a release."
 
 ---
 
 ## Mode 5: Dry Run
 
 Simulates a Full Release without committing, tagging, or pushing. All changes are reverted at the end.
+
+**First, output this banner:**
+
+```
+⚠ DRY RUN — no changes will be committed, tagged, or pushed
+  File modifications will be made temporarily and reverted at the end.
+```
 
 ### Step 0 — Version Selection
 
@@ -686,7 +716,7 @@ Display: "Preview discarded. No changes made."
 
 ## Rollback Suggestions
 
-If a failure occurs, suggest the appropriate rollback based on what phase failed:
+If a failure occurs, identify which phase failed and show ONLY the corresponding row from this table — do not show the full table:
 
 | Phase | What happened | Rollback command |
 |-------|--------------|-----------------|

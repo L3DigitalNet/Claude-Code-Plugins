@@ -9,7 +9,7 @@ export function registerBackupTools(ctx: PluginContext): void {
     return success("bak_list", ctx.targetHost, r.durationMs, `ls ${p}`, { backups: r.stdout.trim(), path: p });
   });
 
-  registerTool(ctx, { name: "bak_create", description: "Create a backup of paths using tar or rsync. Moderate risk.", module: "backup", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ paths: z.array(z.string().min(1)).min(1).describe("Paths to back up"), destination: z.string().optional().describe("Destination dir (defaults to config)"), method: z.enum(["tar", "rsync"]).optional().default("tar"), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "bak_create", description: "Create a backup of paths using tar or rsync. Moderate risk.", module: "backup", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ paths: z.array(z.string().min(1)).min(1).describe("Paths to back up"), destination: z.string().optional().describe("Destination dir (defaults to config)"), method: z.enum(["tar", "rsync"]).optional().default("tar"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const dest = (args.destination as string) ?? ctx.config.documentation.repo_path ?? "/var/backups";
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     const hostname = ctx.targetHost.replace(/[^a-zA-Z0-9-]/g, "_");
@@ -29,7 +29,7 @@ export function registerBackupTools(ctx: PluginContext): void {
     return success("bak_create", ctx.targetHost, r.durationMs, cmd, { destination: dest, method: args.method });
   });
 
-  registerTool(ctx, { name: "bak_restore", description: "Restore from a backup. High risk.", module: "backup", riskLevel: "high", duration: "slow", inputSchema: z.object({ source: z.string().min(1).describe("Backup file/directory"), destination: z.string().optional().default("/").describe("Restore target"), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "bak_restore", description: "Restore from a backup. High risk.", module: "backup", riskLevel: "high", duration: "slow", inputSchema: z.object({ source: z.string().min(1).describe("Backup file/directory"), destination: z.string().optional().default("/").describe("Restore target"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const src = args.source as string;
     const dest = (args.destination as string) ?? "/";
     let cmd: string;
@@ -47,7 +47,7 @@ export function registerBackupTools(ctx: PluginContext): void {
     return success("bak_restore", ctx.targetHost, r.durationMs, cmd, { restored_from: src, restored_to: dest });
   });
 
-  registerTool(ctx, { name: "bak_schedule", description: "Schedule a recurring backup via cron. Moderate risk.", module: "backup", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ paths: z.array(z.string()).min(1), destination: z.string().min(1), schedule: z.string().min(9).describe("Cron schedule"), retention_days: z.number().int().min(1).optional().default(30), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "bak_schedule", description: "Schedule a recurring backup via cron. Moderate risk.", module: "backup", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ paths: z.array(z.string()).min(1), destination: z.string().min(1), schedule: z.string().min(9).describe("Cron schedule"), retention_days: z.number().int().min(1).optional().default(30), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
     const paths = (args.paths as string[]).join(" ");
     const dest = args.destination as string;
     const ret = (args.retention_days as number) ?? 30;

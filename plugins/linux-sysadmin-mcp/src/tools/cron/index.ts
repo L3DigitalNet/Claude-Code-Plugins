@@ -13,7 +13,7 @@ export function registerCronTools(ctx: PluginContext): void {
     return success("cron_list", ctx.targetHost, r.durationMs, cmd, { crontab: r.stdout.trim() });
   });
 
-  registerTool(ctx, { name: "cron_add", description: "Add a crontab entry. Moderate risk.", module: "cron", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ schedule: z.string().min(9).describe("Cron schedule (e.g. '0 * * * *')"), command: z.string().min(1), user: z.string().optional(), comment: z.string().optional(), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "cron_add", description: "Add a crontab entry. Moderate risk.", module: "cron", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ schedule: z.string().min(9).describe("Cron schedule (e.g. '0 * * * *')"), command: z.string().min(1), user: z.string().optional(), comment: z.string().optional(), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
     const u = args.user ? `-u ${args.user}` : "";
     const commentLine = args.comment ? `# ${args.comment}\n` : "";
     const entry = `${commentLine}${args.schedule} ${args.command}`;
@@ -25,7 +25,7 @@ export function registerCronTools(ctx: PluginContext): void {
     return success("cron_add", ctx.targetHost, r.durationMs, cmd, { added: entry.trim() });
   });
 
-  registerTool(ctx, { name: "cron_remove", description: "Remove a crontab entry by pattern. Moderate risk.", module: "cron", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ pattern: z.string().min(1).describe("Pattern to match the line to remove"), user: z.string().optional(), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "cron_remove", description: "Remove a crontab entry by pattern. Moderate risk.", module: "cron", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ pattern: z.string().min(1).describe("Pattern to match the line to remove"), user: z.string().optional(), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
     const u = args.user ? `-u ${args.user}` : "";
     const cmd = `crontab -l ${u} 2>/dev/null | grep -v '${args.pattern}' | crontab - ${u}`;
     const gate = ctx.safetyGate.check({ toolName: "cron_remove", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Remove cron entries matching: ${args.pattern}`, confirmed: args.confirmed as boolean });

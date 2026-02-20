@@ -35,7 +35,11 @@ echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
   - **You become the active coordinator.** After each subagent completes: read output, update ledger, determine if others are unblocked, dispatch next.
   - Run workstreams **sequentially within each wave**. Independent subagents can still be parallelized.
   - Cross-workstream communication happens through you: include subagent A's findings in subagent B's prompt.
-  - **Be transparent with the user:** Fallback mode preserves all context management benefits but executes sequentially. Expect ~2-4x slower wall-clock time. Quality improvement comes from discipline and context isolation, not parallelism.
+  - **Output to user:**
+    ```
+    ⚠ Subagent fallback mode — no agent teams detected. Running workstreams sequentially.
+      Expect slower completion; context isolation and coordination discipline still apply.
+    ```
 
 ---
 
@@ -160,9 +164,16 @@ EOF
 
 This ensures the plan survives context loss between Phase 1 and Phase 2.
 
-**STOP. Wait for explicit user approval before proceeding.**
+Use **AskUserQuestion**:
+- question: `"Does this orchestration plan look good?"`
+- header: `"Approve Plan"`
+- options:
+  1. label: `"Approve — proceed to Phase 2"`, description: `"Set up infrastructure, create worktrees, and spawn teammates"`
+  2. label: `"Request changes"`, description: `"Describe adjustments; I'll revise the plan and ask again"`
+  3. label: `"Cancel"`, description: `"Abort — no infrastructure or teammates will be created"`
 
-Revise if the user requests changes. Do not begin Phase 2 until approved.
+If "Request changes" → ask what to change, update the plan, re-persist it, and re-present for approval.
+If "Cancel" → say "Orchestration cancelled." and stop.
 
 ---
 
@@ -208,14 +219,10 @@ git worktree add .worktrees/<teammate-name> -b orchestrator/<teammate-name>
 
 **Mechanical enforcement:** This plugin's PreToolUse hook blocks Write/Edit/MultiEdit on files outside `.claude/state/` when `ORCHESTRATOR_LEAD=1` is set (which it is for this session). Teammates are not affected.
 
-**Behavioral enforcement (backup):** Switch to delegate mode using `Shift+Tab` if available, and reinforce:
+**Behavioral enforcement (backup):** Switch to delegate mode using `Shift+Tab` if available, and output:
 
 ```
-From this point forward I am the lead orchestrator in DELEGATE MODE.
-I coordinate, monitor the ledger, resolve blockers, and synthesize results.
-I do NOT edit source files. I do NOT implement features.
-The ONLY files I may write to are inside .claude/state/.
-If I am about to edit any other file, I STOP and delegate.
+🔒 Delegate mode active — coordinating only. All file edits go to teammates.
 ```
 
 ### 2.3 Spawn Teammates
@@ -341,11 +348,11 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-worktrees.sh"
 Spawn the **integration-checker** agent (tool-restricted to read-only + Bash for tests). It reports:
 
 ```
-BUILD: [pass | fail — one-line error if fail]
-TESTS: [X passed, Y failed, Z skipped — list failing test names if any]
-IMPORTS: [pass | list of broken import paths]
-TYPES: [pass | list of type mismatches]
-BLOCKERS: [none | list of issues that must be fixed before merge]
+BUILD:    ✓ pass | ✗ fail — <one-line error>
+TESTS:    ✓ X passed, Y failed, Z skipped — <failing test names if any>
+IMPORTS:  ✓ pass | ✗ <broken import paths>
+TYPES:    ✓ pass | ✗ <type mismatches>
+BLOCKERS: ✓ none | ✗ <issues that must be fixed before merge>
 ```
 
 ### 3.3 Quality Gate
@@ -374,23 +381,46 @@ If integration reports issues:
 
 ### 3.5 Report to User
 
-Present a concise summary:
-- What was done (organized by workstream)
-- Files created or modified (list only)
-- Test results (pass/fail with failure details)
-- Merge status (if worktrees were used)
-- Deferred items or recommendations
-- Pointer to `.claude/state/ledger.md` for full audit trail
+Present the summary in this format:
+
+```
+## Orchestration Complete
+
+### Workstreams
+<teammate name>: <1-sentence result>
+...
+
+### Files changed
+- path/to/file.ext — <brief description>
+...
+
+### Tests
+<✓ X passed | ✗ Y failed — failing test names>
+
+### Merge
+<✓ All branches merged | ✗ Conflict in <branch> — see details>
+[Omit if worktrees were not used]
+
+### Deferred
+- <item>
+[Omit section if none]
+
+Full audit trail: .claude/state/ledger.md
+```
 
 ### 3.6 Cleanup
 
-Ask the user whether to preserve or remove orchestration artifacts:
+Use **AskUserQuestion**:
+- question: `"Keep orchestration artifacts in .claude/state/?"`
+- header: `"Cleanup"`
+- options:
+  1. label: `"Keep (Recommended)"`, description: `"Leave .claude/state/ in place as an audit trail"`
+  2. label: `"Remove"`, description: `"Delete .claude/state/ — runs cleanup-state.sh"`
 
-- **Preserve (default):** Leave `.claude/state/` in place as an audit trail.
-- **Clean up:**
-  ```bash
-  bash "${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-state.sh"
-  ```
+If "Remove":
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-state.sh"
+```
 
 ---
 

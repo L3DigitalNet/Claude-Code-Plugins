@@ -29,7 +29,7 @@ export function registerContainerTools(ctx: PluginContext): void {
   });
 
   for (const action of ["start", "stop", "restart"] as const) {
-    registerTool(ctx, { name: `ctr_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a container. Moderate risk.`, module: "containers", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ container: z.string().min(1), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: action === "stop" } }, async (args) => {
+    registerTool(ctx, { name: `ctr_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a container. Moderate risk.`, module: "containers", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ container: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: action === "stop" } }, async (args) => {
       const cmd = `${rt(ctx)} ${action} ${args.container}`;
       const gate = ctx.safetyGate.check({ toolName: `ctr_${action}`, toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `${action} container ${args.container}`, confirmed: args.confirmed as boolean });
       if (gate) return gate;
@@ -39,7 +39,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     });
   }
 
-  registerTool(ctx, { name: "ctr_remove", description: "Remove a container. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ container: z.string().min(1), force: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "ctr_remove", description: "Remove a container. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ container: z.string().min(1), force: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `${rt(ctx)} rm ${args.force ? "-f" : ""} ${args.container}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove container ${args.container}`, confirmed: args.confirmed as boolean });
     if (gate) return gate;
@@ -48,7 +48,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     return success("ctr_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.container });
   });
 
-  registerTool(ctx, { name: "ctr_image_pull", description: "Pull a container image. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "ctr_image_pull", description: "Pull a container image. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = `${rt(ctx)} pull ${args.image}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_image_pull", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Pull image ${args.image}`, confirmed: args.confirmed as boolean });
     if (gate) return gate;
@@ -57,7 +57,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     return success("ctr_image_pull", ctx.targetHost, r.durationMs, cmd, { pulled: args.image });
   });
 
-  registerTool(ctx, { name: "ctr_image_remove", description: "Remove a container image. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "ctr_image_remove", description: "Remove a container image. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `${rt(ctx)} rmi ${args.image}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_image_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove image ${args.image}`, confirmed: args.confirmed as boolean });
     if (gate) return gate;
@@ -72,7 +72,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     return success("ctr_compose_status", ctx.targetHost, r.durationMs, "compose ps", { output: r.stdout.trim() });
   });
 
-  registerTool(ctx, { name: "ctr_compose_up", description: "Start a Compose project. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ project_dir: z.string().min(1), detach: z.boolean().optional().default(true), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "ctr_compose_up", description: "Start a Compose project. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ project_dir: z.string().min(1), detach: z.boolean().optional().default(true), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose up ${args.detach ? "-d" : ""}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_compose_up", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Start compose project in ${args.project_dir}`, confirmed: args.confirmed as boolean });
     if (gate) return gate;
@@ -81,7 +81,7 @@ export function registerContainerTools(ctx: PluginContext): void {
     return success("ctr_compose_up", ctx.targetHost, r.durationMs, cmd, { started: true });
   });
 
-  registerTool(ctx, { name: "ctr_compose_down", description: "Stop and remove a Compose project. High risk.", module: "containers", riskLevel: "high", duration: "normal", inputSchema: z.object({ project_dir: z.string().min(1), volumes: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "ctr_compose_down", description: "Stop and remove a Compose project. High risk.", module: "containers", riskLevel: "high", duration: "normal", inputSchema: z.object({ project_dir: z.string().min(1), volumes: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose down ${args.volumes ? "-v" : ""}`;
     const gate = ctx.safetyGate.check({ toolName: "ctr_compose_down", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Stop compose project in ${args.project_dir}`, confirmed: args.confirmed as boolean });
     if (gate) return gate;

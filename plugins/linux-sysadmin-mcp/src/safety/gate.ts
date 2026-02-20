@@ -89,6 +89,7 @@ export class SafetyGate {
         command: params.command,
         description: params.description,
         warnings,
+        affected_services: params.serviceName ? [params.serviceName] : undefined,
         escalation_reason: escalationReason,
       },
     };

@@ -2,6 +2,19 @@
 
 A **Silver-tier** example demonstrating push-based (non-polling) integrations.
 
+## Installation
+
+1. Copy `custom_components/push_example` to your Home Assistant `custom_components` folder
+2. Restart Home Assistant
+3. Go to **Settings → Devices & Services → Add Integration**
+4. Search for "Push Example"
+
+### Configuration Parameters
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| **Host** | IP address or hostname of your push device | ✓ |
+
 ## When to Use Push Pattern
 
 Use this pattern when your device:

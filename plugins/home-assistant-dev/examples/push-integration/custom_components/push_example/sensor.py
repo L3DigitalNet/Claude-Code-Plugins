@@ -20,6 +20,11 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import SIGNAL_UPDATE, PushCoordinator
 
 
+# Silver IQS: parallel-updates
+# Push entities update via dispatcher — no concurrent update management needed.
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PushConfigEntry,

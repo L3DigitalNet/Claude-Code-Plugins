@@ -74,7 +74,7 @@ export function registerServiceTools(ctx: PluginContext): void {
       description: `${action.charAt(0).toUpperCase() + action.slice(1)} a service. Moderate risk (may escalate via knowledge profiles).`,
       module: "services", riskLevel: "moderate", duration: "quick",
       inputSchema: z.object({
-        service: z.string().min(1), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+        service: z.string().min(1).describe("Service or unit name (e.g. 'nginx', 'nginx.service')"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
       }),
       annotations: { destructiveHint: action === "stop" },
     }, async (args) => {
@@ -96,9 +96,9 @@ export function registerServiceTools(ctx: PluginContext): void {
   // ── svc_enable / svc_disable ────────────────────────────────────
   for (const action of ["enable", "disable"] as const) {
     registerTool(ctx, {
-      name: `svc_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a service at boot.`,
+      name: `svc_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a service at boot. Moderate risk.`,
       module: "services", riskLevel: "moderate", duration: "quick",
-      inputSchema: z.object({ service: z.string().min(1), confirmed: z.boolean().optional().default(false) }),
+      inputSchema: z.object({ service: z.string().min(1).describe("Service or unit name (e.g. 'nginx', 'nginx.service')"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }),
       annotations: { destructiveHint: false },
     }, async (args) => {
       const svc = args.service as string;
@@ -106,9 +106,10 @@ export function registerServiceTools(ctx: PluginContext): void {
       const gate = ctx.safetyGate.check({
         toolName: `svc_${action}`, toolRiskLevel: "moderate", targetHost: ctx.targetHost,
         command: cmd.argv.join(" "), description: `${action} service ${svc} at boot`,
-        confirmed: args.confirmed as boolean,
+        confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean,
       });
       if (gate) return gate;
+      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
       const r = await executeCommand(ctx, `svc_${action}`, cmd, "quick");
       if (r.exitCode !== 0) return error(`svc_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
       return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action });
@@ -120,7 +121,7 @@ export function registerServiceTools(ctx: PluginContext): void {
     name: "svc_logs", description: "Retrieve recent logs for a service. Consults knowledge profile for all log sources.",
     module: "services", riskLevel: "read-only", duration: "quick",
     inputSchema: z.object({
-      service: z.string().min(1), lines: z.number().int().min(1).max(500).optional().default(50),
+      service: z.string().min(1).describe("Service or unit name (e.g. 'nginx', 'nginx.service')"), lines: z.number().int().min(1).max(500).optional().default(50).describe("Number of log lines to retrieve (default 50, max 500)"),
       since: z.string().optional().describe("Time filter e.g. '1 hour ago', '2024-01-01'"),
     }),
     annotations: { readOnlyHint: true },

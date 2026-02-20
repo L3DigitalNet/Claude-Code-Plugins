@@ -24,7 +24,7 @@ export function registerNetworkingTools(ctx: PluginContext): void {
     return success("net_routes_show", ctx.targetHost, r.durationMs, "ip route show", { routes: r.stdout.trim() });
   });
 
-  registerTool(ctx, { name: "net_test", description: "Connectivity tests: ping, traceroute, dig.", module: "networking", riskLevel: "read-only", duration: "normal", inputSchema: z.object({ target: z.string().min(1), test: z.enum(["ping", "traceroute", "dig", "all"]).optional().default("ping") }), annotations: { readOnlyHint: true } }, async (args) => {
+  registerTool(ctx, { name: "net_test", description: "Connectivity tests: ping, traceroute, dig.", module: "networking", riskLevel: "read-only", duration: "normal", inputSchema: z.object({ target: z.string().min(1), test: z.enum(["ping", "traceroute", "dig", "all"]).optional().default("ping").describe("Test to run: 'ping' (ICMP reachability), 'traceroute' (path hops), 'dig' (DNS lookup), or 'all' (runs all three)") }), annotations: { readOnlyHint: true } }, async (args) => {
     const t = args.target as string;
     const test = (args.test as string) ?? "ping";
     const results: Record<string, string> = {};
@@ -34,7 +34,7 @@ export function registerNetworkingTools(ctx: PluginContext): void {
     return success("net_test", ctx.targetHost, 0, `connectivity test: ${test}`, results);
   });
 
-  registerTool(ctx, { name: "net_dns_modify", description: "Modify DNS configuration. Moderate risk.", module: "networking", riskLevel: "moderate", duration: "normal", inputSchema: z.object({ nameservers: z.array(z.string()).min(1), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "net_dns_modify", description: "Modify DNS configuration. Moderate risk.", module: "networking", riskLevel: "moderate", duration: "normal", inputSchema: z.object({ nameservers: z.array(z.string()).min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const ns = (args.nameservers as string[]).map((s) => `nameserver ${s}`).join("\n");
     const cmd = `sudo cp /etc/resolv.conf /etc/resolv.conf.bak && echo '${ns}' | sudo tee /etc/resolv.conf`;
     const gate = ctx.safetyGate.check({ toolName: "net_dns_modify", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Set DNS servers: ${(args.nameservers as string[]).join(", ")}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
@@ -45,7 +45,7 @@ export function registerNetworkingTools(ctx: PluginContext): void {
     return success("net_dns_modify", ctx.targetHost, r.durationMs, cmd, { nameservers: args.nameservers, backup: "/etc/resolv.conf.bak" });
   });
 
-  registerTool(ctx, { name: "net_routes_modify", description: "Add/delete routing table entries. High risk.", module: "networking", riskLevel: "high", duration: "quick", inputSchema: z.object({ action: z.enum(["add", "delete"]), destination: z.string().min(1), gateway: z.string().optional(), interface: z.string().optional(), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "net_routes_modify", description: "Add/delete routing table entries. High risk.", module: "networking", riskLevel: "high", duration: "quick", inputSchema: z.object({ action: z.enum(["add", "delete"]), destination: z.string().min(1).describe("Route destination in CIDR notation or 'default' (e.g. '192.168.1.0/24')"), gateway: z.string().optional().describe("Next-hop gateway IP address (omit for interface-only routes)"), interface: z.string().optional().describe("Network interface to use (e.g. 'eth0', 'ens3')"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     let cmd = `sudo ip route ${args.action} ${args.destination}`;
     if (args.gateway) cmd += ` via ${args.gateway}`;
     if (args.interface) cmd += ` dev ${args.interface}`;

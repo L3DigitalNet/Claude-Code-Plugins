@@ -19,7 +19,7 @@ fi
 
 for branch in $BRANCHES; do
   echo ""
-  echo "--- Merging $branch ---"
+  echo "=== Merging $branch ==="
 
   # Check if branch has any commits beyond base
   COMMIT_COUNT=$(git log "$BASE..$branch" --oneline 2>/dev/null | wc -l)
@@ -30,12 +30,12 @@ for branch in $BRANCHES; do
 
   if ! git merge --no-ff "$branch" -m "Orchestrator: merge $branch"; then
     echo ""
-    echo "  CONFLICT in $branch — stopping for resolution."
-    echo "  Resolve the conflict, then re-run this script for remaining branches."
+    echo "  ✗ CONFLICT in $branch — stopping for resolution."
+    echo "  Fix the conflict, then re-run this script for remaining branches."
     exit 1
   fi
 
-  echo "  Merged $branch successfully ($COMMIT_COUNT commits)."
+  echo "  ✓ Merged $branch ($COMMIT_COUNT commits)."
 done
 
 echo ""

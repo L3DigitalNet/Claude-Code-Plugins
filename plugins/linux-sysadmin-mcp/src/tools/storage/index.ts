@@ -19,7 +19,7 @@ export function registerStorageTools(ctx: PluginContext): void {
     return success("mount_list", ctx.targetHost, r.durationMs, "findmnt", { mounts: r.stdout.trim() });
   });
 
-  registerTool(ctx, { name: "mount_add", description: "Add fstab entry and mount. Moderate risk.", module: "storage", riskLevel: "moderate", duration: "normal", inputSchema: z.object({ device: z.string().min(1), mount_point: z.string().min(1), fs_type: z.string().min(1), options: z.string().optional().default("defaults"), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "mount_add", description: "Add fstab entry and mount. Moderate risk.", module: "storage", riskLevel: "moderate", duration: "normal", inputSchema: z.object({ device: z.string().min(1), mount_point: z.string().min(1), fs_type: z.string().min(1), options: z.string().optional().default("defaults"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const line = `${args.device} ${args.mount_point} ${args.fs_type} ${(args.options as string) || "defaults"} 0 2`;
     const cmd = `sudo mkdir -p '${args.mount_point}' && echo '${line}' | sudo tee -a /etc/fstab && sudo mount '${args.mount_point}'`;
     const gate = ctx.safetyGate.check({ toolName: "mount_add", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Add fstab: ${line}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
@@ -30,10 +30,11 @@ export function registerStorageTools(ctx: PluginContext): void {
     return success("mount_add", ctx.targetHost, r.durationMs, cmd, { fstab_entry: line, mounted: true });
   });
 
-  registerTool(ctx, { name: "mount_remove", description: "Unmount and remove fstab entry. High risk.", module: "storage", riskLevel: "high", duration: "normal", inputSchema: z.object({ mount_point: z.string().min(1), confirmed: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "mount_remove", description: "Unmount and remove fstab entry. High risk.", module: "storage", riskLevel: "high", duration: "normal", inputSchema: z.object({ mount_point: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const mp = args.mount_point as string;
-    const gate = ctx.safetyGate.check({ toolName: "mount_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: `umount ${mp}`, description: `Unmount ${mp} and remove from fstab`, confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "mount_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: `umount ${mp}`, description: `Unmount ${mp} and remove from fstab`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    if (args.dry_run) return success("mount_remove", ctx.targetHost, 0, null, { would_run: `sudo umount '${mp}' && sudo sed -i '\\|${mp}|d' /etc/fstab` }, { dry_run: true });
     const r = await executeBash(ctx, `sudo umount '${mp}' && sudo sed -i '\\|${mp}|d' /etc/fstab`, "normal");
     if (r.exitCode !== 0) return error("mount_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("mount_remove", ctx.targetHost, r.durationMs, "umount + sed", { unmounted: mp });
@@ -44,7 +45,7 @@ export function registerStorageTools(ctx: PluginContext): void {
     return success("lvm_status", ctx.targetHost, r.durationMs, "pvs+vgs+lvs", { output: r.stdout.trim() });
   });
 
-  registerTool(ctx, { name: "lvm_create_lv", description: "Create a logical volume. Moderate risk.", module: "storage", riskLevel: "moderate", duration: "normal", inputSchema: z.object({ name: z.string().min(1), vg: z.string().min(1), size: z.string().min(1), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "lvm_create_lv", description: "Create a logical volume. Moderate risk.", module: "storage", riskLevel: "moderate", duration: "normal", inputSchema: z.object({ name: z.string().min(1).describe("Name for the new logical volume"), vg: z.string().min(1).describe("Volume group name to create the LV in"), size: z.string().min(1).describe("Size with unit suffix (e.g. '10G', '500M')"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = `sudo lvcreate -L ${args.size} -n ${args.name} ${args.vg}`;
     const gate = ctx.safetyGate.check({ toolName: "lvm_create_lv", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Create LV ${args.name} (${args.size}) in VG ${args.vg}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
@@ -54,7 +55,7 @@ export function registerStorageTools(ctx: PluginContext): void {
     return success("lvm_create_lv", ctx.targetHost, r.durationMs, cmd, { created: `${args.vg}/${args.name}` });
   });
 
-  registerTool(ctx, { name: "lvm_resize", description: "Resize a logical volume. High risk.", module: "storage", riskLevel: "high", duration: "normal", inputSchema: z.object({ lv_path: z.string().min(1), size: z.string().min(1), resize_fs: z.boolean().optional().default(true), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false) }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "lvm_resize", description: "Resize a logical volume. High risk.", module: "storage", riskLevel: "high", duration: "normal", inputSchema: z.object({ lv_path: z.string().min(1).describe("Logical volume device path (e.g. /dev/vg0/data)"), size: z.string().min(1).describe("New absolute size or relative change (e.g. '20G', '+5G')"), resize_fs: z.boolean().optional().default(true), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `sudo lvresize ${args.resize_fs !== false ? "-r" : ""} -L ${args.size} ${args.lv_path}`;
     const gate = ctx.safetyGate.check({ toolName: "lvm_resize", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Resize ${args.lv_path} to ${args.size}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;

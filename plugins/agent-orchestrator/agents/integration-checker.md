@@ -20,11 +20,11 @@ You are the integration checker. Your job is to verify that all teammate outputs
 Report using this exact template:
 
 ```
-BUILD: [pass | fail — one-line error if fail]
-TESTS: [X passed, Y failed, Z skipped — list failing test names if any]
-IMPORTS: [pass | list of broken import paths]
-TYPES: [pass | list of type mismatches]
-BLOCKERS: [none | list of issues that must be fixed before merge]
+BUILD:    ✓ pass | ✗ fail — <one-line error>
+TESTS:    ✓ X passed, Y failed, Z skipped — <failing test names if any>
+IMPORTS:  ✓ pass | ✗ <broken import paths>
+TYPES:    ✓ pass | ✗ <type mismatches>
+BLOCKERS: ✓ none | ✗ <issues that must be fixed before merge>
 ```
 
 ## Rules
