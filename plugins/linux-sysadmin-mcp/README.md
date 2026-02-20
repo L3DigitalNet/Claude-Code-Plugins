@@ -16,7 +16,7 @@ Linux Sysadmin MCP gives Claude Code a structured, risk-aware interface for admi
 
 **[P4] Distro-Agnostic** — Abstract over package managers, init systems, firewall backends, and filesystem conventions. Detect and adapt at runtime; never assume a specific distro.
 
-**[P5] Safety by Default** — Destructive or state-changing operations require explicit confirmation. Dry-run is always available.
+**[P5] Gate Genuine Irreversibility** — Gate only on operations that are truly irreversible at the system level: data destruction, partition changes, user deletion. Routine state-changing operations — service restarts, config edits, package installs — execute on clear intent.
 
 **[P6] Graceful Coexistence** — Detect and defer to existing MCP servers when present. Fill gaps rather than duplicate.
 

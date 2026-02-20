@@ -10,7 +10,7 @@ Release Pipeline streamlines the full release lifecycle into a single `/release`
 
 **[P1] Fail Fast, No Auto-Recovery** — If any pre-flight check fails, the pipeline stops immediately and reports. It never attempts to repair problems autonomously or continue past a known failure.
 
-**[P2] Human Gates at Critical Points** — Version bumps, changelogs, tags, and GitHub releases each require explicit human approval before proceeding. Silent deployments are not possible.
+**[P2] Gate at Genuine Irreversibility** — Explicit approval is required before creating tags and publishing GitHub releases — these are public, hard to retract, and exceed what the invocation implies. Version bumps and changelog generation proceed on clear intent; they remain editable before the pipeline reaches an irreversible gate.
 
 **[P3] Conventional Commits as Ground Truth** — Version bump suggestions and changelog entries are derived from commit message prefixes (`feat:`, `fix:`, `BREAKING CHANGE:`). The history is the specification; the pipeline reads it, not the developer's memory.
 
