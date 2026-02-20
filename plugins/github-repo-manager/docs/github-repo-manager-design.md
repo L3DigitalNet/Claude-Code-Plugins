@@ -4,7 +4,7 @@
 
 **Author:** Chris
 **Date:** February 17, 2026
-**Status:** Implemented — v0.2.1 (Feb 2026)
+**Status:** Implemented — v0.2.2 (Feb 2026)
 
 ---
 
@@ -2118,7 +2118,7 @@ The plugin follows the Claude Code plugin pattern established in the `Claude-Cod
 {
   "name": "github-repo-manager",
   "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, security posture, and community file management via PAT.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "L3DigitalNet"
   },
