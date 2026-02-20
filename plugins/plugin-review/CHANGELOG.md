@@ -1,20 +1,10 @@
 # Changelog
 
-## [Unreleased] - 2026-02-20 (integration test self-review)
-
-### Fixed
-- `README.md` [P5] description: corrected stale "3 passes" reference to "configured pass budget (default 5, overridden by `--max-passes=N`)" — drift introduced with 0.3.0 `--max-passes` flag
-- `README.md` Key Design Decisions: updated "3-pass budget" entry to "Configurable pass budget" — same stale reference
-- `docs/DESIGN.md` Pass Budget Rationale: updated "Three passes chosen as default" to reflect 5-pass default and `--max-passes=N` configurability
-
-### Changed
-- `commands/review.md` Phase 2: added progress signal instruction ("Pass N: spawning analyst subagents...") before subagent spawn to address silent gap between activation echo and Phase 3 report
-
 ## [0.3.0] - 2026-02-20
 
 ### Added
 - `scripts/run-assertions.sh` — machine-verifiable assertion runner; reads `.review-assertions.json`, executes all assertions by type (grep_not_match, grep_match, file_exists, file_content, typescript_compile, shell_exit_zero), updates pass/fail status, computes confidence score (assertions_passed/total)
-- `scripts/test-run-assertions.sh` — smoke test for the assertion runner covering 5 assertion types
+- `scripts/test-run-assertions.sh` — smoke test for the assertion runner covering all 6 assertion types plus a fail-case that verifies exit code 1
 - `agents/fix-agent.md` — write-capable targeted fix agent for assertion-driven regressions; one invocation per pass receives all failing assertions and implements minimal fixes
 - `## Assertions Output` block added to all three analyst agents (principles-analyst, ux-analyst, docs-analyst) — each generates machine-verifiable JSON assertions alongside findings, one per open finding
 - Phase 2.5 (Assertion Collection) in orchestrator — extracts and merges analyst assertion JSON blocks into `.claude/state/review-assertions.json`, deduplicating by `id`
@@ -26,14 +16,21 @@
 
 ### Changed
 - Phase 4 is now fully automated — `AskUserQuestion` gate removed; all proposals auto-implemented without human approval
+- Phase 5 renamed to "Persist Pass Counter" — implementation work moved to Phase 4; Phase 5 now only increments `pass_number`
+- Zero-findings path now increments `pass_number` before jumping to Phase 5.5 — prevents infinite loop when assertions fail on a clean pass
 - Pass budget changed from hardcoded 3 to `--max-passes=N` (default 5)
 - Loop convergence criterion is now confidence-based (`confidence < 100%`), not finding-count-based
 - Session cleanup now removes both `plugin-review-writes.json` and `review-assertions.json`
 - State file initialization includes `max_passes` field in both state files
 - `$CLAUDE_PLUGIN_ROOT` syntax standardized — angle-bracket format removed from all prose references
+- Phase 5.5 failure_output display truncation increased from 100 to 200 characters for better TypeScript error visibility
+- `commands/review.md` Phase 2: added progress signal instruction ("Pass N: spawning analyst subagents...") before subagent spawn to address silent gap
 
 ### Fixed
 - Duplicate `### Added` section header in 0.2.0 CHANGELOG entry (pre-existing drift)
+- `README.md` [P5] description: corrected stale "3 passes" reference to "configured pass budget (default 5, overridden by `--max-passes=N`)"
+- `README.md` Key Design Decisions: updated "3-pass budget" entry to "Configurable pass budget"
+- `docs/DESIGN.md` Pass Budget Rationale: updated "Three passes chosen as default" to reflect 5-pass default and `--max-passes=N` configurability
 
 ## [0.2.0] - 2026-02-20
 

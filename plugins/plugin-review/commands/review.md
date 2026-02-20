@@ -100,18 +100,11 @@ For each fix:
 4. Update documentation — identify any docs referencing the modified behavior and update them in the same pass. A code change without a doc update is incomplete.
 5. Summarize in 1–2 sentences.
 
-If zero open findings remain, skip directly to Phase 5.5 (run assertions to verify).
+If zero open findings remain, increment `pass_number` and proceed directly to Phase 5.5 (run assertions to verify).
 
-### Phase 5 — Implement and Re-audit
+### Phase 5 — Persist Pass Counter
 
-For each approved proposal:
-1. State the plan — files, changes, gap closure, cross-track impact.
-2. Implement the code change.
-3. Update documentation — identify any docs referencing the modified behavior and update them in the same pass. A code change without a doc update is incomplete.
-4. Verify — confirm code correctness AND doc accuracy.
-5. Summarize in 1–2 sentences.
-
-After all changes, increment `pass_number` and persist it:
+Phase 4 has already implemented all fixes. After verifying code and documentation changes look correct, increment `pass_number` and persist it:
 
 ```bash
 python3 -c "
@@ -142,7 +135,7 @@ fails = [a for a in d['assertions'] if a['status'] == 'fail']
 for a in fails:
     print(f'  ❌ {a[\"id\"]} ({a[\"track\"]}): {a[\"description\"]}')
     if a.get('failure_output'):
-        print(f'     {a[\"failure_output\"][:100]}')
+        print(f'     {a[\"failure_output\"][:200]}')
 "
 ```
 
