@@ -73,3 +73,38 @@ For each root principle passed by the orchestrator (P1–Pn from README.md):
 ```
 
 Do not deviate from this format. The orchestrator parses it to build the unified report.
+
+## Assertions Output
+
+After your findings, append an `## Assertions` section containing a JSON array of
+machine-verifiable checks, one per open finding:
+
+```
+## Assertions
+
+```json
+[
+  {
+    "id": "A-A-<number>",
+    "finding_id": "<principle or checkpoint ID, e.g. P3 or C1>",
+    "track": "A",
+    "type": "<grep_not_match | grep_match | file_exists | file_content | typescript_compile | shell_exit_zero>",
+    "description": "One sentence: what this assertion verifies",
+    "command": "<bash command to run — use full relative paths from repo root>",
+    "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
+    "path": "<file path — only for file_exists and file_content types>",
+    "needle": "<search string — only for file_content type>"
+  }
+]
+```
+```
+
+**Assertion type guide:**
+- `grep_not_match`: the finding is a pattern that should NOT appear (e.g., banned keyword, disallowed construct). Command should grep for the bad pattern; expect empty output.
+- `grep_match`: the finding is a pattern that SHOULD appear (e.g., required comment header). Command greps for it; expect non-empty output.
+- `file_exists`: the finding is a missing file. Use `path` field (no `command`).
+- `file_content`: the finding is missing content in an existing file. Use `path` + `needle` fields.
+- `typescript_compile`: the finding is a TypeScript type error. Command should be `cd <dir> && npx tsc --noEmit 2>&1`. Only use when target plugin has TypeScript source.
+- `shell_exit_zero`: the finding is a script that should run cleanly. Command is the test invocation.
+
+**Write one assertion per open finding.** If a finding has no machine-verifiable check (e.g., pure judgment calls about architectural quality), omit it — do not invent synthetic assertions. Only include assertions that will currently FAIL (the finding represents a current gap). Do not include assertions for upheld/clean items.

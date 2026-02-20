@@ -166,6 +166,18 @@ git pull origin main
 git merge testing --no-ff -m "Release <plugin-name> v<version>"
 ```
 
+**Tag reconciliation:**
+
+Run tag reconciliation before creating the local tag:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "<plugin-name>/v<version>"
+```
+
+Capture the first line of stdout as `tag_status`. Branch based on value:
+- `MISSING`: proceed to `git tag -a` step normally
+- `LOCAL_ONLY`, `BOTH`, or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists locally or remotely; proceed directly to `git push origin main --tags`
+
 ```bash
 git tag -a "<plugin-name>/v<version>" -m "Release <plugin-name> v<version>"
 ```
@@ -179,7 +191,8 @@ git checkout testing
 ```
 
 ```bash
-gh release create "<plugin-name>/v<version>" --title "<plugin-name> v<version>" --notes "<changelog entry>"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/api-retry.sh 3 1000 -- \
+  gh release create "<plugin-name>/v<version>" --title "<plugin-name> v<version>" --notes "<changelog entry>"
 ```
 
 ## Phase 4 — Scoped Verification

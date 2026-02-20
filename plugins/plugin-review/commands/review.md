@@ -14,14 +14,21 @@ User says "review", "review <plugin-name>", "plugin review", or "audit <plugin-n
 
 You are the **orchestrator** for a multi-pass plugin review. You manage the convergence loop, present findings, collect user decisions, and implement changes. You delegate deep analysis to focused subagents — you never read full plugin source files yourself.
 
+Parse `--max-passes=N` from the user's invocation using a regex match on `--max-passes=(\d+)`; default to 5 if not present. This replaces the old 3-pass budget as the loop safety limit.
+
 **Before beginning, activate the doc-write-tracker hook:**
 
 ```bash
 export PLUGIN_REVIEW_ACTIVE=1
 mkdir -p .claude/state
+
+# Parse --max-passes=N from invocation text (regex: --max-passes=(\d+)); default 5
+MAX_PASSES=5  # replace with extracted value if user provided --max-passes=N
+
 # State file tracks impl/doc writes AND pass_number so the counter survives context compaction.
-echo '{"impl_files":[],"doc_files":[],"pass_number":1}' > .claude/state/plugin-review-writes.json
-echo "✓ Plugin review session activated"
+echo "{\"impl_files\":[],\"doc_files\":[],\"pass_number\":1,\"max_passes\":$MAX_PASSES}" > .claude/state/plugin-review-writes.json
+echo "{\"plugin\":\"\",\"max_passes\":$MAX_PASSES,\"current_pass\":1,\"assertions\":[],\"confidence\":{\"passed\":0,\"total\":0,\"score\":0.0}}" > .claude/state/review-assertions.json
+echo "✓ Plugin review session activated (max passes: $MAX_PASSES)"
 ```
 
 Store the plugin root path for template references:
@@ -53,17 +60,28 @@ You will need this path when spawning subagents (see Phase 2).
 
 Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
 
-- **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-a-criteria.md`.
-- **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-b-criteria.md`.
-- **Docs Analyst** (`agents/docs-analyst.md`): provide the list of all documentation files, a directory listing of implementation files (NOT full source), and the template path: `<CLAUDE_PLUGIN_ROOT>/templates/track-c-criteria.md`.
+- **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-a-criteria.md`.
+- **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-b-criteria.md`.
+- **Docs Analyst** (`agents/docs-analyst.md`): provide the list of all documentation files, a directory listing of implementation files (NOT full source), and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-c-criteria.md`.
 
 Do NOT load those templates yourself — the subagents handle it.
 
 On **Pass 2+**, consult `skills/scoped-reaudit/SKILL.md` to determine which tracks are affected by files changed in the previous pass. Only spawn affected subagents. Carry forward unchanged findings.
 
+### Phase 2.5 — Assertion Collection
+
+Each analyst's output contains an `## Assertions` block with a JSON array. Extract each array and merge all assertions into `.claude/state/review-assertions.json`:
+
+1. Read `.claude/state/review-assertions.json`
+2. Set `plugin` to the current plugin name and `current_pass` to the current pass number
+3. For each assertion from each analyst, add it to the `assertions` array **only if its `id` is not already present** — this preserves existing pass/fail status for assertions whose tracks were not re-audited this pass, preventing the same assertion from being reset and re-evaluated when nothing relevant changed
+4. Write the updated file
+
+After merging, report the assertion count: "Pass N: N total assertions (N new, N carried forward)."
+
 ### Phase 3 — Present Findings
 
-Load `<CLAUDE_PLUGIN_ROOT>/templates/pass-report.md` and format the unified report. Key rules:
+Load `$CLAUDE_PLUGIN_ROOT/templates/pass-report.md` and format the unified report. Key rules:
 - Lead with a severity-sorted summary of **open findings only**
 - Upheld principles and clean touchpoints go in a compact roll-up line
 - Only partially upheld, violated, and issue findings get full detail blocks
@@ -71,13 +89,18 @@ Load `<CLAUDE_PLUGIN_ROOT>/templates/pass-report.md` and format the unified repo
 
 On Pass 2+, focus on findings whose status changed plus any new findings.
 
-### Phase 4 — Propose Changes
+### Phase 4 — Auto-Implement All Proposals
 
-For each open finding, propose a concrete fix grouped by effort (quick wins, structural changes, design reconsiderations).
+For each open finding, propose and immediately implement a concrete fix. Do **not** use `AskUserQuestion` — all proposals are auto-implemented without human approval.
 
-**Cross-track impact check**: for each proposal, load `<CLAUDE_PLUGIN_ROOT>/templates/cross-track-impact.md` and note which other tracks could be affected.
+For each fix:
+1. State the plan — files, changes, gap closure.
+2. Load `$CLAUDE_PLUGIN_ROOT/templates/cross-track-impact.md` and note which other tracks are affected.
+3. Implement the code change.
+4. Update documentation — identify any docs referencing the modified behavior and update them in the same pass. A code change without a doc update is incomplete.
+5. Summarize in 1–2 sentences.
 
-If zero open findings remain, skip to Phase 6. Present proposals as a numbered list grouped by effort. Then use `AskUserQuestion` with bounded options: (1) "All quick wins only", (2) "Quick wins + structural changes", (3) "All proposals", (4) "None / review only". If the user needs finer-grained selection (specific proposal numbers), they can answer "Other" with a comma-separated list. **STOP. Wait for explicit user approval before implementing.**
+If zero open findings remain, skip directly to Phase 5.5 (run assertions to verify).
 
 ### Phase 5 — Implement and Re-audit
 
@@ -88,7 +111,81 @@ For each approved proposal:
 4. Verify — confirm code correctness AND doc accuracy.
 5. Summarize in 1–2 sentences.
 
-After all changes, increment `pass_number` and persist it: read `.claude/state/plugin-review-writes.json`, update the `pass_number` field, and write the file back. Then check the **pass budget**: if `pass_number > 3` and open findings remain, use `AskUserQuestion` with three options: (1) "Continue — review all remaining findings" (note how many passes have been consumed and that context budget is a concern), (2) "Accept gaps — generate final report now", (3) "Final focused pass — re-audit only the highest-severity open findings." **STOP. Do NOT silently continue.** Otherwise, loop back to Phase 2 (scoped re-audit).
+After all changes, increment `pass_number` and persist it:
+
+```bash
+python3 -c "
+import json
+d = json.load(open('.claude/state/plugin-review-writes.json'))
+d['pass_number'] = d.get('pass_number', 1) + 1
+json.dump(d, open('.claude/state/plugin-review-writes.json', 'w'), indent=2)
+"
+```
+
+### Phase 5.5 — Run Assertions
+
+Run the full assertion suite:
+
+```bash
+bash $CLAUDE_PLUGIN_ROOT/scripts/run-assertions.sh
+```
+
+Read the updated confidence score and failing assertions:
+
+```bash
+python3 -c "
+import json
+d = json.load(open('.claude/state/review-assertions.json'))
+pct = int(d['confidence']['score'] * 100)
+print(f'Confidence: {pct}% ({d[\"confidence\"][\"passed\"]}/{d[\"confidence\"][\"total\"]})')
+fails = [a for a in d['assertions'] if a['status'] == 'fail']
+for a in fails:
+    print(f'  ❌ {a[\"id\"]} ({a[\"track\"]}): {a[\"description\"]}')
+    if a.get('failure_output'):
+        print(f'     {a[\"failure_output\"][:100]}')
+"
+```
+
+**If confidence is 100%**, proceed to Phase 6 (convergence).
+
+**If any assertions fail**, spawn the fix-agent (`agents/fix-agent.md`) with:
+- The list of failing assertion objects (full JSON from `.claude/state/review-assertions.json` where `status == "fail"`)
+- The analyst finding context for each assertion: include the relevant section from the Phase 3 pass report (the finding block that generated this assertion), so the fix-agent understands why the assertion was written
+- The specific files likely needing changes per assertion
+
+After the fix-agent returns, re-run assertions and update confidence:
+
+```bash
+bash $CLAUDE_PLUGIN_ROOT/scripts/run-assertions.sh
+```
+
+Read and report the updated confidence.
+
+**Check max-passes budget:**
+
+```bash
+python3 -c "
+import json
+writes = json.load(open('.claude/state/plugin-review-writes.json'))
+review = json.load(open('.claude/state/review-assertions.json'))
+pass_num = writes.get('pass_number', 1)
+max_passes = writes.get('max_passes', 5)
+pct = int(review['confidence']['score'] * 100)
+print(f'Pass {pass_num}/{max_passes} — Confidence: {pct}%')
+if pass_num >= max_passes and review['confidence']['score'] < 1.0:
+    fails = [a['id'] for a in review['assertions'] if a['status'] == 'fail']
+    print(f'BUDGET_REACHED: {len(fails)} assertions still failing: {fails}')
+    print('Proceeding to Phase 6 (budget stop).')
+"
+```
+
+If `pass_number >= max_passes` and confidence < 100%, proceed to Phase 6 with convergence reason "Budget reached."
+
+Loop back to Phase 2 (scoped re-audit) only if ALL of these are true:
+- `confidence < 100%` (assertions still failing)
+- `pass_number < max_passes` (budget not yet reached)
+
+Do not loop based on subjective "findings remain" — confidence is the sole convergence criterion.
 
 ### Phase 6 — Convergence
 
@@ -99,11 +196,27 @@ The loop terminates when any condition is met:
 4. **Plateau** — two identical consecutive passes. Report and ask how to proceed.
 5. **Divergence** — more new findings than resolved. Report immediately, recommend reverting.
 
-Load `<CLAUDE_PLUGIN_ROOT>/templates/final-report.md` and produce the final summary. Clear the session:
+Load `$CLAUDE_PLUGIN_ROOT/templates/final-report.md` and produce the final summary. Read the final confidence score and include it in the final report:
+
+```bash
+python3 -c "
+import json
+d = json.load(open('.claude/state/review-assertions.json'))
+pct = int(d['confidence']['score'] * 100)
+passed = d['confidence']['passed']
+total = d['confidence']['total']
+print(f'Final confidence: {pct}% ({passed}/{total} assertions passing)')
+for a in d['assertions']:
+    icon = '✅' if a['status'] == 'pass' else '❌'
+    print(f'  {icon} {a[\"id\"]} ({a[\"track\"]}): {a[\"description\"]}')
+"
+```
+
+Include this confidence score in the final report output (see `templates/final-report.md` format). Clear the session:
 
 ```bash
 unset PLUGIN_REVIEW_ACTIVE
-rm -f .claude/state/plugin-review-writes.json
+rm -f .claude/state/plugin-review-writes.json .claude/state/review-assertions.json
 echo "✓ Plugin review session ended"
 ```
 
@@ -116,5 +229,7 @@ echo "✓ Plugin review session ended"
 - Do NOT generate reports outside the structured template formats.
 - Prefer structured choice questions over open-ended questions at every decision point.
 - Test changes by reviewing modified code paths before moving on.
-- Respect the 3-pass budget. Surface the decision to the user, don't loop silently.
+- Respect the `max_passes` budget (default 5, overridden by `--max-passes=N`). Report confidence when budget is reached; do not loop silently past the limit.
+- Do NOT use `AskUserQuestion` during the review loop — the loop is fully automated from invocation to final report.
+- Phase 4 is auto-implement. No human approval gates at any point in the loop.
 - Subagents analyze. You implement. Never cross this boundary.

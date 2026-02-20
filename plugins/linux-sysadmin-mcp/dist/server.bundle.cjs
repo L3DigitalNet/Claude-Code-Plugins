@@ -32898,10 +32898,11 @@ var LocalExecutor = class {
           // but prevents unbounded memory growth from runaway commands.
           maxBuffer: 10 * 1024 * 1024,
           env: command.env ? { ...process.env, ...command.env } : process.env,
-          // Security boundary: shell parsing only when argv[0] is explicitly "bash".
-          // All other commands run via execFile without shell, preventing injection
-          // through argument values. Tools that need pipelines must use execBash().
-          shell: cmd === "bash"
+          // shell: false — bash commands use execFile("bash", ["-c", cmd]) where bash
+          // itself provides shell features (pipes, redirects, globs). Setting shell: true
+          // would wrap in /bin/sh -c, splitting multi-word command strings and causing
+          // arguments to become positional params rather than argv for the subprocess.
+          shell: false
         },
         (error3, stdout, stderr) => {
           const durationMs = Math.round(performance.now() - start);

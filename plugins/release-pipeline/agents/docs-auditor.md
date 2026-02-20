@@ -34,6 +34,19 @@ Audit all documentation files in the repository for release readiness.
 - Warn (don't fail) if README.md is missing
 - Warn (don't fail) if CHANGELOG.md is missing
 
+## Waiver Lookup
+
+When the audit would result in FAIL status **due to stale version references only** (not broken links — those are never waivable), before reporting FAIL run:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json stale_docs [plugin-name]
+```
+
+If exit 0 (waived): downgrade FAIL to WARN and annotate `⊘ stale_docs WAIVED — <reason>`.
+If exit 1 (not waived): proceed with original FAIL behavior.
+
+Note: broken links are NOT waivable — only stale version references are covered by `stale_docs`.
+
 ## Output Format
 
 ```
@@ -50,6 +63,6 @@ Details: [specific issues, one per line]
 ## Rules
 
 - PASS = no stale versions and no broken links (tone flags and missing files are warnings only)
-- WARN = only warnings (tone flags or missing files, but no stale versions or broken links)
-- FAIL = stale version references or broken links found
+- WARN = only warnings (tone flags or missing files, but no stale versions or broken links; or stale_docs waived)
+- FAIL = stale version references or broken links found (and not waived)
 - Do not modify any files.

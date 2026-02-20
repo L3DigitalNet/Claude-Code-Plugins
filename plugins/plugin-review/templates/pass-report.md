@@ -5,7 +5,7 @@
   Not loaded by subagents — subagents return structured text; the orchestrator formats it
     using this template. If subagents load this template, it violates [P3].
   Output contract: the Convergence table columns (Upheld / Partial / Violated / Checkpoints /
-    UX Issues / Stale Docs / Trend) must be consistent across all passes so that
+    UX Issues / Stale Docs / Confidence / Trend) must be consistent across all passes so that
     final-report.md's Pass History table can aggregate them correctly.
   Cross-file dependency: final-report.md's Pass History table uses the same column names.
     Changing column headers here requires updating final-report.md's Pass History section.
@@ -57,9 +57,9 @@ Principles <list IDs> are fully upheld. UX touchpoints for <list names> are clea
 - **<file path>**: <issue type> — <brief description>. Triggered by: <pre-existing / Pass N changes>.
 
 ### Convergence
-| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Trend |
-|------|--------|---------|----------|-------------|-----------|------------|-------|
-| 1    | ...    | ...     | ...      | ...         | ...       | ...        | —     |
+| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
+|------|--------|---------|----------|-------------|-----------|------------|------------|-------|
+| 1    | ...    | ...     | ...      | ...         | ...       | ...        | N%         | —     |
 ```
 
 ## Pass 2+ Format
@@ -89,9 +89,9 @@ Focus on what changed. Unchanged items get one-line confirmation.
 (one line each)
 
 ### Convergence
-| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Trend |
-|------|--------|---------|----------|-------------|-----------|------------|-------|
-| ...  | ...    | ...     | ...      | ...         | ...       | ...        | ...   |
+| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
+|------|--------|---------|----------|-------------|-----------|------------|------------|-------|
+| ...  | ...    | ...     | ...      | ...         | ...       | ...        | N%         | ...   |
 ```
 
 ## Rules

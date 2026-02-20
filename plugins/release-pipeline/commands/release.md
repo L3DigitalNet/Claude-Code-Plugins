@@ -106,6 +106,11 @@ Use **AskUserQuestion** to present the release menu. Build the options dynamical
    - description: `"Release a single plugin with scoped tag and changelog (<N> plugins with unreleased changes)"` where N is `len(unreleased_plugins)`
    - If `unreleased_plugins` is empty: `"Release a single plugin with scoped tag and changelog (all plugins up to date)"`
 
+7. **Batch Release All Plugins**
+   - label: `"Batch Release"`
+   - description: `"Release all <N> plugins with unreleased changes sequentially — quarantine failures, produce summary (<N> plugins ready)"` where N is `len(unreleased_plugins)`
+   - If `unreleased_plugins` is empty: `"Batch Release (all plugins up to date — nothing to release)"`
+
 Before calling `AskUserQuestion`, output one context line:
 
 ```
@@ -124,6 +129,7 @@ After the user selects, load the corresponding mode template and follow it exact
 | Quick Merge | `${CLAUDE_PLUGIN_ROOT}/templates/mode-1-quick-merge.md` |
 | Full Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-2-full-release.md` |
 | Plugin Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-3-plugin-release.md` |
+| Batch Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-7-batch-release.md` |
 | Release Status | `${CLAUDE_PLUGIN_ROOT}/templates/mode-4-status.md` |
 | Dry Run | `${CLAUDE_PLUGIN_ROOT}/templates/mode-5-dry-run.md` |
 | Changelog Preview | `${CLAUDE_PLUGIN_ROOT}/templates/mode-6-changelog.md` |

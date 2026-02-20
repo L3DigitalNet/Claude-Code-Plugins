@@ -32,7 +32,7 @@
     },
     {
       "name": "github-repo-manager",
-      "description": "Conversational GitHub repository maintenance \u2014 health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
+      "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
       "version": "0.2.1",
       "author": {
         "name": "L3DigitalNet",
@@ -44,8 +44,8 @@
     },
     {
       "name": "release-pipeline",
-      "description": "Interactive release pipeline \u2014 context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
-      "version": "1.5.0",
+      "description": "Interactive release pipeline — context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
+      "version": "1.6.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -56,8 +56,8 @@
     },
     {
       "name": "linux-sysadmin-mcp",
-      "description": "Comprehensive Linux system administration MCP server with ~107 tools across 15 modules \u2014 packages, services, users, firewall, networking, security, storage, containers, and more",
-      "version": "1.0.5",
+      "description": "Comprehensive Linux system administration MCP server with ~107 tools across 15 modules — packages, services, users, firewall, networking, security, storage, containers, and more",
+      "version": "1.0.6",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -81,7 +81,7 @@
     {
       "name": "plugin-test-harness",
       "description": "Iterative live testing framework for Claude Code plugins and MCP servers. Run a session branch, generate tests, record results, apply fixes, and iterate until convergence.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -93,7 +93,7 @@
     {
       "name": "plugin-review",
       "description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -125,6 +125,17 @@
       "category": "documentation",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
       "source": "./plugins/docs-manager"
+    },
+    {
+      "name": "repo-hygiene",
+      "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
+      "version": "1.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/repo-hygiene",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
     }
   ]
 }

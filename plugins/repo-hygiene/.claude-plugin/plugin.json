@@ -1,0 +1,9 @@
+{
+  "name": "repo-hygiene",
+  "version": "1.0.0",
+  "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  }
+}

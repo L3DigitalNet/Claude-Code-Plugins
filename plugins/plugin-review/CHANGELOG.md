@@ -1,13 +1,36 @@
 # Changelog
 
+## [0.3.0] - 2026-02-20
+
+### Added
+- `scripts/run-assertions.sh` — machine-verifiable assertion runner; reads `.review-assertions.json`, executes all assertions by type (grep_not_match, grep_match, file_exists, file_content, typescript_compile, shell_exit_zero), updates pass/fail status, computes confidence score (assertions_passed/total)
+- `scripts/test-run-assertions.sh` — smoke test for the assertion runner covering 5 assertion types
+- `agents/fix-agent.md` — write-capable targeted fix agent for assertion-driven regressions; one invocation per pass receives all failing assertions and implements minimal fixes
+- `## Assertions Output` block added to all three analyst agents (principles-analyst, ux-analyst, docs-analyst) — each generates machine-verifiable JSON assertions alongside findings, one per open finding
+- Phase 2.5 (Assertion Collection) in orchestrator — extracts and merges analyst assertion JSON blocks into `.claude/state/review-assertions.json`, deduplicating by `id`
+- Phase 5.5 (Assertion Runner) in orchestrator — runs full assertion suite after implementation, spawns fix-agent for failures, re-runs assertions, checks max-passes budget
+- `--max-passes=N` flag — parsed from invocation text via regex `--max-passes=(\d+)`; replaces hardcoded 3-pass budget (default 5)
+- Confidence score (`assertions_passed / total_assertions`) reported at each pass and in final report
+- `Confidence` column in pass-report.md convergence table
+- Assertion Coverage section in final-report.md
+
+### Changed
+- Phase 4 is now fully automated — `AskUserQuestion` gate removed; all proposals auto-implemented without human approval
+- Pass budget changed from hardcoded 3 to `--max-passes=N` (default 5)
+- Loop convergence criterion is now confidence-based (`confidence < 100%`), not finding-count-based
+- Session cleanup now removes both `plugin-review-writes.json` and `review-assertions.json`
+- State file initialization includes `max_passes` field in both state files
+- `$CLAUDE_PLUGIN_ROOT` syntax standardized — angle-bracket format removed from all prose references
+
+### Fixed
+- Duplicate `### Added` section header in 0.2.0 CHANGELOG entry (pre-existing drift)
+
 ## [0.2.0] - 2026-02-20
 
 ### Added
 - PostToolUse hook `validate-agent-frontmatter.sh` — warns when disallowed tools (Write, Edit, Bash, etc.) are added to analyst agent YAML frontmatter, providing secondary enforcement for [P9]
 - Architectural role headers (`<!-- -->` comment blocks) to all six template files documenting which component loads each template, output format contracts, and cross-file dependencies
 - Architectural role header to `skills/scoped-reaudit/SKILL.md` documenting the orchestrator-skill contract and what breaks if the mapping table changes
-
-### Added
 - `docs/DESIGN.md`: new "Hook Design: PostToolUse Agent Frontmatter Validator" section documenting the always-active frontmatter validation gate, its disallowed tool list, and its relationship to primary structural enforcement via agent YAML frontmatter
 
 ### Fixed
