@@ -2,6 +2,45 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
+## [1.0.2] — 2026-02-19
+
+### Changed
+- **UX — M2: Risk level missing from tool descriptions** — added "Moderate risk." suffix to
+  `pkg_update`, `user_modify`, `svc_enable`, and `svc_disable` descriptions so that risk is
+  visible to calling LLMs without requiring them to inspect the `riskLevel` field separately.
+- **UX — M3: `pkg_update` implicit all-system-upgrade** — clarified that omitting `packages`
+  upgrades ALL installed packages (not just a subset), preventing accidental full-system upgrades.
+- **UX — L1: `sec_check_suid` limit parameter** — added `limit` param (default 100, max 500)
+  replacing the hardcoded `head -100` cut-off. Callers can now request more results on busy systems.
+- **UX — L2: `affected_services` now populated in confirmation responses** — safety gate wires
+  `serviceName` through to `preview.affected_services`, fulfilling the type contract that was
+  already declared but never filled.
+- **UX — L3: `net_test` test parameter description** — added `.describe()` explaining all four
+  options including "all" (runs ping + traceroute + dig together).
+
+---
+
+## [1.0.1] — 2026-02-19
+
+### Changed
+- **UX — H1: `confirmed` / `dry_run` parameter descriptions** — added `.describe()` annotations
+  to `confirmed` and `dry_run` on all ~30 state-changing tools across 9 modules (packages,
+  services, firewall, users, storage, networking, security, backup, containers, cron).
+  The annotations tell calling LLMs exactly when and why to set each flag, improving invocation
+  correctness without any runtime behaviour change.
+- **UX — H2: Missing parameter descriptions on operation-critical fields** — added `.describe()`
+  to fields that lacked guidance: `packages` array (pkg_remove, pkg_purge), `package`/`version`
+  (pkg_rollback), `service` (all svc_* tools), `lines` (svc_logs), all 7 fields in the firewall
+  `ruleSchema` (action, direction, port, protocol, source, destination, comment), `name`/`vg`/`size`
+  (lvm_create_lv), `lv_path`/`size` (lvm_resize), `destination`/`gateway`/`interface`
+  (net_routes_modify), `shell`/`home`/`groups`/`system`/`comment` (user_create), `mode`/`owner`
+  (perms_set), `actions` (sec_harden_ssh).
+- **UX — M1: Added `dry_run` preview mode to 7 tools that had `confirmed` but no preview path** —
+  fw_remove_rule, svc_enable, svc_disable, user_modify, group_create, group_delete, mount_remove.
+  Each now returns `{ would_run: "..." }` without executing when `dry_run: true`.
+
+---
+
 ## [1.0.0] - 2026-02-17
 
 ### Added

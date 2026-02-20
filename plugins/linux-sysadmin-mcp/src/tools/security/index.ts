@@ -57,8 +57,8 @@ export function registerSecurityTools(ctx: PluginContext): void {
     name: "sec_harden_ssh", description: "Apply SSH hardening (disable password auth, root login, etc.). High risk.",
     module: "security", riskLevel: "high", duration: "normal",
     inputSchema: z.object({
-      actions: z.array(z.enum(["disable_root_login", "disable_password_auth", "set_max_auth_tries", "disable_x11"])).min(1),
-      confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+      actions: z.array(z.enum(["disable_root_login", "disable_password_auth", "set_max_auth_tries", "disable_x11"])).min(1).describe("SSH hardening actions to apply (select one or more)"),
+      confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
     }),
     annotations: { destructiveHint: true },
   }, async (args) => {
@@ -135,11 +135,15 @@ export function registerSecurityTools(ctx: PluginContext): void {
   registerTool(ctx, {
     name: "sec_check_suid", description: "Find SUID/SGID binaries on the system.",
     module: "security", riskLevel: "read-only", duration: "slow",
-    inputSchema: z.object({ path: z.string().optional().default("/").describe("Search root path") }),
+    inputSchema: z.object({
+      path: z.string().optional().default("/").describe("Search root path"),
+      limit: z.number().int().min(1).max(500).optional().default(100).describe("Maximum number of results to return (default 100, max 500)"),
+    }),
     annotations: { readOnlyHint: true },
   }, async (args) => {
     const p = (args.path as string) ?? "/";
-    const r = await executeBash(ctx, `find ${p} -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null | head -100`, "slow");
+    const limit = (args.limit as number) ?? 100;
+    const r = await executeBash(ctx, `find ${p} -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null | head -${limit}`, "slow");
     const lines = r.stdout.trim().split("\n").filter(Boolean);
     return success("sec_check_suid", ctx.targetHost, r.durationMs, "find ... -perm -4000/-2000", { suid_files: lines, count: lines.length });
   });

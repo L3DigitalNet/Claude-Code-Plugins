@@ -62,7 +62,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     module: "packages", riskLevel: "moderate", duration: "slow",
     inputSchema: z.object({
       packages: z.array(z.string().min(1)).min(1).describe("Package names to install"),
-      confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+      confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
     }),
     annotations: { readOnlyHint: false, destructiveHint: false },
   }, async (args) => {
@@ -87,7 +87,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     name: "pkg_remove", description: "Remove a package (preserve config files). High risk.",
     module: "packages", riskLevel: "high", duration: "normal",
     inputSchema: z.object({
-      packages: z.array(z.string().min(1)).min(1), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+      packages: z.array(z.string().min(1)).min(1).describe("Package names to remove or purge"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
     }),
     annotations: { destructiveHint: true },
   }, async (args) => {
@@ -109,7 +109,7 @@ export function registerPackageTools(ctx: PluginContext): void {
     name: "pkg_purge", description: "Remove a package AND its config files. Critical risk.",
     module: "packages", riskLevel: "critical", duration: "normal",
     inputSchema: z.object({
-      packages: z.array(z.string().min(1)).min(1), confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+      packages: z.array(z.string().min(1)).min(1).describe("Package names to remove or purge"), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
     }),
     annotations: { destructiveHint: true },
   }, async (args) => {
@@ -128,11 +128,11 @@ export function registerPackageTools(ctx: PluginContext): void {
 
   // ── pkg_update ──────────────────────────────────────────────────
   registerTool(ctx, {
-    name: "pkg_update", description: "Update specific packages or all packages.",
+    name: "pkg_update", description: "Update specific packages or all packages. Moderate risk.",
     module: "packages", riskLevel: "moderate", duration: "slow",
     inputSchema: z.object({
-      packages: z.array(z.string()).optional().describe("Specific packages to update (omit for all)"),
-      confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+      packages: z.array(z.string()).optional().describe("Specific packages to update. Omit to upgrade ALL installed packages on the system."),
+      confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
     }),
     annotations: { destructiveHint: false },
   }, async (args) => {
@@ -184,8 +184,8 @@ export function registerPackageTools(ctx: PluginContext): void {
     name: "pkg_rollback", description: "Roll back to a previous package version. High risk.",
     module: "packages", riskLevel: "high", duration: "slow",
     inputSchema: z.object({
-      package: z.string().min(1), version: z.string().optional().describe("Target version (omit for previous)"),
-      confirmed: z.boolean().optional().default(false), dry_run: z.boolean().optional().default(false),
+      package: z.string().min(1).describe("Package name to roll back"), version: z.string().optional().describe("Target version (omit for previous)"),
+      confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes."),
     }),
     annotations: { destructiveHint: true },
   }, async (args) => {

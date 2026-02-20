@@ -6,6 +6,40 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] — 2026-02-19
+
+### Added
+- **DESIGN.md** — architecture decisions document covering 7 key design choices:
+  behavioral-only architecture, single-agent workflow, large command file rationale,
+  two-command split, warm handoff as text block, phase gate state machine, and
+  context pressure management strategy
+- **Context pressure hook** (`hooks/hooks.json` + `scripts/read-counter.sh`) —
+  PostToolUse Read hook that counts file reads per session and emits warnings at
+  10 reads (notice) and 20 reads (strong warning). Mirrors agent-orchestrator's
+  read-counter pattern; upgrades context health tracking from behavioral (per-pass)
+  to mechanical (per-operation)
+
+### Changed
+- **README.md Known Issues** — removed stale Q7 checkbox entry (resolved in 0.2.x UX
+  audit); reframed 5+ option prompt entry as a deliberate design decision in a new
+  "Design Decisions" section; updated context pressure note to reference the new hook
+- **design-draft.md interaction conventions** — strengthened universal AskUserQuestion
+  directive with explicit "applies to code blocks" enforcement and conversion recipe
+- **design-draft.md Q7** — replaced false-affordance checkbox list with numbered
+  reference list; split Q8 into two derived AskUserQuestion calls using Q7 answers
+- **design-draft.md Phase 2A** — progressive disclosure: compact summary first,
+  full candidate details available via option (B) on demand
+- **design-draft.md Phase 3** — moved domain rationale note outside fenced code block;
+  added explicit AskUserQuestion instruction for structure confirmation
+- **design-draft.md `back` command** — added defined output format
+  (`◀ BACK — Returning to Phase [N]: [Phase Name] — resuming at [last confirmed step]`)
+- **design-review.md interaction conventions** — same AskUserQuestion enforcement
+  strengthening as design-draft
+- **design-review.md empty argument** — added defined `✗ NO FILE PROVIDED` message
+  template for consistent entry error display
+
+---
+
 ## [0.2.0] - 2026-02-18
 
 ### Added

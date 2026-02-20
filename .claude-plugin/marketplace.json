@@ -9,7 +9,7 @@
     {
       "name": "agent-orchestrator",
       "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -20,8 +20,8 @@
     },
     {
       "name": "home-assistant-dev",
-      "description": "Comprehensive Home Assistant integration development toolkit with 19 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
-      "version": "2.1.0",
+      "description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
+      "version": "2.2.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -45,7 +45,7 @@
     {
       "name": "release-pipeline",
       "description": "Interactive release pipeline \u2014 context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -57,7 +57,7 @@
     {
       "name": "linux-sysadmin-mcp",
       "description": "Comprehensive Linux system administration MCP server with ~100 tools across 15 modules \u2014 packages, services, users, firewall, networking, security, storage, containers, and more",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -69,7 +69,7 @@
     {
       "name": "design-assistant",
       "description": "Principled design document authoring and enforcement. /design-draft guides principles discovery and document generation. /design-review enforces principles across passes with auto-fix. Warm handoff transfers full context between commands.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"

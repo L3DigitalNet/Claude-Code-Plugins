@@ -14,15 +14,30 @@ allowed-tools: Read, Write, Glob, Grep
 
 ## INTERACTION CONVENTIONS
 
-For every decision point in this command that presents 2–4 labeled
-options (A), (B), (C), etc., present them using `AskUserQuestion`
-rather than as code blocks. Derive the question text, a short header
-(≤12 chars), and option descriptions from the surrounding context.
-`AskUserQuestion` includes a built-in "Other" fallback — do not add a
-redundant "(X) Other" option to bounded lists.
+**Rule: Convert every 2–4 option decision point to `AskUserQuestion`.**
 
-For prompts with 5 or more options (e.g., finding resolution modes,
-tension scenarios, escalation choices), present as formatted text.
+This applies universally — including to code blocks in this file that
+display (A), (B), (C), (D) options. Those blocks define the *content*;
+you convert them to `AskUserQuestion` at runtime. Do not reproduce
+them as formatted text.
+
+How to convert a code block to `AskUserQuestion`:
+- **question**: Use the prompt or question text from the block header
+- **header**: A ≤12-character label (e.g., "Principles", "Proceed?",
+  "Auto-Fix Mode", "Finalize?")
+- **options**: Each (A)/(B)/(C)/(D) becomes one `{label, description}`
+  pair — option letter text as the label, surrounding context as the
+  description. Maximum 4 options.
+- Do not add a redundant "(X) Other" — `AskUserQuestion` includes this
+  automatically.
+
+**For 5 or more options** (e.g., finding resolution modes, tension
+scenarios, escalation choices, health issue resolution): Present as
+formatted text, not `AskUserQuestion`.
+
+**Never convert:** Pause State Snapshots, diff blocks, pass headers,
+status tables, findings queues, and informational inventory blocks —
+these are output, not menus.
 
 ## ENTRY POINT
 
@@ -34,8 +49,18 @@ exist, tell the user and stop. If it exists, proceed with its contents
 as the design document.
 
 **If $ARGUMENTS is empty:**
-Ask the user to provide a file path. Do not begin initialization until
-a valid file has been read.
+Emit the following, then stop until a valid file path is provided:
+
+```
+✗ NO FILE PROVIDED
+──────────────────────────────────────────────────────────────────────
+/design-review requires a path to the design document to review.
+
+  Usage: /design-review path/to/design-doc.md
+
+Provide the file path and I'll begin the review.
+──────────────────────────────────────────────────────────────────────
+```
 
 Once document content is in hand, begin the INITIALIZATION sequence below.
 

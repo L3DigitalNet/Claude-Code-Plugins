@@ -151,10 +151,10 @@ mypy .
 ## Integration Quality Review: {domain}
 
 ### Tier Assessment
-- Bronze: {X}/18 ✅/❌
-- Silver: {X}/10 ✅/❌
-- Gold: {X}/21 ✅/❌
-- Platinum: {X}/3 ✅/❌
+- Bronze: {X}/18 ✓/✗
+- Silver: {X}/10 ✓/✗
+- Gold: {X}/21 ✓/✗
+- Platinum: {X}/3 ✓/✗
 
 **Current Tier:** {highest fully passing tier}
 

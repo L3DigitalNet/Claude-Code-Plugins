@@ -249,10 +249,10 @@ class TestCrossReferenceConsistency:
         # Get skills from README (in the "Agent Skills" section, not "Specialized Agents")
         readme_content = readme_path.read_text()
         
-        # Extract just the skills section (between "Agent Skills" and "Automated Validation")
+        # Extract just the skills section (between "## Skills" and "## Agents")
         skills_section_match = re.search(
-            r'Agent Skills.*?(?=###\s*Automated|$)', 
-            readme_content, 
+            r'## Skills.*?(?=## Agents|$)',
+            readme_content,
             re.DOTALL
         )
         if skills_section_match:

@@ -228,11 +228,33 @@ jobs:
           echo "Onboarding complete. HA version:"
           curl -sf "$HA_BASE/api/config" -H "Authorization: Bearer $LLAT" | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])"
 
+      - name: Configure demo integration
+        run: |
+          set -e
+          HA_BASE="http://localhost:8123"
+          TOKEN=$(python3 -c "import json,os; c=json.load(open(os.path.expanduser('~/.config/ha-dev-mcp/config.json'))); print(c['homeAssistant']['token'])")
+
+          # Set up demo integration via config flow
+          curl -sf -X POST "$HA_BASE/api/config/config_entries/flow" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"handler":"demo","show_advanced_options":false}' > /tmp/demo_flow.json
+
+          FLOW_ID=$(python3 -c "import json; print(json.load(open('/tmp/demo_flow.json'))['flow_id'])")
+
+          # Complete the flow (demo requires no additional config)
+          curl -sf -X POST "$HA_BASE/api/config/config_entries/flow/$FLOW_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' > /tmp/demo_result.json
+
+          python3 -c "import json; r=json.load(open('/tmp/demo_result.json')); print(f'Demo setup result: {r.get(\"type\", \"unknown\")}')"
+
       - name: Build MCP server
         run: cd mcp-server && npx tsc
 
       - name: Wait for demo entities
-        run: sleep 5
+        run: sleep 30
 
       - name: Run REST API tests
         run: node tests/e2e/test-mcp-rest.mjs

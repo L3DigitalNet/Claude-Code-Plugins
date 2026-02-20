@@ -16,14 +16,28 @@ allowed-tools: Read, Write, Glob
 
 ## INTERACTION CONVENTIONS
 
-For every decision point in this command that presents 2–4 labeled
-options (A), (B), (C), etc., present them using `AskUserQuestion`
-rather than as code blocks. Derive the question text, a short header
-(≤12 chars), and option descriptions from the surrounding context.
-`AskUserQuestion` includes a built-in "Other" fallback — do not add a
-redundant "(X) Other" option to bounded lists.
+**Rule: Convert every 2–4 option decision point to `AskUserQuestion`.**
 
-For prompts with 5 or more options, present as formatted text.
+This applies universally — including to code blocks in this file that
+display (A), (B), (C), (D) options. Those blocks define the *content*;
+you convert them to `AskUserQuestion` at runtime. Do not reproduce
+them as formatted text.
+
+How to convert a code block to `AskUserQuestion`:
+- **question**: Use the prompt or question text from the block header
+- **header**: A ≤12-character label (e.g., "Entry Point", "Verdict",
+  "Proceed?", "Structure")
+- **options**: Each (A)/(B)/(C)/(D) becomes one `{label, description}`
+  pair — option letter text as the label, surrounding context as the
+  description. Maximum 4 options.
+- Do not add a redundant "(X) Other" — `AskUserQuestion` includes this
+  automatically.
+
+**For 5 or more options:** Present as formatted text, not
+`AskUserQuestion`.
+
+**Never convert:** Pause State Snapshots, diff blocks, phase headers,
+and informational inventory blocks — these are output, not menus.
 
 ## ENTRY POINT
 
@@ -498,21 +512,24 @@ format above.
 ```
 PHASE 1: CONTEXT — DOMAIN & QUALITY
 ──────────────────────────────────────────────────────────────────────
-Q7. Which of these matter most for this system? Rank your top 3:
-    [ ] Correctness (doing the right thing, no bugs)
-    [ ] Performance (speed, throughput, latency)
-    [ ] Reliability (uptime, fault tolerance, recovery)
-    [ ] Security (access control, data protection, audit)
-    [ ] Scalability (handling growth in load or data)
-    [ ] Maintainability (ease of change, onboarding new devs)
-    [ ] Simplicity (minimal moving parts, easy to understand)
-    [ ] Cost efficiency (infrastructure, development, operational)
-    [ ] Developer experience (ergonomics, tooling, feedback loops)
-    [ ] User experience (end-user-facing quality and responsiveness)
-    [ ] Other: ___
+Q7. Name your top 3 quality attributes for this system, in priority
+    order (#1 most critical, #3 least of the three). Reply with
+    numbers, e.g. "3, 1, 8" or attribute names.
 
-Q8. Of the three you ranked highest — which one would you sacrifice
-    first if forced to choose? Which one is truly non-negotiable?
+     1  Correctness        doing the right thing, no bugs
+     2  Performance        speed, throughput, latency
+     3  Reliability        uptime, fault tolerance, recovery
+     4  Security           access control, data protection, audit
+     5  Scalability        handling growth in load or data
+     6  Maintainability    ease of change, onboarding new devs
+     7  Simplicity         minimal moving parts, easy to understand
+     8  Cost efficiency    infrastructure, development, operational
+     9  Developer experience  ergonomics, tooling, feedback loops
+    10  User experience    end-user-facing quality, responsiveness
+    (Other: name it)
+
+    If multiple attributes are genuinely tied, list them all —
+    we'll resolve tradeoffs in Q8.
 
 Q9. Are there any existing standards, patterns, or reference
     architectures your team is expected to follow? Any internal
@@ -520,6 +537,22 @@ Q9. Are there any existing standards, patterns, or reference
     this design must pass through?
 ──────────────────────────────────────────────────────────────────────
 ```
+
+After receiving Q7, ask Q8 using `AskUserQuestion`:
+- question: "Of those top attributes — which one would you sacrifice
+  first if forced to?"
+- header: "Tradeoff"
+- options: one option per attribute named in Q7 (by name, not number),
+  plus "None — I'd defend all of them equally" as the final option.
+  Maximum 4 options. If more than 3 attributes were named, trim to the
+  3 highest-ranked before building the option list.
+
+Then, as a second `AskUserQuestion`:
+- question: "And which of these is truly non-negotiable — the one that
+  cannot be traded away under any pressure?"
+- header: "Non-negot."
+- options: same set, minus the attribute already identified as
+  sacrificeable above, plus "All are equally non-negotiable".
 
 After all three rounds, verify internally that all questions are
 answered or marked SKIPPED with a reason, and that tension scans ran
@@ -561,21 +594,50 @@ These are inferences from everything you heard — not generic best practices,
 but principles that feel specifically relevant to *this* project's goals,
 constraints, risks, and quality priorities.
 
+Before presenting, verify internally that every candidate has all
+required fields: a quote in Inferred from, ≥2 practice examples,
+non-empty Cost of violation, and Tension flag set or explicitly
+"None". Complete any empty fields before showing the summary.
+
+Then emit a compact summary — one block per candidate, no more:
+
 ```
-PHASE 2A: CANDIDATE PRINCIPLES
+PHASE 2A: CANDIDATE PRINCIPLES ([N] candidates)
 ══════════════════════════════════════════════════════════════════════
-Based on everything you've told me, here are the design principles I
-believe this project wants to operate by. These are candidates — we'll
-stress-test, modify, and lock them down together.
+Here are the design principles I believe this project operates by.
+These are inferences from what you told me — not best practices.
+We'll stress-test and lock each one in Phase 2B.
+══════════════════════════════════════════════════════════════════════
 
-For each candidate I've noted:
-- Where I inferred it from (your words, not mine)
-- What it means in practice
-- What it would cost if violated
-- Whether I think it will create tension with another candidate
+[PC1] [Principle Name]
+  "[One-sentence declarative statement]"
+  Inferred from: "[brief quote or paraphrase — 10 words max]"
+  Tension: [None | ⚠ conflicts with PC[N]]
 
+[PC2] [Principle Name]
+  "[One-sentence declarative statement]"
+  Inferred from: "[brief quote or paraphrase — 10 words max]"
+  Tension: [None | ⚠ conflicts with PC[N]]
+
+[... one block per candidate ...]
+══════════════════════════════════════════════════════════════════════
+```
+
+Then ask initial reaction using `AskUserQuestion`:
+- question: "Initial reaction to this candidate set?"
+- header: "Reaction"
+- options:
+  (A) These look right — proceed to stress-testing
+  (B) Show me full details before deciding
+  (C) Something is missing — I'll tell you what to add
+  (D) I want to start over with different framing
+
+**If (B) — Show full details:**
+Emit the full candidate block for every principle:
+
+```
 ──────────────────────────────────────────────────────────────────────
-CANDIDATE [PC1]: [Principle Name]
+[PC1]: [Principle Name]
 ──────────────────────────────────────────────────────────────────────
 Inferred from: "[direct quote or paraphrase from the human's answers]"
 Statement: [declarative sentence — how the team should make decisions]
@@ -584,26 +646,12 @@ In practice this means: [2-3 concrete examples of this principle
 Cost of violation: [what goes wrong if this is ignored under pressure]
 Tension flag: [None / Conflicts with PC[N] — see Phase 2C]
 
+[... same format for all candidates ...]
 ──────────────────────────────────────────────────────────────────────
-CANDIDATE [PC2]: [Principle Name]
-──────────────────────────────────────────────────────────────────────
-[same format]
-
-[... continue for all candidates, typically 4-8]
-
-──────────────────────────────────────────────────────────────────────
-Initial reaction:
-  (A) These look right — proceed to stress-testing
-  (B) Some of these are wrong or missing — tell me what to change
-  (C) I want to add a principle not on this list
-  (D) I want to start over with different framing
-══════════════════════════════════════════════════════════════════════
 ```
 
-Before presenting confirmation, verify internally that every candidate
-has all required fields: a quote in Inferred from, ≥2 practice
-examples, non-empty Cost of violation, and Tension flag set or
-explicitly "None". Complete any empty fields before presenting.
+After showing full details, re-ask the reaction using `AskUserQuestion`
+with options (A), (C), and (D) only (B is satisfied).
 
 ### Step 2B — Individual Stress Testing
 
@@ -878,17 +926,20 @@ recommend for this design document. Each section is rated:
   ○  12. Deployment & Environment Configuration
   ○  13. Open Questions & Decisions Log
   ○  14. Appendix
-──────────────────────────────────────────────────────────────────────
-
-Notes on recommended structure:
-  [Any domain-specific rationale for the section choices — why certain
-  sections were prioritized or added based on the context gathered.]
-
-  (A) Accept this structure — proceed to Phase 4
-  (B) I want to add, remove, or reorder sections
-  (C) This document covers only [subset] — trim accordingly
 ══════════════════════════════════════════════════════════════════════
 ```
+
+After emitting the section list, briefly explain any domain-specific
+rationale in plain text (why certain sections were prioritized or
+included based on what was gathered in Phase 1). Keep to 2-3 sentences.
+
+Then present the confirmation using `AskUserQuestion`:
+- question: "Does this section structure work for your document?"
+- header: "Structure"
+- options:
+  (A) Accept this structure — proceed to Phase 4
+  (B) I want to add, remove, or reorder sections
+  (C) This document covers only a subset — trim accordingly
 
 ---
 
@@ -1432,7 +1483,7 @@ These commands work at any point during the authoring session:
 | `pause` | Suspend session and emit full Pause State Snapshot capturing all phase progress, confirmed answers, principle registry, tension log, section list, and draft state |
 | `continue` | Resume from a Pause State Snapshot. Claude reconstructs all state and resumes at the exact phase and step indicated. |
 | `finalize` | Trigger Early Exit Protocol. Suspends current phase, assesses completion status, emits Partial Draft Declaration with all salvageable artifacts and readiness assessment. Followed by Pause Snapshot for optional resumption. |
-| `back` | Return to previous phase |
+| `back` | Return to previous phase. Progress from the current phase is discarded. Emit: `◀ BACK — Returning to Phase [N]: [Phase Name] — resuming at [last confirmed step]` |
 | `skip to [phase]` | Jump to a later phase. Current phase must have reached its confirmation gate (the (A)/(B) prompt at phase end). Claude warns if skipping would bypass an unconfirmed synthesis or registry. |
 | `show principles` | Print current principles registry in full |
 | `show context` | Reprint the Context Synthesis from Phase 0-1 |

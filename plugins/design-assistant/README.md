@@ -180,8 +180,11 @@ plugins/design-assistant/
 
 ## Known Issues
 
-- **Large documents cause context pressure** — documents over ~500 lines may push review context near limits during Track B; use `pause/continue` to checkpoint and resume across sessions
+- **Large documents cause context pressure** — documents over ~500 lines may push review context near limits during Track B; use `pause/continue` to checkpoint and resume across sessions. The installed plugin includes a read-counter hook that provides early warnings at 10 and 20 reads.
 - **Cold-start review has limited analysis** — without a principles section and without a warm handoff from `/design-draft`, Track B (principle enforcement) is skipped entirely
-- **`pause/continue` state is session-local** — session snapshots are held in the active conversation context; starting a new Claude Code session requires a fresh run of `/design-draft` or `/design-review`
-- **Phase 1 Q7 quality attributes list** — the 10-item quality attributes question (Round 3, Q7) is presented as a plain-text checkbox list. `AskUserQuestion` supports a maximum of 4 options, so this question cannot be converted without restructuring the question format
-- **Tension resolution and finding-queue prompts have 5+ options** — these exceed the `AskUserQuestion` limit and remain as formatted text in both commands
+- **`pause/continue` state is session-local** — session snapshots are held in the active conversation context; starting a new Claude Code session requires pasting the snapshot
+
+## Design Decisions
+
+- **Tension resolution and finding-queue prompts remain as formatted text** — these decision points have 5+ options (A–E or more), which intentionally exceeds the `AskUserQuestion` limit of 4. All 2–4 option decision points use `AskUserQuestion`; 5+ option points use formatted text. This is a deliberate convention, not a limitation.
+- **Large command files** — both commands are 1,000–1,500 lines by design. See [DESIGN.md](DESIGN.md) for rationale (AD3: template externalization doesn't reduce context cost for single-agent behavioral plugins).

@@ -21,9 +21,5 @@ cp "$SCRIPT_DIR/../templates/ledger.md" .claude/state/ledger.md
 # Copy teammate protocol
 cp "$SCRIPT_DIR/../templates/teammate-protocol.md" .claude/state/teammate-protocol.md
 
-echo "=== Orchestrator bootstrap complete ==="
-echo "Created: .claude/state/ledger.md"
-echo "Created: .claude/state/teammate-protocol.md"
-echo "Updated: .gitignore"
-echo ""
-echo "Next: Update ledger placeholders (<task summary>, <timestamp>, <mode>) with values from your plan."
+echo "✓ Bootstrap complete — .claude/state/ ready."
+echo "  Next: update ledger placeholders in .claude/state/ledger.md"
