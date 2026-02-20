@@ -33,7 +33,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "home-assistant-js-websocket": "^9.0.0",
     "minisearch": "^6.3.0",
-    "zod": "^3.22.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",
