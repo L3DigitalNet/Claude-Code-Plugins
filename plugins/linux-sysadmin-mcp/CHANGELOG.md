@@ -2,6 +2,24 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
+## [1.1.0] - 2026-02-20
+
+### Added
+- add check-stale-commits.sh
+- linux-sysadmin-mcp v1.0.5 + plugin-test-harness v0.1.1
+- quality improvements from plugin review (v1.0.4)
+
+### Changed
+- update version numbers in design and testing documents to v2.2.1 and v1.0.5
+- align plugin principles with trust-based philosophy
+- pre-release staging — update github-repo-manager, linux-sysadmin-mcp, release-pipeline
+- release: 6 plugin releases — agent-orchestrator 1.0.2, home-assistant-dev 2.2.0, release-pipeline 1.4.0, linux-sysadmin-mcp 1.0.2, design-assistant 0.3.0, plugin-test-harness 0.1.1
+
+### Fixed
+- clean up CHANGELOG duplicate section header
+- update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
+
+
 ## [1.0.6] — 2026-02-20
 
 ### Fixed
