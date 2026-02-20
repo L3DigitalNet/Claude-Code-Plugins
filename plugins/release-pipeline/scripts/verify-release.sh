@@ -85,7 +85,9 @@ fi
 
 # ---------- 2. GitHub release exists ----------
 
-if gh release view "$TAG" --json tagName -q '.tagName' -R "$(git -C "$REPO" remote get-url origin 2>/dev/null)" &>/dev/null; then
+if bash "$(dirname "$0")/api-retry.sh" 3 1000 -- \
+    gh release view "$TAG" --json tagName -q '.tagName' \
+    -R "$(git -C "$REPO" remote get-url origin 2>/dev/null)" &>/dev/null; then
   check "GitHub release exists" "pass"
 else
   check "GitHub release exists" "fail"
@@ -94,7 +96,9 @@ fi
 # ---------- 3. Release notes not empty ----------
 
 release_body=""
-release_body=$(gh release view "$TAG" --json body -q '.body' -R "$(git -C "$REPO" remote get-url origin 2>/dev/null)" 2>/dev/null || true)
+release_body=$(bash "$(dirname "$0")/api-retry.sh" 3 1000 -- \
+    gh release view "$TAG" --json body -q '.body' \
+    -R "$(git -C "$REPO" remote get-url origin 2>/dev/null)" 2>/dev/null || true)
 
 if [[ -n "$release_body" ]]; then
   check "Release notes present" "pass"
