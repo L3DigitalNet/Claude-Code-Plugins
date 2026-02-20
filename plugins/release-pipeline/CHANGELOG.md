@@ -7,15 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.5.0] - 2026-02-19
 
 ### Added
-- sync local plugins to cache on SessionStart
-- auto-build TypeScript plugins before git commit
+- `MERGE COMPLETE` named block in Quick Merge final report — consistent with Full Release and Plugin Release output format
+- Explicit AskUserQuestion option labels for monorepo scope question in Dry Run and Changelog Preview modes
 
 ### Changed
-- pre-release staging — update github-repo-manager, linux-sysadmin-mcp, release-pipeline
-- release: 6 plugin releases — agent-orchestrator 1.0.2, home-assistant-dev 2.2.0, release-pipeline 1.4.0, linux-sysadmin-mcp 1.0.2, design-assistant 0.3.0, plugin-test-harness 0.1.1
+- Changelog write now happens after the approval gate in Full Release and Plugin Release — prevents a dirty `git checkout -- .` on abort; --preview is used before the gate
+- Quick Merge commit step no longer requires a separate confirmation — invocation with uncommitted changes implies consent; the merge gate is the single decision point
+- `sync-local-plugins.sh` SessionStart hook now suppresses output when no files changed
 
 ### Fixed
-- remove redundant release-detection skill, show changelog before approval
+- remove redundant release-detection skill (was listed in README but never created)
+- show changelog entry before approval gate in Phase 2 so users review it before committing
 
 
 ## [1.4.2] - 2026-02-19
@@ -33,7 +35,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.4.0] - 2026-02-19
 
 ### Changed
-- release: 5 plugin releases — design-assistant 0.3.0, linux-sysadmin-mcp 1.0.2, agent-orchestrator 1.0.2, release-pipeline 1.4.0, home-assistant-dev 2.2.0
 - add Principles section to all 7 plugin READMEs
 - standardise all plugin READMEs with consistent sections
 

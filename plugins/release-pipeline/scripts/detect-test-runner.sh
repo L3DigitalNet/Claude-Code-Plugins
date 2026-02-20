@@ -7,7 +7,9 @@ set -euo pipefail
 # Output: the test command to run (stdout)
 # Exit:   0 = found, 1 = not detected
 #
-# Detection order:
+# Called by: agents/test-runner.md (sourced at runtime by the test-runner agent)
+#
+# Detection order — ecosystem-specificity to generality, then CLAUDE.md as authoritative fallback:
 #   1. Python pytest  (pyproject.toml, pytest.ini, setup.cfg)
 #   2. Node.js        (package.json scripts.test)
 #   3. Rust           (Cargo.toml)

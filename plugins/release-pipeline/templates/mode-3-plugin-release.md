@@ -102,7 +102,7 @@ Display consolidated pre-flight report (same format as Mode 2).
 **Before proceeding, verify each agent's status explicitly:**
 - Locate the `TEST RESULTS`, `DOCS AUDIT`, and `GIT PRE-FLIGHT` blocks in each agent's output.
 - If any block is missing, incomplete, or ambiguous → treat it as FAIL.
-- If **ANY agent reports FAIL** → STOP immediately. Do NOT proceed to Phase 2.
+- If **ANY agent reports FAIL** → STOP immediately. Display the failure details and suggest: "Fix the issues above and re-run `/release`." Do NOT proceed to Phase 2.
 - If **all PASS or WARN** (and all three blocks are present) → proceed to Phase 2.
 
 ## Phase 2 — Scoped Preparation (Sequential)
@@ -115,33 +115,41 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version> --plugin <plugin-
 
 This bumps `plugins/<plugin-name>/.claude-plugin/plugin.json` and the matching entry in `.claude-plugin/marketplace.json`.
 
-**Step 2 — Generate changelog (plugin-scoped):**
+**Step 2 — Preview changelog (plugin-scoped, no write yet):**
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name>
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name> --preview
 ```
 
-This collects only commits touching `plugins/<plugin-name>/` since the last `<plugin-name>/v*` tag and writes to `plugins/<plugin-name>/CHANGELOG.md`. Capture stdout — it contains the full changelog entry. Display it in a fenced block immediately after running.
+This collects only commits touching `plugins/<plugin-name>/` since the last `<plugin-name>/v*` tag. Capture stdout — it contains the full changelog entry that will be added. Does not write to CHANGELOG.md.
 
-**Step 3 — Show diff summary:**
-
-Run:
+Then show the diff for version files already updated:
 
 ```bash
 git diff --stat
 ```
 
-Summarize: version files changed (plugin.json, marketplace.json) and any other modified files. (The changelog entry was already shown in Step 2 — do not repeat it.)
+Display both in a single pre-gate summary (matching Mode 2 format):
+- "Version files updated:" — from the diff (plugin.json, marketplace.json)
+- "Changelog entry that will be added:" — from the preview output, in a fenced block
 
-**Step 4 — Approval gate:**
+**Step 3 — Approval gate:**
 
 Use **AskUserQuestion**:
 - question: `"Proceed with the <plugin-name> v<version> release?"`
 - header: `"Release"`
 - options:
-  1. label: `"Proceed"`, description: `"Commit, tag, merge to main, and push"`
-  2. label: `"Abort"`, description: `"Cancel — revert all changes (git checkout -- .)"`
-If "Abort" → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
+  1. label: `"Proceed"`, description: `"Write changelog, commit, tag, merge to main, and push"`
+  2. label: `"Abort"`, description: `"Cancel — revert version bumps (git checkout -- .)"`
+If "Abort" → run `git checkout -- .` and report "Release aborted. Version bumps reverted." and stop.
+
+**Step 4 — Write changelog (after approval):**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name>
+```
+
+This writes the entry to `plugins/<plugin-name>/CHANGELOG.md`. No output needed — it was previewed in Step 2.
 
 ## Phase 3 — Scoped Release (Sequential)
 

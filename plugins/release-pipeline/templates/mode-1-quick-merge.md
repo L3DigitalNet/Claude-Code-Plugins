@@ -28,19 +28,17 @@ If on `main` or email is not noreply: STOP and report the issue.
 
 ## Step 2 — Stage and Commit (only if uncommitted changes exist)
 
+Selecting Quick Merge with uncommitted changes implies consent to commit them — no separate confirmation gate is needed here. The merge gate in Step 3 is the decision point.
+
 If `git status --porcelain` returned output:
 
 1. Stage all changes: `git add -A`
 2. Generate a commit message from `git diff --cached --stat` (summarize the changes)
-3. Show the user the `git diff --cached --stat` output and the proposed commit message
-4. Use **AskUserQuestion**:
-   - question: `"Stage and commit these changes?"`
-   - header: `"Commit"`
-   - options:
-     1. label: `"Proceed"`, description: `"Commit all staged changes with the message above"`
-     2. label: `"Abort"`, description: `"Cancel — do not stage or commit anything"`
-   If "Abort" → report "Quick merge aborted." and stop.
-5. Commit with the generated message.
+3. Display the staged changes and proposed message as labelled context before the merge gate:
+   - `Changes staged:` — output of `git diff --cached --stat`
+   - `Proposed commit:` — the generated commit message
+   (The merge gate below is where the user can abort — nothing has been committed yet.)
+4. Commit with the generated message.
 
 If the working tree is clean, skip directly to Step 3.
 
@@ -66,7 +64,14 @@ git checkout testing
 
 ## Step 4 — Report
 
-Display:
-- Number of commits merged
-- Files changed (`git diff --stat HEAD~1` on main before switching back)
-- Confirm current branch is `testing`
+Display a completion block:
+
+```
+MERGE COMPLETE
+==============
+Commits merged: <N>
+Files changed:  <summary from git diff --stat HEAD~1>
+Branch:         testing
+```
+
+Run `git diff --stat HEAD~1` on main before switching back to get the files-changed summary.

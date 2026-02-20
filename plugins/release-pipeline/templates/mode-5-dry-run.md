@@ -16,7 +16,14 @@ flags that prevent file writes — no mutations occur and no revert step is need
 
 ## Step 0 — Version Selection
 
-Same as Mode 2 Step 0 — present auto-suggested version via AskUserQuestion. If monorepo, first ask if this is a repo-wide or plugin dry run using AskUserQuestion, then scope accordingly.
+If monorepo (`is_monorepo` is true), first ask the dry-run scope using **AskUserQuestion**:
+- question: `"Dry run scope?"`
+- header: `"Scope"`
+- options:
+  1. label: `"Repo-wide"`, description: `"Simulate a full-repository release"`
+  2. label: `"Single plugin"`, description: `"Simulate release scoped to one plugin"` → if selected, show the same plugin picker used in Mode 3 Step 0
+
+Then present the auto-suggested version (same as Mode 2 Step 0), scoped to the selection.
 
 ## Phase 1 — Pre-flight (Parallel)
 

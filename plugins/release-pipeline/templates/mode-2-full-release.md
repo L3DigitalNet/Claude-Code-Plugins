@@ -90,33 +90,43 @@ PRE-FLIGHT RESULTS
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version>
 ```
 
-**Step 2 — Generate changelog:**
+If this exits 1, STOP — no version strings found means the release is malformed.
+
+**Step 2 — Preview changes (no writes yet):**
+
+Run changelog preview (does not write CHANGELOG.md):
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version>
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --preview
 ```
 
-Capture stdout — it contains the full changelog entry. Display it in a fenced block immediately after running.
-
-**Step 3 — Show diff summary:**
-
-Run:
+Then show the diff for files already updated (version bumps only):
 
 ```bash
 git diff --stat
 ```
 
-Summarize: version files changed and any other modified files. (The changelog entry was already shown in Step 2 — do not repeat it.)
+Display both in a single pre-gate summary:
+- "Version files updated:" — from the diff
+- "Changelog entry that will be added:" — from the preview output, in a fenced block
 
-**Step 4 — Approval gate:**
+**Step 3 — Approval gate:**
 
 Use **AskUserQuestion**:
 - question: `"Proceed with the v<version> release?"`
 - header: `"Release"`
 - options:
-  1. label: `"Proceed"`, description: `"Commit, tag, merge to main, and push"`
-  2. label: `"Abort"`, description: `"Cancel — revert all changes (git checkout -- .)"`
-If "Abort" → run `git checkout -- .` and report "Release aborted. All changes reverted." and stop.
+  1. label: `"Proceed"`, description: `"Write changelog, commit, tag, merge to main, and push"`
+  2. label: `"Abort"`, description: `"Cancel — revert version bumps (git checkout -- .)"`
+If "Abort" → run `git checkout -- .` and report "Release aborted. Version bumps reverted." and stop.
+
+**Step 4 — Write changelog (after approval):**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version>
+```
+
+This writes the entry to CHANGELOG.md. No output needed — it was previewed in Step 2.
 
 ## Phase 3 — Release (Sequential)
 

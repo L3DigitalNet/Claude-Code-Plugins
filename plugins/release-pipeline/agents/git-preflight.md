@@ -27,7 +27,7 @@ Clean tree: YES | NO (X files modified)
 Branch: <branch-name> (OK | FAIL — on protected branch)
 Email: <email> (OK | FAIL — not noreply)
 Remote: <url> (OK | FAIL)
-Tag vX.Y.Z: available | ALREADY EXISTS
+Tag:       <resolved-tag-value> — available | ALREADY EXISTS
 ```
 
 ## Rules

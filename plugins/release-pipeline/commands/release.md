@@ -109,8 +109,10 @@ Use **AskUserQuestion** to present the release menu. Build the options dynamical
 Before calling `AskUserQuestion`, output one context line:
 
 ```
-Branch: <current_branch>  |  Last tag: <last_tag>  |  <commit_count> commits since last tag
+Branch: <current_branch>  |  Last tag: <last_tag>  |  <commit_count> commits since last tag  |  ⚠ uncommitted changes
 ```
+
+Omit the `⚠ uncommitted changes` segment when `is_dirty` is false.
 
 **Question text:** `"What would you like to do?"`
 **Header:** `"Release"`

@@ -7,6 +7,14 @@ set -euo pipefail
 # Output: list of files changed (or would-change) on stdout
 # Exit:   0 = at least one file updated (or would update), 1 = no version strings found
 #
+# Called by: templates/mode-2-full-release.md (Phase 2 Step 1),
+#            templates/mode-3-plugin-release.md (Phase 2 Step 1),
+#            templates/mode-5-dry-run.md (Phase 2 Step 1)
+#
+# Exit 1 behaviour: emits a warning to stderr and exits non-zero. mode-2-full-release.md
+# (Phase 2 Step 1) has an explicit "If this exits 1, STOP" instruction. mode-3 and
+# mode-5 templates should apply the same logic: exit 1 = release is malformed, pipeline STOP.
+#
 # --dry-run: reports which files would change without writing any of them.
 #
 # Version targets (single-repo mode, no --plugin):
