@@ -51,7 +51,7 @@ The `scoped-reaudit` skill encodes a mapping from file paths to affected tracks.
 
 ## Pass Budget Rationale
 
-Three passes chosen as default based on the typical review arc: Pass 1 discovers initial findings, Pass 2 verifies fixes and catches regressions, Pass 3 handles cascade effects. Reviews that haven't converged by Pass 3 usually have findings representing accepted trade-offs or architectural limitations rather than fixable gaps. The budget is a structural checkpoint, not a hard wall — the user can choose to continue, but the orchestrator must surface the decision.
+Five passes chosen as the default budget (configurable via `--max-passes=N`) based on the typical review arc: Pass 1 discovers initial findings, Pass 2 verifies fixes and catches regressions, Pass 3 handles cascade effects, with additional passes available for complex plugins. Reviews that haven't converged by the budget limit usually have findings representing accepted trade-offs or architectural limitations rather than fixable gaps. The budget is a structural checkpoint, not a hard wall — the user can choose to continue, but the orchestrator must surface the decision.
 
 ## Hook Design: PostToolUse Doc Write Tracker
 
