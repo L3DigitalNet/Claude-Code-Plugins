@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-17 23:41 EST
 **Claude Code Model:** Claude Opus 4.6
-**Plugin Version:** 0.1.0 *(results from initial v0.1.0 release; v1.0.x includes additional tools and UX improvements not covered by this run)*
+**Plugin Version:** 0.1.0 *(results from initial v0.1.0 release; current version is 1.0.3. Subsequent 1.0.x releases added parameter descriptions, dry_run additions, documentation_action hints, structured output for perf/sec/net tools, and confirmation_threshold default change — behavioral changes that would affect some Layer 3 assertions. A re-run against 1.0.3 is pending.)*
 
 ## Summary
 
@@ -81,7 +81,7 @@ Distro detection correctly identifies Fedora 43 as rhel family with dnf/systemd/
 | packages | 5 | PASS (1 filtered variant returned ERROR -- see notes) |
 | services | 5 | PASS |
 | performance | 8 | PASS |
-| logs | 5 | PASS |
+| logs | 4 | PASS |
 | security | 6 | PASS |
 | storage | 5 | PASS |
 | users | 6 | PASS |

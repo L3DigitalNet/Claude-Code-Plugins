@@ -4,18 +4,20 @@ import { registerTool, success, error, executeBash } from "../helpers.js";
 
 export function registerDocTools(ctx: PluginContext): void {
   const repoPath = () => ctx.config.documentation.repo_path;
-  const noRepo = () => error("doc", ctx.targetHost, 0, { code: "NO_DOC_REPO", category: "validation", message: "No documentation repo configured. Set documentation.repo_path in config.yaml.", remediation: ["Set documentation.repo_path in ~/.config/linux-sysadmin/config.yaml"] });
+  // Accept the calling tool's name so the error envelope's `tool` field matches the actual invocation.
+  // Without this, all doc tools would return tool:"doc" which breaks the response envelope contract.
+  const noRepo = (toolName: string) => error(toolName, ctx.targetHost, null, { code: "NO_DOC_REPO", category: "validation", message: "No documentation repo configured. Set documentation.repo_path in config.yaml.", remediation: ["Set documentation.repo_path in ~/.config/linux-sysadmin/config.yaml"] });
 
   registerTool(ctx, { name: "doc_status", description: "Show documentation repo status: git state, tracked hosts/services.", module: "docs", riskLevel: "read-only", duration: "quick", inputSchema: z.object({}), annotations: { readOnlyHint: true } }, async () => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_status");
     const r = await executeBash(ctx, `cd '${rp}' && git status --short && echo '---HOSTS---' && ls -d hosts/*/ 2>/dev/null || echo 'No hosts documented'`, "quick");
     return success("doc_status", ctx.targetHost, r.durationMs, "git status + ls", { output: r.stdout.trim(), repo_path: rp });
   });
 
   registerTool(ctx, { name: "doc_init", description: "Initialize documentation git repo. Low risk.", module: "docs", riskLevel: "low", duration: "quick", inputSchema: z.object({ path: z.string().optional().describe("Override repo path") }), annotations: { destructiveHint: false } }, async (args) => {
     const rp = (args.path as string) ?? repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_init");
     const cmd = `mkdir -p '${rp}' && cd '${rp}' && git init && mkdir -p hosts/${ctx.targetHost.replace(/[^a-zA-Z0-9.-]/g, "_")}/services && echo '# Infrastructure Documentation' > README.md && git add -A && git commit -m '${ctx.config.documentation.commit_prefix}: initialize documentation repo'`;
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("doc_init", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
@@ -24,7 +26,7 @@ export function registerDocTools(ctx: PluginContext): void {
 
   registerTool(ctx, { name: "doc_generate_host", description: "Generate/update host-level README with system overview.", module: "docs", riskLevel: "low", duration: "normal", inputSchema: z.object({ rationale: z.string().optional().describe("Why this host exists / its role") }), annotations: { destructiveHint: false } }, async (args) => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_generate_host");
     const hostname = ctx.targetHost.replace(/[^a-zA-Z0-9.-]/g, "_");
     const hostDir = `${rp}/hosts/${hostname}`;
     // Gather system data
@@ -74,7 +76,7 @@ ${osR.stdout.trim()}
 
   registerTool(ctx, { name: "doc_generate_service", description: "Generate/update per-service README using knowledge profile data.", module: "docs", riskLevel: "low", duration: "normal", inputSchema: z.object({ service: z.string().min(1), rationale: z.string().optional() }), annotations: { destructiveHint: false } }, async (args) => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_generate_service");
     const svc = args.service as string;
     const hostname = ctx.targetHost.replace(/[^a-zA-Z0-9.-]/g, "_");
     const svcDir = `${rp}/hosts/${hostname}/services/${svc}`;
@@ -111,13 +113,13 @@ ${osR.stdout.trim()}
 
   registerTool(ctx, { name: "doc_backup_config", description: "Backup a service's config files to the documentation repo.", module: "docs", riskLevel: "read-only", duration: "quick", inputSchema: z.object({ service: z.string().min(1), paths: z.array(z.string()).optional().describe("Override config paths (uses profile if omitted)") }), annotations: { readOnlyHint: true } }, async (args) => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_backup_config");
     const svc = args.service as string;
     const hostname = ctx.targetHost.replace(/[^a-zA-Z0-9.-]/g, "_");
     const backupDir = `${rp}/hosts/${hostname}/services/${svc}/configs`;
     const profile = ctx.knowledgeBase.getProfile(svc);
     const paths = (args.paths as string[] | undefined) ?? (profile ? [profile.config.primary, ...(profile.config.backup_paths ?? [])] : []);
-    if (!paths.length) return error("doc_backup_config", ctx.targetHost, 0, { code: "NO_PATHS", category: "validation", message: "No config paths to back up. Specify paths or ensure a knowledge profile exists." });
+    if (!paths.length) return error("doc_backup_config", ctx.targetHost, null, { code: "NO_PATHS", category: "validation", message: "No config paths to back up. Specify paths or ensure a knowledge profile exists." });
     const cmds = [`mkdir -p '${backupDir}'`];
     for (const p of paths) {
       const fname = p.replace(/\//g, "_").replace(/^_/, "");
@@ -139,35 +141,60 @@ ${osR.stdout.trim()}
 
   registerTool(ctx, { name: "doc_diff", description: "Show uncommitted documentation changes.", module: "docs", riskLevel: "read-only", duration: "quick", inputSchema: z.object({}), annotations: { readOnlyHint: true } }, async () => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_diff");
     const r = await executeBash(ctx, `cd '${rp}' && git diff --stat && echo '---DIFF---' && git diff`, "quick");
     return success("doc_diff", ctx.targetHost, r.durationMs, "git diff", { output: r.stdout.trim() });
   });
 
   registerTool(ctx, { name: "doc_history", description: "Show documentation commit history.", module: "docs", riskLevel: "read-only", duration: "quick", inputSchema: z.object({ limit: z.number().int().min(1).max(50).optional().default(20) }), annotations: { readOnlyHint: true } }, async (args) => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_history");
     const r = await executeBash(ctx, `cd '${rp}' && git log --oneline -n ${(args.limit as number) ?? 20}`, "quick");
     return success("doc_history", ctx.targetHost, r.durationMs, "git log", { history: r.stdout.trim() });
   });
 
   registerTool(ctx, { name: "doc_restore_guide", description: "Generate a disaster recovery / restore guide for a host.", module: "docs", riskLevel: "read-only", duration: "normal", inputSchema: z.object({}), annotations: { readOnlyHint: true } }, async () => {
     const rp = repoPath();
-    if (!rp) return noRepo();
+    if (!rp) return noRepo("doc_restore_guide");
     const hostname = ctx.targetHost.replace(/[^a-zA-Z0-9.-]/g, "_");
     const hostDir = `${rp}/hosts/${hostname}`;
     // Read existing docs
-    const [hostR, svcsR] = await Promise.all([
+    const [hostR, svcsListR] = await Promise.all([
       executeBash(ctx, `cat '${hostDir}/README.md' 2>/dev/null || echo 'No host README'`, "quick"),
       executeBash(ctx, `ls '${hostDir}/services/' 2>/dev/null || echo 'none'`, "quick"),
     ]);
-    const services = svcsR.stdout.trim().split("\n").filter(s => s !== "none" && s.trim());
-    const svcDocs: string[] = [];
+    const services = svcsListR.stdout.trim().split("\n").filter(s => s !== "none" && s.trim());
+    // Build per-service structured restore entries from their READMEs
+    const serviceEntries: Array<{ name: string; restore_steps: string[]; readme_available: boolean }> = [];
     for (const svc of services) {
-      const r = await executeBash(ctx, `cat '${hostDir}/services/${svc}/README.md' 2>/dev/null || echo 'No README for ${svc}'`, "quick");
-      svcDocs.push(`### ${svc}\n${r.stdout.trim()}`);
+      const r = await executeBash(ctx, `cat '${hostDir}/services/${svc}/README.md' 2>/dev/null`, "quick");
+      const hasReadme = r.exitCode === 0 && r.stdout.trim().length > 0;
+      serviceEntries.push({
+        name: svc,
+        restore_steps: hasReadme
+          ? [`Install and configure ${svc} per its README`, `Restore config files from configs/ directory`, `Enable and start the service`, `Run health checks to verify`]
+          : [`Install ${svc}`, `Restore configuration`, `Enable and start the service`],
+        readme_available: hasReadme,
+      });
     }
-    const guide = `# Disaster Recovery Guide: ${ctx.targetHost}\n\n## Host Overview\n${hostR.stdout.trim()}\n\n## Services to Restore\n${svcDocs.join("\n\n")}\n\n## Restore Steps\n1. Provision new host matching distro: ${ctx.distro.name} ${ctx.distro.version}\n2. Restore config files from this repo's configs/ directories\n3. Install packages and enable services per each service README\n4. Verify health checks pass for each service\n\n---\n*Generated ${new Date().toISOString()}*\n`;
-    return success("doc_restore_guide", ctx.targetHost, 0, null, { guide, services_documented: services.length });
+    const restoreSequence = [
+      `Provision new host matching distro: ${ctx.distro.name} ${ctx.distro.version}`,
+      "Restore config files from this repo's configs/ directories",
+      "Install packages and enable services per each service README",
+      "Verify health checks pass for each service",
+    ];
+    // Full guide markdown for human-readable output alongside the structured fields
+    const svcDocsMarkdown = serviceEntries.map(s =>
+      `### ${s.name}\n${s.restore_steps.map(step => `- ${step}`).join("\n")}`
+    ).join("\n\n");
+    const fullGuideMarkdown = `# Disaster Recovery Guide: ${ctx.targetHost}\n\n## Host Overview\n${hostR.stdout.trim()}\n\n## Services to Restore\n${svcDocsMarkdown}\n\n## Restore Steps\n${restoreSequence.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\n---\n*Generated ${new Date().toISOString()}*\n`;
+    return success("doc_restore_guide", ctx.targetHost, null, null, {
+      host_summary: hostR.stdout.trim(),
+      services: serviceEntries,
+      restore_sequence: restoreSequence,
+      services_documented: services.length,
+      generated_at: new Date().toISOString(),
+      full_guide_markdown: fullGuideMarkdown,
+    });
   });
 }

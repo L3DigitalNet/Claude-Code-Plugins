@@ -25,11 +25,41 @@ export function registerSecurityTools(ctx: PluginContext): void {
       }
       if (checks.length) profileResults.push({ profile: rp.profile.name, checks });
     }
-    const failedCount = failedR.stdout.trim().split("\n").filter(Boolean).length;
-    const severity = failedCount > 0 || profileResults.some(p => p.checks.some(c => !c.passed)) ? "warning" as const : "info" as const;
+    const failedServices = failedR.stdout.trim().split("\n").filter(Boolean);
+    const failedCount = failedServices.length;
+    const hasFailedHealthChecks = profileResults.some(p => p.checks.some(c => !c.passed));
+    // Use the full severity scale: >5 failed services = critical, >2 = high, any = warning
+    const severity = failedCount > 5 ? "critical" as const
+      : failedCount > 2 ? "high" as const
+      : (failedCount > 0 || hasFailedHealthChecks) ? "warning" as const
+      : "info" as const;
+    // Parse listening ports from ss output into structured records
+    const listenLines = listeningR.stdout.trim().split("\n").filter(Boolean);
+    const listening_ports: Array<{ proto: string; local_addr: string; port: number; process?: string }> = [];
+    for (const line of listenLines) {
+      // ss -tlnp format: Netid State Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+      const parts = line.trim().split(/\s+/);
+      if (parts[0] === "tcp" || parts[0] === "udp") {
+        const localPart = parts[4] ?? "";
+        const lastColon = localPart.lastIndexOf(":");
+        if (lastColon !== -1) {
+          const addr = localPart.slice(0, lastColon);
+          const port = parseInt(localPart.slice(lastColon + 1));
+          if (!isNaN(port)) {
+            listening_ports.push({
+              proto: parts[0],
+              local_addr: addr,
+              port,
+              // Process column appears at index 6 if present (requires sudo for ss -p)
+              ...(parts[6] ? { process: parts[6].replace(/users:\(\("?([^"]+)"?,.*\)/, "$1") } : {}),
+            });
+          }
+        }
+      }
+    }
     return success("sec_audit", ctx.targetHost, failedR.durationMs, "multiple", {
-      failed_services: failedR.stdout.trim() || "none",
-      listening_ports: listeningR.stdout.trim(),
+      failed_services: failedServices.length > 0 ? failedServices : "none",
+      listening_ports,
       recent_ssh_warnings: loginR.stdout.trim(),
       profile_health: profileResults,
     }, { summary: `${failedCount} failed services. ${profileResults.length} profiles checked.`, severity });
@@ -80,7 +110,7 @@ export function registerSecurityTools(ctx: PluginContext): void {
       confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean,
     });
     if (gate) return gate;
-    if (args.dry_run) return success("sec_harden_ssh", ctx.targetHost, 0, null, { would_apply: descriptions }, { dry_run: true });
+    if (args.dry_run) return success("sec_harden_ssh", ctx.targetHost, null, null, { preview_command: cmd, preview_actions: descriptions }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "normal");
     if (r.exitCode !== 0) {
       // Rollback on failure
@@ -129,7 +159,28 @@ export function registerSecurityTools(ctx: PluginContext): void {
     inputSchema: z.object({}), annotations: { readOnlyHint: true },
   }, async () => {
     const r = await executeBash(ctx, "sudo -n ss -tlnp 2>/dev/null || ss -tln", "quick");
-    return success("sec_check_listening", ctx.targetHost, r.durationMs, "ss -tlnp", { listening: r.stdout.trim() });
+    const listenLines = r.stdout.trim().split("\n").filter(Boolean);
+    const ports: Array<{ proto: string; local_addr: string; port: number; process?: string }> = [];
+    for (const line of listenLines) {
+      const parts = line.trim().split(/\s+/);
+      if (parts[0] === "tcp" || parts[0] === "udp") {
+        const localPart = parts[4] ?? "";
+        const lastColon = localPart.lastIndexOf(":");
+        if (lastColon !== -1) {
+          const addr = localPart.slice(0, lastColon);
+          const port = parseInt(localPart.slice(lastColon + 1));
+          if (!isNaN(port)) {
+            ports.push({
+              proto: parts[0],
+              local_addr: addr,
+              port,
+              ...(parts[6] ? { process: parts[6].replace(/users:\(\("?([^"]+)"?,.*\)/, "$1") } : {}),
+            });
+          }
+        }
+      }
+    }
+    return success("sec_check_listening", ctx.targetHost, r.durationMs, "ss -tlnp", { listening_ports: ports, count: ports.length });
   });
 
   registerTool(ctx, {

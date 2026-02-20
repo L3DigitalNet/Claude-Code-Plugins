@@ -76,9 +76,12 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_install", cmd, "slow");
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_install", ctx.targetHost, r.durationMs, r.stderr, ctx);
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
+      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
     return success("pkg_install", ctx.targetHost, r.durationMs, cmd.argv.join(" "),
       { packages_installed: pkgs, output: r.stdout.trim() },
-      args.dry_run ? { dry_run: true } : undefined,
+      args.dry_run ? { dry_run: true } : docHint,
     );
   });
 
@@ -101,7 +104,10 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_remove", cmd, "normal");
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_remove", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    return success("pkg_remove", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_removed: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : undefined);
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
+      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+    return success("pkg_remove", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_removed: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : docHint);
   });
 
   // ── pkg_purge ───────────────────────────────────────────────────
@@ -123,7 +129,10 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_purge", cmd, "normal");
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_purge", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    return success("pkg_purge", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_purged: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : undefined);
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
+      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+    return success("pkg_purge", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_purged: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : docHint);
   });
 
   // ── pkg_update ──────────────────────────────────────────────────
@@ -146,7 +155,20 @@ export function registerPackageTools(ctx: PluginContext): void {
     if (gate) return gate;
     const r = await executeCommand(ctx, "pkg_update", cmd, "slow");
     if (r.exitCode !== 0) return buildCategorizedResponse("pkg_update", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    return success("pkg_update", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : undefined);
+    // Parse updated package count from apt/dnf output — heuristic, not exhaustive
+    const stdout = r.stdout.trim();
+    const upgradedMatch = stdout.match(/(\d+)\s+upgraded/i) ?? stdout.match(/Upgraded:\s+(\d+)/i) ?? stdout.match(/Nothing to upgrade/i);
+    const packages_updated_count = upgradedMatch ? (upgradedMatch[0].match(/\d+/) ? parseInt(upgradedMatch[0].match(/\d+/)![0]) : 0) : undefined;
+    const summary = packages_updated_count !== undefined
+      ? packages_updated_count === 0 ? "No packages updated." : `${packages_updated_count} package(s) updated.`
+      : "Update completed — check raw output for details.";
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } }
+      : { documentation_tip: "Set documentation.repo_path in config.yaml to track package changes" };
+    return success("pkg_update", ctx.targetHost, r.durationMs, cmd.argv.join(" "), {
+      ...(packages_updated_count !== undefined ? { packages_updated_count } : {}),
+      raw_output: stdout,
+    }, args.dry_run ? { dry_run: true } : { summary, ...docHint });
   });
 
   // ── pkg_check_updates ───────────────────────────────────────────

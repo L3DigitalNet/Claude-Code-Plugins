@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { PluginContext } from "../context.js";
-import { registerTool, success, error, executeBash, executeCommand } from "../helpers.js";
+import { registerTool, success, executeBash, executeCommand, buildCategorizedResponse } from "../helpers.js";
 
 export function registerServiceTools(ctx: PluginContext): void {
   // ── svc_list ────────────────────────────────────────────────────
@@ -86,9 +86,9 @@ export function registerServiceTools(ctx: PluginContext): void {
         confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean, serviceName: svc,
       });
       if (gate) return gate;
-      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
       const r = await executeCommand(ctx, `svc_${action}`, cmd, "quick");
-      if (r.exitCode !== 0) return error(`svc_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
+      if (r.exitCode !== 0) return buildCategorizedResponse(`svc_${action}`, ctx.targetHost, r.durationMs, r.stderr, ctx);
       const docHint = ctx.config.documentation.repo_path
         ? { documentation_action: { type: "service_changed", service: svc, suggested_actions: [`doc_generate_service service=${svc}`, `doc_backup_config service=${svc}`] } }
         : undefined;
@@ -112,10 +112,10 @@ export function registerServiceTools(ctx: PluginContext): void {
         confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean,
       });
       if (gate) return gate;
-      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
       const r = await executeCommand(ctx, `svc_${action}`, cmd, "quick");
-      if (r.exitCode !== 0) return error(`svc_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-      return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action });
+      if (r.exitCode !== 0) return buildCategorizedResponse(`svc_${action}`, ctx.targetHost, r.durationMs, r.stderr, ctx);
+      return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action, enabled_at_boot: action === "enable" });
     });
   }
 
@@ -134,7 +134,14 @@ export function registerServiceTools(ctx: PluginContext): void {
     let cmd = `journalctl -u ${svc} -n ${lines} --no-pager`;
     if (args.since) cmd += ` --since '${args.since}'`;
     const r = await executeBash(ctx, cmd, "quick");
-    const data: Record<string, unknown> = { service: svc, journal_logs: r.stdout.trim() };
+    const journalLines = r.stdout.trim().split("\n").filter(Boolean);
+    const data: Record<string, unknown> = {
+      service: svc,
+      journal_logs: journalLines,
+      log_line_count: journalLines.length,
+      // truncated when returned lines equals the requested limit — more may exist
+      truncated: journalLines.length >= lines,
+    };
     // Check knowledge profile for additional log paths
     const profile = ctx.knowledgeBase.getProfile(svc);
     if (profile?.logs) {

@@ -42,15 +42,15 @@ const __dirname = typeof import.meta?.url === "string"
 async function main(): Promise<void> {
   logger.info("Starting linux-sysadmin-mcp server");
 
-  // ── Phase 1: Load config ──────────────────────────────────────
+  // Phase 1: Load config
   const configPath = process.env.LINUX_SYSADMIN_CONFIG ?? undefined;
   const { config, configPath: resolvedConfigPath, firstRun } = loadConfig(configPath);
   logger.info({ configPath: resolvedConfigPath, firstRun }, "Configuration loaded");
 
-  // ── Phase 2: Detect distro ────────────────────────────────────
+  // Phase 2: Detect distro
   const distro = detectDistro(config.distro);
 
-  // ── Phase 3: Verify sudo ──────────────────────────────────────
+  // Phase 3: Verify sudo
   const sudoAvailable = verifySudo();
   if (!sudoAvailable && config.privilege.degrade_without_sudo) {
     logger.warn("Passwordless sudo not available — running in degraded mode (read-only tools only)");
@@ -59,13 +59,13 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // ── Phase 4: Create command dispatch ──────────────────────────
+  // Phase 4: Create command dispatch
   const commands = createDistroCommands(distro);
 
-  // ── Phase 5: Create executor ──────────────────────────────────
+  // Phase 5: Create executor
   const executor = new LocalExecutor();
 
-  // ── Phase 6: Get active systemd units for profile resolution ──
+  // Phase 6: Get active systemd units for profile resolution
   let activeUnits: string[] = [];
   try {
     const { execSync } = await import("node:child_process");
@@ -75,7 +75,7 @@ async function main(): Promise<void> {
     logger.warn("Could not list active systemd units for profile resolution");
   }
 
-  // ── Phase 7: Load knowledge base ──────────────────────────────
+  // Phase 7: Load knowledge base
   const knowledgeBase = loadKnowledgeBase({
     builtinDir: join(__dirname, "..", "knowledge"),
     additionalPaths: config.knowledge.additional_paths,
@@ -83,11 +83,11 @@ async function main(): Promise<void> {
     activeUnitNames: activeUnits,
   });
 
-  // ── Phase 8: Create safety gate ───────────────────────────────
+  // Phase 8: Create safety gate
   const safetyGate = new SafetyGate(config.safety);
   safetyGate.addEscalations(knowledgeBase.escalations);
 
-  // ── Phase 9: Create tool registry and plugin context ──────────
+  // Phase 9: Create tool registry and plugin context
   const registry = new ToolRegistry();
   const ctx: PluginContext = {
     config, distro, commands, executor, safetyGate, knowledgeBase, registry,
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
     configPath: resolvedConfigPath, firstRun,
   };
 
-  // ── Phase 10: Register all tool modules ───────────────────────
+  // Phase 10: Register all tool modules
   registerSessionTools(ctx);
   registerPackageTools(ctx);
   registerServiceTools(ctx);
@@ -114,13 +114,13 @@ async function main(): Promise<void> {
 
   logger.info({ toolCount: registry.size }, "All tool modules registered");
 
-  // ── Phase 11: Create MCP server ───────────────────────────────
+  // Phase 11: Create MCP server
   const server = new McpServer({
     name: "linux-sysadmin-mcp",
-    version: "1.0.3",
+    version: "1.0.4",
   });
 
-  // ── Phase 12: Register tools on MCP server ────────────────────
+  // Phase 12: Register tools on MCP server
   // In degraded mode (no passwordless sudo), skip state-changing tools so that
   // the degraded_mode warning in sysadmin_session_info is actually true — only
   // read-only tools are registered and therefore callable by Claude.
@@ -162,7 +162,11 @@ async function main(): Promise<void> {
           };
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
-          logger.error({ tool: name, error: message }, "Tool execution error");
+          // Classify the exception type to give Claude a better category signal
+          const isTypeError = err instanceof TypeError;
+          const isRangeError = err instanceof RangeError;
+          const errorCategory = isTypeError || isRangeError ? "validation" : "state";
+          logger.error({ tool: name, error: message, errorType: err?.constructor?.name }, "Tool execution error");
           return {
             content: [{
               type: "text" as const,
@@ -170,13 +174,16 @@ async function main(): Promise<void> {
                 status: "error",
                 tool: name,
                 target_host: ctx.targetHost,
-                duration_ms: 0,
+                duration_ms: null,
                 command_executed: null,
                 error_code: "INTERNAL_ERROR",
-                error_category: "state",
+                error_category: errorCategory,
                 message,
                 transient: false,
-                remediation: ["Check server logs for details"],
+                remediation: [
+                  "Restart the MCP server if this error persists — it may indicate a stale connection or corrupted state",
+                  "If the error recurs, report the tool name and error message to the plugin maintainer",
+                ],
               }),
             }],
           };
@@ -185,7 +192,7 @@ async function main(): Promise<void> {
     );
   }
 
-  // ── Phase 13: Connect transport ───────────────────────────────
+  // Phase 13: Connect transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
   logger.info({ tools: registry.size, host: hostname() }, "linux-sysadmin-mcp server running on stdio");

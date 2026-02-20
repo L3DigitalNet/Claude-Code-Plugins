@@ -21,17 +21,20 @@ export function registerUserTools(ctx: PluginContext): void {
     const cmd = ctx.commands.userCreate({ username: args.username as string, shell: args.shell as string|undefined, home: args.home as string|undefined, groups: args.groups as string[]|undefined, system: args.system as boolean, comment: args.comment as string|undefined });
     const gate = ctx.safetyGate.check({ toolName: "user_create", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Create user ${args.username}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("user_create", ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+    if (args.dry_run) return success("user_create", ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
     const r = await executeCommand(ctx, "user_create", cmd, "quick");
     if (r.exitCode !== 0) return error("user_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("user_create", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { created: args.username });
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } }
+      : { documentation_tip: "Set documentation.repo_path in config.yaml to track user changes" };
+    return success("user_create", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { created: args.username }, docHint);
   });
 
   registerTool(ctx, { name: "user_modify", description: "Modify user properties. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ username: z.string().min(1), shell: z.string().optional(), groups: z.array(z.string()).optional(), append_groups: z.boolean().optional().default(true), lock: z.boolean().optional(), unlock: z.boolean().optional(), comment: z.string().optional(), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = ctx.commands.userModify(args.username as string, { shell: args.shell as string|undefined, groups: args.groups as string[]|undefined, append_groups: args.append_groups as boolean|undefined, lock: args.lock as boolean|undefined, unlock: args.unlock as boolean|undefined, comment: args.comment as string|undefined });
     const gate = ctx.safetyGate.check({ toolName: "user_modify", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Modify user ${args.username}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("user_modify", ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+    if (args.dry_run) return success("user_modify", ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
     const r = await executeCommand(ctx, "user_modify", cmd, "quick");
     if (r.exitCode !== 0) return error("user_modify", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("user_modify", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { modified: args.username });
@@ -41,10 +44,13 @@ export function registerUserTools(ctx: PluginContext): void {
     const cmd = ctx.commands.userDelete(args.username as string, { removeHome: args.remove_home as boolean });
     const gate = ctx.safetyGate.check({ toolName: "user_delete", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Delete user ${args.username}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("user_delete", ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
+    if (args.dry_run) return success("user_delete", ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
     const r = await executeCommand(ctx, "user_delete", cmd, "quick");
     if (r.exitCode !== 0) return error("user_delete", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("user_delete", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { deleted: args.username });
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } }
+      : { documentation_tip: "Set documentation.repo_path in config.yaml to track user changes" };
+    return success("user_delete", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { deleted: args.username }, docHint);
   });
 
   registerTool(ctx, { name: "group_list", description: "List groups and members.", module: "users", riskLevel: "read-only", duration: "quick", inputSchema: z.object({ filter: z.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
@@ -56,7 +62,7 @@ export function registerUserTools(ctx: PluginContext): void {
   registerTool(ctx, { name: "group_create", description: "Create a group. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ name: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const gate = ctx.safetyGate.check({ toolName: "group_create", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: `sudo groupadd ${args.name}`, description: `Create group ${args.name}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("group_create", ctx.targetHost, 0, null, { would_run: `sudo groupadd ${args.name}` }, { dry_run: true });
+    if (args.dry_run) return success("group_create", ctx.targetHost, null, null, { preview_command: `sudo groupadd ${args.name}` }, { dry_run: true });
     const r = await executeBash(ctx, `sudo groupadd ${args.name}`, "quick");
     if (r.exitCode !== 0) return error("group_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("group_create", ctx.targetHost, r.durationMs, `sudo groupadd ${args.name}`, { created: args.name });
@@ -65,7 +71,7 @@ export function registerUserTools(ctx: PluginContext): void {
   registerTool(ctx, { name: "group_delete", description: "Delete a group. High risk.", module: "users", riskLevel: "high", duration: "quick", inputSchema: z.object({ name: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const gate = ctx.safetyGate.check({ toolName: "group_delete", toolRiskLevel: "high", targetHost: ctx.targetHost, command: `sudo groupdel ${args.name}`, description: `Delete group ${args.name}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("group_delete", ctx.targetHost, 0, null, { would_run: `sudo groupdel ${args.name}` }, { dry_run: true });
+    if (args.dry_run) return success("group_delete", ctx.targetHost, null, null, { preview_command: `sudo groupdel ${args.name}` }, { dry_run: true });
     const r = await executeBash(ctx, `sudo groupdel ${args.name}`, "quick");
     if (r.exitCode !== 0) return error("group_delete", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("group_delete", ctx.targetHost, r.durationMs, `sudo groupdel ${args.name}`, { deleted: args.name });
@@ -80,11 +86,11 @@ export function registerUserTools(ctx: PluginContext): void {
     const cmds: string[] = []; const rec = args.recursive ? "-R " : "";
     if (args.mode) cmds.push(`sudo chmod ${rec}${args.mode} '${args.path}'`);
     if (args.owner) cmds.push(`sudo chown ${rec}${args.owner} '${args.path}'`);
-    if (!cmds.length) return error("perms_set", ctx.targetHost, 0, { code: "VALIDATION_ERROR", category: "validation", message: "Specify mode or owner" });
+    if (!cmds.length) return error("perms_set", ctx.targetHost, null, { code: "VALIDATION_ERROR", category: "validation", message: "Specify mode or owner" });
     const cmd = cmds.join(" && ");
     const gate = ctx.safetyGate.check({ toolName: "perms_set", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Set perms on ${args.path}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
-    if (args.dry_run) return success("perms_set", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
+    if (args.dry_run) return success("perms_set", ctx.targetHost, null, null, { preview_command: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("perms_set", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("perms_set", ctx.targetHost, r.durationMs, cmd, { path: args.path });

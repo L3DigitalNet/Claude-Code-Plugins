@@ -42,7 +42,7 @@ export function registerSessionTools(ctx: PluginContext): void {
       detected_profiles: profiles,
       // Profile parse failures — non-empty means a knowledge file has a syntax error
       profile_load_errors: ctx.knowledgeBase.loadErrors.length > 0 ? ctx.knowledgeBase.loadErrors : undefined,
-      unresolved_roles: profiles.flatMap((p) => (p as Record<string, unknown>).unresolved_roles as string[] ?? []),
+      // unresolved_roles is per-profile inside detected_profiles; not duplicated at top level
       documentation: ctx.config.documentation.repo_path
         ? { enabled: true, repo_path: ctx.config.documentation.repo_path }
         : { enabled: false, reason: "No documentation repo configured. Set documentation.repo_path in config.yaml." },
@@ -54,13 +54,17 @@ export function registerSessionTools(ctx: PluginContext): void {
     };
 
     if (ctx.firstRun) {
-      data.first_run = true;
-      data.config_generated = ctx.configPath;
-      data.setup_hints = [
-        ...(ctx.sudoAvailable ? [] : ["Configure passwordless sudo for full functionality."]),
-        `Configuration file at ${ctx.configPath} — customize as needed.`,
-        ...(ctx.config.documentation.repo_path ? [] : ["Set documentation.repo_path in config.yaml to enable documentation."]),
-      ];
+      // Nest first-run setup data under a dedicated key — keeps it visually distinct
+      // from operational session fields (target_host, distro, etc.)
+      data.setup = {
+        first_run: true,
+        config_path: ctx.configPath,
+        hints: [
+          ...(ctx.sudoAvailable ? [] : ["Configure passwordless sudo for full functionality."]),
+          `Review the configuration at ${ctx.configPath} — all defaults are safe to start.`,
+          ...(ctx.config.documentation.repo_path ? [] : ["Set documentation.repo_path in config.yaml to enable change tracking."]),
+        ],
+      };
     }
 
     if (!ctx.sudoAvailable) {

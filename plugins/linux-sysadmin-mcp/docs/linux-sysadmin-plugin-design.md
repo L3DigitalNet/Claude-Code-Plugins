@@ -1,6 +1,6 @@
 # Linux SysAdmin — Claude Code Plugin Design Document
 
-**Version:** 1.0.2 (Implemented — 2026-02-19)
+**Version:** 1.0.4 (Implemented — 2026-02-20)
 **Status:** Implemented — sections marked *[Planned]* describe features not yet implemented
 **Target Runtime:** Claude Code (CLI)
 **Implementation:** TypeScript / Node.js >= 20 LTS
@@ -156,25 +156,30 @@ The MCP server communicates via **stdio** (stdin/stdout), the standard transport
 
 SSE (Server-Sent Events) transport for networked/shared deployments is deferred to a future release. SSE introduces significant security considerations (authentication, TLS, network exposure of privileged operations) that require dedicated design work beyond v1 scope.
 
-The server is launched via:
+The server is launched via the bundled CJS entry point:
 
 ```
-linux-sysadmin-mcp --config ~/.config/linux-sysadmin/config.yaml
+node dist/server.bundle.cjs
 ```
+
+Config path is read from the `LINUX_SYSADMIN_CONFIG` environment variable (if set) or defaults to `~/.config/linux-sysadmin/config.yaml`.
 
 ```text
 Installation:
 
 1. MCP Server (required):
-   Add to claude code config:
+   Add to Claude Code config (.mcp.json or ~/.claude/settings.json):
    {
      "mcpServers": {
-       "linux-sysadmin": {
-         "command": "linux-sysadmin-mcp",
-         "args": ["--config", "~/.config/linux-sysadmin/config.yaml"]
+       "linux-sysadmin-mcp": {
+         "command": "node",
+         "args": ["/path/to/plugin/dist/server.bundle.cjs"]
        }
      }
    }
+
+   When installed via the Claude Code plugin system, the path resolves
+   automatically to ${CLAUDE_PLUGIN_ROOT}/dist/server.bundle.cjs.
 
 2. [Planned] Slash Commands (optional):
    # Not yet implemented — planned for a future release
@@ -549,42 +554,24 @@ troubleshooting:
 
 ### 5.3 Built-in Profiles
 
-The following profiles ship with the plugin. They are derived from common homelab and server deployments and cover the most frequently encountered tools.
+The following 8 profiles ship with v1.0.x and are validated by the test suite. They are derived from common homelab and server deployments and cover the most frequently encountered tools.
 
 | Profile ID | Name | Category | Service Units |
 |---|---|---|---|
-| `pihole` | Pi-hole | DNS | `pihole-FTL` |
-| `unbound` | Unbound | DNS | `unbound` |
-| `chrony` | Chrony | NTP | `chrony` / `chronyd` |
-| `caddy` | Caddy | Reverse Proxy | `caddy` |
-| `nginx` | nginx | Web/Proxy | `nginx` |
-| `traefik` | Traefik | Reverse Proxy | `traefik` |
-| `ufw` | UFW | Firewall | `ufw` |
-| `firewalld` | firewalld | Firewall | `firewalld` |
-| `nftables` | nftables | Firewall | `nftables` |
-| `fail2ban` | Fail2ban | IDS/IPS | `fail2ban` |
 | `crowdsec` | CrowdSec | IDS/IPS | `crowdsec`, `crowdsec-firewall-bouncer` |
-| `aide` | AIDE | Integrity | `aide.timer` / `aide-check.timer` (cron fallback) |
-| `lynis` | Lynis | Security Audit | (manual / cron-based) |
-| `rkhunter` | rkhunter | Rootkit Detection | (cron-based) |
-| `rsyslog` | rsyslog | Logging | `rsyslog` |
-| `lldpd` | lldpd | Network Discovery | `lldpd` |
-| `kismet` | Kismet | Wireless Monitor | `kismet` |
-| `uptime-kuma` | Uptime Kuma | Monitoring | `uptime-kuma` |
-| `unattended-upgrades` | Unattended Upgrades | Patching | `unattended-upgrades` |
 | `docker` | Docker | Container | `docker`, `containerd` |
-| `podman` | Podman | Container | `podman.socket` |
-| `wireguard` | WireGuard | VPN | `wg-quick@<iface>` |
+| `fail2ban` | Fail2ban | IDS/IPS | `fail2ban` |
+| `nginx` | nginx | Web/Proxy | `nginx` |
+| `pihole` | Pi-hole | DNS | `pihole-FTL` |
 | `sshd` | OpenSSH Server | Remote Access | `ssh` / `sshd` |
-| `postfix` | Postfix | Mail | `postfix` |
-| `samba` | Samba | File Sharing | `smbd`, `nmbd` |
-| `nfs` | NFS Server | File Sharing | `nfs-server`, `nfs-kernel-server` |
-| `prometheus` | Prometheus | Monitoring | `prometheus` |
-| `grafana` | Grafana | Monitoring | `grafana-server` |
-| `postgresql` | PostgreSQL | Database | `postgresql` / `postgresql@<ver>-main` |
-| `mariadb` | MariaDB | Database | `mariadb` / `mysql` |
-| `home-assistant` | Home Assistant | Automation | `home-assistant@homeassistant` |
-| `mosquitto` | Mosquitto | MQTT Broker | `mosquitto` |
+| `ufw` | UFW | Firewall | `ufw` |
+| `unbound` | Unbound | DNS | `unbound` |
+
+#### Planned Profiles (not yet implemented)
+
+The following profiles are planned for future releases. The knowledge directory will be populated as each profile is authored and validated:
+
+`caddy`, `traefik`, `chrony`, `firewalld`, `nftables`, `aide`, `lynis`, `rkhunter`, `rsyslog`, `lldpd`, `kismet`, `uptime-kuma`, `unattended-upgrades`, `podman`, `wireguard`, `postfix`, `samba`, `nfs`, `prometheus`, `grafana`, `postgresql`, `mariadb`, `home-assistant`, `mosquitto`
 
 ### 5.4 Knowledge Integration Points
 
@@ -793,11 +780,11 @@ The plugin provides a session context tool that gives Claude full awareness of t
 
 | Tool | Description | Risk Level |
 |---|---|---|
-| `sysadmin_session_info` | Full session context: target host, distro, sudo status, MAC system, detected knowledge profiles with resolved dependency roles, documentation repo status, integration mode, detected MCP servers, routing guidance | Read-only |
+| `sysadmin_session_info` | Full session context: target host, distro, sudo status, MAC system, detected knowledge profiles with resolved dependency roles, documentation repo status, integration mode (behavioral hint for coexistence) | Read-only |
 
 `sysadmin_session_info` is a core infrastructure tool, not specific to any module. It is documented here because it spans all modules and is the primary mechanism for Claude to understand the plugin's state. Its full response shape is shown in Sections 8.3 (complementary mode) and 9.1 (first-run).
 
-The response has a stable base schema (target host, distro, sudo status, MAC system, profiles, documentation status, integration mode, MCP servers, routing guidance) shown in Section 8.3. Additional conditional fields appear based on context:
+The response has a stable base schema (target host, distro, sudo status, MAC system, profiles, documentation status, integration mode) shown in Section 8.3. Note: `integration_mode` is a behavioral hint string passed to Claude indicating the intended coexistence strategy — the plugin does not perform runtime enumeration of other MCP servers (no standard discovery API exists). Additional conditional fields appear based on context:
 
 - **First-run fields** (`first_run`, `config_generated`, `setup_hints`) — present only when the plugin generated a default config file on this startup. See Section 9.1.
 - **Degraded-mode fields** (`degraded_mode`, `degraded_reason`) — present whenever passwordless sudo is unavailable, not only on first run.
@@ -837,8 +824,8 @@ The response has a stable base schema (target host, distro, sudo status, MAC sys
 | `group_delete` | Delete a group | High |
 | `perms_check` | Check permissions on files/directories | Read-only |
 | `perms_set` | Set permissions/ownership on files/directories | Moderate |
-| `sudoers_list` | Show sudoers configuration | Read-only |
-| `sudoers_modify` | Modify sudoers entries | Critical |
+| `sudoers_list` | *[Planned]* Show sudoers configuration | Read-only |
+| `sudoers_modify` | *[Planned]* Modify sudoers entries | Critical |
 
 `sudoers_modify` accepts `action` (add | remove | modify), `target_file` (defaults to `/etc/sudoers.d/linux-sysadmin`; the tool never touches `/etc/sudoers` directly), and a structured `rule` object: `user` (string, or `%groupname` for group rules), `hosts` (default "ALL"), `runas` (default "ALL"), `commands` (string array of allowed command paths), `nopasswd` (boolean, default false), `comment` (string, optional). The tool always writes to drop-in files in `/etc/sudoers.d/` and validates the result with `visudo -cf <file>` before activating. If validation fails, the change is reverted and the error is returned with the specific syntax issue. The tool refuses to modify `/etc/sudoers` directly — users must do that manually. This protects against the most dangerous failure mode in sudoers management: a syntax error that locks all users out of sudo.
 
@@ -857,8 +844,8 @@ The response has a stable base schema (target host, distro, sudo status, MAC sys
 `svc_create_unit` accepts structured parameters (`name`, `description`, `exec_start`, `user`, `working_directory`, `after`, `wanted_by`, `restart`, `type`) and generates a properly formatted systemd unit file at `/etc/systemd/system/<name>.service`. It also accepts an optional `raw_content` string parameter for cases where Claude wants to write a complete unit file directly — when `raw_content` is provided, the structured parameters are ignored. `svc_edit_unit` reads the existing unit file, accepts the same field-level parameters as `svc_create_unit` (only provided fields are modified), and writes the updated file. Both tools run `systemctl daemon-reload` after writing the file.
 
 | `timer_list` | List systemd timers and their schedules | Read-only |
-| `timer_create` | Create a new systemd timer unit | Moderate |
-| `timer_modify` | Modify an existing systemd timer | Moderate |
+| `timer_create` | *[Planned]* Create a new systemd timer unit | Moderate |
+| `timer_modify` | *[Planned]* Modify an existing systemd timer | Moderate |
 
 ### 6.4 Firewall and Network Configuration
 
@@ -899,7 +886,6 @@ These are general-purpose log tools that operate on explicit journald units, log
 | Tool | Description | Risk Level |
 |---|---|---|
 | `log_query` | Query journalctl / log files with filters | Read-only |
-| `log_tail` | Tail recent log entries for a unit or file | Read-only |
 | `log_search` | Search logs by pattern/regex | Read-only |
 | `log_summary` | Summarize log activity (errors, warnings, frequency) | Read-only |
 | `log_disk_usage` | Report log storage consumption | Read-only |
@@ -953,7 +939,7 @@ Backups support three destination types: local filesystem paths, remote hosts vi
 | `bak_create` | Create a backup of specified paths to a destination | Low |
 | `bak_list` | List available backups at a destination | Read-only |
 | `bak_restore` | Restore from a backup | Critical |
-| `bak_schedule` | Create/modify a scheduled backup job. Creates a systemd timer and associated service unit via the same mechanism as `timer_create` (Section 6.3), with the service unit invoking the plugin's backup command. Per Principle 1, this is a convenience composition — users who prefer cron can use `cron_add` directly instead. | Moderate |
+| `bak_schedule` | Schedule a recurring backup job via cron. Adds a cron entry invoking the plugin's backup command on the specified schedule. Includes retention policy to remove backups older than a configured number of days. Users who want a systemd timer instead can create one manually with `cron_add` or `timer_create` (Section 6.3, *[Planned]*). | Moderate |
 | `bak_verify` | Verify backup integrity by comparing file counts, sizes, and checksums between a backup and the live system. Reports missing files, size mismatches, and corrupted files. | Read-only |
 | `bak_destinations` | List and validate configured backup destinations | Read-only |
 
@@ -1528,7 +1514,7 @@ Each tool self-declares its expected duration category. The plugin uses this to 
 | Duration Category | Timeout | Examples |
 |---|---|---|
 | `instant` | 10 seconds | `svc_status`, `perf_uptime`, `disk_usage`, `cron_validate` |
-| `quick` | 30 seconds | `pkg_info`, `fw_list_rules`, `user_list`, `net_connections`, `log_tail`, `doc_commit`, `doc_status` |
+| `quick` | 30 seconds | `pkg_info`, `fw_list_rules`, `user_list`, `net_connections`, `log_disk_usage`, `doc_commit`, `doc_status` |
 | `normal` | 120 seconds | `pkg_install` (single package), `svc_restart`, `sec_check_ssh`, `fw_add_rule`, `doc_generate_service`, `doc_backup_config` |
 | `slow` | 600 seconds | `pkg_update` (all packages), `sec_audit`, `log_search` (large range), `bak_snapshot_config`, `doc_generate_host`, `doc_diff` (many services) |
 | `long_running` | 1800 seconds | `bak_create` (large paths), `pkg_update` (major upgrade), `bak_restore` |
@@ -1793,7 +1779,7 @@ The plugin is designed to work out of the box with zero configuration. On first 
 2. **Runs distro detection** and reports the detected environment.
 3. **Tests sudo access** via `sudo -n true`. If it fails, the plugin starts in **degraded mode**: all read-only tools work normally, but state-changing tools are unavailable. The session info response clearly reports this, and Claude can advise the user on setting up sudoers. The plugin includes a reference sudoers fragment it can display on request.
 4. **Resolves knowledge profiles** by scanning running systemd units against built-in and user-defined profiles. Resolved profiles have their abstract dependency roles mapped to the concrete services detected on this host. Unresolved roles are flagged in the startup summary.
-5. **Detects other MCP servers** and applies complementary mode by default (the safest default, since it provides routing guidance without hiding any available tools).
+5. **Applies `complementary` integration mode by default** — a behavioral hint that causes Claude to treat this plugin as complementary to other installed tools rather than exclusive. No runtime MCP server enumeration occurs (no standard discovery API exists); `integration_mode` is a config string, not a live detection result.
 6. **Detects MAC system** (SELinux/AppArmor) and reports status.
 7. **Reports a startup summary** to Claude via the first `sysadmin_session_info` response:
 
@@ -1816,7 +1802,6 @@ The plugin is designed to work out of the box with zero configuration. On first 
     "reason": "No documentation repo configured. Set documentation.repo_path in config.yaml to enable."
   },
   "integration_mode": "complementary",
-  "detected_mcp_servers": [],
   "setup_hints": [
     "To enable full functionality, configure passwordless sudo for this user.",
     "Reference sudoers fragment: run sysadmin_session_info(show_sudoers_reference=true)",
@@ -1971,7 +1956,7 @@ sequenceDiagram
     P->>OS: Detect MAC system (SELinux/AppArmor)
     P->>OS: Resolve knowledge profiles (scan running units, match profiles, resolve roles)
     P->>P: Check documentation repo status (if configured)
-    P->>CC: Check for active MCP servers
+    P->>P: Apply integration_mode config (complementary by default — behavioral hint only, no runtime MCP enumeration)
     P->>P: Build capability map + generate dynamic tool descriptions
     P-->>CC: Ready (target: localhost, distro: Ubuntu 24.04, profiles: 5 active, docs: 5 services documented, mode: complementary, sudo: available, mac: apparmor/enforcing)
 
@@ -2037,39 +2022,44 @@ sequenceDiagram
 
 ## 11. Testing Strategy
 
-The plugin is tested against **dedicated virtual machines** for each supported distro family. VMs provide a production-faithful environment that includes full systemd, real service management, kernel-level features (SELinux, AppArmor, LVM), and accurate package manager behavior — none of which work correctly in containers.
+The plugin uses a **container-based** test environment (Podman/Docker) where each distro under test is run as a systemd-enabled container. Containers provide fast reset cycles and match the real package manager and systemd behavior needed to validate tool responses.
 
 ### 11.1 Test Matrix
 
 | Distro | Version | Role | Key Coverage |
 |---|---|---|---|
+| Fedora (latest) | 43 | Primary RHEL-family target | dnf, firewalld, SELinux, systemd |
 | Ubuntu 24.04 LTS | Latest | Primary Debian-family target | apt, ufw, AppArmor, systemd |
-| Ubuntu 22.04 LTS | Latest | Backward compatibility | apt, ufw, AppArmor, systemd |
 | Debian 12 (Bookworm) | Stable | Debian-specific divergences | apt, nftables, AppArmor, systemd |
-| Fedora 41 | Latest | Primary RHEL-family target | dnf, firewalld, SELinux, systemd |
-| Fedora 40 | Previous | Backward compatibility | dnf, firewalld, SELinux, systemd |
 
 ### 11.2 Test Tiers
 
-**Unit tests** — Run locally without a VM. Cover the distro abstraction layer mapping logic, input validation (zod schemas), error categorization, config parsing, documentation template generation, dependency graph topological sort (for restore guide ordering), config drift comparison logic, and commit message formatting. Framework: vitest.
+**Layer 1 — Structural validation** — Python/pytest, no container required. Validates plugin manifest, MCP configuration, bundle existence, TypeScript source file count, knowledge profiles (schema + required fields), package.json fields, and cross-references between README and implementation.
 
-**Integration tests** — Run against a live VM per distro. Each test boots a VM from a clean snapshot, executes a tool module's full lifecycle (e.g., install a package, verify it, remove it, verify removal), and asserts on the structured output. Tests verify that the distro abstraction maps to the correct native commands, that the safety gate prompts at the right risk levels, and that documentation triggers fire correctly after state-changing operations. Documentation-specific integration tests verify: `doc_generate_host` produces a complete host README from live system state, `doc_generate_service` produces correct per-service READMEs for detected profiles, `doc_backup_config` copies the correct files to the repo, `doc_diff` detects actual config drift after manual edits, `doc_validate` catches incomplete documentation and stale backups, and `doc_restore_guide` produces a correctly dependency-ordered restore sequence.
+**Layer 2 — MCP server startup** — Launches the server inside a container, captures pino log output, and asserts on: startup timing (<5s), tool count, all 15 modules registered, no duplicate registrations, distro detection, knowledge base load count, config file creation, and firstRun flag.
 
-**End-to-end tests** — Run a full Claude Code session against each VM with the MCP server active. These verify the complete round-trip from Claude Code tool invocation through the MCP server to the target host and back. They cover the stdio transport, SSH connection manager (connecting to a second VM as a remote target), complementary mode MCP server detection, and the full documentation lifecycle: state-changing operation → `documentation_action` in response → documentation tools invoked → git commit → drift detection after manual change.
+**Layer 3 — Tool execution** — Calls every tool against the live container via the MCP JSON-RPC protocol. Validates:
+- All read-only tools return `status: "success"` with valid data shape
+- All state-changing tools without `confirmed: true` return `status: "confirmation_required"`
+- All state-changing tools with `confirmed: true` execute and return either a valid success or a structured error response (both are acceptable — infrastructure-dependent tools return errors in minimal containers)
 
-### 11.3 VM Management
+**Layer 4 — Safety gate** — Unit tests covering risk classification, confirmation bypass, dry-run bypass, profile escalation, and response shape. E2E tests verify gate behavior against the live MCP server.
 
-VMs are managed via **Vagrant** with libvirt or VirtualBox as the provider. Each distro has a `Vagrantfile` that provisions a clean base image with passwordless sudo configured for the test user. Snapshots are taken after initial provisioning so integration tests can reset to a clean state between runs.
+**Layer 5 — Knowledge base** — Unit tests covering YAML parsing, profile resolution, dependency role resolution, escalation extraction, and user profile override.
+
+### 11.3 Container Management
+
+Test containers are Podman (or Docker) containers with systemd as PID 1 (`--systemd=true`). Each distro image is provisioned with: Node.js, passwordless sudo for the test user, and test fixtures (cron entries, sample users, sample log data, nginx/sshd running). The MCP server binary is bind-mounted from the host build output. Containers are reset between test layers by stopping and re-starting from the base image.
 
 ### 11.4 CI Pipeline
 
 CI runs on every pull request and merge to main. The pipeline:
 
-1. Runs unit tests (fast, no VM required)
-2. Boots VMs for each distro in the test matrix (parallelized)
-3. Runs integration tests per distro
-4. Runs end-to-end tests against one primary distro (Ubuntu 24.04)
-5. Full end-to-end across all distros on release branches only (to manage CI time)
+1. Builds the TypeScript bundle (`npm run build`)
+2. Runs Layer 1 structural validation (fast, no container)
+3. Starts the test container for the primary target (Fedora latest)
+4. Runs Layers 2–5 against the container
+5. Reports pass/fail counts per layer with structured output
 
 ---
 
@@ -2121,7 +2111,7 @@ All original open questions have been resolved through collaborative review:
 | MCP routing | Advisory: dynamic tool descriptions + sysadmin_session_info context tool. Claude decides. | 8.1, 8.3 |
 | MCP error boundary | Unified: plugin normalizes all delegated MCP errors into structured format. | 8.6 |
 | MCP Claude awareness | Dynamic tool descriptions at registration + session context tool. | 8.3 |
-| Testing strategy | VMs per distro via Vagrant. Unit, integration, and E2E tiers. | 11 |
+| Testing strategy | Container-based (Podman) per-distro test environment. Unit + integration tiers. | 11 |
 | License | Apache 2.0 | Header |
 | Documentation system | Core principle (Principle 3). Three-tier structure (host → service → config backups). Git-backed, user-owned repo. Auto-triggered by state-changing ops. Captures rationale, not just state. Reproducibility test: can a human rebuild from docs alone? | 2, 6.13 |
 | Telemetry | Deferred to post-v1 based on community feedback | 12 |
