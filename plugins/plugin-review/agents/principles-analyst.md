@@ -33,7 +33,7 @@ On Pass 2+, focus on changed files and affected principles/checkpoints. Carry fo
 
 ## Root Architectural Alignment
 
-In addition to plugin-specific principles, assess alignment with root architectural patterns: external execution, template externalization, on-demand loading, disposable subagents, mechanical enforcement usage, and unnecessary context footprint.
+The orchestrator provides the root architectural principles (P1–Pn from the repo's root README.md). For each root principle, assess whether the plugin upholds, partially upholds, or violates it — using the same evidence standard as plugin-specific principles. Report these under "Root Architectural Alignment" using the same status labels.
 
 ## Output Format
 
@@ -62,13 +62,8 @@ In addition to plugin-specific principles, assess alignment with root architectu
 **Anti-patterns found**: <list or "none">
 
 ### Root Architectural Alignment
-- External execution: <compliant / gap>
-- Template externalization: <compliant / gap>
-- On-demand loading: <compliant / gap>
-- Disposable subagents: <compliant / gap>
-- Mechanical enforcement used where available: <yes / gap list>
-- Behavioral-only where hooks feasible: <list or "none">
-- Unnecessary context footprint: <list or "none">
+For each root principle passed by the orchestrator (P1–Pn from README.md):
+- [Pn] <Name>: <Upheld / Partially Upheld / Violated> — <one-line evidence>
 
 ### Orphaned Principles
 <list or "None found">
