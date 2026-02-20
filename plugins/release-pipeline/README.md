@@ -1,6 +1,6 @@
 # Release Pipeline
 
-Interactive release pipeline for any repo. One command, six options.
+**Version:** 1.4.2 — Interactive release pipeline for any repo. One command, six options.
 
 ## Summary
 
@@ -41,12 +41,27 @@ The command auto-detects your repository state and presents a context-aware menu
 |---------|-------------|
 | `/release` | Open the interactive release menu |
 
-## Skills
+## Hooks
 
-| Skill | Description |
-|-------|-------------|
-| `release` | Full release pipeline workflow — phases, version bumping, changelog, GitHub release |
-| `release-detection` | Detects release intent in natural language and routes to `/release` |
+Three background hooks are installed automatically and run without invocation:
+
+| Hook | Event | Behavior |
+|------|-------|----------|
+| `sync-local-plugins.sh` | SessionStart | Syncs local plugin source from the development repo to the installed Claude Code cache. Discovery order: `$CLAUDE_PROJECT_DIR` first, then `$HOME/projects/Claude-Code-Plugins` as a fallback. Only syncs plugins that are already installed (cache dir exists). |
+| `force-push-guard.sh` | PreToolUse (Bash) | Blocks any `git push --force` or `git push -f` command. Returns a block decision — the command does not execute. |
+| `auto-build-plugins.sh` | PreToolUse (Bash) | On `git commit`, checks for staged TypeScript source files in `plugins/<name>/src/`. If found and the plugin has a `build` npm script, runs `npm run build`, stages the resulting `dist/` directory, and then lets the commit proceed. Blocks the commit if the build fails. Outputs a notice before building so the side-effect is visible. |
+
+**Note:** `force-push-guard.sh` and `auto-build-plugins.sh` are registered sequentially under the same PreToolUse/Bash matcher. If the force-push guard blocks a command (exits 2), `auto-build-plugins.sh` does not run for that command.
+
+## Pre-flight Agents
+
+Full Release and Plugin Release spawn three agents in parallel during Phase 1:
+
+| Agent | Role | Output format |
+|-------|------|---------------|
+| `test-runner` | Detects and runs the project's test suite | `TEST RESULTS` block — PASS / FAIL with count and details |
+| `docs-auditor` | Checks docs for stale versions, broken links, and tone | `DOCS AUDIT` block — PASS / WARN / FAIL |
+| `git-preflight` | Validates branch, noreply email, and tag availability | `GIT PRE-FLIGHT` block — PASS / FAIL per check |
 
 ## Release Options
 
@@ -56,7 +71,7 @@ The command auto-detects your repository state and presents a context-aware menu
 | Full Release | Semver release with pre-flight, changelog, tag, GitHub release |
 | Plugin Release | Release a single plugin from a monorepo (scoped tag + changelog) |
 | Release Status | Show unreleased commits, last tag, changelog drift |
-| Dry Run | Simulate a full release without any changes |
+| Dry Run | Simulate a full release without any changes (`bump-version.sh --dry-run` + `generate-changelog.sh --preview`) |
 | Changelog Preview | Generate and display a changelog entry |
 
 ## Full Release Workflow

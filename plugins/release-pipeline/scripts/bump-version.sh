@@ -3,9 +3,11 @@ set -euo pipefail
 
 # bump-version.sh — Find and replace version strings across common project files.
 #
-# Usage: bump-version.sh <repo-path> <new-version> [--plugin <name>]
-# Output: list of files changed (stdout)
-# Exit:   0 = at least one file updated, 1 = no version strings found or bad args
+# Usage: bump-version.sh <repo-path> <new-version> [--plugin <name>] [--dry-run]
+# Output: list of files changed (or would-change) on stdout
+# Exit:   0 = at least one file updated (or would update), 1 = no version strings found
+#
+# --dry-run: reports which files would change without writing any of them.
 #
 # Version targets (single-repo mode, no --plugin):
 #   1. pyproject.toml          — version = "X.Y.Z"
@@ -38,6 +40,15 @@ if [[ $# -ge 4 && "$3" == "--plugin" ]]; then
   fi
 fi
 
+# ---------- Optional --dry-run flag ----------
+DRY_RUN=false
+for arg in "$@"; do
+  if [[ "$arg" == "--dry-run" ]]; then
+    DRY_RUN=true
+    break
+  fi
+done
+
 # Strip leading 'v' if present (v1.2.0 -> 1.2.0).
 VERSION="${VERSION#v}"
 
@@ -52,25 +63,35 @@ updated=0
 
 # ---------- Helper ----------
 # bump_file <filepath> <sed-expression>
-#   Runs sed in-place. If the file changed, prints and counts it.
+#   In live mode: runs sed in-place and prints the file if changed.
+#   In dry-run mode: compares a tempfile to detect changes without writing.
 bump_file() {
   local file="$1"
   local expr="$2"
 
   [[ -f "$file" ]] || return 0
 
-  # Capture checksum before edit.
-  local before
-  before=$(md5sum "$file")
-
-  sed -i -E "$expr" "$file"
-
-  local after
-  after=$(md5sum "$file")
-
-  if [[ "$before" != "$after" ]]; then
-    echo "Updated: $file"
-    updated=$((updated + 1))
+  if [[ "$DRY_RUN" == true ]]; then
+    # Apply sed to a temp copy; cmp detects changes without touching the original.
+    local tmpfile
+    tmpfile=$(mktemp)
+    cp "$file" "$tmpfile"
+    sed -i -E "$expr" "$tmpfile"
+    if ! cmp -s "$file" "$tmpfile"; then
+      echo "Would update: $file"
+      updated=$((updated + 1))
+    fi
+    rm -f "$tmpfile"
+  else
+    local before
+    before=$(md5sum "$file")
+    sed -i -E "$expr" "$file"
+    local after
+    after=$(md5sum "$file")
+    if [[ "$before" != "$after" ]]; then
+      echo "Updated: $file"
+      updated=$((updated + 1))
+    fi
   fi
 }
 
@@ -88,15 +109,25 @@ bump_file "$REPO/package.json" \
 # ---------- 3. Cargo.toml (first occurrence only) ----------
 if [[ -f "$REPO/Cargo.toml" ]]; then
   local_file="$REPO/Cargo.toml"
-  before=$(md5sum "$local_file")
+  cargo_expr="0,/^version[[:space:]]*=[[:space:]]*\".*\"/{s/^(version[[:space:]]*=[[:space:]]*\").*(\")/\1${VERSION}\2/}"
 
-  # Replace only the first version = "..." line (the [package] version).
-  sed -i -E "0,/^version[[:space:]]*=[[:space:]]*\".*\"/{s/^(version[[:space:]]*=[[:space:]]*\").*(\")/\1${VERSION}\2/}" "$local_file"
-
-  after=$(md5sum "$local_file")
-  if [[ "$before" != "$after" ]]; then
-    echo "Updated: $local_file"
-    updated=$((updated + 1))
+  if [[ "$DRY_RUN" == true ]]; then
+    tmpfile=$(mktemp)
+    cp "$local_file" "$tmpfile"
+    sed -i -E "$cargo_expr" "$tmpfile"
+    if ! cmp -s "$local_file" "$tmpfile"; then
+      echo "Would update: $local_file"
+      updated=$((updated + 1))
+    fi
+    rm -f "$tmpfile"
+  else
+    before=$(md5sum "$local_file")
+    sed -i -E "$cargo_expr" "$local_file"
+    after=$(md5sum "$local_file")
+    if [[ "$before" != "$after" ]]; then
+      echo "Updated: $local_file"
+      updated=$((updated + 1))
+    fi
   fi
 fi
 
@@ -132,10 +163,26 @@ if [[ -n "$PLUGIN" ]]; then
   MARKETPLACE="$REPO/.claude-plugin/marketplace.json"
   if [[ -f "$MARKETPLACE" ]]; then
     local_file="$MARKETPLACE"
-    before=$(md5sum "$local_file")
 
-    # Use python3 for precise JSON manipulation (sed can't target specific array entries)
-    python3 -c "
+    if [[ "$DRY_RUN" == true ]]; then
+      # Check current version for this plugin without writing.
+      current_ver=$(python3 -c "
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+for p in data.get('plugins', []):
+    if p['name'] == sys.argv[2]:
+        print(p.get('version', ''))
+        break
+" "$local_file" "$PLUGIN" 2>/dev/null || true)
+      if [[ "$current_ver" != "$VERSION" ]]; then
+        echo "Would update: $local_file (plugin: $PLUGIN)"
+        updated=$((updated + 1))
+      fi
+    else
+      before=$(md5sum "$local_file")
+      # Use python3 for precise JSON manipulation (sed can't target specific array entries)
+      python3 -c "
 import json, sys
 with open(sys.argv[1]) as f:
     data = json.load(f)
@@ -147,20 +194,28 @@ with open(sys.argv[1], 'w') as f:
     json.dump(data, f, indent=2)
     f.write('\n')
 " "$local_file" "$PLUGIN" "$VERSION"
-
-    after=$(md5sum "$local_file")
-    if [[ "$before" != "$after" ]]; then
-      echo "Updated: $local_file (plugin: $PLUGIN)"
-      updated=$((updated + 1))
+      after=$(md5sum "$local_file")
+      if [[ "$before" != "$after" ]]; then
+        echo "Updated: $local_file (plugin: $PLUGIN)"
+        updated=$((updated + 1))
+      fi
     fi
   fi
 fi
 
 # ---------- Summary ----------
-echo "${updated} file(s) updated"
+if [[ "$DRY_RUN" == true ]]; then
+  echo "${updated} file(s) would be updated"
+else
+  echo "${updated} file(s) updated"
+fi
 
 if [[ "$updated" -eq 0 ]]; then
-  echo "Warning: no version strings found to update" >&2
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "Warning: no version strings found that would be updated" >&2
+  else
+    echo "Warning: no version strings found to update" >&2
+  fi
   exit 1
 fi
 

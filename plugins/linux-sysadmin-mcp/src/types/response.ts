@@ -47,26 +47,23 @@ export interface ErrorResponse extends ResponseBase {
   error_category: ErrorCategory;
   message: string;
   transient: boolean;
-  retried: boolean;
-  retry_count: number;
   remediation: string[];
   // Delegated errors (Section 8.6)
   source?: string;
   original_error?: string;
 }
 
-/** Blocked response for lock contention (Section 7.3). */
+/**
+ * Blocked response for resource lock contention (Section 7.3).
+ * Emitted when a package manager lock or similar resource lock is detected.
+ * Distinct from ErrorResponse so Claude can distinguish "safety gate blocked"
+ * from "operation blocked by OS resource lock".
+ */
 export interface BlockedResponse extends ResponseBase {
   status: "blocked";
   error_code: string;
   error_category: "lock";
-  lock_info: {
-    resource: string;
-    held_by_process: string;
-    held_by_pid: number;
-    held_by_user: string;
-    held_since?: string;
-  };
+  message: string;
   remediation: string[];
 }
 

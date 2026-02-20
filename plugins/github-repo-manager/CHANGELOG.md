@@ -2,6 +2,23 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [Unreleased]
+
+### Added
+- `scripts/gh-manager-guard.sh` — PreToolUse hook that emits a mutation-warning to the agent context window before any `gh-manager` write command runs. Exits 0 (non-blocking warning). Complements the existing PostToolUse audit trail in `gh-manager-monitor.sh`.
+- `hooks/hooks.json` updated to register the PreToolUse Bash hook (`gh-manager-guard.sh`) alongside the existing PostToolUse hook (`gh-manager-monitor.sh`).
+
+## [0.2.1] - 2026-02-19
+
+### Fixed
+- `repos classify`: added `tier` key as alias for `suggested_tier` for consistent field naming in skill layer and tests
+- `files exists`: now exits 1 when file is not found (404), matching the command contract (exit code signals presence)
+- `security dependabot`: returns success with `accessible: false` on 403/404 for graceful skill-layer degradation
+- `security code-scanning`: same graceful degradation pattern on 403
+- `repo labels create/update`: flattened label fields to top level (`name`, `color`, `description`) instead of nesting under `label` object
+- `branches create`: added `name` alias alongside `branch` field in response shapes for consistent key naming
+- All three self-test tiers now pass (Tier A: 61/61, Tier B: 28/28, Tier C: 40/40 + 3 expected skips)
+
 ## [0.2.0] - 2026-02-18
 
 ### Added
@@ -57,7 +74,7 @@ All notable changes to the github-repo-manager plugin are documented here.
 
 #### Configuration System
 - Per-repo config (`.github-repo-manager.yml` committed to repo)
-- Portfolio config (`~/.config/gh-manager/portfolio.yml` for multi-repo)
+- Portfolio config (`~/.config/github-repo-manager/portfolio.yml` for multi-repo)
 - Schema validation via `config validate` command
 - Config resolution with source precedence chain
 

@@ -44,6 +44,9 @@ export class SafetyGate {
     confirmed?: boolean;
     dryRun?: boolean;
     serviceName?: string;
+    // Whether this tool exposes a dry_run parameter. Omit or set true if yes.
+    // Set false for tools that have no dry_run path (e.g., fw_enable, fw_disable).
+    supportsDryRun?: boolean;
   }): ConfirmationResponse | null {
     // Dry-run bypasses confirmation (Section 7.4.3)
     if (params.dryRun && this.dryRunBypass) return null;
@@ -84,7 +87,7 @@ export class SafetyGate {
       duration_ms: 0,
       command_executed: null,
       risk_level: effectiveRisk,
-      dry_run_available: true,
+      dry_run_available: params.supportsDryRun !== false,
       preview: {
         command: params.command,
         description: params.description,

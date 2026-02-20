@@ -26,7 +26,7 @@ Audit all documentation files in the repository for release readiness.
 ### 3. Tone Check
 
 - Scan for overtly corporate language in .md files
-- Flag words: "synergy", "leverage" (as verb), "stakeholders", "paradigm", "actionable", "circle back", "bandwidth" (non-technical usage)
+- Flag words: "synergy", "leverage" (as verb), "stakeholders", "paradigm", "circle back", "bandwidth" (non-technical usage)
 - The target tone is professional but approachable — NOT corporate
 
 ### 4. File Existence

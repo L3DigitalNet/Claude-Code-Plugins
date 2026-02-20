@@ -3,6 +3,19 @@ description: Cross-repository operations for GitHub Repo Manager — scope infer
 ---
 
 # Cross-Repo Orchestration — Skill
+#
+# Architectural note: This file covers scope inference, batch mutation strategy, fork/archive
+# handling, and rate limit budgeting. These are all cross-repo session concerns that must
+# be active together — you cannot infer scope without knowing how to handle forks, or apply
+# batch mutations without knowing the rate limit strategy. The single-repo module skills
+# (security, pr-management, etc.) are single-concept; this is the portfolio orchestrator
+# and is deliberately broader in scope.
+#
+# Relationships: Loaded by commands/repo-manager.md when cross-repo mode is detected.
+# The nine module skills run per-repo within a cross-repo session; their findings are
+# aggregated here using the report template in repo-manager-assessment/SKILL.md.
+# If mutation strategy or scope inference logic changes here, update the design doc
+# (github-repo-manager-design.md §9.4–9.6) accordingly.
 
 ## When This Skill Applies
 
@@ -78,9 +91,8 @@ Missing SECURITY.md (5 repos):
   Markdown-Keeper (Tier 3)
   ...
 
-Skipped:
-  forks: integration_blueprint, brands
-  archived: old-project
+Skipped: 2 forks, 1 archived
+  (forks: integration_blueprint, brands · archived: old-project)
 
 Recommendation: SECURITY.md is highest priority. I can generate
 a template and apply it to all 5 repos — PRs for Tier 4, direct
@@ -104,15 +116,29 @@ Want me to fix them all, or work through one at a time?
 
 ### Batch Execution
 
-When the owner says "fix them all":
+When the owner indicates they want to apply a fix across repos, use `AskUserQuestion` before proceeding:
+
+> I'll apply this to N repos:
+> - Tier 4 repos (pull request — changes go into a draft PR for your review before merging): repo-a, repo-b
+> - Tier 1–3 repos (direct commit — changes go live immediately to the default branch, no review step): repo-c, repo-d
+>
+> ⚠️ **This will create commits/PRs on each repo listed above.** Tier 1–3 commits are immediate and cannot be easily reverted if content is wrong. Tier 4 PRs remain as drafts for you to review before merging.
+
+Use `AskUserQuestion` with options:
+- **"Go ahead — fix them all"** — proceed with the plan above
+- **"Walk through one at a time"** — apply one repo, pause for approval before next
+- **"Cancel"** — stop without making changes
+
+Only after approval:
 
 1. **Generate content** once (or customize per-repo if needed)
-2. **Apply to each repo** using the appropriate tier mutation:
+2. **Apply to each repo** using the appropriate tier mutation, emitting a progress line after each:
 
    Tiers 1-3 (direct commit):
    ```bash
    echo "CONTENT" | gh-manager files put --repo owner/name --path SECURITY.md --message "Add SECURITY.md"
    ```
+   Then emit: `  ✓ owner/repo-name — committed to main`
 
    Tier 4 (PR):
    ```bash
@@ -120,6 +146,7 @@ When the owner says "fix them all":
    echo "CONTENT" | gh-manager files put --repo owner/name --path SECURITY.md --branch maintenance/add-security-md --message "Add SECURITY.md"
    gh-manager prs create --repo owner/name --head maintenance/add-security-md --base main --title "[Maintenance] Add SECURITY.md" --label maintenance
    ```
+   Then emit: `  ✓ owner/repo-name — PR #N created`
 
 3. **Report results** grouped by mutation method:
    ```
@@ -130,6 +157,16 @@ When the owner says "fix them all":
      Tier 3 (committed directly):
        Markdown-Keeper — committed to main
    ```
+
+### Implication Warnings
+
+Before executing any cross-repo batch mutation, note applicable consequences:
+
+| Mutation type | Implication to surface |
+|---------------|------------------------|
+| Wiki push | Force-push overwrites any manually-authored content in the wiki that isn't mirrored in your source docs. |
+| PR creation | Creates notifications for any watchers or contributors on each Tier 4 repo. |
+| Direct commit to main | Immediately visible in commit history and any open PRs referencing that branch. |
 
 ### Rate Limit Awareness
 

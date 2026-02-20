@@ -4,7 +4,7 @@
 
 **Author:** Chris
 **Date:** February 17, 2026
-**Status:** Design Complete — Ready for implementation
+**Status:** Implemented — v0.2.1 (Feb 2026)
 
 ---
 
@@ -118,15 +118,24 @@ github-repo-manager/
 │   └── plugin.json               # Plugin manifest (name, version, description)
 │
 ├── hooks/
-│   └── hooks.json                # Empty — no hooks (explicit-invocation-only)
+│   └── hooks.json                # PostToolUse on Bash — runs gh-manager-monitor.sh for
+│                                  # rate-limit watchdog and mutation audit trail
 │
 ├── commands/                      # Slash commands
 │   └── repo-manager.md           # /repo-manager — single entry point
 │
 ├── skills/                        # Skill reference material (Layer 1)
 │   ├── repo-manager/
-│   │   └── SKILL.md              # Core orchestration skill — module sequencing,
-│   │                              # tier logic, communication style, error handling
+│   │   └── SKILL.md              # Core session skill — onboarding, tier logic,
+│   │                              # communication style, error handling
+│   ├── repo-manager-assessment/
+│   │   └── SKILL.md              # Full assessment orchestration — module execution order,
+│   │                              # cross-module dedup rules, unified findings format, reports
+│   ├── repo-manager-reference/
+│   │   └── SKILL.md              # gh-manager helper command reference (all subcommands)
+│   ├── repo-config/
+│   │   └── SKILL.md              # Configuration system — per-repo and portfolio config,
+│   │                              # precedence rules, validation
 │   ├── wiki-sync/
 │   │   └── SKILL.md              # Wiki publish pipeline logic
 │   ├── community-health/
@@ -143,8 +152,14 @@ github-repo-manager/
 │   │   └── SKILL.md              # Dependency review logic
 │   ├── issue-triage/
 │   │   └── SKILL.md              # Issue triage and labeling logic
-│   └── release-health/
-│       └── SKILL.md              # Release readiness assessment logic
+│   ├── release-health/
+│   │   └── SKILL.md              # Release readiness assessment logic
+│   ├── cross-repo/
+│   │   └── SKILL.md              # Cross-repo scope inference, batch mutations,
+│   │                              # portfolio scanning
+│   └── self-test/
+│       └── SKILL.md              # Self-diagnostics — PAT scope check, gh-manager install,
+│                                  # API connectivity verification
 │
 ├── helper/                        # Node.js API helper (Layer 2)
 │   ├── package.json
@@ -170,8 +185,9 @@ github-repo-manager/
 │   │   └── util/
 │   │       ├── paginate.js       # Auto-pagination wrapper
 │   │       └── output.js         # JSON stdout formatting
-│   └── tests/
-│       └── ...
+│   └── util/
+│       ├── paginate.js       # Auto-pagination wrapper
+│       └── output.js         # JSON stdout formatting
 │
 ├── templates/                     # Content templates
 │   ├── SECURITY.md.tmpl           # Security policy template
@@ -183,7 +199,22 @@ github-repo-manager/
 │       └── feature_request.md.tmpl
 │
 ├── scripts/                       # Setup and lifecycle scripts
-│   └── setup.sh                  # First-time setup (npm install in helper/)
+│   ├── setup.sh                  # First-time setup (npm install in helper/)
+│   ├── ensure-deps.sh            # Auto-dependency installer — checks node_modules and
+│   │                              # runs npm install if missing (called by core session skill)
+│   ├── gh-manager-guard.sh      # PreToolUse hook script — mutation detection and warning.
+│   │                              # Emits a context-window warning before any gh-manager write
+│   │                              # command runs; exits 0 (warning only, does not block).
+│   └── gh-manager-monitor.sh    # PostToolUse hook script — rate-limit watchdog and
+│                                  # mutation audit trail (logs to ~/.github-repo-manager-audit.log)
+│
+├── tests/                         # Integration test framework
+│   ├── lib.sh                    # Shared test library with JSON assertion helpers
+│   ├── run-all.sh                # Test orchestrator with per-tier selection
+│   ├── run-tier-a.sh             # Tier A: offline/infrastructure tests (61 tests)
+│   ├── run-tier-b.sh             # Tier B: read-only GitHub API tests (28 tests)
+│   ├── run-tier-c.sh             # Tier C: mutation tests (40 tests + 3 expected skips)
+│   └── cleanup.sh                # Post-test cleanup (removes test artifacts from GitHub)
 │
 ├── config/
 │   ├── default.yml               # Default maintenance policies by tier
@@ -2087,7 +2118,7 @@ The plugin follows the Claude Code plugin pattern established in the `Claude-Cod
 {
   "name": "github-repo-manager",
   "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, security posture, and community file management via PAT.",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "author": {
     "name": "L3DigitalNet"
   },
@@ -2141,7 +2172,11 @@ Claude: [cross-repo summary scoped to public repos]
 
 **This plugin is strictly explicit-invocation-only.** It must never interfere with normal development workflows.
 
-- **No hooks.** The plugin does not register any `PreToolUse`, `PostToolUse`, `PreCompact`, or other lifecycle hooks. Unlike the agent-orchestrator plugin which actively monitors tool usage, the repo manager is completely dormant until `/repo-manager` is explicitly invoked.
+- **Two scoped hooks.** The plugin registers a `PreToolUse` hook (`gh-manager-guard.sh`) and a `PostToolUse` hook (`gh-manager-monitor.sh`), both scoped to Bash tool calls involving `gh-manager`. These are not session-activation hooks — the plugin remains dormant until `/repo-manager` is invoked. The hooks serve two mechanical purposes:
+  - **Pre-mutation warning** (`gh-manager-guard.sh`): Emits a context-window message before any write command runs, giving the AI a chance to abort if no prior owner approval existed in the conversation. Exits 0 — it warns but cannot programmatically block, because hooks cannot inspect conversation history.
+  - **Post-mutation audit trail** (`gh-manager-monitor.sh`): Logs every non-dry-run mutation to `~/.github-repo-manager-audit.log` and emits rate-limit warnings when the API budget runs low.
+
+  **Accepted limitation:** The guard hook's warning is an agent-context injection only — it is not visible to the user in the terminal. The user-facing consent gate is entirely behavioral (the skill's `AskUserQuestion` approval flows). This is an accepted design constraint: hooks cannot read conversation history to verify that approval was given.
 - **No passive activation.** The skill files must not be read or applied during unrelated tasks. The `/repo-manager` command is the only entry point.
 - **No git interception.** The plugin never intercepts, wraps, or monitors `git push`, `git commit`, `git merge`, or any other git operations performed during normal development. It uses the GitHub API separately and independently from the local git workflow.
 - **Clean session boundary.** When the `/repo-manager` session ends (owner says they're done, or moves on to other work), the plugin's context is fully released. Claude returns to normal operation with no residual repo-management behavior.
@@ -2248,6 +2283,7 @@ The setup script is run once after cloning. The SKILL.md references `${CLAUDE_PL
 | 1.8 | 2026-02-17 | Sixth review — 6 issues and 2 refinements: (1) Wiki content generation handoff made explicit (Section 5.1) — Claude writes generated pages to a local staging directory via filesystem tools, then passes it to `wiki diff --content-dir`. Added staging directory step to operations list and cleanup step. (2) Project structure comments synchronized with CLI surface — `repo.js` now includes `labels`, `wiki.js` includes `init`, `prs.js` includes `request-review`, `security.js` includes `branch-rules`. (3) Added `files delete` command to helper CLI surface and project structure — required for community health file migration from per-repo to org-level `.github` repo. Uses Contents API DELETE with SHA-conditional safety. (4) Private repos with releases explicitly addressed in detection flow (Section 7.4) — maps to Tier 2 with rationale note. Tier ceremony is driven by public visibility risk, not release maturity alone. Release health module still runs for assessment value. Owner can override to higher tier manually. (5) Added `discussions comment` command to helper CLI surface and project structure — required for leaving explanatory comments before closing discussions, consistent with communication principles and PR/issue parity. (6) Config validation behavior defined in Section 8.1 — skill layer validates against `config/schema.yml` on read. Unknown keys noted and ignored, invalid values fall back to tier defaults, type mismatches coerced where obvious. Config errors never block sessions; Claude reports and continues. Refinements: (A) Cross-repo report template added to Section 10.1 — findings grouped by concern across repos, with actions-taken table, skip list, and API usage. (B) `files put` content delivery mechanism documented in interaction model — Claude writes content to temp file and pipes via stdin, with `--branch` flag for Tier 4 PR workflows. |
 | 1.9 | 2026-02-17 | Seventh review — 4 issues and 1 refinement: (1) Release Health applicability corrected in private-repos-with-releases note (Section 7.4) — removed claim that release health "still runs" on Tier 2, since the module is Tier 4 only and the tier enforcement rules would block it. Note now explains that the owner can override tier to get release health, with the caveat that this also raises mutation ceremony. (2) `wiki_sync` config comment changed from "Auto-disabled on Tiers 1-2 unless overridden" to "Tiers 3-4 only" — the previous wording implied `enabled: true` could override tier restrictions, contradicting the tier applicability enforcement note six lines above. (3) PR size threshold `xlarge: 1000` added to config (Section 5.3) — the module spec references S/M/L/XL classification but only three thresholds were defined. XL now has an explicit boundary. (4) Notifications API endpoint corrected from `GET /notifications?repo={owner}/{repo}` to `GET /repos/{owner}/{repo}/notifications` — the previous format is not a valid GitHub API endpoint. Refinement: (A) Release readiness scope inference (Sections 9.4, 9.5) broadened from "Tier 4 repos only" to "repos with releases (Tier 4 primary)" — acknowledges that repos at other tiers can have releases and should surface in cross-repo checks, even though the full Release Health module requires Tier 4. |
 | 2.0 | 2026-02-17 | Final verification pass — 1 minor issue: Tier summary table (Section 7.1) listed "No" in the "Has Releases" column for Tiers 1-2, but the detection flow routes private repos with releases to Tier 2 regardless. Changed to "N/A*" with footnote explaining that releases don't factor into tier assignment for private repos. Version promoted from draft to v2.0. Eight review passes total (v1.3-v2.0), declining from 8 issues to 1, confirming design stability. |
+| 2.1 | 2026-02-19 | Plugin review corrections: (1) Section 4.2 structure tree updated to include `gh-manager-guard.sh` (PreToolUse hook script). (2) Section 11.3 Activation Boundary corrected from "No hooks" to accurate description of the two registered hooks (PreToolUse guard + PostToolUse monitor), with documented accepted limitation (guard exits 0, warns but cannot block). (3) Section 11.3 manifest example version updated from 0.1.0 to 0.2.1. |
 
 ---
 

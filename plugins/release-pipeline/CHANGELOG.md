@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.2] - 2026-02-19
+
+### Fixed
+- remove redundant release-detection skill (was listed in README but never created)
+- show changelog entry before approval gate in Phase 2 so users review it before committing
+
+## [1.4.1] - 2026-02-19
+
+### Added
+- `auto-build-plugins.sh` PreToolUse hook — auto-builds TypeScript plugins and stages `dist/` before git commits
+- `sync-local-plugins.sh` SessionStart hook — syncs local plugin source to Claude Code cache on session start
+
 ## [1.4.0] - 2026-02-19
 
 ### Changed
@@ -27,7 +39,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - add detect-unreleased.sh for monorepo scanning
 
 ### Changed
-- bump version to v1.2.0 and update docs
-- bump version to v1.1.0
 - add monorepo usage to README
 

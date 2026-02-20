@@ -144,9 +144,18 @@ gh-manager releases draft --repo owner/name --tag v0.3.0 --name "v0.3.0" --body 
 
 ### Publish Draft Release
 
-⚠️ **Irreversible for public repos.** Publishing triggers notifications, webhooks, and makes the release publicly visible.
+⚠️ **Publishing a release is irreversible.** It immediately becomes publicly visible, triggers notifications to all watchers, fires webhooks (e.g., CI/CD pipelines, Slack bots), and appears in the repo's release feed. There is no "unpublish" — you can only delete a release, which leaves the tag and is also visible.
 
-> Draft release v0.3.0 is ready. Publishing will make it live and trigger notifications. Ready to publish?
+Use `AskUserQuestion` before publishing:
+
+> Draft release v0.3.0 is ready. Publishing will make it live and trigger notifications to all watchers.
+
+Options:
+- **"Publish now"** — make it live immediately
+- **"Edit release notes first"** — pause so the owner can review/edit the draft on GitHub before publishing
+- **"Cancel"** — leave as draft
+
+Then on confirmation:
 
 ```bash
 gh-manager releases publish --repo owner/name --release-id 12345

@@ -8,6 +8,13 @@ description: Manage GitHub Discussions — find unanswered questions, stale thre
 
 Manage GitHub Discussions — surface unanswered questions, stale threads, and discussions needing maintainer attention. Help keep the community discussion space healthy and responsive.
 
+## Applicability and Tier Behavior
+
+- **Tier 4 (Public, Releases):** Full assessment with maximum ceremony. Closing is externally visible — prefer posting resolution comments before closing. Never auto-close external contributor discussions. Unanswered Q&A is high priority.
+- **Tier 3 (Public, No Releases):** Same as Tier 4. Discussions are public and closure is visible.
+- **Tier 2 (Private, Code):** Lower ceremony — batch approvals for stale closures are acceptable. No external visibility concern.
+- **Tier 1 (Private, Docs):** Minimal ceremony. Discussions are unlikely; if present, close stale ones with brief comment.
+
 ## Execution Order
 
 Runs as module #8 during full assessments (after Notifications, before Wiki Sync). Discussions are often lower priority than issues and PRs, so they run later.
@@ -71,12 +78,9 @@ The helper returns discussions pre-classified with `needs_attention`, `is_unansw
 > • 🙋 Q&A #9 "Error with firmware 2.4" — unanswered, 3 days old
 > • 💡 Ideas #7 "Support for Zigbee devices" — no replies, 15 days old
 >
-> **By category:**
-> • Q&A (6) — 2 unanswered
-> • Ideas (4) — 1 with no replies
-> • Show and Tell (2) — all healthy
->
 > The two unanswered Q&A items should probably get a response. Want me to draft replies, or just flag them for your attention?
+>
+> _(Category breakdown available on request)_
 
 ### Step 4: Suggest Actions
 
@@ -102,7 +106,18 @@ gh-manager discussions comment --repo owner/name --discussion 5 --body "Great qu
 
 ### Close Resolved Discussions
 
-⚠️ **Closing a discussion is immediately visible to all participants and cannot be undone** (it can be reopened, but the close notification is already sent). On public repos, prefer posting a resolution comment first and letting the author close it if possible.
+⚠️ **Closing a discussion is immediately visible to all participants and cannot be undone** (it can be reopened, but the close notification is already sent). On Tier 3/4 public repos, prefer posting a resolution comment first and letting the author close it if possible.
+
+Use `AskUserQuestion` before closing:
+
+> Discussion #3 "How to configure multi-zone?" was answered in the thread. Should I mark it closed?
+
+Options:
+- **"Close as resolved"** — close immediately (Tier 1/2 default)
+- **"Post a comment, then close"** — summarize resolution, then close (Tier 3/4 recommended)
+- **"Skip — leave it open"** — don't close this discussion
+
+On close:
 
 ```bash
 gh-manager discussions close --repo owner/name --discussion 3 --reason RESOLVED
@@ -110,11 +125,18 @@ gh-manager discussions close --repo owner/name --discussion 3 --reason RESOLVED
 
 ### Close Stale Discussions
 
-```bash
-gh-manager discussions close --repo owner/name --discussion 7 --reason OUTDATED
-```
+⚠️ **Closing sends a notification to all participants** — on Tier 3/4 repos this is externally visible. Post a comment first so the author understands why their discussion was closed.
 
-For stale closures, consider posting a comment first:
+Use `AskUserQuestion` before closing:
+
+> Discussion #7 "Support for Zigbee devices" has been idle for 30+ days with no replies.
+
+Options:
+- **"Post closing comment, then close"** — recommended for Tier 3/4 (visible to community)
+- **"Close without comment"** — appropriate for Tier 1/2 internal repos
+- **"Skip — leave it open"** — don't close this discussion
+
+On "Post closing comment, then close":
 
 ```bash
 gh-manager discussions comment --repo owner/name --discussion 7 --body "Closing this as it's been inactive for 30+ days. Feel free to open a new discussion if this is still relevant.

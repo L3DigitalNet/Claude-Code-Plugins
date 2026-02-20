@@ -1,7 +1,7 @@
 # Linux SysAdmin — Claude Code Plugin Design Document
 
-**Version:** 0.1.0 (Design Complete — 2026-02-18)
-**Status:** Design Complete — Ready for Implementation
+**Version:** 1.0.2 (Implemented — 2026-02-19)
+**Status:** Implemented — sections marked *[Planned]* describe features not yet implemented
 **Target Runtime:** Claude Code (CLI)
 **Implementation:** TypeScript / Node.js >= 20 LTS
 **Distribution:** npm package (`linux-sysadmin-mcp`)
@@ -13,7 +13,7 @@
 
 Linux SysAdmin is a Claude Code plugin that provides a comprehensive, composable toolkit for Linux system administration. Every capability is exposed as a discrete, atomic tool — package management, service control, firewall configuration, security hardening, and disaster recovery are all independent operations that Claude assembles into complex workflows on the fly, not monolithic mega-commands.
 
-The plugin ships with an embedded knowledge base of universal tool knowledge — standard config paths, management commands, log locations, health checks, and dependency patterns for 30+ common sysadmin tools. This knowledge is generic to each tool, not specific to any environment. Users supply environment-specific details through configuration and custom profiles.
+The plugin ships with an embedded knowledge base of universal tool knowledge — standard config paths, management commands, log locations, health checks, and dependency patterns. Eight built-in YAML profiles cover the most common sysadmin services (nginx, sshd, docker, ufw, fail2ban, pihole, unbound, crowdsec); users can add custom profiles for other services. This knowledge is generic to each tool, not specific to any environment. Users supply environment-specific details through configuration and custom profiles.
 
 Documentation is a first-class output of every state-changing operation. Every configuration change Claude makes is reflected in human-readable, git-versioned documentation that captures not just what is configured but why. The documentation is structured so that a human can fully recreate a working system from bare metal using only the documentation repo and its backed-up config files.
 
@@ -128,11 +128,11 @@ The Tool Router dispatches to the Safety Gate, which classifies each operation b
 
 **Safety Gate** — Intercepts state-changing operations. Classifies each operation by risk level (read-only, low-risk, moderate, high, critical). Operations at moderate risk or above require explicit user confirmation. All state-changing operations support a `dry_run` parameter that previews what would happen without executing. See Section 7.4 for the full confirmation flow, dry-run behavior, and risk classification pipeline.
 
-**SSH Connection Manager** — Infrastructure component that provides the remote execution channel. When a remote host is the active target, all tool modules submit commands through the SSH Connection Manager rather than local `child_process`. Manages persistent connections, keepalive monitoring, and auto-reconnect (see Section 6.10 for full specification). Tool modules are agnostic to whether they execute locally or remotely.
+**SSH Connection Manager** — *[Planned]* Infrastructure component that will provide the remote execution channel. When implemented, remote tool invocations will submit commands through SSH rather than local `child_process`. Currently, all tools execute locally only; remote SSH targeting is a planned v2 feature.
 
 **Documentation Manager** — Manages the user's documentation repository. Writes and updates host-level and per-service READMEs, copies config file backups, and commits changes via git. Receives documentation triggers from other tool modules after state-changing operations and surfaces suggested documentation actions in tool responses for Claude to act on. See Section 6.13 for full specification.
 
-**Execution Layer** — Routes commands to either local execution (`child_process` / `execa`) or remote execution (SSH exec channels), based on the active target host. Handles subprocess timeouts using each tool's declared duration category (Section 7.1).
+**Execution Layer** — Executes commands via Node.js `child_process`. Handles subprocess timeouts using each tool's declared duration category (Section 7.1). Remote SSH execution is planned for a future release.
 
 ### 3.3 Privilege Model
 
@@ -146,7 +146,7 @@ At session start, the Distro Detector runs a `sudo -n true` check to verify pass
 
 The plugin is distributed primarily as a **standalone MCP server** that users register in their Claude Code configuration (`~/.claude/settings.json` or project-level `.mcp.json`). This is the canonical form and provides full access to all tool modules.
 
-Optionally, a set of **Claude Code slash-commands** are provided as a convenience layer on top of the MCP server. Slash-commands offer shortcuts for common workflows (e.g., `/sysadmin-status` for a quick system health overview, `/sysadmin-audit` for a security audit) and are implemented as thin wrappers that compose the underlying atomic MCP tools (Principle 1). The slash-commands are not required and do not expose functionality beyond what the MCP server provides.
+*[Planned]* A set of **Claude Code slash-commands** may be provided as a convenience layer on top of the MCP server. These would offer shortcuts for common workflows and would be implemented as thin wrappers composing underlying atomic MCP tools (Principle 1). Slash-commands are not included in v1.0.x.
 
 **Alias Syntax:** Aliases are strings of tool names separated by `+`. Each tool name can include parameters as `key=value` pairs in parentheses. The plugin parses the alias and issues the tool calls sequentially, collecting all results into a single combined response. This is simple sequential composition, not a pipeline — each tool runs independently and no tool's output feeds into another's input. Example: `status: "perf_overview + svc_list(filter='failed') + disk_usage"` runs three tools and returns their combined output. Aliases are defined in `config.yaml` (Section 9.2).
 
@@ -176,8 +176,8 @@ Installation:
      }
    }
 
-2. Slash Commands (optional):
-   claude install linux-sysadmin-commands
+2. [Planned] Slash Commands (optional):
+   # Not yet implemented — planned for a future release
 ```
 
 ### 3.5 Implementation Language
@@ -187,11 +187,11 @@ The MCP server is implemented in **TypeScript** running on **Node.js**. This cho
 Key dependencies:
 
 - **@modelcontextprotocol/sdk** — MCP server framework, tool registration, transport handling
-- **ssh2** — SSH connection management for remote host targeting
-- **execa** — Structured subprocess execution with timeout, signal handling, and output capture
 - **zod** — Input validation for all tool parameters
-- **winston** or **pino** — Structured logging for operational diagnostics
+- **pino** — Structured logging for operational diagnostics
 - **yaml** — Configuration file parsing
+
+*[Planned, not yet included]*: **ssh2** for remote SSH execution.
 
 The plugin shells out to native system commands (`apt`, `dnf`, `systemctl`, `ufw`, `firewall-cmd`, etc.) rather than reimplementing their logic. This keeps the codebase focused on orchestration and structured output rather than duplicating distro-level functionality.
 

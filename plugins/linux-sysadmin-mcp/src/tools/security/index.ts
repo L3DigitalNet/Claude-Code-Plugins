@@ -145,6 +145,7 @@ export function registerSecurityTools(ctx: PluginContext): void {
     const limit = (args.limit as number) ?? 100;
     const r = await executeBash(ctx, `find ${p} -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null | head -${limit}`, "slow");
     const lines = r.stdout.trim().split("\n").filter(Boolean);
-    return success("sec_check_suid", ctx.targetHost, r.durationMs, "find ... -perm -4000/-2000", { suid_files: lines, count: lines.length });
+    // truncated is true when we hit the head -${limit} cap — more results may exist
+    return success("sec_check_suid", ctx.targetHost, r.durationMs, "find ... -perm -4000/-2000", { suid_files: lines, count: lines.length }, { truncated: lines.length >= limit });
   });
 }

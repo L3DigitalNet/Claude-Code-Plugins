@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { PluginContext } from "./context.js";
-import type { ToolResponse, SuccessResponse, ErrorResponse, ErrorCategory } from "../types/response.js";
+import type { ToolResponse, SuccessResponse, ErrorResponse, BlockedResponse, ErrorCategory } from "../types/response.js";
 import type { ToolMetadata, RegisteredTool, ExecutionContext } from "../types/tool.js";
 import type { Command } from "../types/command.js";
 import type { RiskLevel, DurationCategory } from "../types/risk.js";
@@ -17,9 +17,35 @@ export function error(tool: string, targetHost: string, durationMs: number, opts
   return {
     status: "error", tool, target_host: targetHost, duration_ms: durationMs, command_executed: null,
     error_code: opts.code, error_category: opts.category, message: opts.message,
-    transient: opts.transient ?? false, retried: false, retry_count: 0,
+    transient: opts.transient ?? false,
     remediation: opts.remediation ?? [],
   };
+}
+
+/** Build a blocked response for resource lock contention (e.g., apt/dpkg lock). */
+export function blocked(tool: string, targetHost: string, durationMs: number, opts: { code: string; message: string; remediation?: string[] }): BlockedResponse {
+  return {
+    status: "blocked", tool, target_host: targetHost, duration_ms: durationMs, command_executed: null,
+    error_code: opts.code, error_category: "lock", message: opts.message,
+    remediation: opts.remediation ?? [],
+  };
+}
+
+/**
+ * Categorize a failed command's stderr and return the correct response type.
+ * Returns BlockedResponse for lock contention, ErrorResponse for all other failures.
+ * Preferred over calling error() directly when stderr is available.
+ */
+export function buildCategorizedResponse(tool: string, targetHost: string, durationMs: number, stderr: string, ctx: PluginContext): ErrorResponse | BlockedResponse {
+  const cat = categorizeError(stderr, ctx);
+  if (cat.code === "RESOURCE_LOCKED") {
+    return blocked(tool, targetHost, durationMs, {
+      code: cat.code,
+      message: stderr.trim() || "Resource is locked by another process",
+      remediation: cat.remediation,
+    });
+  }
+  return error(tool, targetHost, durationMs, { ...cat, message: stderr.trim() });
 }
 
 // ── Error Categorization (Section 7.2) ─────────────────────────────
@@ -68,7 +94,11 @@ export function categorizeError(stderr: string, ctx: PluginContext): { code: str
       return { code: p.code, category: p.category, transient: p.transient, remediation: p.remediation(ctx) };
     }
   }
-  return { code: "COMMAND_FAILED", category: "state", transient: false, remediation: ["Review the error output for details"] };
+  return { code: "COMMAND_FAILED", category: "state", transient: false, remediation: [
+    "Review the stderr output above for the specific error",
+    "Try with dry_run: true to preview the operation without executing",
+    "Run sysadmin_session_info to verify sudo availability and distro detection",
+  ] };
 }
 
 // ── Execution Helpers ──────────────────────────────────────────────

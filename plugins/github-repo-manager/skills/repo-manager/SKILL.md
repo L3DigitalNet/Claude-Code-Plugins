@@ -3,6 +3,19 @@ description: GitHub Repo Manager session behavior — onboarding, tier system, c
 ---
 
 # GitHub Repo Manager — Core Session Skill
+#
+# Architectural note: This file intentionally covers multiple concerns (onboarding, tier
+# detection, communication style, error handling, session wrap-up) because they are all
+# session-level orchestration concerns that must be active simultaneously throughout every
+# session. Splitting them would require loading multiple skills on every invocation, which
+# is not how Claude Code skill loading works — a skill loads in full when triggered once.
+# The nine module skills (security, pr-management, etc.) are single-concept; this is the
+# session coordinator, and is deliberately broader in scope.
+#
+# Relationships: Called by commands/repo-manager.md (Step 1). Delegates to
+# repo-manager-assessment/SKILL.md at Step 7. All module skills report findings back
+# through the assessment orchestrator. If this file changes, the command and assessment
+# skill may need corresponding updates.
 
 ## Overview
 
@@ -51,10 +64,22 @@ If GITHUB_PAT is not set, explain what a PAT is (at beginner level) and how to s
 > I need a GitHub Personal Access Token (PAT) to access your repos. A PAT is like a password that lets this tool talk to GitHub on your behalf — but with specific permissions so it can only do what you allow.
 >
 > Set it with: `export GITHUB_PAT=ghp_your_token_here`
->
-> Do you need help creating one?
 
-If the PAT is set but returns an auth error, report it clearly.
+Then use `AskUserQuestion` with these options:
+- **"I'll set my PAT and retry"** — owner will export the variable; re-run `auth verify` after
+- **"Walk me through creating a PAT"** — direct them to github.com/settings/tokens, explain `repo` and `notifications` scopes
+- **"Cancel"** — exit the session
+
+If the PAT is set but returns a 401/403 auth error:
+> GitHub rejected your PAT. Common causes:
+> - The token was revoked or expired — check github.com/settings/tokens
+> - The token scope is missing `repo` — click the token, add the scope, regenerate
+> - For fine-grained PATs: ensure the target repo is included in the "Repository access" field
+
+Use `AskUserQuestion`: "How do you want to proceed?" with options:
+- **"I've updated my PAT — retry"** — re-run `auth verify`
+- **"Help me check scopes"** — walk through github.com/settings/tokens
+- **"Cancel"** — exit
 
 #### Step 3: Check PAT scopes
 
@@ -74,22 +99,17 @@ Check the response:
 
 **Present the tier proposal and confirm with AskUserQuestion:**
 
-Summarize your reasoning briefly (1-2 sentences), then use `AskUserQuestion` with these options:
+Summarize your reasoning briefly (1-2 sentences). Use `AskUserQuestion` with all four tier options — mark the auto-detected tier as recommended. Always show the full set so the owner can override if they disagree with the classification:
 
 | Option | Description |
 |--------|-------------|
-| "Confirm — Tier N (auto-detected)" | Use the suggested tier. Mark as recommended. |
 | "Tier 1 — Private, Docs Only" | Low ceremony, batch approvals, direct commits |
 | "Tier 2 — Private, Runnable Code" | Show diffs, individual approvals for code changes |
 | "Tier 3 — Public, No Releases" | Direct commits with full diff review |
 | "Tier 4 — Public, Releases" | Maximum ceremony — PRs for all file changes |
 
-Only show tier options that differ from the auto-detected one. Pre-select the auto-detected tier as the recommended option.
-
-Example lead-in (adapt to the actual repo):
-> Based on what I see — public repo, 14 releases, CI workflows, Python package — I'd classify this as Tier 4.
-
-Then ask: "Does that sound right?" with the AskUserQuestion options above.
+Append `(Recommended)` to whichever tier was auto-detected — the marker moves based on what the classifier returned, not always Tier 4. Example lead-in (adapt to the actual repo):
+> Based on what I see — public repo, 14 releases, CI workflows, Python package — I'd classify this as Tier 4. Does that match?
 
 #### Step 5: Check for config file
 
@@ -134,10 +154,10 @@ All checks passed — proceed to the requested work.
 ✓ owner/repo-name — Tier 4 · labels OK · running assessment...
 ```
 
-If any step needed interaction (tier was confirmed, labels were created), summarize what was set up in one line before starting:
+If any step needed interaction (tier was confirmed, labels were created), summarize what was set up in the same format:
 
 ```
-✓ Set up: Tier 4 confirmed, 4 labels created · running assessment...
+✓ owner/repo-name — Tier 4 confirmed · 4 labels created · running assessment...
 ```
 
 A fully configured repo should produce zero multi-line onboarding output.
@@ -255,7 +275,10 @@ During multi-module assessment, collect errors as you go and summarize them toge
 
 When the owner indicates they're done:
 
-1. **Check for deferred items.** Note anything assessed but not acted on.
+1. **Check for deferred items.** Note anything assessed but not acted on, as a short bulleted list (max 5 items; if more, note the count: "and N more"). Example:
+   - ⏭ PR #42 merge — deferred by owner
+   - ⏭ Branch protection update — skipped (403 on branch-rules)
+   - ⏭ 3 stale issues — owner will triage manually
 2. **Summarize actions** in one sentence: "I created 2 PRs, labeled 1 issue, and pushed wiki updates."
 3. **Offer a report** if the session had significant findings or actions — use `AskUserQuestion`:
    - "Show report inline" — present the markdown report in conversation

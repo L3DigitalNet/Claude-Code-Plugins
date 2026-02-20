@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { PluginContext } from "../context.js";
-import { registerTool, success, executeBash } from "../helpers.js";
+import { registerTool, success, error, executeBash } from "../helpers.js";
 
 export function registerSSHTools(ctx: PluginContext): void {
   registerTool(ctx, { name: "ssh_session_info", description: "SSH transport diagnostics: current target, connection status.", module: "ssh", riskLevel: "read-only", duration: "instant", inputSchema: z.object({}), annotations: { readOnlyHint: true } }, async () => {
@@ -29,7 +29,7 @@ export function registerSSHTools(ctx: PluginContext): void {
     const fname = (args.filename as string) ?? `~/.ssh/id_${keyType}`;
     const commentArg = args.comment ? `-C '${args.comment}'` : "";
     const r = await executeBash(ctx, `ssh-keygen -t ${keyType} -f ${fname} -N '' ${commentArg} 2>&1`, "quick");
-    if (r.exitCode !== 0) return success("ssh_key_generate", ctx.targetHost, r.durationMs, "ssh-keygen", { error: r.stderr.trim() + r.stdout.trim() });
+    if (r.exitCode !== 0) return error("ssh_key_generate", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: (r.stderr.trim() || r.stdout.trim()) || "ssh-keygen failed" });
     return success("ssh_key_generate", ctx.targetHost, r.durationMs, `ssh-keygen -t ${keyType}`, { generated: fname, type: keyType });
   });
 

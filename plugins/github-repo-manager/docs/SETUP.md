@@ -8,25 +8,21 @@
 
 ## Installation
 
-> **Note:** All paths below are relative to the plugin directory (`plugins/github-repo-manager/`).
-> At runtime, the plugin uses `ensure-deps.sh` to automatically install dependencies on first use.
-> The manual `setup.sh` script is provided for explicit pre-installation if preferred.
-
-1. Clone or add the plugin to your Claude Code plugins directory:
+Install via the Claude Code plugin marketplace:
 
 ```bash
-# If using Claude-Code-Plugins repo structure:
-cp -r github-repo-manager /path/to/Claude-Code-Plugins/plugins/
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin install github-repo-manager@l3digitalnet-plugins
 ```
 
-2. Run the setup script (from the plugin directory):
+After installation, the plugin's `ensure-deps.sh` script runs automatically on first use to install the Node.js helper dependencies. No manual setup step is required.
+
+If you prefer to pre-install dependencies explicitly:
 
 ```bash
-cd plugins/github-repo-manager
+cd ~/.claude/plugins/cache/l3digitalnet-plugins/github-repo-manager
 bash scripts/setup.sh
 ```
-
-This installs the Node.js helper dependencies. Alternatively, `scripts/ensure-deps.sh` runs automatically at runtime to handle this.
 
 ## Create a GitHub Personal Access Token (PAT)
 

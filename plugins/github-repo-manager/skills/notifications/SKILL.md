@@ -8,6 +8,13 @@ description: Process GitHub notifications with priority classification. Use when
 
 Process and triage repository notifications for the authenticated user. Surface actionable items, summarize the backlog, and offer to mark notifications as read.
 
+## Applicability and Tier Behavior
+
+Notification volume and sensitivity don't vary by tier — unlike other modules, notifications reflect user-level activity (not repo-level) and the same triage care applies regardless of repo visibility. The tier distinctions below are contextual notes, not ceremony differences:
+
+- **Tier 4 / Tier 3 (Public):** Review request and mention notifications may involve external contributors. Cross-reference with PR Management and Issue Triage findings before marking them read.
+- **Tier 2 / Tier 1 (Private):** Lower volume typically. Batch mark-read approval is appropriate after summarizing actionable items.
+
 ## Execution Order
 
 Runs as module #7 during full assessments (after Dependency Audit). Notifications are often downstream effects of issues already surfaced by other modules, so running late avoids redundancy.
@@ -52,7 +59,7 @@ The helper returns notifications pre-categorized by priority and type. Use the `
 > 7 unread notifications:
 > • 🔴 Critical: 1 (security alert)
 > • 🟡 High: 2 (review request, direct mention)
-> • 🔵 Medium: 3 (PR comments)
+> • 🟢 Medium: 3 (PR comments)
 > • ⚪ Low: 1 (Dependabot PR)
 
 ### Step 3: Present Actionable Items
@@ -83,6 +90,8 @@ For these, note the overlap briefly instead of repeating the full finding:
 
 ### Step 5: Offer to Mark as Read
 
+Note: marking notifications as read **affects your GitHub notification state across all devices and clients** (web, mobile, desktop app). Notifications marked read here won't reappear as unread on your phone or in email digests.
+
 > Want me to mark the 5 notifications that have been addressed as read? I'd keep the 2 action items (review request and mention) unread.
 
 On approval:
@@ -107,7 +116,7 @@ gh-manager notifications mark-read --repo owner/name
 |----------|----------|--------|
 | 🔴 Critical | Security alerts, CI failures on default branch | Surface immediately |
 | 🟡 High | Review requests, direct mentions, assigned issues | Present as action items |
-| 🔵 Medium | PR activity on watched threads, discussion replies | Summarize |
+| 🟢 Medium | PR activity on watched threads, discussion replies | Summarize |
 | ⚪ Low | Dependabot PRs, bot comments, subscription updates | Batch summary |
 
 ---

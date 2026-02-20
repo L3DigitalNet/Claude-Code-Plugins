@@ -171,10 +171,10 @@ Many security endpoints require specific PAT scopes or repo features to be enabl
 
 | Error | Response |
 |-------|----------|
-| 403 on dependabot | "Dependabot alerts aren't accessible. Your PAT may need the `security_events` scope, or Dependabot isn't enabled on this repo." |
-| 404 on code-scanning | "Code scanning isn't enabled on this repo. For repos with significant code, consider enabling CodeQL in Settings → Security." |
-| 404 on secret-scanning | "Secret scanning isn't available. It's enabled by default on public repos with GitHub Advanced Security." |
-| 403 on branch-rules | "I can't read branch protection rules. This typically requires admin access to the repo." |
+| 403 on dependabot | "I can't access Dependabot alerts. Two things to check: **(1)** Your PAT may be missing the `security_events` scope — go to github.com/settings/tokens → find your PAT → add `security_events` → Save. **(2)** Dependabot may not be enabled on this repo — go to Settings → Security → Enable Dependabot alerts. Fix either or both, then I can retry." |
+| 404 on code-scanning | "Code scanning isn't enabled on this repo. For repos with significant code, consider enabling CodeQL in Settings → Security → Code scanning → Set up CodeQL." |
+| 404 on secret-scanning | "Secret scanning isn't available. It's enabled by default on public repos with GitHub Advanced Security, and available for private repos under GHAS." |
+| 403 on branch-rules | "I can't read branch protection rules — this requires `repo` scope and at minimum write access to the repo. Check your PAT at github.com/settings/tokens." |
 
 **Don't stop the assessment on security errors.** Report what you can access and note what's unavailable. The owner can fix permissions later.
 

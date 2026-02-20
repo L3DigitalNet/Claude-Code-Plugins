@@ -1,12 +1,12 @@
 {
   "name": "linux-sysadmin-mcp",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Comprehensive Linux system administration MCP server for Claude Code",
   "type": "module",
   "bin": {
-    "linux-sysadmin-mcp": "dist/server.js"
+    "linux-sysadmin-mcp": "dist/server.bundle.cjs"
   },
-  "main": "dist/server.js",
+  "main": "dist/server.bundle.cjs",
   "scripts": {
     "build": "tsc && npm run bundle",
     "bundle": "esbuild src/server.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/server.bundle.cjs --define:import.meta.url=undefined",

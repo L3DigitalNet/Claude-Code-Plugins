@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-17 23:41 EST
 **Claude Code Model:** Claude Opus 4.6
-**Plugin Version:** 0.1.0
+**Plugin Version:** 0.1.0 *(results from initial v0.1.0 release; v1.0.x includes additional tools and UX improvements not covered by this run)*
 
 ## Summary
 

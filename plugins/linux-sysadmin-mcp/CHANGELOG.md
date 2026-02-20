@@ -2,16 +2,32 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
-## [1.0.2] - 2026-02-19
+## [1.0.3] — 2026-02-19
 
 ### Changed
-- release: 5 plugin releases — design-assistant 0.3.0, linux-sysadmin-mcp 1.0.2, agent-orchestrator 1.0.2, release-pipeline 1.4.0, home-assistant-dev 2.2.0
-- add Principles section to all 7 plugin READMEs
-- standardise all plugin READMEs with consistent sections
+- **UX — B-005: `fw_add_rule` error categorization** — errors from the firewall backend are now
+  routed through `buildCategorizedResponse()` rather than passed as raw stderr, giving categorized
+  error codes and actionable remediation hints.
+- **UX — B-009: `sec_check_suid` truncation signal** — response now includes `truncated: true`
+  when results hit the `limit` cap, so callers know additional SUID files may exist beyond the
+  returned set.
+- **UX — A-002/B-006: `documentation_action` now emitted** — `svc_start`, `svc_stop`,
+  `svc_restart`, and `fw_add_rule` include a `documentation_action` hint in their success
+  response when a documentation repo is configured, guiding Claude to suggest relevant doc tools
+  (e.g. `doc_generate_service`, `doc_backup_config`) after a state change.
+- **UX — N-001: `ctr_compose_down` `volumes` parameter description** — moved the destructive-
+  action warning ("permanently deletes all volume data") from the `dry_run` field into the
+  `volumes` field's own `.describe()` so it is visible to callers regardless of which parameter
+  they read first.
+- **Fix — N-002: `package.json` `bin`/`main` entry point** — corrected from `dist/server.js`
+  (unbundled tsc output) to `dist/server.bundle.cjs` (esbuild bundle). Users who install globally
+  and invoke the binary directly now get the correct bundled entry point.
+- **Docs — C-009: tool count consistency** — README header updated from "~100 tools" to "~107
+  tools" to match the module table total.
+- **Docs — C-010: design doc installation block** — `claude install linux-sysadmin-commands`
+  line marked as `[Planned]` with a comment noting it is not yet implemented.
 
-### Fixed
-- update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
-
+---
 
 ## [1.0.2] — 2026-02-19
 

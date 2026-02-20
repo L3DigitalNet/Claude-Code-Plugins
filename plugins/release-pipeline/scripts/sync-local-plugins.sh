@@ -72,15 +72,20 @@ for plugin_src in "$repo/plugins"/*/; do
     --exclude='*.d.ts.map' \
     "$plugin_src" "$plugin_cache/" \
     > /dev/null 2>&1; then
-    # rsync not available or failed — fall back to cp (no --delete equivalent)
-    cp -r "$plugin_src/." "$plugin_cache/" 2>/dev/null || true
+    # rsync not available or failed — fall back to cp (no --delete equivalent).
+    # Swallowing cp failure here would silently leave the cache out of date, which
+    # is worse than surfacing the warning and letting the session continue.
+    if ! cp -r "$plugin_src/." "$plugin_cache/"; then
+      printf '[release-pipeline] Warning: failed to sync %s to cache (both rsync and cp failed)\n' "$plugin_name"
+    fi
   fi
 
   synced+=("$plugin_name")
 done
 
 if [ ${#synced[@]} -gt 0 ]; then
-  printf 'Synced local plugins to cache: %s\n' "${synced[*]}"
+  printf '[release-pipeline] Synced %d plugin(s) to cache:\n' "${#synced[@]}"
+  printf '  - %s\n' "${synced[@]}"
 fi
 
 exit 0

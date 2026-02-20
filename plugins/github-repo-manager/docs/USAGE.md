@@ -343,4 +343,4 @@ gh-manager config resolve --repo owner/name
 
 ## Current Phase
 
-**v1.0 — All Phases Complete.** The plugin covers all 9 assessment modules (security, release health, community health, PR management, issue triage, dependency audit, notifications, discussions, wiki sync), cross-repo batch operations, config management (per-repo and portfolio), report generation, and cross-module intelligence.
+**v0.2.1 — All Phases Complete.** The plugin covers all 9 assessment modules (security, release health, community health, PR management, issue triage, dependency audit, notifications, discussions, wiki sync), cross-repo batch operations, config management (per-repo and portfolio), report generation, and cross-module intelligence.

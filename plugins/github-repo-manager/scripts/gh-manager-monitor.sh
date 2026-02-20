@@ -66,15 +66,16 @@ try:
     remaining = r.get('remaining')
     if remaining is not None:
         print(remaining)
-except:
-    pass
+except Exception as e:
+    import sys
+    print(f'[gh-manager-monitor] rate-limit parse error: {e}', file=sys.stderr)
 " 2>/dev/null)
 
     if [ -n "$RATE_REMAINING" ]; then
         if [ "$RATE_REMAINING" -lt 100 ] 2>/dev/null; then
-            echo "🔴 GitHub API rate limit critical: ${RATE_REMAINING} REST calls remaining. Consider pausing — limit resets in ~1 hour."
+            echo "🔴 Rate limit critical: ${RATE_REMAINING} REST calls remaining. Limit resets in ~1 hour — consider pausing."
         elif [ "$RATE_REMAINING" -lt 300 ] 2>/dev/null; then
-            echo "⚠️ GitHub API rate limit low: ${RATE_REMAINING} REST calls remaining. Cross-repo scans may be limited."
+            echo "⚠️ Rate limit low: ${RATE_REMAINING} REST calls remaining. Large cross-repo scans may fail."
         fi
     fi
 fi
@@ -89,7 +90,9 @@ if echo "$COMMAND" | grep -q -- "--dry-run"; then
     exit 0
 fi
 
-# Mutation command patterns (any write operation)
+# Mutation command patterns (any write operation) — MUST be kept in sync with gh-manager-guard.sh (lines 62-68).
+# Both scripts match the same write operations so the guard warning and audit trail stay aligned.
+# If you add a new gh-manager write command, update the pattern in BOTH scripts.
 MUTATION_PATTERN="prs merge|prs close|prs label|prs comment|prs create|prs request-review"
 MUTATION_PATTERN2="issues close|issues label|issues comment|issues assign"
 MUTATION_PATTERN3="files put|files delete|branches create|branches delete"

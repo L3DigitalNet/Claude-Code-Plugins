@@ -8,6 +8,13 @@ description: Audit dependency health via dependency graph and Dependabot PRs. Us
 
 Review dependency health beyond just security alerts. Summarize the dependency graph, audit the Dependabot PR backlog, identify outdated dependencies, and recommend batch-merge strategies for low-risk bumps.
 
+## Applicability and Tier Behavior
+
+- **Tier 4 (Public, Releases):** Full assessment with full ceremony. Batch-merge candidates are presented for individual review before merging; each merge triggers CI and is visible to repo watchers. Major version bumps require extra scrutiny — they can break external users.
+- **Tier 3 (Public, No Releases):** Same as Tier 4. Public visibility applies to all merges.
+- **Tier 2 (Private, Code):** Full assessment. Batch approval acceptable for patch/minor Dependabot PRs with CI passing.
+- **Tier 1 (Private, Docs):** Skip dependency audit — docs repos typically don't have meaningful dependency graphs.
+
 ## Execution Order
 
 Runs as module #6 during full assessments (after Issue Triage). Defers Dependabot security alerts to the Security module — this module focuses on the broader dependency picture.
@@ -80,6 +87,8 @@ This is the core of the dependency audit. Evaluate:
 > The 4 batch-merge candidates are all patch/minor bumps with passing CI. Want me to merge them?
 
 ### Step 4: Batch Merge (Owner Approval Required)
+
+⚠️ **Batch merging implications**: Merging multiple PRs in sequence triggers a separate CI run for each. On repos with slow CI, this can queue many builds simultaneously. If one PR's tests fail mid-batch, subsequent merges may inherit the broken state. For Tier 3/4 repos, each merge is also visible to contributors and watcher subscribers.
 
 After presenting the candidates, use `AskUserQuestion`:
 

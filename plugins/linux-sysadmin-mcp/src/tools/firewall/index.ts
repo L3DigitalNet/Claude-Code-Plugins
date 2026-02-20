@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { PluginContext } from "../context.js";
 import type { FirewallRule } from "../../types/firewall.js";
-import { registerTool, success, error, executeCommand, executeBash } from "../helpers.js";
+import { registerTool, success, error, buildCategorizedResponse, executeCommand, executeBash } from "../helpers.js";
 
 const ruleSchema = z.object({
   action: z.enum(["allow", "deny", "reject"]).describe("Firewall action: allow, deny, or reject the connection"),
@@ -31,9 +31,14 @@ export function registerFirewallTools(ctx: PluginContext): void {
     const cmd = ctx.commands.firewallAddRule(rule, { dryRun: args.dry_run as boolean });
     const gate = ctx.safetyGate.check({ toolName: "fw_add_rule", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Add firewall rule: ${rule.action} ${rule.direction} port ${rule.port}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    // Dry-run guard: return command preview without executing (matches fw_remove_rule pattern)
+    if (args.dry_run) return success("fw_add_rule", ctx.targetHost, 0, null, { would_run: cmd.argv.join(" ") }, { dry_run: true });
     const r = await executeCommand(ctx, "fw_add_rule", cmd, "quick");
-    if (r.exitCode !== 0) return error("fw_add_rule", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("fw_add_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { added: rule }, args.dry_run ? { dry_run: true } : undefined);
+    if (r.exitCode !== 0) return buildCategorizedResponse("fw_add_rule", ctx.targetHost, r.durationMs, r.stderr, ctx);
+    const docHint = ctx.config.documentation.repo_path
+      ? { documentation_action: { type: "firewall_changed", suggested_actions: ["doc_generate_host"] } }
+      : undefined;
+    return success("fw_add_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { added: rule }, docHint);
   });
 
   registerTool(ctx, { name: "fw_remove_rule", description: "Remove a firewall rule. High risk.", module: "firewall", riskLevel: "high", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
@@ -49,7 +54,7 @@ export function registerFirewallTools(ctx: PluginContext): void {
 
   registerTool(ctx, { name: "fw_enable", description: "Enable the firewall. Critical risk.", module: "firewall", riskLevel: "critical", duration: "quick", inputSchema: z.object({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = ctx.commands.firewallEnable();
-    const gate = ctx.safetyGate.check({ toolName: "fw_enable", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: "Enable firewall", confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "fw_enable", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: "Enable firewall", confirmed: args.confirmed as boolean, supportsDryRun: false });
     if (gate) return gate;
     const r = await executeCommand(ctx, "fw_enable", cmd, "quick");
     if (r.exitCode !== 0) return error("fw_enable", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
@@ -58,7 +63,7 @@ export function registerFirewallTools(ctx: PluginContext): void {
 
   registerTool(ctx, { name: "fw_disable", description: "Disable the firewall. Critical risk.", module: "firewall", riskLevel: "critical", duration: "quick", inputSchema: z.object({ confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = ctx.commands.firewallDisable();
-    const gate = ctx.safetyGate.check({ toolName: "fw_disable", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: "Disable firewall", confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "fw_disable", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: "Disable firewall", confirmed: args.confirmed as boolean, supportsDryRun: false });
     if (gate) return gate;
     const r = await executeCommand(ctx, "fw_disable", cmd, "quick");
     if (r.exitCode !== 0) return error("fw_disable", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });

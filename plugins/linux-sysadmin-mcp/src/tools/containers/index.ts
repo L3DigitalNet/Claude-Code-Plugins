@@ -29,38 +29,42 @@ export function registerContainerTools(ctx: PluginContext): void {
   });
 
   for (const action of ["start", "stop", "restart"] as const) {
-    registerTool(ctx, { name: `ctr_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a container. Moderate risk.`, module: "containers", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ container: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: action === "stop" } }, async (args) => {
+    registerTool(ctx, { name: `ctr_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a container. Moderate risk.`, module: "containers", riskLevel: "moderate", duration: "quick", inputSchema: z.object({ container: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: action === "stop" } }, async (args) => {
       const cmd = `${rt(ctx)} ${action} ${args.container}`;
-      const gate = ctx.safetyGate.check({ toolName: `ctr_${action}`, toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `${action} container ${args.container}`, confirmed: args.confirmed as boolean });
+      const gate = ctx.safetyGate.check({ toolName: `ctr_${action}`, toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `${action} container ${args.container}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
       if (gate) return gate;
+      if (args.dry_run) return success(`ctr_${action}`, ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
       const r = await executeBash(ctx, cmd, "quick");
       if (r.exitCode !== 0) return error(`ctr_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
       return success(`ctr_${action}`, ctx.targetHost, r.durationMs, cmd, { container: args.container, action });
     });
   }
 
-  registerTool(ctx, { name: "ctr_remove", description: "Remove a container. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ container: z.string().min(1), force: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "ctr_remove", description: "Remove a container. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ container: z.string().min(1), force: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `${rt(ctx)} rm ${args.force ? "-f" : ""} ${args.container}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove container ${args.container}`, confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "ctr_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove container ${args.container}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    if (args.dry_run) return success("ctr_remove", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("ctr_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.container });
   });
 
-  registerTool(ctx, { name: "ctr_image_pull", description: "Pull a container image. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "ctr_image_pull", description: "Pull a container image. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = `${rt(ctx)} pull ${args.image}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_image_pull", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Pull image ${args.image}`, confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "ctr_image_pull", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Pull image ${args.image}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    if (args.dry_run) return success("ctr_image_pull", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "slow");
     if (r.exitCode !== 0) return error("ctr_image_pull", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_image_pull", ctx.targetHost, r.durationMs, cmd, { pulled: args.image });
   });
 
-  registerTool(ctx, { name: "ctr_image_remove", description: "Remove a container image. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "ctr_image_remove", description: "Remove a container image. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: z.object({ image: z.string().min(1), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `${rt(ctx)} rmi ${args.image}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_image_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove image ${args.image}`, confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "ctr_image_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove image ${args.image}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    if (args.dry_run) return success("ctr_image_remove", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "quick");
     if (r.exitCode !== 0) return error("ctr_image_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_image_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.image });
@@ -72,19 +76,21 @@ export function registerContainerTools(ctx: PluginContext): void {
     return success("ctr_compose_status", ctx.targetHost, r.durationMs, "compose ps", { output: r.stdout.trim() });
   });
 
-  registerTool(ctx, { name: "ctr_compose_up", description: "Start a Compose project. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ project_dir: z.string().min(1), detach: z.boolean().optional().default(true), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
+  registerTool(ctx, { name: "ctr_compose_up", description: "Start a Compose project. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: z.object({ project_dir: z.string().min(1), detach: z.boolean().optional().default(true), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
     const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose up ${args.detach ? "-d" : ""}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_compose_up", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Start compose project in ${args.project_dir}`, confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "ctr_compose_up", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Start compose project in ${args.project_dir}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    if (args.dry_run) return success("ctr_compose_up", ctx.targetHost, 0, null, { would_run: cmd }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "slow");
     if (r.exitCode !== 0) return error("ctr_compose_up", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_compose_up", ctx.targetHost, r.durationMs, cmd, { started: true });
   });
 
-  registerTool(ctx, { name: "ctr_compose_down", description: "Stop and remove a Compose project. High risk.", module: "containers", riskLevel: "high", duration: "normal", inputSchema: z.object({ project_dir: z.string().min(1), volumes: z.boolean().optional().default(false), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
+  registerTool(ctx, { name: "ctr_compose_down", description: "Stop and remove a Compose project. High risk.", module: "containers", riskLevel: "high", duration: "normal", inputSchema: z.object({ project_dir: z.string().min(1), volumes: z.boolean().optional().default(false).describe("Remove named volumes declared in the compose file. WARNING: permanently deletes all volume data — use dry_run: true first."), confirmed: z.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: z.boolean().optional().default(false).describe("Preview without executing — returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
     const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose down ${args.volumes ? "-v" : ""}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_compose_down", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Stop compose project in ${args.project_dir}`, confirmed: args.confirmed as boolean });
+    const gate = ctx.safetyGate.check({ toolName: "ctr_compose_down", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Stop compose project in ${args.project_dir}${args.volumes ? " (with volume removal)" : ""}`, confirmed: args.confirmed as boolean, dryRun: args.dry_run as boolean });
     if (gate) return gate;
+    if (args.dry_run) return success("ctr_compose_down", ctx.targetHost, 0, null, { would_run: cmd, volumes_would_be_deleted: args.volumes === true }, { dry_run: true });
     const r = await executeBash(ctx, cmd, "normal");
     if (r.exitCode !== 0) return error("ctr_compose_down", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
     return success("ctr_compose_down", ctx.targetHost, r.durationMs, cmd, { stopped: true });
