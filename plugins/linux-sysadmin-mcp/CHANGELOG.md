@@ -2,6 +2,17 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
+## [1.0.2] - 2026-02-19
+
+### Changed
+- release: 5 plugin releases — design-assistant 0.3.0, linux-sysadmin-mcp 1.0.2, agent-orchestrator 1.0.2, release-pipeline 1.4.0, home-assistant-dev 2.2.0
+- add Principles section to all 7 plugin READMEs
+- standardise all plugin READMEs with consistent sections
+
+### Fixed
+- update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
+
+
 ## [1.0.2] — 2026-02-19
 
 ### Changed

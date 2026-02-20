@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.1] - 2026-02-19
+
+### Changed
+- ux(plugin-test-harness): improve tool output formatting and error handling
+- add Principles section to all 7 plugin READMEs
+- standardise all plugin READMEs with consistent sections
+
+
 ## [0.1.0] - 2026-02-18
 
 ### Added
