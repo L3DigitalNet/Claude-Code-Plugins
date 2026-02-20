@@ -278,13 +278,17 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version>
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version>
 ```
 
+Capture stdout — it contains the full changelog entry. Display it in a fenced block immediately after running.
+
 **Step 3 — Show diff summary:**
+
+Display the changelog entry from Step 2. Then run:
 
 ```bash
 git diff --stat
 ```
 
-Display: version file changes, changelog preview (first 30 lines of the generated entry), and any other modified files.
+Summarize: changelog entry above, version files changed, and any other modified files.
 
 **Step 4 — Approval gate:**
 
@@ -469,15 +473,17 @@ This bumps `plugins/<plugin-name>/.claude-plugin/plugin.json` and the matching e
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version> --plugin <plugin-name>
 ```
 
-This collects only commits touching `plugins/<plugin-name>/` since the last `<plugin-name>/v*` tag and writes to `plugins/<plugin-name>/CHANGELOG.md`.
+This collects only commits touching `plugins/<plugin-name>/` since the last `<plugin-name>/v*` tag and writes to `plugins/<plugin-name>/CHANGELOG.md`. Capture stdout — it contains the full changelog entry. Display it in a fenced block immediately after running.
 
 **Step 3 — Show diff summary:**
+
+Display the changelog entry from Step 2. Then run:
 
 ```bash
 git diff --stat
 ```
 
-Display: version changes, changelog preview (first 30 lines), marketplace.json change.
+Summarize: changelog entry above, version files changed (plugin.json, marketplace.json), any other modified files.
 
 **Step 4 — Approval gate:**
 
