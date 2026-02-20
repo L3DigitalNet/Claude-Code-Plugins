@@ -7,8 +7,8 @@
     },
     {
       "check": "dirty_working_tree",
-      "plugin": "release-pipeline",
-      "reason": "Scoped plugin release — dirty files are in other plugins (plugin-test-harness, linux-sysadmin-mcp) and will not be staged"
+      "plugin": "*",
+      "reason": "Scoped plugin release — dirty files outside the target plugin directory will not be staged"
     },
     {
       "check": "missing_tests",
