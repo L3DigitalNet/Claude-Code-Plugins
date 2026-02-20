@@ -62,7 +62,7 @@ machine-verifiable checks, one per open finding:
     "id": "A-C-<number>",
     "finding_id": "<doc file path or drift category ID>",
     "track": "C",
-    "type": "<grep_not_match | grep_match | file_exists | file_content>",
+    "type": "<grep_not_match | grep_match | file_exists | file_content | typescript_compile | shell_exit_zero>",
     "description": "One sentence: what this assertion verifies",
     "command": "<bash command to run — use full relative paths from repo root>",
     "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
@@ -78,5 +78,7 @@ machine-verifiable checks, one per open finding:
 - `file_exists`: the finding is a missing documentation file. Use `path` field.
 - `grep_not_match`: the finding is an orphaned reference — dead text that should not appear. Command greps for the dead reference; expect empty output.
 - `grep_match`: the finding is a doc accuracy issue — the doc should reference something it currently doesn't. Command greps the doc for correct content; expect non-empty output.
+- `typescript_compile`: only applicable if the target plugin has TypeScript source. Command should be `cd <dir> && npx tsc --noEmit 2>&1`. Rarely used for documentation findings.
+- `shell_exit_zero`: applicable if the finding is a script or test that should run cleanly. Command is the test invocation.
 
 Only include assertions that will currently FAIL (finding represents a current gap). Do not include assertions for current/accurate documentation.
