@@ -69,7 +69,7 @@
     {
       "name": "design-assistant",
       "description": "Principled design document authoring and enforcement. /design-draft guides principles discovery and document generation. /design-review enforces principles across passes with auto-fix. Warm handoff transfers full context between commands.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"

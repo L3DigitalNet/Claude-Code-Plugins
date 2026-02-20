@@ -1,6 +1,6 @@
 {
   "name": "design-assistant",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Full design document lifecycle: guided authoring with principles discovery (/design-draft) followed by iterative principle-enforced review with auto-fix (/design-review). Start with /design-draft for new documents, /design-review for existing ones.",
   "author": {
     "name": "L3DigitalNet",
