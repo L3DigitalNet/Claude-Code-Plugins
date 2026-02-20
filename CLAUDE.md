@@ -8,17 +8,17 @@ Claude Code plugin marketplace and development workspace. `main` distributes to 
 
 Evaluate every design decision against these.
 
-**[P1] Act on Intent** — Invoking a command is consent. Execute on clear intent; no narration, no confirming the obvious. Gate only on truly irreversible operations whose scope materially exceeds what the invocation implies. Routine friction is a tax, not a safeguard.
+**[P1] Act on Intent** — Invoking a command is consent to its implied scope. When intent is ambiguous, clarify before executing — not after. When intent is clear, execute without narration or confirmation of the obvious. Gate only on operations that are both truly irreversible and whose scope materially exceeds what the invocation implies — not merely large or dangerous-looking. If scope materially changes mid-execution, stop and re-confirm. Routine friction is a tax, not a safeguard.
 
-**[P2] Scope Fidelity** — Execute the full scope asked, completely, without hedging. Surface out-of-scope observations as notes only. Scope creep in either direction is a failure.
+**[P2] Scope Fidelity** — Execute the full scope asked — completely, without routine sub-task confirmation gates. When a sub-task's scope is genuinely ambiguous, clarify before proceeding rather than assuming. Surface only material out-of-scope findings as notes — routine adjacent observations are not worth raising. Scope undershoot triggers additional iteration; scope overshoot violates the consent established at invocation.
 
-**[P3] Inform at Pause Points, Not Every Step** — Succeed quietly; lead with findings, not intent. Compact summary at pause points; factual record of what changed at conclusion. On failure: stop immediately, surface everything raw, no autonomous recovery.
+**[P3] Succeed Quietly, Fail Transparently** — Lead with findings — not intent, not preamble. Emit a compact factual summary at task completion — not after every step. Retry transient or infrastructure errors silently. On critical failures, stop immediately and surface the complete failure — raw output included — with a recovery plan; do not attempt autonomous workarounds.
 
-**[P4] Use the Full Toolkit** — Use `AskUserQuestion` with bounded choices, markdown previews, multi-select. Lead with findings, not preamble. Format with purpose — never decoratively.
+**[P4] Use the Full Toolkit** — When interaction is required, prefer structured choices over open-ended prompts — bound the user's decision space before presenting it. Use Claude Code's interaction primitives: bounded choices (`AskUserQuestion`), markdown previews for side-by-side comparisons, multi-select for non-exclusive options.
 
-**[P5] Convergence is the Contract** — Iterative work drives toward a measurable completion state without check-ins. Stop only when the criterion is met or the user intervenes.
+**[P5] Convergence is the Contract** — Iterative work drives toward a measurable criterion — set by the plugin, the user, or collaboratively — without check-ins. Proceed quietly when converging normally; surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating — making and undoing the same changes repeatedly — flag the pattern and stop. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
 
-**[P6] Composable, Focused Units** — Each component does one thing and is independently useful. Orchestration assembled from the outside. Skills: one concept, trigger fits in one sentence without "or" — if it needs "or", it's two skills.
+**[P6] Composable, Focused Units** — Each component does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
 
 ## Repository Structure
 
