@@ -10,23 +10,17 @@ A Claude Code plugin marketplace and development workspace. `main` distributes p
 
 These govern every plugin. Evaluate every design decision against them.
 
-**[P1] Composable Over Monolithic** — Focused, independently useful units. Complex workflows emerge from combining atomic components at runtime. Each skill, command, or hook does one thing; orchestration is assembled from the outside.
+**[P1] Act on Intent** — Invoking a command is consent. Execute on clear intent without restating what's about to happen or asking for confirmation of the obvious. Confirmation gates exist only for operations that are truly irreversible and whose scope materially exceeds what the invocation implies — not for operations that are merely large or look dangerous. Routine friction is a tax, not a safeguard.
 
-**[P2] Scope Fidelity** — A plugin does exactly what it was invoked to do — no more. Out-of-scope observations are surfaced as notes, never acted upon. Scope creep is a trust violation.
+**[P2] Scope Fidelity** — Execute the full scope of what was asked — completely, without hedging or stopping to confirm sub-tasks. Do not act beyond the declared scope; surface out-of-scope observations as notes only. Scope creep in either direction is a failure.
 
-**[P3] Safe Default, Explicit Escalation** — Default posture is minimal, reversible, lowest-impact. Destructive modes and irreversible paths require an explicit user step. Dry-run before live, read before write, narrow scope before wide.
+**[P3] Inform at Pause Points, Not Every Step** — Succeed quietly: output results, not narration; lead with findings, not intent. At logical pause points — phase transitions, pre-decision moments — surface a compact summary; at the natural conclusion of a process, a brief factual record of what was done — not why, just what changed. Timely, dense information enables decisions; status updates after every action are noise. When something fails, stop immediately and surface the complete failure — raw output included, nothing softened, no autonomous recovery.
 
-**[P4] Human Consent Before Consequence** — No autonomous destructive or irreversible actions. Every high-impact operation is announced before execution. Confirming once in one context does not authorise the same action in another.
+**[P4] Use the Full Toolkit** — When interaction is required, use Claude Code's rich primitives: bounded `AskUserQuestion` choices over open-ended prompts, markdown previews for side-by-side comparisons, multi-select for non-exclusive options. Lead with findings, not preamble. Format with purpose — status symbols, structured lists — never decoratively.
 
-**[P5] Explainability Precedes Action** — Explain what and why before acting, in plain language. Proportionate: brief for routine actions, detailed for high-impact ones.
+**[P5] Convergence is the Contract** — Iterative work defines completion as a measurable state — zero findings, all checks green, all tests passing — and drives toward it across cycles without check-ins. Report the trend; stop only when the criterion is met or the user intervenes.
 
-**[P6] Conversation-Native Interaction** — Honour the terminal conversation medium. Prefer bounded `AskUserQuestion` choices over open-ended prompts. Lead with the answer. Output longer than ~10 lines should be chunked. Errors are actionable, never raw stack traces.
-
-**[P7] Fail Fast, Never Silently** — Stop immediately on failure and surface it completely. No autonomous recovery, no continuing past a known failure.
-
-**[P8] Done is Measured, Not Declared** — Iterative plugins define completion as a measurable state (zero findings, all checks green) and drive toward it across cycles. Success is not declared after a single pass.
-
-**[P9] One Concept Per Skill** — Each skill covers one tightly-scoped concept whose trigger fits in one sentence without "or". A skill spanning five topics loads all five even when only one applies. If the trigger needs "or", it's two skills.
+**[P6] Composable, Focused Units** — Every plugin component — command, skill, hook — does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in. Skills are the sharpest expression of this: each covers a single concept narrow enough that its trigger fits in one sentence without "or". Skills load in full when triggered; wide scope silently taxes every loosely related task with tokens that do no work. If a trigger requires "or", it's two skills.
 
 ## Repository Structure
 
