@@ -47,3 +47,36 @@ Triggered by: <"Pre-existing drift" or "Pass N changes to <file>">
 ```
 
 Do not deviate from this format. The orchestrator parses it to build the unified report.
+
+## Assertions Output
+
+After your findings, append an `## Assertions` section containing a JSON array of
+machine-verifiable checks, one per open finding:
+
+```
+## Assertions
+
+```json
+[
+  {
+    "id": "A-C-<number>",
+    "finding_id": "<doc file path or drift category ID>",
+    "track": "C",
+    "type": "<grep_not_match | grep_match | file_exists | file_content>",
+    "description": "One sentence: what this assertion verifies",
+    "command": "<bash command to run — use full relative paths from repo root>",
+    "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
+    "path": "<file path — only for file_exists and file_content types>",
+    "needle": "<search string — only for file_content type>"
+  }
+]
+```
+```
+
+**Assertion type guide:**
+- `file_content`: the finding is stale content — the doc should contain updated text. Use `path` + `needle` fields where needle is the content that should be present after the fix.
+- `file_exists`: the finding is a missing documentation file. Use `path` field.
+- `grep_not_match`: the finding is an orphaned reference — dead text that should not appear. Command greps for the dead reference; expect empty output.
+- `grep_match`: the finding is a doc accuracy issue — the doc should reference something it currently doesn't. Command greps the doc for correct content; expect non-empty output.
+
+Only include assertions that will currently FAIL (finding represents a current gap). Do not include assertions for current/accurate documentation.
