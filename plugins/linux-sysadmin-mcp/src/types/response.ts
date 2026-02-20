@@ -15,7 +15,8 @@ export interface ResponseBase {
   status: "success" | "error" | "blocked" | "confirmation_required";
   tool: string;
   target_host: string;
-  duration_ms: number;
+  // null when no command was executed (confirmation_required gate fired before execution)
+  duration_ms: number | null;
   command_executed: string | null;
 }
 

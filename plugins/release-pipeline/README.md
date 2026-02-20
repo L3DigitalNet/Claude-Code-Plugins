@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 1.4.2 — Interactive release pipeline for any repo. One command, six options.
+**Version:** 1.5.0 — Interactive release pipeline for any repo. One command, six options.
 
 ## Summary
 
@@ -43,11 +43,11 @@ The command auto-detects your repository state and presents a context-aware menu
 
 ## Hooks
 
-Three background hooks are installed automatically and run without invocation:
+Three scripts are registered across two background hooks, installed automatically and running without invocation:
 
 | Hook | Event | Behavior |
 |------|-------|----------|
-| `sync-local-plugins.sh` | SessionStart | Syncs local plugin source from the development repo to the installed Claude Code cache. Discovery order: `$CLAUDE_PROJECT_DIR` first, then `$HOME/projects/Claude-Code-Plugins` as a fallback. Only syncs plugins that are already installed (cache dir exists). |
+| `sync-local-plugins.sh` | SessionStart | Syncs local plugin source from the development repo to the installed Claude Code cache. Discovery order: `$CLAUDE_PROJECT_DIR` first, then `$HOME/projects/Claude-Code-Plugins` as a fallback. Only syncs plugins that are already installed (cache dir exists). Produces no output when no files changed — output only appears when files are actually transferred. |
 | `force-push-guard.sh` | PreToolUse (Bash) | Blocks any `git push --force` or `git push -f` command. Returns a block decision — the command does not execute. |
 | `auto-build-plugins.sh` | PreToolUse (Bash) | On `git commit`, checks for staged TypeScript source files in `plugins/<name>/src/`. If found and the plugin has a `build` npm script, runs `npm run build`, stages the resulting `dist/` directory, and then lets the commit proceed. Blocks the commit if the build fails. Outputs a notice before building so the side-effect is visible. |
 
@@ -80,7 +80,7 @@ Full Release and Plugin Release spawn three agents in parallel during Phase 1:
 |-------|--------|-----------|
 | 0. Detection | Auto-detect repo state, suggest version | Yes |
 | 1. Pre-flight | Run tests, audit docs, check git state | Yes (3 agents) |
-| 2. Preparation | Bump versions, generate changelog, show diff | Sequential |
+| 2. Preparation | Bump versions, preview changelog and diff, approval gate, write changelog | Sequential |
 | 3. Release | Commit, merge, tag, push, GitHub release | Sequential |
 | 4. Verification | Confirm tag, release page, notes | Sequential |
 

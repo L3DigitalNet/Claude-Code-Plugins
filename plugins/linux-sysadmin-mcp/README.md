@@ -97,7 +97,7 @@ Add custom profiles to `~/.config/linux-sysadmin/profiles/` or configure `knowle
 
 Every state-changing tool has a risk level: `read-only` → `low` → `moderate` → `high` → `critical`.
 
-Operations at or above the configured threshold (default: `moderate`) require explicit `confirmed: true`. Knowledge profiles can escalate risk (e.g., restarting a database service escalates from moderate to high).
+Operations at or above the configured threshold (default: `high`) require explicit `confirmed: true`. Knowledge profiles can escalate risk (e.g., restarting a database service escalates from moderate to high).
 
 All destructive tools support `dry_run: true` to preview changes.
 
@@ -107,7 +107,7 @@ All destructive tools support `dry_run: true` to preview changes.
 
 ```yaml
 safety:
-  confirmation_threshold: moderate    # Gate level
+  confirmation_threshold: high        # Gate level
   dry_run_bypass_confirmation: true   # dry_run skips gate
 
 documentation:

@@ -10,7 +10,14 @@ Generates and displays a changelog entry without modifying any files (unless the
 
 Same as Mode 2 Step 0 — present auto-suggested version via AskUserQuestion.
 
-For monorepo: first ask if this is repo-wide or per-plugin using AskUserQuestion. If per-plugin, use suggest-version.sh with --plugin flag.
+For monorepo (`is_monorepo` is true), first ask the scope using **AskUserQuestion**:
+- question: `"Generate changelog for?"`
+- header: `"Scope"`
+- options:
+  1. label: `"Repo-wide"`, description: `"Generate changelog entry for the entire repository"`
+  2. label: `"Single plugin"`, description: `"Generate changelog entry for one plugin"` → if selected, show the same plugin picker used in Mode 3 Step 0
+
+If per-plugin, pass `--plugin <plugin-name>` to suggest-version.sh and generate-changelog.sh.
 
 ## Step 2 — Generate Preview
 

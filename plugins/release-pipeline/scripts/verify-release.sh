@@ -7,6 +7,9 @@ set -euo pipefail
 # Output: verification report (stdout)
 # Exit:   0 = all checks pass, 1 = any check failed
 #
+# Called by: templates/mode-2-full-release.md (Phase 4) and templates/mode-3-plugin-release.md (Phase 4)
+# On exit 1, the calling template warns but does NOT roll back — the release is already public.
+#
 # Checks performed:
 #   1. Tag exists on remote
 #   2. GitHub release exists

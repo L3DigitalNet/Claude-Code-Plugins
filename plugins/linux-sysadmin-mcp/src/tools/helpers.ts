@@ -1,3 +1,9 @@
+// helpers.ts — Core response builders, error categorization, and execution helpers.
+// Every tool module imports success(), error(), blocked(), buildCategorizedResponse(),
+// executeBash(), and registerTool() from here. If response field names or shapes change,
+// ALL tool modules and the server.ts catch block must be updated in lockstep.
+// See types/response.ts for the full TypeScript types and discriminated union.
+
 import { z } from "zod";
 import type { PluginContext } from "./context.js";
 import type { ToolResponse, SuccessResponse, ErrorResponse, BlockedResponse, ErrorCategory } from "../types/response.js";
@@ -7,13 +13,13 @@ import type { RiskLevel, DurationCategory } from "../types/risk.js";
 import { DURATION_TIMEOUTS } from "../types/risk.js";
 import { execBash } from "../execution/executor.js";
 
-// ── Response Builders ──────────────────────────────────────────────
+// Response Builders
 
-export function success(tool: string, targetHost: string, durationMs: number, commandExecuted: string | null, data: Record<string, unknown>, extra?: Partial<SuccessResponse>): SuccessResponse {
+export function success(tool: string, targetHost: string, durationMs: number | null, commandExecuted: string | null, data: Record<string, unknown>, extra?: Partial<SuccessResponse>): SuccessResponse {
   return { status: "success", tool, target_host: targetHost, duration_ms: durationMs, command_executed: commandExecuted, data, ...extra };
 }
 
-export function error(tool: string, targetHost: string, durationMs: number, opts: { code: string; category: ErrorCategory; message: string; transient?: boolean; remediation?: string[] }): ErrorResponse {
+export function error(tool: string, targetHost: string, durationMs: number | null, opts: { code: string; category: ErrorCategory; message: string; transient?: boolean; remediation?: string[] }): ErrorResponse {
   return {
     status: "error", tool, target_host: targetHost, duration_ms: durationMs, command_executed: null,
     error_code: opts.code, error_category: opts.category, message: opts.message,
@@ -23,7 +29,7 @@ export function error(tool: string, targetHost: string, durationMs: number, opts
 }
 
 /** Build a blocked response for resource lock contention (e.g., apt/dpkg lock). */
-export function blocked(tool: string, targetHost: string, durationMs: number, opts: { code: string; message: string; remediation?: string[] }): BlockedResponse {
+export function blocked(tool: string, targetHost: string, durationMs: number | null, opts: { code: string; message: string; remediation?: string[] }): BlockedResponse {
   return {
     status: "blocked", tool, target_host: targetHost, duration_ms: durationMs, command_executed: null,
     error_code: opts.code, error_category: "lock", message: opts.message,
@@ -36,7 +42,7 @@ export function blocked(tool: string, targetHost: string, durationMs: number, op
  * Returns BlockedResponse for lock contention, ErrorResponse for all other failures.
  * Preferred over calling error() directly when stderr is available.
  */
-export function buildCategorizedResponse(tool: string, targetHost: string, durationMs: number, stderr: string, ctx: PluginContext): ErrorResponse | BlockedResponse {
+export function buildCategorizedResponse(tool: string, targetHost: string, durationMs: number | null, stderr: string, ctx: PluginContext): ErrorResponse | BlockedResponse {
   const cat = categorizeError(stderr, ctx);
   if (cat.code === "RESOURCE_LOCKED") {
     return blocked(tool, targetHost, durationMs, {
@@ -48,7 +54,9 @@ export function buildCategorizedResponse(tool: string, targetHost: string, durat
   return error(tool, targetHost, durationMs, { ...cat, message: stderr.trim() });
 }
 
-// ── Error Categorization (Section 7.2) ─────────────────────────────
+// Error Categorization (Section 7.2)
+// Pattern table maps stderr substrings to structured error codes and remediation hints.
+// Patterns are tested in order; first match wins. Unknown errors fall through to COMMAND_FAILED.
 
 interface ErrorPattern {
   test: (stderr: string) => boolean;
@@ -101,7 +109,7 @@ export function categorizeError(stderr: string, ctx: PluginContext): { code: str
   ] };
 }
 
-// ── Execution Helpers ──────────────────────────────────────────────
+// Execution Helpers
 
 /** Execute a Command through the context's executor and return a ToolResponse. */
 export async function executeCommand(ctx: PluginContext, toolName: string, command: Command, duration: DurationCategory): Promise<{ stdout: string; stderr: string; exitCode: number; durationMs: number }> {
@@ -119,7 +127,7 @@ export async function executeBash(ctx: PluginContext, cmd: string, duration: Dur
   return execBash(ctx.executor, cmd, timeout);
 }
 
-// ── Tool Registration Helper ───────────────────────────────────────
+// Tool Registration Helper
 
 /** Register a tool on the context's registry with less boilerplate. */
 export function registerTool(

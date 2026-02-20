@@ -56,8 +56,8 @@
     },
     {
       "name": "linux-sysadmin-mcp",
-      "description": "Comprehensive Linux system administration MCP server with ~100 tools across 15 modules \u2014 packages, services, users, firewall, networking, security, storage, containers, and more",
-      "version": "1.0.3",
+      "description": "Comprehensive Linux system administration MCP server with ~107 tools across 15 modules \u2014 packages, services, users, firewall, networking, security, storage, containers, and more",
+      "version": "1.0.4",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -113,6 +113,18 @@
       "source": "./plugins/context-efficiency-toolkit",
       "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/context-efficiency-toolkit"
+    },
+    {
+      "name": "docs-manager",
+      "description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "documentation",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
+      "source": "./plugins/docs-manager"
     }
   ]
 }

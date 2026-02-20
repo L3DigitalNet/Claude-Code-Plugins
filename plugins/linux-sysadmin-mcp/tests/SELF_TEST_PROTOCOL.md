@@ -39,8 +39,10 @@ Pytest-based validation of plugin layout, manifests, TypeScript sources, knowled
 ### Layer 2: MCP Server Startup (14 tests)
 Node.js tests inside a Fedora 43 container that verify the MCP server starts, all 106 tools register correctly, distro detection succeeds, and knowledge base loads. Validates JSON logging from pino and startup timing (<5 seconds). Container provides systemd, sshd, nginx, crond, firewalld services for realistic environment.
 
-### Layer 3: Tool Execution (~150 tests)
+### Layer 3: Tool Execution (116 invocations / 1188 assertions)
 All 106 tools executed via MCP stdio protocol inside the container, each validated against ToolResponse schema. State-changing tools tested twice: once without `confirmed` (blocked with `confirmation_required`), once with `confirmed: true` (succeeds). Read-only tools invoked once. Order: read-only first, then state-changing (unconfirmed, then confirmed), then cleanup tools.
+
+Note: the "~150" estimate in early planning referred to tool invocations. Actual results show 116 invocations (106 tools, some with multiple test variants) producing 1188 individual assertion checks. "Tests" here means invocations, not assertions.
 
 ### Layer 4: Safety Gate (26 tests)
 Two parts: **Unit tests** (18 tests on host) verify risk classification, confirmation bypass, dry-run override, and knowledge profile escalation logic deterministically. **E2E tests** (8 tests in container) validate that state-changing tools actually require confirmation and escalations are applied correctly for profile-matched commands.
@@ -54,7 +56,7 @@ Unit tests validating YAML parsing, profile resolution against active services, 
 |-------|------|-----------|----------|
 | 1. Structural | test_plugin_structure.py | 92 | Python only |
 | 2. Startup | test-mcp-startup.mjs | 14 | Container (systemd) |
-| 3. Tool Execution | test-mcp-tools.mjs | ~150 | Container (systemd) |
+| 3. Tool Execution | test-mcp-tools.mjs | 116 invocations / 1188 assertions | Container (systemd) |
 | 4. Safety Gate | test-safety-gate.mjs (18) + test-mcp-safety.mjs (8) | 26 | Host (unit) + Container (e2e) |
 | 5. Knowledge Base | test-knowledge-base.mjs | 23 | Host only |
 | **Total** | | **~305** | |

@@ -90,6 +90,9 @@ repo=$(find_repo) || exit 0
 # --- Sync each plugin that is installed in the cache ---
 
 synced=()
+# Tracks plugins where rsync actually transferred files — used to suppress output
+# when all plugins were already up to date (no files changed = no action needed).
+changed=()
 
 for plugin_src in "$repo/plugins"/*/; do
   [ -d "$plugin_src" ] || continue
@@ -99,31 +102,39 @@ for plugin_src in "$repo/plugins"/*/; do
   # Only sync plugins that are already installed — don't create new installs
   [ -d "$plugin_cache" ] || continue
 
-  # Capture all rsync output — "cannot delete non-empty directory" warnings from
-  # stale cache dirs are harmless but would pollute Claude's context if printed.
-  if ! rsync -a --delete \
+  # --itemize-changes outputs one line per transferred file; empty = nothing changed.
+  # Captures stdout (file change lines) while suppressing stderr (harmless "cannot
+  # delete non-empty directory" warnings from stale cache dirs).
+  rsync_output=""
+  if rsync_output=$(rsync -a --delete --itemize-changes \
     --exclude='.git/' \
     --exclude='node_modules/' \
     --exclude='.pth/' \
     --exclude='.claude/' \
     --exclude='*.js.map' \
     --exclude='*.d.ts.map' \
-    "$plugin_src" "$plugin_cache/" \
-    > /dev/null 2>&1; then
+    "$plugin_src" "$plugin_cache/" 2>/dev/null); then
+    if [ -n "$rsync_output" ]; then
+      changed+=("$plugin_name")
+    fi
+  else
     # rsync not available or failed — fall back to cp (no --delete equivalent).
     # Swallowing cp failure here would silently leave the cache out of date, which
     # is worse than surfacing the warning and letting the session continue.
     if ! cp -r "$plugin_src/." "$plugin_cache/"; then
       printf '[release-pipeline] Warning: failed to sync %s to cache (both rsync and cp failed)\n' "$plugin_name"
     fi
+    # cp doesn't report what changed — assume something did to be safe
+    changed+=("$plugin_name")
   fi
 
   synced+=("$plugin_name")
 done
 
-if [ ${#synced[@]} -gt 0 ]; then
-  printf '[release-pipeline] Synced %d plugin(s) to cache:\n' "${#synced[@]}"
-  printf '  - %s\n' "${synced[@]}"
+# Only print when files actually changed — suppress routine "nothing changed" noise
+if [ ${#changed[@]} -gt 0 ]; then
+  printf '[release-pipeline] Synced %d plugin(s) to cache:\n' "${#changed[@]}"
+  printf '  - %s\n' "${changed[@]}"
 fi
 
 exit 0

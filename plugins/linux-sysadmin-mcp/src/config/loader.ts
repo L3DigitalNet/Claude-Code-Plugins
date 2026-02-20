@@ -15,7 +15,7 @@ const DEFAULT_CONFIG: PluginConfig = {
   privilege: { method: "sudo", degrade_without_sudo: true },
   output: { default_limit: 50, log_default_limit: 100 },
   errors: { max_retries: 3, retry_backoff_seconds: 2, command_timeout_ceiling: 0 },
-  safety: { confirmation_threshold: "moderate", dry_run_bypass_confirmation: true },
+  safety: { confirmation_threshold: "high", dry_run_bypass_confirmation: true },
   ssh: { keepalive_interval: 15, keepalive_max_missed: 3, auto_reconnect: true, max_reconnect_attempts: 3 },
   knowledge: { additional_paths: [], disabled_profiles: [] },
   documentation: {
@@ -47,7 +47,7 @@ errors:
   command_timeout_ceiling: 0
 
 safety:
-  confirmation_threshold: moderate
+  confirmation_threshold: high
   dry_run_bypass_confirmation: true
 
 ssh:

@@ -15,10 +15,27 @@ export function registerPerformanceTools(ctx: PluginContext): void {
       executeBash(ctx, "df -h --output=source,size,used,avail,pcent,target -x tmpfs -x devtmpfs 2>/dev/null || df -h", "instant"),
     ]);
     const loadParts = loadR.stdout.trim().split(/\s+/);
+    // Parse free -m output into structured fields instead of returning a raw string
+    const memLines = memR.stdout.trim().split("\n");
+    const memParsed: Record<string, unknown> = {};
+    for (const line of memLines) {
+      const parts = line.trim().split(/\s+/);
+      if (parts[0]?.toLowerCase().startsWith("mem:")) {
+        memParsed.ram = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0"), free_mb: parseInt(parts[3] ?? "0"), shared_mb: parseInt(parts[4] ?? "0"), bufcache_mb: parseInt(parts[5] ?? "0"), available_mb: parseInt(parts[6] ?? "0") };
+      } else if (parts[0]?.toLowerCase().startsWith("swap:")) {
+        memParsed.swap = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0"), free_mb: parseInt(parts[3] ?? "0") };
+      }
+    }
+    // Parse df output into structured array; fall back to raw on parse failure
+    const diskLines = diskR.stdout.trim().split("\n").slice(1).filter(Boolean); // skip header
+    const diskParsed = diskLines.map((l) => {
+      const p = l.trim().split(/\s+/);
+      return { filesystem: p[0], size: p[1], used: p[2], avail: p[3], use_pct: p[4], mount: p[5] };
+    }).filter(d => d.mount);
     return success("perf_overview", ctx.targetHost, loadR.durationMs, "multiple (loadavg, free, df)", {
       load_average: { "1m": parseFloat(loadParts[0] ?? "0"), "5m": parseFloat(loadParts[1] ?? "0"), "15m": parseFloat(loadParts[2] ?? "0") },
-      memory: memR.stdout.trim(),
-      disk: diskR.stdout.trim(),
+      memory: Object.keys(memParsed).length > 0 ? memParsed : { raw: memR.stdout.trim() },
+      disk: diskParsed.length > 0 ? diskParsed : { raw: diskR.stdout.trim() },
     });
   });
 
@@ -56,8 +73,27 @@ export function registerPerformanceTools(ctx: PluginContext): void {
       executeBash(ctx, "free -m && echo '---' && cat /proc/meminfo | head -20", "instant"),
       executeBash(ctx, `ps aux --sort=-rss | head -n ${n + 1}`, "quick"),
     ]);
+    // Parse free -m section from memory_info output (before '---')
+    const memSection = memR.stdout.trim().split("---")[0] ?? "";
+    const memParsed: Record<string, unknown> = {};
+    for (const line of memSection.trim().split("\n")) {
+      const parts = line.trim().split(/\s+/);
+      if (parts[0]?.toLowerCase().startsWith("mem:")) {
+        memParsed.ram = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0"), free_mb: parseInt(parts[3] ?? "0"), available_mb: parseInt(parts[6] ?? "0") };
+      } else if (parts[0]?.toLowerCase().startsWith("swap:")) {
+        memParsed.swap = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0") };
+      }
+    }
+    // Parse top consumers from ps output
+    const topLines = topR.stdout.trim().split("\n");
+    const topConsumers = topLines.slice(1).map((l) => {
+      const p = l.trim().split(/\s+/);
+      return { user: p[0], pid: p[1], mem_pct: p[3], rss_kb: parseInt(p[5] ?? "0"), command: p.slice(10).join(" ") };
+    });
     return success("perf_memory", ctx.targetHost, memR.durationMs, "free -m + /proc/meminfo + ps", {
-      memory_info: memR.stdout.trim(), top_consumers: topR.stdout.trim(),
+      memory: Object.keys(memParsed).length > 0 ? memParsed : { raw: memSection.trim() },
+      meminfo_raw: memR.stdout.trim().split("---")[1]?.trim(),
+      top_consumers: topConsumers.length > 0 ? topConsumers : { raw: topR.stdout.trim() },
     });
   });
 
@@ -79,7 +115,26 @@ export function registerPerformanceTools(ctx: PluginContext): void {
     inputSchema: z.object({}), annotations: { readOnlyHint: true },
   }, async () => {
     const r = await executeBash(ctx, "cat /proc/net/dev", "instant");
-    return success("perf_network_io", ctx.targetHost, r.durationMs, "cat /proc/net/dev", { net_dev: r.stdout.trim() });
+    // /proc/net/dev: skip 2 header lines, parse interface name and rx/tx byte counts
+    const netLines = r.stdout.trim().split("\n").slice(2).filter(Boolean);
+    const interfaces = netLines.map((line) => {
+      const [ifacePart, statsPart] = line.split(":");
+      const iface = ifacePart?.trim();
+      const stats = statsPart?.trim().split(/\s+/) ?? [];
+      return {
+        interface: iface,
+        rx_bytes: parseInt(stats[0] ?? "0"),
+        rx_packets: parseInt(stats[1] ?? "0"),
+        rx_errors: parseInt(stats[2] ?? "0"),
+        tx_bytes: parseInt(stats[8] ?? "0"),
+        tx_packets: parseInt(stats[9] ?? "0"),
+        tx_errors: parseInt(stats[10] ?? "0"),
+      };
+    }).filter(i => i.interface);
+    return success("perf_network_io", ctx.targetHost, r.durationMs, "cat /proc/net/dev", {
+      interfaces,
+      note: "rx_bytes/tx_bytes are cumulative since boot — call twice and diff for throughput rate",
+    });
   });
 
   // ── perf_uptime ─────────────────────────────────────────────────

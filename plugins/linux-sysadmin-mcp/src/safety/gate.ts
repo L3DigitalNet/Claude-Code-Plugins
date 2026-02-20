@@ -84,7 +84,8 @@ export class SafetyGate {
       status: "confirmation_required",
       tool: params.toolName,
       target_host: params.targetHost,
-      duration_ms: 0,
+      // null = no command executed; 0 would be ambiguous with "ran instantly"
+      duration_ms: null,
       command_executed: null,
       risk_level: effectiveRisk,
       dry_run_available: params.supportsDryRun !== false,
