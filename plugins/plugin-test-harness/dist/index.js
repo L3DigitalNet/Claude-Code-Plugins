@@ -35684,6 +35684,10 @@ async function generateMcpTests(options) {
   const tests = [];
   const includeEdgeCases = options.includeEdgeCases ?? true;
   for (const tool of options.toolSchemas) {
+    if (requiresRealCommit(tool)) {
+      tests.push(buildCommitScenarioTest(tool, options.pluginPath));
+      continue;
+    }
     const validInput = buildValidInput(tool, options.pluginPath);
     tests.push({
       id: slugify(`${tool.name}_valid_input`),
@@ -35763,7 +35767,8 @@ function buildValidInput(tool, pluginPath) {
     } else if (prop.type === "boolean") {
       input[field] = true;
     } else if (prop.type === "array") {
-      input[field] = [];
+      const minItems = typeof prop.minItems === "number" ? prop.minItems : 0;
+      input[field] = minItems > 0 ? [buildArrayItemStub(prop.items)] : [];
     } else if (prop.type === "object") {
       input[field] = {};
     } else {
@@ -35771,6 +35776,79 @@ function buildValidInput(tool, pluginPath) {
     }
   }
   return input;
+}
+function requiresRealCommit(tool) {
+  const required2 = tool.inputSchema?.required ?? [];
+  const props = tool.inputSchema?.properties ?? {};
+  return required2.some((field) => {
+    const prop = props[field];
+    if (!prop || prop.type !== "string") return false;
+    const fl = field.toLowerCase();
+    return fl.includes("hash") || fl.includes("sha") || fl === "commit";
+  });
+}
+function buildCommitScenarioTest(tool, pluginPath) {
+  const required2 = tool.inputSchema?.required ?? [];
+  const props = tool.inputSchema?.properties ?? {};
+  const hashField = required2.find((f) => {
+    const fl = f.toLowerCase();
+    return fl.includes("hash") || fl.includes("sha") || fl === "commit";
+  });
+  const otherInput = {};
+  for (const field of required2) {
+    if (field === hashField) continue;
+    otherInput[field] = buildValidInput(
+      { name: tool.name, inputSchema: { type: "object", properties: { [field]: props[field] }, required: [field] } },
+      pluginPath
+    )[field];
+  }
+  return {
+    id: slugify(`${tool.name}_valid_input`),
+    name: `${tool.name} \u2014 valid input`,
+    mode: "mcp",
+    type: "scenario",
+    steps: [
+      {
+        // Step 1: create a real commit so we have a hash to work with
+        tool: "pth_apply_fix",
+        input: {
+          files: [{ path: "src/stub-for-scenario.ts", content: `// scenario stub for ${tool.name}
+` }],
+          commitTitle: `test: stub commit for ${tool.name} scenario`
+        },
+        expect: { success: true },
+        // Claude extracts the short hash from "Fix committed: {hash} (iteration N)"
+        capture: { [hashField]: "text:Fix committed: (\\w+)" }
+      },
+      {
+        // Step 2: call the target tool with the real captured hash
+        tool: tool.name,
+        input: { ...otherInput, [hashField]: `\${${hashField}}` },
+        expect: { success: true }
+      }
+    ],
+    expect: { success: true },
+    generated_from: "schema",
+    timeout_seconds: 30
+  };
+}
+function buildArrayItemStub(itemSchema) {
+  if (!itemSchema || itemSchema["type"] !== "object") return {};
+  const stub = {};
+  const itemProps = itemSchema["properties"] ?? {};
+  const itemRequired = itemSchema["required"] ?? Object.keys(itemProps);
+  for (const itemField of itemRequired) {
+    const itemProp = itemProps[itemField] ?? {};
+    const fl = itemField.toLowerCase();
+    if (itemProp["type"] === "string") {
+      if (fl === "path" || fl.includes("path")) stub[itemField] = "src/stub.ts";
+      else if (fl === "content") stub[itemField] = "// stub file content\n";
+      else stub[itemField] = "test-value";
+    } else {
+      stub[itemField] = null;
+    }
+  }
+  return stub;
 }
 
 // src/fix/applicator.ts

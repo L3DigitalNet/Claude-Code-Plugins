@@ -7,7 +7,7 @@ export interface ToolSchema {
   description?: string;
   inputSchema?: {
     type: string;
-    properties?: Record<string, { type: string; description?: string; enum?: unknown[] }>;
+    properties?: Record<string, { type: string; description?: string; enum?: unknown[]; minItems?: number; items?: Record<string, unknown> }>;
     required?: string[];
   };
 }
