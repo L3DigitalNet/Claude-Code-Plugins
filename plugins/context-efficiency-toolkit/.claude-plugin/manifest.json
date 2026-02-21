@@ -1,6 +1,6 @@
 {
   "name": "context-efficiency-toolkit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Audits Claude Code plugins for token and context efficiency, and rewrites instruction markdown files to be tightly worded and token-efficient.",
   "author": "L3DigitalNet",
   "license": "MIT",
