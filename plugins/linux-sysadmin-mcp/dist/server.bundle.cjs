@@ -33282,6 +33282,41 @@ function registerSessionTools(ctx) {
       data.degraded_mode = true;
       data.degraded_reason = "Passwordless sudo not configured. State-changing tools are disabled.";
     }
+    if (args.show_sudoers_reference) {
+      data.sudoers_reference = {
+        note: "Add these NOPASSWD lines to /etc/sudoers.d/linux-sysadmin-mcp (use visudo -f to validate)",
+        modules: {
+          packages: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/apt*, /usr/bin/dnf*, /usr/bin/yum*, /usr/bin/zypper*"
+          ],
+          services: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/systemctl *",
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/journalctl *"
+          ],
+          users: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/useradd, /usr/sbin/usermod, /usr/sbin/userdel",
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/groupadd, /usr/sbin/groupmod, /usr/sbin/groupdel",
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/passwd"
+          ],
+          firewall: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/ufw *, /usr/sbin/iptables *",
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/firewall-cmd *"
+          ],
+          storage: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/du *",
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/lvdisplay, /usr/sbin/vgdisplay, /usr/sbin/pvdisplay",
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/lvcreate, /usr/sbin/lvresize, /usr/sbin/lvextend"
+          ],
+          cron: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/crontab *"
+          ],
+          security: [
+            "your_user ALL=(ALL) NOPASSWD: /usr/bin/find / -perm -4000 *",
+            "your_user ALL=(ALL) NOPASSWD: /usr/sbin/aa-status, /usr/sbin/semanage *"
+          ]
+        }
+      };
+    }
     return success("sysadmin_session_info", ctx.targetHost, null, null, data);
   });
 }
@@ -33869,8 +33904,32 @@ function registerPerformanceTools(ctx) {
     inputSchema: external_exports.object({}),
     annotations: { readOnlyHint: true }
   }, async () => {
-    let r = await executeBash(ctx, "iostat -x 1 1 2>/dev/null || cat /proc/diskstats", "quick");
-    return success("perf_disk_io", ctx.targetHost, r.durationMs, "iostat -x 1 1", { io_stats: r.stdout.trim() });
+    const r = await executeBash(ctx, "cat /proc/diskstats", "quick");
+    const devices = r.stdout.trim().split("\n").filter(Boolean).map((line) => {
+      const p = line.trim().split(/\s+/);
+      const d = {
+        name: p[2],
+        reads_completed: Number(p[3]),
+        reads_merged: Number(p[4]),
+        sectors_read: Number(p[5]),
+        ms_reading: Number(p[6]),
+        writes_completed: Number(p[7]),
+        writes_merged: Number(p[8]),
+        sectors_written: Number(p[9]),
+        ms_writing: Number(p[10]),
+        ios_in_progress: Number(p[11]),
+        ms_doing_io: Number(p[12]),
+        ms_weighted_io: Number(p[13])
+      };
+      if (p.length >= 18) {
+        d.discards_completed = Number(p[14]);
+        d.discards_merged = Number(p[15]);
+        d.sectors_discarded = Number(p[16]);
+        d.ms_discarding = Number(p[17]);
+      }
+      return d;
+    });
+    return success("perf_disk_io", ctx.targetHost, r.durationMs, "cat /proc/diskstats", { devices, count: devices.length });
   });
   registerTool(ctx, {
     name: "perf_network_io",
@@ -34349,7 +34408,8 @@ function registerStorageTools(ctx) {
     return success("disk_usage", ctx.targetHost, r.durationMs, cmd, { filesystems });
   });
   registerTool(ctx, { name: "disk_usage_top", description: "Find largest directories under a path.", module: "storage", riskLevel: "read-only", duration: "normal", inputSchema: external_exports.object({ path: external_exports.string().optional().default("/"), limit: external_exports.number().int().min(1).max(50).optional().default(20), depth: external_exports.number().int().min(1).max(5).optional().default(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `sudo -n du -h --max-depth=${args.depth ?? 1} '${args.path ?? "/"}' 2>/dev/null | sort -rh | head -n ${args.limit ?? 20}`, "normal");
+    const cmd = `sudo -n du -h --one-file-system --max-depth=${args.depth ?? 1} '${args.path ?? "/"}' 2>/dev/null | sort -rh | head -n ${args.limit ?? 20}`;
+    const r = await executeBash(ctx, cmd, "normal");
     const entries = r.stdout.trim().split("\n").filter(Boolean).map((line) => {
       const tab = line.indexOf("	");
       return tab !== -1 ? { size: line.slice(0, tab).trim(), path: line.slice(tab + 1).trim() } : { size: line.trim(), path: "" };
@@ -34784,15 +34844,73 @@ function registerCronTools(ctx) {
   });
   registerTool(ctx, { name: "cron_validate", description: "Validate cron expression syntax.", module: "cron", riskLevel: "read-only", duration: "instant", inputSchema: external_exports.object({ expression: external_exports.string().min(9) }), annotations: { readOnlyHint: true } }, async (args) => {
     const parts = args.expression.trim().split(/\s+/);
-    const valid = parts.length >= 5 && parts.length <= 7;
     const fieldNames = ["minute", "hour", "day-of-month", "month", "day-of-week"];
+    const fieldRanges = [[0, 59], [0, 23], [1, 31], [1, 12], [0, 7]];
     const issues = [];
-    if (!valid) issues.push(`Expected 5-7 fields, got ${parts.length}`);
-    return success("cron_validate", ctx.targetHost, 0, null, { expression: args.expression, valid: valid && issues.length === 0, fields: parts.slice(0, 5).map((v, i) => ({ field: fieldNames[i], value: v })), issues });
+    if (parts.length < 5 || parts.length > 7) {
+      issues.push(`Expected 5-7 fields, got ${parts.length}`);
+    } else {
+      parts.slice(0, 5).forEach((part, i) => {
+        const [min, max] = fieldRanges[i];
+        const name = fieldNames[i];
+        const tokens = part.replace(/\/\d+/g, "").replace(/[*?]/g, "").split(/[,\-]/).filter(Boolean);
+        for (const token of tokens) {
+          const n = parseInt(token, 10);
+          if (!isNaN(n) && (n < min || n > max)) {
+            issues.push(`${name}: ${n} out of range ${min}-${max}`);
+          }
+        }
+      });
+    }
+    return success("cron_validate", ctx.targetHost, 0, null, {
+      expression: args.expression,
+      valid: issues.length === 0,
+      fields: parts.slice(0, 5).map((v, i) => ({ field: fieldNames[i], value: v })),
+      issues
+    });
   });
   registerTool(ctx, { name: "cron_next_runs", description: "Show next N scheduled execution times for a cron expression.", module: "cron", riskLevel: "read-only", duration: "instant", inputSchema: external_exports.object({ expression: external_exports.string().min(9), count: external_exports.number().int().min(1).max(20).optional().default(5) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `systemd-analyze calendar '${args.expression}' --iterations=${args.count ?? 5} 2>/dev/null || echo 'systemd-analyze not available for cron expressions'`, "instant");
-    return success("cron_next_runs", ctx.targetHost, r.durationMs, "systemd-analyze calendar", { output: r.stdout.trim() });
+    const count = args.count ?? 5;
+    const expr = args.expression.trim();
+    const parts = expr.split(/\s+/);
+    if (parts.length < 5) {
+      return success("cron_next_runs", ctx.targetHost, 0, null, { error: `Invalid expression: expected 5 fields, got ${parts.length}`, next_runs: [] });
+    }
+    const [minF, hourF, domF, monF, dowF] = parts;
+    function matchField(field, value) {
+      if (field === "*" || field === "?") return true;
+      for (const part of field.split(",")) {
+        const slashIdx = part.indexOf("/");
+        const step = slashIdx !== -1 ? parseInt(part.slice(slashIdx + 1), 10) : 1;
+        const rangeStep = slashIdx !== -1 ? part.slice(0, slashIdx) : part;
+        if (rangeStep === "*") {
+          if (value % step === 0) return true;
+        } else if (rangeStep.includes("-")) {
+          const [lo, hi] = rangeStep.split("-").map(Number);
+          if (value >= lo && value <= hi && (value - lo) % step === 0) return true;
+        } else {
+          if (value === parseInt(rangeStep, 10)) return true;
+        }
+      }
+      return false;
+    }
+    const results = [];
+    const start = /* @__PURE__ */ new Date();
+    start.setSeconds(0, 0);
+    start.setMinutes(start.getMinutes() + 1);
+    const cur = new Date(start.getTime());
+    let iterations = 0;
+    const maxIterations = 527040;
+    while (results.length < count && iterations < maxIterations) {
+      const dow = cur.getDay();
+      const dowMatch = matchField(dowF, dow) || dow === 0 && matchField(dowF, 7);
+      if (matchField(monF, cur.getMonth() + 1) && matchField(domF, cur.getDate()) && dowMatch && matchField(hourF, cur.getHours()) && matchField(minF, cur.getMinutes())) {
+        results.push(cur.toISOString().replace("T", " ").slice(0, 16) + " UTC");
+      }
+      cur.setMinutes(cur.getMinutes() + 1);
+      iterations++;
+    }
+    return success("cron_next_runs", ctx.targetHost, 0, null, { expression: expr, next_runs: results, searched_minutes: iterations });
   });
 }
 
