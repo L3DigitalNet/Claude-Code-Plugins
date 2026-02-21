@@ -2,23 +2,22 @@
 
 **Plugin:** plugin-test-harness
 **Mode:** mcp
-**Branch:** pth/plugin-test-harness-2026-02-21-1c63e9
-**Started:** 2026-02-21T02:55:53.003Z
-**Ended:** 2026-02-21T03:14:14.187Z
-**Total Iterations:** 1
+**Branch:** pth/plugin-test-harness-2026-02-21-9a8bd6
+**Started:** 2026-02-21T03:21:32.009Z
+**Ended:** 2026-02-21T15:31:03.679Z
+**Total Iterations:** 0
 
 ## Test Results
 
 | Tests | Passing | Failing |
 |-------|---------|---------|
-| 0 | 15 | 2 |
+| 19 | 6 | 3 |
 
 ## Convergence
 
 | Iteration | Passing | Failing | Fixes Applied |
 |-----------|---------|---------|---------------|
-| 1 | 15 | 2 | 0 |
 
 ## Status
 
-2 tests still failing at session end.
+3 tests still failing at session end.

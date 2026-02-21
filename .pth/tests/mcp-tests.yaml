@@ -247,3 +247,21 @@ expect:
   success: true
 generated_from: schema
 timeout_seconds: 10
+
+---
+id: generated_test
+name: generated-test
+mode: mcp
+type: single
+tool: example
+expect:
+  success: true
+
+---
+id: test-value
+name: generated-test
+mode: mcp
+type: single
+tool: example
+expect:
+  success: true

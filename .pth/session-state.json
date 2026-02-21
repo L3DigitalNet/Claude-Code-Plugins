@@ -1,7 +1,7 @@
 {
   "sessionId": "pth/plugin-test-harness-2026-02-21-9a8bd6",
   "branch": "pth/plugin-test-harness-2026-02-21-9a8bd6",
-  "worktreePath": "/tmp/pth-worktree-plugin-test-harness-2026-02-21-9a8bd6",
+  "worktreePath": "/tmp/pth-worktree-undefined",
   "pluginPath": "/home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness",
   "pluginName": "plugin-test-harness",
   "pluginMode": "mcp",
@@ -9,8 +9,24 @@
   "startedAt": "2026-02-21T03:21:32.009Z",
   "iteration": 0,
   "testCount": 19,
-  "passingCount": 0,
-  "failingCount": 0,
+  "passingCount": 6,
+  "failingCount": 3,
   "convergenceTrend": "unknown",
-  "activeFailures": []
+  "activeFailures": [
+    {
+      "testName": "pth_apply_fix — valid input",
+      "category": "",
+      "lastDiagnosisSummary": "PTH Error [INVALID_PLUGIN]: applyFix requires at least one file change — empty files array violates schema minItems:1 but was passed by the generator"
+    },
+    {
+      "testName": "pth_revert_fix — valid input",
+      "category": "",
+      "lastDiagnosisSummary": "PTH Error [GIT_ERROR]: git revert exited 128: fatal: bad revision 'abc1234def5678901234567890123456789012'"
+    },
+    {
+      "testName": "pth_generate_tests — valid input",
+      "category": "",
+      "lastDiagnosisSummary": "PTH Error [INVALID_TEST]: Test with id 'pth_preflight_valid_input' already exists. Generator attempted to re-create all 19 existing tests."
+    }
+  ]
 }
