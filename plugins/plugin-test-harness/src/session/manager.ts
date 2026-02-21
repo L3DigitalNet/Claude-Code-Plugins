@@ -10,17 +10,20 @@ import type { SessionState } from './types.js';
 import { run } from '../shared/exec.js';
 import { PTHError, PTHErrorCode } from '../shared/errors.js';
 
-// In-memory state shared with server.ts
+// In-memory state shared with server.ts.
+// iterationHistory: server.ts pushes a snapshot each time pth_get_iteration_status is called
+// with changed counts. detectConvergence() in src/results/convergence.ts reads this array.
+// Cleared implicitly on process restart (resume starts with empty history).
 export let testStore = new TestStore();
 export const iterationHistory: Array<{ passing: number; failing: number; fixesApplied: number }> = [];
 
 export async function preflight(args: { pluginPath: string }): Promise<string> {
-  const lines: string[] = ['PTH Preflight Check', ''];
+  const checkLines: string[] = [];
 
   // Check path exists
   try {
     await fs.access(args.pluginPath);
-    lines.push(`✓ Plugin path exists: ${args.pluginPath}`);
+    checkLines.push(`✓ Plugin path exists: ${args.pluginPath}`);
   } catch {
     return `✗ Plugin path not found: ${args.pluginPath}`;
   }
@@ -28,19 +31,19 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
   // Check git repo (plugin may be a subdirectory of a larger repo)
   try {
     await getGitRepoRoot(args.pluginPath);
-    lines.push(`✓ Git repository detected`);
+    checkLines.push(`✓ Git repository detected`);
   } catch {
-    lines.push(`⚠ Not a git repository — PTH requires git for session branch management`);
+    checkLines.push(`⚠ Not a git repository — PTH requires git for session branch management`);
   }
 
   // Check plugin mode
   let pluginValid = false;
   try {
     const mode = await detectPluginMode(args.pluginPath);
-    lines.push(`✓ Plugin mode: ${mode}`);
+    checkLines.push(`✓ Plugin mode: ${mode}`);
     pluginValid = true;
   } catch {
-    lines.push(`✗ Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
+    checkLines.push(`✗ Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
   }
 
   // Check for active session lock
@@ -49,20 +52,19 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
     const lock = JSON.parse(await fs.readFile(lockPath, 'utf-8')) as { pid: number; branch: string };
     try {
       process.kill(lock.pid, 0);  // check if PID is alive
-      lines.push(`⚠ Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
+      checkLines.push(`⚠ Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
     } catch {
-      lines.push(`⚠ Stale session lock found (PID ${lock.pid} is not running) — will be cleaned up at start`);
+      checkLines.push(`⚠ Stale session lock found (PID ${lock.pid} is not running) — will be cleaned up at start`);
     }
   } catch {
-    lines.push(`✓ No active session lock`);
+    checkLines.push(`✓ No active session lock`);
   }
 
-  if (pluginValid) {
-    lines.push('', 'OK — ready to start a session.');
-  } else {
-    lines.push('', 'Cannot start session — fix the issues above first.');
-  }
-  return lines.join('\n');
+  // Verdict first per P3 (lead with findings)
+  const verdict = pluginValid
+    ? '✓ OK — ready to start a session.'
+    : '✗ Cannot start session — fix the issues above first.';
+  return [verdict, '', 'PTH Preflight Check', '', ...checkLines].join('\n');
 }
 
 export interface StartSessionResult {
@@ -146,6 +148,7 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
       `Mode:      ${pluginMode}`,
       `Plugin:    ${pluginName}`,
       pluginRelPath ? `Subpath:   ${pluginRelPath}` : '',
+      `Plugin dir: ${path.join(worktreePath, pluginRelPath)}`,
       existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
       ``,
       nextStep,
@@ -210,12 +213,12 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
   const lines = [
     `PTH session resumed.`,
     ``,
-    `Branch:     ${args.branch}`,
-    `Iteration:  ${state.iteration}`,
-    `Tests:      ${testStore.count()} loaded`,
-    `Status:     ${state.passingCount} passing, ${state.failingCount} failing`,
-    `Trend:      ${state.convergenceTrend}`,
-    savedState ? `` : `Note: session-state.json not found — reconstructed from git history.`,
+    `Branch:    ${args.branch}`,
+    `Iteration: ${state.iteration}`,
+    `Tests:     ${testStore.count()} loaded`,
+    `Status:    ${state.passingCount} passing, ${state.failingCount} failing`,
+    `Trend:     ${state.convergenceTrend}`,
+    ...(!savedState ? [`Note: session-state.json not found — reconstructed from git history.`] : []),
   ];
 
   return { state, message: lines.join('\n') };

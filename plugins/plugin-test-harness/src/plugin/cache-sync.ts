@@ -4,18 +4,20 @@ import os from 'os';
 import { run, runOrThrow } from '../shared/exec.js';
 import { PTHError, PTHErrorCode } from '../shared/errors.js';
 
-export async function syncToCache(worktreePath: string, cachePath: string): Promise<void> {
+// Returns the number of files synced (0 for cp fallback where count is unavailable).
+export async function syncToCache(worktreePath: string, cachePath: string): Promise<number> {
   await fs.mkdir(cachePath, { recursive: true });
 
   let rsyncResult;
   try {
-    rsyncResult = await run('rsync', ['-a', '--delete', `${worktreePath}/`, `${cachePath}/`]);
+    // --out-format="%n" prints one line per transferred file — count lines to get file count
+    rsyncResult = await run('rsync', ['-a', '--delete', '--out-format=%n', `${worktreePath}/`, `${cachePath}/`]);
   } catch (err) {
     // run() throws PTHError(BUILD_FAILED) when the command can't be spawned (rsync not installed)
     if (err instanceof PTHError && err.code === PTHErrorCode.BUILD_FAILED) {
-      // rsync not available — fall back to cp
+      // rsync not available — fall back to cp; file count is unavailable
       await runOrThrow('cp', ['-r', `${worktreePath}/.`, cachePath]);
-      return;
+      return 0;
     }
     throw err;
   }
@@ -28,6 +30,9 @@ export async function syncToCache(worktreePath: string, cachePath: string): Prom
       { stderr: rsyncResult.stderr }
     );
   }
+
+  // Count non-empty lines — each represents one file transferred
+  return rsyncResult.stdout.split('\n').filter(l => l.trim()).length;
 }
 
 export function detectCachePath(pluginName: string): string {

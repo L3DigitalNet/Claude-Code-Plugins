@@ -3234,8 +3234,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path15) {
-      let input = path15;
+    function removeDotSegments(path16) {
+      let input = path16;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3434,8 +3434,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path15, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path15 && path15 !== "/" ? path15 : void 0;
+        const [path16, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path16 && path16 !== "/" ? path16 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6797,12 +6797,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs9, exportName) {
+    function addFormats(ajv, list, fs10, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs9[f]);
+        ajv.addFormat(f, fs10[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -6887,17 +6887,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path15) {
-      const ctrl = callVisitor(key, node, visitor, path15);
+    function visit_(key, node, visitor, path16) {
+      const ctrl = callVisitor(key, node, visitor, path16);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path15, ctrl);
-        return visit_(key, ctrl, visitor, path15);
+        replaceNode(key, path16, ctrl);
+        return visit_(key, ctrl, visitor, path16);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path15 = Object.freeze(path15.concat(node));
+          path16 = Object.freeze(path16.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = visit_(i2, node.items[i2], visitor, path15);
+            const ci = visit_(i2, node.items[i2], visitor, path16);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6908,13 +6908,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path15 = Object.freeze(path15.concat(node));
-          const ck = visit_("key", node.key, visitor, path15);
+          path16 = Object.freeze(path16.concat(node));
+          const ck = visit_("key", node.key, visitor, path16);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path15);
+          const cv = visit_("value", node.value, visitor, path16);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6935,17 +6935,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path15) {
-      const ctrl = await callVisitor(key, node, visitor, path15);
+    async function visitAsync_(key, node, visitor, path16) {
+      const ctrl = await callVisitor(key, node, visitor, path16);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path15, ctrl);
-        return visitAsync_(key, ctrl, visitor, path15);
+        replaceNode(key, path16, ctrl);
+        return visitAsync_(key, ctrl, visitor, path16);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path15 = Object.freeze(path15.concat(node));
+          path16 = Object.freeze(path16.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = await visitAsync_(i2, node.items[i2], visitor, path15);
+            const ci = await visitAsync_(i2, node.items[i2], visitor, path16);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6956,13 +6956,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path15 = Object.freeze(path15.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path15);
+          path16 = Object.freeze(path16.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path16);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path15);
+          const cv = await visitAsync_("value", node.value, visitor, path16);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6989,23 +6989,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path15) {
+    function callVisitor(key, node, visitor, path16) {
       if (typeof visitor === "function")
-        return visitor(key, node, path15);
+        return visitor(key, node, path16);
       if (identity3.isMap(node))
-        return visitor.Map?.(key, node, path15);
+        return visitor.Map?.(key, node, path16);
       if (identity3.isSeq(node))
-        return visitor.Seq?.(key, node, path15);
+        return visitor.Seq?.(key, node, path16);
       if (identity3.isPair(node))
-        return visitor.Pair?.(key, node, path15);
+        return visitor.Pair?.(key, node, path16);
       if (identity3.isScalar(node))
-        return visitor.Scalar?.(key, node, path15);
+        return visitor.Scalar?.(key, node, path16);
       if (identity3.isAlias(node))
-        return visitor.Alias?.(key, node, path15);
+        return visitor.Alias?.(key, node, path16);
       return void 0;
     }
-    function replaceNode(key, path15, node) {
-      const parent = path15[path15.length - 1];
+    function replaceNode(key, path16, node) {
+      const parent = path16[path16.length - 1];
       if (identity3.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity3.isPair(parent)) {
@@ -7613,10 +7613,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity3 = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path15, value) {
+    function collectionFromPath(schema, path16, value) {
       let v = value;
-      for (let i2 = path15.length - 1; i2 >= 0; --i2) {
-        const k = path15[i2];
+      for (let i2 = path16.length - 1; i2 >= 0; --i2) {
+        const k = path16[i2];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a2 = [];
           a2[k] = v;
@@ -7635,7 +7635,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path15) => path15 == null || typeof path15 === "object" && !!path15[Symbol.iterator]().next().done;
+    var isEmptyPath = (path16) => path16 == null || typeof path16 === "object" && !!path16[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -7665,11 +7665,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path15, value) {
-        if (isEmptyPath(path15))
+      addIn(path16, value) {
+        if (isEmptyPath(path16))
           this.add(value);
         else {
-          const [key, ...rest] = path15;
+          const [key, ...rest] = path16;
           const node = this.get(key, true);
           if (identity3.isCollection(node))
             node.addIn(rest, value);
@@ -7683,8 +7683,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path15) {
-        const [key, ...rest] = path15;
+      deleteIn(path16) {
+        const [key, ...rest] = path16;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -7698,8 +7698,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path15, keepScalar) {
-        const [key, ...rest] = path15;
+      getIn(path16, keepScalar) {
+        const [key, ...rest] = path16;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity3.isScalar(node) ? node.value : node;
@@ -7717,8 +7717,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path15) {
-        const [key, ...rest] = path15;
+      hasIn(path16) {
+        const [key, ...rest] = path16;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -7728,8 +7728,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path15, value) {
-        const [key, ...rest] = path15;
+      setIn(path16, value) {
+        const [key, ...rest] = path16;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -10233,9 +10233,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path15, value) {
+      addIn(path16, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path15, value);
+          this.contents.addIn(path16, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -10310,14 +10310,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path15) {
-        if (Collection.isEmptyPath(path15)) {
+      deleteIn(path16) {
+        if (Collection.isEmptyPath(path16)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path15) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path16) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -10332,10 +10332,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path15, keepScalar) {
-        if (Collection.isEmptyPath(path15))
+      getIn(path16, keepScalar) {
+        if (Collection.isEmptyPath(path16))
           return !keepScalar && identity3.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity3.isCollection(this.contents) ? this.contents.getIn(path15, keepScalar) : void 0;
+        return identity3.isCollection(this.contents) ? this.contents.getIn(path16, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -10346,10 +10346,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path15) {
-        if (Collection.isEmptyPath(path15))
+      hasIn(path16) {
+        if (Collection.isEmptyPath(path16))
           return this.contents !== void 0;
-        return identity3.isCollection(this.contents) ? this.contents.hasIn(path15) : false;
+        return identity3.isCollection(this.contents) ? this.contents.hasIn(path16) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -10366,13 +10366,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path15, value) {
-        if (Collection.isEmptyPath(path15)) {
+      setIn(path16, value) {
+        if (Collection.isEmptyPath(path16)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path15), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path16), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path15, value);
+          this.contents.setIn(path16, value);
         }
       }
       /**
@@ -12324,9 +12324,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path15) => {
+    visit.itemAtPath = (cst, path16) => {
       let item = cst;
-      for (const [field, index] of path15) {
+      for (const [field, index] of path16) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -12335,23 +12335,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path15) => {
-      const parent = visit.itemAtPath(cst, path15.slice(0, -1));
-      const field = path15[path15.length - 1][0];
+    visit.parentCollection = (cst, path16) => {
+      const parent = visit.itemAtPath(cst, path16.slice(0, -1));
+      const field = path16[path16.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path15, item, visitor) {
-      let ctrl = visitor(item, path15);
+    function _visit(path16, item, visitor) {
+      let ctrl = visitor(item, path16);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i2 = 0; i2 < token.items.length; ++i2) {
-            const ci = _visit(Object.freeze(path15.concat([[field, i2]])), token.items[i2], visitor);
+            const ci = _visit(Object.freeze(path16.concat([[field, i2]])), token.items[i2], visitor);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -12362,10 +12362,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path15);
+            ctrl = ctrl(item, path16);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path15) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path16) : ctrl;
     }
     exports.visit = visit;
   }
@@ -13650,14 +13650,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs9 = this.flowScalar(this.type);
+              const fs10 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs9, sep: [] });
+                map.items.push({ start, key: fs10, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs9);
+                this.stack.push(fs10);
               } else {
-                Object.assign(it, { key: fs9, sep: [] });
+                Object.assign(it, { key: fs10, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -13785,13 +13785,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs9 = this.flowScalar(this.type);
+              const fs10 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs9, sep: [] });
+                fc.items.push({ start: [], key: fs10, sep: [] });
               else if (it.sep)
-                this.stack.push(fs9);
+                this.stack.push(fs10);
               else
-                Object.assign(it, { key: fs9, sep: [] });
+                Object.assign(it, { key: fs10, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -15179,8 +15179,8 @@ var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports, module) {
     module.exports = isexe;
     isexe.sync = sync;
-    var fs9 = __require("fs");
-    function checkPathExt(path15, options) {
+    var fs10 = __require("fs");
+    function checkPathExt(path16, options) {
       var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -15191,25 +15191,25 @@ var require_windows = __commonJS({
       }
       for (var i2 = 0; i2 < pathext.length; i2++) {
         var p = pathext[i2].toLowerCase();
-        if (p && path15.substr(-p.length).toLowerCase() === p) {
+        if (p && path16.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat, path15, options) {
+    function checkStat(stat, path16, options) {
       if (!stat.isSymbolicLink() && !stat.isFile()) {
         return false;
       }
-      return checkPathExt(path15, options);
+      return checkPathExt(path16, options);
     }
-    function isexe(path15, options, cb) {
-      fs9.stat(path15, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, path15, options));
+    function isexe(path16, options, cb) {
+      fs10.stat(path16, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path16, options));
       });
     }
-    function sync(path15, options) {
-      return checkStat(fs9.statSync(path15), path15, options);
+    function sync(path16, options) {
+      return checkStat(fs10.statSync(path16), path16, options);
     }
   }
 });
@@ -15219,14 +15219,14 @@ var require_mode = __commonJS({
   "node_modules/isexe/mode.js"(exports, module) {
     module.exports = isexe;
     isexe.sync = sync;
-    var fs9 = __require("fs");
-    function isexe(path15, options, cb) {
-      fs9.stat(path15, function(er, stat) {
+    var fs10 = __require("fs");
+    function isexe(path16, options, cb) {
+      fs10.stat(path16, function(er, stat) {
         cb(er, er ? false : checkStat(stat, options));
       });
     }
-    function sync(path15, options) {
-      return checkStat(fs9.statSync(path15), options);
+    function sync(path16, options) {
+      return checkStat(fs10.statSync(path16), options);
     }
     function checkStat(stat, options) {
       return stat.isFile() && checkMode(stat, options);
@@ -15250,7 +15250,7 @@ var require_mode = __commonJS({
 // node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "node_modules/isexe/index.js"(exports, module) {
-    var fs9 = __require("fs");
+    var fs10 = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -15259,7 +15259,7 @@ var require_isexe = __commonJS({
     }
     module.exports = isexe;
     isexe.sync = sync;
-    function isexe(path15, options, cb) {
+    function isexe(path16, options, cb) {
       if (typeof options === "function") {
         cb = options;
         options = {};
@@ -15269,7 +15269,7 @@ var require_isexe = __commonJS({
           throw new TypeError("callback not provided");
         }
         return new Promise(function(resolve, reject) {
-          isexe(path15, options || {}, function(er, is) {
+          isexe(path16, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
@@ -15278,7 +15278,7 @@ var require_isexe = __commonJS({
           });
         });
       }
-      core(path15, options || {}, function(er, is) {
+      core(path16, options || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options && options.ignoreErrors) {
             er = null;
@@ -15288,9 +15288,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync(path15, options) {
+    function sync(path16, options) {
       try {
-        return core.sync(path15, options || {});
+        return core.sync(path16, options || {});
       } catch (er) {
         if (options && options.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -15306,7 +15306,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports, module) {
     var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path15 = __require("path");
+    var path16 = __require("path");
     var COLON = isWindows ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -15344,7 +15344,7 @@ var require_which = __commonJS({
           return opt.all && found.length ? resolve(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path15.join(pathPart, cmd);
+        const pCmd = path16.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         resolve(subStep(p, i2, 0));
       });
@@ -15371,7 +15371,7 @@ var require_which = __commonJS({
       for (let i2 = 0; i2 < pathEnv.length; i2++) {
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path15.join(pathPart, cmd);
+        const pCmd = path16.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -15419,7 +15419,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports, module) {
     "use strict";
-    var path15 = __require("path");
+    var path16 = __require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -15437,7 +15437,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env[getPathKey({ env })],
-          pathExt: withoutPathExt ? path15.delimiter : void 0
+          pathExt: withoutPathExt ? path16.delimiter : void 0
         });
       } catch (e) {
       } finally {
@@ -15446,7 +15446,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path15.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path16.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -15500,8 +15500,8 @@ var require_shebang_command = __commonJS({
       if (!match) {
         return null;
       }
-      const [path15, argument] = match[0].replace(/#! ?/, "").split(" ");
-      const binary = path15.split("/").pop();
+      const [path16, argument] = match[0].replace(/#! ?/, "").split(" ");
+      const binary = path16.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -15514,16 +15514,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "node_modules/cross-spawn/lib/util/readShebang.js"(exports, module) {
     "use strict";
-    var fs9 = __require("fs");
+    var fs10 = __require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs9.openSync(command, "r");
-        fs9.readSync(fd, buffer, 0, size, 0);
-        fs9.closeSync(fd);
+        fd = fs10.openSync(command, "r");
+        fs10.readSync(fd, buffer, 0, size, 0);
+        fs10.closeSync(fd);
       } catch (e) {
       }
       return shebangCommand(buffer.toString());
@@ -15536,7 +15536,7 @@ var require_readShebang = __commonJS({
 var require_parse = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports, module) {
     "use strict";
-    var path15 = __require("path");
+    var path16 = __require("path");
     var resolveCommand = require_resolveCommand();
     var escape2 = require_escape();
     var readShebang = require_readShebang();
@@ -15561,7 +15561,7 @@ var require_parse = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path15.normalize(parsed.command);
+        parsed.command = path16.normalize(parsed.command);
         parsed.command = escape2.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -19691,13 +19691,13 @@ var init_output_sync = __esm({
       }
     };
     writeToFiles = (serializedResult, stdioItems, outputFiles) => {
-      for (const { path: path15, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
-        const pathString = typeof path15 === "string" ? path15 : path15.toString();
+      for (const { path: path16, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
+        const pathString = typeof path16 === "string" ? path16 : path16.toString();
         if (append || outputFiles.has(pathString)) {
-          appendFileSync(path15, serializedResult);
+          appendFileSync(path16, serializedResult);
         } else {
           outputFiles.add(pathString);
-          writeFileSync(path15, serializedResult);
+          writeFileSync(path16, serializedResult);
         }
       }
     };
@@ -22795,19 +22795,21 @@ async function readMcpConfig(pluginPath) {
   return { serverName, ...serverConfig };
 }
 async function detectPluginName(pluginPath) {
-  const manifestPath = path10.join(pluginPath, ".claude-plugin", "manifest.json");
+  const manifestPath = path10.join(pluginPath, ".claude-plugin", "plugin.json");
   try {
     const raw = await fs5.readFile(manifestPath, "utf-8");
     const manifest = JSON.parse(raw);
     if (manifest.name) return manifest.name;
-  } catch {
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
   }
   const pkgPath = path10.join(pluginPath, "package.json");
   try {
     const raw = await fs5.readFile(pkgPath, "utf-8");
     const pkg = JSON.parse(raw);
     if (pkg.name) return pkg.name;
-  } catch {
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
   }
   return path10.basename(pluginPath);
 }
@@ -22834,11 +22836,12 @@ var init_store = __esm({
   "src/testing/store.ts"() {
     "use strict";
     import_yaml2 = __toESM(require_dist2(), 1);
+    init_errors();
     TestStore = class {
       tests = /* @__PURE__ */ new Map();
       add(test) {
         if (this.tests.has(test.id)) {
-          throw new Error(`Test with id "${test.id}" already exists. Use update() to replace it.`);
+          throw new PTHError("INVALID_TEST" /* INVALID_TEST */, `Test with id "${test.id}" already exists. Call pth_edit_test to update it.`);
         }
         this.tests.set(test.id, test);
       }
@@ -22894,45 +22897,41 @@ import fs7 from "fs/promises";
 import path12 from "path";
 import os from "os";
 async function preflight(args) {
-  const lines = ["PTH Preflight Check", ""];
+  const checkLines = [];
   try {
     await fs7.access(args.pluginPath);
-    lines.push(`\u2713 Plugin path exists: ${args.pluginPath}`);
+    checkLines.push(`\u2713 Plugin path exists: ${args.pluginPath}`);
   } catch {
     return `\u2717 Plugin path not found: ${args.pluginPath}`;
   }
   try {
     await getGitRepoRoot(args.pluginPath);
-    lines.push(`\u2713 Git repository detected`);
+    checkLines.push(`\u2713 Git repository detected`);
   } catch {
-    lines.push(`\u26A0 Not a git repository \u2014 PTH requires git for session branch management`);
+    checkLines.push(`\u26A0 Not a git repository \u2014 PTH requires git for session branch management`);
   }
   let pluginValid = false;
   try {
     const mode = await detectPluginMode(args.pluginPath);
-    lines.push(`\u2713 Plugin mode: ${mode}`);
+    checkLines.push(`\u2713 Plugin mode: ${mode}`);
     pluginValid = true;
   } catch {
-    lines.push(`\u2717 Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
+    checkLines.push(`\u2717 Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
   }
   const lockPath = path12.join(args.pluginPath, ".pth", "active-session.lock");
   try {
     const lock = JSON.parse(await fs7.readFile(lockPath, "utf-8"));
     try {
       process.kill(lock.pid, 0);
-      lines.push(`\u26A0 Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
+      checkLines.push(`\u26A0 Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
     } catch {
-      lines.push(`\u26A0 Stale session lock found (PID ${lock.pid} is not running) \u2014 will be cleaned up at start`);
+      checkLines.push(`\u26A0 Stale session lock found (PID ${lock.pid} is not running) \u2014 will be cleaned up at start`);
     }
   } catch {
-    lines.push(`\u2713 No active session lock`);
+    checkLines.push(`\u2713 No active session lock`);
   }
-  if (pluginValid) {
-    lines.push("", "OK \u2014 ready to start a session.");
-  } else {
-    lines.push("", "Cannot start session \u2014 fix the issues above first.");
-  }
-  return lines.join("\n");
+  const verdict = pluginValid ? "\u2713 OK \u2014 ready to start a session." : "\u2717 Cannot start session \u2014 fix the issues above first.";
+  return [verdict, "", "PTH Preflight Check", "", ...checkLines].join("\n");
 }
 async function startSession(args) {
   const pluginName = await detectPluginName(args.pluginPath);
@@ -22987,6 +22986,7 @@ async function startSession(args) {
       `Mode:      ${pluginMode}`,
       `Plugin:    ${pluginName}`,
       pluginRelPath ? `Subpath:   ${pluginRelPath}` : "",
+      `Plugin dir: ${path12.join(worktreePath, pluginRelPath)}`,
       existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
       ``,
       nextStep
@@ -23040,12 +23040,12 @@ async function resumeSession(args) {
   const lines = [
     `PTH session resumed.`,
     ``,
-    `Branch:     ${args.branch}`,
-    `Iteration:  ${state.iteration}`,
-    `Tests:      ${testStore.count()} loaded`,
-    `Status:     ${state.passingCount} passing, ${state.failingCount} failing`,
-    `Trend:      ${state.convergenceTrend}`,
-    savedState ? `` : `Note: session-state.json not found \u2014 reconstructed from git history.`
+    `Branch:    ${args.branch}`,
+    `Iteration: ${state.iteration}`,
+    `Tests:     ${testStore.count()} loaded`,
+    `Status:    ${state.passingCount} passing, ${state.failingCount} failing`,
+    `Trend:     ${state.convergenceTrend}`,
+    ...!savedState ? [`Note: session-state.json not found \u2014 reconstructed from git history.`] : []
   ];
   return { state, message: lines.join("\n") };
 }
@@ -23094,6 +23094,53 @@ var init_manager = __esm({
   }
 });
 
+// src/session/report-generator.ts
+var report_generator_exports = {};
+__export(report_generator_exports, {
+  generateReport: () => generateReport
+});
+import fs8 from "fs/promises";
+import path13 from "path";
+async function generateReport(worktreePath, options) {
+  const { state, iterationHistory: iterationHistory2 } = options;
+  const lines = [
+    `# PTH Session Report`,
+    ``,
+    `**Plugin:** ${state.pluginName}`,
+    `**Mode:** ${state.pluginMode}`,
+    `**Branch:** ${state.branch}`,
+    `**Started:** ${state.startedAt}`,
+    `**Ended:** ${(/* @__PURE__ */ new Date()).toISOString()}`,
+    `**Total Iterations:** ${state.iteration}`,
+    ``,
+    `## Test Results`,
+    ``,
+    `| Tests | Passing | Failing |`,
+    `|-------|---------|---------|`,
+    `| ${state.testCount} | ${state.passingCount} | ${state.failingCount} |`,
+    ``,
+    `## Convergence`,
+    ``,
+    `| Iteration | Passing | Failing | Fixes Applied |`,
+    `|-----------|---------|---------|---------------|`,
+    ...iterationHistory2.map(
+      (h2) => `| ${h2.iteration} | ${h2.passing} | ${h2.failing} | ${h2.fixesApplied} |`
+    ),
+    ``,
+    `## Status`,
+    ``,
+    state.failingCount === 0 ? `All ${state.testCount} tests passing.` : `${state.failingCount} tests still failing at session end.`
+  ];
+  const dir = path13.join(worktreePath, ".pth");
+  await fs8.mkdir(dir, { recursive: true });
+  await fs8.writeFile(path13.join(worktreePath, ".pth/SESSION-REPORT.md"), lines.join("\n"), "utf-8");
+}
+var init_report_generator = __esm({
+  "src/session/report-generator.ts"() {
+    "use strict";
+  }
+});
+
 // src/plugin/cache-sync.ts
 var cache_sync_exports = {};
 __export(cache_sync_exports, {
@@ -23101,18 +23148,18 @@ __export(cache_sync_exports, {
   getInstallPath: () => getInstallPath,
   syncToCache: () => syncToCache
 });
-import fs8 from "fs/promises";
-import path13 from "path";
+import fs9 from "fs/promises";
+import path14 from "path";
 import os2 from "os";
 async function syncToCache(worktreePath, cachePath) {
-  await fs8.mkdir(cachePath, { recursive: true });
+  await fs9.mkdir(cachePath, { recursive: true });
   let rsyncResult;
   try {
-    rsyncResult = await run("rsync", ["-a", "--delete", `${worktreePath}/`, `${cachePath}/`]);
+    rsyncResult = await run("rsync", ["-a", "--delete", "--out-format=%n", `${worktreePath}/`, `${cachePath}/`]);
   } catch (err) {
     if (err instanceof PTHError && err.code === "BUILD_FAILED" /* BUILD_FAILED */) {
       await runOrThrow("cp", ["-r", `${worktreePath}/.`, cachePath]);
-      return;
+      return 0;
     }
     throw err;
   }
@@ -23123,15 +23170,16 @@ async function syncToCache(worktreePath, cachePath) {
       { stderr: rsyncResult.stderr }
     );
   }
+  return rsyncResult.stdout.split("\n").filter((l) => l.trim()).length;
 }
 function detectCachePath(pluginName) {
-  return path13.join(os2.homedir(), ".claude", "plugins", "cache", pluginName);
+  return path14.join(os2.homedir(), ".claude", "plugins", "cache", pluginName);
 }
 async function getInstallPath(pluginName) {
-  const installedPluginsPath = path13.join(os2.homedir(), ".claude", "plugins", "installed_plugins.json");
+  const installedPluginsPath = path14.join(os2.homedir(), ".claude", "plugins", "installed_plugins.json");
   let raw;
   try {
-    raw = await fs8.readFile(installedPluginsPath, "utf-8");
+    raw = await fs9.readFile(installedPluginsPath, "utf-8");
   } catch {
     return null;
   }
@@ -23353,10 +23401,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path15) {
-  if (!path15)
+function getElementAtPath(obj, path16) {
+  if (!path16)
     return obj;
-  return path15.reduce((acc, key) => acc?.[key], obj);
+  return path16.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -23676,11 +23724,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path15, issues) {
+function prefixIssues(path16, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path15);
+    iss.path.unshift(path16);
     return iss;
   });
 }
@@ -28483,7 +28531,7 @@ var StdioServerTransport = class {
 };
 
 // src/server.ts
-import path14 from "path";
+import path15 from "path";
 
 // node_modules/zod/v3/external.js
 var external_exports = {};
@@ -28963,8 +29011,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path15, errorMaps, issueData } = params;
-  const fullPath = [...path15, ...issueData.path || []];
+  const { data, path: path16, errorMaps, issueData } = params;
+  const fullPath = [...path16, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -29080,11 +29128,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path15, key) {
+  constructor(parent, value, path16, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path15;
+    this._path = path16;
     this._key = key;
   }
   get path() {
@@ -35623,6 +35671,7 @@ function detectConvergence(snapshots) {
   }
   const first = passValues[0];
   if (last > first) return "improving";
+  if (last < first) return "declining";
   return "unknown";
 }
 
@@ -35758,6 +35807,7 @@ async function getFixHistory(worktreePath) {
 
 // src/server.ts
 init_git();
+init_exec();
 
 // src/plugin/reloader.ts
 init_exec();
@@ -35922,9 +35972,23 @@ function createServer() {
         }
         case "pth_end_session": {
           if (!currentSession) return respond("No active session.");
+          const { generateReport: generateReport2 } = await Promise.resolve().then(() => (init_report_generator(), report_generator_exports));
+          const reportPath = path15.join(currentSession.worktreePath, ".pth/SESSION-REPORT.md");
+          await generateReport2(currentSession.worktreePath, {
+            state: currentSession,
+            allResults: resultsTracker.getAllLatest(),
+            iterationHistory: iterationHistory.map((s, i2) => ({
+              iteration: i2 + 1,
+              passing: s.passing,
+              failing: s.failing,
+              fixesApplied: s.fixesApplied
+            }))
+          });
           const result = await sessionManager.endSession(currentSession);
           currentSession = null;
-          return respond(result);
+          return respond(`${result}
+
+Report: ${reportPath}`);
         }
         default: {
           if (!currentSession) {
@@ -35935,7 +35999,8 @@ function createServer() {
       }
     } catch (err) {
       if (err instanceof PTHError) {
-        return respond(`PTH Error [${err.code}]: ${err.message}`);
+        const ctxLines = err.context && Object.keys(err.context).length > 0 ? "\n" + Object.entries(err.context).map(([k, v]) => `  ${k}: ${v}`).join("\n") : "";
+        return respond(`PTH Error [${err.code}]: ${err.message}${ctxLines}`);
       }
       const msg = err instanceof Error ? err.message : String(err);
       return respond(`PTH Error: ${msg}`);
@@ -36003,7 +36068,9 @@ ${tests.map((t) => `- ${t.name}`).join("\n")}`);
           filterStatus ? `status=${filterStatus}` : "",
           tag ? `tag=${tag}` : ""
         ].filter(Boolean);
-        const header = filterParts.length > 0 ? `${tests.length} tests (${filterParts.join(", ")}):` : `${tests.length} tests:`;
+        const pass = resultsTracker.getPassCount();
+        const fail = resultsTracker.getFailCount();
+        const header = filterParts.length > 0 ? `${tests.length} tests (${filterParts.join(", ")}):` : `${tests.length} tests (${pass} passing, ${fail} failing):`;
         return respond(`${header}
 
 ${lines.join("\n")}`);
@@ -36012,7 +36079,8 @@ ${lines.join("\n")}`);
         const { yaml } = args;
         const test = parseTest(yaml);
         store.add(test);
-        return respond(`Test added: ${test.name} (id: ${test.id})`);
+        return respond(`Test added: ${test.name}
+ID: ${test.id}`);
       }
       case "pth_edit_test": {
         const { testId, yaml } = args;
@@ -36107,18 +36175,25 @@ ${impacted.map((t) => `- ${t.name}`).join("\n")}`);
           commitTitle,
           trailers
         });
-        return respond(`Fix committed: ${hash.slice(0, 7)} (iteration ${session.iteration})
+        const activeSnap = iterationHistory[iterationHistory.length - 1];
+        if (activeSnap) activeSnap.fixesApplied++;
+        return respond(
+          `Fix committed: ${hash.slice(0, 7)} (iteration ${session.iteration})
 ${commitTitle}
-Files: ${files.map((f) => f.path).join(", ")}`);
+Files: ${files.map((f) => f.path).join(", ")}
+
+Next: re-run affected tests, then call pth_get_test_impact to identify which tests to re-record.`
+        );
       }
       case "pth_sync_to_cache": {
         const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
         const cachePath = await getInstallPath2(session.pluginName) ?? detectCachePath2(session.pluginName);
-        const pluginWorktreePath = path14.join(session.worktreePath, session.pluginRelPath);
+        const pluginWorktreePath = path15.join(session.worktreePath, session.pluginRelPath);
         try {
-          await syncToCache2(pluginWorktreePath, cachePath);
+          const filesSynced = await syncToCache2(pluginWorktreePath, cachePath);
+          const countLine = filesSynced > 0 ? `${filesSynced} file(s) synced` : "No files changed";
           return respond(`Synced worktree to cache: ${cachePath}
-Hook script changes are now live.`);
+${countLine}. Hook script changes are now live.`);
         } catch (e) {
           return respond(`Cache sync failed: ${e.message}
 Cache path: ${cachePath}`);
@@ -36127,7 +36202,7 @@ Cache path: ${cachePath}`);
       case "pth_reload_plugin": {
         const { detectBuildSystem: detectBuildSystem2 } = await Promise.resolve().then(() => (init_detector(), detector_exports));
         const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
-        const pluginWorktreePath = path14.join(session.worktreePath, session.pluginRelPath);
+        const pluginWorktreePath = path15.join(session.worktreePath, session.pluginRelPath);
         const buildSystem = await detectBuildSystem2(pluginWorktreePath);
         const { processPattern } = args;
         const installPath = await getInstallPath2(session.pluginName);
@@ -36136,10 +36211,15 @@ Cache path: ${cachePath}`);
         const result = await reloadPlugin(pluginWorktreePath, buildSystem, pattern, async () => {
           await syncToCache2(pluginWorktreePath, cachePath);
         });
+        const MAX_BUILD_LINES = 50;
+        const buildLines = result.buildOutput ? result.buildOutput.split("\n") : [];
+        const buildTruncated = buildLines.length > MAX_BUILD_LINES;
+        const buildDisplay = buildTruncated ? buildLines.slice(0, MAX_BUILD_LINES).join("\n") + `
+[Truncated: ${buildLines.length - MAX_BUILD_LINES} more lines]` : result.buildOutput;
         return respond([
           result.buildSucceeded ? "\u2713 Build succeeded" : "\u2717 Build failed",
-          result.buildOutput ? `Build output:
-${result.buildOutput}` : "",
+          buildDisplay ? `Build output:
+${buildDisplay}` : "",
           result.message
         ].filter(Boolean).join("\n"));
       }
@@ -36157,8 +36237,16 @@ ${lines.join("\n")}`);
       }
       case "pth_revert_fix": {
         const { commitHash } = args;
+        const showResult = await run("git", ["show", "-s", "--format=%s", commitHash], { cwd: session.worktreePath });
+        const originalTitle = showResult.stdout.trim();
         await revertCommit(session.worktreePath, commitHash);
-        return respond(`Reverted commit ${commitHash}. Changes undone and a new revert commit added.`);
+        const newHash = (await run("git", ["rev-parse", "HEAD"], { cwd: session.worktreePath })).stdout.trim();
+        return respond(
+          `Reverted: ${commitHash.slice(0, 7)} \u2014 ${originalTitle}
+Revert commit: ${newHash.slice(0, 7)}
+
+Next: re-run affected tests to verify the revert resolved the regression.`
+        );
       }
       case "pth_diff_session": {
         const diff = await getDiff(session.worktreePath, "origin/HEAD");
@@ -36176,13 +36264,24 @@ ${display}${suffix}`);
       }
       // ── Iteration ──────────────────────────────────────────────────
       case "pth_get_iteration_status": {
-        const snapshots = iterationHistory;
-        const trend = detectConvergence(snapshots);
-        const history = snapshots.map(
+        const pass = resultsTracker.getPassCount();
+        const fail = resultsTracker.getFailCount();
+        const hasResults = pass + fail > 0;
+        const lastSnap = iterationHistory[iterationHistory.length - 1];
+        if (hasResults && (!lastSnap || lastSnap.passing !== pass || lastSnap.failing !== fail)) {
+          iterationHistory.push({ passing: pass, failing: fail, fixesApplied: 0 });
+          session.iteration = iterationHistory.length;
+          session.convergenceTrend = detectConvergence(iterationHistory);
+          await writeSessionState(session.worktreePath, session);
+        }
+        const trend = detectConvergence(iterationHistory);
+        const history = iterationHistory.map(
           (s, i2) => `| ${i2 + 1} | ${s.passing} | ${s.failing} | ${s.fixesApplied} |`
         ).join("\n");
+        const recommendation = trend === "improving" ? "Keep iterating \u2014 pass rate is rising." : trend === "plateaued" ? "Try a different fix strategy \u2014 pass rate has stalled." : trend === "oscillating" ? "Use pth_get_test_impact to find the regressing fix." : trend === "declining" ? "Pass rate is falling \u2014 use pth_revert_fix before continuing." : "Not enough iterations yet to detect a trend.";
         return respond([
           `Iteration: ${session.iteration}    Trend: ${trend}`,
+          `Recommendation: ${recommendation}`,
           ``,
           `| Iteration | Passing | Failing | Fixes |`,
           `|-----------|---------|---------|-------|`,

@@ -1,18 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import type { SessionState } from './types.js';
-
-// Inline minimal TestResult type — full type created in Task 7 (src/results/types.ts)
-interface TestResult {
-  testId: string;
-  testName: string;
-  status: 'pending' | 'passing' | 'failing' | 'skipped';
-  iteration: number;
-  durationMs?: number;
-  failureReason?: string;
-  claudeNotes?: string;
-  recordedAt: string;
-}
+import type { TestResult } from '../results/types.js';
 
 export interface ReportOptions {
   state: SessionState;
