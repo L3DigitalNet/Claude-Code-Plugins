@@ -103,9 +103,36 @@ export function registerPerformanceTools(ctx: PluginContext): void {
     module: "performance", riskLevel: "read-only", duration: "quick",
     inputSchema: z.object({}), annotations: { readOnlyHint: true },
   }, async () => {
-    // Try iostat first, fall back to /proc/diskstats
-    let r = await executeBash(ctx, "iostat -x 1 1 2>/dev/null || cat /proc/diskstats", "quick");
-    return success("perf_disk_io", ctx.targetHost, r.durationMs, "iostat -x 1 1", { io_stats: r.stdout.trim() });
+    const r = await executeBash(ctx, "cat /proc/diskstats", "quick");
+    // /proc/diskstats: fixed-width space-separated; columns 1-3 are major/minor/name,
+    // 4-14 are the standard I/O counters (reads, merges, sectors, ms per operation class).
+    // Columns 15+ (discards, flushes) only present on kernel ≥ 4.18 — include when available.
+    const devices = r.stdout.trim().split("\n").filter(Boolean).map((line) => {
+      const p = line.trim().split(/\s+/);
+      const d: Record<string, unknown> = {
+        name: p[2],
+        reads_completed: Number(p[3]),
+        reads_merged: Number(p[4]),
+        sectors_read: Number(p[5]),
+        ms_reading: Number(p[6]),
+        writes_completed: Number(p[7]),
+        writes_merged: Number(p[8]),
+        sectors_written: Number(p[9]),
+        ms_writing: Number(p[10]),
+        ios_in_progress: Number(p[11]),
+        ms_doing_io: Number(p[12]),
+        ms_weighted_io: Number(p[13]),
+      };
+      // Discard stats (kernel ≥ 4.18)
+      if (p.length >= 18) {
+        d.discards_completed = Number(p[14]);
+        d.discards_merged = Number(p[15]);
+        d.sectors_discarded = Number(p[16]);
+        d.ms_discarding = Number(p[17]);
+      }
+      return d;
+    });
+    return success("perf_disk_io", ctx.targetHost, r.durationMs, "cat /proc/diskstats", { devices, count: devices.length });
   });
 
   // ── perf_network_io ─────────────────────────────────────────────
