@@ -21,6 +21,7 @@ describe('session state persister', () => {
     worktreePath: '/tmp/pth-worktree-abc123',
     pluginPath: '/home/dev/my-plugin',
     pluginName: 'my-plugin',
+    pluginRelPath: 'plugins/my-plugin',
     pluginMode: 'mcp',
     startedAt: '2026-02-18T10:00:00Z',
     iteration: 3,

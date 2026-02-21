@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-02-20
+
+### Added
+- enhance plugin management and git integration
+- linux-sysadmin-mcp v1.0.5 + plugin-test-harness v0.1.1
+
+### Fixed
+- update path variable names for consistency and clarity
+- use \${CLAUDE_PLUGIN_ROOT} in .mcp.json args
+- commit dist/ so MCP server works after install
+
+
 ## [0.1.3] - 2026-02-20
 
 ### Fixed

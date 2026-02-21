@@ -30,6 +30,7 @@ describe('getFixHistory', () => {
   it('returns a FixRecord for a commit with PTH trailers', async () => {
     await applyFix({
       worktreePath: tmpDir,
+      pluginRelPath: '',
       files: [{ path: 'init.ts', content: 'const x = 1;\n' }],
       commitTitle: 'fix: update x',
       trailers: { 'PTH-Test': 'test_x', 'PTH-Iteration': '1' },
