@@ -17,7 +17,7 @@ export interface SessionState {
   testCount: number;
   passingCount: number;
   failingCount: number;
-  convergenceTrend: 'improving' | 'plateaued' | 'oscillating' | 'unknown';
+  convergenceTrend: 'improving' | 'plateaued' | 'oscillating' | 'declining' | 'unknown';
   activeFailures: ActiveFailure[];
 }
 

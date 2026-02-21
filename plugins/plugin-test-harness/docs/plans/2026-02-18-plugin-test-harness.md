@@ -2,6 +2,13 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+> **⚠ IMPLEMENTATION DIVERGENCE NOTES** (updated post-implementation):
+> - **Dynamic tool registration was not implemented.** `notifications/tools/list_changed` calls in this plan were reverted. All 19 tools are always registered — no dormant/active split.
+> - **`impact.ts` was not created.** Source file → test dependency mapping lives in `src/testing/utils.ts`.
+> - **Manifest file is `plugin.json`**, not `manifest.json`. References to `.claude-plugin/manifest.json` in this plan are wrong; the correct path is `.claude-plugin/plugin.json`.
+> - **Test fixture `manifest.json`** references in this plan are also wrong for the same reason.
+> - **`templates/` directory was not created.** YAML template files referenced in the architecture diagram were not implemented — test YAML is generated inline by the MCP tools.
+
 **Goal:** Build a Claude Code MCP plugin that orchestrates iterative live testing, diagnosis, and hot-patching of other Claude Code plugins and MCP servers, with Claude as the test executor.
 
 **Architecture:** PTH is an MCP server that runs in the developer's Claude Code session alongside the plugin under test. It uses dynamic tool registration (dormant: 3 tools when idle, session: 16 tools when active) via `notifications/tools/list_changed`. Claude executes tests directly by calling target plugin tools or running hook scripts — PTH is a test orchestration and tracking layer, not a test executor. All testing is in-session; no Docker or VM environments.

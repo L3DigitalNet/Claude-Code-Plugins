@@ -2,13 +2,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { stringify as stringifyYaml } from 'yaml';
 import type { PthTest } from './types.js';
+import { PTHError, PTHErrorCode } from '../shared/errors.js';
 
 export class TestStore {
   private tests: Map<string, PthTest> = new Map();
 
   add(test: PthTest): void {
     if (this.tests.has(test.id)) {
-      throw new Error(`Test with id "${test.id}" already exists. Use update() to replace it.`);
+      throw new PTHError(PTHErrorCode.INVALID_TEST, `Test with id "${test.id}" already exists. Call pth_edit_test to update it.`);
     }
     this.tests.set(test.id, test);
   }

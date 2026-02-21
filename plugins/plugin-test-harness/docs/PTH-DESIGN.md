@@ -1,8 +1,17 @@
 # Plugin Test Harness (PTH) — Design Document
 
-**Version:** 1.0  
-**Date:** February 18, 2026  
-**Status:** Approved for Implementation
+> **⚠ DESIGN DOCUMENT STATUS: PARTIALLY SUPERSEDED**
+> This document describes the original pre-implementation design. Several major architectural elements were revised or removed during implementation:
+> - **No container/VM isolation** — PTH runs tests in a git worktree on the host, not Docker/VM environments
+> - **19 tools implemented** (not 45 as planned) — dynamic tool registration via `notifications/tools/list_changed` was not implemented
+> - **No parallel test execution** — tests are driven by Claude sequentially
+> - **No CI export or doc patch generation** — these remain planned features
+>
+> For the current implementation, see the README and source code. This document is kept for historical context.
+
+**Version:** 1.0
+**Date:** February 18, 2026
+**Status:** Approved for Implementation (partial — see note above)
 
 ---
 

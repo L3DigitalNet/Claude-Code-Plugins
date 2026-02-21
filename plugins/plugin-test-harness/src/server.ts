@@ -14,6 +14,7 @@ import { generateMcpTests, generatePluginTests } from './testing/generator.js';
 import { applyFix } from './fix/applicator.js';
 import { getFixHistory } from './fix/tracker.js';
 import { revertCommit, getDiff } from './session/git.js';
+import { run } from './shared/exec.js';
 import { reloadPlugin } from './plugin/reloader.js';
 import { writeSessionState } from './session/state-persister.js';
 import { writeToolSchemasCache } from './shared/source-analyzer.js';
@@ -94,9 +95,23 @@ export function createServer(): Server {
         }
         case 'pth_end_session': {
           if (!currentSession) return respond('No active session.');
+          // Generate the session report before removing the worktree — report-generator
+          // needs worktreePath and the in-memory resultsTracker/iterationHistory.
+          const { generateReport } = await import('./session/report-generator.js');
+          const reportPath = path.join(currentSession.worktreePath, '.pth/SESSION-REPORT.md');
+          await generateReport(currentSession.worktreePath, {
+            state: currentSession,
+            allResults: resultsTracker.getAllLatest(),
+            iterationHistory: mgr.iterationHistory.map((s, i) => ({
+              iteration: i + 1,
+              passing: s.passing,
+              failing: s.failing,
+              fixesApplied: s.fixesApplied,
+            })),
+          });
           const result = await sessionManager.endSession(currentSession);
           currentSession = null;
-          return respond(result);
+          return respond(`${result}\n\nReport: ${reportPath}`);
         }
         default: {
           if (!currentSession) {
@@ -107,7 +122,12 @@ export function createServer(): Server {
       }
     } catch (err) {
       if (err instanceof PTHError) {
-        return respond(`PTH Error [${err.code}]: ${err.message}`);
+        // Surface context (stderr, stdout) alongside the structured error code and message.
+        // PTHError.context carries raw diagnostic output that Claude needs to decide next steps.
+        const ctxLines = err.context && Object.keys(err.context).length > 0
+          ? '\n' + Object.entries(err.context).map(([k, v]) => `  ${k}: ${v}`).join('\n')
+          : '';
+        return respond(`PTH Error [${err.code}]: ${err.message}${ctxLines}`);
       }
       const msg = err instanceof Error ? err.message : String(err);
       return respond(`PTH Error: ${msg}`);
@@ -184,9 +204,12 @@ export function createServer(): Server {
           filterStatus ? `status=${filterStatus}` : '',
           tag ? `tag=${tag}` : '',
         ].filter(Boolean);
+        // Show pass/fail breakdown in unfiltered header so Claude can quickly assess session state
+        const pass = resultsTracker.getPassCount();
+        const fail = resultsTracker.getFailCount();
         const header = filterParts.length > 0
           ? `${tests.length} tests (${filterParts.join(', ')}):`
-          : `${tests.length} tests:`;
+          : `${tests.length} tests (${pass} passing, ${fail} failing):`;
         return respond(`${header}\n\n${lines.join('\n')}`);
       }
 
@@ -194,7 +217,7 @@ export function createServer(): Server {
         const { yaml } = args as { yaml: string };
         const test = parseTest(yaml);
         store.add(test);
-        return respond(`Test added: ${test.name} (id: ${test.id})`);
+        return respond(`Test added: ${test.name}\nID: ${test.id}`);
       }
 
       case 'pth_edit_test': {
@@ -300,7 +323,15 @@ export function createServer(): Server {
           commitTitle,
           trailers,
         });
-        return respond(`Fix committed: ${hash.slice(0, 7)} (iteration ${session.iteration})\n${commitTitle}\nFiles: ${files.map(f => f.path).join(', ')}`);
+        // Track fix count on the current iteration snapshot (for convergence history reporting).
+        const activeSnap = mgr.iterationHistory[mgr.iterationHistory.length - 1];
+        if (activeSnap) activeSnap.fixesApplied++;
+        return respond(
+          `Fix committed: ${hash.slice(0, 7)} (iteration ${session.iteration})\n` +
+          `${commitTitle}\n` +
+          `Files: ${files.map(f => f.path).join(', ')}\n` +
+          `\nNext: re-run affected tests, then call pth_get_test_impact to identify which tests to re-record.`
+        );
       }
 
       case 'pth_sync_to_cache': {
@@ -311,8 +342,9 @@ export function createServer(): Server {
         // Sync from the plugin subdirectory within the worktree, not the worktree root.
         const pluginWorktreePath = path.join(session.worktreePath, session.pluginRelPath);
         try {
-          await syncToCache(pluginWorktreePath, cachePath);
-          return respond(`Synced worktree to cache: ${cachePath}\nHook script changes are now live.`);
+          const filesSynced = await syncToCache(pluginWorktreePath, cachePath);
+          const countLine = filesSynced > 0 ? `${filesSynced} file(s) synced` : 'No files changed';
+          return respond(`Synced worktree to cache: ${cachePath}\n${countLine}. Hook script changes are now live.`);
         } catch (e) {
           return respond(`Cache sync failed: ${(e as Error).message}\nCache path: ${cachePath}`);
         }
@@ -335,9 +367,15 @@ export function createServer(): Server {
         const result = await reloadPlugin(pluginWorktreePath, buildSystem, pattern, async () => {
           await syncToCache(pluginWorktreePath, cachePath);
         });
+        const MAX_BUILD_LINES = 50;
+        const buildLines = result.buildOutput ? result.buildOutput.split('\n') : [];
+        const buildTruncated = buildLines.length > MAX_BUILD_LINES;
+        const buildDisplay = buildTruncated
+          ? buildLines.slice(0, MAX_BUILD_LINES).join('\n') + `\n[Truncated: ${buildLines.length - MAX_BUILD_LINES} more lines]`
+          : result.buildOutput;
         return respond([
           result.buildSucceeded ? '✓ Build succeeded' : '✗ Build failed',
-          result.buildOutput ? `Build output:\n${result.buildOutput}` : '',
+          buildDisplay ? `Build output:\n${buildDisplay}` : '',
           result.message,
         ].filter(Boolean).join('\n'));
       }
@@ -355,8 +393,16 @@ export function createServer(): Server {
 
       case 'pth_revert_fix': {
         const { commitHash } = args as { commitHash: string };
+        // Get original commit title before reverting — for informative confirmation
+        const showResult = await run('git', ['show', '-s', '--format=%s', commitHash], { cwd: session.worktreePath });
+        const originalTitle = showResult.stdout.trim();
         await revertCommit(session.worktreePath, commitHash);
-        return respond(`Reverted commit ${commitHash}. Changes undone and a new revert commit added.`);
+        const newHash = (await run('git', ['rev-parse', 'HEAD'], { cwd: session.worktreePath })).stdout.trim();
+        return respond(
+          `Reverted: ${commitHash.slice(0, 7)} — ${originalTitle}\n` +
+          `Revert commit: ${newHash.slice(0, 7)}\n` +
+          `\nNext: re-run affected tests to verify the revert resolved the regression.`
+        );
       }
 
       case 'pth_diff_session': {
@@ -374,13 +420,32 @@ export function createServer(): Server {
 
       // ── Iteration ──────────────────────────────────────────────────
       case 'pth_get_iteration_status': {
-        const snapshots = mgr.iterationHistory;
-        const trend = detectConvergence(snapshots);
-        const history = snapshots.map((s, i) =>
+        // Capture a snapshot of the current pass/fail state. Push only when counts differ
+        // from the last snapshot — prevents duplicate rows if called multiple times in a row.
+        // This is the canonical "end-of-iteration" checkpoint in the test/fix/reload workflow.
+        const pass = resultsTracker.getPassCount();
+        const fail = resultsTracker.getFailCount();
+        const hasResults = pass + fail > 0;
+        const lastSnap = mgr.iterationHistory[mgr.iterationHistory.length - 1];
+        if (hasResults && (!lastSnap || lastSnap.passing !== pass || lastSnap.failing !== fail)) {
+          mgr.iterationHistory.push({ passing: pass, failing: fail, fixesApplied: 0 });
+          session.iteration = mgr.iterationHistory.length;
+          session.convergenceTrend = detectConvergence(mgr.iterationHistory);
+          await writeSessionState(session.worktreePath, session);
+        }
+
+        const trend = detectConvergence(mgr.iterationHistory);
+        const history = mgr.iterationHistory.map((s, i) =>
           `| ${i + 1} | ${s.passing} | ${s.failing} | ${s.fixesApplied} |`
         ).join('\n');
+        const recommendation = trend === 'improving'    ? 'Keep iterating — pass rate is rising.'
+          : trend === 'plateaued'   ? 'Try a different fix strategy — pass rate has stalled.'
+          : trend === 'oscillating' ? 'Use pth_get_test_impact to find the regressing fix.'
+          : trend === 'declining'   ? 'Pass rate is falling — use pth_revert_fix before continuing.'
+          : 'Not enough iterations yet to detect a trend.';
         return respond([
           `Iteration: ${session.iteration}    Trend: ${trend}`,
+          `Recommendation: ${recommendation}`,
           ``,
           `| Iteration | Passing | Failing | Fixes |`,
           `|-----------|---------|---------|-------|`,

@@ -24,7 +24,8 @@ export function detectConvergence(snapshots: IterationSnapshot[]): ConvergenceTr
   const first = passValues[0];
   if (last > first) return 'improving';
 
-  // Declining trends are treated as 'unknown' — no separate 'declining' variant
-  // in ConvergenceTrend because the session state type doesn't include it.
+  // Declining trend: pass rate fell from first to last snapshot in the window.
+  if (last < first) return 'declining';
+
   return 'unknown';
 }

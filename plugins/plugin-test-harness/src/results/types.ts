@@ -6,4 +6,4 @@ export interface IterationSnapshot {
   failing: number;
 }
 
-export type ConvergenceTrend = 'improving' | 'plateaued' | 'oscillating' | 'unknown';
+export type ConvergenceTrend = 'improving' | 'plateaued' | 'oscillating' | 'declining' | 'unknown';

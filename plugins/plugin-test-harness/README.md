@@ -10,7 +10,7 @@ PTH treats plugin testing as an iterative convergence problem rather than a one-
 
 **[P1] Claude's Judgment, Not Mechanical Rules** — No rigid enforcement gates or hard-coded safety thresholds. Claude assesses risk, decides approval workflows, and manages safety contextually — because tests span wildly varying plugin domains and environment configurations where rigid rules would be either too restrictive or too permissive.
 
-**[P2] Convergence Over Single-Pass** — Testing is an iterative convergence problem. PTH drives successive test/fix/reload cycles and measures the trend (improving, plateau, oscillating, diverging) across iterations. A plugin is not done when the first run passes.
+**[P2] Convergence Over Single-Pass** — Testing is an iterative convergence problem. PTH drives successive test/fix/reload cycles and measures the trend (improving, plateaued, oscillating, declining) across iterations. A plugin is not done when the first run passes.
 
 **[P3] Durable Session Assets** — The git branch and test definitions are the session's durable assets. If the environment fails catastrophically, the session can always be resumed from these.
 
@@ -163,9 +163,9 @@ git branch -d pth/my-plugin-2026-02-18-abc123
 | Trend | Meaning | Recommended action |
 |-------|---------|-------------------|
 | `improving` | Pass rate rising each iteration | Keep iterating |
-| `plateau` | Pass rate has stalled | Try a different fix strategy |
+| `plateaued` | Pass rate has stalled | Try a different fix strategy |
 | `oscillating` | Tests flip between pass and fail | Use `pth_get_test_impact` to find the regressing fix |
-| `diverging` | Pass rate is falling | Use `pth_revert_fix` before continuing |
+| `declining` | Pass rate is falling | Use `pth_revert_fix` before continuing |
 
 ## Requirements
 

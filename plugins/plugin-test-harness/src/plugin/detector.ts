@@ -124,13 +124,16 @@ export async function readMcpConfig(pluginPath: string): Promise<McpConfig | nul
 }
 
 export async function detectPluginName(pluginPath: string): Promise<string> {
-  // Try .claude-plugin/manifest.json
-  const manifestPath = path.join(pluginPath, '.claude-plugin', 'manifest.json');
+  // Try .claude-plugin/plugin.json (canonical manifest name; manifest.json is not valid)
+  const manifestPath = path.join(pluginPath, '.claude-plugin', 'plugin.json');
   try {
     const raw = await fs.readFile(manifestPath, 'utf-8');
     const manifest = JSON.parse(raw) as { name?: string };
     if (manifest.name) return manifest.name;
-  } catch { /* ignore */ }
+  } catch (err) {
+    // ENOENT is expected when not a Claude Code plugin — re-throw anything else
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+  }
 
   // Try package.json
   const pkgPath = path.join(pluginPath, 'package.json');
@@ -138,7 +141,9 @@ export async function detectPluginName(pluginPath: string): Promise<string> {
     const raw = await fs.readFile(pkgPath, 'utf-8');
     const pkg = JSON.parse(raw) as { name?: string };
     if (pkg.name) return pkg.name;
-  } catch { /* ignore */ }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+  }
 
   // Fall back to directory name
   return path.basename(pluginPath);

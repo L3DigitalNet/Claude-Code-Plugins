@@ -1,4 +1,7 @@
-// src/results/tracker.ts
+// src/results/tracker.ts — in-memory result store, intentionally not persisted.
+// Result history is lost on pth_resume_session; convergence trend resets to 'unknown' on resume.
+// Tests themselves persist via TestStore.persistToDir() — only result recordings don't survive.
+// If persistence is ever added, it must write to worktreePath/.pth/results/ to survive worktree reuse.
 import type { TestResult } from '../testing/types.js';
 
 export class ResultsTracker {
