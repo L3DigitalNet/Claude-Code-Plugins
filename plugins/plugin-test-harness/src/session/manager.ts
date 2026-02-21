@@ -188,6 +188,15 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 }
 
 export async function resumeSession(args: { branch: string; pluginPath: string }): Promise<StartSessionResult> {
+  // Reject non-PTH branch names before any filesystem or git operations.
+  // This prevents worktreePath from becoming pth-worktree-undefined when branch has no '/'.
+  if (!args.branch.startsWith('pth/')) {
+    throw new PTHError(
+      PTHErrorCode.GIT_ERROR,
+      `Branch "${args.branch}" is not a PTH session branch. Session branches follow the pattern: pth/<plugin>-<date>-<hash>`
+    );
+  }
+
   const repoRoot = await getGitRepoRoot(args.pluginPath);
   const worktreePath = path.join(os.tmpdir(), `pth-worktree-${args.branch.split('/')[1]}`);
 

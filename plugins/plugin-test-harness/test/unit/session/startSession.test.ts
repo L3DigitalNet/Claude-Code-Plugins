@@ -64,3 +64,24 @@ describe('startSession — lock enforcement (BUG-1)', () => {
       .rejects.toMatchObject({ code: 'GIT_ERROR' });
   });
 });
+
+describe('resumeSession — branch validation (BUG-2)', () => {
+  it('throws GIT_ERROR for non-pth branch names', async () => {
+    const { resumeSession } = await import('../../../src/session/manager.js');
+    await expect(resumeSession({ branch: 'main', pluginPath: '/any/path' }))
+      .rejects.toMatchObject({ code: 'GIT_ERROR', message: expect.stringContaining('pth/') });
+  });
+
+  it('throws GIT_ERROR for branches without pth/ prefix', async () => {
+    const { resumeSession } = await import('../../../src/session/manager.js');
+    await expect(resumeSession({ branch: 'feature/my-thing', pluginPath: '/any/path' }))
+      .rejects.toMatchObject({ code: 'GIT_ERROR' });
+  });
+
+  it('proceeds for valid pth/ branch (falls through to git check)', async () => {
+    const { resumeSession } = await import('../../../src/session/manager.js');
+    // Will fail on checkBranchExists (branch not found), not on validation
+    await expect(resumeSession({ branch: 'pth/my-plugin-2026-02-21-abc123', pluginPath: '/any/path' }))
+      .rejects.toMatchObject({ code: 'GIT_ERROR', message: expect.not.stringContaining('is not a PTH session branch') });
+  });
+});
