@@ -77,12 +77,13 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
   const pluginMode = await detectPluginMode(args.pluginPath);
   await detectBuildSystem(args.pluginPath);
 
+  const lockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
+
   // Enforce the session lock — reject if another Claude instance has an active session.
   // Uses the same live-PID check as preflight so stale locks (dead PID) are silently ignored.
   {
-    const activeLockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
     try {
-      const raw = await fs.readFile(activeLockPath, 'utf-8');
+      const raw = await fs.readFile(lockPath, 'utf-8');
       const lock = JSON.parse(raw) as { pid: number; branch: string };
       try {
         process.kill(lock.pid, 0);  // throws if PID is dead
@@ -117,7 +118,6 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
 
   // Create worktree
   const worktreePath = path.join(os.tmpdir(), `pth-worktree-${branch.split('/')[1]}`);
-  const lockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
 
   // All resource acquisition inside try so we can roll back fully on failure
   try {
