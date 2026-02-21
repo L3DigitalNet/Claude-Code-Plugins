@@ -1,0 +1,16 @@
+{
+  "sessionId": "main",
+  "branch": "main",
+  "worktreePath": "/tmp/pth-worktree-undefined",
+  "pluginPath": "/home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness",
+  "pluginName": "plugin-test-harness",
+  "pluginMode": "mcp",
+  "pluginRelPath": "plugins/plugin-test-harness",
+  "startedAt": "2026-02-21T03:12:15.756Z",
+  "iteration": 0,
+  "testCount": 0,
+  "passingCount": 1,
+  "failingCount": 0,
+  "convergenceTrend": "unknown",
+  "activeFailures": []
+}
