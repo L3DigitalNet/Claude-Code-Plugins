@@ -3,6 +3,33 @@
 ## [0.3.0] - 2026-02-20
 
 ### Added
+- add Assertion Coverage section to final report template
+- add Confidence column to pass report convergence tables
+- refactor convergence loop — fully automated with assertion runner
+- add Assertions block to docs-analyst output format
+- add Assertions block to ux-analyst output format
+- add Assertions block to principles-analyst output format
+- add fix-agent — write-capable assertion-driven fixer
+- add run-assertions.sh assertion runner with smoke tests
+- enhance skills and commands for context efficiency review and markdown tightening
+- add documentation for PostToolUse Agent Frontmatter Validator in DESIGN.md
+- update version to 0.2.0 and enhance documentation with new hooks and validation features
+
+### Changed
+- bump to v0.3.0 — assertion-driven convergence loop
+
+### Fixed
+- address code review — Phase 5 duplication, loop safety, test coverage
+- integration test self-review fixes (v0.3.0)
+- clarify convergence loop conditions and fix-agent context in review.md
+- complete assertion type enum + guide in docs-analyst
+- complete assertion type enum in ux-analyst (add typescript_compile)
+- harden run-assertions.sh — JSON error handling, file handle fix, field validation
+
+
+## [0.3.0] - 2026-02-20
+
+### Added
 - `scripts/run-assertions.sh` — machine-verifiable assertion runner; reads `.review-assertions.json`, executes all assertions by type (grep_not_match, grep_match, file_exists, file_content, typescript_compile, shell_exit_zero), updates pass/fail status, computes confidence score (assertions_passed/total)
 - `scripts/test-run-assertions.sh` — smoke test for the assertion runner covering all 6 assertion types plus a fail-case that verifies exit code 1
 - `agents/fix-agent.md` — write-capable targeted fix agent for assertion-driven regressions; one invocation per pass receives all failing assertions and implements minimal fixes
