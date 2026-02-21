@@ -20,7 +20,7 @@ The plugin splits work into an orchestrator (the `review` command) and three dis
 |-----------|-------|-----------|
 | Doc co-mutation (forgot to update) | Mechanical (warn-only) | `doc-write-tracker` PostToolUse hook tracks impl-vs-doc writes, warns on imbalance — does not block |
 | Doc co-mutation (content accuracy) | Behavioral | Orchestrator verifies doc content matches new behavior — can't be mechanically checked |
-| Pass budget (3-pass limit) | Structural | Orchestrator command explicitly checks pass count before spawning next round |
+| Pass budget (configurable, default 5 via --max-passes=N) | Structural | Orchestrator command explicitly checks pass count before spawning next round |
 | Scoped re-audit | Structural | `scoped-reaudit` skill encodes file→track mapping; orchestrator consults it before spawning |
 | Subagents don't implement | Structural + Mechanical (warn) | Agent YAML frontmatter `tools:` line restricts to `Read, Grep, Glob` — no Write/Edit access. PostToolUse hook `validate-agent-frontmatter.sh` warns if disallowed tools are added to agent files. |
 | Report format consistency | Structural | Report templates are externalized; agents are instructed to follow them exactly |
