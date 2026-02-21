@@ -26,6 +26,7 @@ describe('applyFix', () => {
   it('writes a file change and creates a commit with PTH trailers', async () => {
     const commitHash = await applyFix({
       worktreePath: tmpDir,
+      pluginRelPath: '',
       files: [{ path: 'src.ts', content: 'const x = 2;\n' }],
       commitTitle: 'fix: update value',
       trailers: {
