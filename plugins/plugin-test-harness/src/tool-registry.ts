@@ -114,7 +114,7 @@ const sessionTools: ToolDef[] = [
       files: z.array(z.object({
         path: z.string().describe('File path relative to plugin root'),
         content: z.string().describe('Full new file content'),
-      })),
+      })).min(1, 'At least one file change is required'),
       commitTitle: z.string().describe('Git commit title, e.g. "fix: handle null group"'),
       testId: z.string().optional().describe('ID of the test this fix addresses'),
       category: z.string().optional().describe('Failure category, e.g. "runtime-exception"'),
@@ -141,7 +141,7 @@ const sessionTools: ToolDef[] = [
     name: 'pth_revert_fix',
     description: 'Undo a specific fix commit via git revert.',
     inputSchema: z.object({
-      commitHash: z.string(),
+      commitHash: z.string().regex(/^[0-9a-f]{7,40}$/i, 'commitHash must be a valid git SHA (7–40 hex characters)'),
     }),
   },
   {

@@ -117,7 +117,9 @@ export function createServer(): Server {
           if (!currentSession) {
             return respond('No PTH session active. Call pth_start_session first.');
           }
-          return handleSessionTool(toolName, args, currentSession);
+          // await is required — without it, async rejections from handleSessionTool
+          // bypass this try-catch and surface as unhandled MCP -32603 errors.
+          return await handleSessionTool(toolName, args, currentSession);
         }
       }
     } catch (err) {
@@ -161,11 +163,13 @@ export function createServer(): Server {
 
       // ── Tests ──────────────────────────────────────────────────────
       case 'pth_generate_tests': {
-        const { toolSchemas } = args as { toolSchemas?: ToolSchema[] };
+        const { toolSchemas, includeEdgeCases } = args as { toolSchemas?: ToolSchema[]; includeEdgeCases?: boolean };
         let tests;
         if (session.pluginMode === 'mcp' && toolSchemas) {
           await writeToolSchemasCache(session.worktreePath, toolSchemas);
-          tests = await generateMcpTests({ pluginPath: session.worktreePath, toolSchemas });
+          // Pass session.pluginPath (not worktreePath) so field-name heuristics in
+          // buildValidInput can populate *path* fields with a real, reachable directory.
+          tests = await generateMcpTests({ pluginPath: session.pluginPath, toolSchemas, includeEdgeCases });
         } else {
           tests = generatePluginTests([]);
         }
