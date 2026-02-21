@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] - 2026-02-21
+
+### Fixed
+- `pth_start_session` now rejects if an active session lock is held by a live process (BUG-1)
+- `pth_resume_session` now validates branch has `pth/` prefix before proceeding (BUG-2, BUG-3)
+- `pth_generate_tests` now upserts existing tests instead of throwing on duplicate IDs (BUG-4)
+
 ## [0.3.0] - 2026-02-20
 
 ### Added
