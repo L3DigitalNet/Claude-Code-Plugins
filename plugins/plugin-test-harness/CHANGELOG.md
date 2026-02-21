@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.1] - 2026-02-21
+
+### Fixed
+- `pth_apply_fix`: detect when `git add` silently stages nothing (gitignored paths) and throw a clear `GIT_ERROR` with the attempted paths instead of a misleading `BUILD_FAILED` from the subsequent commit (BUG-5)
+- `pth_apply_fix`: `BUILD_FAILED` from `runOrThrow` on git operations now correctly converted to `GIT_ERROR` in `commitFiles` catch block (BUG-5)
+- `pth_reload_plugin`: run `npm install` before build when `node_modules` is absent in worktree — worktrees are clean checkouts with no inherited dependencies (BUG-6)
+
 ## [0.4.0] - 2026-02-21
 
 ### Fixed

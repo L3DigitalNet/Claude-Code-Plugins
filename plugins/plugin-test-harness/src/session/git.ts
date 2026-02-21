@@ -111,6 +111,18 @@ export async function commitFiles(
     for (const filePath of filePaths) {
       await run('git', ['add', filePath], { cwd: worktreePath });
     }
+
+    // git add silently succeeds (exit 0) for gitignored files without staging them.
+    // Detect this before committing — "no changes added to commit" buried in git output
+    // is confusing; a direct GIT_ERROR with the attempted paths is far more actionable.
+    const staged = await run('git', ['diff', '--name-only', '--cached'], { cwd: worktreePath });
+    if (!staged.stdout.trim()) {
+      throw new PTHError(
+        PTHErrorCode.GIT_ERROR,
+        `Nothing staged after git add — files may be gitignored or paths may be wrong.\nAttempted: ${filePaths.join(', ')}`
+      );
+    }
+
     const result = await runOrThrow('git', ['commit', '-m', message], { cwd: worktreePath });
     const match = result.stdout.match(/\[[\w/.-]+ ([a-f0-9]+)\]/);
     if (!match?.[1]) {
@@ -118,8 +130,12 @@ export async function commitFiles(
     }
     return match[1];
   } catch (err) {
-    if (err instanceof PTHError) throw err;
+    // Re-throw our own GIT_ERROR and INVALID_PLUGIN errors as-is.
+    // Convert BUILD_FAILED thrown by runOrThrow (wrong code for git ops) to GIT_ERROR.
+    if (err instanceof PTHError && err.code !== PTHErrorCode.BUILD_FAILED) throw err;
+    const context = err instanceof PTHError ? err.context : {};
     throw new PTHError(PTHErrorCode.GIT_ERROR, `Failed to commit changes in: ${worktreePath}`, {
+      ...context,
       cause: err instanceof Error ? err.message : String(err),
     });
   }
