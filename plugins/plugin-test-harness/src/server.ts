@@ -173,14 +173,28 @@ export function createServer(): Server {
         } else {
           tests = generatePluginTests([]);
         }
-        tests.forEach(t => store.add(t));
+        let newCount = 0;
+        let updatedCount = 0;
+        tests.forEach(t => {
+          if (store.get(t.id)) {
+            store.update(t);
+            updatedCount++;
+          } else {
+            store.add(t);
+            newCount++;
+          }
+        });
         if (tests.length === 0) {
           const guidance = session.pluginMode === 'mcp'
             ? 'No tool schemas found. Pass toolSchemas from the plugin\'s tools/list response.'
             : 'No hook scripts found in the plugin. Create tests manually with pth_create_test.';
           return respond(`Generated 0 tests.\n\n${guidance}`);
         }
-        return respond(`Generated ${tests.length} tests:\n\n${tests.map(t => `- ${t.name}`).join('\n')}`);
+        const summary = [
+          newCount > 0 ? `${newCount} new` : '',
+          updatedCount > 0 ? `${updatedCount} updated` : '',
+        ].filter(Boolean).join(', ');
+        return respond(`Generated ${tests.length} tests (${summary}):\n\n${tests.map(t => `- ${t.name}`).join('\n')}`);
       }
 
       case 'pth_list_tests': {
