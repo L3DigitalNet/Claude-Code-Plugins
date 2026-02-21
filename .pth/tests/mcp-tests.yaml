@@ -1,48 +1,8 @@
-id: pth_preflight_valid_input
-name: pth_preflight — valid input
+id: sysadmin_session_info_valid_input
+name: sysadmin_session_info — valid input
 mode: mcp
 type: single
-tool: pth_preflight
-input:
-  pluginPath: /home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_start_session_valid_input
-name: pth_start_session — valid input
-mode: mcp
-type: single
-tool: pth_start_session
-input:
-  pluginPath: /home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_resume_session_valid_input
-name: pth_resume_session — valid input
-mode: mcp
-type: single
-tool: pth_resume_session
-input:
-  branch: main
-  pluginPath: /home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_end_session_valid_input
-name: pth_end_session — valid input
-mode: mcp
-type: single
-tool: pth_end_session
+tool: sysadmin_session_info
 input: {}
 expect:
   success: true
@@ -50,11 +10,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_get_session_status_valid_input
-name: pth_get_session_status — valid input
+id: pkg_list_installed_valid_input
+name: pkg_list_installed — valid input
 mode: mcp
 type: single
-tool: pth_get_session_status
+tool: pkg_list_installed
 input: {}
 expect:
   success: true
@@ -62,11 +22,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_generate_tests_valid_input
-name: pth_generate_tests — valid input
+id: pkg_info_valid_input
+name: pkg_info — valid input
 mode: mcp
 type: single
-tool: pth_generate_tests
+tool: pkg_info
 input: {}
 expect:
   success: true
@@ -74,11 +34,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_list_tests_valid_input
-name: pth_list_tests — valid input
+id: pkg_check_updates_valid_input
+name: pkg_check_updates — valid input
 mode: mcp
 type: single
-tool: pth_list_tests
+tool: pkg_check_updates
 input: {}
 expect:
   success: true
@@ -86,62 +46,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_create_test_valid_input
-name: pth_create_test — valid input
+id: svc_list_valid_input
+name: svc_list — valid input
 mode: mcp
 type: single
-tool: pth_create_test
-input:
-  yaml: |-
-    name: generated-test
-    mode: mcp
-    tool: example
-    expect:
-      success: true
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_edit_test_valid_input
-name: pth_edit_test — valid input
-mode: mcp
-type: single
-tool: pth_edit_test
-input:
-  testId: test-value
-  yaml: |-
-    name: generated-test
-    mode: mcp
-    tool: example
-    expect:
-      success: true
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_record_result_valid_input
-name: pth_record_result — valid input
-mode: mcp
-type: single
-tool: pth_record_result
-input:
-  testId: test-value
-  status: passing
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_get_results_valid_input
-name: pth_get_results — valid input
-mode: mcp
-type: single
-tool: pth_get_results
+tool: svc_list
 input: {}
 expect:
   success: true
@@ -149,38 +58,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_get_test_impact_valid_input
-name: pth_get_test_impact — valid input
+id: svc_status_valid_input
+name: svc_status — valid input
 mode: mcp
 type: single
-tool: pth_get_test_impact
-input:
-  files: []
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_apply_fix_valid_input
-name: pth_apply_fix — valid input
-mode: mcp
-type: single
-tool: pth_apply_fix
-input:
-  files: []
-  commitTitle: test-value
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_sync_to_cache_valid_input
-name: pth_sync_to_cache — valid input
-mode: mcp
-type: single
-tool: pth_sync_to_cache
+tool: svc_status
 input: {}
 expect:
   success: true
@@ -188,11 +70,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_reload_plugin_valid_input
-name: pth_reload_plugin — valid input
+id: svc_start_valid_input
+name: svc_start — valid input
 mode: mcp
 type: single
-tool: pth_reload_plugin
+tool: svc_start
 input: {}
 expect:
   success: true
@@ -200,11 +82,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_get_fix_history_valid_input
-name: pth_get_fix_history — valid input
+id: svc_stop_valid_input
+name: svc_stop — valid input
 mode: mcp
 type: single
-tool: pth_get_fix_history
+tool: svc_stop
 input: {}
 expect:
   success: true
@@ -212,24 +94,11 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_revert_fix_valid_input
-name: pth_revert_fix — valid input
+id: svc_restart_valid_input
+name: svc_restart — valid input
 mode: mcp
 type: single
-tool: pth_revert_fix
-input:
-  commitHash: abc1234def5678901234567890123456789012
-expect:
-  success: true
-generated_from: schema
-timeout_seconds: 10
-
----
-id: pth_diff_session_valid_input
-name: pth_diff_session — valid input
-mode: mcp
-type: single
-tool: pth_diff_session
+tool: svc_restart
 input: {}
 expect:
   success: true
@@ -237,11 +106,215 @@ generated_from: schema
 timeout_seconds: 10
 
 ---
-id: pth_get_iteration_status_valid_input
-name: pth_get_iteration_status — valid input
+id: perf_overview_valid_input
+name: perf_overview — valid input
 mode: mcp
 type: single
-tool: pth_get_iteration_status
+tool: perf_overview
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: perf_disk_io_valid_input
+name: perf_disk_io — valid input
+mode: mcp
+type: single
+tool: perf_disk_io
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: disk_usage_valid_input
+name: disk_usage — valid input
+mode: mcp
+type: single
+tool: disk_usage
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: disk_usage_top_valid_input
+name: disk_usage_top — valid input
+mode: mcp
+type: single
+tool: disk_usage_top
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: log_disk_usage_valid_input
+name: log_disk_usage — valid input
+mode: mcp
+type: single
+tool: log_disk_usage
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: ssh_session_info_valid_input
+name: ssh_session_info — valid input
+mode: mcp
+type: single
+tool: ssh_session_info
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: log_query_valid_input
+name: log_query — valid input
+mode: mcp
+type: single
+tool: log_query
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: log_search_valid_input
+name: log_search — valid input
+mode: mcp
+type: single
+tool: log_search
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: fw_status_valid_input
+name: fw_status — valid input
+mode: mcp
+type: single
+tool: fw_status
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: net_interfaces_valid_input
+name: net_interfaces — valid input
+mode: mcp
+type: single
+tool: net_interfaces
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: sec_audit_valid_input
+name: sec_audit — valid input
+mode: mcp
+type: single
+tool: sec_audit
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: sec_mac_status_valid_input
+name: sec_mac_status — valid input
+mode: mcp
+type: single
+tool: sec_mac_status
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: lvm_status_valid_input
+name: lvm_status — valid input
+mode: mcp
+type: single
+tool: lvm_status
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: lvm_create_lv_valid_input
+name: lvm_create_lv — valid input
+mode: mcp
+type: single
+tool: lvm_create_lv
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: bak_create_valid_input
+name: bak_create — valid input
+mode: mcp
+type: single
+tool: bak_create
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: user_list_valid_input
+name: user_list — valid input
+mode: mcp
+type: single
+tool: user_list
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: cron_list_valid_input
+name: cron_list — valid input
+mode: mcp
+type: single
+tool: cron_list
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: ctr_list_valid_input
+name: ctr_list — valid input
+mode: mcp
+type: single
+tool: ctr_list
 input: {}
 expect:
   success: true
