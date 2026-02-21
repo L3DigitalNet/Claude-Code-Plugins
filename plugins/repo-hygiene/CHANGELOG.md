@@ -3,6 +3,20 @@
 ## [1.0.0] - 2026-02-20
 
 ### Added
+- add /hygiene orchestrating command
+- add check-stale-commits.sh
+- add check-orphans.sh
+- add check-manifests.sh
+- add check-gitignore.sh
+- scaffold plugin structure v1.0.0
+
+### Fixed
+- address code review — stale-pattern false positives, fix_cmd absolute paths, orphan safety guard, trailing-slash auto-fix, .claude/state note
+
+
+## [1.0.0] - 2026-02-20
+
+### Added
 - `/hygiene` command with `--dry-run` flag
 - Check 1: `.gitignore` stale pattern detection and missing-pattern suggestions
 - Check 2: Marketplace manifest `source` path cross-reference
