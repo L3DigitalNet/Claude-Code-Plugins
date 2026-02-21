@@ -1,6 +1,6 @@
 {
   "name": "plugin-test-harness",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Iterative live testing framework for Claude Code plugins and MCP servers. Run a session branch, generate tests, record results, apply fixes, and iterate until convergence.",
   "author": {
     "name": "L3DigitalNet",
