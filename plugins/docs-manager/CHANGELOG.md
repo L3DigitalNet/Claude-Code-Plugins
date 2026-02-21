@@ -4,6 +4,29 @@ All notable changes to the docs-manager plugin will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-02-20
+
+### Added
+- complete v0.1.0 — documentation lifecycle management plugin
+- add skills and agents
+- add template registration script
+- expand /docs command with all subcommands
+- add index system with register, query, locking, and Path B detection
+- add /docs command router with queue, status, help
+- add Stop hook and hooks.json registration
+- add PostToolUse hook detection (Path A)
+- add survival-context classifier (P5 rule)
+- add frontmatter reader utility with tests
+- add queue clear and fallback merge scripts
+- add queue read script with fallback merge
+- add queue append script with dedup and fallback
+- add state bootstrap script with tests
+- add plugin scaffold and marketplace entry
+
+### Changed
+- Add Principles Registry for docs-manager with enforcement heuristics and risk areas
+
+
 ## [0.1.0] - 2026-02-20
 
 ### Added
