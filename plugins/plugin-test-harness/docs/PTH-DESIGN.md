@@ -55,11 +55,11 @@ PTH runs on the host machine as a standard MCP server within the developer's Cla
 │  ┌────────────────────────────────────────────────────┐     │
 │  │              Claude Code Session                    │     │
 │  │                                                     │     │
-│  │  ┌──────────────────┐  ┌──────────────────────┐    │     │
-│  │  │  Plugin Test      │  │  Superpowers          │    │     │
-│  │  │  Harness (PTH)    │  │  (if installed)       │    │     │
-│  │  │  MCP Server       │  │                       │    │     │
-│  │  └────────┬─────────┘  └──────────────────────┘    │     │
+│  │  ┌──────────────────┐                               │     │
+│  │  │  Plugin Test      │                               │     │
+│  │  │  Harness (PTH)    │                               │     │
+│  │  │  MCP Server       │                               │     │
+│  │  └────────┬─────────┘                               │     │
 │  │           │                                         │     │
 │  └───────────┼─────────────────────────────────────────┘     │
 │              │                                               │
@@ -482,17 +482,6 @@ This gives Claude a rich, structured history to work with:
 
 Claude uses this git history to avoid repeating failed fixes, detect oscillating patterns, and understand how the codebase has evolved across iterations.
 
-**Superpowers Integration:**
-
-When the Superpowers plugin is detected in the Claude Code session, Claude can choose to delegate complex changes through Superpowers' planning and implementation workflow. This is particularly valuable for:
-- Architectural restructuring (splitting modules, moving functions between files)
-- Changes that affect many files simultaneously
-- Changes where a brainstorm→plan→implement→review cycle would produce a better result
-
-Claude decides when a change is complex enough to warrant Superpowers versus direct implementation. PTH does not depend on Superpowers and is fully functional without it.
-
-**Detection:** At session start, PTH checks for Superpowers by looking for its skill files in the Claude Code plugin cache (typically `~/.claude/plugins/cache/Superpowers/`). If found, PTH notes the available skills (brainstorming, TDD, code review, etc.) and Claude factors them into its decision-making for complex changes.
-
 **Anti-Regression Awareness:**
 
 The git commit history gives Claude full visibility into what has been tried. Claude can review:
@@ -534,7 +523,6 @@ ITERATION LOOP
   │
   ├─ Apply fix
   │   ├─ Claude assesses risk and decides: apply directly or ask human
-  │   ├─ If complex: optionally delegate to Superpowers
   │   └─ Commit fix to session branch with diagnostic context
   │
   ├─ Reload plugin
@@ -1170,8 +1158,6 @@ plugin-test-harness/
 │   │   └── types.ts                  # Session state
 │   │
 │   ├── integrations/
-│   │   └── superpowers.ts           # Detect and optionally leverage Superpowers
-│   │
 │   └── shared/
 │       ├── errors.ts                # Error types and helpers
 │       ├── logger.ts                # Dual-channel: conversation-level reporting + debug log
@@ -1409,9 +1395,8 @@ Iteration 3:
   - Remaining 2 failures are in firewall management tools
   - Claude diagnoses: these tools assume iptables but the test VM has nftables
   - Claude: "These failures require adding nftables support alongside iptables.
-    This is an architectural change affecting 3 files. I'll use Superpowers
-    to plan and implement this."
-  - [Superpowers brainstorm → plan → implement cycle]
+    This is an architectural change affecting 3 files."
+  - Claude plans and implements the changes
   - Reloads
 
 Iteration 4:
@@ -1537,8 +1522,8 @@ Design decisions from the collaborative design process and document drafting, fo
 | 22 | Build system discovery | Convention-based, human fallback | Works for most plugins, graceful degradation |
 | 23 | Plugin configuration | Schema-read + Claude defaults + human for secrets | Minimal human burden, accurate config |
 | 24 | Service dependencies | Source analysis + auto-provision | Reduces manual setup |
-| 25 | Architectural changes | Superpowers if available, Claude judgment otherwise | Best tool for complex restructuring |
-| 26 | Human alteration UX | Natural language description → PTH implements | Low friction, leverages Claude's interpretation |
+| 25 | Architectural changes | Claude judgment | Handles restructuring directly |
+| 26 | Human alteration UX | Natural language description → PTH implements | Low friction, uses Claude's interpretation |
 | 27 | Observability | Summary in chat, detail on request | Clean conversation without log noise |
 | 28 | Implementation language | TypeScript with MCP SDK | Consistent with existing plugin ecosystem |
 | 29 | Session scope | One plugin, one environment at a time | Simple, focused. Reprovisioning available if tier needs to change |

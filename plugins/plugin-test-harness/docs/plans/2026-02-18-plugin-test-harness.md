@@ -1,7 +1,5 @@
 # Plugin Test Harness (PTH) Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 > **⚠ IMPLEMENTATION DIVERGENCE NOTES** (updated post-implementation):
 > - **Dynamic tool registration was not implemented.** `notifications/tools/list_changed` calls in this plan were reverted. All 19 tools are always registered — no dormant/active split.
 > - **`impact.ts` was not created.** Source file → test dependency mapping lives in `src/testing/utils.ts`.
@@ -25,7 +23,7 @@ Full design is in `docs/PTH-DESIGN.md`. Key decisions made in the pre-implementa
 - **No PTH MCP client** — Claude calls target plugin tools natively; PTH doesn't proxy.
 - **Two modes** — `mcp` (for MCP server plugins) and `plugin` (for skill/command/hook plugins).
 - **19 tools** — 3 dormant, 16 session. Down from 45 in original design.
-- **Removed features** — Superpowers integration, `_i` assertion variants, documentation patches, parallel execution, code coverage, Docker/VM environments, performance phase, flakiness detection, cross-distro verification.
+- **Removed features** — `_i` assertion variants, documentation patches, parallel execution, code coverage, Docker/VM environments, performance phase, flakiness detection, cross-distro verification.
 - **Deferred features** — CI export, Tier 3 VM, performance phase.
 
 ---
