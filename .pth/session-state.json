@@ -1,0 +1,27 @@
+{
+  "sessionId": "pth/plugin-test-harness-2026-02-21-1c63e9",
+  "branch": "pth/plugin-test-harness-2026-02-21-1c63e9",
+  "worktreePath": "/tmp/pth-worktree-plugin-test-harness-2026-02-21-1c63e9",
+  "pluginPath": "/home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness",
+  "pluginName": "plugin-test-harness",
+  "pluginMode": "mcp",
+  "pluginRelPath": "plugins/plugin-test-harness",
+  "startedAt": "2026-02-21T02:55:53.003Z",
+  "iteration": 1,
+  "testCount": 0,
+  "passingCount": 15,
+  "failingCount": 2,
+  "convergenceTrend": "unknown",
+  "activeFailures": [
+    {
+      "testName": "pth_apply_fix — valid input",
+      "category": "",
+      "lastDiagnosisSummary": "files: [] — PTH Error [INVALID_PLUGIN]: applyFix requires at least one file change. Improvement: now returns in-band error (not MCP -32603). Root issue: generator fills array fields with [] regardless of minItems."
+    },
+    {
+      "testName": "pth_revert_fix — valid input",
+      "category": "",
+      "lastDiagnosisSummary": "commitHash: 'abc1234def...' — PTH Error [GIT_ERROR]: bad revision. Improvement: now returns in-band error (not MCP -32603). Root issue: hex placeholder is valid format but non-existent SHA."
+    }
+  ]
+}

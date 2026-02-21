@@ -1,0 +1,249 @@
+id: pth_preflight_valid_input
+name: pth_preflight — valid input
+mode: mcp
+type: single
+tool: pth_preflight
+input:
+  pluginPath: /home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_start_session_valid_input
+name: pth_start_session — valid input
+mode: mcp
+type: single
+tool: pth_start_session
+input:
+  pluginPath: /home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_resume_session_valid_input
+name: pth_resume_session — valid input
+mode: mcp
+type: single
+tool: pth_resume_session
+input:
+  branch: main
+  pluginPath: /home/chris/projects/Claude-Code-Plugins/plugins/plugin-test-harness
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_end_session_valid_input
+name: pth_end_session — valid input
+mode: mcp
+type: single
+tool: pth_end_session
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_get_session_status_valid_input
+name: pth_get_session_status — valid input
+mode: mcp
+type: single
+tool: pth_get_session_status
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_generate_tests_valid_input
+name: pth_generate_tests — valid input
+mode: mcp
+type: single
+tool: pth_generate_tests
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_list_tests_valid_input
+name: pth_list_tests — valid input
+mode: mcp
+type: single
+tool: pth_list_tests
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_create_test_valid_input
+name: pth_create_test — valid input
+mode: mcp
+type: single
+tool: pth_create_test
+input:
+  yaml: |-
+    name: generated-test
+    mode: mcp
+    tool: example
+    expect:
+      success: true
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_edit_test_valid_input
+name: pth_edit_test — valid input
+mode: mcp
+type: single
+tool: pth_edit_test
+input:
+  testId: test-value
+  yaml: |-
+    name: generated-test
+    mode: mcp
+    tool: example
+    expect:
+      success: true
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_record_result_valid_input
+name: pth_record_result — valid input
+mode: mcp
+type: single
+tool: pth_record_result
+input:
+  testId: test-value
+  status: passing
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_get_results_valid_input
+name: pth_get_results — valid input
+mode: mcp
+type: single
+tool: pth_get_results
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_get_test_impact_valid_input
+name: pth_get_test_impact — valid input
+mode: mcp
+type: single
+tool: pth_get_test_impact
+input:
+  files: []
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_apply_fix_valid_input
+name: pth_apply_fix — valid input
+mode: mcp
+type: single
+tool: pth_apply_fix
+input:
+  files: []
+  commitTitle: test-value
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_sync_to_cache_valid_input
+name: pth_sync_to_cache — valid input
+mode: mcp
+type: single
+tool: pth_sync_to_cache
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_reload_plugin_valid_input
+name: pth_reload_plugin — valid input
+mode: mcp
+type: single
+tool: pth_reload_plugin
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_get_fix_history_valid_input
+name: pth_get_fix_history — valid input
+mode: mcp
+type: single
+tool: pth_get_fix_history
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_revert_fix_valid_input
+name: pth_revert_fix — valid input
+mode: mcp
+type: single
+tool: pth_revert_fix
+input:
+  commitHash: abc1234def5678901234567890123456789012
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_diff_session_valid_input
+name: pth_diff_session — valid input
+mode: mcp
+type: single
+tool: pth_diff_session
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10
+
+---
+id: pth_get_iteration_status_valid_input
+name: pth_get_iteration_status — valid input
+mode: mcp
+type: single
+tool: pth_get_iteration_status
+input: {}
+expect:
+  success: true
+generated_from: schema
+timeout_seconds: 10

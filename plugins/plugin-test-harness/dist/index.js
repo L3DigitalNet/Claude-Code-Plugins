@@ -35554,7 +35554,7 @@ var sessionTools = [
       files: external_exports.array(external_exports.object({
         path: external_exports.string().describe("File path relative to plugin root"),
         content: external_exports.string().describe("Full new file content")
-      })),
+      })).min(1, "At least one file change is required"),
       commitTitle: external_exports.string().describe('Git commit title, e.g. "fix: handle null group"'),
       testId: external_exports.string().optional().describe("ID of the test this fix addresses"),
       category: external_exports.string().optional().describe('Failure category, e.g. "runtime-exception"')
@@ -35581,7 +35581,7 @@ var sessionTools = [
     name: "pth_revert_fix",
     description: "Undo a specific fix commit via git revert.",
     inputSchema: external_exports.object({
-      commitHash: external_exports.string()
+      commitHash: external_exports.string().regex(/^[0-9a-f]{7,40}$/i, "commitHash must be a valid git SHA (7\u201340 hex characters)")
     })
   },
   {
@@ -35682,8 +35682,9 @@ init_parser();
 init_utils();
 async function generateMcpTests(options) {
   const tests = [];
+  const includeEdgeCases = options.includeEdgeCases ?? true;
   for (const tool of options.toolSchemas) {
-    const validInput = buildValidInput(tool);
+    const validInput = buildValidInput(tool, options.pluginPath);
     tests.push({
       id: slugify(`${tool.name}_valid_input`),
       name: `${tool.name} \u2014 valid input`,
@@ -35695,21 +35696,23 @@ async function generateMcpTests(options) {
       generated_from: "schema",
       timeout_seconds: 10
     });
-    const required2 = tool.inputSchema?.required ?? [];
-    if (required2.length > 0) {
-      const missingInput = { ...validInput };
-      delete missingInput[required2[0]];
-      tests.push({
-        id: slugify(`${tool.name}_missing_required`),
-        name: `${tool.name} \u2014 missing required field "${required2[0]}"`,
-        mode: "mcp",
-        type: "single",
-        tool: tool.name,
-        input: missingInput,
-        expect: { success: false },
-        generated_from: "schema",
-        timeout_seconds: 10
-      });
+    if (includeEdgeCases) {
+      const required2 = tool.inputSchema?.required ?? [];
+      if (required2.length > 0) {
+        const missingInput = { ...validInput };
+        delete missingInput[required2[0]];
+        tests.push({
+          id: slugify(`${tool.name}_missing_required`),
+          name: `${tool.name} \u2014 missing required field "${required2[0]}"`,
+          mode: "mcp",
+          type: "single",
+          tool: tool.name,
+          input: missingInput,
+          expect: { success: false },
+          generated_from: "schema",
+          timeout_seconds: 10
+        });
+      }
     }
   }
   return tests;
@@ -35730,7 +35733,7 @@ function generatePluginTests(hookScripts) {
   }
   return tests;
 }
-function buildValidInput(tool) {
+function buildValidInput(tool, pluginPath) {
   const input = {};
   const props = tool.inputSchema?.properties ?? {};
   const required2 = tool.inputSchema?.required ?? [];
@@ -35740,12 +35743,32 @@ function buildValidInput(tool) {
       input[field] = "";
       continue;
     }
-    if (prop.type === "string") input[field] = prop.enum ? prop.enum[0] : "test-value";
-    else if (prop.type === "number" || prop.type === "integer") input[field] = 1;
-    else if (prop.type === "boolean") input[field] = true;
-    else if (prop.type === "array") input[field] = [];
-    else if (prop.type === "object") input[field] = {};
-    else input[field] = null;
+    const fieldLower = field.toLowerCase();
+    if (prop.type === "string") {
+      if (prop.enum) {
+        input[field] = prop.enum[0];
+      } else if (fieldLower.includes("path") || fieldLower.includes("dir")) {
+        input[field] = pluginPath;
+      } else if (fieldLower === "branch") {
+        input[field] = "main";
+      } else if (fieldLower.includes("hash") || fieldLower.includes("sha") || fieldLower === "commit") {
+        input[field] = "abc1234def5678901234567890123456789012";
+      } else if (fieldLower === "yaml") {
+        input[field] = "name: generated-test\nmode: mcp\ntool: example\nexpect:\n  success: true";
+      } else {
+        input[field] = "test-value";
+      }
+    } else if (prop.type === "number" || prop.type === "integer") {
+      input[field] = 1;
+    } else if (prop.type === "boolean") {
+      input[field] = true;
+    } else if (prop.type === "array") {
+      input[field] = [];
+    } else if (prop.type === "object") {
+      input[field] = {};
+    } else {
+      input[field] = null;
+    }
   }
   return input;
 }
@@ -35994,7 +36017,7 @@ Report: ${reportPath}`);
           if (!currentSession) {
             return respond("No PTH session active. Call pth_start_session first.");
           }
-          return handleSessionTool(toolName, args, currentSession);
+          return await handleSessionTool(toolName, args, currentSession);
         }
       }
     } catch (err) {
@@ -36026,11 +36049,11 @@ Report: ${reportPath}`);
       }
       // ── Tests ──────────────────────────────────────────────────────
       case "pth_generate_tests": {
-        const { toolSchemas } = args;
+        const { toolSchemas, includeEdgeCases } = args;
         let tests;
         if (session.pluginMode === "mcp" && toolSchemas) {
           await writeToolSchemasCache(session.worktreePath, toolSchemas);
-          tests = await generateMcpTests({ pluginPath: session.worktreePath, toolSchemas });
+          tests = await generateMcpTests({ pluginPath: session.pluginPath, toolSchemas, includeEdgeCases });
         } else {
           tests = generatePluginTests([]);
         }
