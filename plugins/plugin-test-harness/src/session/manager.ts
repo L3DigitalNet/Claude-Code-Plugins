@@ -77,6 +77,29 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
   const pluginMode = await detectPluginMode(args.pluginPath);
   await detectBuildSystem(args.pluginPath);
 
+  // Enforce the session lock — reject if another Claude instance has an active session.
+  // Uses the same live-PID check as preflight so stale locks (dead PID) are silently ignored.
+  {
+    const activeLockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
+    try {
+      const raw = await fs.readFile(activeLockPath, 'utf-8');
+      const lock = JSON.parse(raw) as { pid: number; branch: string };
+      try {
+        process.kill(lock.pid, 0);  // throws if PID is dead
+        throw new PTHError(
+          PTHErrorCode.SESSION_ALREADY_ACTIVE,
+          `Session already active (PID ${lock.pid}, branch ${lock.branch}). Call pth_end_session first, or run pth_preflight to verify.`
+        );
+      } catch (e) {
+        if (e instanceof PTHError) throw e;  // re-throw our own error, not the kill signal error
+        // PID is dead — stale lock, fall through and overwrite it
+      }
+    } catch (e) {
+      if (e instanceof PTHError) throw e;
+      // Lock file missing or unreadable — no active session, proceed
+    }
+  }
+
   // Resolve git repo root — plugin may be a subdirectory of a larger mono-repo.
   // pluginRelPath is the relative path from the repo root to the plugin directory.
   // All file writes (pth_apply_fix, sync, build) use path.join(worktreePath, pluginRelPath, ...).
