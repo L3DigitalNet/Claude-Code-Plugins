@@ -3234,8 +3234,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path16) {
-      let input = path16;
+    function removeDotSegments(path17) {
+      let input = path17;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3434,8 +3434,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path16, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path16 && path16 !== "/" ? path16 : void 0;
+        const [path17, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path17 && path17 !== "/" ? path17 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6797,12 +6797,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs10, exportName) {
+    function addFormats(ajv, list, fs11, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs10[f]);
+        ajv.addFormat(f, fs11[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -6887,17 +6887,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path16) {
-      const ctrl = callVisitor(key, node, visitor, path16);
+    function visit_(key, node, visitor, path17) {
+      const ctrl = callVisitor(key, node, visitor, path17);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path16, ctrl);
-        return visit_(key, ctrl, visitor, path16);
+        replaceNode(key, path17, ctrl);
+        return visit_(key, ctrl, visitor, path17);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path16 = Object.freeze(path16.concat(node));
+          path17 = Object.freeze(path17.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = visit_(i2, node.items[i2], visitor, path16);
+            const ci = visit_(i2, node.items[i2], visitor, path17);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6908,13 +6908,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path16 = Object.freeze(path16.concat(node));
-          const ck = visit_("key", node.key, visitor, path16);
+          path17 = Object.freeze(path17.concat(node));
+          const ck = visit_("key", node.key, visitor, path17);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path16);
+          const cv = visit_("value", node.value, visitor, path17);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6935,17 +6935,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path16) {
-      const ctrl = await callVisitor(key, node, visitor, path16);
+    async function visitAsync_(key, node, visitor, path17) {
+      const ctrl = await callVisitor(key, node, visitor, path17);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path16, ctrl);
-        return visitAsync_(key, ctrl, visitor, path16);
+        replaceNode(key, path17, ctrl);
+        return visitAsync_(key, ctrl, visitor, path17);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path16 = Object.freeze(path16.concat(node));
+          path17 = Object.freeze(path17.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = await visitAsync_(i2, node.items[i2], visitor, path16);
+            const ci = await visitAsync_(i2, node.items[i2], visitor, path17);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6956,13 +6956,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path16 = Object.freeze(path16.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path16);
+          path17 = Object.freeze(path17.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path17);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path16);
+          const cv = await visitAsync_("value", node.value, visitor, path17);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6989,23 +6989,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path16) {
+    function callVisitor(key, node, visitor, path17) {
       if (typeof visitor === "function")
-        return visitor(key, node, path16);
+        return visitor(key, node, path17);
       if (identity3.isMap(node))
-        return visitor.Map?.(key, node, path16);
+        return visitor.Map?.(key, node, path17);
       if (identity3.isSeq(node))
-        return visitor.Seq?.(key, node, path16);
+        return visitor.Seq?.(key, node, path17);
       if (identity3.isPair(node))
-        return visitor.Pair?.(key, node, path16);
+        return visitor.Pair?.(key, node, path17);
       if (identity3.isScalar(node))
-        return visitor.Scalar?.(key, node, path16);
+        return visitor.Scalar?.(key, node, path17);
       if (identity3.isAlias(node))
-        return visitor.Alias?.(key, node, path16);
+        return visitor.Alias?.(key, node, path17);
       return void 0;
     }
-    function replaceNode(key, path16, node) {
-      const parent = path16[path16.length - 1];
+    function replaceNode(key, path17, node) {
+      const parent = path17[path17.length - 1];
       if (identity3.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity3.isPair(parent)) {
@@ -7613,10 +7613,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity3 = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path16, value) {
+    function collectionFromPath(schema, path17, value) {
       let v = value;
-      for (let i2 = path16.length - 1; i2 >= 0; --i2) {
-        const k = path16[i2];
+      for (let i2 = path17.length - 1; i2 >= 0; --i2) {
+        const k = path17[i2];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a2 = [];
           a2[k] = v;
@@ -7635,7 +7635,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path16) => path16 == null || typeof path16 === "object" && !!path16[Symbol.iterator]().next().done;
+    var isEmptyPath = (path17) => path17 == null || typeof path17 === "object" && !!path17[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -7665,11 +7665,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path16, value) {
-        if (isEmptyPath(path16))
+      addIn(path17, value) {
+        if (isEmptyPath(path17))
           this.add(value);
         else {
-          const [key, ...rest] = path16;
+          const [key, ...rest] = path17;
           const node = this.get(key, true);
           if (identity3.isCollection(node))
             node.addIn(rest, value);
@@ -7683,8 +7683,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path16) {
-        const [key, ...rest] = path16;
+      deleteIn(path17) {
+        const [key, ...rest] = path17;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -7698,8 +7698,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path16, keepScalar) {
-        const [key, ...rest] = path16;
+      getIn(path17, keepScalar) {
+        const [key, ...rest] = path17;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity3.isScalar(node) ? node.value : node;
@@ -7717,8 +7717,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path16) {
-        const [key, ...rest] = path16;
+      hasIn(path17) {
+        const [key, ...rest] = path17;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -7728,8 +7728,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path16, value) {
-        const [key, ...rest] = path16;
+      setIn(path17, value) {
+        const [key, ...rest] = path17;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -10233,9 +10233,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path16, value) {
+      addIn(path17, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path16, value);
+          this.contents.addIn(path17, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -10310,14 +10310,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path16) {
-        if (Collection.isEmptyPath(path16)) {
+      deleteIn(path17) {
+        if (Collection.isEmptyPath(path17)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path16) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path17) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -10332,10 +10332,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path16, keepScalar) {
-        if (Collection.isEmptyPath(path16))
+      getIn(path17, keepScalar) {
+        if (Collection.isEmptyPath(path17))
           return !keepScalar && identity3.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity3.isCollection(this.contents) ? this.contents.getIn(path16, keepScalar) : void 0;
+        return identity3.isCollection(this.contents) ? this.contents.getIn(path17, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -10346,10 +10346,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path16) {
-        if (Collection.isEmptyPath(path16))
+      hasIn(path17) {
+        if (Collection.isEmptyPath(path17))
           return this.contents !== void 0;
-        return identity3.isCollection(this.contents) ? this.contents.hasIn(path16) : false;
+        return identity3.isCollection(this.contents) ? this.contents.hasIn(path17) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -10366,13 +10366,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path16, value) {
-        if (Collection.isEmptyPath(path16)) {
+      setIn(path17, value) {
+        if (Collection.isEmptyPath(path17)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path16), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path17), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path16, value);
+          this.contents.setIn(path17, value);
         }
       }
       /**
@@ -12324,9 +12324,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path16) => {
+    visit.itemAtPath = (cst, path17) => {
       let item = cst;
-      for (const [field, index] of path16) {
+      for (const [field, index] of path17) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -12335,23 +12335,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path16) => {
-      const parent = visit.itemAtPath(cst, path16.slice(0, -1));
-      const field = path16[path16.length - 1][0];
+    visit.parentCollection = (cst, path17) => {
+      const parent = visit.itemAtPath(cst, path17.slice(0, -1));
+      const field = path17[path17.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path16, item, visitor) {
-      let ctrl = visitor(item, path16);
+    function _visit(path17, item, visitor) {
+      let ctrl = visitor(item, path17);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i2 = 0; i2 < token.items.length; ++i2) {
-            const ci = _visit(Object.freeze(path16.concat([[field, i2]])), token.items[i2], visitor);
+            const ci = _visit(Object.freeze(path17.concat([[field, i2]])), token.items[i2], visitor);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -12362,10 +12362,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path16);
+            ctrl = ctrl(item, path17);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path16) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path17) : ctrl;
     }
     exports.visit = visit;
   }
@@ -13650,14 +13650,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs10 = this.flowScalar(this.type);
+              const fs11 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs10, sep: [] });
+                map.items.push({ start, key: fs11, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs10);
+                this.stack.push(fs11);
               } else {
-                Object.assign(it, { key: fs10, sep: [] });
+                Object.assign(it, { key: fs11, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -13785,13 +13785,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs10 = this.flowScalar(this.type);
+              const fs11 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs10, sep: [] });
+                fc.items.push({ start: [], key: fs11, sep: [] });
               else if (it.sep)
-                this.stack.push(fs10);
+                this.stack.push(fs11);
               else
-                Object.assign(it, { key: fs10, sep: [] });
+                Object.assign(it, { key: fs11, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -15179,8 +15179,8 @@ var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports, module) {
     module.exports = isexe;
     isexe.sync = sync;
-    var fs10 = __require("fs");
-    function checkPathExt(path16, options) {
+    var fs11 = __require("fs");
+    function checkPathExt(path17, options) {
       var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -15191,25 +15191,25 @@ var require_windows = __commonJS({
       }
       for (var i2 = 0; i2 < pathext.length; i2++) {
         var p = pathext[i2].toLowerCase();
-        if (p && path16.substr(-p.length).toLowerCase() === p) {
+        if (p && path17.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat, path16, options) {
+    function checkStat(stat, path17, options) {
       if (!stat.isSymbolicLink() && !stat.isFile()) {
         return false;
       }
-      return checkPathExt(path16, options);
+      return checkPathExt(path17, options);
     }
-    function isexe(path16, options, cb) {
-      fs10.stat(path16, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, path16, options));
+    function isexe(path17, options, cb) {
+      fs11.stat(path17, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path17, options));
       });
     }
-    function sync(path16, options) {
-      return checkStat(fs10.statSync(path16), path16, options);
+    function sync(path17, options) {
+      return checkStat(fs11.statSync(path17), path17, options);
     }
   }
 });
@@ -15219,14 +15219,14 @@ var require_mode = __commonJS({
   "node_modules/isexe/mode.js"(exports, module) {
     module.exports = isexe;
     isexe.sync = sync;
-    var fs10 = __require("fs");
-    function isexe(path16, options, cb) {
-      fs10.stat(path16, function(er, stat) {
+    var fs11 = __require("fs");
+    function isexe(path17, options, cb) {
+      fs11.stat(path17, function(er, stat) {
         cb(er, er ? false : checkStat(stat, options));
       });
     }
-    function sync(path16, options) {
-      return checkStat(fs10.statSync(path16), options);
+    function sync(path17, options) {
+      return checkStat(fs11.statSync(path17), options);
     }
     function checkStat(stat, options) {
       return stat.isFile() && checkMode(stat, options);
@@ -15250,7 +15250,7 @@ var require_mode = __commonJS({
 // node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "node_modules/isexe/index.js"(exports, module) {
-    var fs10 = __require("fs");
+    var fs11 = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -15259,7 +15259,7 @@ var require_isexe = __commonJS({
     }
     module.exports = isexe;
     isexe.sync = sync;
-    function isexe(path16, options, cb) {
+    function isexe(path17, options, cb) {
       if (typeof options === "function") {
         cb = options;
         options = {};
@@ -15269,7 +15269,7 @@ var require_isexe = __commonJS({
           throw new TypeError("callback not provided");
         }
         return new Promise(function(resolve, reject) {
-          isexe(path16, options || {}, function(er, is) {
+          isexe(path17, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
@@ -15278,7 +15278,7 @@ var require_isexe = __commonJS({
           });
         });
       }
-      core(path16, options || {}, function(er, is) {
+      core(path17, options || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options && options.ignoreErrors) {
             er = null;
@@ -15288,9 +15288,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync(path16, options) {
+    function sync(path17, options) {
       try {
-        return core.sync(path16, options || {});
+        return core.sync(path17, options || {});
       } catch (er) {
         if (options && options.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -15306,7 +15306,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports, module) {
     var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path16 = __require("path");
+    var path17 = __require("path");
     var COLON = isWindows ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -15344,7 +15344,7 @@ var require_which = __commonJS({
           return opt.all && found.length ? resolve(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path16.join(pathPart, cmd);
+        const pCmd = path17.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         resolve(subStep(p, i2, 0));
       });
@@ -15371,7 +15371,7 @@ var require_which = __commonJS({
       for (let i2 = 0; i2 < pathEnv.length; i2++) {
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path16.join(pathPart, cmd);
+        const pCmd = path17.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -15419,7 +15419,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports, module) {
     "use strict";
-    var path16 = __require("path");
+    var path17 = __require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -15437,7 +15437,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env[getPathKey({ env })],
-          pathExt: withoutPathExt ? path16.delimiter : void 0
+          pathExt: withoutPathExt ? path17.delimiter : void 0
         });
       } catch (e) {
       } finally {
@@ -15446,7 +15446,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path16.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path17.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -15500,8 +15500,8 @@ var require_shebang_command = __commonJS({
       if (!match) {
         return null;
       }
-      const [path16, argument] = match[0].replace(/#! ?/, "").split(" ");
-      const binary = path16.split("/").pop();
+      const [path17, argument] = match[0].replace(/#! ?/, "").split(" ");
+      const binary = path17.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -15514,16 +15514,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "node_modules/cross-spawn/lib/util/readShebang.js"(exports, module) {
     "use strict";
-    var fs10 = __require("fs");
+    var fs11 = __require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs10.openSync(command, "r");
-        fs10.readSync(fd, buffer, 0, size, 0);
-        fs10.closeSync(fd);
+        fd = fs11.openSync(command, "r");
+        fs11.readSync(fd, buffer, 0, size, 0);
+        fs11.closeSync(fd);
       } catch (e) {
       }
       return shebangCommand(buffer.toString());
@@ -15536,7 +15536,7 @@ var require_readShebang = __commonJS({
 var require_parse = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports, module) {
     "use strict";
-    var path16 = __require("path");
+    var path17 = __require("path");
     var resolveCommand = require_resolveCommand();
     var escape2 = require_escape();
     var readShebang = require_readShebang();
@@ -15561,7 +15561,7 @@ var require_parse = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path16.normalize(parsed.command);
+        parsed.command = path17.normalize(parsed.command);
         parsed.command = escape2.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -19691,13 +19691,13 @@ var init_output_sync = __esm({
       }
     };
     writeToFiles = (serializedResult, stdioItems, outputFiles) => {
-      for (const { path: path16, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
-        const pathString = typeof path16 === "string" ? path16 : path16.toString();
+      for (const { path: path17, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
+        const pathString = typeof path17 === "string" ? path17 : path17.toString();
         if (append || outputFiles.has(pathString)) {
-          appendFileSync(path16, serializedResult);
+          appendFileSync(path17, serializedResult);
         } else {
           outputFiles.add(pathString);
-          writeFileSync(path16, serializedResult);
+          writeFileSync(path17, serializedResult);
         }
       }
     };
@@ -22582,6 +22582,14 @@ async function commitFiles(worktreePath, filePaths, message) {
     for (const filePath of filePaths) {
       await run("git", ["add", filePath], { cwd: worktreePath });
     }
+    const staged = await run("git", ["diff", "--name-only", "--cached"], { cwd: worktreePath });
+    if (!staged.stdout.trim()) {
+      throw new PTHError(
+        "GIT_ERROR" /* GIT_ERROR */,
+        `Nothing staged after git add \u2014 files may be gitignored or paths may be wrong.
+Attempted: ${filePaths.join(", ")}`
+      );
+    }
     const result = await runOrThrow("git", ["commit", "-m", message], { cwd: worktreePath });
     const match = result.stdout.match(/\[[\w/.-]+ ([a-f0-9]+)\]/);
     if (!match?.[1]) {
@@ -22589,8 +22597,10 @@ async function commitFiles(worktreePath, filePaths, message) {
     }
     return match[1];
   } catch (err) {
-    if (err instanceof PTHError) throw err;
+    if (err instanceof PTHError && err.code !== "BUILD_FAILED" /* BUILD_FAILED */) throw err;
+    const context = err instanceof PTHError ? err.context : {};
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Failed to commit changes in: ${worktreePath}`, {
+      ...context,
       cause: err instanceof Error ? err.message : String(err)
     });
   }
@@ -22661,21 +22671,21 @@ var init_git = __esm({
 });
 
 // src/session/state-persister.ts
-import fs3 from "fs/promises";
-import path8 from "path";
+import fs4 from "fs/promises";
+import path9 from "path";
 async function writeSessionState(worktreePath, state) {
-  const dir = path8.join(worktreePath, ".pth");
-  await fs3.mkdir(dir, { recursive: true });
-  await fs3.writeFile(
-    path8.join(worktreePath, STATE_FILE),
+  const dir = path9.join(worktreePath, ".pth");
+  await fs4.mkdir(dir, { recursive: true });
+  await fs4.writeFile(
+    path9.join(worktreePath, STATE_FILE),
     JSON.stringify(state, null, 2),
     "utf-8"
   );
 }
 async function readSessionState(worktreePath) {
-  const filePath = path8.join(worktreePath, STATE_FILE);
+  const filePath = path9.join(worktreePath, STATE_FILE);
   try {
-    const raw = await fs3.readFile(filePath, "utf-8");
+    const raw = await fs4.readFile(filePath, "utf-8");
     return JSON.parse(raw);
   } catch (err) {
     if (err.code === "ENOENT") return null;
@@ -22698,23 +22708,23 @@ __export(detector_exports, {
   detectPluginName: () => detectPluginName,
   readMcpConfig: () => readMcpConfig
 });
-import fs5 from "fs/promises";
-import path10 from "path";
+import fs6 from "fs/promises";
+import path11 from "path";
 async function detectPluginMode(pluginPath) {
   try {
-    await fs5.access(pluginPath);
+    await fs6.access(pluginPath);
   } catch {
     throw new PTHError("PLUGIN_NOT_FOUND" /* PLUGIN_NOT_FOUND */, `Plugin path not found: ${pluginPath}`);
   }
-  const mcpJsonPath = path10.join(pluginPath, ".mcp.json");
+  const mcpJsonPath = path11.join(pluginPath, ".mcp.json");
   try {
-    await fs5.access(mcpJsonPath);
+    await fs6.access(mcpJsonPath);
     return "mcp";
   } catch {
   }
-  const claudePluginDir = path10.join(pluginPath, ".claude-plugin");
+  const claudePluginDir = path11.join(pluginPath, ".claude-plugin");
   try {
-    await fs5.access(claudePluginDir);
+    await fs6.access(claudePluginDir);
     return "plugin";
   } catch {
     throw new PTHError(
@@ -22724,12 +22734,12 @@ async function detectPluginMode(pluginPath) {
   }
 }
 async function detectBuildSystem(pluginPath) {
-  const pkgPath = path10.join(pluginPath, "package.json");
+  const pkgPath = path11.join(pluginPath, "package.json");
   try {
-    const raw = await fs5.readFile(pkgPath, "utf-8");
+    const raw = await fs6.readFile(pkgPath, "utf-8");
     const pkg = JSON.parse(raw);
     const hasBuildScript = !!pkg.scripts?.["build"];
-    const hasTsConfig = await fileExists(path10.join(pluginPath, "tsconfig.json"));
+    const hasTsConfig = await fileExists(path11.join(pluginPath, "tsconfig.json"));
     return {
       installCommand: ["npm", "install"],
       buildCommand: hasBuildScript ? ["npm", "run", "build"] : hasTsConfig ? ["npx", "tsc"] : null,
@@ -22738,7 +22748,7 @@ async function detectBuildSystem(pluginPath) {
     };
   } catch {
   }
-  if (await fileExists(path10.join(pluginPath, "pyproject.toml")) || await fileExists(path10.join(pluginPath, "setup.py"))) {
+  if (await fileExists(path11.join(pluginPath, "pyproject.toml")) || await fileExists(path11.join(pluginPath, "setup.py"))) {
     return {
       installCommand: ["pip", "install", "-e", "."],
       buildCommand: null,
@@ -22746,7 +22756,7 @@ async function detectBuildSystem(pluginPath) {
       language: "python"
     };
   }
-  if (await fileExists(path10.join(pluginPath, "tsconfig.json"))) {
+  if (await fileExists(path11.join(pluginPath, "tsconfig.json"))) {
     return {
       installCommand: null,
       buildCommand: ["npx", "tsc"],
@@ -22754,7 +22764,7 @@ async function detectBuildSystem(pluginPath) {
       language: "typescript"
     };
   }
-  if (await fileExists(path10.join(pluginPath, "Makefile")) || await fileExists(path10.join(pluginPath, "install.sh"))) {
+  if (await fileExists(path11.join(pluginPath, "Makefile")) || await fileExists(path11.join(pluginPath, "install.sh"))) {
     return {
       installCommand: null,
       buildCommand: null,
@@ -22770,10 +22780,10 @@ async function detectBuildSystem(pluginPath) {
   };
 }
 async function readMcpConfig(pluginPath) {
-  const mcpJsonPath = path10.join(pluginPath, ".mcp.json");
+  const mcpJsonPath = path11.join(pluginPath, ".mcp.json");
   let raw;
   try {
-    raw = await fs5.readFile(mcpJsonPath, "utf-8");
+    raw = await fs6.readFile(mcpJsonPath, "utf-8");
   } catch (err) {
     if (err.code === "ENOENT") return null;
     throw err;
@@ -22795,27 +22805,27 @@ async function readMcpConfig(pluginPath) {
   return { serverName, ...serverConfig };
 }
 async function detectPluginName(pluginPath) {
-  const manifestPath = path10.join(pluginPath, ".claude-plugin", "plugin.json");
+  const manifestPath = path11.join(pluginPath, ".claude-plugin", "plugin.json");
   try {
-    const raw = await fs5.readFile(manifestPath, "utf-8");
+    const raw = await fs6.readFile(manifestPath, "utf-8");
     const manifest = JSON.parse(raw);
     if (manifest.name) return manifest.name;
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
-  const pkgPath = path10.join(pluginPath, "package.json");
+  const pkgPath = path11.join(pluginPath, "package.json");
   try {
-    const raw = await fs5.readFile(pkgPath, "utf-8");
+    const raw = await fs6.readFile(pkgPath, "utf-8");
     const pkg = JSON.parse(raw);
     if (pkg.name) return pkg.name;
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
-  return path10.basename(pluginPath);
+  return path11.basename(pluginPath);
 }
 async function fileExists(p) {
   try {
-    await fs5.access(p);
+    await fs6.access(p);
     return true;
   } catch {
     return false;
@@ -22829,8 +22839,8 @@ var init_detector = __esm({
 });
 
 // src/testing/store.ts
-import fs6 from "fs/promises";
-import path11 from "path";
+import fs7 from "fs/promises";
+import path12 from "path";
 var import_yaml2, TestStore;
 var init_store = __esm({
   "src/testing/store.ts"() {
@@ -22861,19 +22871,19 @@ var init_store = __esm({
         return this.tests.size;
       }
       async persistToDir(dirPath) {
-        await fs6.mkdir(dirPath, { recursive: true });
+        await fs7.mkdir(dirPath, { recursive: true });
         const mcpTests = this.filter((t) => t.mode === "mcp");
         const pluginTests = this.filter((t) => t.mode === "plugin");
         if (mcpTests.length > 0) {
-          await fs6.writeFile(
-            path11.join(dirPath, "mcp-tests.yaml"),
+          await fs7.writeFile(
+            path12.join(dirPath, "mcp-tests.yaml"),
             mcpTests.map((t) => (0, import_yaml2.stringify)(t)).join("\n---\n"),
             "utf-8"
           );
         }
         if (pluginTests.length > 0) {
-          await fs6.writeFile(
-            path11.join(dirPath, "plugin-tests.yaml"),
+          await fs7.writeFile(
+            path12.join(dirPath, "plugin-tests.yaml"),
             pluginTests.map((t) => (0, import_yaml2.stringify)(t)).join("\n---\n"),
             "utf-8"
           );
@@ -22893,13 +22903,13 @@ __export(manager_exports, {
   startSession: () => startSession,
   testStore: () => testStore
 });
-import fs7 from "fs/promises";
-import path12 from "path";
+import fs8 from "fs/promises";
+import path13 from "path";
 import os from "os";
 async function preflight(args) {
   const checkLines = [];
   try {
-    await fs7.access(args.pluginPath);
+    await fs8.access(args.pluginPath);
     checkLines.push(`\u2713 Plugin path exists: ${args.pluginPath}`);
   } catch {
     return `\u2717 Plugin path not found: ${args.pluginPath}`;
@@ -22918,9 +22928,9 @@ async function preflight(args) {
   } catch {
     checkLines.push(`\u2717 Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
   }
-  const lockPath = path12.join(args.pluginPath, ".pth", "active-session.lock");
+  const lockPath = path13.join(args.pluginPath, ".pth", "active-session.lock");
   try {
-    const lock = JSON.parse(await fs7.readFile(lockPath, "utf-8"));
+    const lock = JSON.parse(await fs8.readFile(lockPath, "utf-8"));
     try {
       process.kill(lock.pid, 0);
       checkLines.push(`\u26A0 Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
@@ -22937,10 +22947,10 @@ async function startSession(args) {
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
   await detectBuildSystem(args.pluginPath);
+  const lockPath = path13.join(args.pluginPath, ".pth", "active-session.lock");
   {
-    const activeLockPath = path12.join(args.pluginPath, ".pth", "active-session.lock");
     try {
-      const raw = await fs7.readFile(activeLockPath, "utf-8");
+      const raw = await fs8.readFile(lockPath, "utf-8");
       const lock = JSON.parse(raw);
       try {
         process.kill(lock.pid, 0);
@@ -22956,21 +22966,20 @@ async function startSession(args) {
     }
   }
   const repoRoot = await getGitRepoRoot(args.pluginPath);
-  const pluginRelPath = path12.relative(repoRoot, args.pluginPath);
+  const pluginRelPath = path13.relative(repoRoot, args.pluginPath);
   const branch = generateSessionBranch(pluginName);
   await pruneWorktrees(repoRoot);
   if (await checkBranchExists(repoRoot, branch)) {
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${branch} already exists \u2014 this should be extremely rare. Try again.`);
   }
-  const worktreePath = path12.join(os.tmpdir(), `pth-worktree-${branch.split("/")[1]}`);
-  const lockPath = path12.join(args.pluginPath, ".pth", "active-session.lock");
+  const worktreePath = path13.join(os.tmpdir(), `pth-worktree-${branch.split("/")[1]}`);
   try {
     await createBranch(repoRoot, branch);
     await addWorktree(repoRoot, worktreePath, branch);
-    await fs7.mkdir(path12.join(args.pluginPath, ".pth"), { recursive: true });
-    await fs7.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: (/* @__PURE__ */ new Date()).toISOString() }), "utf-8");
+    await fs8.mkdir(path13.join(args.pluginPath, ".pth"), { recursive: true });
+    await fs8.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: (/* @__PURE__ */ new Date()).toISOString() }), "utf-8");
     testStore = new TestStore();
-    const existingTests = await loadTestsFromDir(path12.join(worktreePath, ".pth", "tests"));
+    const existingTests = await loadTestsFromDir(path13.join(worktreePath, ".pth", "tests"));
     existingTests.forEach((t) => testStore.add(t));
     const state = {
       sessionId: branch,
@@ -23004,14 +23013,14 @@ async function startSession(args) {
       `Mode:      ${pluginMode}`,
       `Plugin:    ${pluginName}`,
       pluginRelPath ? `Subpath:   ${pluginRelPath}` : "",
-      `Plugin dir: ${path12.join(worktreePath, pluginRelPath)}`,
+      `Plugin dir: ${path13.join(worktreePath, pluginRelPath)}`,
       existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
       ``,
       nextStep
     ].filter((l) => l !== void 0);
     return { state, message: lines.join("\n") };
   } catch (err) {
-    await fs7.rm(lockPath, { force: true });
+    await fs8.rm(lockPath, { force: true });
     await removeWorktree(repoRoot, worktreePath).catch(() => {
     });
     await run("git", ["branch", "-D", branch], { cwd: repoRoot }).catch(() => {
@@ -23027,21 +23036,21 @@ async function resumeSession(args) {
     );
   }
   const repoRoot = await getGitRepoRoot(args.pluginPath);
-  const worktreePath = path12.join(os.tmpdir(), `pth-worktree-${args.branch.split("/")[1]}`);
+  const worktreePath = path13.join(os.tmpdir(), `pth-worktree-${args.branch.split("/")[1]}`);
   if (!await checkBranchExists(repoRoot, args.branch)) {
     throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${args.branch} not found in ${args.pluginPath}`);
   }
   await pruneWorktrees(repoRoot);
-  const worktreeExists = await fs7.access(worktreePath).then(() => true).catch(() => false);
+  const worktreeExists = await fs8.access(worktreePath).then(() => true).catch(() => false);
   if (!worktreeExists) {
     await addWorktree(repoRoot, worktreePath, args.branch);
   }
   const savedState = await readSessionState(worktreePath);
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
-  const pluginRelPath = path12.relative(repoRoot, args.pluginPath);
+  const pluginRelPath = path13.relative(repoRoot, args.pluginPath);
   testStore = new TestStore();
-  const tests = await loadTestsFromDir(path12.join(worktreePath, ".pth", "tests"));
+  const tests = await loadTestsFromDir(path13.join(worktreePath, ".pth", "tests"));
   tests.forEach((t) => testStore.add(t));
   const state = savedState ?? {
     sessionId: args.branch,
@@ -23074,15 +23083,15 @@ async function resumeSession(args) {
   return { state, message: lines.join("\n") };
 }
 async function endSession(state) {
-  await testStore.persistToDir(path12.join(state.worktreePath, ".pth", "tests"));
+  await testStore.persistToDir(path13.join(state.worktreePath, ".pth", "tests"));
   const status = await run("git", ["status", "--porcelain"], { cwd: state.worktreePath });
   if (status.stdout.trim()) {
     await commitAll(state.worktreePath, buildCommitMessage("chore: persist PTH test suite", { "PTH-Type": "session-end" }));
   }
   const repoRoot = await getGitRepoRoot(state.pluginPath);
   await removeWorktree(repoRoot, state.worktreePath);
-  const lockPath = path12.join(state.pluginPath, ".pth", "active-session.lock");
-  await fs7.rm(lockPath, { force: true });
+  const lockPath = path13.join(state.pluginPath, ".pth", "active-session.lock");
+  await fs8.rm(lockPath, { force: true });
   return [
     `PTH session ended.`,
     ``,
@@ -23123,8 +23132,8 @@ var report_generator_exports = {};
 __export(report_generator_exports, {
   generateReport: () => generateReport
 });
-import fs8 from "fs/promises";
-import path13 from "path";
+import fs9 from "fs/promises";
+import path14 from "path";
 async function generateReport(worktreePath, options) {
   const { state, iterationHistory: iterationHistory2 } = options;
   const lines = [
@@ -23155,9 +23164,9 @@ async function generateReport(worktreePath, options) {
     ``,
     state.failingCount === 0 ? `All ${state.testCount} tests passing.` : `${state.failingCount} tests still failing at session end.`
   ];
-  const dir = path13.join(worktreePath, ".pth");
-  await fs8.mkdir(dir, { recursive: true });
-  await fs8.writeFile(path13.join(worktreePath, ".pth/SESSION-REPORT.md"), lines.join("\n"), "utf-8");
+  const dir = path14.join(worktreePath, ".pth");
+  await fs9.mkdir(dir, { recursive: true });
+  await fs9.writeFile(path14.join(worktreePath, ".pth/SESSION-REPORT.md"), lines.join("\n"), "utf-8");
 }
 var init_report_generator = __esm({
   "src/session/report-generator.ts"() {
@@ -23172,11 +23181,11 @@ __export(cache_sync_exports, {
   getInstallPath: () => getInstallPath,
   syncToCache: () => syncToCache
 });
-import fs9 from "fs/promises";
-import path14 from "path";
+import fs10 from "fs/promises";
+import path15 from "path";
 import os2 from "os";
 async function syncToCache(worktreePath, cachePath) {
-  await fs9.mkdir(cachePath, { recursive: true });
+  await fs10.mkdir(cachePath, { recursive: true });
   let rsyncResult;
   try {
     rsyncResult = await run("rsync", ["-a", "--delete", "--out-format=%n", `${worktreePath}/`, `${cachePath}/`]);
@@ -23197,13 +23206,13 @@ async function syncToCache(worktreePath, cachePath) {
   return rsyncResult.stdout.split("\n").filter((l) => l.trim()).length;
 }
 function detectCachePath(pluginName) {
-  return path14.join(os2.homedir(), ".claude", "plugins", "cache", pluginName);
+  return path15.join(os2.homedir(), ".claude", "plugins", "cache", pluginName);
 }
 async function getInstallPath(pluginName) {
-  const installedPluginsPath = path14.join(os2.homedir(), ".claude", "plugins", "installed_plugins.json");
+  const installedPluginsPath = path15.join(os2.homedir(), ".claude", "plugins", "installed_plugins.json");
   let raw;
   try {
-    raw = await fs9.readFile(installedPluginsPath, "utf-8");
+    raw = await fs10.readFile(installedPluginsPath, "utf-8");
   } catch {
     return null;
   }
@@ -23425,10 +23434,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path16) {
-  if (!path16)
+function getElementAtPath(obj, path17) {
+  if (!path17)
     return obj;
-  return path16.reduce((acc, key) => acc?.[key], obj);
+  return path17.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -23748,11 +23757,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path16, issues) {
+function prefixIssues(path17, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path16);
+    iss.path.unshift(path17);
     return iss;
   });
 }
@@ -28555,7 +28564,7 @@ var StdioServerTransport = class {
 };
 
 // src/server.ts
-import path15 from "path";
+import path16 from "path";
 
 // node_modules/zod/v3/external.js
 var external_exports = {};
@@ -29035,8 +29044,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path16, errorMaps, issueData } = params;
-  const fullPath = [...path16, ...issueData.path || []];
+  const { data, path: path17, errorMaps, issueData } = params;
+  const fullPath = [...path17, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -29152,11 +29161,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path16, key) {
+  constructor(parent, value, path17, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path16;
+    this._path = path17;
     this._key = key;
   }
   get path() {
@@ -35936,15 +35945,39 @@ init_exec();
 
 // src/plugin/reloader.ts
 init_exec();
+import fs3 from "fs/promises";
+import path8 from "path";
 async function reloadPlugin(worktreePath, buildSystem, pluginStartPattern, onBuildSuccess) {
   let buildOutput = "";
+  if (buildSystem.installCommand) {
+    const nodeModulesPath = path8.join(worktreePath, "node_modules");
+    const hasDeps = await fs3.access(nodeModulesPath).then(() => true).catch(() => false);
+    if (!hasDeps) {
+      const installResult = await run(
+        buildSystem.installCommand[0],
+        buildSystem.installCommand.slice(1),
+        { cwd: worktreePath, timeoutMs: 12e4 }
+      );
+      buildOutput += `[install]
+${installResult.stdout}${installResult.stderr}
+`;
+      if (installResult.exitCode !== 0) {
+        return {
+          buildSucceeded: false,
+          buildOutput,
+          processTerminated: false,
+          message: `Dependency install failed (exit ${installResult.exitCode}). Fix install errors before reloading.`
+        };
+      }
+    }
+  }
   if (buildSystem.buildCommand) {
     const result = await run(
       buildSystem.buildCommand[0],
       buildSystem.buildCommand.slice(1),
       { cwd: worktreePath, timeoutMs: 12e4 }
     );
-    buildOutput = result.stdout + result.stderr;
+    buildOutput += result.stdout + result.stderr;
     if (result.exitCode !== 0) {
       return {
         buildSucceeded: false,
@@ -36034,11 +36067,11 @@ function sleep(ms) {
 init_state_persister();
 
 // src/shared/source-analyzer.ts
-import fs4 from "fs/promises";
-import path9 from "path";
+import fs5 from "fs/promises";
+import path10 from "path";
 async function writeToolSchemasCache(pluginPath, schemas) {
-  const cachePath = path9.join(pluginPath, ".pth-tools-cache.json");
-  await fs4.writeFile(cachePath, JSON.stringify(schemas, null, 2), "utf-8");
+  const cachePath = path10.join(pluginPath, ".pth-tools-cache.json");
+  await fs5.writeFile(cachePath, JSON.stringify(schemas, null, 2), "utf-8");
 }
 
 // src/server.ts
@@ -36098,7 +36131,7 @@ function createServer() {
         case "pth_end_session": {
           if (!currentSession) return respond("No active session.");
           const { generateReport: generateReport2 } = await Promise.resolve().then(() => (init_report_generator(), report_generator_exports));
-          const reportPath = path15.join(currentSession.worktreePath, ".pth/SESSION-REPORT.md");
+          const reportPath = path16.join(currentSession.worktreePath, ".pth/SESSION-REPORT.md");
           await generateReport2(currentSession.worktreePath, {
             state: currentSession,
             allResults: resultsTracker.getAllLatest(),
@@ -36327,7 +36360,7 @@ Next: re-run affected tests, then call pth_get_test_impact to identify which tes
       case "pth_sync_to_cache": {
         const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
         const cachePath = await getInstallPath2(session.pluginName) ?? detectCachePath2(session.pluginName);
-        const pluginWorktreePath = path15.join(session.worktreePath, session.pluginRelPath);
+        const pluginWorktreePath = path16.join(session.worktreePath, session.pluginRelPath);
         try {
           const filesSynced = await syncToCache2(pluginWorktreePath, cachePath);
           const countLine = filesSynced > 0 ? `${filesSynced} file(s) synced` : "No files changed";
@@ -36341,7 +36374,7 @@ Cache path: ${cachePath}`);
       case "pth_reload_plugin": {
         const { detectBuildSystem: detectBuildSystem2 } = await Promise.resolve().then(() => (init_detector(), detector_exports));
         const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
-        const pluginWorktreePath = path15.join(session.worktreePath, session.pluginRelPath);
+        const pluginWorktreePath = path16.join(session.worktreePath, session.pluginRelPath);
         const buildSystem = await detectBuildSystem2(pluginWorktreePath);
         const { processPattern } = args;
         const installPath = await getInstallPath2(session.pluginName);

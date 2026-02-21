@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { run } from '../shared/exec.js';
 import type { BuildSystem } from './types.js';
 
@@ -15,15 +17,38 @@ export async function reloadPlugin(
   pluginStartPattern: string,   // pattern to find process, e.g. path component of start command
   onBuildSuccess?: () => Promise<void>  // called after build succeeds, before process kill (e.g. cache sync)
 ): Promise<ReloadResult> {
-  // Step 1: Build
+  // Step 1: Install dependencies if missing — worktrees are clean checkouts with no
+  // node_modules. Run installCommand once before building so tsc and other bin tools resolve.
   let buildOutput = '';
+  if (buildSystem.installCommand) {
+    const nodeModulesPath = path.join(worktreePath, 'node_modules');
+    const hasDeps = await fs.access(nodeModulesPath).then(() => true).catch(() => false);
+    if (!hasDeps) {
+      const installResult = await run(
+        buildSystem.installCommand[0],
+        buildSystem.installCommand.slice(1),
+        { cwd: worktreePath, timeoutMs: 120_000 }
+      );
+      buildOutput += `[install]\n${installResult.stdout}${installResult.stderr}\n`;
+      if (installResult.exitCode !== 0) {
+        return {
+          buildSucceeded: false,
+          buildOutput,
+          processTerminated: false,
+          message: `Dependency install failed (exit ${installResult.exitCode}). Fix install errors before reloading.`,
+        };
+      }
+    }
+  }
+
+  // Step 2: Build
   if (buildSystem.buildCommand) {
     const result = await run(
       buildSystem.buildCommand[0],
       buildSystem.buildCommand.slice(1),
       { cwd: worktreePath, timeoutMs: 120_000 }
     );
-    buildOutput = result.stdout + result.stderr;
+    buildOutput += result.stdout + result.stderr;
     if (result.exitCode !== 0) {
       return {
         buildSucceeded: false,
@@ -34,7 +59,7 @@ export async function reloadPlugin(
     }
   }
 
-  // Step 1b: Post-build hook (e.g. sync dist to versioned cache) — must run before kill
+  // Step 3: Post-build hook (e.g. sync dist to versioned cache) — must run before kill
   // so the restarted process loads the new binary, not the old cached one.
   if (onBuildSuccess) {
     try {
@@ -49,7 +74,7 @@ export async function reloadPlugin(
     }
   }
 
-  // Step 2: Find PID — prefer pgrep, fall back to ps aux
+  // Step 4: Find PID — prefer pgrep, fall back to ps aux
   let pid: number | undefined;
 
   const pgrepResult = await run('pgrep', ['-f', pluginStartPattern]);
@@ -81,7 +106,7 @@ export async function reloadPlugin(
     };
   }
 
-  // Step 3: SIGTERM with SIGKILL fallback
+  // Step 5: SIGTERM with SIGKILL fallback
   let terminated = false;
   try {
     process.kill(pid, 'SIGTERM');
