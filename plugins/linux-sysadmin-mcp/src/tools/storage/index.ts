@@ -17,7 +17,10 @@ export function registerStorageTools(ctx: PluginContext): void {
   });
 
   registerTool(ctx, { name: "disk_usage_top", description: "Find largest directories under a path.", module: "storage", riskLevel: "read-only", duration: "normal", inputSchema: z.object({ path: z.string().optional().default("/"), limit: z.number().int().min(1).max(50).optional().default(20), depth: z.number().int().min(1).max(5).optional().default(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `sudo -n du -h --max-depth=${(args.depth as number) ?? 1} '${(args.path as string) ?? "/"}' 2>/dev/null | sort -rh | head -n ${(args.limit as number) ?? 20}`, "normal");
+    // --one-file-system prevents du from crossing mount boundaries (NFS, pCloud, /proc, /sys).
+    // Without it, scanning "/" can block for 30+ seconds on network mounts and return empty results.
+    const cmd = `sudo -n du -h --one-file-system --max-depth=${(args.depth as number) ?? 1} '${(args.path as string) ?? "/"}' 2>/dev/null | sort -rh | head -n ${(args.limit as number) ?? 20}`;
+    const r = await executeBash(ctx, cmd, "normal");
     // Parse "size\tpath" du output into structured records (tab-separated by du).
     const entries = r.stdout.trim().split("\n").filter(Boolean).map((line) => {
       const tab = line.indexOf("\t");

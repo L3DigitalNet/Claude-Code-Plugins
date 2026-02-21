@@ -2,6 +2,15 @@
 
 All notable changes to the linux-sysadmin-mcp plugin are documented here.
 
+## [1.1.1] - 2026-02-20
+
+### Fixed
+- implement show_sudoers_reference in sysadmin_session_info
+- implement pure-JS cron next-run calculator in cron_next_runs
+- add --one-file-system to disk_usage_top to prevent cross-mount hang
+- parse /proc/diskstats into structured JSON in perf_disk_io
+
+
 ## [1.1.0] - 2026-02-20
 
 ### Added
