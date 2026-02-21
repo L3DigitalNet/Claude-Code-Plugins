@@ -1,0 +1,249 @@
+[
+  {
+    "name": "pth_preflight",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "pluginPath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pluginPath"
+      ]
+    }
+  },
+  {
+    "name": "pth_start_session",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "pluginPath": {
+          "type": "string"
+        },
+        "sessionNote": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pluginPath"
+      ]
+    }
+  },
+  {
+    "name": "pth_resume_session",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "pluginPath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "branch",
+        "pluginPath"
+      ]
+    }
+  },
+  {
+    "name": "pth_end_session",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_get_session_status",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_generate_tests",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "toolSchemas": {
+          "type": "array"
+        },
+        "includeEdgeCases": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  {
+    "name": "pth_list_tests",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_create_test",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "yaml": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "yaml"
+      ]
+    }
+  },
+  {
+    "name": "pth_edit_test",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "testId": {
+          "type": "string"
+        },
+        "yaml": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "testId",
+        "yaml"
+      ]
+    }
+  },
+  {
+    "name": "pth_record_result",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "testId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "passing",
+            "failing",
+            "skipped"
+          ]
+        },
+        "durationMs": {
+          "type": "number"
+        },
+        "failureReason": {
+          "type": "string"
+        },
+        "claudeNotes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "testId",
+        "status"
+      ]
+    }
+  },
+  {
+    "name": "pth_get_results",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_get_test_impact",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "files"
+      ]
+    }
+  },
+  {
+    "name": "pth_apply_fix",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "minItems": 1
+        },
+        "commitTitle": {
+          "type": "string"
+        },
+        "testId": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "files",
+        "commitTitle"
+      ]
+    }
+  },
+  {
+    "name": "pth_sync_to_cache",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_reload_plugin",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_get_fix_history",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_revert_fix",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "commitHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        }
+      },
+      "required": [
+        "commitHash"
+      ]
+    }
+  },
+  {
+    "name": "pth_diff_session",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "pth_get_iteration_status",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  }
+]
