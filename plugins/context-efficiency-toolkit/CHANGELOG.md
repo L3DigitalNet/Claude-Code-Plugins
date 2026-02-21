@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-02-20
+
+### Added
+- enhance skills and commands for context efficiency review and markdown tightening
+- add new commands and skills for context efficiency review and markdown tightening
+
+### Changed
+- Release context-efficiency-toolkit v0.1.0
+
+### Fixed
+- correct manifest.json command/skill file paths
+
+
 ## [0.1.0] - 2026-02-20
 
 ### Added
