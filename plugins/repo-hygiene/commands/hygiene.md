@@ -1,5 +1,5 @@
 ---
-description: Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.
+description: Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, plugin state consistency, stale uncommitted changes, README freshness (leaf-to-root with implementation cross-reference), and docs/ accuracy.
 ---
 
 # /hygiene [--dry-run]
@@ -43,18 +43,64 @@ Parse each result as JSON. If any script exits non-zero, surface the error immed
 
 Collect all `findings` arrays. Tag each finding with its `check` field value.
 
-## Step 2: Semantic README Scan (Check 3 — inline)
+## Step 2: Semantic README and Docs Scan (Check 3 — inline)
 
-For each plugin directory under `plugins/` that has a `README.md`:
+Perform this scan in **leaf-to-root order**: process plugin READMEs first (2a), then the root README.md (2b), then docs/ files (2c). This ordering ensures child artifacts are verified before the parent documents that reference them.
 
-1. Read the README
-2. **Structural conformance** — check that all required sections from `docs/plugin-readme-template.md` are present. Required headings (any level): `Summary`, `Principles`, `Requirements`, `Installation`, `How It Works`, `Usage`, `Planned Features`, `Known Issues`, `Links`. For each missing required section, add a finding:
+### Step 2a: Plugin READMEs (leaf level)
+
+For each plugin directory under `plugins/` that has a `README.md`, in alphabetical order, read the README and all implementation files in the plugin directory, then apply the following checks:
+
+1. **Template placeholder detection** — Check for any text that appears to be unmodified from `docs/plugin-readme-template.md`, such as literal strings: `One-sentence description`, `Feature one`, `Feature two`, `Issue title`, `/command-name`, `skill-name`, `agent-name`, `Principle Name`, `Step one`, `Step two`, `Step three`. For each placeholder found:
+   - `check: "readme-freshness"`, `severity: "warn"`, `path: "plugins/<name>/README.md"`, `detail: "Contains unmodified template placeholder: '<placeholder text>' — replace with actual content (see docs/plugin-readme-template.md)"`, `auto_fix: false`, `fix_cmd: null`
+
+2. **Structural conformance** — Check that all required sections from `docs/plugin-readme-template.md` are present. Required headings (any level): `Summary`, `Principles`, `Requirements`, `Installation`, `How It Works`, `Usage`, `Planned Features`, `Known Issues`, `Links`. For each missing required section, add a finding:
    - `check: "readme-freshness"`, `severity: "warn"`, `path: "plugins/<name>/README.md"`, `detail: "Missing required section '<section name>' (see docs/plugin-readme-template.md)"`, `auto_fix: false`, `fix_cmd: null`
-3. Extract the `Known Issues` section (heading may be `## Known Issues`, `### Known Issues`, or similar). For each bullet item in that section, scan the plugin's actual implementation files (scripts, hooks, commands) for evidence the issue has been fixed. If the codebase evidence suggests the issue is no longer present, add a finding:
-   - `check: "readme-freshness"`, `severity: "warn"`, `path: "plugins/<name>/README.md"`, `detail: "Known Issue '<first 80 chars>' may be stale — implementation evidence suggests it is resolved"`, `auto_fix: false`, `fix_cmd: null`
-4. Extract the `Principles` or `Design Principles` section. For each principle listed, check if it is obviously contradicted by the current codebase (e.g., "no external network calls" but the plugin makes HTTP requests; "single-file command" but there are agents/ and scripts/). Only flag clear contradictions, not minor drift. Add findings with the same format as above.
 
-Add all readme-freshness findings to the unified findings list.
+3. **Implementation cross-reference** — For each component type declared in the README, verify the corresponding file or directory exists on disk. Extract entries from table rows using backtick-delimited identifiers:
+
+   - **Commands table** (`## Commands` section): for each `` `/command-name` `` entry, strip the leading `/` and check that `plugins/<name>/commands/command-name.md` or `plugins/<name>/commands/command-name/` exists.
+   - **Skills table** (`## Skills` section): for each `` `skill-name` `` entry, check that `plugins/<name>/skills/skill-name/SKILL.md` or `plugins/<name>/skills/skill-name.md` exists.
+   - **Agents table** (`## Agents` section): for each `` `agent-name` `` entry, check that `plugins/<name>/agents/agent-name.md` or `plugins/<name>/agents/agent-name/` exists.
+   - **Hooks table** (`## Hooks` section): for each `` `script-name.sh` `` entry, check that the script exists at `plugins/<name>/hooks/script-name.sh` or `plugins/<name>/scripts/script-name.sh`. Also verify that `plugins/<name>/hooks/hooks.json` exists whenever any hook scripts are listed.
+   - **Tools table** (`## Tools` section): presence of a Tools section implies an MCP server — check that `plugins/<name>/.mcp.json` exists.
+
+   For each declared entry whose corresponding file does not exist:
+   - `check: "readme-freshness"`, `severity: "warn"`, `path: "plugins/<name>/README.md"`, `detail: "README declares <type> '<identifier>' but <expected_path> not found on disk"`, `auto_fix: false`, `fix_cmd: null`
+
+4. **Known Issues staleness** — Extract the `Known Issues` section. For each bullet item, scan the plugin's actual implementation files (scripts, hooks, commands) for evidence the issue has been fixed. If the codebase evidence clearly suggests the issue is no longer present, add a finding:
+   - `check: "readme-freshness"`, `severity: "warn"`, `path: "plugins/<name>/README.md"`, `detail: "Known Issue '<first 80 chars>' may be stale — implementation evidence suggests it is resolved"`, `auto_fix: false`, `fix_cmd: null`
+
+5. **Principles vs. codebase** — Extract the `Principles` or `Design Principles` section. For each principle, check if it is obviously contradicted by the current codebase (e.g., "no external network calls" but the plugin makes HTTP requests; "single-file command" but there are agents/ and scripts/). Only flag clear contradictions, not minor drift. Add findings with the same format as above.
+
+### Step 2b: Root README.md (root level)
+
+Read `README.md` at the repo root.
+
+1. **Plugin coverage** — For each plugin listed in `.claude-plugin/marketplace.json`, check that the plugin `name` appears somewhere in the root README. For each missing plugin reference:
+   - `check: "readme-freshness"`, `severity: "warn"`, `path: "README.md"`, `detail: "Root README.md does not mention plugin '<name>' — add it to the plugin list or table"`, `auto_fix: false`, `fix_cmd: null`
+
+2. **Plugin list present** — If the root README contains no plugin list, table, or section that inventories available plugins, add a finding:
+   - `check: "readme-freshness"`, `severity: "warn"`, `path: "README.md"`, `detail: "Root README.md has no plugin inventory table or list — add a summary of available plugins"`, `auto_fix: false`, `fix_cmd: null`
+
+### Step 2c: docs/ accuracy check
+
+For each Markdown file in `docs/` (skip `docs/plans/` entirely):
+
+1. Read the file.
+
+2. **Broken path references** — Extract all of the following reference patterns:
+   - Fenced code block content that contains repo-relative paths starting with `plugins/`, `scripts/`, `docs/`, or `.claude-plugin/`
+   - Inline code spans containing `.sh`, `.md`, `.json`, or `.ts` file references that include a `/`
+   - Markdown link targets that are relative paths (not starting with `http`)
+
+   For each extracted path, check whether it exists in the repo relative to `REPO_ROOT`. For each that does not exist:
+   - `check: "docs-accuracy"`, `severity: "warn"`, `path: "docs/<filename>"`, `detail: "References '<path>' which does not exist on disk — may be stale or renamed"`, `auto_fix: false`, `fix_cmd: null`
+
+3. **Plugin name references** — Scan for bare plugin directory names that appear to reference plugin directories (e.g., `plugin-test-harness`, `repo-hygiene`, `linux-sysadmin-mcp`). Check that each referenced plugin still exists as a directory under `plugins/`. For any removed plugin references:
+   - `check: "docs-accuracy"`, `severity: "warn"`, `path: "docs/<filename>"`, `detail: "References plugin '<name>' which does not exist under plugins/ — may be removed or renamed"`, `auto_fix: false`, `fix_cmd: null`
+
+Add all findings from Steps 2a, 2b, and 2c to the unified findings list.
 
 ## Step 3: Classify Findings
 
@@ -111,6 +157,9 @@ Otherwise, display all needs-approval findings grouped by check type, numbered:
 
 [readme-freshness]
   5. <path> — <detail>
+
+[docs-accuracy]
+  6. <path> — <detail>
 ```
 
 Then use `AskUserQuestion` with multi-select to let the user choose actions:
@@ -120,6 +169,7 @@ Then use `AskUserQuestion` with multi-select to let the user choose actions:
   - "All gitignore stale patterns (N items)"
   - "All stale commit files — stage only (N items)"
   - "All README freshness findings — open for review (N items)"
+  - "All docs/ accuracy findings — open for review (N items)"
   - "None — defer all"
 
 **If DRY_RUN is true:** Skip the AskUserQuestion. Display `[DRY RUN] Would present N items for approval`.
@@ -150,6 +200,8 @@ git add <filepath>
 Report: `📦 Staged: <filepath>` — remind the user to commit with their own message.
 
 **`readme-freshness` (stale documentation):** Read the flagged section of the README aloud (display it in the response). Do NOT automatically edit the file — present it for the user to review. Report: `📖 Displayed for review: <path>`
+
+**`docs-accuracy` (stale docs/ reference):** Read the surrounding context of the flagged reference from the docs file (display ±5 lines around it). Do NOT automatically edit the file — present it for the user to review. Report: `📖 Displayed for review: <path>`
 
 **`gitignore` (stale patterns):** For patterns flagged as needs-approval (stale, not auto-fixable), ask the user to confirm before removing. Use the Edit tool to remove the specific line from the .gitignore file.
 

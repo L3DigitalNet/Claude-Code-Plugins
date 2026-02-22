@@ -4,7 +4,7 @@ Autonomous maintenance sweep for the Claude-Code-Plugins monorepo.
 
 ## Summary
 
-`/hygiene` runs five parallel mechanical checks against the repository and Claude Code's local plugin state, then performs a semantic pass over plugin READMEs using inline AI reasoning. Findings are classified automatically: safe corrections (missing `.gitignore` patterns, trailing slashes in `marketplace.json`) are applied without confirmation; destructive or ambiguous changes (orphan deletion, stale commits, README edits) require explicit approval via a multi-select prompt. A `--dry-run` flag shows the full plan without touching anything.
+`/hygiene` runs four parallel mechanical checks against the repository and Claude Code's local plugin state, then performs a three-phase semantic pass: plugin READMEs (leaf-to-root), the root README.md, and the `docs/` directory. Findings are classified automatically: safe corrections (missing `.gitignore` patterns, trailing slashes in `marketplace.json`) are applied without confirmation; destructive or ambiguous changes (orphan deletion, stale commits, README edits, stale docs references) require explicit approval via a multi-select prompt. A `--dry-run` flag shows the full plan without touching anything.
 
 ## Principles
 
@@ -40,17 +40,19 @@ claude --plugin-dir ./plugins/repo-hygiene
 ```mermaid
 flowchart TD
     U([User]) -->|"/hygiene [--dry-run]"| S0[Step 0: Parse args<br/>Locate PLUGIN_ROOT and REPO_ROOT]
-    S0 --> P[Run 4 mechanical scripts in parallel]
+    S0 --> P[Step 1: Run 4 mechanical scripts in parallel]
     P --> G[check-gitignore.sh]
     P --> M[check-manifests.sh]
     P --> O[check-orphans.sh]
     P --> C[check-stale-commits.sh]
-    G & M & O & C --> R[Step 2: Semantic README scan<br/>inline AI reasoning]
-    R --> CL{Classify findings}
+    G & M & O & C --> R2A[Step 2a: Plugin READMEs<br/>placeholder / structure / cross-ref / issues]
+    R2A --> R2B[Step 2b: Root README.md<br/>plugin coverage check]
+    R2B --> R2C[Step 2c: docs/ accuracy<br/>broken paths and plugin refs]
+    R2C --> CL{Step 3: Classify findings}
     CL -->|auto_fix == true| AF[Step 4: Apply auto-fixes<br/>or show dry-run plan]
     CL -->|needs approval| NA[Step 5: Present grouped findings<br/>AskUserQuestion multi-select]
     CL -->|severity == info| IN[Collect info notes]
-    NA --> AP[Step 6: Apply approved fixes<br/>orphan delete / git add / README display / gitignore edit]
+    NA --> AP[Step 6: Apply approved fixes<br/>delete / stage / display for review / edit]
     AF & AP & IN --> SUM((Step 7: Final summary<br/>Auto-fixed / Approved / Deferred / Info))
 ```
 
@@ -60,7 +62,7 @@ flowchart TD
 /hygiene [--dry-run]
 ```
 
-The sweep always runs all five checks. With `--dry-run`, no files are modified and no approval prompt is shown — the command prints what it would do and exits.
+The sweep always runs all checks. With `--dry-run`, no files are modified and no approval prompt is shown — the command prints what it would do and exits.
 
 **Auto-fixed without approval:**
 - Missing `node_modules/` in a plugin `.gitignore` when `package.json` is present
@@ -71,7 +73,8 @@ The sweep always runs all five checks. With `--dry-run`, no files are modified a
 - Orphaned `temp_*` directories under `~/.claude/plugins/cache/`
 - Stale `enabledPlugins` entries in `~/.claude/settings.json` with no matching install
 - Uncommitted files last modified more than 24 hours ago (staged on approval, not committed)
-- README structural gaps or stale `Known Issues` / `Principles` sections (displayed for review, not auto-edited)
+- README structural gaps, template placeholders, unresolvable component references, or stale `Known Issues` / `Principles` sections (displayed for review, not auto-edited)
+- `docs/` file references to paths or plugin names that no longer exist on disk (displayed for review, not auto-edited)
 
 **Info only (no action required):**
 - Plugins present in `installed_plugins.json` but absent from `settings.json` `enabledPlugins`
@@ -89,7 +92,7 @@ The sweep always runs all five checks. With `--dry-run`, no files are modified a
 |---|---|---|---|---|
 | 1 | `.gitignore` missing patterns | `check-gitignore.sh` | All non-auto-generated `.gitignore` files in the repo tree. Flags missing `node_modules/` when `package.json` is co-located; flags missing `__pycache__/` and `*.pyc` when `.py` files exist within 3 directory levels. Skips the root `.gitignore` (already provides global coverage) and pytest-generated files (contain only `*`). | Yes — appends missing lines |
 | 2 | Marketplace manifest consistency | `check-manifests.sh` | Cross-references `.claude-plugin/marketplace.json` against each plugin's `.claude-plugin/plugin.json`: source directory existence, `plugin.json` presence, and version match between the marketplace entry and the manifest. Also checks `~/.claude/plugins/installed_plugins.json` for entries whose `installPath` no longer exists on disk. Flags trailing slashes in `source` paths as auto-fixable normalisation. | Trailing slash only; all other mismatches need approval |
-| 3 | README structural and semantic freshness | inline AI (Step 2) | For each plugin `README.md`: checks that all required sections are present (`Summary`, `Principles`, `Requirements`, `Installation`, `How It Works`, `Usage`, `Planned Features`, `Known Issues`, `Links`); scans `Known Issues` bullets for implementation evidence that the issue is resolved; checks `Principles` for clear contradictions with the current codebase. | No |
+| 3 | README and docs accuracy | inline AI (Step 2) | Three-phase scan in leaf-to-root order: **(2a) Plugin READMEs** — detects unmodified template placeholders; checks all required sections are present; cross-references each Commands/Skills/Agents/Hooks/Tools table entry against actual files on disk; scans `Known Issues` for resolved issues; checks `Principles` for clear codebase contradictions. **(2b) Root README.md** — verifies all marketplace plugins are mentioned and a plugin inventory is present. **(2c) `docs/` files** (excluding `plans/`) — checks every repo-relative path reference and plugin name mention against actual files on disk. | No |
 | 4 | Plugin state orphans | `check-orphans.sh` | Compares three state sources: `installed_plugins.json`, `settings.json` `enabledPlugins`, and `~/.claude/plugins/cache/`. Flags `enabledPlugins` keys absent from `installed_plugins.json` (stale toggle) as warnings; flags the inverse (installed but not enabled) as info notes. Flags `temp_*` directories at the top level of the cache dir as orphaned. | No |
 | 5 | Stale uncommitted changes | `check-stale-commits.sh` | Runs `git status --porcelain` and identifies modified or untracked files (excluding git-ignored) whose `mtime` is older than 24 hours. Reports the file path and age in days and hours. On approval, stages the file with `git add` — does not commit. | No |
 
