@@ -147,7 +147,7 @@ Validator uses Zod strict mode — unknown fields are rejected.
 
 **Plugin entries** — required: `name`, `description`, `source`. Optional: `version`, `author` (object), `category`, `homepage`, `tags`, `strict`. **INVALID**: `displayName`, `keywords`, `license`.
 
-**`plugin.json` manifests** — valid fields: `name`, `version`, `description`, `author`. `category` is rejected. `homepage` is tolerated.
+**`plugin.json` manifests** — valid fields: `name`, `version`, `description`, `author`. Optional: `homepage`. **INVALID (rejected):** `category`, `keywords`, `repository`, `license`. Note: `validate-marketplace.sh` only validates `marketplace.json` entries — it does **not** catch invalid `plugin.json` fields, so violations are silent locally but rejected on install.
 
 Canonical entry template:
 ```json

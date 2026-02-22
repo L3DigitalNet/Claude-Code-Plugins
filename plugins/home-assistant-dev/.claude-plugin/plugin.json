@@ -6,28 +6,5 @@
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"
   },
-  "homepage": "https://developers.home-assistant.io/",
-  "repository": "https://github.com/L3DigitalNet/Claude-Code-Plugins",
-  "license": "MIT",
-  "keywords": [
-    "home-assistant",
-    "home assistant",
-    "hass",
-    "integration",
-    "custom-component",
-    "iot",
-    "smart-home",
-    "python",
-    "asyncio",
-    "DataUpdateCoordinator",
-    "config-flow",
-    "HACS",
-    "diagnostics",
-    "quality-scale",
-    "validation",
-    "testing",
-    "websocket",
-    "recorder",
-    "mcp"
-  ]
+  "homepage": "https://developers.home-assistant.io/"
 }

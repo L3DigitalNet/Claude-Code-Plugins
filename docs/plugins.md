@@ -93,15 +93,14 @@ claude --version
 
 ```json
 {
-  "author": "Name or {name, email, url}",
-  "homepage": "https://...",
-  "repository": "https://github.com/...",
-  "license": "MIT",
-  "keywords": ["tag1", "tag2"],
-  "mcpServers": {}, // See MCP section
-  "lspServers": {} // See LSP section
+  "author": { "name": "Your Name", "url": "https://..." },
+  "homepage": "https://..."
 }
 ```
+
+> **Strict mode warning:** `plugin.json` uses Zod strict validation — unknown fields are rejected on install.
+> Invalid fields (silently dropped by local tooling but rejected at install): `keywords`, `repository`, `license`, `category`.
+> MCP and LSP servers use separate sidecar files (`.mcp.json`, `.lsp.json`) — not `plugin.json`.
 
 ## Component Types
 

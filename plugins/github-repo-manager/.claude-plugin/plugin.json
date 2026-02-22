@@ -4,14 +4,5 @@
   "version": "0.2.2",
   "author": {
     "name": "L3DigitalNet"
-  },
-  "keywords": [
-    "github",
-    "maintenance",
-    "wiki",
-    "security",
-    "community-health",
-    "pull-requests",
-    "repository-management"
-  ]
+  }
 }

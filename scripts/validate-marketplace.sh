@@ -158,26 +158,60 @@ for i in $(seq 0 $((PLUGIN_COUNT - 1))); do
         else
             echo -e "${GREEN}    OK Plugin directory exists${NC}"
 
-            # Validate plugin manifest exists
+            # Validate plugin manifest exists and conforms to Zod schema
             if [ -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]; then
                 echo -e "${GREEN}    OK Manifest exists${NC}"
+                MANIFEST_FILE="$PLUGIN_DIR/.claude-plugin/plugin.json"
 
-                # Check version consistency (if both have versions)
-                MARKETPLACE_VER=$(jq -r ".plugins[$i].version // \"none\"" "$MARKETPLACE_FILE")
-                PLUGIN_VER=$(jq -r '.version // "none"' "$PLUGIN_DIR/.claude-plugin/plugin.json" 2>/dev/null || echo "none")
-
-                if [ "$MARKETPLACE_VER" != "none" ] && [ "$PLUGIN_VER" != "none" ] && [ "$MARKETPLACE_VER" != "$PLUGIN_VER" ]; then
-                    echo -e "${RED}    x Version mismatch: marketplace=$MARKETPLACE_VER, plugin=$PLUGIN_VER${NC}"
+                if ! jq empty "$MANIFEST_FILE" 2>/dev/null; then
+                    echo -e "${RED}    x Invalid JSON in plugin.json${NC}"
                     ERRORS=$((ERRORS + 1))
-                elif [ "$MARKETPLACE_VER" != "none" ] && [ "$PLUGIN_VER" != "none" ]; then
-                    echo -e "${GREEN}    OK Versions match: $MARKETPLACE_VER${NC}"
-                fi
+                else
+                    # Validate required manifest fields
+                    for MFIELD in name version description; do
+                        if ! jq -e ".$MFIELD" "$MANIFEST_FILE" > /dev/null 2>&1; then
+                            echo -e "${RED}    x plugin.json: missing required field '$MFIELD'${NC}"
+                            ERRORS=$((ERRORS + 1))
+                        fi
+                    done
 
-                # Check name consistency
-                MANIFEST_NAME=$(jq -r '.name // "unknown"' "$PLUGIN_DIR/.claude-plugin/plugin.json" 2>/dev/null || echo "unknown")
-                if [ "$PLUGIN_NAME" != "$MANIFEST_NAME" ]; then
-                    echo -e "${YELLOW}    ! Name mismatch: marketplace=$PLUGIN_NAME, plugin=$MANIFEST_NAME${NC}"
-                    WARNINGS=$((WARNINGS + 1))
+                    # Reject unknown fields — Zod strict mode rejects everything outside this set.
+                    # Note: validate-marketplace.sh does NOT otherwise validate plugin.json fields,
+                    # so this is the only guard against schema drift that silently passes locally.
+                    ALLOWED_MANIFEST_FIELDS="name version description author homepage"
+                    while IFS= read -r KEY; do
+                        if [[ ! " $ALLOWED_MANIFEST_FIELDS " =~ " $KEY " ]]; then
+                            echo -e "${RED}    x plugin.json: invalid field '$KEY' (rejected by Zod strict mode on install)${NC}"
+                            ERRORS=$((ERRORS + 1))
+                        fi
+                    done < <(jq -r 'keys[]' "$MANIFEST_FILE")
+
+                    # Validate author is an object if present
+                    if jq -e '.author' "$MANIFEST_FILE" > /dev/null 2>&1; then
+                        AUTHOR_TYPE=$(jq -r '.author | type' "$MANIFEST_FILE")
+                        if [ "$AUTHOR_TYPE" != "object" ]; then
+                            echo -e "${RED}    x plugin.json: author must be an object {name, url/email}, not a $AUTHOR_TYPE${NC}"
+                            ERRORS=$((ERRORS + 1))
+                        fi
+                    fi
+
+                    # Check version consistency between marketplace and manifest
+                    MARKETPLACE_VER=$(jq -r ".plugins[$i].version // \"none\"" "$MARKETPLACE_FILE")
+                    PLUGIN_VER=$(jq -r '.version // "none"' "$MANIFEST_FILE" 2>/dev/null || echo "none")
+
+                    if [ "$MARKETPLACE_VER" != "none" ] && [ "$PLUGIN_VER" != "none" ] && [ "$MARKETPLACE_VER" != "$PLUGIN_VER" ]; then
+                        echo -e "${RED}    x Version mismatch: marketplace=$MARKETPLACE_VER, plugin=$PLUGIN_VER${NC}"
+                        ERRORS=$((ERRORS + 1))
+                    elif [ "$MARKETPLACE_VER" != "none" ] && [ "$PLUGIN_VER" != "none" ]; then
+                        echo -e "${GREEN}    OK Versions match: $MARKETPLACE_VER${NC}"
+                    fi
+
+                    # Check name consistency between marketplace entry and manifest
+                    MANIFEST_NAME=$(jq -r '.name // "unknown"' "$MANIFEST_FILE" 2>/dev/null || echo "unknown")
+                    if [ "$PLUGIN_NAME" != "$MANIFEST_NAME" ]; then
+                        echo -e "${YELLOW}    ! Name mismatch: marketplace=$PLUGIN_NAME, plugin=$MANIFEST_NAME${NC}"
+                        WARNINGS=$((WARNINGS + 1))
+                    fi
                 fi
             elif [ -f "$PLUGIN_DIR/.claude-plugin/manifest.json" ]; then
                 echo -e "${GREEN}    OK Manifest exists (manifest.json)${NC}"

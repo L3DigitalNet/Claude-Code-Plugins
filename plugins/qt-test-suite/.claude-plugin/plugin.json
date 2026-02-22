@@ -1,5 +1,5 @@
 {
-  "name": "qt",
+  "name": "qt-test-suite",
   "version": "0.1.0",
   "description": "Qt testing pipeline: AI-driven test generation, coverage-gap analysis, and headless GUI testing via Qt Pilot for PySide6 and C++/Qt projects.",
   "author": {

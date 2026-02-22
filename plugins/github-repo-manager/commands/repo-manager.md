@@ -1,5 +1,6 @@
 ---
 description: Activate GitHub repository management. Only runs when explicitly invoked. Does not monitor or intercept normal git operations.
+allowed-tools: Bash, Read, Glob, Write, AskUserQuestion
 ---
 
 # IMPORTANT: Activation Scope

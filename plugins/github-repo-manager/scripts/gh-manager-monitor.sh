@@ -3,12 +3,18 @@
 #
 # Handles two concerns:
 #   1. Rate limit watchdog — warns when API budget is running low
-#   2. Mutation audit trail — logs non-dry-run mutations to ~/.github-repo-manager-audit.log
+#   2. Mutation audit trail — logs confirmed mutations to ~/.github-repo-manager-audit.log
+#
+# Mutation patterns are sourced from mutation-patterns.sh (shared with gh-manager-guard.sh).
+# To add a new mutation command, update mutation-patterns.sh — no changes needed here.
 #
 # Receives PostToolUse hook JSON on stdin.
 # Stdout is injected into the agent context window.
 
 set -uo pipefail
+
+# shellcheck source=mutation-patterns.sh
+source "${BASH_SOURCE%/*}/mutation-patterns.sh"
 
 # Read full stdin once
 INPUT=$(cat)
@@ -82,34 +88,9 @@ fi
 
 # ─── Mutation Audit Trail ─────────────────────────────────────────────────────
 #
-# Log every non-dry-run mutation to an audit log.
-# This creates a recovery trail for the session.
+# Log every confirmed (non-dry-run) mutation to the audit log.
 
-# Skip dry-run calls — they don't mutate
-if echo "$COMMAND" | grep -q -- "--dry-run"; then
-    exit 0
-fi
-
-# Mutation command patterns (any write operation) — MUST be kept in sync with gh-manager-guard.sh (lines 62-68).
-# Both scripts match the same write operations so the guard warning and audit trail stay aligned.
-# If you add a new gh-manager write command, update the pattern in BOTH scripts.
-MUTATION_PATTERN="prs merge|prs close|prs label|prs comment|prs create|prs request-review"
-MUTATION_PATTERN2="issues close|issues label|issues comment|issues assign"
-MUTATION_PATTERN3="files put|files delete|branches create|branches delete"
-MUTATION_PATTERN4="releases draft|releases publish"
-MUTATION_PATTERN5="discussions comment|discussions close"
-MUTATION_PATTERN6="notifications mark-read|wiki push|wiki init"
-MUTATION_PATTERN7="repo labels create|repo labels update|config repo-write|config portfolio-write"
-
-IS_MUTATION=0
-for PATTERN in "$MUTATION_PATTERN" "$MUTATION_PATTERN2" "$MUTATION_PATTERN3" "$MUTATION_PATTERN4" "$MUTATION_PATTERN5" "$MUTATION_PATTERN6" "$MUTATION_PATTERN7"; do
-    if echo "$COMMAND" | grep -qE "$PATTERN"; then
-        IS_MUTATION=1
-        break
-    fi
-done
-
-if [ "$IS_MUTATION" -eq 1 ]; then
+if is_mutation_command "$COMMAND"; then
     AUDIT_LOG="$HOME/.github-repo-manager-audit.log"
     TIMESTAMP=$(date -Iseconds 2>/dev/null || date +"%Y-%m-%d %H:%M:%S")
     # Extract just the gh-manager portion of the command
