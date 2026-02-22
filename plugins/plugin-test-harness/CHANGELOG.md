@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.5] - 2026-02-22
+
+### Added
+- **`pth_delete_test`**: Remove a test from the suite by ID. Also clears its result history from the in-session `ResultsTracker` to prevent orphaned entries from skewing pass/fail counts.
+
 ## [0.6.4] - 2026-02-22
 
 ### Fixed

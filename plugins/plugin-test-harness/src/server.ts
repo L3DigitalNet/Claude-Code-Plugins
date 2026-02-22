@@ -288,6 +288,20 @@ export function createServer(): Server {
         return respond(`Test updated: ${updatedTest.name}${idChanged}`);
       }
 
+      case 'pth_delete_test': {
+        const { testId } = args as { testId: string };
+        if (!testId.trim()) {
+          return { content: [{ type: 'text' as const, text: 'testId must be a non-empty string.' }], isError: true };
+        }
+        const test = store.get(testId);
+        if (!test) {
+          return { content: [{ type: 'text' as const, text: `Unknown test id: ${testId}` }], isError: true };
+        }
+        store.delete(testId);
+        resultsTracker.delete(testId);
+        return respond(`Test deleted: ${test.name} (${testId})`);
+      }
+
       // ── Execution ──────────────────────────────────────────────────
       case 'pth_record_result': {
         const { testId, status, durationMs, failureReason, claudeNotes } = args as {
