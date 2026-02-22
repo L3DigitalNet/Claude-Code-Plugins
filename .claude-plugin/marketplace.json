@@ -148,6 +148,18 @@
       "category": "development",
       "source": "./plugins/autonomous-refactor",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
+    },
+    {
+      "name": "qt-test-suite",
+      "description": "Qt testing pipeline for PySide6 and C++/Qt projects — AI test generation, coverage-gap analysis with gcov/lcov and coverage.py, and headless GUI testing via bundled Qt Pilot MCP server.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "development",
+      "source": "./plugins/qt-test-suite",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-test-suite"
     }
   ]
 }

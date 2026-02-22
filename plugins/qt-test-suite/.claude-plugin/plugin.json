@@ -1,0 +1,10 @@
+{
+  "name": "qt",
+  "version": "0.1.0",
+  "description": "Qt testing pipeline: AI-driven test generation, coverage-gap analysis, and headless GUI testing via Qt Pilot for PySide6 and C++/Qt projects.",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  },
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-test-suite"
+}
