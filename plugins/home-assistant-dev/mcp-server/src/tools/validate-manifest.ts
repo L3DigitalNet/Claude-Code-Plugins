@@ -47,6 +47,12 @@ const DOMAIN_PATTERN = /^[a-z][a-z0-9_]*$/;
 export async function handleValidateManifest(
   input: ValidateManifestInput
 ): Promise<ValidateManifestOutput> {
+  // Throw for missing path — consistent with validate_strings and check_patterns.
+  // The existsSync path below handles a valid path that doesn't exist (returns structured errors).
+  if (!input.path) {
+    throw new Error("path is required");
+  }
+
   const errors: ValidationError[] = [];
   const warnings: ValidationError[] = [];
   const isHacs = input.mode !== "core";
@@ -97,7 +103,7 @@ export async function handleValidateManifest(
     }
 
     // Check domain matches directory
-    const pathParts = input.path.split(/[/\\]/);
+    const pathParts = input.path.split(/[\/\\]/);
     const dirName = pathParts[pathParts.length - 2];
     if (dirName && manifest.domain !== dirName) {
       warnings.push({
