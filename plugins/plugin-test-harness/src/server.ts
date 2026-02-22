@@ -96,23 +96,15 @@ export function createServer(): Server {
         }
         case 'pth_end_session': {
           if (!currentSession) return respond('No active session.');
-          // Generate the session report before removing the worktree — report-generator
-          // needs worktreePath and the in-memory resultsTracker/iterationHistory.
-          const { generateReport } = await import('./session/report-generator.js');
-          const reportPath = path.join(currentSession.worktreePath, '.pth/SESSION-REPORT.md');
-          await generateReport(currentSession.worktreePath, {
-            state: currentSession,
-            allResults: resultsTracker.getAllLatest(),
-            iterationHistory: mgr.iterationHistory.map((s, i) => ({
-              iteration: i + 1,
-              passing: s.passing,
-              failing: s.failing,
-              fixesApplied: s.fixesApplied,
-            })),
+          // Pass in-memory runtime data to endSession — manager.ts cannot access
+          // resultsTracker or iterationHistory directly (they live in this server scope).
+          const exportedResults = resultsTracker.exportHistory(mgr.testStore);
+          const result = await sessionManager.endSession(currentSession, {
+            iterationHistory: mgr.iterationHistory,
+            exportedResults,
           });
-          const result = await sessionManager.endSession(currentSession);
           currentSession = null;
-          return respond(`${result}\n\nReport: ${reportPath}`);
+          return respond(result);
         }
         default: {
           if (!currentSession) {
@@ -164,7 +156,11 @@ export function createServer(): Server {
 
       // ── Tests ──────────────────────────────────────────────────────
       case 'pth_generate_tests': {
-        const { toolSchemas: passedSchemas, includeEdgeCases } = args as { toolSchemas?: ToolSchema[]; includeEdgeCases?: boolean };
+        const { toolSchemas: passedSchemas, includeEdgeCases, tools: toolFilter } = args as {
+          toolSchemas?: ToolSchema[];
+          includeEdgeCases?: boolean;
+          tools?: string[];  // optional gap-targeted filter from gap analysis
+        };
         let tests;
         if (session.pluginMode === 'mcp') {
           // Auto-discover tool schemas when not explicitly passed: spawn the target MCP server,
@@ -178,10 +174,15 @@ export function createServer(): Server {
             }
             toolSchemas = await fetchToolSchemasFromMcpServer(mcpConfig, session.pluginPath);
           }
-          await writeToolSchemasCache(session.worktreePath, toolSchemas);
+          // Apply gap-targeted filter: when tools[] is provided (from gap analysis newComponents
+          // or modifiedComponents), only generate tests for those specific tools.
+          const filteredSchemas = toolFilter && toolFilter.length > 0
+            ? toolSchemas.filter(s => toolFilter.includes(s.name))
+            : toolSchemas;
+          await writeToolSchemasCache(session.worktreePath, toolSchemas);  // always cache full list
           // Pass session.pluginPath (not worktreePath) so field-name heuristics in
           // buildValidInput can populate *path* fields with a real, reachable directory.
-          tests = await generateMcpTests({ pluginPath: session.pluginPath, toolSchemas, includeEdgeCases });
+          tests = await generateMcpTests({ pluginPath: session.pluginPath, toolSchemas: filteredSchemas, includeEdgeCases });
         } else {
           tests = generatePluginTests([]);
         }

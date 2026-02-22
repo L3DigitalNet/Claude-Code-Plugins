@@ -3234,8 +3234,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path17) {
-      let input = path17;
+    function removeDotSegments(path19) {
+      let input = path19;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3434,8 +3434,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path17, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path17 && path17 !== "/" ? path17 : void 0;
+        const [path19, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path19 && path19 !== "/" ? path19 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6797,12 +6797,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs11, exportName) {
+    function addFormats(ajv, list, fs13, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs11[f]);
+        ajv.addFormat(f, fs13[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -6887,17 +6887,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path17) {
-      const ctrl = callVisitor(key, node, visitor, path17);
+    function visit_(key, node, visitor, path19) {
+      const ctrl = callVisitor(key, node, visitor, path19);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path17, ctrl);
-        return visit_(key, ctrl, visitor, path17);
+        replaceNode(key, path19, ctrl);
+        return visit_(key, ctrl, visitor, path19);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path17 = Object.freeze(path17.concat(node));
+          path19 = Object.freeze(path19.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = visit_(i2, node.items[i2], visitor, path17);
+            const ci = visit_(i2, node.items[i2], visitor, path19);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6908,13 +6908,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path17 = Object.freeze(path17.concat(node));
-          const ck = visit_("key", node.key, visitor, path17);
+          path19 = Object.freeze(path19.concat(node));
+          const ck = visit_("key", node.key, visitor, path19);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path17);
+          const cv = visit_("value", node.value, visitor, path19);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6935,17 +6935,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path17) {
-      const ctrl = await callVisitor(key, node, visitor, path17);
+    async function visitAsync_(key, node, visitor, path19) {
+      const ctrl = await callVisitor(key, node, visitor, path19);
       if (identity3.isNode(ctrl) || identity3.isPair(ctrl)) {
-        replaceNode(key, path17, ctrl);
-        return visitAsync_(key, ctrl, visitor, path17);
+        replaceNode(key, path19, ctrl);
+        return visitAsync_(key, ctrl, visitor, path19);
       }
       if (typeof ctrl !== "symbol") {
         if (identity3.isCollection(node)) {
-          path17 = Object.freeze(path17.concat(node));
+          path19 = Object.freeze(path19.concat(node));
           for (let i2 = 0; i2 < node.items.length; ++i2) {
-            const ci = await visitAsync_(i2, node.items[i2], visitor, path17);
+            const ci = await visitAsync_(i2, node.items[i2], visitor, path19);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -6956,13 +6956,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity3.isPair(node)) {
-          path17 = Object.freeze(path17.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path17);
+          path19 = Object.freeze(path19.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path19);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path17);
+          const cv = await visitAsync_("value", node.value, visitor, path19);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -6989,23 +6989,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path17) {
+    function callVisitor(key, node, visitor, path19) {
       if (typeof visitor === "function")
-        return visitor(key, node, path17);
+        return visitor(key, node, path19);
       if (identity3.isMap(node))
-        return visitor.Map?.(key, node, path17);
+        return visitor.Map?.(key, node, path19);
       if (identity3.isSeq(node))
-        return visitor.Seq?.(key, node, path17);
+        return visitor.Seq?.(key, node, path19);
       if (identity3.isPair(node))
-        return visitor.Pair?.(key, node, path17);
+        return visitor.Pair?.(key, node, path19);
       if (identity3.isScalar(node))
-        return visitor.Scalar?.(key, node, path17);
+        return visitor.Scalar?.(key, node, path19);
       if (identity3.isAlias(node))
-        return visitor.Alias?.(key, node, path17);
+        return visitor.Alias?.(key, node, path19);
       return void 0;
     }
-    function replaceNode(key, path17, node) {
-      const parent = path17[path17.length - 1];
+    function replaceNode(key, path19, node) {
+      const parent = path19[path19.length - 1];
       if (identity3.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity3.isPair(parent)) {
@@ -7613,10 +7613,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity3 = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path17, value) {
+    function collectionFromPath(schema, path19, value) {
       let v = value;
-      for (let i2 = path17.length - 1; i2 >= 0; --i2) {
-        const k = path17[i2];
+      for (let i2 = path19.length - 1; i2 >= 0; --i2) {
+        const k = path19[i2];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a2 = [];
           a2[k] = v;
@@ -7635,7 +7635,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path17) => path17 == null || typeof path17 === "object" && !!path17[Symbol.iterator]().next().done;
+    var isEmptyPath = (path19) => path19 == null || typeof path19 === "object" && !!path19[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -7665,11 +7665,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path17, value) {
-        if (isEmptyPath(path17))
+      addIn(path19, value) {
+        if (isEmptyPath(path19))
           this.add(value);
         else {
-          const [key, ...rest] = path17;
+          const [key, ...rest] = path19;
           const node = this.get(key, true);
           if (identity3.isCollection(node))
             node.addIn(rest, value);
@@ -7683,8 +7683,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path17) {
-        const [key, ...rest] = path17;
+      deleteIn(path19) {
+        const [key, ...rest] = path19;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -7698,8 +7698,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path17, keepScalar) {
-        const [key, ...rest] = path17;
+      getIn(path19, keepScalar) {
+        const [key, ...rest] = path19;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity3.isScalar(node) ? node.value : node;
@@ -7717,8 +7717,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path17) {
-        const [key, ...rest] = path17;
+      hasIn(path19) {
+        const [key, ...rest] = path19;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -7728,8 +7728,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path17, value) {
-        const [key, ...rest] = path17;
+      setIn(path19, value) {
+        const [key, ...rest] = path19;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -10233,9 +10233,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path17, value) {
+      addIn(path19, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path17, value);
+          this.contents.addIn(path19, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -10310,14 +10310,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path17) {
-        if (Collection.isEmptyPath(path17)) {
+      deleteIn(path19) {
+        if (Collection.isEmptyPath(path19)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path17) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path19) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -10332,10 +10332,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path17, keepScalar) {
-        if (Collection.isEmptyPath(path17))
+      getIn(path19, keepScalar) {
+        if (Collection.isEmptyPath(path19))
           return !keepScalar && identity3.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity3.isCollection(this.contents) ? this.contents.getIn(path17, keepScalar) : void 0;
+        return identity3.isCollection(this.contents) ? this.contents.getIn(path19, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -10346,10 +10346,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path17) {
-        if (Collection.isEmptyPath(path17))
+      hasIn(path19) {
+        if (Collection.isEmptyPath(path19))
           return this.contents !== void 0;
-        return identity3.isCollection(this.contents) ? this.contents.hasIn(path17) : false;
+        return identity3.isCollection(this.contents) ? this.contents.hasIn(path19) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -10366,13 +10366,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path17, value) {
-        if (Collection.isEmptyPath(path17)) {
+      setIn(path19, value) {
+        if (Collection.isEmptyPath(path19)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path17), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path19), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path17, value);
+          this.contents.setIn(path19, value);
         }
       }
       /**
@@ -12324,9 +12324,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path17) => {
+    visit.itemAtPath = (cst, path19) => {
       let item = cst;
-      for (const [field, index] of path17) {
+      for (const [field, index] of path19) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -12335,23 +12335,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path17) => {
-      const parent = visit.itemAtPath(cst, path17.slice(0, -1));
-      const field = path17[path17.length - 1][0];
+    visit.parentCollection = (cst, path19) => {
+      const parent = visit.itemAtPath(cst, path19.slice(0, -1));
+      const field = path19[path19.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path17, item, visitor) {
-      let ctrl = visitor(item, path17);
+    function _visit(path19, item, visitor) {
+      let ctrl = visitor(item, path19);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i2 = 0; i2 < token.items.length; ++i2) {
-            const ci = _visit(Object.freeze(path17.concat([[field, i2]])), token.items[i2], visitor);
+            const ci = _visit(Object.freeze(path19.concat([[field, i2]])), token.items[i2], visitor);
             if (typeof ci === "number")
               i2 = ci - 1;
             else if (ci === BREAK)
@@ -12362,10 +12362,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path17);
+            ctrl = ctrl(item, path19);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path17) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path19) : ctrl;
     }
     exports.visit = visit;
   }
@@ -13650,14 +13650,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs11 = this.flowScalar(this.type);
+              const fs13 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs11, sep: [] });
+                map.items.push({ start, key: fs13, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs11);
+                this.stack.push(fs13);
               } else {
-                Object.assign(it, { key: fs11, sep: [] });
+                Object.assign(it, { key: fs13, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -13785,13 +13785,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs11 = this.flowScalar(this.type);
+              const fs13 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs11, sep: [] });
+                fc.items.push({ start: [], key: fs13, sep: [] });
               else if (it.sep)
-                this.stack.push(fs11);
+                this.stack.push(fs13);
               else
-                Object.assign(it, { key: fs11, sep: [] });
+                Object.assign(it, { key: fs13, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -15179,8 +15179,8 @@ var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports, module) {
     module.exports = isexe;
     isexe.sync = sync;
-    var fs11 = __require("fs");
-    function checkPathExt(path17, options) {
+    var fs13 = __require("fs");
+    function checkPathExt(path19, options) {
       var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -15191,25 +15191,25 @@ var require_windows = __commonJS({
       }
       for (var i2 = 0; i2 < pathext.length; i2++) {
         var p = pathext[i2].toLowerCase();
-        if (p && path17.substr(-p.length).toLowerCase() === p) {
+        if (p && path19.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat, path17, options) {
+    function checkStat(stat, path19, options) {
       if (!stat.isSymbolicLink() && !stat.isFile()) {
         return false;
       }
-      return checkPathExt(path17, options);
+      return checkPathExt(path19, options);
     }
-    function isexe(path17, options, cb) {
-      fs11.stat(path17, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, path17, options));
+    function isexe(path19, options, cb) {
+      fs13.stat(path19, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path19, options));
       });
     }
-    function sync(path17, options) {
-      return checkStat(fs11.statSync(path17), path17, options);
+    function sync(path19, options) {
+      return checkStat(fs13.statSync(path19), path19, options);
     }
   }
 });
@@ -15219,14 +15219,14 @@ var require_mode = __commonJS({
   "node_modules/isexe/mode.js"(exports, module) {
     module.exports = isexe;
     isexe.sync = sync;
-    var fs11 = __require("fs");
-    function isexe(path17, options, cb) {
-      fs11.stat(path17, function(er, stat) {
+    var fs13 = __require("fs");
+    function isexe(path19, options, cb) {
+      fs13.stat(path19, function(er, stat) {
         cb(er, er ? false : checkStat(stat, options));
       });
     }
-    function sync(path17, options) {
-      return checkStat(fs11.statSync(path17), options);
+    function sync(path19, options) {
+      return checkStat(fs13.statSync(path19), options);
     }
     function checkStat(stat, options) {
       return stat.isFile() && checkMode(stat, options);
@@ -15250,7 +15250,7 @@ var require_mode = __commonJS({
 // node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "node_modules/isexe/index.js"(exports, module) {
-    var fs11 = __require("fs");
+    var fs13 = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -15259,7 +15259,7 @@ var require_isexe = __commonJS({
     }
     module.exports = isexe;
     isexe.sync = sync;
-    function isexe(path17, options, cb) {
+    function isexe(path19, options, cb) {
       if (typeof options === "function") {
         cb = options;
         options = {};
@@ -15269,7 +15269,7 @@ var require_isexe = __commonJS({
           throw new TypeError("callback not provided");
         }
         return new Promise(function(resolve, reject) {
-          isexe(path17, options || {}, function(er, is) {
+          isexe(path19, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
@@ -15278,7 +15278,7 @@ var require_isexe = __commonJS({
           });
         });
       }
-      core(path17, options || {}, function(er, is) {
+      core(path19, options || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options && options.ignoreErrors) {
             er = null;
@@ -15288,9 +15288,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync(path17, options) {
+    function sync(path19, options) {
       try {
-        return core.sync(path17, options || {});
+        return core.sync(path19, options || {});
       } catch (er) {
         if (options && options.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -15306,7 +15306,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports, module) {
     var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path17 = __require("path");
+    var path19 = __require("path");
     var COLON = isWindows ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -15344,7 +15344,7 @@ var require_which = __commonJS({
           return opt.all && found.length ? resolve(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path17.join(pathPart, cmd);
+        const pCmd = path19.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         resolve(subStep(p, i2, 0));
       });
@@ -15371,7 +15371,7 @@ var require_which = __commonJS({
       for (let i2 = 0; i2 < pathEnv.length; i2++) {
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path17.join(pathPart, cmd);
+        const pCmd = path19.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -15419,7 +15419,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports, module) {
     "use strict";
-    var path17 = __require("path");
+    var path19 = __require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -15437,7 +15437,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env[getPathKey({ env })],
-          pathExt: withoutPathExt ? path17.delimiter : void 0
+          pathExt: withoutPathExt ? path19.delimiter : void 0
         });
       } catch (e) {
       } finally {
@@ -15446,7 +15446,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path17.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path19.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -15500,8 +15500,8 @@ var require_shebang_command = __commonJS({
       if (!match) {
         return null;
       }
-      const [path17, argument] = match[0].replace(/#! ?/, "").split(" ");
-      const binary = path17.split("/").pop();
+      const [path19, argument] = match[0].replace(/#! ?/, "").split(" ");
+      const binary = path19.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -15514,16 +15514,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "node_modules/cross-spawn/lib/util/readShebang.js"(exports, module) {
     "use strict";
-    var fs11 = __require("fs");
+    var fs13 = __require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs11.openSync(command, "r");
-        fs11.readSync(fd, buffer, 0, size, 0);
-        fs11.closeSync(fd);
+        fd = fs13.openSync(command, "r");
+        fs13.readSync(fd, buffer, 0, size, 0);
+        fs13.closeSync(fd);
       } catch (e) {
       }
       return shebangCommand(buffer.toString());
@@ -15536,7 +15536,7 @@ var require_readShebang = __commonJS({
 var require_parse = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports, module) {
     "use strict";
-    var path17 = __require("path");
+    var path19 = __require("path");
     var resolveCommand = require_resolveCommand();
     var escape2 = require_escape();
     var readShebang = require_readShebang();
@@ -15561,7 +15561,7 @@ var require_parse = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path17.normalize(parsed.command);
+        parsed.command = path19.normalize(parsed.command);
         parsed.command = escape2.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -19691,13 +19691,13 @@ var init_output_sync = __esm({
       }
     };
     writeToFiles = (serializedResult, stdioItems, outputFiles) => {
-      for (const { path: path17, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
-        const pathString = typeof path17 === "string" ? path17 : path17.toString();
+      for (const { path: path19, append } of stdioItems.filter(({ type }) => FILE_TYPES.has(type))) {
+        const pathString = typeof path19 === "string" ? path19 : path19.toString();
         if (append || outputFiles.has(pathString)) {
-          appendFileSync(path17, serializedResult);
+          appendFileSync(path19, serializedResult);
         } else {
           outputFiles.add(pathString);
-          writeFileSync(path17, serializedResult);
+          writeFileSync(path19, serializedResult);
         }
       }
     };
@@ -22505,6 +22505,8 @@ var init_logger = __esm({
 });
 
 // src/session/git.ts
+import fs2 from "fs/promises";
+import path7 from "path";
 import { randomBytes } from "crypto";
 function generateSessionBranch(pluginName) {
   const date3 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -22556,6 +22558,14 @@ async function removeWorktree(repoPath, worktreePath) {
   const result = await run("git", ["worktree", "remove", "--force", worktreePath], { cwd: repoPath });
   if (result.exitCode !== 0) {
     warn(`git worktree remove failed (exit ${result.exitCode}): ${result.stderr}`);
+  }
+}
+async function cleanWorktreePthDir(worktreePath) {
+  const pthDir = path7.join(worktreePath, ".pth");
+  try {
+    await fs2.rm(pthDir, { recursive: true, force: true });
+  } catch {
+    warn(`Could not clean .pth/ in worktree ${worktreePath} \u2014 proceeding with removal`);
   }
 }
 async function pruneWorktrees(repoPath) {
@@ -22670,22 +22680,60 @@ var init_git = __esm({
   }
 });
 
+// src/fix/tracker.ts
+async function getFixHistory(worktreePath) {
+  const result = await run(
+    "git",
+    ["log", "--format=%x1eCOMMIT%x1e%h %s%n%aI%n%b", "-n100"],
+    { cwd: worktreePath }
+  );
+  const records = [];
+  const chunks = result.stdout.split(COMMIT_PREFIX).filter((c3) => c3.trim());
+  for (const chunk of chunks) {
+    const lines = chunk.split("\n");
+    const firstLine = lines[0]?.trim() ?? "";
+    const m = firstLine.match(/^([a-f0-9]+) (.+)$/);
+    if (!m) continue;
+    const timestamp = lines[1]?.trim() ?? (/* @__PURE__ */ new Date()).toISOString();
+    const body = lines.slice(2).join("\n");
+    const trailers = parseTrailers(body);
+    if (Object.keys(trailers).length === 0) continue;
+    records.push({
+      commitHash: m[1],
+      commitTitle: m[2],
+      trailers,
+      filesChanged: trailers["PTH-Files"]?.split(",").map((f) => f.trim()) ?? [],
+      timestamp
+    });
+  }
+  return records;
+}
+var COMMIT_PREFIX;
+var init_tracker = __esm({
+  "src/fix/tracker.ts"() {
+    "use strict";
+    init_exec();
+    init_git();
+    COMMIT_PREFIX = "COMMIT";
+  }
+});
+
 // src/session/state-persister.ts
-import fs4 from "fs/promises";
-import path9 from "path";
+import fs5 from "fs/promises";
+import path10 from "path";
 async function writeSessionState(worktreePath, state) {
-  const dir = path9.join(worktreePath, ".pth");
-  await fs4.mkdir(dir, { recursive: true });
-  await fs4.writeFile(
-    path9.join(worktreePath, STATE_FILE),
+  const dir = path10.join(worktreePath, ".pth");
+  await fs5.mkdir(dir, { recursive: true });
+  await fs5.writeFile(
+    path10.join(worktreePath, STATE_FILE),
     JSON.stringify(state, null, 2),
     "utf-8"
   );
 }
 async function readSessionState(worktreePath) {
-  const filePath = path9.join(worktreePath, STATE_FILE);
+  const filePath = path10.join(worktreePath, STATE_FILE);
   try {
-    const raw = await fs4.readFile(filePath, "utf-8");
+    const raw = await fs5.readFile(filePath, "utf-8");
     return JSON.parse(raw);
   } catch (err) {
     if (err.code === "ENOENT") return null;
@@ -22708,23 +22756,23 @@ __export(detector_exports, {
   detectPluginName: () => detectPluginName,
   readMcpConfig: () => readMcpConfig
 });
-import fs6 from "fs/promises";
-import path11 from "path";
+import fs7 from "fs/promises";
+import path12 from "path";
 async function detectPluginMode(pluginPath) {
   try {
-    await fs6.access(pluginPath);
+    await fs7.access(pluginPath);
   } catch {
     throw new PTHError("PLUGIN_NOT_FOUND" /* PLUGIN_NOT_FOUND */, `Plugin path not found: ${pluginPath}`);
   }
-  const mcpJsonPath = path11.join(pluginPath, ".mcp.json");
+  const mcpJsonPath = path12.join(pluginPath, ".mcp.json");
   try {
-    await fs6.access(mcpJsonPath);
+    await fs7.access(mcpJsonPath);
     return "mcp";
   } catch {
   }
-  const claudePluginDir = path11.join(pluginPath, ".claude-plugin");
+  const claudePluginDir = path12.join(pluginPath, ".claude-plugin");
   try {
-    await fs6.access(claudePluginDir);
+    await fs7.access(claudePluginDir);
     return "plugin";
   } catch {
     throw new PTHError(
@@ -22734,12 +22782,12 @@ async function detectPluginMode(pluginPath) {
   }
 }
 async function detectBuildSystem(pluginPath) {
-  const pkgPath = path11.join(pluginPath, "package.json");
+  const pkgPath = path12.join(pluginPath, "package.json");
   try {
-    const raw = await fs6.readFile(pkgPath, "utf-8");
+    const raw = await fs7.readFile(pkgPath, "utf-8");
     const pkg = JSON.parse(raw);
     const hasBuildScript = !!pkg.scripts?.["build"];
-    const hasTsConfig = await fileExists(path11.join(pluginPath, "tsconfig.json"));
+    const hasTsConfig = await fileExists(path12.join(pluginPath, "tsconfig.json"));
     return {
       installCommand: ["npm", "install"],
       buildCommand: hasBuildScript ? ["npm", "run", "build"] : hasTsConfig ? ["npx", "tsc"] : null,
@@ -22748,7 +22796,7 @@ async function detectBuildSystem(pluginPath) {
     };
   } catch {
   }
-  if (await fileExists(path11.join(pluginPath, "pyproject.toml")) || await fileExists(path11.join(pluginPath, "setup.py"))) {
+  if (await fileExists(path12.join(pluginPath, "pyproject.toml")) || await fileExists(path12.join(pluginPath, "setup.py"))) {
     return {
       installCommand: ["pip", "install", "-e", "."],
       buildCommand: null,
@@ -22756,7 +22804,7 @@ async function detectBuildSystem(pluginPath) {
       language: "python"
     };
   }
-  if (await fileExists(path11.join(pluginPath, "tsconfig.json"))) {
+  if (await fileExists(path12.join(pluginPath, "tsconfig.json"))) {
     return {
       installCommand: null,
       buildCommand: ["npx", "tsc"],
@@ -22764,7 +22812,7 @@ async function detectBuildSystem(pluginPath) {
       language: "typescript"
     };
   }
-  if (await fileExists(path11.join(pluginPath, "Makefile")) || await fileExists(path11.join(pluginPath, "install.sh"))) {
+  if (await fileExists(path12.join(pluginPath, "Makefile")) || await fileExists(path12.join(pluginPath, "install.sh"))) {
     return {
       installCommand: null,
       buildCommand: null,
@@ -22780,10 +22828,10 @@ async function detectBuildSystem(pluginPath) {
   };
 }
 async function readMcpConfig(pluginPath) {
-  const mcpJsonPath = path11.join(pluginPath, ".mcp.json");
+  const mcpJsonPath = path12.join(pluginPath, ".mcp.json");
   let raw;
   try {
-    raw = await fs6.readFile(mcpJsonPath, "utf-8");
+    raw = await fs7.readFile(mcpJsonPath, "utf-8");
   } catch (err) {
     if (err.code === "ENOENT") return null;
     throw err;
@@ -22805,27 +22853,27 @@ async function readMcpConfig(pluginPath) {
   return { serverName, ...serverConfig };
 }
 async function detectPluginName(pluginPath) {
-  const manifestPath = path11.join(pluginPath, ".claude-plugin", "plugin.json");
+  const manifestPath = path12.join(pluginPath, ".claude-plugin", "plugin.json");
   try {
-    const raw = await fs6.readFile(manifestPath, "utf-8");
+    const raw = await fs7.readFile(manifestPath, "utf-8");
     const manifest = JSON.parse(raw);
     if (manifest.name) return manifest.name;
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
-  const pkgPath = path11.join(pluginPath, "package.json");
+  const pkgPath = path12.join(pluginPath, "package.json");
   try {
-    const raw = await fs6.readFile(pkgPath, "utf-8");
+    const raw = await fs7.readFile(pkgPath, "utf-8");
     const pkg = JSON.parse(raw);
     if (pkg.name) return pkg.name;
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
-  return path11.basename(pluginPath);
+  return path12.basename(pluginPath);
 }
 async function fileExists(p) {
   try {
-    await fs6.access(p);
+    await fs7.access(p);
     return true;
   } catch {
     return false;
@@ -22839,8 +22887,8 @@ var init_detector = __esm({
 });
 
 // src/testing/store.ts
-import fs7 from "fs/promises";
-import path12 from "path";
+import fs8 from "fs/promises";
+import path13 from "path";
 var import_yaml2, TestStore;
 var init_store = __esm({
   "src/testing/store.ts"() {
@@ -22871,19 +22919,19 @@ var init_store = __esm({
         return this.tests.size;
       }
       async persistToDir(dirPath) {
-        await fs7.mkdir(dirPath, { recursive: true });
+        await fs8.mkdir(dirPath, { recursive: true });
         const mcpTests = this.filter((t) => t.mode === "mcp");
         const pluginTests = this.filter((t) => t.mode === "plugin");
         if (mcpTests.length > 0) {
-          await fs7.writeFile(
-            path12.join(dirPath, "mcp-tests.yaml"),
+          await fs8.writeFile(
+            path13.join(dirPath, "mcp-tests.yaml"),
             mcpTests.map((t) => (0, import_yaml2.stringify)(t)).join("\n---\n"),
             "utf-8"
           );
         }
         if (pluginTests.length > 0) {
-          await fs7.writeFile(
-            path12.join(dirPath, "plugin-tests.yaml"),
+          await fs8.writeFile(
+            path13.join(dirPath, "plugin-tests.yaml"),
             pluginTests.map((t) => (0, import_yaml2.stringify)(t)).join("\n---\n"),
             "utf-8"
           );
@@ -22893,249 +22941,403 @@ var init_store = __esm({
   }
 });
 
-// src/session/manager.ts
-var manager_exports = {};
-__export(manager_exports, {
-  endSession: () => endSession,
-  iterationHistory: () => iterationHistory,
-  preflight: () => preflight,
-  resumeSession: () => resumeSession,
-  startSession: () => startSession,
-  testStore: () => testStore
-});
-import fs8 from "fs/promises";
-import path13 from "path";
+// src/persistence/store-manager.ts
+import fs9 from "fs/promises";
+import path14 from "path";
 import os from "os";
-async function preflight(args) {
-  const checkLines = [];
-  try {
-    await fs8.access(args.pluginPath);
-    checkLines.push(`\u2713 Plugin path exists: ${args.pluginPath}`);
-  } catch {
-    return `\u2717 Plugin path not found: ${args.pluginPath}`;
-  }
-  try {
-    await getGitRepoRoot(args.pluginPath);
-    checkLines.push(`\u2713 Git repository detected`);
-  } catch {
-    checkLines.push(`\u26A0 Not a git repository \u2014 PTH requires git for session branch management`);
-  }
-  let pluginValid = false;
-  try {
-    const mode = await detectPluginMode(args.pluginPath);
-    checkLines.push(`\u2713 Plugin mode: ${mode}`);
-    pluginValid = true;
-  } catch {
-    checkLines.push(`\u2717 Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
-  }
-  let liveSessionActive = false;
-  const lockPath = path13.join(args.pluginPath, ".pth", "active-session.lock");
-  try {
-    const lock = JSON.parse(await fs8.readFile(lockPath, "utf-8"));
-    try {
-      process.kill(lock.pid, 0);
-      liveSessionActive = true;
-      checkLines.push(`\u26A0 Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
-    } catch {
-      checkLines.push(`\u26A0 Stale session lock found (PID ${lock.pid} is not running) \u2014 will be cleaned up at start`);
-    }
-  } catch {
-    checkLines.push(`\u2713 No active session lock`);
-  }
-  const verdict = !pluginValid ? "\u2717 Cannot start session \u2014 fix the issues above first." : liveSessionActive ? "\u26A0 Session already active \u2014 call pth_end_session first, or use pth_resume_session." : "\u2713 OK \u2014 ready to start a session.";
-  return [verdict, "", "PTH Preflight Check", "", ...checkLines].join("\n");
+function slugify2(name) {
+  return name.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
 }
-async function startSession(args) {
-  const pluginName = await detectPluginName(args.pluginPath);
-  const pluginMode = await detectPluginMode(args.pluginPath);
-  await detectBuildSystem(args.pluginPath);
-  const lockPath = path13.join(args.pluginPath, ".pth", "active-session.lock");
-  {
-    try {
-      const raw = await fs8.readFile(lockPath, "utf-8");
-      const lock = JSON.parse(raw);
-      try {
-        process.kill(lock.pid, 0);
-        throw new PTHError(
-          "SESSION_ALREADY_ACTIVE" /* SESSION_ALREADY_ACTIVE */,
-          `Session already active (PID ${lock.pid}, branch ${lock.branch}). Call pth_end_session first, or run pth_preflight to verify.`
-        );
-      } catch (e) {
-        if (e instanceof PTHError) throw e;
-      }
-    } catch (e) {
-      if (e instanceof PTHError) throw e;
-    }
-  }
-  const repoRoot = await getGitRepoRoot(args.pluginPath);
-  const pluginRelPath = path13.relative(repoRoot, args.pluginPath);
-  const branch = generateSessionBranch(pluginName);
-  await pruneWorktrees(repoRoot);
-  if (await checkBranchExists(repoRoot, branch)) {
-    throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${branch} already exists \u2014 this should be extremely rare. Try again.`);
-  }
-  const worktreePath = path13.join(os.tmpdir(), `pth-worktree-${branch.split("/")[1]}`);
+function getPersistentStorePath(pluginName) {
+  return path14.join(os.homedir(), ".pth", slugify2(pluginName));
+}
+async function hasHistory(pluginName) {
+  const indexPath = path14.join(getPersistentStorePath(pluginName), "index.json");
   try {
-    await createBranch(repoRoot, branch);
-    await addWorktree(repoRoot, worktreePath, branch);
-    await fs8.mkdir(path13.join(args.pluginPath, ".pth"), { recursive: true });
-    await fs8.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: (/* @__PURE__ */ new Date()).toISOString() }), "utf-8");
-    testStore = new TestStore();
-    const existingTests = await loadTestsFromDir(path13.join(worktreePath, ".pth", "tests"));
-    existingTests.forEach((t) => testStore.add(t));
-    const state = {
-      sessionId: branch,
-      branch,
-      worktreePath,
-      pluginPath: args.pluginPath,
-      pluginName,
-      pluginMode,
-      pluginRelPath,
-      startedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      iteration: 0,
-      testCount: testStore.count(),
-      passingCount: 0,
-      failingCount: 0,
-      convergenceTrend: "unknown",
-      activeFailures: []
+    await fs9.access(indexPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function loadTests(pluginName) {
+  const testsDir = path14.join(getPersistentStorePath(pluginName), "tests");
+  return loadTestsFromDir(testsDir);
+}
+async function saveTests(pluginName, store) {
+  const testsDir = path14.join(getPersistentStorePath(pluginName), "tests");
+  await fs9.mkdir(testsDir, { recursive: true });
+  await store.persistToDir(testsDir);
+}
+async function loadSnapshot(pluginName) {
+  const snapshotPath = path14.join(getPersistentStorePath(pluginName), "plugin-snapshot.json");
+  try {
+    const raw = await fs9.readFile(snapshotPath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+async function saveSnapshot(pluginName, snapshot) {
+  const storePath = getPersistentStorePath(pluginName);
+  await fs9.mkdir(storePath, { recursive: true });
+  await fs9.writeFile(
+    path14.join(storePath, "plugin-snapshot.json"),
+    JSON.stringify(snapshot, null, 2),
+    "utf-8"
+  );
+}
+async function appendResults(pluginName, sessionId, exportedResults) {
+  if (exportedResults.length === 0) return;
+  const storePath = getPersistentStorePath(pluginName);
+  await fs9.mkdir(storePath, { recursive: true });
+  const historyPath = path14.join(storePath, "results-history.json");
+  let history = {};
+  try {
+    const raw = await fs9.readFile(historyPath, "utf-8");
+    history = JSON.parse(raw);
+  } catch {
+    history = {};
+  }
+  const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+  for (const result of exportedResults) {
+    if (result.latestStatus === "pending") continue;
+    const entry = {
+      sessionId,
+      status: result.latestStatus,
+      failureReason: result.latestResult?.failureReason,
+      timestamp: result.latestResult?.recordedAt ?? timestamp
     };
-    await writeSessionState(worktreePath, state);
-    const mcpConfig = pluginMode === "mcp" ? await readMcpConfig(args.pluginPath) : null;
-    const nextStep = pluginMode === "mcp" && mcpConfig ? [
-      `MCP server: ${mcpConfig.command} ${mcpConfig.args.join(" ")}`,
-      ``,
-      `Next: call pth_generate_tests \u2014 tool schemas will be auto-discovered from the MCP server.`
-    ].join("\n") : `Next: call pth_generate_tests to analyze hook scripts and manifest.`;
-    const lines = [
-      `PTH session started.`,
-      ``,
-      `Branch:    ${branch}`,
-      `Worktree:  ${worktreePath}`,
-      `Mode:      ${pluginMode}`,
-      `Plugin:    ${pluginName}`,
-      pluginRelPath ? `Subpath:   ${pluginRelPath}` : "",
-      `Plugin dir: ${path13.join(worktreePath, pluginRelPath)}`,
-      existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
-      ``,
-      nextStep
-    ].filter((l) => l !== void 0);
-    return { state, message: lines.join("\n") };
-  } catch (err) {
-    await fs8.rm(lockPath, { force: true });
-    await removeWorktree(repoRoot, worktreePath).catch(() => {
-    });
-    await run("git", ["branch", "-D", branch], { cwd: repoRoot }).catch(() => {
-    });
-    throw err;
+    const existing = history[result.testId] ?? [];
+    existing.push(entry);
+    history[result.testId] = existing;
   }
+  await fs9.writeFile(historyPath, JSON.stringify(history, null, 2), "utf-8");
 }
-async function resumeSession(args) {
-  if (!args.branch.startsWith("pth/")) {
-    throw new PTHError(
-      "GIT_ERROR" /* GIT_ERROR */,
-      `Branch "${args.branch}" is not a PTH session branch. Session branches follow the pattern: pth/<plugin>-<date>-<hash>`
-    );
-  }
-  const repoRoot = await getGitRepoRoot(args.pluginPath);
-  const worktreePath = path13.join(os.tmpdir(), `pth-worktree-${args.branch.split("/")[1]}`);
-  if (!await checkBranchExists(repoRoot, args.branch)) {
-    throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${args.branch} not found in ${args.pluginPath}`);
-  }
-  await pruneWorktrees(repoRoot);
-  const worktreeExists = await fs8.access(worktreePath).then(() => true).catch(() => false);
-  if (!worktreeExists) {
-    await addWorktree(repoRoot, worktreePath, args.branch);
-  }
-  const savedState = await readSessionState(worktreePath);
-  const pluginName = await detectPluginName(args.pluginPath);
-  const pluginMode = await detectPluginMode(args.pluginPath);
-  const pluginRelPath = path13.relative(repoRoot, args.pluginPath);
-  testStore = new TestStore();
-  const tests = await loadTestsFromDir(path13.join(worktreePath, ".pth", "tests"));
-  tests.forEach((t) => testStore.add(t));
-  const state = savedState ?? {
-    sessionId: args.branch,
-    branch: args.branch,
-    worktreePath,
-    pluginPath: args.pluginPath,
-    pluginName,
-    pluginMode,
-    pluginRelPath,
-    startedAt: (/* @__PURE__ */ new Date()).toISOString(),
-    iteration: 0,
-    testCount: testStore.count(),
-    passingCount: 0,
-    failingCount: 0,
-    convergenceTrend: "unknown",
-    activeFailures: []
-  };
-  state.worktreePath = worktreePath;
-  state.pluginRelPath = state.pluginRelPath ?? pluginRelPath;
-  const lines = [
-    `PTH session resumed.`,
-    ``,
-    `Branch:    ${args.branch}`,
-    `Iteration: ${state.iteration}`,
-    `Tests:     ${testStore.count()} loaded`,
-    `Status:    ${state.passingCount} passing, ${state.failingCount} failing`,
-    `Trend:     ${state.convergenceTrend}`,
-    ...!savedState ? [`Note: session-state.json not found \u2014 reconstructed from git history.`] : []
-  ];
-  return { state, message: lines.join("\n") };
+async function saveSessionArtifacts(pluginName, artifacts) {
+  const date3 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const shortId = artifacts.sessionId.split("/").pop() ?? artifacts.sessionId;
+  const sessionDir = path14.join(
+    getPersistentStorePath(pluginName),
+    "sessions",
+    `${date3}-${shortId}`
+  );
+  await fs9.mkdir(sessionDir, { recursive: true });
+  await Promise.all([
+    fs9.writeFile(path14.join(sessionDir, "SESSION-REPORT.md"), artifacts.reportContent, "utf-8"),
+    fs9.writeFile(
+      path14.join(sessionDir, "iteration-history.json"),
+      JSON.stringify(
+        artifacts.iterationHistory.map((s, i2) => ({
+          iteration: i2 + 1,
+          passing: s.passing,
+          failing: s.failing,
+          fixesApplied: s.fixesApplied
+        })),
+        null,
+        2
+      ),
+      "utf-8"
+    ),
+    fs9.writeFile(
+      path14.join(sessionDir, "fix-history.json"),
+      JSON.stringify(artifacts.fixHistory, null, 2),
+      "utf-8"
+    )
+  ]);
+  return sessionDir;
 }
-async function endSession(state) {
-  await testStore.persistToDir(path13.join(state.worktreePath, ".pth", "tests"));
-  const status = await run("git", ["status", "--porcelain"], { cwd: state.worktreePath });
-  if (status.stdout.trim()) {
-    await commitAll(state.worktreePath, buildCommitMessage("chore: persist PTH test suite", { "PTH-Type": "session-end" }));
+async function updateIndex(pluginName, sessionId) {
+  const storePath = getPersistentStorePath(pluginName);
+  await fs9.mkdir(storePath, { recursive: true });
+  const indexPath = path14.join(storePath, "index.json");
+  let index;
+  try {
+    const raw = await fs9.readFile(indexPath, "utf-8");
+    index = JSON.parse(raw);
+  } catch {
+    index = {
+      pluginName,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      lastSession: sessionId,
+      sessionCount: 0
+    };
   }
-  const repoRoot = await getGitRepoRoot(state.pluginPath);
-  await removeWorktree(repoRoot, state.worktreePath);
-  const lockPath = path13.join(state.pluginPath, ".pth", "active-session.lock");
-  await fs8.rm(lockPath, { force: true });
-  return [
-    `PTH session ended.`,
-    ``,
-    `Branch:       ${state.branch}`,
-    `Tests saved:  ${testStore.count()}`,
-    `Iterations:   ${state.iteration}`,
-    `Final status: ${state.passingCount} passing, ${state.failingCount} failing`,
-    ``,
-    `Branch ${state.branch} remains in your repo with full session history.`,
-    `Review: git log ${state.branch}  (run from ${state.pluginPath})`,
-    `Diff:   git diff $(git merge-base HEAD ${state.branch})...${state.branch}`
-  ].join("\n");
+  index.lastSession = sessionId;
+  index.sessionCount = (index.sessionCount ?? 0) + 1;
+  await fs9.writeFile(indexPath, JSON.stringify(index, null, 2), "utf-8");
 }
-function buildCommitMessage(title, trailers) {
-  const lines = Object.entries(trailers).map(([k, v]) => `${k}: ${v}`).join("\n");
-  return lines ? `${title}
-
-${lines}` : title;
-}
-var testStore, iterationHistory;
-var init_manager = __esm({
-  "src/session/manager.ts"() {
+var init_store_manager = __esm({
+  "src/persistence/store-manager.ts"() {
     "use strict";
-    init_detector();
-    init_git();
-    init_state_persister();
-    init_store();
     init_parser();
-    init_exec();
-    init_errors();
-    testStore = new TestStore();
-    iterationHistory = [];
+  }
+});
+
+// src/persistence/plugin-scanner.ts
+import fs10 from "fs/promises";
+import path15 from "path";
+async function scanPlugin(pluginPath, snapshotCapturedAt) {
+  const scannedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const isMcp = await fileExists2(path15.join(pluginPath, ".mcp.json"));
+  const pluginMode = isMcp ? "mcp" : "plugin";
+  const version2 = await readVersion(pluginPath);
+  if (pluginMode === "plugin") {
+    const [commands, skills, agents] = await Promise.all([
+      listComponentNames(path15.join(pluginPath, ".claude-plugin", "commands")),
+      listComponentNames(path15.join(pluginPath, ".claude-plugin", "skills")),
+      listComponentNames(path15.join(pluginPath, ".claude-plugin", "agents"))
+    ]);
+    return { pluginMode, version: version2, toolNames: [], commands, skills, agents, changedSourceFiles: [], scannedAt };
+  }
+  const srcDir = path15.join(pluginPath, "src");
+  const srcExists = await fileExists2(srcDir);
+  const snapshotTime = snapshotCapturedAt ? new Date(snapshotCapturedAt).getTime() : void 0;
+  const [toolNames, changedSourceFiles] = await Promise.all([
+    srcExists ? extractToolNamesFromSource(srcDir) : Promise.resolve([]),
+    snapshotTime ? findChangedSourceFiles(pluginPath, snapshotTime) : Promise.resolve([])
+  ]);
+  return { pluginMode, version: version2, toolNames, commands: [], skills: [], agents: [], changedSourceFiles, scannedAt };
+}
+function buildSnapshot(scan, toolSchemas) {
+  return {
+    pluginMode: scan.pluginMode,
+    capturedAt: scan.scannedAt,
+    version: scan.version,
+    tools: toolSchemas,
+    commands: scan.commands,
+    skills: scan.skills,
+    agents: scan.agents
+  };
+}
+async function listComponentNames(dirPath) {
+  try {
+    const entries = await fs10.readdir(dirPath, { withFileTypes: true });
+    return entries.map((e) => {
+      if (e.isDirectory()) return e.name;
+      return e.name.replace(/\.[^.]+$/, "");
+    }).filter((n2) => !n2.startsWith(".")).sort();
+  } catch {
+    return [];
+  }
+}
+async function extractToolNamesFromSource(srcDir) {
+  const files = await findSourceFiles(srcDir);
+  const names = /* @__PURE__ */ new Set();
+  for (const file of files) {
+    try {
+      const content = await fs10.readFile(file, "utf-8");
+      const matches = content.matchAll(TOOL_NAME_PATTERN);
+      for (const match of matches) {
+        names.add(match[1]);
+      }
+    } catch {
+    }
+  }
+  return [...names].sort();
+}
+async function findSourceFiles(dir) {
+  const results = [];
+  try {
+    const entries = await fs10.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path15.join(dir, entry.name);
+      if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
+        results.push(...await findSourceFiles(full));
+      } else if (entry.isFile() && (entry.name.endsWith(".ts") || entry.name.endsWith(".js"))) {
+        results.push(full);
+      }
+    }
+  } catch {
+  }
+  return results;
+}
+async function findChangedSourceFiles(pluginPath, sinceMs) {
+  const searchDirs = ["src", "scripts", "hooks"].map((d) => path15.join(pluginPath, d));
+  const changed = [];
+  for (const dir of searchDirs) {
+    const files = await findSourceFiles(dir);
+    for (const file of files) {
+      try {
+        const stat = await fs10.stat(file);
+        if (stat.mtimeMs > sinceMs) {
+          changed.push(path15.relative(pluginPath, file));
+        }
+      } catch {
+      }
+    }
+  }
+  return changed;
+}
+async function readVersion(pluginPath) {
+  try {
+    const raw = await fs10.readFile(path15.join(pluginPath, ".claude-plugin", "plugin.json"), "utf-8");
+    const data = JSON.parse(raw);
+    if (data.version) return data.version;
+  } catch {
+  }
+  try {
+    const raw = await fs10.readFile(path15.join(pluginPath, "package.json"), "utf-8");
+    const data = JSON.parse(raw);
+    if (data.version) return data.version;
+  } catch {
+  }
+  return void 0;
+}
+async function fileExists2(p) {
+  try {
+    await fs10.access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+var TOOL_NAME_PATTERN;
+var init_plugin_scanner = __esm({
+  "src/persistence/plugin-scanner.ts"() {
+    "use strict";
+    TOOL_NAME_PATTERN = /\bname:\s*['"]([a-z][a-z0-9_]{3,})['"]/g;
+  }
+});
+
+// src/persistence/gap-analyzer.ts
+function analyzeGap(snapshot, scan, savedTests) {
+  const savedTests_count = savedTests.length;
+  if (snapshot.pluginMode === "plugin") {
+    return analyzePluginGap(snapshot, scan, savedTests, savedTests_count);
+  } else {
+    return analyzeMcpGap(snapshot, scan, savedTests, savedTests_count);
+  }
+}
+function analyzePluginGap(snapshot, scan, savedTests, savedTests_count) {
+  const savedCommands = new Set(snapshot.commands);
+  const savedSkills = new Set(snapshot.skills);
+  const savedAgents = new Set(snapshot.agents);
+  const currentCommands = new Set(scan.commands);
+  const currentSkills = new Set(scan.skills);
+  const currentAgents = new Set(scan.agents);
+  const allSaved = [
+    ...snapshot.commands.map((n2) => `command:${n2}`),
+    ...snapshot.skills.map((n2) => `skill:${n2}`),
+    ...snapshot.agents.map((n2) => `agent:${n2}`)
+  ];
+  const allCurrent = [
+    ...scan.commands.map((n2) => `command:${n2}`),
+    ...scan.skills.map((n2) => `skill:${n2}`),
+    ...scan.agents.map((n2) => `agent:${n2}`)
+  ];
+  const savedSet = new Set(allSaved);
+  const currentSet = new Set(allCurrent);
+  const newComponents = allCurrent.filter((n2) => !savedSet.has(n2));
+  const removedComponents = allSaved.filter((n2) => !currentSet.has(n2));
+  const unchangedComponents = allCurrent.filter((n2) => savedSet.has(n2));
+  const modifiedComponents = [];
+  const removedNames = new Set(removedComponents.map((c3) => c3.split(":")[1]));
+  const staleTestIds = savedTests.filter((t) => {
+    const toolRef = t.tool ?? t.name.split(" ")[0];
+    return removedNames.has(toolRef) || removedNames.has(toolRef.replace(/_/g, "-"));
+  }).map((t) => t.id);
+  const recommendation = buildRecommendation({
+    newCount: newComponents.length,
+    modifiedCount: 0,
+    removedCount: removedComponents.length,
+    staleCount: staleTestIds.length,
+    sourceChanged: false,
+    pluginMode: "plugin"
+  });
+  return {
+    savedTests: savedTests_count,
+    newComponents,
+    modifiedComponents,
+    removedComponents,
+    unchangedComponents,
+    staleTestIds,
+    sourceChangedSinceSnapshot: false,
+    recommendation
+  };
+  void savedCommands;
+  void savedSkills;
+  void savedAgents;
+  void currentCommands;
+  void currentSkills;
+  void currentAgents;
+}
+function analyzeMcpGap(snapshot, scan, savedTests, savedTests_count) {
+  const savedToolNames = new Set(snapshot.tools.map((t) => t.name));
+  const currentToolNames = new Set(scan.toolNames);
+  const hasCurrentNames = currentToolNames.size > 0;
+  let newComponents = [];
+  let removedComponents = [];
+  let unchangedComponents = [];
+  if (hasCurrentNames) {
+    newComponents = [...currentToolNames].filter((n2) => !savedToolNames.has(n2));
+    removedComponents = [...savedToolNames].filter((n2) => !currentToolNames.has(n2));
+    unchangedComponents = [...currentToolNames].filter((n2) => savedToolNames.has(n2));
+  } else {
+    unchangedComponents = snapshot.tools.map((t) => t.name);
+  }
+  const sourceChanged = scan.changedSourceFiles.length > 0;
+  const modifiedComponents = sourceChanged && hasCurrentNames ? unchangedComponents.filter((n2) => {
+    return scan.changedSourceFiles.some(
+      (f) => f.includes(n2.replace(/_/g, "-")) || f.includes(n2)
+    );
+  }) : [];
+  const removedSet = new Set(removedComponents);
+  const staleTestIds = savedTests.filter((t) => {
+    const toolRef = t.tool ?? "";
+    return removedSet.has(toolRef);
+  }).map((t) => t.id);
+  const recommendation = buildRecommendation({
+    newCount: newComponents.length,
+    modifiedCount: modifiedComponents.length,
+    removedCount: removedComponents.length,
+    staleCount: staleTestIds.length,
+    sourceChanged,
+    pluginMode: "mcp",
+    noSourceScan: !hasCurrentNames,
+    changedFileCount: scan.changedSourceFiles.length
+  });
+  return {
+    savedTests: savedTests_count,
+    newComponents,
+    modifiedComponents,
+    removedComponents,
+    unchangedComponents,
+    staleTestIds,
+    sourceChangedSinceSnapshot: sourceChanged,
+    recommendation
+  };
+}
+function buildRecommendation(opts) {
+  const parts = [];
+  if (opts.newCount > 0) {
+    parts.push(`${opts.newCount} new component(s) detected \u2192 run pth_generate_tests to cover them`);
+  }
+  if (opts.modifiedCount > 0) {
+    parts.push(`${opts.modifiedCount} component(s) potentially modified \u2192 regenerate tests to update schemas`);
+  }
+  if (opts.staleCount > 0) {
+    parts.push(`${opts.staleCount} test(s) may be stale (removed components) \u2192 review with pth_list_tests`);
+  }
+  if (opts.pluginMode === "mcp" && opts.sourceChanged && opts.newCount === 0 && opts.modifiedCount === 0) {
+    parts.push(`${opts.changedFileCount ?? 0} source file(s) changed since last snapshot \u2192 run pth_generate_tests to verify tool schemas`);
+  }
+  if (opts.pluginMode === "mcp" && opts.noSourceScan) {
+    parts.push(`Source scan found no tool names \u2014 run pth_generate_tests to discover current tools`);
+  }
+  if (parts.length === 0) {
+    return "No structural changes detected \u2014 existing tests should still be valid.";
+  }
+  return parts.join(". ") + ".";
+}
+var init_gap_analyzer = __esm({
+  "src/persistence/gap-analyzer.ts"() {
+    "use strict";
   }
 });
 
 // src/session/report-generator.ts
-var report_generator_exports = {};
-__export(report_generator_exports, {
-  generateReport: () => generateReport
-});
-import fs9 from "fs/promises";
-import path14 from "path";
-async function generateReport(worktreePath, options) {
+function buildReportContent(options) {
   const { state, iterationHistory: iterationHistory2 } = options;
   const lines = [
     `# PTH Session Report`,
@@ -23165,13 +23367,327 @@ async function generateReport(worktreePath, options) {
     ``,
     state.failingCount === 0 ? `All ${state.testCount} tests passing.` : `${state.failingCount} tests still failing at session end.`
   ];
-  const dir = path14.join(worktreePath, ".pth");
-  await fs9.mkdir(dir, { recursive: true });
-  await fs9.writeFile(path14.join(worktreePath, ".pth/SESSION-REPORT.md"), lines.join("\n"), "utf-8");
+  return lines.join("\n");
 }
 var init_report_generator = __esm({
   "src/session/report-generator.ts"() {
     "use strict";
+  }
+});
+
+// src/session/manager.ts
+var manager_exports = {};
+__export(manager_exports, {
+  endSession: () => endSession,
+  iterationHistory: () => iterationHistory,
+  preflight: () => preflight,
+  resumeSession: () => resumeSession,
+  startSession: () => startSession,
+  testStore: () => testStore
+});
+import fs11 from "fs/promises";
+import path16 from "path";
+import os2 from "os";
+async function preflight(args) {
+  const checkLines = [];
+  try {
+    await fs11.access(args.pluginPath);
+    checkLines.push(`\u2713 Plugin path exists: ${args.pluginPath}`);
+  } catch {
+    return `\u2717 Plugin path not found: ${args.pluginPath}`;
+  }
+  try {
+    await getGitRepoRoot(args.pluginPath);
+    checkLines.push(`\u2713 Git repository detected`);
+  } catch {
+    checkLines.push(`\u26A0 Not a git repository \u2014 PTH requires git for session branch management`);
+  }
+  let pluginValid = false;
+  try {
+    const mode = await detectPluginMode(args.pluginPath);
+    checkLines.push(`\u2713 Plugin mode: ${mode}`);
+    pluginValid = true;
+  } catch {
+    checkLines.push(`\u2717 Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
+  }
+  let liveSessionActive = false;
+  const lockPath = path16.join(args.pluginPath, ".pth", "active-session.lock");
+  try {
+    const lock = JSON.parse(await fs11.readFile(lockPath, "utf-8"));
+    try {
+      process.kill(lock.pid, 0);
+      liveSessionActive = true;
+      checkLines.push(`\u26A0 Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
+    } catch {
+      checkLines.push(`\u26A0 Stale session lock found (PID ${lock.pid} is not running) \u2014 will be cleaned up at start`);
+    }
+  } catch {
+    checkLines.push(`\u2713 No active session lock`);
+  }
+  let pluginName = "";
+  try {
+    pluginName = await detectPluginName(args.pluginPath);
+    const history = await hasHistory(pluginName);
+    checkLines.push(
+      history ? `\u2713 Persistent store found: ~/.pth/${pluginName.replace(/[^a-z0-9-]/gi, "-").toLowerCase()}/` : `\u25CB No persistent store yet \u2014 will be created at session end`
+    );
+  } catch {
+  }
+  const verdict = !pluginValid ? "\u2717 Cannot start session \u2014 fix the issues above first." : liveSessionActive ? "\u26A0 Session already active \u2014 call pth_end_session first, or use pth_resume_session." : "\u2713 OK \u2014 ready to start a session.";
+  return [verdict, "", "PTH Preflight Check", "", ...checkLines].join("\n");
+}
+async function startSession(args) {
+  const pluginName = await detectPluginName(args.pluginPath);
+  const pluginMode = await detectPluginMode(args.pluginPath);
+  await detectBuildSystem(args.pluginPath);
+  const lockPath = path16.join(args.pluginPath, ".pth", "active-session.lock");
+  {
+    try {
+      const raw = await fs11.readFile(lockPath, "utf-8");
+      const lock = JSON.parse(raw);
+      try {
+        process.kill(lock.pid, 0);
+        throw new PTHError(
+          "SESSION_ALREADY_ACTIVE" /* SESSION_ALREADY_ACTIVE */,
+          `Session already active (PID ${lock.pid}, branch ${lock.branch}). Call pth_end_session first, or run pth_preflight to verify.`
+        );
+      } catch (e) {
+        if (e instanceof PTHError) throw e;
+      }
+    } catch (e) {
+      if (e instanceof PTHError) throw e;
+    }
+  }
+  const repoRoot = await getGitRepoRoot(args.pluginPath);
+  const pluginRelPath = path16.relative(repoRoot, args.pluginPath);
+  const branch = generateSessionBranch(pluginName);
+  await pruneWorktrees(repoRoot);
+  if (await checkBranchExists(repoRoot, branch)) {
+    throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${branch} already exists \u2014 this should be extremely rare. Try again.`);
+  }
+  const worktreePath = path16.join(os2.tmpdir(), `pth-worktree-${branch.split("/")[1]}`);
+  const pluginHasHistory = await hasHistory(pluginName);
+  let savedTests = [];
+  let gapAnalysis;
+  if (pluginHasHistory) {
+    const [snapshot, tests] = await Promise.all([
+      loadSnapshot(pluginName),
+      loadTests(pluginName)
+    ]);
+    savedTests = tests;
+    if (snapshot) {
+      const scan = await scanPlugin(args.pluginPath, snapshot.capturedAt);
+      gapAnalysis = analyzeGap(snapshot, scan, tests);
+    }
+  }
+  try {
+    await createBranch(repoRoot, branch);
+    await addWorktree(repoRoot, worktreePath, branch);
+    await fs11.mkdir(path16.join(args.pluginPath, ".pth"), { recursive: true });
+    await fs11.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: (/* @__PURE__ */ new Date()).toISOString() }), "utf-8");
+    testStore = new TestStore();
+    savedTests.forEach((t) => testStore.add(t));
+    const state = {
+      sessionId: branch,
+      branch,
+      worktreePath,
+      pluginPath: args.pluginPath,
+      pluginName,
+      pluginMode,
+      pluginRelPath,
+      startedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      iteration: 0,
+      testCount: testStore.count(),
+      passingCount: 0,
+      failingCount: 0,
+      convergenceTrend: "unknown",
+      activeFailures: []
+    };
+    await writeSessionState(worktreePath, state);
+    const mcpConfig = pluginMode === "mcp" ? await readMcpConfig(args.pluginPath) : null;
+    const nextStep = pluginMode === "mcp" && mcpConfig ? [
+      `MCP server: ${mcpConfig.command} ${mcpConfig.args.join(" ")}`,
+      ``,
+      `Next: call pth_generate_tests \u2014 tool schemas will be auto-discovered from the MCP server.`
+    ].join("\n") : `Next: call pth_generate_tests to analyze hook scripts and manifest.`;
+    const gapLines = [];
+    if (gapAnalysis) {
+      gapLines.push("");
+      gapLines.push("Gap Analysis:");
+      if (gapAnalysis.newComponents.length > 0) {
+        gapLines.push(`  New:      ${gapAnalysis.newComponents.join(", ")}`);
+      }
+      if (gapAnalysis.modifiedComponents.length > 0) {
+        gapLines.push(`  Modified: ${gapAnalysis.modifiedComponents.join(", ")}`);
+      }
+      if (gapAnalysis.removedComponents.length > 0) {
+        gapLines.push(`  Removed:  ${gapAnalysis.removedComponents.join(", ")}`);
+      }
+      if (gapAnalysis.staleTestIds.length > 0) {
+        gapLines.push(`  Stale tests: ${gapAnalysis.staleTestIds.join(", ")}`);
+      }
+      gapLines.push(`  \u2192 ${gapAnalysis.recommendation}`);
+    }
+    const lines = [
+      `PTH session started.`,
+      ``,
+      `Branch:    ${branch}`,
+      `Worktree:  ${worktreePath}`,
+      `Mode:      ${pluginMode}`,
+      `Plugin:    ${pluginName}`,
+      pluginRelPath ? `Subpath:   ${pluginRelPath}` : "",
+      `Plugin dir: ${path16.join(worktreePath, pluginRelPath)}`,
+      savedTests.length > 0 ? `Tests:     ${savedTests.length} loaded from persistent store (~/.pth/${pluginName.replace(/[^a-z0-9-]/gi, "-").toLowerCase()}/)` : `Tests:     0 (run pth_generate_tests to create them)`,
+      ...gapLines,
+      ``,
+      nextStep
+    ].filter((l) => l !== void 0);
+    return { state, message: lines.join("\n"), gapAnalysis };
+  } catch (err) {
+    await fs11.rm(lockPath, { force: true });
+    await removeWorktree(repoRoot, worktreePath).catch(() => {
+    });
+    await run("git", ["branch", "-D", branch], { cwd: repoRoot }).catch(() => {
+    });
+    throw err;
+  }
+}
+async function resumeSession(args) {
+  if (!args.branch.startsWith("pth/")) {
+    throw new PTHError(
+      "GIT_ERROR" /* GIT_ERROR */,
+      `Branch "${args.branch}" is not a PTH session branch. Session branches follow the pattern: pth/<plugin>-<date>-<hash>`
+    );
+  }
+  const repoRoot = await getGitRepoRoot(args.pluginPath);
+  const worktreePath = path16.join(os2.tmpdir(), `pth-worktree-${args.branch.split("/")[1]}`);
+  if (!await checkBranchExists(repoRoot, args.branch)) {
+    throw new PTHError("GIT_ERROR" /* GIT_ERROR */, `Branch ${args.branch} not found in ${args.pluginPath}`);
+  }
+  await pruneWorktrees(repoRoot);
+  const worktreeExists = await fs11.access(worktreePath).then(() => true).catch(() => false);
+  if (!worktreeExists) {
+    await addWorktree(repoRoot, worktreePath, args.branch);
+  }
+  const savedState = await readSessionState(worktreePath);
+  const pluginName = await detectPluginName(args.pluginPath);
+  const pluginMode = await detectPluginMode(args.pluginPath);
+  const pluginRelPath = path16.relative(repoRoot, args.pluginPath);
+  testStore = new TestStore();
+  const tests = await loadTests(pluginName);
+  tests.forEach((t) => testStore.add(t));
+  const state = savedState ?? {
+    sessionId: args.branch,
+    branch: args.branch,
+    worktreePath,
+    pluginPath: args.pluginPath,
+    pluginName,
+    pluginMode,
+    pluginRelPath,
+    startedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    iteration: 0,
+    testCount: testStore.count(),
+    passingCount: 0,
+    failingCount: 0,
+    convergenceTrend: "unknown",
+    activeFailures: []
+  };
+  state.worktreePath = worktreePath;
+  state.pluginRelPath = state.pluginRelPath ?? pluginRelPath;
+  const lines = [
+    `PTH session resumed.`,
+    ``,
+    `Branch:    ${args.branch}`,
+    `Iteration: ${state.iteration}`,
+    `Tests:     ${testStore.count()} loaded from persistent store`,
+    `Status:    ${state.passingCount} passing, ${state.failingCount} failing`,
+    `Trend:     ${state.convergenceTrend}`,
+    ...!savedState ? [`Note: session-state.json not found \u2014 reconstructed from git history.`] : []
+  ];
+  return { state, message: lines.join("\n") };
+}
+async function endSession(state, options) {
+  await saveTests(state.pluginName, testStore);
+  await appendResults(state.pluginName, state.branch, options.exportedResults);
+  const reportContent = buildReportContent({
+    state,
+    allResults: [],
+    // Not used by buildReportContent
+    iterationHistory: options.iterationHistory.map((s, i2) => ({
+      iteration: i2 + 1,
+      passing: s.passing,
+      failing: s.failing,
+      fixesApplied: s.fixesApplied
+    }))
+  });
+  const fixHistory = await getFixHistory(state.worktreePath);
+  const sessionDir = await saveSessionArtifacts(state.pluginName, {
+    sessionId: state.branch,
+    reportContent,
+    iterationHistory: options.iterationHistory,
+    fixHistory
+  });
+  let toolSchemas = [];
+  try {
+    const cacheRaw = await fs11.readFile(path16.join(state.worktreePath, ".pth-tools-cache.json"), "utf-8");
+    const cached2 = JSON.parse(cacheRaw);
+    toolSchemas = cached2.map((t) => ({
+      name: t.name,
+      description: t.description ?? "",
+      inputSchema: t.inputSchema ?? {}
+    }));
+  } catch {
+  }
+  const scan = await scanPlugin(state.pluginPath);
+  const snapshot = buildSnapshot(scan, toolSchemas);
+  await saveSnapshot(state.pluginName, snapshot);
+  await updateIndex(state.pluginName, state.branch);
+  await cleanWorktreePthDir(state.worktreePath);
+  const status = await run("git", ["status", "--porcelain"], { cwd: state.worktreePath });
+  if (status.stdout.trim()) {
+    await commitAll(state.worktreePath, buildCommitMessage("chore: session end cleanup", { "PTH-Type": "session-end" }));
+  }
+  const repoRoot = await getGitRepoRoot(state.pluginPath);
+  await removeWorktree(repoRoot, state.worktreePath);
+  const lockPath = path16.join(state.pluginPath, ".pth", "active-session.lock");
+  await fs11.rm(lockPath, { force: true });
+  return [
+    `PTH session ended.`,
+    ``,
+    `Branch:       ${state.branch}`,
+    `Tests saved:  ${testStore.count()} \u2192 ~/.pth/${state.pluginName.replace(/[^a-z0-9-]/gi, "-").toLowerCase()}/tests/`,
+    `Iterations:   ${state.iteration}`,
+    `Final status: ${state.passingCount} passing, ${state.failingCount} failing`,
+    ``,
+    `Persistent store: ~/.pth/${state.pluginName.replace(/[^a-z0-9-]/gi, "-").toLowerCase()}/`,
+    `Session report:   ${sessionDir}/SESSION-REPORT.md`,
+    `Branch ${state.branch} remains in your repo with full fix history.`,
+    `Review: git log ${state.branch}  (run from ${state.pluginPath})`
+  ].join("\n");
+}
+function buildCommitMessage(title, trailers) {
+  const lines = Object.entries(trailers).map(([k, v]) => `${k}: ${v}`).join("\n");
+  return lines ? `${title}
+
+${lines}` : title;
+}
+var testStore, iterationHistory;
+var init_manager = __esm({
+  "src/session/manager.ts"() {
+    "use strict";
+    init_detector();
+    init_git();
+    init_state_persister();
+    init_store();
+    init_exec();
+    init_errors();
+    init_store_manager();
+    init_plugin_scanner();
+    init_gap_analyzer();
+    init_report_generator();
+    init_tracker();
+    testStore = new TestStore();
+    iterationHistory = [];
   }
 });
 
@@ -23182,11 +23698,11 @@ __export(cache_sync_exports, {
   getInstallPath: () => getInstallPath,
   syncToCache: () => syncToCache
 });
-import fs10 from "fs/promises";
-import path15 from "path";
-import os2 from "os";
+import fs12 from "fs/promises";
+import path17 from "path";
+import os3 from "os";
 async function syncToCache(worktreePath, cachePath) {
-  await fs10.mkdir(cachePath, { recursive: true });
+  await fs12.mkdir(cachePath, { recursive: true });
   let rsyncResult;
   try {
     rsyncResult = await run("rsync", ["-a", "--delete", "--out-format=%n", `${worktreePath}/`, `${cachePath}/`]);
@@ -23207,13 +23723,13 @@ async function syncToCache(worktreePath, cachePath) {
   return rsyncResult.stdout.split("\n").filter((l) => l.trim()).length;
 }
 function detectCachePath(pluginName) {
-  return path15.join(os2.homedir(), ".claude", "plugins", "cache", pluginName);
+  return path17.join(os3.homedir(), ".claude", "plugins", "cache", pluginName);
 }
 async function getInstallPath(pluginName) {
-  const installedPluginsPath = path15.join(os2.homedir(), ".claude", "plugins", "installed_plugins.json");
+  const installedPluginsPath = path17.join(os3.homedir(), ".claude", "plugins", "installed_plugins.json");
   let raw;
   try {
-    raw = await fs10.readFile(installedPluginsPath, "utf-8");
+    raw = await fs12.readFile(installedPluginsPath, "utf-8");
   } catch {
     return null;
   }
@@ -23435,10 +23951,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path17) {
-  if (!path17)
+function getElementAtPath(obj, path19) {
+  if (!path19)
     return obj;
-  return path17.reduce((acc, key) => acc?.[key], obj);
+  return path19.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -23758,11 +24274,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path17, issues) {
+function prefixIssues(path19, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path17);
+    iss.path.unshift(path19);
     return iss;
   });
 }
@@ -28565,7 +29081,7 @@ var StdioServerTransport = class {
 };
 
 // src/server.ts
-import path16 from "path";
+import path18 from "path";
 
 // node_modules/zod/v3/external.js
 var external_exports = {};
@@ -29045,8 +29561,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path17, errorMaps, issueData } = params;
-  const fullPath = [...path17, ...issueData.path || []];
+  const { data, path: path19, errorMaps, issueData } = params;
+  const fullPath = [...path19, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -29162,11 +29678,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path17, key) {
+  constructor(parent, value, path19, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path17;
+    this._path = path19;
     this._key = key;
   }
   get path() {
@@ -35528,7 +36044,8 @@ var sessionTools = [
     description: "Generate test proposals for the target plugin from available signals (tool schemas, source analysis, manifest). Returns YAML test definitions for review.",
     inputSchema: external_exports.object({
       toolSchemas: external_exports.array(external_exports.unknown()).optional().describe("Tool schemas from the target plugin (paste tools/list output here for MCP plugins)"),
-      includeEdgeCases: external_exports.boolean().optional().default(true)
+      includeEdgeCases: external_exports.boolean().optional().default(true),
+      tools: external_exports.array(external_exports.string()).optional().describe("Limit generation to specific tool names (from gap analysis newComponents/modifiedComponents). Omit to generate for all tools.")
     })
   },
   {
@@ -35686,6 +36203,21 @@ var ResultsTracker = class {
   }
   getAllLatest() {
     return Array.from(this.results.keys()).map((id) => this.getLatest(id)).filter((r) => r !== void 0);
+  }
+  // Export per-test latest status for persistence to ~/.pth/PLUGIN_NAME/results-history.json.
+  // Called by server.ts at pth_end_session and passed to EndSessionOptions.exportedResults.
+  exportHistory(store) {
+    const results = [];
+    for (const testId of this.results.keys()) {
+      const latest = this.getLatest(testId);
+      results.push({
+        testId,
+        testName: store.get(testId)?.name ?? testId,
+        latestStatus: latest?.status ?? "pending",
+        latestResult: latest
+      });
+    }
+    return results;
   }
 };
 
@@ -35888,18 +36420,18 @@ function buildArrayItemStub(itemSchema) {
 // src/fix/applicator.ts
 init_git();
 init_errors();
-import fs2 from "fs/promises";
-import path7 from "path";
+import fs3 from "fs/promises";
+import path8 from "path";
 async function applyFix(request) {
   if (request.files.length === 0) {
     throw new PTHError("INVALID_PLUGIN" /* INVALID_PLUGIN */, "applyFix requires at least one file change");
   }
   const worktreeRelPaths = [];
   for (const file of request.files) {
-    const fullPath = path7.join(request.worktreePath, request.pluginRelPath, file.path);
-    await fs2.mkdir(path7.dirname(fullPath), { recursive: true });
-    await fs2.writeFile(fullPath, file.content, "utf-8");
-    worktreeRelPaths.push(path7.join(request.pluginRelPath, file.path));
+    const fullPath = path8.join(request.worktreePath, request.pluginRelPath, file.path);
+    await fs3.mkdir(path8.dirname(fullPath), { recursive: true });
+    await fs3.writeFile(fullPath, file.content, "utf-8");
+    worktreeRelPaths.push(path8.join(request.pluginRelPath, file.path));
   }
   const trailerLines = Object.entries(request.trailers).map(([k, v]) => `${k}: ${v}`).join("\n");
   const message = trailerLines ? `${request.commitTitle}
@@ -35908,51 +36440,20 @@ ${trailerLines}` : request.commitTitle;
   return commitFiles(request.worktreePath, worktreeRelPaths, message);
 }
 
-// src/fix/tracker.ts
-init_exec();
-init_git();
-var COMMIT_PREFIX = "COMMIT";
-async function getFixHistory(worktreePath) {
-  const result = await run(
-    "git",
-    ["log", "--format=%x1eCOMMIT%x1e%h %s%n%aI%n%b", "-n100"],
-    { cwd: worktreePath }
-  );
-  const records = [];
-  const chunks = result.stdout.split(COMMIT_PREFIX).filter((c3) => c3.trim());
-  for (const chunk of chunks) {
-    const lines = chunk.split("\n");
-    const firstLine = lines[0]?.trim() ?? "";
-    const m = firstLine.match(/^([a-f0-9]+) (.+)$/);
-    if (!m) continue;
-    const timestamp = lines[1]?.trim() ?? (/* @__PURE__ */ new Date()).toISOString();
-    const body = lines.slice(2).join("\n");
-    const trailers = parseTrailers(body);
-    if (Object.keys(trailers).length === 0) continue;
-    records.push({
-      commitHash: m[1],
-      commitTitle: m[2],
-      trailers,
-      filesChanged: trailers["PTH-Files"]?.split(",").map((f) => f.trim()) ?? [],
-      timestamp
-    });
-  }
-  return records;
-}
-
 // src/server.ts
+init_tracker();
 init_git();
 init_exec();
 
 // src/plugin/reloader.ts
 init_exec();
-import fs3 from "fs/promises";
-import path8 from "path";
+import fs4 from "fs/promises";
+import path9 from "path";
 async function reloadPlugin(worktreePath, buildSystem, pluginStartPattern, onBuildSuccess) {
   let buildOutput = "";
   if (buildSystem.installCommand) {
-    const nodeModulesPath = path8.join(worktreePath, "node_modules");
-    const hasDeps = await fs3.access(nodeModulesPath).then(() => true).catch(() => false);
+    const nodeModulesPath = path9.join(worktreePath, "node_modules");
+    const hasDeps = await fs4.access(nodeModulesPath).then(() => true).catch(() => false);
     if (!hasDeps) {
       const installResult = await run(
         buildSystem.installCommand[0],
@@ -36068,8 +36569,8 @@ function sleep(ms) {
 init_state_persister();
 
 // src/shared/source-analyzer.ts
-import fs5 from "fs/promises";
-import path10 from "path";
+import fs6 from "fs/promises";
+import path11 from "path";
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/client.js
 var ExperimentalClientTasks = class {
@@ -36918,8 +37419,8 @@ function isElectron() {
 
 // src/shared/source-analyzer.ts
 async function writeToolSchemasCache(pluginPath, schemas) {
-  const cachePath = path10.join(pluginPath, ".pth-tools-cache.json");
-  await fs5.writeFile(cachePath, JSON.stringify(schemas, null, 2), "utf-8");
+  const cachePath = path11.join(pluginPath, ".pth-tools-cache.json");
+  await fs6.writeFile(cachePath, JSON.stringify(schemas, null, 2), "utf-8");
 }
 async function fetchToolSchemasFromMcpServer(mcpConfig, pluginPath) {
   const transport2 = new StdioClientTransport({
@@ -36999,23 +37500,13 @@ function createServer() {
         }
         case "pth_end_session": {
           if (!currentSession) return respond("No active session.");
-          const { generateReport: generateReport2 } = await Promise.resolve().then(() => (init_report_generator(), report_generator_exports));
-          const reportPath = path16.join(currentSession.worktreePath, ".pth/SESSION-REPORT.md");
-          await generateReport2(currentSession.worktreePath, {
-            state: currentSession,
-            allResults: resultsTracker.getAllLatest(),
-            iterationHistory: iterationHistory.map((s, i2) => ({
-              iteration: i2 + 1,
-              passing: s.passing,
-              failing: s.failing,
-              fixesApplied: s.fixesApplied
-            }))
+          const exportedResults = resultsTracker.exportHistory(testStore);
+          const result = await sessionManager.endSession(currentSession, {
+            iterationHistory,
+            exportedResults
           });
-          const result = await sessionManager.endSession(currentSession);
           currentSession = null;
-          return respond(`${result}
-
-Report: ${reportPath}`);
+          return respond(result);
         }
         default: {
           if (!currentSession) {
@@ -37053,7 +37544,7 @@ Report: ${reportPath}`);
       }
       // ── Tests ──────────────────────────────────────────────────────
       case "pth_generate_tests": {
-        const { toolSchemas: passedSchemas, includeEdgeCases } = args;
+        const { toolSchemas: passedSchemas, includeEdgeCases, tools: toolFilter } = args;
         let tests;
         if (session.pluginMode === "mcp") {
           let toolSchemas = passedSchemas;
@@ -37064,8 +37555,9 @@ Report: ${reportPath}`);
             }
             toolSchemas = await fetchToolSchemasFromMcpServer(mcpConfig, session.pluginPath);
           }
+          const filteredSchemas = toolFilter && toolFilter.length > 0 ? toolSchemas.filter((s) => toolFilter.includes(s.name)) : toolSchemas;
           await writeToolSchemasCache(session.worktreePath, toolSchemas);
-          tests = await generateMcpTests({ pluginPath: session.pluginPath, toolSchemas, includeEdgeCases });
+          tests = await generateMcpTests({ pluginPath: session.pluginPath, toolSchemas: filteredSchemas, includeEdgeCases });
         } else {
           tests = generatePluginTests([]);
         }
@@ -37237,7 +37729,7 @@ Next: re-run affected tests, then call pth_get_test_impact to identify which tes
       case "pth_sync_to_cache": {
         const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
         const cachePath = await getInstallPath2(session.pluginName) ?? detectCachePath2(session.pluginName);
-        const pluginWorktreePath = path16.join(session.worktreePath, session.pluginRelPath);
+        const pluginWorktreePath = path18.join(session.worktreePath, session.pluginRelPath);
         try {
           const filesSynced = await syncToCache2(pluginWorktreePath, cachePath);
           const countLine = filesSynced > 0 ? `${filesSynced} file(s) synced` : "No files changed";
@@ -37251,7 +37743,7 @@ Cache path: ${cachePath}`);
       case "pth_reload_plugin": {
         const { detectBuildSystem: detectBuildSystem2 } = await Promise.resolve().then(() => (init_detector(), detector_exports));
         const { syncToCache: syncToCache2, detectCachePath: detectCachePath2, getInstallPath: getInstallPath2 } = await Promise.resolve().then(() => (init_cache_sync(), cache_sync_exports));
-        const pluginWorktreePath = path16.join(session.worktreePath, session.pluginRelPath);
+        const pluginWorktreePath = path18.join(session.worktreePath, session.pluginRelPath);
         const buildSystem = await detectBuildSystem2(pluginWorktreePath);
         const { processPattern } = args;
         const installPath = await getInstallPath2(session.pluginName);

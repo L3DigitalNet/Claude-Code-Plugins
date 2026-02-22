@@ -29,6 +29,42 @@ jest.unstable_mockModule('../../../src/session/git.js', () => ({
   removeWorktree: jest.fn().mockImplementation(async () => undefined),
   commitAll: jest.fn().mockImplementation(async () => undefined),
   buildCommitMessage: jest.fn().mockImplementation(() => 'stubbed commit'),
+  // Added when manager.ts began importing fix/tracker.ts (which imports parseTrailers),
+  // and when cleanWorktreePthDir was added to git.ts as part of persistent storage.
+  parseTrailers: jest.fn().mockImplementation(() => ({})),
+  cleanWorktreePthDir: jest.fn().mockImplementation(async () => undefined),
+}));
+
+// Stub persistence modules — manager.ts now calls these at startSession/endSession.
+// Tests only exercise lock-check and branch-validation logic, not persistence.
+jest.unstable_mockModule('../../../src/persistence/store-manager.js', () => ({
+  hasHistory: jest.fn().mockImplementation(async () => false),
+  loadTests: jest.fn().mockImplementation(async () => []),
+  loadSnapshot: jest.fn().mockImplementation(async () => null),
+  saveTests: jest.fn().mockImplementation(async () => undefined),
+  saveSnapshot: jest.fn().mockImplementation(async () => undefined),
+  appendResults: jest.fn().mockImplementation(async () => undefined),
+  saveSessionArtifacts: jest.fn().mockImplementation(async () => '/fake/session/dir'),
+  updateIndex: jest.fn().mockImplementation(async () => undefined),
+  getPersistentStorePath: jest.fn().mockImplementation(() => '/fake/.pth/test-plugin'),
+}));
+jest.unstable_mockModule('../../../src/persistence/plugin-scanner.js', () => ({
+  scanPlugin: jest.fn().mockImplementation(async () => ({
+    pluginMode: 'plugin', toolNames: [], commands: [], skills: [], agents: [], changedSourceFiles: [], scannedAt: new Date().toISOString(),
+  })),
+  buildSnapshot: jest.fn().mockImplementation(() => ({ pluginMode: 'plugin', capturedAt: '', tools: [], commands: [], skills: [], agents: [] })),
+}));
+jest.unstable_mockModule('../../../src/persistence/gap-analyzer.js', () => ({
+  analyzeGap: jest.fn().mockImplementation(() => ({
+    savedTests: 0, newComponents: [], modifiedComponents: [], removedComponents: [], unchangedComponents: [], staleTestIds: [], sourceChangedSinceSnapshot: false, recommendation: 'No changes.',
+  })),
+}));
+jest.unstable_mockModule('../../../src/fix/tracker.js', () => ({
+  getFixHistory: jest.fn().mockImplementation(async () => []),
+}));
+jest.unstable_mockModule('../../../src/session/report-generator.js', () => ({
+  buildReportContent: jest.fn().mockImplementation(() => '# Report'),
+  generateReport: jest.fn().mockImplementation(async () => undefined),
 }));
 
 describe('startSession — lock enforcement (BUG-1)', () => {

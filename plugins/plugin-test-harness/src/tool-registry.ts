@@ -55,6 +55,7 @@ const sessionTools: ToolDef[] = [
     inputSchema: z.object({
       toolSchemas: z.array(z.unknown()).optional().describe('Tool schemas from the target plugin (paste tools/list output here for MCP plugins)'),
       includeEdgeCases: z.boolean().optional().default(true),
+      tools: z.array(z.string()).optional().describe('Limit generation to specific tool names (from gap analysis newComponents/modifiedComponents). Omit to generate for all tools.'),
     }),
   },
   {

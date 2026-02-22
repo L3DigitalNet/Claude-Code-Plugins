@@ -2,13 +2,19 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { detectPluginMode, detectPluginName, detectBuildSystem, readMcpConfig } from '../plugin/detector.js';
-import { generateSessionBranch, createBranch, addWorktree, removeWorktree, pruneWorktrees, commitAll, checkBranchExists, getGitRepoRoot } from './git.js';
+import { generateSessionBranch, createBranch, addWorktree, removeWorktree, pruneWorktrees, commitAll, checkBranchExists, getGitRepoRoot, cleanWorktreePthDir } from './git.js';
 import { writeSessionState, readSessionState } from './state-persister.js';
 import { TestStore } from '../testing/store.js';
-import { loadTestsFromDir } from '../testing/parser.js';
 import type { SessionState } from './types.js';
 import { run } from '../shared/exec.js';
 import { PTHError, PTHErrorCode } from '../shared/errors.js';
+import { hasHistory, loadTests, saveTests, loadSnapshot, saveSnapshot, appendResults, saveSessionArtifacts, updateIndex } from '../persistence/store-manager.js';
+import { scanPlugin, buildSnapshot } from '../persistence/plugin-scanner.js';
+import { analyzeGap } from '../persistence/gap-analyzer.js';
+import { buildReportContent } from './report-generator.js';
+import { getFixHistory } from '../fix/tracker.js';
+import type { GapAnalysisResult, EndSessionOptions } from '../persistence/types.js';
+import type { ToolSnapshotEntry } from '../persistence/types.js';
 
 // In-memory state shared with server.ts.
 // iterationHistory: server.ts pushes a snapshot each time pth_get_iteration_status is called
@@ -63,6 +69,19 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
     checkLines.push(`✓ No active session lock`);
   }
 
+  // Check for persistent store history
+  let pluginName = '';
+  try {
+    pluginName = await detectPluginName(args.pluginPath);
+    const history = await hasHistory(pluginName);
+    checkLines.push(history
+      ? `✓ Persistent store found: ~/.pth/${pluginName.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}/`
+      : `○ No persistent store yet — will be created at session end`
+    );
+  } catch {
+    // Non-fatal — plugin name detection failure is caught later in startSession
+  }
+
   // Verdict first per P3 (lead with findings).
   // Three distinct states: plugin invalid, session active (blocks start), or clear.
   const verdict = !pluginValid
@@ -76,6 +95,7 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
 export interface StartSessionResult {
   state: SessionState;
   message: string;
+  gapAnalysis?: GapAnalysisResult;
 }
 
 export async function startSession(args: { pluginPath: string; sessionNote?: string }): Promise<StartSessionResult> {
@@ -125,6 +145,25 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
   // Create worktree
   const worktreePath = path.join(os.tmpdir(), `pth-worktree-${branch.split('/')[1]}`);
 
+  // Check for persistent store history and run gap analysis before worktree setup
+  // (gap analysis only needs plugin source, not worktree)
+  const pluginHasHistory = await hasHistory(pluginName);
+  let savedTests: Awaited<ReturnType<typeof loadTests>> = [];
+  let gapAnalysis: GapAnalysisResult | undefined;
+
+  if (pluginHasHistory) {
+    const [snapshot, tests] = await Promise.all([
+      loadSnapshot(pluginName),
+      loadTests(pluginName),
+    ]);
+    savedTests = tests;
+
+    if (snapshot) {
+      const scan = await scanPlugin(args.pluginPath, snapshot.capturedAt);
+      gapAnalysis = analyzeGap(snapshot, scan, tests);
+    }
+  }
+
   // All resource acquisition inside try so we can roll back fully on failure
   try {
     await createBranch(repoRoot, branch);
@@ -134,10 +173,9 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
     await fs.mkdir(path.join(args.pluginPath, '.pth'), { recursive: true });
     await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, branch, startedAt: new Date().toISOString() }), 'utf-8');
 
-    // Load existing tests if any
+    // Load tests from persistent store (authoritative) — worktree has no tests yet
     testStore = new TestStore();
-    const existingTests = await loadTestsFromDir(path.join(worktreePath, '.pth', 'tests'));
-    existingTests.forEach(t => testStore.add(t));
+    savedTests.forEach(t => testStore.add(t));
 
     const state: SessionState = {
       sessionId: branch,
@@ -168,6 +206,26 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
         ].join('\n')
       : `Next: call pth_generate_tests to analyze hook scripts and manifest.`;
 
+    // Build gap summary for response
+    const gapLines: string[] = [];
+    if (gapAnalysis) {
+      gapLines.push('');
+      gapLines.push('Gap Analysis:');
+      if (gapAnalysis.newComponents.length > 0) {
+        gapLines.push(`  New:      ${gapAnalysis.newComponents.join(', ')}`);
+      }
+      if (gapAnalysis.modifiedComponents.length > 0) {
+        gapLines.push(`  Modified: ${gapAnalysis.modifiedComponents.join(', ')}`);
+      }
+      if (gapAnalysis.removedComponents.length > 0) {
+        gapLines.push(`  Removed:  ${gapAnalysis.removedComponents.join(', ')}`);
+      }
+      if (gapAnalysis.staleTestIds.length > 0) {
+        gapLines.push(`  Stale tests: ${gapAnalysis.staleTestIds.join(', ')}`);
+      }
+      gapLines.push(`  → ${gapAnalysis.recommendation}`);
+    }
+
     const lines = [
       `PTH session started.`,
       ``,
@@ -177,12 +235,13 @@ export async function startSession(args: { pluginPath: string; sessionNote?: str
       `Plugin:    ${pluginName}`,
       pluginRelPath ? `Subpath:   ${pluginRelPath}` : '',
       `Plugin dir: ${path.join(worktreePath, pluginRelPath)}`,
-      existingTests.length > 0 ? `Tests:     ${existingTests.length} loaded from previous session` : `Tests:     0 (run pth_generate_tests to create them)`,
+      savedTests.length > 0 ? `Tests:     ${savedTests.length} loaded from persistent store (~/.pth/${pluginName.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}/)` : `Tests:     0 (run pth_generate_tests to create them)`,
+      ...gapLines,
       ``,
       nextStep,
     ].filter(l => l !== undefined) as string[];
 
-    return { state, message: lines.join('\n') };
+    return { state, message: lines.join('\n'), gapAnalysis };
   } catch (err) {
     // Best-effort rollback: clean up all acquired resources
     await fs.rm(lockPath, { force: true });
@@ -216,14 +275,15 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
     await addWorktree(repoRoot, worktreePath, args.branch);
   }
 
-  // Load state
+  // Load state from worktree (runtime state for in-progress session)
   const savedState = await readSessionState(worktreePath);
   const pluginName = await detectPluginName(args.pluginPath);
   const pluginMode = await detectPluginMode(args.pluginPath);
   const pluginRelPath = path.relative(repoRoot, args.pluginPath);
 
+  // Load tests from persistent store (authoritative) — not from worktree
   testStore = new TestStore();
-  const tests = await loadTestsFromDir(path.join(worktreePath, '.pth', 'tests'));
+  const tests = await loadTests(pluginName);
   tests.forEach(t => testStore.add(t));
 
   const state: SessionState = savedState ?? {
@@ -252,7 +312,7 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
     ``,
     `Branch:    ${args.branch}`,
     `Iteration: ${state.iteration}`,
-    `Tests:     ${testStore.count()} loaded`,
+    `Tests:     ${testStore.count()} loaded from persistent store`,
     `Status:    ${state.passingCount} passing, ${state.failingCount} failing`,
     `Trend:     ${state.convergenceTrend}`,
     ...(!savedState ? [`Note: session-state.json not found — reconstructed from git history.`] : []),
@@ -261,21 +321,70 @@ export async function resumeSession(args: { branch: string; pluginPath: string }
   return { state, message: lines.join('\n') };
 }
 
-export async function endSession(state: SessionState): Promise<string> {
-  // Persist tests
-  await testStore.persistToDir(path.join(state.worktreePath, '.pth', 'tests'));
+export async function endSession(state: SessionState, options: EndSessionOptions): Promise<string> {
+  // 1. Persist tests to ~/.pth/PLUGIN_NAME/tests/ (authoritative store)
+  await saveTests(state.pluginName, testStore);
 
-  // Commit test suite + state (only if there are changes to commit)
+  // 2. Append results history to ~/.pth/PLUGIN_NAME/results-history.json
+  await appendResults(state.pluginName, state.branch, options.exportedResults);
+
+  // 3. Build session report content
+  const reportContent = buildReportContent({
+    state,
+    allResults: [],  // Not used by buildReportContent
+    iterationHistory: options.iterationHistory.map((s, i) => ({
+      iteration: i + 1,
+      passing: s.passing,
+      failing: s.failing,
+      fixesApplied: s.fixesApplied,
+    })),
+  });
+
+  // 4. Collect fix history from git before worktree removal
+  const fixHistory = await getFixHistory(state.worktreePath);
+
+  // 5. Save per-session artifacts to ~/.pth/PLUGIN_NAME/sessions/<id>/
+  const sessionDir = await saveSessionArtifacts(state.pluginName, {
+    sessionId: state.branch,
+    reportContent,
+    iterationHistory: options.iterationHistory,
+    fixHistory,
+  });
+
+  // 6. Build and save plugin snapshot for gap analysis in future sessions
+  // Read tool schema cache written by pth_generate_tests (if it ran this session)
+  let toolSchemas: ToolSnapshotEntry[] = [];
+  try {
+    const cacheRaw = await fs.readFile(path.join(state.worktreePath, '.pth-tools-cache.json'), 'utf-8');
+    const cached = JSON.parse(cacheRaw) as Array<{ name: string; description?: string; inputSchema?: object }>;
+    toolSchemas = cached.map(t => ({
+      name: t.name,
+      description: t.description ?? '',
+      inputSchema: t.inputSchema ?? {},
+    }));
+  } catch {
+    // pth_generate_tests was not called this session, or cache is unavailable — preserve existing snapshot
+  }
+  const scan = await scanPlugin(state.pluginPath);
+  const snapshot = buildSnapshot(scan, toolSchemas);
+  await saveSnapshot(state.pluginName, snapshot);
+
+  // 7. Update persistent store index
+  await updateIndex(state.pluginName, state.branch);
+
+  // 8. Clean worktree .pth/ — prevents stale test data from being loaded if this branch
+  //    is resumed later after tests have evolved in the persistent store
+  await cleanWorktreePthDir(state.worktreePath);
+
+  // 9. Commit any uncommitted plugin code changes on the branch (NOT tests — they're in ~/.pth/)
   const status = await run('git', ['status', '--porcelain'], { cwd: state.worktreePath });
   if (status.stdout.trim()) {
-    await commitAll(state.worktreePath, buildCommitMessage('chore: persist PTH test suite', { 'PTH-Type': 'session-end' }));
+    await commitAll(state.worktreePath, buildCommitMessage('chore: session end cleanup', { 'PTH-Type': 'session-end' }));
   }
 
-  // Remove worktree
+  // 10. Remove worktree and lock
   const repoRoot = await getGitRepoRoot(state.pluginPath);
   await removeWorktree(repoRoot, state.worktreePath);
-
-  // Remove lock
   const lockPath = path.join(state.pluginPath, '.pth', 'active-session.lock');
   await fs.rm(lockPath, { force: true });
 
@@ -283,13 +392,14 @@ export async function endSession(state: SessionState): Promise<string> {
     `PTH session ended.`,
     ``,
     `Branch:       ${state.branch}`,
-    `Tests saved:  ${testStore.count()}`,
+    `Tests saved:  ${testStore.count()} → ~/.pth/${state.pluginName.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}/tests/`,
     `Iterations:   ${state.iteration}`,
     `Final status: ${state.passingCount} passing, ${state.failingCount} failing`,
     ``,
-    `Branch ${state.branch} remains in your repo with full session history.`,
+    `Persistent store: ~/.pth/${state.pluginName.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}/`,
+    `Session report:   ${sessionDir}/SESSION-REPORT.md`,
+    `Branch ${state.branch} remains in your repo with full fix history.`,
     `Review: git log ${state.branch}  (run from ${state.pluginPath})`,
-    `Diff:   git diff $(git merge-base HEAD ${state.branch})...${state.branch}`,
   ].join('\n');
 }
 

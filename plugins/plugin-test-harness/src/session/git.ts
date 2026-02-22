@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { randomBytes } from 'crypto';
 import { run, runOrThrow } from '../shared/exec.js';
 import { PTHError, PTHErrorCode } from '../shared/errors.js';
@@ -71,6 +73,20 @@ export async function removeWorktree(repoPath: string, worktreePath: string): Pr
   const result = await run('git', ['worktree', 'remove', '--force', worktreePath], { cwd: repoPath });
   if (result.exitCode !== 0) {
     warn(`git worktree remove failed (exit ${result.exitCode}): ${result.stderr}`);
+  }
+}
+
+// Remove .pth/ from the worktree before git worktree remove. This prevents stale test
+// definitions from being loaded if a new session is started on a different plugin while
+// this worktree branch still exists (e.g. the branch is checked out again via resume).
+// Tests are now authoritative in ~/.pth/PLUGIN_NAME/ — worktree .pth/ is ephemeral.
+export async function cleanWorktreePthDir(worktreePath: string): Promise<void> {
+  const pthDir = path.join(worktreePath, '.pth');
+  try {
+    await fs.rm(pthDir, { recursive: true, force: true });
+  } catch {
+    // Non-fatal — warn but proceed; worktree removal will clean the directory anyway
+    warn(`Could not clean .pth/ in worktree ${worktreePath} — proceeding with removal`);
   }
 }
 

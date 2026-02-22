@@ -1,8 +1,9 @@
-// src/results/tracker.ts — in-memory result store, intentionally not persisted.
-// Result history is lost on pth_resume_session; convergence trend resets to 'unknown' on resume.
-// Tests themselves persist via TestStore.persistToDir() — only result recordings don't survive.
-// If persistence is ever added, it must write to worktreePath/.pth/results/ to survive worktree reuse.
+// src/results/tracker.ts — in-memory result store for the active session.
+// exportHistory() serializes the latest result per test for persistence to ~/.pth/PLUGIN_NAME/
+// by store-manager.appendResults(). Full in-session result history (per-iteration recordings)
+// is still in-memory only and resets on resume — only the final status per test is persisted.
 import type { TestResult } from '../testing/types.js';
+import type { ExportedResults } from '../persistence/types.js';
 
 export class ResultsTracker {
   private results: Map<string, TestResult[]> = new Map();  // testId -> history
@@ -53,5 +54,21 @@ export class ResultsTracker {
     return Array.from(this.results.keys())
       .map(id => this.getLatest(id))
       .filter((r): r is TestResult => r !== undefined);
+  }
+
+  // Export per-test latest status for persistence to ~/.pth/PLUGIN_NAME/results-history.json.
+  // Called by server.ts at pth_end_session and passed to EndSessionOptions.exportedResults.
+  exportHistory(store: { get(id: string): { name: string } | undefined }): ExportedResults[] {
+    const results: ExportedResults[] = [];
+    for (const testId of this.results.keys()) {
+      const latest = this.getLatest(testId);
+      results.push({
+        testId,
+        testName: store.get(testId)?.name ?? testId,
+        latestStatus: latest?.status ?? 'pending',
+        latestResult: latest,
+      });
+    }
+    return results;
   }
 }
