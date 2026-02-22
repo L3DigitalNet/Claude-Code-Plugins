@@ -56,6 +56,8 @@ export interface PthTest {
   tags?: string[];
   generated_from?: GeneratedFrom;
   timeout_seconds?: number;
+  // When true, pth_generate_tests skips regenerating this test — preserves manual expect/input edits.
+  pinned?: boolean;
 }
 
 export type TestStatus = 'pending' | 'passing' | 'failing' | 'skipped';

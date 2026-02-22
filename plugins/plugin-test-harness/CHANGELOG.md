@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.4] - 2026-02-22
+
+### Fixed
+- **MCP non-string parameter serialization**: Claude Code's MCP client sends array and number parameters as JSON strings. Added `z.preprocess(parseJsonString, ...)` to `files` in `pth_get_test_impact` and `pth_apply_fix`, and `z.coerce.number()` for `durationMs` in `pth_record_result` — all now accept both native types and their string-encoded equivalents
+- **`pth_generate_tests` overwrites manual test edits**: added `pinned?: boolean` to `PthTest`. `pth_edit_test` now sets `pinned: true` automatically; `pth_generate_tests` skips pinned tests and reports them as "(N pinned)" in the summary
+
 ## [0.6.3] - 2026-02-22
 
 ### Fixed
