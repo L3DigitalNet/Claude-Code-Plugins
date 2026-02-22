@@ -14,6 +14,10 @@ export class ResultsTracker {
     this.results.set(result.testId, history);
   }
 
+  delete(testId: string): void {
+    this.results.delete(testId);
+  }
+
   getHistory(testId: string): TestResult[] {
     return this.results.get(testId) ?? [];
   }

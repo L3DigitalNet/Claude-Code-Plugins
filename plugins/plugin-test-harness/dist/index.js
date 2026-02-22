@@ -22906,6 +22906,9 @@ var init_store = __esm({
       update(test) {
         this.tests.set(test.id, test);
       }
+      delete(id) {
+        return this.tests.delete(id);
+      }
       get(id) {
         return this.tests.get(id);
       }
@@ -36145,6 +36148,13 @@ var sessionTools = [
       yaml: external_exports.string().describe("New YAML test definition")
     })
   },
+  {
+    name: "pth_delete_test",
+    description: "Remove a test from the suite by ID. Also clears its result history from the session tracker.",
+    inputSchema: external_exports.object({
+      testId: external_exports.string().min(1, "testId must be a non-empty string")
+    })
+  },
   // Execution
   {
     name: "pth_record_result",
@@ -36241,6 +36251,9 @@ var ResultsTracker = class {
     const history = this.results.get(result.testId) ?? [];
     history.push(result);
     this.results.set(result.testId, history);
+  }
+  delete(testId) {
+    this.results.delete(testId);
   }
   getHistory(testId) {
     return this.results.get(testId) ?? [];
@@ -37788,6 +37801,19 @@ ID: ${test.id}`);
         store.update(updatedTest);
         const idChanged = test.id !== testId ? ` (note: YAML id '${test.id}' ignored, kept '${testId}')` : "";
         return respond(`Test updated: ${updatedTest.name}${idChanged}`);
+      }
+      case "pth_delete_test": {
+        const { testId } = args;
+        if (!testId.trim()) {
+          return { content: [{ type: "text", text: "testId must be a non-empty string." }], isError: true };
+        }
+        const test = store.get(testId);
+        if (!test) {
+          return { content: [{ type: "text", text: `Unknown test id: ${testId}` }], isError: true };
+        }
+        store.delete(testId);
+        resultsTracker.delete(testId);
+        return respond(`Test deleted: ${test.name} (${testId})`);
       }
       // ── Execution ──────────────────────────────────────────────────
       case "pth_record_result": {

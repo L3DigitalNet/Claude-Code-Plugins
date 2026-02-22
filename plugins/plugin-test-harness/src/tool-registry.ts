@@ -90,6 +90,13 @@ const sessionTools: ToolDef[] = [
       yaml: z.string().describe('New YAML test definition'),
     }),
   },
+  {
+    name: 'pth_delete_test',
+    description: 'Remove a test from the suite by ID. Also clears its result history from the session tracker.',
+    inputSchema: z.object({
+      testId: z.string().min(1, 'testId must be a non-empty string'),
+    }),
+  },
   // Execution
   {
     name: 'pth_record_result',

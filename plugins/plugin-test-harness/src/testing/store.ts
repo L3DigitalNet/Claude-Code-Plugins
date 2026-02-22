@@ -18,6 +18,10 @@ export class TestStore {
     this.tests.set(test.id, test);
   }
 
+  delete(id: string): boolean {
+    return this.tests.delete(id);
+  }
+
   get(id: string): PthTest | undefined {
     return this.tests.get(id);
   }
