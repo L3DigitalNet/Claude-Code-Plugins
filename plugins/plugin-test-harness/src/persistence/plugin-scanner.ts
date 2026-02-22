@@ -113,7 +113,10 @@ async function extractToolNamesFromSource(srcDir: string): Promise<string[]> {
 
   for (const file of files) {
     try {
-      const content = await fs.readFile(file, 'utf-8');
+      const raw = await fs.readFile(file, 'utf-8');
+      // Strip single-line comments before scanning — the regex pattern itself
+      // appears verbatim in comments in this file and would create a false positive.
+      const content = raw.split('\n').filter(l => !l.trimStart().startsWith('//')).join('\n');
       const matches = content.matchAll(TOOL_NAME_PATTERN);
       for (const match of matches) {
         names.add(match[1]);

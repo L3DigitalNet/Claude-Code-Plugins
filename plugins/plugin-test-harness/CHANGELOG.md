@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.3] - 2026-02-22
+
+### Fixed
+- **Plugin scanner false positive**: strip single-line comments before regex scan — the `TOOL_NAME_PATTERN` comment in `plugin-scanner.ts` itself was matched, injecting `tool_name` as a fake new component in the gap analysis
+- **`pth_start_session_valid_input` wrong expectation**: renamed to "rejects when session already active", flipped to `success: false` — this is the correct behavior and a valid error-path test
+- **`pth_resume_session_valid_input` wrong expectation**: renamed to "rejects invalid branch format", flipped to `success: false` — `branch: main` correctly fails the PTH session branch format guard
+
 ## [0.6.2] - 2026-02-22
 
 ### Fixed

@@ -23126,7 +23126,8 @@ async function extractToolNamesFromSource(srcDir) {
   const names = /* @__PURE__ */ new Set();
   for (const file of files) {
     try {
-      const content = await fs10.readFile(file, "utf-8");
+      const raw = await fs10.readFile(file, "utf-8");
+      const content = raw.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
       const matches = content.matchAll(TOOL_NAME_PATTERN);
       for (const match of matches) {
         names.add(match[1]);
