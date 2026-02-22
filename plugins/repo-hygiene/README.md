@@ -8,18 +8,18 @@ Autonomous maintenance sweep for the Claude-Code-Plugins monorepo.
 
 ## Principles
 
-**Act on Intent** — Invoking `/hygiene` is consent to a full sweep. The command runs all checks unconditionally and presents findings rather than asking which checks to run. It gates only on operations that are destructive or whose scope exceeds what a maintenance sweep implies.
+**Act on Intent**: Invoking `/hygiene` is consent to a full sweep. The command runs all checks unconditionally and presents findings rather than asking which checks to run. It gates only on operations that are destructive or whose scope exceeds what a maintenance sweep implies.
 
-**Succeed Quietly, Fail Transparently** — Scripts emit structured JSON. If any script exits non-zero the sweep stops immediately and surfaces the raw error with the script name. Individual fix-command failures are logged and skipped rather than aborting the whole sweep.
+**Succeed Quietly, Fail Transparently**: Scripts emit structured JSON. If any script exits non-zero the sweep stops immediately and surfaces the raw error with the script name. Individual fix-command failures are logged and skipped rather than aborting the whole sweep.
 
-**Scope Fidelity** — Auto-fix is reserved for findings where the correct action is unambiguous (appending a missing `.gitignore` line, normalising a trailing slash). Everything with judgement involved surfaces for approval.
+**Scope Fidelity**: Auto-fix is reserved for findings where the correct action is unambiguous (appending a missing `.gitignore` line, normalising a trailing slash). Everything with judgement involved surfaces for approval.
 
-**Safety by Construction** — Orphan `temp_*` directory deletion is gated on three independent path checks (prefix, no `..`, basename) enforced in the command itself, not just the script. No rm command runs unless all three pass.
+**Safety by Construction**: Orphan `temp_*` directory deletion is gated on three independent path checks (prefix, no `..`, basename) enforced in the command itself, not just the script. No rm command runs unless all three pass.
 
 ## Requirements
 
 - Claude Code (any recent version)
-- Python 3 (used by all four mechanical scan scripts — no external packages required)
+- Python 3 (used by all four mechanical scan scripts; no external packages required)
 - Must be run from within the Claude-Code-Plugins repository (scripts call `git rev-parse --show-toplevel` to locate repo root)
 
 ## Installation
@@ -63,7 +63,7 @@ flowchart TD
 /hygiene [--dry-run]
 ```
 
-The sweep always runs all checks. With `--dry-run`, no files are modified and no approval prompt is shown — the command prints what it would do and exits.
+The sweep always runs all checks. With `--dry-run`, no files are modified and no approval prompt is shown; the command prints what it would do and exits.
 
 **Auto-fixed without approval:**
 - Missing `node_modules/` in a plugin `.gitignore` when `package.json` is present
@@ -81,7 +81,7 @@ The sweep always runs all checks. With `--dry-run`, no files are modified and no
 - Plugins present in `installed_plugins.json` but absent from `settings.json` `enabledPlugins`
 
 **After the sweep (Step 8):**
-Any file changes made by the sweep (auto-fixes and approved edits) are committed automatically as `fix(hygiene): apply auto-fixes from /hygiene sweep`, pushed to the current branch, then merged to `main` and pushed. Files staged via `stale-commits` approvals are called out separately — they require a user-authored commit message. The remote is always left up-to-date after a successful sweep. Skipped when `--dry-run` is active or when no files were modified.
+Any file changes made by the sweep (auto-fixes and approved edits) are committed automatically as `fix(hygiene): apply auto-fixes from /hygiene sweep`, pushed to the current branch, then merged to `main` and pushed. Files staged via `stale-commits` approvals are called out separately; they require a user-authored commit message. The remote is always left up-to-date after a successful sweep. Skipped when `--dry-run` is active or when no files were modified.
 
 ## Commands
 
@@ -94,18 +94,18 @@ Any file changes made by the sweep (auto-fixes and approved edits) are committed
 
 | # | Check | Script | What it inspects | Auto-fixable |
 |---|---|---|---|---|
-| 1 | `.gitignore` missing patterns | `check-gitignore.sh` | All non-auto-generated `.gitignore` files in the repo tree. Flags missing `node_modules/` when `package.json` is co-located; flags missing `__pycache__/` and `*.pyc` when `.py` files exist within 3 directory levels. Skips the root `.gitignore` (already provides global coverage) and pytest-generated files (contain only `*`). | Yes — appends missing lines |
+| 1 | `.gitignore` missing patterns | `check-gitignore.sh` | All non-auto-generated `.gitignore` files in the repo tree. Flags missing `node_modules/` when `package.json` is co-located; flags missing `__pycache__/` and `*.pyc` when `.py` files exist within 3 directory levels. Skips the root `.gitignore` (already provides global coverage) and pytest-generated files (contain only `*`). | Yes: appends missing lines |
 | 2 | Marketplace manifest consistency | `check-manifests.sh` | Cross-references `.claude-plugin/marketplace.json` against each plugin's `.claude-plugin/plugin.json`: source directory existence, `plugin.json` presence, and version match between the marketplace entry and the manifest. Also checks `~/.claude/plugins/installed_plugins.json` for entries whose `installPath` no longer exists on disk. Flags trailing slashes in `source` paths as auto-fixable normalisation. | Trailing slash only; all other mismatches need approval |
-| 3 | README and docs accuracy | inline AI (Step 2) | Three-phase scan in leaf-to-root order: **(2a) Plugin READMEs** — detects unmodified template placeholders; checks all required sections are present; cross-references each Commands/Skills/Agents/Hooks/Tools table entry against actual files on disk; scans `Known Issues` for resolved issues; checks `Principles` for clear codebase contradictions. **(2b) Root README.md** — verifies all marketplace plugins are mentioned and a plugin inventory is present. **(2c) `docs/` files** (excluding `plans/`) — checks every repo-relative path reference and plugin name mention against actual files on disk. | No |
+| 3 | README and docs accuracy | inline AI (Step 2) | Three-phase scan in leaf-to-root order: **(2a) Plugin READMEs**: detects unmodified template placeholders; checks all required sections are present; cross-references each Commands/Skills/Agents/Hooks/Tools table entry against actual files on disk; scans `Known Issues` for resolved issues; checks `Principles` for clear codebase contradictions. **(2b) Root README.md**: verifies all marketplace plugins are mentioned and a plugin inventory is present. **(2c) `docs/` files** (excluding `plans/`): checks every repo-relative path reference and plugin name mention against actual files on disk. | No |
 | 4 | Plugin state orphans | `check-orphans.sh` | Compares three state sources: `installed_plugins.json`, `settings.json` `enabledPlugins`, and `~/.claude/plugins/cache/`. Flags `enabledPlugins` keys absent from `installed_plugins.json` (stale toggle) as warnings; flags the inverse (installed but not enabled) as info notes. Flags `temp_*` directories at the top level of the cache dir as orphaned. | No |
-| 5 | Stale uncommitted changes | `check-stale-commits.sh` | Runs `git status --porcelain` and identifies modified or untracked files (excluding git-ignored) whose `mtime` is older than 24 hours. Reports the file path and age in days and hours. On approval, stages the file with `git add` — does not commit. | No |
+| 5 | Stale uncommitted changes | `check-stale-commits.sh` | Runs `git status --porcelain` and identifies modified or untracked files (excluding git-ignored) whose `mtime` is older than 24 hours. Reports the file path and age in days and hours. On approval, stages the file with `git add`; does not commit. | No |
 
 ## Planned Features
 
 No unreleased items are currently tracked in the changelog. Two checks were considered and intentionally excluded from v1.0.0:
 
-- **Stale pattern detection for `.gitignore`** — removed because defensive patterns (`.env`, `.DS_Store`, `.vscode/`) are valid even when no matching file currently exists, making any `git ls-files`-based staleness check produce systematic false positives.
-- **Per-plugin `.claude/state/` coverage check** — omitted because the root `.gitignore` already has `**/.claude/state/`, which covers all subdirectories via gitignore inheritance.
+- **Stale pattern detection for `.gitignore`**: removed because defensive patterns (`.env`, `.DS_Store`, `.vscode/`) are valid even when no matching file currently exists, making any `git ls-files`-based staleness check produce systematic false positives.
+- **Per-plugin `.claude/state/` coverage check**: omitted because the root `.gitignore` already has `**/.claude/state/`, which covers all subdirectories via gitignore inheritance.
 
 ## Known Issues
 

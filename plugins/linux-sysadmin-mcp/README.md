@@ -1,44 +1,44 @@
 # linux-sysadmin-mcp
 
-A Claude Code MCP plugin providing comprehensive Linux system administration — packages, services, users, firewall, networking, security, storage, containers, and more — through a structured, risk-aware tool interface.
+A Claude Code MCP plugin providing comprehensive Linux system administration: packages, services, users, firewall, networking, security, storage, containers, and more, through a structured, risk-aware tool interface.
 
 ## Summary
 
-linux-sysadmin-mcp exposes 101 tools across 15 modules as MCP tools, giving Claude the ability to read system state and execute state-changing commands with a built-in safety gate. Every state-changing operation is classified by risk level and passes through a three-step safety check before execution — tool default risk, knowledge profile escalation, and configurable threshold — so routine operations proceed without friction while high-impact commands require explicit confirmation.
+linux-sysadmin-mcp exposes 101 tools across 15 modules as MCP tools, giving Claude the ability to read system state and execute state-changing commands with a built-in safety gate. Every state-changing operation is classified by risk level and passes through a three-step safety check before execution: tool default risk, knowledge profile escalation, and configurable threshold, so routine operations proceed without friction while high-impact commands require explicit confirmation.
 
 The server auto-detects the host's distro family (Debian/RHEL/Arch) and maps commands accordingly. A knowledge base of service profiles (sshd, ufw, nginx, etc.) enriches health checks, log queries, and risk escalations with service-specific context.
 
 ## Principles
 
-**[P1] Act on Intent** — Invoking a tool is consent to its implied scope. Routine operations execute without confirmation gates. Only operations at or above the configured risk threshold pause for confirmation.
+**[P1] Act on Intent**: Invoking a tool is consent to its implied scope. Routine operations execute without confirmation gates. Only operations at or above the configured risk threshold pause for confirmation.
 
-**[P2] Dry Run Before Destruction** — Every state-changing tool (except a handful of firewall enable/disable operations) accepts `dry_run: true`, which returns `preview_command` without executing. The default safety gate treats `dry_run: true` as automatic confirmation bypass.
+**[P2] Dry Run Before Destruction**: Every state-changing tool (except a handful of firewall enable/disable operations) accepts `dry_run: true`, which returns `preview_command` without executing. The default safety gate treats `dry_run: true` as automatic confirmation bypass.
 
-**[P3] Degrade, Never Fail Silently** — When passwordless sudo is unavailable, the server registers only read-only tools and reports `degraded_mode: true` in `sysadmin_session_info`. Unrecognized distro families log a warning before falling back to Debian commands.
+**[P3] Degrade, Never Fail Silently**: When passwordless sudo is unavailable, the server registers only read-only tools and reports `degraded_mode: true` in `sysadmin_session_info`. Unrecognized distro families log a warning before falling back to Debian commands.
 
-**[P4] Structured Output, Categorized Errors** — Tool responses are JSON with typed fields, not raw command output. Errors include `error_code`, `error_category`, and `remediation` steps. All state-changing responses include `command_executed` and `duration_ms`.
+**[P4] Structured Output, Categorized Errors**: Tool responses are JSON with typed fields, not raw command output. Errors include `error_code`, `error_category`, and `remediation` steps. All state-changing responses include `command_executed` and `duration_ms`.
 
-**[P5] Knowledge Profiles Enrich Context** — YAML service profiles add service-aware health checks, log sources, and risk escalations (e.g., editing `/etc/ssh/sshd_config` escalates risk to `high` via the sshd profile's interaction rules).
+**[P5] Knowledge Profiles Enrich Context**: YAML service profiles add service-aware health checks, log sources, and risk escalations (e.g., editing `/etc/ssh/sshd_config` escalates risk to `high` via the sshd profile's interaction rules).
 
-**[P6] Graceful Coexistence** — `integration_mode` (standalone/complementary/override) is a behavioral hint for Claude describing how aggressively to use MCP tools vs. built-in knowledge. Runtime MCP server detection is not currently implemented.
+**[P6] Graceful Coexistence**: `integration_mode` (standalone/complementary/override) is a behavioral hint for Claude describing how aggressively to use MCP tools vs. built-in knowledge. Runtime MCP server detection is not currently implemented.
 
 ## Features
 
-- **session** — Host context, distro info, sudo status, detected knowledge profiles, per-module tool count. Always call `sysadmin_session_info` first.
-- **packages** — List, search, inspect, install, remove, purge, update, rollback, and audit history. Supports apt and dnf.
-- **services** — List, status, start, stop, restart, enable, disable, and log retrieval for systemd units. Status enriched from knowledge profiles. Includes `timer_list`.
-- **performance** — System overview, top processes, memory breakdown, disk I/O, network throughput, uptime, and heuristic bottleneck analysis.
-- **logs** — Query (parsed journalctl), search (grep + journal), summarize errors by unit, and show log disk usage.
-- **security** — Full security audit, SSH config audit and hardening, security update check, MAC system status, listening port audit, SUID/SGID binary scan.
-- **storage** — Disk usage by filesystem, largest directories, mount listing, fstab management, LVM status, LV creation, and LV resize.
-- **users** — List, inspect, create, modify, and delete users and groups. Check and set file permissions/ownership.
-- **firewall** — Status, rule listing, add and remove rules, enable and disable. Supports ufw and firewalld.
-- **networking** — Interface listing, active connections, DNS and routing table inspection and modification, connectivity tests (ping/traceroute/dig).
-- **containers** — List, inspect, logs, start, stop, restart, remove containers; manage images; Docker Compose up/down/status.
-- **cron** — List, add, remove, and validate crontab entries. Preview next N scheduled runs for a cron expression.
-- **backup** — List, create (tar/rsync), restore, schedule, and verify backups.
-- **ssh** — SSH transport diagnostics, client config listing, key listing, connectivity tests, key generation, authorized key inspection.
-- **docs** — Git-backed documentation repo: init, generate host and service READMEs, back up config files, diff, history, and disaster recovery guide generation.
+- **session**: Host context, distro info, sudo status, detected knowledge profiles, per-module tool count. Always call `sysadmin_session_info` first.
+- **packages**: List, search, inspect, install, remove, purge, update, rollback, and audit history. Supports apt and dnf.
+- **services**: List, status, start, stop, restart, enable, disable, and log retrieval for systemd units. Status enriched from knowledge profiles. Includes `timer_list`.
+- **performance**: System overview, top processes, memory breakdown, disk I/O, network throughput, uptime, and heuristic bottleneck analysis.
+- **logs**: Query (parsed journalctl), search (grep + journal), summarize errors by unit, and show log disk usage.
+- **security**: Full security audit, SSH config audit and hardening, security update check, MAC system status, listening port audit, SUID/SGID binary scan.
+- **storage**: Disk usage by filesystem, largest directories, mount listing, fstab management, LVM status, LV creation, and LV resize.
+- **users**: List, inspect, create, modify, and delete users and groups. Check and set file permissions/ownership.
+- **firewall**: Status, rule listing, add and remove rules, enable and disable. Supports ufw and firewalld.
+- **networking**: Interface listing, active connections, DNS and routing table inspection and modification, connectivity tests (ping/traceroute/dig).
+- **containers**: List, inspect, logs, start, stop, restart, remove containers; manage images; Docker Compose up/down/status.
+- **cron**: List, add, remove, and validate crontab entries. Preview next N scheduled runs for a cron expression.
+- **backup**: List, create (tar/rsync), restore, schedule, and verify backups.
+- **ssh**: SSH transport diagnostics, client config listing, key listing, connectivity tests, key generation, authorized key inspection.
+- **docs**: Git-backed documentation repo: init, generate host and service READMEs, back up config files, diff, history, and disaster recovery guide generation.
 
 ## Requirements
 
@@ -61,7 +61,7 @@ claude --plugin-dir ./plugins/linux-sysadmin-mcp
 
 ### Post-Install Steps
 
-The MCP server ships as a pre-built esbuild bundle (`dist/server.bundle.cjs`) — no `npm install` or build step is required after plugin installation. The server registers automatically as `linux-sysadmin-mcp` via `.mcp.json`.
+The MCP server ships as a pre-built esbuild bundle (`dist/server.bundle.cjs`); no `npm install` or build step is required after plugin installation. The server registers automatically as `linux-sysadmin-mcp` via `.mcp.json`.
 
 If you modify the TypeScript source, rebuild with:
 
@@ -85,11 +85,11 @@ flowchart LR
     I[Knowledge Profiles] -.->|risk escalations<br/>health checks<br/>log sources| C
 ```
 
-The server runs as a stdio MCP process spawned by Claude Code. On startup it detects the distro family, verifies sudo access, loads active systemd units, resolves knowledge profiles, and registers all tool modules. Tool registrations are filtered in degraded mode — only `read-only` tools are exposed when passwordless sudo is unavailable.
+The server runs as a stdio MCP process spawned by Claude Code. On startup it detects the distro family, verifies sudo access, loads active systemd units, resolves knowledge profiles, and registers all tool modules. Tool registrations are filtered in degraded mode: only `read-only` tools are exposed when passwordless sudo is unavailable.
 
 ## Usage
 
-Start any session by calling `sysadmin_session_info` — it returns the host, distro, sudo status, active knowledge profiles, and per-module tool counts.
+Start any session by calling `sysadmin_session_info`; it returns the host, distro, sudo status, active knowledge profiles, and per-module tool counts.
 
 **Example prompts:**
 
@@ -211,11 +211,11 @@ Set `LINUX_SYSADMIN_CONFIG` environment variable to override the config file pat
 
 ## Known Issues
 
-- **Arch Linux support is partial** — distro detection and command dispatch target Debian and RHEL families; Arch falls back to Debian commands with a warning.
-- **Remote host support is not yet implemented** — all tools run on the local host where the MCP server is spawned. The `ssh` module provides connectivity tools but does not route other tool calls over SSH.
-- **`timer_create` and `timer_modify` are not implemented** — `timer_list` is the only systemd timer tool currently available; cron-based scheduling uses `bak_schedule` and `cron_add` instead.
-- **`sudoers_list` and `sudoers_modify` are not implemented** — sudoers management is planned but absent from the current release.
-- **Documentation tools require a pre-configured git repo** — `doc_*` tools return an error until `documentation.repo_path` is set in the config and `doc_init` is run.
+- **Arch Linux support is partial**: distro detection and command dispatch target Debian and RHEL families; Arch falls back to Debian commands with a warning.
+- **Remote host support is not yet implemented**: all tools run on the local host where the MCP server is spawned. The `ssh` module provides connectivity tools but does not route other tool calls over SSH.
+- **`timer_create` and `timer_modify` are not implemented**: `timer_list` is the only systemd timer tool currently available; cron-based scheduling uses `bak_schedule` and `cron_add` instead.
+- **`sudoers_list` and `sudoers_modify` are not implemented**: sudoers management is planned but absent from the current release.
+- **Documentation tools require a pre-configured git repo**: `doc_*` tools return an error until `documentation.repo_path` is set in the config and `doc_init` is run.
 
 ## Links
 

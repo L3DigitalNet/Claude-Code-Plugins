@@ -4,21 +4,21 @@ An iterative MCP-based test harness for Claude Code plugins and MCP servers.
 
 ## Summary
 
-Plugin Test Harness (PTH) runs a structured test/fix/reload loop against a target plugin entirely inside Claude Code. It creates a git session branch and worktree, auto-discovers tool schemas from the live MCP server, generates test cases, executes them via Claude, and applies code fixes — iterating until convergence. Test suites and session artifacts persist across sessions in `~/.pth/PLUGIN_NAME/` so state is never lost when a session ends or a process restarts.
+Plugin Test Harness (PTH) runs a structured test/fix/reload loop against a target plugin entirely inside Claude Code. It creates a git session branch and worktree, auto-discovers tool schemas from the live MCP server, generates test cases, executes them via Claude, and applies code fixes, iterating until convergence. Test suites and session artifacts persist across sessions in `~/.pth/PLUGIN_NAME/` so state is never lost when a session ends or a process restarts.
 
 ## Principles
 
-**[P1] Act on Intent** — Invoking a session tool is consent to its full scope. Session gates block only the narrow pre-session window; once a session is active, all tools operate without confirmation.
+**[P1] Act on Intent**: Invoking a session tool is consent to its full scope. Session gates block only the narrow pre-session window; once a session is active, all tools operate without confirmation.
 
-**[P2] Scope Fidelity** — Each tool does exactly one thing: generate, record, fix, reload, or inspect. No tool performs a superset of its stated scope without being asked.
+**[P2] Scope Fidelity**: Each tool does exactly one thing: generate, record, fix, reload, or inspect. No tool performs a superset of its stated scope without being asked.
 
-**[P3] Succeed Quietly, Fail Transparently** — Normal iterations emit compact summaries. On critical failures (build error, git conflict, missing tool) PTH stops immediately and surfaces raw output alongside a recovery plan.
+**[P3] Succeed Quietly, Fail Transparently**: Normal iterations emit compact summaries. On critical failures (build error, git conflict, missing tool) PTH stops immediately and surfaces raw output alongside a recovery plan.
 
-**[P4] Use the Full Toolkit** — The convergence trend (`improving`, `plateaued`, `oscillating`, `declining`) is a structured signal, not prose — enabling Claude to pick the right next action without guessing.
+**[P4] Use the Full Toolkit**: The convergence trend (`improving`, `plateaued`, `oscillating`, `declining`) is a structured signal, not prose, enabling Claude to pick the right next action without guessing.
 
-**[P5] Convergence is the Contract** — Sessions iterate toward zero failing tests without check-ins. PTH surfaces the trend and a recommended next action at each iteration boundary; the AI drives toward the goal.
+**[P5] Convergence is the Contract**: Sessions iterate toward zero failing tests without check-ins. PTH surfaces the trend and a recommended next action at each iteration boundary; the AI drives toward the goal.
 
-**[P6] Composable, Focused Units** — Each MCP tool is independently callable. Orchestration is assembled at runtime by the AI agent, not baked into PTH itself.
+**[P6] Composable, Focused Units**: Each MCP tool is independently callable. Orchestration is assembled at runtime by the AI agent, not baked into PTH itself.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ flowchart TD
 ```
 Call pth_preflight with the absolute path to your plugin.
 Then call pth_start_session to create the session branch.
-Call pth_generate_tests — schemas are auto-discovered.
+Call pth_generate_tests; schemas are auto-discovered.
 Execute each test by calling the plugin's tools, then pth_record_result.
 Call pth_get_iteration_status to checkpoint and see the trend.
 Apply fixes with pth_apply_fix, reload with pth_reload_plugin, repeat.
@@ -123,7 +123,7 @@ Each session runs in a git worktree at `/tmp/pth-worktree-<branch-slug>`. The ma
 |------|-------------|
 | `pth_record_result` | Record a test outcome (passing/failing/skipped) after Claude executes the test. Accepts optional `durationMs`, `failureReason`, and `claudeNotes`. |
 | `pth_get_results` | Full pass/fail listing for all tests with failure reasons. |
-| `pth_get_test_impact` | Identify which tests exercise a given set of source files — used to target re-runs after a fix. |
+| `pth_get_test_impact` | Identify which tests exercise a given set of source files, used to target re-runs after a fix. |
 | `pth_get_iteration_status` | Checkpoint the current iteration: snapshot pass/fail counts, advance the iteration counter, emit the convergence table and trend recommendation. |
 
 ### Fix Management
@@ -244,7 +244,7 @@ Example: `pth/linux-sysadmin-mcp-2026-02-18-a3f9c2`
 
 Worktrees are created at: `/tmp/pth-worktree-<branch-slug>`
 
-The branch remains in the git repository after `pth_end_session` — you can browse fix history with:
+The branch remains in the git repository after `pth_end_session`; you can browse fix history with:
 
 ```bash
 git log pth/my-plugin-2026-02-18-a3f9c2 --oneline
@@ -278,7 +278,7 @@ All session artifacts are written to `~/.pth/<plugin-name>/` at `pth_end_session
     └── fix-history.json
 ```
 
-Tests in `~/.pth/` are the authoritative source. When resuming or starting a new session, PTH loads the saved test suite — no tests are lost across process restarts.
+Tests in `~/.pth/` are the authoritative source. When resuming or starting a new session, PTH loads the saved test suite; no tests are lost across process restarts.
 
 ## Convergence
 
@@ -306,10 +306,10 @@ The convergence table rendered by `pth_get_iteration_status`:
 
 When a persistent store exists for a plugin, `pth_start_session` compares the saved plugin snapshot against the current source to surface structural changes without requiring a live server:
 
-- **New components** — tools or commands present in source but absent from the last snapshot
-- **Modified components** — tools whose source files changed since the snapshot was captured
-- **Removed components** — tools that were in the snapshot but are no longer present
-- **Stale test IDs** — tests whose target tool was removed
+- **New components**: tools or commands present in source but absent from the last snapshot
+- **Modified components**: tools whose source files changed since the snapshot was captured
+- **Removed components**: tools that were in the snapshot but are no longer present
+- **Stale test IDs**: tests whose target tool was removed
 
 Use `pth_generate_tests` with the `tools[]` parameter to generate tests only for new or modified components from the gap report.
 

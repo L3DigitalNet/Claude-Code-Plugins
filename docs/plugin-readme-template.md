@@ -38,11 +38,11 @@ Delete this comment block before publishing.
 
 Design decisions in this plugin are evaluated against these principles.
 
-**[P1] Principle Name** — Describe what this principle requires or forbids, and why.
+**[P1] Principle Name**: Describe what this principle requires or forbids, and why.
 
-**[P2] Principle Name** — Describe what this principle requires or forbids, and why.
+**[P2] Principle Name**: Describe what this principle requires or forbids, and why.
 
-**[P3] Principle Name** — Describe what this principle requires or forbids, and why.
+**[P3] Principle Name**: Describe what this principle requires or forbids, and why.
 
 ## Features
 
@@ -52,9 +52,9 @@ Design decisions in this plugin are evaluated against these principles.
      omit this section to avoid duplication.
      Bold the feature name, dash, then one-sentence description. -->
 
-- **Feature one** — What the user can do and why it matters.
-- **Feature two** — What the user can do and why it matters.
-- **Feature three** — What the user can do and why it matters.
+- **Feature one**: What the user can do and why it matters.
+- **Feature two**: What the user can do and why it matters.
+- **Feature three**: What the user can do and why it matters.
 
 ## Requirements
 
@@ -135,9 +135,9 @@ Natural language triggers: *"phrase that activates this plugin"*, *"alternative 
 
 Typical workflow:
 
-1. **Step one** — Invoke the command and describe your goal.
-2. **Step two** — Review the output or approve the plan.
-3. **Step three** — The plugin executes and delivers the result.
+1. **Step one**: Invoke the command and describe your goal.
+2. **Step two**: Review the output or approve the plan.
+3. **Step three**: The plugin executes and delivers the result.
 
 ## Commands
 
@@ -199,18 +199,18 @@ other_setting: true          # Why the default is what it is
 <!-- Use imperative phrases. Describe what users will be able to do — not
      implementation details. Omit timelines and version targets. -->
 
-- **Feature name** — What users will be able to do once this is shipped.
-- **Feature name** — What users will be able to do once this is shipped.
+- **Feature name**: What users will be able to do once this is shipped.
+- **Feature name**: What users will be able to do once this is shipped.
 
 ## Known Issues
 
 <!-- Runtime bugs, unintentional limitations, and missing workarounds. This section is
-     for things that are wrong or incomplete — not for intentional trade-offs (those
-     belong in Design Decisions). Each entry: bold title, em dash, description,
+     for things that are wrong or incomplete, not for intentional trade-offs (those
+     belong in Design Decisions). Each entry: bold title, colon, description,
      workaround if one exists. Don't pad with trivial caveats. -->
 
-- **Issue title** — What goes wrong and under what conditions. Workaround: *do X instead*.
-- **Issue title** — What goes wrong and under what conditions. No workaround currently.
+- **Issue title**: What goes wrong and under what conditions. Workaround: *do X instead*.
+- **Issue title**: What goes wrong and under what conditions. No workaround currently.
 
 ## Design Decisions
 
@@ -220,7 +220,7 @@ other_setting: true          # Why the default is what it is
      safety guard doesn't cover a particular tool, why a simpler approach was ruled out.
      Delete this section if there are no non-obvious decisions worth documenting. -->
 
-- **Decision title** — What the choice is, what the alternative was, and why the
+- **Decision title**: What the choice is, what the alternative was, and why the
   alternative was rejected.
 
 ## Links

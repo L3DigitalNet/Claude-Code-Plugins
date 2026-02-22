@@ -4,19 +4,19 @@ Test-driven autonomous refactoring against project design principles, with git w
 
 ## Summary
 
-Manual refactoring requires a developer to simultaneously understand design principles, identify violations, implement changes safely, and validate correctness — a cognitively expensive cycle prone to scope creep and regressions. `autonomous-refactor` automates this loop end-to-end: it reads your project's stated design principles from `README.md`, generates a behavioural test baseline, applies each refactoring opportunity in an isolated git worktree, and commits only changes that keep tests green — reverting everything else without human input. The result is a before/after report showing LOC, cyclomatic complexity, and principles alignment score deltas.
+Manual refactoring requires a developer to simultaneously understand design principles, identify violations, implement changes safely, and validate correctness, a cognitively expensive cycle prone to scope creep and regressions. `autonomous-refactor` automates this loop end-to-end: it reads your project's stated design principles from `README.md`, generates a behavioural test baseline, applies each refactoring opportunity in an isolated git worktree, and commits only changes that keep tests green, reverting everything else without human input. The result is a before/after report showing LOC, cyclomatic complexity, and principles alignment score deltas.
 
 ## Principles
 
-**[P1] Snapshot before touching** — A behavioural test suite is generated and confirmed green before any source change. A failing baseline stops the entire session immediately; there is no option to proceed with a red baseline.
+**[P1] Snapshot before touching**: A behavioural test suite is generated and confirmed green before any source change. A failing baseline stops the entire session immediately; there is no option to proceed with a red baseline.
 
-**[P2] Isolation per change** — Each refactoring opportunity runs in its own `git worktree`. Green commits merge; red tests trigger a force-remove of the worktree. Failures never touch the working branch.
+**[P2] Isolation per change**: Each refactoring opportunity runs in its own `git worktree`. Green commits merge; red tests trigger a force-remove of the worktree. Failures never touch the working branch.
 
-**[P3] Principle-driven opportunities** — Every opportunity must cite a specific principle from the project `README.md`. Aesthetic or stylistic changes with no principle backing are out of scope. No new external dependencies may be introduced.
+**[P3] Principle-driven opportunities**: Every opportunity must cite a specific principle from the project `README.md`. Aesthetic or stylistic changes with no principle backing are out of scope. No new external dependencies may be introduced.
 
-**[P4] Convergence without confirmation** — Phase 3 runs fully autonomously until all opportunities are addressed, `--max-changes` is reached, or a hard stop condition (git failure, missing test runner) occurs. `AskUserQuestion` is never called during the loop.
+**[P4] Convergence without confirmation**: Phase 3 runs fully autonomously until all opportunities are addressed, `--max-changes` is reached, or a hard stop condition (git failure, missing test runner) occurs. `AskUserQuestion` is never called during the loop.
 
-**[P5] Fail transparently** — Test failures, git errors, and missing tools surface immediately with raw output and recovery instructions. The session stops rather than attempting autonomous workarounds.
+**[P5] Fail transparently**: Test failures, git errors, and missing tools surface immediately with raw output and recovery instructions. The session stops rather than attempting autonomous workarounds.
 
 ## Requirements
 
@@ -50,35 +50,35 @@ The plugin includes a TypeScript metrics helper (`src/metrics.ts`) invoked via `
 cd plugins/autonomous-refactor && npm install
 ```
 
-The plugin degrades gracefully if this step is skipped — per-file diff summaries in the final report fall back to text descriptions from the session change log.
+The plugin degrades gracefully if this step is skipped; per-file diff summaries in the final report fall back to text descriptions from the session change log.
 
 ## How It Works
 
 ```mermaid
 flowchart TD
     User([User]) -->|"/refactor src/foo.ts"| Init[Initialise session state<br/>.claude/state/refactor-session.json]
-    Init --> P1[Phase 1 — Snapshot]
+    Init --> P1[Phase 1: Snapshot]
 
     P1 --> TG[Spawn test-generator agent<br/>Reads exports, writes tests to<br/>.claude/state/refactor-tests/]
     TG --> BaselineOk{Green<br/>baseline?}
-    BaselineOk -->|BASELINE FAILURE| Stop1((Stop — fix<br/>baseline first))
+    BaselineOk -->|BASELINE FAILURE| Stop1((Stop: fix<br/>baseline first))
     BaselineOk -->|Pass| Metrics1[snapshot-metrics.sh<br/>Capture LOC + complexity]
-    Metrics1 --> P2[Phase 2 — Analyze]
+    Metrics1 --> P2[Phase 2: Analyze]
 
     P2 --> PA[Spawn principles-auditor agent<br/>Reads README.md + target files<br/>Returns ranked opportunities JSON]
-    PA --> P3[Phase 3 — Refactor Loop<br/>fully autonomous]
+    PA --> P3[Phase 3: Refactor Loop<br/>fully autonomous]
 
     P3 --> Osc{Reverted<br/>twice?}
-    Osc -->|Yes| Skip1[Skip — oscillation]
+    Osc -->|Yes| Skip1[Skip: oscillation]
     Osc -->|No| WT[git worktree add<br/>.claude/worktrees/refactor-N]
     WT --> WTFail{Worktree<br/>created?}
-    WTFail -->|Fail| Stop2((Stop — surface<br/>git error))
+    WTFail -->|Fail| Stop2((Stop: surface<br/>git error))
     WTFail -->|OK| RA[Spawn refactor-agent<br/>Implements change in worktree]
     RA --> Scope{More than<br/>3 files?}
     Scope -->|Yes| Skip2[OUT_OF_SCOPE<br/>Remove worktree]
     Scope -->|No| Tests[run-tests.sh<br/>Run suite in worktree]
     Tests --> Runner{Runner<br/>found?}
-    Runner -->|Exit 2| Stop3((Stop — surface<br/>install instructions))
+    Runner -->|Exit 2| Stop3((Stop: surface<br/>install instructions))
     Runner -->|Exit 0 green| Commit[git commit in worktree<br/>git worktree remove]
     Runner -->|Exit 1 red| Revert[git worktree remove --force<br/>Record revert]
 
@@ -90,7 +90,7 @@ flowchart TD
     More -->|Yes| Osc
     More -->|No| P4
 
-    P4[Phase 4 — Report] --> Metrics2[snapshot-metrics.sh<br/>Capture final LOC + complexity]
+    P4[Phase 4: Report] --> Metrics2[snapshot-metrics.sh<br/>Capture final LOC + complexity]
     Metrics2 --> RG[Spawn report-generator agent<br/>Populates final-report.md template]
     RG --> Cleanup[rm -rf .claude/state .claude/worktrees]
     Cleanup --> Report((Before/after report<br/>emitted to user))
@@ -110,10 +110,10 @@ If no target files are specified, the plugin lists `.ts`, `.tsx`, and `.py` file
 
 **Numbered workflow phases:**
 
-1. **Snapshot** — `test-generator` generates a behavioural test suite from all exported symbols, runs it to confirm a green baseline, and saves results to `.claude/state/refactor-tests/`. LOC and cyclomatic complexity are snapshotted. Baseline failure stops the session.
-2. **Analyze** — `principles-auditor` reads project `README.md`, extracts stated design principles (sections named Principles, Design Principles, Architecture, Guidelines, or labelled P1/P2 etc.), identifies violations and improvement opportunities, scores alignment 0–100, and returns up to 15 ranked opportunities.
-3. **Refactor Loop** — Opportunities are processed autonomously in priority order (high → medium → low). Each runs in a dedicated git worktree. Green tests: commit, remove worktree, re-audit for new opportunities. Red tests: force-remove worktree, record revert, continue. Oscillation (two reverts of the same opportunity) causes a skip. Loop exits when all opportunities are addressed, `--max-changes` is reached, or a hard stop condition triggers.
-4. **Report** — Final LOC, complexity, and alignment score are captured. `report-generator` populates a before/after report template with deltas and a per-change table. All session state and worktrees are cleaned up.
+1. **Snapshot**: `test-generator` generates a behavioural test suite from all exported symbols, runs it to confirm a green baseline, and saves results to `.claude/state/refactor-tests/`. LOC and cyclomatic complexity are snapshotted. Baseline failure stops the session.
+2. **Analyze**: `principles-auditor` reads project `README.md`, extracts stated design principles (sections named Principles, Design Principles, Architecture, Guidelines, or labelled P1/P2 etc.), identifies violations and improvement opportunities, scores alignment 0–100, and returns up to 15 ranked opportunities.
+3. **Refactor Loop**: Opportunities are processed autonomously in priority order (high → medium → low). Each runs in a dedicated git worktree. Green tests: commit, remove worktree, re-audit for new opportunities. Red tests: force-remove worktree, record revert, continue. Oscillation (two reverts of the same opportunity) causes a skip. Loop exits when all opportunities are addressed, `--max-changes` is reached, or a hard stop condition triggers.
+4. **Report**: Final LOC, complexity, and alignment score are captured. `report-generator` populates a before/after report template with deltas and a per-change table. All session state and worktrees are cleaned up.
 
 ## Commands
 
@@ -127,7 +127,7 @@ If no target files are specified, the plugin lists `.ts`, `.tsx`, and `.py` file
 |-------|-------------|-------|
 | `test-generator` | Phase 1. Reads target files, generates a behavioural test suite covering all exported symbols, runs tests to confirm green baseline, retries up to 3 times on test code failures. Writes tests to `.claude/state/refactor-tests/` only. | `Read`, `Glob`, `Grep`, `Bash` |
 | `principles-auditor` | Phase 2 and Phase 3 re-audit. Reads target files and project `README.md`, extracts design principles, scores alignment 0–100, returns ranked JSON list of up to 15 opportunities. Re-invoked after each successful commit to discover opportunities the previous change may have resolved or exposed. | `Read`, `Glob`, `Grep` |
-| `refactor-agent` | Phase 3. Receives one opportunity object and a git worktree path, implements the minimal change needed inside that worktree, returns `OUT_OF_SCOPE` if more than 3 files require changes. Does not run tests or commit — the orchestrator handles both. | `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep` |
+| `refactor-agent` | Phase 3. Receives one opportunity object and a git worktree path, implements the minimal change needed inside that worktree, returns `OUT_OF_SCOPE` if more than 3 files require changes. Does not run tests or commit; the orchestrator handles both. | `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep` |
 | `report-generator` | Phase 4. Reads session state and baseline/final metrics files, populates the `final-report.md` template with LOC delta, complexity delta, alignment score delta, and per-change outcome table. Optionally runs `src/metrics.ts` via `npx tsx` for per-file diff summaries. | `Read`, `Glob`, `Bash` |
 
 ## Planned Features
@@ -135,7 +135,7 @@ If no target files are specified, the plugin lists `.ts`, `.tsx`, and `.py` file
 No unreleased section exists in the changelog. Gaps identified from the implementation:
 
 - Language support beyond TypeScript and Python (the test runner, complexity tool, and file discovery are all language-gated)
-- Resumable sessions — session state is cleaned up at the end of Phase 4; a mid-session crash cannot be resumed without manual recovery
+- Resumable sessions: session state is cleaned up at the end of Phase 4; a mid-session crash cannot be resumed without manual recovery
 - Hook-based post-session notification for CI or changelog integration
 
 ## Known Issues
@@ -148,9 +148,9 @@ No unreleased section exists in the changelog. Gaps identified from the implemen
 
 ## Design Decisions
 
-**Worktree-per-opportunity rather than branch-per-opportunity.** Each opportunity gets its own `git worktree` so the revert path is always `git worktree remove --force` — no need to track modified files or undo partial edits. The tradeoff is that worktree creation failure is a hard stop rather than a degraded-mode fallback.
+**Worktree-per-opportunity rather than branch-per-opportunity.** Each opportunity gets its own `git worktree` so the revert path is always `git worktree remove --force`, with no need to track modified files or undo partial edits. The tradeoff is that worktree creation failure is a hard stop rather than a degraded-mode fallback.
 
-**Re-audit after each successful commit.** The `principles-auditor` runs again after every committed change rather than working from a static list. This prevents applying opportunities the previous change already resolved, and surfaces new ones only visible after earlier refactors land. Re-auditing after a revert is explicitly skipped — no code changed, so no new information.
+**Re-audit after each successful commit.** The `principles-auditor` runs again after every committed change rather than working from a static list. This prevents applying opportunities the previous change already resolved, and surfaces new ones only visible after earlier refactors land. Re-auditing after a revert is explicitly skipped; no code changed, so no new information.
 
 **Orchestrator never reads source files; only the write-capable agent does.** The command file (`refactor.md`) delegates all source-level analysis and modification to agents. The `refactor-agent` is the only write-capable component and is constrained to paths within its assigned worktree, eliminating the possibility of accidental writes to the main working tree.
 

@@ -1,8 +1,8 @@
 # Performance Profiler
 
-Profile and benchmark Claude Code plugins and MCP servers — latency, throughput, flamegraphs, and regression tracking.
+Profile and benchmark Claude Code plugins and MCP servers: latency, throughput, flamegraphs, and regression tracking.
 
-> **Status: Planned — not yet implemented.** No commands, tools, or components exist. This is a placeholder for a future plugin.
+> **Status: Planned, not yet implemented.** No commands, tools, or components exist. This is a placeholder for a future plugin.
 
 ## Summary
 
@@ -10,10 +10,10 @@ Performance Profiler will measure the runtime characteristics of MCP server plug
 
 ## Planned Features
 
-- **MCP server benchmarking** — measure tool call latency, throughput, and resource usage for any running MCP server
-- **Flamegraph generation** — produce visual call-stack profiles from Node.js and Python MCP servers
-- **Regression tracking** — compare performance across plugin versions and flag regressions automatically
-- **Claude context cost analysis** — estimate token usage per tool call to identify high-cost tools
+- **MCP server benchmarking**: measure tool call latency, throughput, and resource usage for any running MCP server
+- **Flamegraph generation**: produce visual call-stack profiles from Node.js and Python MCP servers
+- **Regression tracking**: compare performance across plugin versions and flag regressions automatically
+- **Claude context cost analysis**: estimate token usage per tool call to identify high-cost tools
 
 ## Installation
 
