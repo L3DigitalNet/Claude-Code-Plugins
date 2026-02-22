@@ -219,3 +219,61 @@ Hygiene sweep complete.
 ```
 
 If DRY_RUN was active, prefix the header with `[DRY RUN]`.
+
+## Step 8: Commit and Push to Remote
+
+**If DRY_RUN is true:** Skip this step entirely.
+
+**If no files were modified or staged during the sweep:** Skip this step — nothing to push.
+
+Otherwise, check git state:
+
+```bash
+git status --porcelain
+```
+
+**Staged files (from stale-commits approvals):**
+If any staged files are present, do NOT auto-commit them. Display:
+```
+⚠ N staged file(s) from stale-commits approvals — commit these yourself with your own message before or after this push:
+  • <filepath>
+```
+
+**Unstaged changes (from auto-fixes and approved gitignore edits):**
+If any modified-but-unstaged files exist, stage and commit them:
+
+```bash
+git add -A
+git commit -m "$(cat <<'EOF'
+fix(hygiene): apply auto-fixes from /hygiene sweep
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+EOF
+)"
+```
+
+If there were no unstaged changes (only staged stale-commits files), skip the commit — don't create an empty commit.
+
+**Push and deploy:**
+
+Get the current branch:
+```bash
+git branch --show-current
+```
+
+Push the current branch:
+```bash
+git push origin <current-branch>
+```
+
+Then merge to `main` and push:
+```bash
+git checkout main && git pull origin main && git merge <current-branch> --no-ff -m "Deploy: hygiene sweep fixes" && git push origin main && git checkout <current-branch>
+```
+
+Report:
+```
+🚀 Pushed <current-branch> and merged to main.
+```
+
+If any git command fails, surface the error and stop — do not continue with the deploy.

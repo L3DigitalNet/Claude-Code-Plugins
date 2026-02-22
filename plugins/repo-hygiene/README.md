@@ -53,7 +53,8 @@ flowchart TD
     CL -->|needs approval| NA[Step 5: Present grouped findings<br/>AskUserQuestion multi-select]
     CL -->|severity == info| IN[Collect info notes]
     NA --> AP[Step 6: Apply approved fixes<br/>delete / stage / display for review / edit]
-    AF & AP & IN --> SUM((Step 7: Final summary<br/>Auto-fixed / Approved / Deferred / Info))
+    AF & AP & IN --> SUM[Step 7: Final summary<br/>Auto-fixed / Approved / Deferred / Info]
+    SUM --> PUSH((Step 8: Commit auto-fixes<br/>push branch → merge to main))
 ```
 
 ## Usage
@@ -78,6 +79,9 @@ The sweep always runs all checks. With `--dry-run`, no files are modified and no
 
 **Info only (no action required):**
 - Plugins present in `installed_plugins.json` but absent from `settings.json` `enabledPlugins`
+
+**After the sweep (Step 8):**
+Any file changes made by the sweep (auto-fixes and approved edits) are committed automatically as `fix(hygiene): apply auto-fixes from /hygiene sweep`, pushed to the current branch, then merged to `main` and pushed. Files staged via `stale-commits` approvals are called out separately — they require a user-authored commit message. The remote is always left up-to-date after a successful sweep. Skipped when `--dry-run` is active or when no files were modified.
 
 ## Commands
 

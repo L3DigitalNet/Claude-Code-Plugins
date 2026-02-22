@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2026-02-22
+
+### Added
+- Step 8: after the sweep, auto-commits any file changes from auto-fixes and approved edits, pushes the current branch, then merges to `main` and pushes — remote is always left up-to-date after a successful non-dry-run sweep
+- Stale-commits staged files are called out separately in Step 8 and excluded from the auto-commit (they require a user-authored commit message)
+
 ## [1.1.0] - 2026-02-22
 
 ### Changed
