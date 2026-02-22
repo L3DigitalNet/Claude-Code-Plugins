@@ -1,0 +1,129 @@
+name: Qt Test Coverage
+
+on:
+  push:
+    branches: [main, testing]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Python / PySide6 ────────────────────────────────────────────────────────
+  coverage-python:
+    name: Python Coverage
+    runs-on: ubuntu-latest
+    # Remove this job if project is C++ only
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install system Qt dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y libgl1-mesa-dev libglib2.0-0 libdbus-1-3
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-qt
+
+      - name: Run tests with coverage
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          pytest \
+            --cov=myapp \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-report=html:htmlcov \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=80 \
+            tests/
+
+      - name: Coverage summary
+        run: |
+          python -c "
+          import json
+          d = json.load(open('coverage.json', encoding='utf-8')) if __import__('os').path.exists('coverage.json') else None
+          if d:
+              t = d['totals']
+              print(f\"Coverage: {t['percent_covered']:.1f}% ({t['covered_lines']}/{t['num_statements']} lines)\")
+          "
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-coverage-html
+          path: htmlcov/
+          if-no-files-found: warn
+
+  # ── C++ / Qt6 ──────────────────────────────────────────────────────────────
+  coverage-cpp:
+    name: C++ Coverage
+    runs-on: ubuntu-latest
+    # Remove this job if project is Python only
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y \
+            cmake ninja-build lcov \
+            qt6-base-dev qt6-declarative-dev \
+            libgl1-mesa-dev
+
+      - name: Configure with coverage
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_COVERAGE=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure --parallel 4
+
+      - name: Capture coverage data
+        run: |
+          lcov --capture \
+               --directory build \
+               --output-file coverage_raw.info \
+               --no-external
+
+          lcov --remove coverage_raw.info \
+               '*/tests/*' '*/moc_*' '*/ui_*' '*/build/*' \
+               --output-file coverage.info
+
+          lcov --summary coverage.info
+
+          genhtml coverage.info \
+                  --output-directory htmlcov-cpp \
+                  --title "${{ github.repository }} C++ Coverage" \
+                  --legend
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(lcov --summary coverage.info 2>&1 | grep "lines" | grep -oP '\d+\.\d+' | head -1)
+          echo "Line coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "ERROR: Coverage ${COVERAGE}% is below 80% threshold"
+            exit 1
+          fi
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cpp-coverage-html
+          path: htmlcov-cpp/
+          if-no-files-found: warn

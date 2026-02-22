@@ -1,0 +1,12 @@
+{
+  "_comment": "qt-test-suite configuration — commit this file. For personal overrides, use .claude/qt-test.local.md (gitignored).",
+  "project_type": "python",
+  "build_dir": "build",
+  "test_dir": "tests",
+  "app_entry": "main.py",
+  "coverage_threshold": 80,
+  "coverage_exclude": [
+    "tests/*",
+    "*/migrations/*"
+  ]
+}

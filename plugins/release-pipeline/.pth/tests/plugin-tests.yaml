@@ -1,0 +1,298 @@
+id: force_push_guard_blocks_force_flag
+name: force-push-guard blocks --force flag
+mode: plugin
+type: hook-script
+script: scripts/force-push-guard.sh
+stdin:
+  tool_name: Bash
+  tool_input:
+    command: git push origin main --force
+expect:
+  exit_code: 2
+  stdout_contains: block
+tags:
+  - force-push-guard
+  - hook
+
+---
+id: force_push_guard_blocks_f_shorthand
+name: force-push-guard blocks -f shorthand
+mode: plugin
+type: hook-script
+script: scripts/force-push-guard.sh
+stdin:
+  tool_name: Bash
+  tool_input:
+    command: git push origin main -f
+expect:
+  exit_code: 2
+  stdout_contains: block
+tags:
+  - force-push-guard
+  - hook
+
+---
+id: force_push_guard_allows_normal_push
+name: force-push-guard allows normal push
+mode: plugin
+type: hook-script
+script: scripts/force-push-guard.sh
+stdin:
+  tool_name: Bash
+  tool_input:
+    command: git push origin main
+expect:
+  exit_code: 0
+tags:
+  - force-push-guard
+  - hook
+
+---
+id: force_push_guard_fails_open_on_empty_input
+name: force-push-guard fails open on empty input
+mode: plugin
+type: hook-script
+script: scripts/force-push-guard.sh
+stdin:
+  tool_name: Bash
+  tool_input: {}
+expect:
+  exit_code: 0
+tags:
+  - force-push-guard
+  - hook
+  - edge-case
+
+---
+id: detect_test_runner_finds_pytest_from_pyproject_toml
+name: detect-test-runner finds pytest from pyproject.toml
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-pytest-fixture
+expect:
+  exit_code: 0
+  stdout_contains: pytest
+setup:
+  - exec: |-
+      mkdir -p /tmp/pth-pytest-fixture && printf '[tool.pytest.ini_options]
+      ' > /tmp/pth-pytest-fixture/pyproject.toml
+teardown:
+  - exec: rm -rf /tmp/pth-pytest-fixture
+tags:
+  - detect-test-runner
+
+---
+id: detect_test_runner_finds_pytest_from_pytest_ini
+name: detect-test-runner finds pytest from pytest.ini
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-pytest-ini-fixture
+expect:
+  exit_code: 0
+  stdout_contains: pytest
+setup:
+  - exec: mkdir -p /tmp/pth-pytest-ini-fixture && touch
+      /tmp/pth-pytest-ini-fixture/pytest.ini
+teardown:
+  - exec: rm -rf /tmp/pth-pytest-ini-fixture
+tags:
+  - detect-test-runner
+
+---
+id: detect_test_runner_finds_npm_test_from_package_json
+name: detect-test-runner finds npm test from package.json
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-node-fixture
+expect:
+  exit_code: 0
+  stdout_contains: npm test
+setup:
+  - exec: |-
+      mkdir -p /tmp/pth-node-fixture && printf '{"scripts":{"test":"jest"}}
+      ' > /tmp/pth-node-fixture/package.json
+teardown:
+  - exec: rm -rf /tmp/pth-node-fixture
+tags:
+  - detect-test-runner
+
+---
+id: detect_test_runner_finds_cargo_test_from_cargo_toml
+name: detect-test-runner finds cargo test from Cargo.toml
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-rust-fixture
+expect:
+  exit_code: 0
+  stdout_contains: cargo test
+setup:
+  - exec: mkdir -p /tmp/pth-rust-fixture && touch /tmp/pth-rust-fixture/Cargo.toml
+teardown:
+  - exec: rm -rf /tmp/pth-rust-fixture
+tags:
+  - detect-test-runner
+
+---
+id: detect_test_runner_finds_go_test_from_go_mod
+name: detect-test-runner finds go test from go.mod
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-go-fixture
+expect:
+  exit_code: 0
+  stdout_contains: go test
+setup:
+  - exec: |-
+      mkdir -p /tmp/pth-go-fixture && printf 'module example.com/foo
+
+      go 1.21
+      ' > /tmp/pth-go-fixture/go.mod
+teardown:
+  - exec: rm -rf /tmp/pth-go-fixture
+tags:
+  - detect-test-runner
+
+---
+id: detect_test_runner_exits_1_for_unknown_project
+name: detect-test-runner exits 1 for unknown project
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-empty-fixture
+expect:
+  exit_code: 1
+setup:
+  - exec: mkdir -p /tmp/pth-empty-fixture
+teardown:
+  - exec: rm -rf /tmp/pth-empty-fixture
+tags:
+  - detect-test-runner
+  - edge-case
+
+---
+id: detect_test_runner_exits_1_for_nonexistent_directory
+name: detect-test-runner exits 1 for nonexistent directory
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-does-not-exist-xyz
+expect:
+  exit_code: 1
+tags:
+  - detect-test-runner
+  - edge-case
+
+---
+id: verify_release_exits_1_with_missing_args
+name: verify-release exits 1 with missing args
+mode: plugin
+type: exec
+command: bash scripts/verify-release.sh
+expect:
+  exit_code: 1
+  stdout_contains: Usage
+tags:
+  - verify-release
+  - edge-case
+
+---
+id: verify_release_exits_1_for_nonexistent_repo_path
+name: verify-release exits 1 for nonexistent repo path
+mode: plugin
+type: exec
+command: bash scripts/verify-release.sh /tmp/no-such-repo-xyz 1.2.3
+expect:
+  exit_code: 1
+  stdout_contains: Error
+tags:
+  - verify-release
+  - edge-case
+
+---
+id: verify_release_rejects_plugin_name_with_path_separator
+name: verify-release rejects plugin name with path separator
+mode: plugin
+type: exec
+command: bash scripts/verify-release.sh /tmp 1.0.0 --plugin foo/bar
+expect:
+  exit_code: 1
+  stdout_contains: path separator
+tags:
+  - verify-release
+  - edge-case
+
+---
+id: verify_release_strips_leading_v_from_version_in_report_header
+name: verify-release strips leading v from version in report header
+mode: plugin
+type: exec
+command: bash scripts/verify-release.sh /tmp v2.0.0
+expect:
+  exit_code: 1
+  stdout_contains: v2.0.0
+tags:
+  - verify-release
+pinned: true
+
+---
+id: verify_release_plugin_tag_format_is_name_vversion
+name: verify-release plugin tag format is name/vVERSION
+mode: plugin
+type: exec
+command: bash scripts/verify-release.sh /tmp 1.0.0 --plugin my-plugin
+expect:
+  exit_code: 1
+  stdout_contains: my-plugin/v1.0.0
+tags:
+  - verify-release
+pinned: true
+
+---
+id: force_push_guard_does_not_block_fd_combined_flag
+name: force-push-guard does not block -fd combined flag
+mode: plugin
+type: hook-script
+script: scripts/force-push-guard.sh
+stdin:
+  tool_name: Bash
+  tool_input:
+    command: git push origin main -fd
+expect:
+  exit_code: 0
+tags:
+  - force-push-guard
+  - edge-case
+
+---
+id: sync_local_plugins_exits_0_when_cache_dir_absent
+name: sync-local-plugins exits 0 when cache dir absent
+mode: plugin
+type: exec
+env:
+  HOME: /tmp/pth-no-cache-home
+command: bash scripts/sync-local-plugins.sh
+expect:
+  exit_code: 0
+tags:
+  - sync-local-plugins
+
+---
+id: detect_test_runner_falls_back_to_claude_md_test_command
+name: detect-test-runner falls back to CLAUDE.md test command
+mode: plugin
+type: exec
+command: bash scripts/detect-test-runner.sh /tmp/pth-claudemd-fixture
+expect:
+  exit_code: 0
+  stdout_contains: pytest
+setup:
+  - exec: |-
+      mkdir -p /tmp/pth-claudemd-fixture && printf '## Testing
+
+      ```
+      pytest tests/ -m unit
+      ```
+      ' > /tmp/pth-claudemd-fixture/CLAUDE.md
+teardown:
+  - exec: rm -rf /tmp/pth-claudemd-fixture
+tags:
+  - detect-test-runner
+  - edge-case

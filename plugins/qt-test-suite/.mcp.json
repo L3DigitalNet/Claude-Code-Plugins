@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "qt-pilot": {
+      "command": "bash",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/start-qt-pilot.sh"]
+    }
+  }
+}
