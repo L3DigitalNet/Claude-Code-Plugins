@@ -1,6 +1,6 @@
 # docs-manager
 
-Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.
+Documentation lifecycle management: detects changes, queues tasks silently, surfaces them for batch review at session boundaries.
 
 ## Summary
 
@@ -8,26 +8,26 @@ docs-manager is a Claude Code plugin that manages the full lifecycle of personal
 
 ## Principles
 
-**[P1] Domain Libraries, Not a Global Web** — Every document belongs to a named library. Discovery is guaranteed at the library level. Documents cannot be saved without declaring membership.
+**[P1] Domain Libraries, Not a Global Web**: Every document belongs to a named library. Discovery is guaranteed at the library level. Documents cannot be saved without declaring membership.
 
-**[P2] Detection is Automatic; Resolution is Deferred and Batched** — Hooks observe file writes silently and append to a persistent queue. Resolution happens at session boundaries, not mid-task.
+**[P2] Detection is Automatic; Resolution is Deferred and Batched**: Hooks observe file writes silently and append to a persistent queue. Resolution happens at session boundaries, not mid-task.
 
-**[P3] Staleness is Surfaced at the Point of Use and at Session Close** — Freshness is checked when a project becomes active and enforced when a session ends. Dormant docs are not alarmed; active docs are not allowed to go silently out of date.
+**[P3] Staleness is Surfaced at the Point of Use and at Session Close**: Freshness is checked when a project becomes active and enforced when a session ends. Dormant docs are not alarmed; active docs are not allowed to go silently out of date.
 
-**[P4] Templates are Inferred, Not Imposed** — The tool infers the appropriate document structure from context, directory, and user-established patterns. No selection menus.
+**[P4] Templates are Inferred, Not Imposed**: The tool infers the appropriate document structure from context, directory, and user-established patterns. No selection menus.
 
-**[P5] Human-First in Survival Contexts** — Any document a human may need to follow without AI assistance (sysadmin, dev, personal) requires explanatory prose alongside structured data. AI-only artifacts (`audience: ai`) are exempt; token efficiency takes precedence for them.
+**[P5] Human-First in Survival Contexts**: Any document a human may need to follow without AI assistance (sysadmin, dev, personal) requires explanatory prose alongside structured data. AI-only artifacts (`audience: ai`) are exempt; token efficiency takes precedence for them.
 
-**[P6] Lighter Than the Problem** — Any workflow the plugin imposes must cost less effort than the documentation problem it solves. The tool carries the intelligence burden; the user approves or declines.
+**[P6] Lighter Than the Problem**: Any workflow the plugin imposes must cost less effort than the documentation problem it solves. The tool carries the intelligence burden; the user approves or declines.
 
-**[P7] Anchor to Upstream Truth** — Documentation describing third-party tools must be periodically verified against its upstream authoritative source. Internal freshness checks are not sufficient when the ground truth is externally maintained.
+**[P7] Anchor to Upstream Truth**: Documentation describing third-party tools must be periodically verified against its upstream authoritative source. Internal freshness checks are not sufficient when the ground truth is externally maintained.
 
 ## Requirements
 
 - Claude Code (any recent version)
 - `jq` (for queue and index JSON operations)
 - `git` (for the default `git-markdown` index backend)
-- Python 3 stdlib (for frontmatter parsing — no external packages required)
+- Python 3 stdlib (for frontmatter parsing; no external packages required)
 
 ## Installation
 
@@ -218,7 +218,7 @@ template: homelab-service-runbook
 
 - Upstream verification requires network access. Headless servers without internet access cannot run `/docs verify` against live upstream URLs.
 - The index is read-only when the `git-markdown` backend repository is not cloned on the current machine. Run `/docs index init` to set up a new machine.
-- `/docs status` infers hook health from last-fired timestamps rather than querying the Claude Code hook registry directly. A stale timestamp may indicate a hook failure or simply an inactive session — `/docs hook status` provides the detailed diagnostic.
+- `/docs status` infers hook health from last-fired timestamps rather than querying the Claude Code hook registry directly. A stale timestamp may indicate a hook failure or simply an inactive session; `/docs hook status` provides the detailed diagnostic.
 - Queue write failures during concurrent sessions fall back to `queue.fallback.json`. If the fallback file is not merged before the next session, items may appear duplicated in the review flow (deduplication handles this at merge time).
 
 ## Links

@@ -1,24 +1,24 @@
 # qt-dev-suite
 
-Companion plugin to `qt-test-suite` for active Qt GUI application development — proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt projects.
+Companion plugin to `qt-test-suite` for active Qt GUI application development : proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt projects.
 
 ## Summary
 
-Qt GUI development involves many interacting systems: signals and slots, layout managers, Model/View architecture, threading constraints, and platform packaging — each with non-obvious pitfalls. `qt-dev-suite` loads the right domain knowledge at the right moment, surfaces expert guidance proactively during development, and generates correct boilerplate so you spend time on application logic instead of Qt ceremony.
+Qt GUI development involves many interacting systems: signals and slots, layout managers, Model/View architecture, threading constraints, and platform packaging, each with non-obvious pitfalls. `qt-dev-suite` loads the right domain knowledge at the right moment, surfaces expert guidance proactively during development, and generates correct boilerplate so you spend time on application logic instead of Qt ceremony.
 
-Where `qt-test-suite` handles the *testing* side (test generation, coverage analysis, headless visual testing), `qt-dev-suite` handles the *development* side — architecture, patterns, component implementation, code review, and UX quality.
+Where `qt-test-suite` handles the *testing* side (test generation, coverage analysis, headless visual testing), `qt-dev-suite` handles the *development* side: architecture, patterns, component implementation, code review, and UX quality.
 
 ## Principles
 
 Design decisions in this plugin are evaluated against these principles.
 
-**[P1] Right knowledge at the right moment** — Skills load contextually; agents trigger proactively. Domain knowledge appears when needed without requiring the user to ask for it explicitly.
+**[P1] Right knowledge at the right moment**: Skills load contextually; agents trigger proactively. Domain knowledge appears when needed without requiring the user to ask for it explicitly.
 
-**[P2] Testability is a first-class concern** — Every generated component includes `setObjectName()` calls and MVP-compatible structure so `qt-test-suite`'s `gui-tester` can find and interact with all widgets without modification.
+**[P2] Testability is a first-class concern**: Every generated component includes `setObjectName()` calls and MVP-compatible structure so `qt-test-suite`'s `gui-tester` can find and interact with all widgets without modification.
 
-**[P3] Complete implementations over pseudocode** — All generated code is runnable as-is. Stubs are clearly marked with `# TODO`. No "add your logic here" placeholders for required structural elements.
+**[P3] Complete implementations over pseudocode**: All generated code is runnable as-is. Stubs are clearly marked with `# TODO`. No "add your logic here" placeholders for required structural elements.
 
-**[P4] Binding-agnostic where possible** — Skills and agents work with PySide6, PyQt6, and C++/Qt. Binding-specific differences are documented, not hidden.
+**[P4] Binding-agnostic where possible**: Skills and agents work with PySide6, PyQt6, and C++/Qt. Binding-specific differences are documented, not hidden.
 
 ## Requirements
 
@@ -116,18 +116,18 @@ Natural language triggers (agents activate proactively):
 
 ## Planned Features
 
-- `qt-animation` skill — QPropertyAnimation, state machines, transition effects
-- `qt-internationalization` skill — QTranslator, .ts files, lupdate/lrelease workflow
+- `qt-animation` skill: QPropertyAnimation, state machines, transition effects
+- `qt-internationalization` skill: QTranslator, .ts files, lupdate/lrelease workflow
 - Example project templates in `examples/`
 
 ## Known Issues
 
-- Skills cover PySide6 and PyQt6. C++/Qt coverage in skills is partial — primary focus is Python bindings.
+- Skills cover PySide6 and PyQt6. C++/Qt coverage in skills is partial; primary focus is Python bindings.
 - `qt-packaging` covers PyInstaller and Briefcase; `nuitka` not yet covered.
 
 ## Links
 
 - [Changelog](CHANGELOG.md)
-- [qt-test-suite](../qt-test-suite/) — companion testing plugin (test generation, coverage, headless GUI testing)
+- [qt-test-suite](../qt-test-suite/): companion testing plugin (test generation, coverage, headless GUI testing)
 - [PySide6 documentation](https://doc.qt.io/qtforpython-6/)
 - [Qt documentation](https://doc.qt.io/)

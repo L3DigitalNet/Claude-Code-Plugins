@@ -1,6 +1,6 @@
 # Release Pipeline
 
-Autonomous release pipeline for Claude Code — interactive menu-driven releases with parallel pre-flight checks, semver suggestion, changelog generation, and GitHub release creation.
+Autonomous release pipeline for Claude Code: interactive menu-driven releases with parallel pre-flight checks, semver suggestion, changelog generation, and GitHub release creation.
 
 ## Summary
 
@@ -8,15 +8,15 @@ Release Pipeline presents a context-aware menu at invocation, detects whether yo
 
 ## Principles
 
-**[P1] Act on Intent** — Invocation is consent to the implied scope. The single approval gate before irreversible operations (tag, push, GitHub release) is the decision point; routine sub-tasks like staging or committing do not prompt separately.
+**[P1] Act on Intent**: Invocation is consent to the implied scope. The single approval gate before irreversible operations (tag, push, GitHub release) is the decision point; routine sub-tasks like staging or committing do not prompt separately.
 
-**[P2] Scope Fidelity** — Execute the full release completely without intermediate confirmation gates. Pre-flight failures stop the pipeline immediately with the full error and a rollback suggestion.
+**[P2] Scope Fidelity**: Execute the full release completely without intermediate confirmation gates. Pre-flight failures stop the pipeline immediately with the full error and a rollback suggestion.
 
-**[P3] Succeed Quietly, Fail Transparently** — Pre-flight agents, auto-build, stash, and the session-start sync hook suppress output when nothing changed. On critical failure, the pipeline stops and surfaces raw output with recovery instructions.
+**[P3] Succeed Quietly, Fail Transparently**: Pre-flight agents, auto-build, stash, and the session-start sync hook suppress output when nothing changed. On critical failure, the pipeline stops and surfaces raw output with recovery instructions.
 
-**[P4] Use the Full Toolkit** — Every decision point uses `AskUserQuestion` with bounded options. Version selection always presents a commit-derived suggestion alongside a custom entry option.
+**[P4] Use the Full Toolkit**: Every decision point uses `AskUserQuestion` with bounded options. Version selection always presents a commit-derived suggestion alongside a custom entry option.
 
-**[P5] Convergence is the Contract** — Batch release runs all plugins to completion with quarantine-and-continue semantics; individual plugin failures do not abort the batch.
+**[P5] Convergence is the Contract**: Batch release runs all plugins to completion with quarantine-and-continue semantics; individual plugin failures do not abort the batch.
 
 ## Requirements
 
@@ -122,12 +122,12 @@ Each agent supports per-check waivers via `.release-waivers.json` in the repo ro
 
 `detect-test-runner.sh` probes for test frameworks in this order:
 
-1. **Python / pytest** — `pyproject.toml` with `[tool.pytest]`, `pytest.ini`, or `setup.cfg` with `[tool:pytest]`
-2. **Node.js** — `package.json` with a `scripts.test` entry (`npm test`)
-3. **Rust** — `Cargo.toml` present (`cargo test`)
-4. **Make** — `Makefile` with a `test:` target (`make test`)
-5. **Go** — `go.mod` present (`go test ./...`)
-6. **CLAUDE.md fallback** — extracts the first documented test command from the project's CLAUDE.md
+1. **Python / pytest**: `pyproject.toml` with `[tool.pytest]`, `pytest.ini`, or `setup.cfg` with `[tool:pytest]`
+2. **Node.js**: `package.json` with a `scripts.test` entry (`npm test`)
+3. **Rust**: `Cargo.toml` present (`cargo test`)
+4. **Make**: `Makefile` with a `test:` target (`make test`)
+5. **Go**: `go.mod` present (`go test ./...`)
+6. **CLAUDE.md fallback**: extracts the first documented test command from the project's CLAUDE.md
 
 If no runner is detected, the `missing_tests` waiver is checked before reporting FAIL.
 
@@ -135,8 +135,8 @@ If no runner is detected, the `missing_tests` waiver is checked before reporting
 
 Before pre-flight runs in Full Release, Plugin Release, and Batch Release modes, two common blockers are resolved automatically:
 
-- **Dirty working tree** — auto-stashed before pre-flight via `auto-stash.sh stash` and restored after all git operations complete (before the GitHub API call) via `auto-stash.sh pop`.
-- **Non-noreply git email** — checked via `fix-git-email.sh`, which parses the remote URL (HTTPS or SSH) to derive the correct `@users.noreply.github.com` address and applies it with `git config --local --auto-fix`. If auto-fix fails, the pipeline stops with a manual fix instruction.
+- **Dirty working tree**: auto-stashed before pre-flight via `auto-stash.sh stash` and restored after all git operations complete (before the GitHub API call) via `auto-stash.sh pop`.
+- **Non-noreply git email**: checked via `fix-git-email.sh`, which parses the remote URL (HTTPS or SSH) to derive the correct `@users.noreply.github.com` address and applies it with `git config --local --auto-fix`. If auto-fix fails, the pipeline stops with a manual fix instruction.
 
 Both recoveries are noted inline. If either cannot be resolved, the pipeline stops immediately.
 
@@ -163,7 +163,7 @@ GitHub CLI calls in Phase 3.5 (release create) and Phase 4 (verify) are wrapped 
 - Batch Release runs plugins sequentially, not in parallel. Large monorepos with many unreleased plugins will take proportionally longer.
 - Quick Merge always merges `testing` into `main`. Repos using different branch naming must adjust manually.
 - Changelog generation uses conventional commit prefixes. Repos without conventional commits produce a generic "other" section with no semver signal.
-- Dry Run simulates version bumps and changelog generation but cannot simulate the GitHub release API — actual release creation may still fail after a clean dry run.
+- Dry Run simulates version bumps and changelog generation but cannot simulate the GitHub release API; actual release creation may still fail after a clean dry run.
 
 ## Links
 

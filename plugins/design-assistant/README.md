@@ -1,6 +1,6 @@
 # Design Assistant
 
-Guided design document authoring and iterative principle-enforced review — from blank slate to implementation-ready spec.
+Guided design document authoring and iterative principle-enforced review: from blank slate to implementation-ready spec.
 
 ## Summary
 
@@ -8,15 +8,15 @@ Design Assistant covers the full lifecycle of a design document: `/design-draft`
 
 ## Principles
 
-**[P1] Principles before architecture** — Every candidate principle is inferred from what you actually said, stress-tested against a forced tradeoff, and locked before any document sections are written. Generic best practices are rejected; a principle with no cost is not a principle.
+**[P1] Principles before architecture**: Every candidate principle is inferred from what you actually said, stress-tested against a forced tradeoff, and locked before any document sections are written. Generic best practices are rejected; a principle with no cost is not a principle.
 
-**[P2] Tensions are resolved, not smoothed** — Contradictions between answers and conflicts between principles are named explicitly and resolved through concrete domain-specific scenarios. Unresolved tensions become the source of the most expensive design arguments later.
+**[P2] Tensions are resolved, not smoothed**: Contradictions between answers and conflicts between principles are named explicitly and resolved through concrete domain-specific scenarios. Unresolved tensions become the source of the most expensive design arguments later.
 
-**[P3] Convergence without check-ins** — The review loop runs passes until a full pass produces zero findings across all three tracks and principle compliance and gap coverage are both clean. Progress is silent; blockers surface immediately.
+**[P3] Convergence without check-ins**: The review loop runs passes until a full pass produces zero findings across all three tracks and principle compliance and gap coverage are both clean. Progress is silent; blockers surface immediately.
 
-**[P4] Principle violations are never auto-fixed** — `PRINCIPLE: Pn` findings always require individual human review regardless of auto-fix mode. Principle violations are design decisions that require conscious author resolution.
+**[P4] Principle violations are never auto-fixed**: `PRINCIPLE: Pn` findings always require individual human review regardless of auto-fix mode. Principle violations are design decisions that require conscious author resolution.
 
-**[P5] Every fix is screened before it is offered** — Before any proposed resolution is presented, it is screened against all principles in the registry. A fix that closes one finding while violating an established principle is disqualified from auto-fix and surfaced for manual review.
+**[P5] Every fix is screened before it is offered**: Before any proposed resolution is presented, it is screened against all principles in the registry. A fix that closes one finding while violating an established principle is disqualified from auto-fix and surfaced for manual review.
 
 ## Requirements
 
@@ -103,21 +103,21 @@ Sessions can be suspended with `pause` and resumed by pasting the snapshot into 
 
 ## Known Issues
 
-- **5+ option prompts fall back to formatted text** — `AskUserQuestion` is bounded at 4 options. Decision points with 5 or more choices (finding resolution modes, tension scenarios, escalation choices, health issue resolution) are presented as formatted text rather than structured bounded-choice UI. This is a deliberate constraint imposed by the `AskUserQuestion` primitive, documented in the interaction conventions of both commands.
+- **5+ option prompts fall back to formatted text**: `AskUserQuestion` is bounded at 4 options. Decision points with 5 or more choices (finding resolution modes, tension scenarios, escalation choices, health issue resolution) are presented as formatted text rather than structured bounded-choice UI. This is a deliberate constraint imposed by the `AskUserQuestion` primitive, documented in the interaction conventions of both commands.
 
-- **Context pressure accumulates over long review sessions** — The read-counter hook tracks file reads as a proxy for context growth. The `/design-review` end-of-pass summary also tracks estimated context growth lines with GREEN/YELLOW/RED thresholds (GREEN < 4,000 lines, YELLOW 4,000–8,000 or 3+ consecutive Heavy passes, RED > 8,000 or any Critical-volume pass). For large documents or many passes, pausing and resuming in a fresh session is recommended.
+- **Context pressure accumulates over long review sessions**: The read-counter hook tracks file reads as a proxy for context growth. The `/design-review` end-of-pass summary also tracks estimated context growth lines with GREEN/YELLOW/RED thresholds (GREEN < 4,000 lines, YELLOW 4,000–8,000 or 3+ consecutive Heavy passes, RED > 8,000 or any Critical-volume pass). For large documents or many passes, pausing and resuming in a fresh session is recommended.
 
-- **Behavioral-only architecture** — Both commands implement their state machines entirely through prompt instructions. There are no compiled state machines, no external databases, and no persistent session files between exchanges. All session state lives in the conversation context; the Pause State Snapshot is the only cross-session persistence mechanism.
+- **Behavioral-only architecture**: Both commands implement their state machines entirely through prompt instructions. There are no compiled state machines, no external databases, and no persistent session files between exchanges. All session state lives in the conversation context; the Pause State Snapshot is the only cross-session persistence mechanism.
 
 ## Design Decisions
 
-**Two commands instead of one** — Authoring and review are split into separate commands so each can be invoked independently. A team may already have a document that needs reviewing without having gone through the drafting process; similarly, a completed draft may be reviewed separately from when it was written. The warm handoff contract enables seamless flow between them when used together.
+**Two commands instead of one**: Authoring and review are split into separate commands so each can be invoked independently. A team may already have a document that needs reviewing without having gone through the drafting process; similarly, a completed draft may be reviewed separately from when it was written. The warm handoff contract enables seamless flow between them when used together.
 
-**Warm handoff as plain text block** — The handoff from `/design-draft` to `/design-review` is a structured text block emitted into the conversation context rather than a file or API call. This keeps the architecture behavioral-only (no external state) while allowing `/design-review` to import the full principles registry, tension resolution log, and open questions log without re-deriving them from document text.
+**Warm handoff as plain text block**: The handoff from `/design-draft` to `/design-review` is a structured text block emitted into the conversation context rather than a file or API call. This keeps the architecture behavioral-only (no external state) while allowing `/design-review` to import the full principles registry, tension resolution log, and open questions log without re-deriving them from document text.
 
-**Auto-Fix Heuristics are internal only** — Each principle carries an `auto_fix_heuristic` field used by `/design-review` to generate fixes, but this field is explicitly excluded from all user-facing output and from the rendered design document. The reader-facing fields are `Statement`, `Intent`, `Enforcement Heuristic`, `Cost of Following`, `Tiebreaker`, and `Risk Areas`.
+**Auto-Fix Heuristics are internal only**: Each principle carries an `auto_fix_heuristic` field used by `/design-review` to generate fixes, but this field is explicitly excluded from all user-facing output and from the rendered design document. The reader-facing fields are `Statement`, `Intent`, `Enforcement Heuristic`, `Cost of Following`, `Tiebreaker`, and `Risk Areas`.
 
-**Phase gates block, not warn** — Every phase in `/design-draft` has a completion check that must pass before the next phase begins. Unanswered questions must become `SKIPPED: [reason]`; all candidates must have verdicts; no Active tension may survive Phase 2C. These are hard gates, not advisory checks, because downstream quality depends on each phase's outputs being complete.
+**Phase gates block, not warn**: Every phase in `/design-draft` has a completion check that must pass before the next phase begins. Unanswered questions must become `SKIPPED: [reason]`; all candidates must have verdicts; no Active tension may survive Phase 2C. These are hard gates, not advisory checks, because downstream quality depends on each phase's outputs being complete.
 
 ## Links
 

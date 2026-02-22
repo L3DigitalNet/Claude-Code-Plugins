@@ -4,33 +4,33 @@ Audits Claude Code plugins for token and context efficiency, then rewrites instr
 
 ## Summary
 
-Every token a plugin loads — skill files, command definitions, repeated prose — costs context space that cannot be recovered. As plugins grow, bloated instructions compound across agent turns and risk context exhaustion on large inputs. The Context Efficiency Toolkit provides two structured, approval-gated workflows: a twelve-principle architectural audit that diagnoses and fixes structural inefficiency, and a prose-level rewriting pass that eliminates motivational text, restatements, and hedging from instruction files. The two commands are designed to work in sequence — settle the architecture first, then polish the language.
+Every token a plugin loads (skill files, command definitions, repeated prose) costs context space that cannot be recovered. As plugins grow, bloated instructions compound across agent turns and risk context exhaustion on large inputs. The Context Efficiency Toolkit provides two structured, approval-gated workflows: a twelve-principle architectural audit that diagnoses and fixes structural inefficiency, and a prose-level rewriting pass that eliminates motivational text, restatements, and hedging from instruction files. The two commands are designed to work in sequence: settle the architecture first, then polish the language.
 
 ## Principles
 
-**[P1] Imperative Minimalism** — Every instruction sentence must define a behavior, constrain a choice, or specify a format. Anything else is cut.
+**[P1] Imperative Minimalism**: Every instruction sentence must define a behavior, constrain a choice, or specify a format. Anything else is cut.
 
-**[P2] Format Matches Data Type** — Structured data uses structured formats (YAML, tables). Behavioral rules use natural language. Never encode structured data as prose.
+**[P2] Format Matches Data Type**: Structured data uses structured formats (YAML, tables). Behavioral rules use natural language. Never encode structured data as prose.
 
-**[P3] Reference Over Repetition** — Define a concept once, name it, reference the name thereafter. Never restate a definition.
+**[P3] Reference Over Repetition**: Define a concept once, name it, reference the name thereafter. Never restate a definition.
 
-**[P4] Lazy Context Loading** — Read the minimum data needed at the moment it is needed. Prefer targeted reads over whole-resource reads.
+**[P4] Lazy Context Loading**: Read the minimum data needed at the moment it is needed. Prefer targeted reads over whole-resource reads.
 
-**[P5] Process and Discard** — Carry forward structured summaries or extracts after reading — not raw content.
+**[P5] Process and Discard**: Carry forward structured summaries or extracts after reading; not raw content.
 
-**[P6] Output Verbosity Matches Consumer** — Human-facing outputs are clear and readable. Machine-consumed outputs are compact and schema-aligned.
+**[P6] Output Verbosity Matches Consumer**: Human-facing outputs are clear and readable. Machine-consumed outputs are compact and schema-aligned.
 
-**[P7] Decompose by Scope** — Each subagent's input context must be constructable from a small, targeted briefing. If a subagent requires the orchestrator's full context, the decomposition is wrong.
+**[P7] Decompose by Scope**: Each subagent's input context must be constructable from a small, targeted briefing. If a subagent requires the orchestrator's full context, the decomposition is wrong.
 
-**[P8] Subagents Return Structured Extracts** — Subagent outputs follow an explicit schema and return results, not reasoning traces.
+**[P8] Subagents Return Structured Extracts**: Subagent outputs follow an explicit schema and return results, not reasoning traces.
 
-**[P9] Orchestrator Synthesizes, Does Not Re-Analyze** — The orchestrator routes, integrates, and synthesizes. It does not re-analyze source data the subagent already processed.
+**[P9] Orchestrator Synthesizes, Does Not Re-Analyze**: The orchestrator routes, integrates, and synthesizes. It does not re-analyze source data the subagent already processed.
 
-**[P10] Fail Fast, Surface Early** — Surface ambiguity, infeasibility, or blockers at the earliest possible point.
+**[P10] Fail Fast, Surface Early**: Surface ambiguity, infeasibility, or blockers at the earliest possible point.
 
-**[P11] Choose the Lighter Path** — When multiple valid approaches exist and result quality is comparable, take the one with lower token cost.
+**[P11] Choose the Lighter Path**: When multiple valid approaches exist and result quality is comparable, take the one with lower token cost.
 
-**[P12] Verbosity Scales Inverse to Context Depth** — As context window depth grows, reduce tool call frequency and output verbosity.
+**[P12] Verbosity Scales Inverse to Context Depth**: As context window depth grows, reduce tool call frequency and output verbosity.
 
 ## Requirements
 
@@ -62,9 +62,9 @@ flowchart TD
     S5 --> S6[Stage 5: Execute approved plan]
     S6 --> TM[/tighten-markdown/]
     TM --> T1[Step 1: Inventory file<br/>count sections and sentences]
-    T1 --> T2[Step 2: Cut — apply 3-test standard]
-    T2 --> T3[Step 3: Compress — rewrite survivors]
-    T3 --> T4[Step 4: Structure — enforce format rules]
+    T1 --> T2[Step 2: Cut, apply 3-test standard]
+    T2 --> T3[Step 3: Compress, rewrite survivors]
+    T3 --> T4[Step 4: Structure, enforce format rules]
     T4 --> T5((Write file<br/>report savings))
 ```
 
@@ -78,7 +78,7 @@ Run `/review-context-efficiency` first for structural and architectural issues, 
 /review-context-efficiency
 ```
 
-When prompted, provide either the plugin's root directory path (e.g., `plugins/my-plugin`) or paste a file list. The command loads two skills — `CONTEXT_EFFICIENCY_REFERENCE.md` (principle definitions) and `CONTEXT_EFFICIENCY_REVIEW.md` (workflow) — both are required. Claude will not advance past any stage or make any changes without explicit approval.
+When prompted, provide either the plugin's root directory path (e.g., `plugins/my-plugin`) or paste a file list. The command loads two skills: `CONTEXT_EFFICIENCY_REFERENCE.md` (principle definitions) and `CONTEXT_EFFICIENCY_REVIEW.md` (workflow); both are required. Claude will not advance past any stage or make any changes without explicit approval.
 
 **`/tighten-markdown`**
 

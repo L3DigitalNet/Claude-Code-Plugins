@@ -60,23 +60,23 @@ installed plugins at the start of each session.
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
 | [Qt Test Suite](#qt-test-suite) | MCP + Commands | `/qt:generate`, `/qt:run`, `/qt:coverage`, `/qt:visual` | AI test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt |
-| [Qt Dev Suite](#qt-dev-suite) | Commands + Skills | `/qt-dev-suite:scaffold`, `/qt-dev-suite:new-component` | Qt GUI development companion — proactive agents, 13 domain skills, and scaffolding commands |
+| [Qt Dev Suite](#qt-dev-suite) | Commands + Skills | `/qt-dev-suite:scaffold`, `/qt-dev-suite:new-component` | Qt GUI development companion with proactive agents, 13 domain skills, and scaffolding commands |
 
 ## Principles
 
 These principles apply across all plugins in this collection. Individual plugins may define additional principles scoped to their domain.
 
-**[P1] Act on Intent** — Invoking a command is consent to its implied scope. When intent is ambiguous, clarify scope before executing — not after. When intent is clear, execute without narration or confirmation of the obvious. A confirmation gate is warranted only when an operation is both truly irreversible and its scope materially exceeds what the invocation implies — not for operations that are merely large or look dangerous. If scope materially changes mid-execution, stop and re-confirm. Routine friction is a tax, not a safeguard.
+**[P1] Act on Intent**: Invoking a command is consent to its implied scope. When intent is ambiguous, clarify scope before executing, not after. When intent is clear, execute without narration or confirmation of the obvious. A confirmation gate is warranted only when an operation is both truly irreversible and its scope materially exceeds what the invocation implies, not for operations that are merely large or look dangerous. If scope materially changes mid-execution, stop and re-confirm. Routine friction is a tax, not a safeguard.
 
-**[P2] Scope Fidelity** — Execute the full scope of what was asked — completely, without routine sub-task confirmation gates. When a sub-task's scope is genuinely ambiguous, clarify before proceeding rather than assuming. Do not act beyond the declared scope; surface only material out-of-scope findings as notes — routine adjacent observations are not worth raising. Scope undershoot triggers additional iteration; scope overshoot violates the consent established at invocation.
+**[P2] Scope Fidelity**: Execute the full scope of what was asked, completely, without routine sub-task confirmation gates. When a sub-task's scope is genuinely ambiguous, clarify before proceeding rather than assuming. Do not act beyond the declared scope; surface only material out-of-scope findings as notes; routine adjacent observations are not worth raising. Scope undershoot triggers additional iteration; scope overshoot violates the consent established at invocation.
 
-**[P3] Succeed Quietly, Fail Transparently** — Lead with findings — not intent, not preamble. Output results, not narration. Emit a compact factual summary at task completion — not after every step. On transient or infrastructure errors, retry silently. On critical failures, stop immediately and surface the complete failure — raw output included — with a recovery plan; do not attempt autonomous workarounds.
+**[P3] Succeed Quietly, Fail Transparently**: Lead with findings, not intent or preamble. Output results, not narration. Emit a compact factual summary at task completion, not after every step. On transient or infrastructure errors, retry silently. On critical failures, stop immediately and surface the complete failure (raw output included) with a recovery plan; do not attempt autonomous workarounds.
 
-**[P4] Use the Full Toolkit** — When interaction is required, prefer structured choices over open-ended prompts — bound the user's decision space before presenting it. Use Claude Code's interaction primitives: bounded choices (`AskUserQuestion`), markdown previews for side-by-side comparisons, multi-select for non-exclusive options.
+**[P4] Use the Full Toolkit**: When interaction is required, prefer structured choices over open-ended prompts; bound the user's decision space before presenting it. Use Claude Code's interaction primitives: bounded choices (`AskUserQuestion`), markdown previews for side-by-side comparisons, multi-select for non-exclusive options.
 
-**[P5] Convergence is the Contract** — Iterative work defines completion as a measurable criterion — set by the plugin, the user, or collaboratively — and drives toward it without check-ins. Proceed quietly when converging normally. Surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating — making and undoing the same changes repeatedly — flag the pattern and stop rather than continuing. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
+**[P5] Convergence is the Contract**: Iterative work defines completion as a measurable criterion (set by the plugin, the user, or collaboratively) and drives toward it without check-ins. Proceed quietly when converging normally. Surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating (making and undoing the same changes repeatedly), flag the pattern and stop rather than continuing. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
 
-**[P6] Composable, Focused Units** — Every plugin component — command, skill, hook — does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
+**[P6] Composable, Focused Units**: Every plugin component (command, skill, hook) does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
 
 ---
 
@@ -106,15 +106,15 @@ isolation via git worktrees, and mechanical enforcement hooks.
 
 ### Design Assistant
 
-**Full design document lifecycle in two commands** — guided authoring from blank page through
+**Full design document lifecycle in two commands**: guided authoring from blank page through
 principle-enforced iterative review.
 
 **Features:**
 
-- `/design-draft` — 5-phase interview: context deep dive, principles discovery, scope
+- `/design-draft`: 5-phase interview: context deep dive, principles discovery, scope
   confirmation, gap-filling, and draft generation
 - Principle stress-testing and tension resolution before any architecture is committed
-- `/design-review` — multi-pass principle enforcement, gap analysis, and optional auto-fix
+- `/design-review`: multi-pass principle enforcement, gap analysis, and optional auto-fix
 - Principle Conflict Screening: all proposed fixes checked against established principles
   before presentation
 - Automatic warm handoff from draft to review (principles registry transferred)
@@ -133,21 +133,21 @@ principle-enforced iterative review.
 
 ### GitHub Repo Manager
 
-**Conversational GitHub repository maintenance** — assess and fix repo health
+**Conversational GitHub repository maintenance**: assess and fix repo health
 interactively, with owner approval at every step.
 
 **Features:**
 
-- Wiki sync — keeps wiki pages in sync with in-repo docs and code
-- Community health — audits and updates CONTRIBUTING, SECURITY, CODE_OF_CONDUCT,
+- Wiki sync: keeps wiki pages in sync with in-repo docs and code
+- Community health: audits and updates CONTRIBUTING, SECURITY, CODE_OF_CONDUCT,
   issue/PR templates
-- PR triage — conflict detection, staleness checks, review summaries
-- Issue triage — labels, assignees, staleness, linked PRs
-- Release health — unreleased commits, changelog drift, draft releases
-- Security posture — Dependabot alerts, code scanning, secret scanning
-- Dependency audit — outdated packages, license concerns
-- Notifications & discussions — triage and summarise
-- Cross-repo mode — scan all accessible repos for a specific concern and fix in batch
+- PR triage: conflict detection, staleness checks, review summaries
+- Issue triage: labels, assignees, staleness, linked PRs
+- Release health: unreleased commits, changelog drift, draft releases
+- Security posture: Dependabot alerts, code scanning, secret scanning
+- Dependency audit: outdated packages, license concerns
+- Notifications & discussions: triage and summarise
+- Cross-repo mode: scan all accessible repos for a specific concern and fix in batch
 - Structured maintenance report generated at session end
 
 **Install:**
@@ -220,7 +220,7 @@ containers, and more.
 
 ### Plugin Test Harness
 
-**Iterative plugin testing framework** — generates tests, records pass/fail results,
+**Iterative plugin testing framework**: generates tests, records pass/fail results,
 applies source fixes, reloads the target plugin, and retests until convergence.
 
 **Features:**
@@ -246,7 +246,7 @@ applies source fixes, reloads the target plugin, and retests until convergence.
 
 ### Release Pipeline
 
-**Autonomous release pipeline** — quick merge or full semver release with parallel
+**Autonomous release pipeline**: quick merge or full semver release with parallel
 pre-flight checks, changelog generation, and GitHub release creation.
 
 **Features:**
@@ -271,7 +271,7 @@ pre-flight checks, changelog generation, and GitHub release creation.
 
 ### Autonomous Refactor
 
-**Test-driven autonomous refactoring** — reads your project's design principles,
+**Test-driven autonomous refactoring**: reads your project's design principles,
 generates a behavioural test baseline, applies each refactoring opportunity in an
 isolated git worktree, and commits only changes that keep tests green.
 
@@ -279,7 +279,7 @@ isolated git worktree, and commits only changes that keep tests green.
 
 - Derives refactoring opportunities from principles declared in `README.md`
 - Generates a green test baseline before touching any source file
-- Applies each change in an isolated git worktree — reverts automatically on red tests
+- Applies each change in an isolated git worktree, reverting automatically on red tests
 - Detects oscillation (repeated make/undo of the same change) and stops
 - Produces a before/after report with LOC, cyclomatic complexity, and alignment score
 
@@ -296,17 +296,17 @@ isolated git worktree, and commits only changes that keep tests green.
 
 ### Context Efficiency Toolkit
 
-**Audit and reduce plugin context footprint** — two structured workflows for eliminating
+**Audit and reduce plugin context footprint**: two structured workflows for eliminating
 token waste: a twelve-principle architectural audit and a prose-level rewriting pass.
 
 **Features:**
 
-- `/review-context-efficiency` — audits against 12 structural efficiency principles
+- `/review-context-efficiency`: audits against 12 structural efficiency principles
   (deferred loading, hook vs instruction, template extraction, and more)
-- `/tighten-markdown` — rewrites instruction files to remove motivational text,
+- `/tighten-markdown`: rewrites instruction files to remove motivational text,
   restatements, hedging, and syntax narration without changing meaning
 - Approval-gated: findings presented before any file is modified
-- Designed to run in sequence — architecture first, prose second
+- Designed to run in sequence: architecture first, prose second
 
 **Install:**
 
@@ -321,14 +321,14 @@ token waste: a twelve-principle architectural audit and a prose-level rewriting 
 
 ### Docs Manager
 
-**Documentation lifecycle management** — monitors file changes via hooks, accumulates
+**Documentation lifecycle management**: monitors file changes via hooks, accumulates
 documentation tasks into a persistent queue without interrupting active work, and
 surfaces the queue for batch review at session end.
 
 **Features:**
 
-- Hook-driven change detection — queues documentation tasks as files are written
-- Persistent queue across sessions — never loses pending items between restarts
+- Hook-driven change detection: queues documentation tasks as files are written
+- Persistent queue across sessions with no item loss between restarts
 - Central library index with per-document freshness tracking
 - Third-party doc verification against upstream authoritative sources
 - Batch review at session end rather than interrupting active work
@@ -347,16 +347,16 @@ surfaces the queue for batch review at session end.
 
 ### Plugin Review
 
-**Multi-pass assertion-driven plugin audit** — three parallel analyst subagents cover
+**Multi-pass assertion-driven plugin audit**: three parallel analyst subagents cover
 principles alignment, terminal UX quality, and documentation freshness, then the
 orchestrator auto-implements all fixes and re-audits to convergence.
 
 **Features:**
 
 - Three parallel read-only analyst tracks: principles (A), UX (B), docs (C)
-- Assertion-based confidence scoring — loop continues until 100% or budget exhausted
+- Assertion-based confidence scoring: loop continues until 100% or budget exhausted
 - `--autonomous` flag adds regression guard (Track D) and build/test validation
-- All fixes auto-implemented by the orchestrator — no manual copy/paste
+- All fixes auto-implemented by the orchestrator, no manual copy/paste
 - Findings severity-sorted: critical → high → medium → low
 
 **Install:**
@@ -372,7 +372,7 @@ orchestrator auto-implements all fixes and re-audits to convergence.
 
 ### Repo Hygiene
 
-**Autonomous maintenance sweep** — five parallel mechanical checks plus a semantic
+**Autonomous maintenance sweep**: five parallel mechanical checks plus a semantic
 README pass, with safe corrections applied automatically and destructive changes
 requiring explicit approval.
 
@@ -398,14 +398,14 @@ requiring explicit approval.
 
 ### Qt Test Suite
 
-**AI-powered Qt testing pipeline** — test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt projects.
+**AI-powered Qt testing pipeline**: test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt projects.
 
 **Features:**
 
-- `/qt:generate` — scans codebase and generates unit tests for untested files
-- `/qt:run` — auto-detects Python (pytest) or C++ (CTest) and runs the full suite
-- `/qt:coverage` — gcov/lcov (C++) or coverage.py (Python) → HTML report → gap-targeted test generation loop
-- `/qt:visual` — launches app headlessly via Xvfb, drives UI interactions with the bundled Qt Pilot MCP server
+- `/qt:generate`: scans codebase and generates unit tests for untested files
+- `/qt:run`: auto-detects Python (pytest) or C++ (CTest) and runs the full suite
+- `/qt:coverage`: gcov/lcov (C++) or coverage.py (Python) → HTML report → gap-targeted test generation loop
+- `/qt:visual`: launches app headlessly via Xvfb, drives UI interactions with the bundled Qt Pilot MCP server
 - Auto-installed virtual environment for Qt Pilot dependencies on first run
 
 **Install:**
@@ -421,15 +421,15 @@ requiring explicit approval.
 
 ### Qt Dev Suite
 
-**Qt GUI application development companion** — proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt projects.
+**Qt GUI application development companion**: proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt projects.
 
 **Features:**
 
-- 4 proactive agents: development specialist, debugger, code reviewer, and UX advisor — activate automatically on context
+- 4 proactive agents: development specialist, debugger, code reviewer, and UX advisor) activate automatically on context
 - 13 context-aware skills covering signals/slots, layouts, Model/View, threading, QML, styling, and more
-- `/qt-dev-suite:scaffold` — generates a complete PySide6 project with pyproject.toml, src layout, and test config
-- `/qt-dev-suite:new-component` — generates widget, dialog, or window boilerplate with correct `setObjectName()` calls
-- Designed to pair with `qt-test-suite` — scaffolded components are immediately testable by the GUI tester
+- `/qt-dev-suite:scaffold`: generates a complete PySide6 project with pyproject.toml, src layout, and test config
+- `/qt-dev-suite:new-component`: generates widget, dialog, or window boilerplate with correct `setObjectName()` calls
+- Designed to pair with `qt-test-suite`; scaffolded components are immediately testable by the GUI tester
 
 **Install:**
 

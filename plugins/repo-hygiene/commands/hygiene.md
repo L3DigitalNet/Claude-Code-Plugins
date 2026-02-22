@@ -74,6 +74,9 @@ For each plugin directory under `plugins/` that has a `README.md`, in alphabetic
 
 5. **Principles vs. codebase** — Extract the `Principles` or `Design Principles` section. For each principle, check if it is obviously contradicted by the current codebase (e.g., "no external network calls" but the plugin makes HTTP requests; "single-file command" but there are agents/ and scripts/). Only flag clear contradictions, not minor drift. Add findings with the same format as above.
 
+6. **Em dash overuse** — Count all occurrences of `—` (U+2014 em dash) in the README. If the count is 3 or more, add a finding. The `**Term** — description` pattern is the most common source and should become `**Term**: description`. Prose uses (` — ` between clauses) should be replaced with a comma, a period, or a restructured sentence. Em dashes are a strong signal of AI-generated text and degrade perceived writing quality.
+   - `check: "readme-freshness"`, `severity: "warn"`, `path: "plugins/<name>/README.md"`, `detail: "Contains N em dashes (—) — replace '**Term** — desc' with '**Term**: desc' and prose '—' with commas or periods"`, `auto_fix: false`, `fix_cmd: null`
+
 ### Step 2b: Root README.md (root level)
 
 Read `README.md` at the repo root.

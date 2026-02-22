@@ -4,17 +4,17 @@ A Claude Code plugin that provides an AI-powered Qt testing pipeline: test gener
 
 ## Summary
 
-Qt applications present unique testing challenges: C++ templates and signals/slots make unit test scaffolding non-obvious; coverage tools differ between Python and C++ builds; and GUI components require a live display server or a headless substitute. `qt-test-suite` handles all three — it scans your codebase to generate targeted tests, instruments builds for coverage, and drives your PySide6 app visually via Xvfb and the bundled Qt Pilot MCP server. The result is a complete test pipeline — unit, coverage, and GUI — without manual toolchain setup.
+Qt applications present unique testing challenges: C++ templates and signals/slots make unit test scaffolding non-obvious; coverage tools differ between Python and C++ builds; and GUI components require a live display server or a headless substitute. `qt-test-suite` handles all three: it scans your codebase to generate targeted tests, instruments builds for coverage, and drives your PySide6 app visually via Xvfb and the bundled Qt Pilot MCP server. The result is a complete test pipeline (unit, coverage, and GUI) without manual toolchain setup.
 
 ## Principles
 
-**[P1] Coverage-driven generation** — Tests are generated from identified coverage gaps, not arbitrary files. The coverage report is the source of truth for what needs testing next.
+**[P1] Coverage-driven generation**: Tests are generated from identified coverage gaps, not arbitrary files. The coverage report is the source of truth for what needs testing next.
 
-**[P2] Language-transparent operation** — Commands auto-detect Python/PySide6 vs C++/Qt and adapt toolchains without user configuration. Coverage uses gcov/lcov for C++ and coverage.py for Python; tests use pytest-qt and QTest respectively.
+**[P2] Language-transparent operation**: Commands auto-detect Python/PySide6 vs C++/Qt and adapt toolchains without user configuration. Coverage uses gcov/lcov for C++ and coverage.py for Python; tests use pytest-qt and QTest respectively.
 
-**[P3] Headless-first GUI testing** — Visual tests launch via Xvfb with no display server configuration required. Qt Pilot identifies widgets by `objectName`, falling back to coordinate-based clicks only when names are absent.
+**[P3] Headless-first GUI testing**: Visual tests launch via Xvfb with no display server configuration required. Qt Pilot identifies widgets by `objectName`, falling back to coordinate-based clicks only when names are absent.
 
-**[P4] Testability is a prerequisite** — All scaffolded and generated components include `setObjectName()` calls on interactive elements. Without object names, the GUI tester degrades to fragile coordinate-based interaction.
+**[P4] Testability is a prerequisite**: All scaffolded and generated components include `setObjectName()` calls on interactive elements. Without object names, the GUI tester degrades to fragile coordinate-based interaction.
 
 ## Requirements
 
@@ -71,10 +71,10 @@ flowchart TD
 
 Typical workflow:
 
-1. **Generate** — Run `/qt:generate` to scan the project and write initial tests for untested files.
-2. **Run** — Run `/qt:run` to execute the suite and see a pass/fail summary.
-3. **Coverage** — Run `/qt:coverage` to measure coverage and identify gaps. If gaps are found, the `test-generator` agent is offered to fill them.
-4. **Visual** — Run `/qt:visual` to launch the app headlessly and walk through UI flows using the Qt Pilot MCP server.
+1. **Generate**: Run `/qt:generate` to scan the project and write initial tests for untested files.
+2. **Run**: Run `/qt:run` to execute the suite and see a pass/fail summary.
+3. **Coverage**: Run `/qt:coverage` to measure coverage and identify gaps. If gaps are found, the `test-generator` agent is offered to fill them.
+4. **Visual**: Run `/qt:visual` to launch the app headlessly and walk through UI flows using the Qt Pilot MCP server.
 
 ## Commands
 
@@ -160,10 +160,10 @@ No unreleased features are currently tracked in the changelog.
 
 ## Known Issues
 
-- **C++/Qt coverage requires a CMake-configured build directory** — Projects using custom build systems must set `build_dir` in `.qt-test.json` manually. `lcov` must also be installed.
-- **`pyside6-rcc` not invoked automatically** — Projects relying on compiled `.qrc` resources must pre-compile them before running tests; the plugin does not run `pyside6-rcc` as part of the test pipeline.
-- **Xvfb required for visual tests** — Environments without Xvfb (macOS, Windows, minimal CI containers) cannot run `/qt:visual`. No headless fallback is available.
-- **C++/Qt support is partial** — Primary development and testing focus is Python/PySide6; C++/Qt paths receive less coverage in the test suite and skill content.
+- **C++/Qt coverage requires a CMake-configured build directory**: Projects using custom build systems must set `build_dir` in `.qt-test.json` manually. `lcov` must also be installed.
+- **`pyside6-rcc` not invoked automatically**: Projects relying on compiled `.qrc` resources must pre-compile them before running tests; the plugin does not run `pyside6-rcc` as part of the test pipeline.
+- **Xvfb required for visual tests**: Environments without Xvfb (macOS, Windows, minimal CI containers) cannot run `/qt:visual`. No headless fallback is available.
+- **C++/Qt support is partial**: Primary development and testing focus is Python/PySide6; C++/Qt paths receive less coverage in the test suite and skill content.
 
 ## Links
 
@@ -171,4 +171,4 @@ No unreleased features are currently tracked in the changelog.
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
 - Qt Pilot MCP server: [github.com/neatobandit0/qt-pilot](https://github.com/neatobandit0/qt-pilot) (MIT License)
-- [qt-dev-suite](../qt-dev-suite/) — companion development plugin (agents, skills, scaffolding)
+- [qt-dev-suite](../qt-dev-suite/): companion development plugin (agents, skills, scaffolding)

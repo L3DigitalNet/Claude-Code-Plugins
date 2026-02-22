@@ -4,27 +4,27 @@ Comprehensive plugin quality review covering principles alignment, terminal UX q
 
 ## Summary
 
-`plugin-review` runs a multi-pass, assertion-driven audit of any Claude Code plugin. Three read-only analyst subagents work in parallel across three tracks — principles alignment (Track A), terminal UX quality (Track B), and documentation freshness (Track C) — then report findings back to the orchestrator, which auto-implements all fixes and re-audits until the assertion confidence score reaches 100% or the pass budget is exhausted. An optional `--autonomous` flag adds a fourth subagent (regression guard), tier-classified auto-fixing, and build/test validation after each implementation pass.
+`plugin-review` runs a multi-pass, assertion-driven audit of any Claude Code plugin. Three read-only analyst subagents work in parallel across three tracks (principles alignment, Track A; terminal UX quality, Track B; and documentation freshness, Track C) then report findings back to the orchestrator, which auto-implements all fixes and re-audits until the assertion confidence score reaches 100% or the pass budget is exhausted. An optional `--autonomous` flag adds a fourth subagent (regression guard), tier-classified auto-fixing, and build/test validation after each implementation pass.
 
 ## Principles
 
-**[P1] Act on Intent** — Invoking `/review` is consent to run the full multi-pass loop. The orchestrator never inserts approval gates during the loop; fixes are auto-implemented and re-audited without interruption.
+**[P1] Act on Intent**: Invoking `/review` is consent to run the full multi-pass loop. The orchestrator never inserts approval gates during the loop; fixes are auto-implemented and re-audited without interruption.
 
-**[P2] Scope Fidelity** — The orchestrator does not read full plugin source files. Subagents analyze; the orchestrator implements. This boundary is structural — analyst agents have read-only tool restrictions (`tools: Read, Grep, Glob`) enforced in their YAML frontmatter.
+**[P2] Scope Fidelity**: The orchestrator does not read full plugin source files. Subagents analyze; the orchestrator implements. This boundary is structural; analyst agents have read-only tool restrictions (`tools: Read, Grep, Glob`) enforced in their YAML frontmatter.
 
-**[P3] On-Demand Template Loading** — Templates are loaded by the component that uses them, not pre-loaded by the orchestrator. The orchestrator passes template paths to subagents; subagents read them at analysis time. This keeps the orchestrator's context footprint minimal.
+**[P3] On-Demand Template Loading**: Templates are loaded by the component that uses them, not pre-loaded by the orchestrator. The orchestrator passes template paths to subagents; subagents read them at analysis time. This keeps the orchestrator's context footprint minimal.
 
-**[P4] Bounded User Interaction** — Every user-facing decision point uses `AskUserQuestion` with explicit options. During the review loop itself no interaction occurs; the loop is fully automated from invocation to final report.
+**[P4] Bounded User Interaction**: Every user-facing decision point uses `AskUserQuestion` with explicit options. During the review loop itself no interaction occurs; the loop is fully automated from invocation to final report.
 
-**[P5] Convergence is the Contract** — The loop drives toward 100% assertion confidence without check-ins. It stops only when confidence reaches 100%, the pass budget is exhausted, a plateau is detected, or divergence occurs.
+**[P5] Convergence is the Contract**: The loop drives toward 100% assertion confidence without check-ins. It stops only when confidence reaches 100%, the pass budget is exhausted, a plateau is detected, or divergence occurs.
 
-**[P6] Documentation Co-mutation** — Every implementation change must include corresponding documentation updates. A PostToolUse hook (`doc-write-tracker.sh`) mechanically warns when implementation files are modified without a corresponding documentation write.
+**[P6] Documentation Co-mutation**: Every implementation change must include corresponding documentation updates. A PostToolUse hook (`doc-write-tracker.sh`) mechanically warns when implementation files are modified without a corresponding documentation write.
 
-**[P7] Analyst/Orchestrator Separation** — Three categories of subagents are held strictly apart: read-only analysts (principles-analyst, ux-analyst, docs-analyst, regression-guard) that only produce findings; write-capable fixers (fix-agent, build-fix-agent) that implement minimal targeted fixes; and the orchestrator command that synthesizes results and implements the main body of changes.
+**[P7] Analyst/Orchestrator Separation**: Three categories of subagents are held strictly apart: read-only analysts (principles-analyst, ux-analyst, docs-analyst, regression-guard) that only produce findings; write-capable fixers (fix-agent, build-fix-agent) that implement minimal targeted fixes; and the orchestrator command that synthesizes results and implements the main body of changes.
 
-**[P8] Enforcement Layers** — Principle enforcement is evaluated against a three-tier hierarchy: Mechanical (hooks that block/warn deterministically) > Structural (file organization, agent tool restrictions) > Behavioral (prompt instructions). A principle that claims mechanical enforcement but relies solely on behavioral instructions is flagged as a gap.
+**[P8] Enforcement Layers**: Principle enforcement is evaluated against a three-tier hierarchy: Mechanical (hooks that block/warn deterministically) > Structural (file organization, agent tool restrictions) > Behavioral (prompt instructions). A principle that claims mechanical enforcement but relies solely on behavioral instructions is flagged as a gap.
 
-**[P9] Read-Only Analyst Enforcement** — Analyst subagents must not gain write tools. A PostToolUse hook (`validate-agent-frontmatter.sh`) warns when Write, Edit, Bash, or other disallowed tools are added to analyst agent YAML frontmatter.
+**[P9] Read-Only Analyst Enforcement**: Analyst subagents must not gain write tools. A PostToolUse hook (`validate-agent-frontmatter.sh`) warns when Write, Edit, Bash, or other disallowed tools are added to analyst agent YAML frontmatter.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ flowchart TD
     Report --> Fix["Phase 4: Auto-implement all fixes<br/>(orchestrator writes code + docs)"]
     Fix --> Assert["Phase 5.5: Run Assertions<br/>(confidence score)"]
     Assert --> Decision{"confidence<br/>= 100%?"}
-    Decision -->|"No — budget remains"| Spawn
+    Decision -->|"Not yet"| Spawn
     Decision -->|"Yes or budget reached"| Final(("Phase 6:<br/>Final Report"))
 ```
 
@@ -95,8 +95,8 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 | `ux-analyst` | B | Read-only. Audits user-facing code paths against terminal UX criteria across four categories: information density, user input, progress/feedback, and terminal-specific patterns. Returns severity-grouped findings and assertions. |
 | `docs-analyst` | C | Read-only. Compares documentation files against implementation structure across five drift categories: accuracy, completeness, orphaned references, principle-implementation consistency, and examples. Returns per-file freshness assessment and assertions. |
 | `regression-guard` | D | Read-only. Autonomous mode only, Pass 2+. Re-checks previously-fixed findings to verify fixes are still intact after subsequent implementation changes. Returns per-finding holding/regressed status with file-level evidence. |
-| `fix-agent` | — | Write-capable. Invoked after `run-assertions.sh` finds failures. Implements the minimum change needed to make each failing assertion pass, then returns a structured summary. |
-| `build-fix-agent` | — | Write-capable. Autonomous mode only. Invoked in Phase 4.5 when `run-build-test.sh` reports failures. Implements minimal fixes for build or test breakage introduced during Phase 4. Spawned at most once per pass. |
+| `fix-agent` | (n/a) | Write-capable. Invoked after `run-assertions.sh` finds failures. Implements the minimum change needed to make each failing assertion pass, then returns a structured summary. |
+| `build-fix-agent` | (n/a) | Write-capable. Autonomous mode only. Invoked in Phase 4.5 when `run-build-test.sh` reports failures. Implements minimal fixes for build or test breakage introduced during Phase 4. Spawned at most once per pass. |
 
 ## Skills
 
@@ -113,7 +113,7 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 
 ## Review Tracks
 
-### Track A — Principles Alignment
+### Track A: Principles Alignment
 
 Evaluated by `principles-analyst` using `templates/track-a-criteria.md`.
 
@@ -121,38 +121,38 @@ Audits every plugin-specific principle (P1–Pn) and root architectural principl
 
 Includes a `[C1] LLM-Optimized Commenting` checkpoint that evaluates whether in-code comments are written for the AI reader: architectural role headers, intent-over-mechanics explanations, constraint annotations, decision context, and cross-file relationship notes. Flags syntax narration, decorative structure, and stale comments as anti-patterns.
 
-### Track B — Terminal UX Quality
+### Track B: Terminal UX Quality
 
 Evaluated by `ux-analyst` using `templates/track-b-criteria.md`.
 
-Audits every user-facing touchpoint — tools that produce output, input collection points, status/progress/error messages, and long-form text blocks — against four UX categories:
+Audits every user-facing touchpoint (tools that produce output, input collection points, status/progress/error messages, and long-form text blocks) against four UX categories:
 
-- **Information Density** — Is output appropriately compact? No verbose preamble before findings.
-- **User Input** — Are decision points bounded choices (`AskUserQuestion`) rather than open-ended prompts?
-- **Progress and Feedback** — Are long operations accompanied by progress signals? Are errors surfaced with recovery paths?
-- **Terminal-Specific** — Does output respect terminal width, avoid excessive color, and format structured data legibly?
+- **Information Density**: Is output appropriately compact? No verbose preamble before findings.
+- **User Input**: Are decision points bounded choices (`AskUserQuestion`) rather than open-ended prompts?
+- **Progress and Feedback**: Are long operations accompanied by progress signals? Are errors surfaced with recovery paths?
+- **Terminal-Specific**: Does output respect terminal width, avoid excessive color, and format structured data legibly?
 
 Findings are severity-grouped: High (🔴), Medium (🟡), Low (🟢).
 
-### Track C — Documentation Freshness
+### Track C: Documentation Freshness
 
 Evaluated by `docs-analyst` using `templates/track-c-criteria.md`.
 
 Compares all documentation files against the actual implementation across five drift categories:
 
-1. **Accuracy** — Do described behaviors, parameter names, and examples match the code?
-2. **Completeness** — Are all user-facing tools, commands, hooks, and configuration options documented? Required README sections: `Summary`, `Principles`, `Requirements`, `Installation`, `How It Works`, `Usage`, `Planned Features`, `Known Issues`, `Links`.
-3. **Orphaned References** — Does the documentation describe features or flags that no longer exist?
-4. **Principle-Implementation Consistency** — Do README principle descriptions accurately reflect actual enforcement mechanisms?
-5. **Examples and Usage** — Do workflow sequences and code examples match the current phase order and parameter names?
+1. **Accuracy**: Do described behaviors, parameter names, and examples match the code?
+2. **Completeness**: Are all user-facing tools, commands, hooks, and configuration options documented? Required README sections: `Summary`, `Principles`, `Requirements`, `Installation`, `How It Works`, `Usage`, `Planned Features`, `Known Issues`, `Links`.
+3. **Orphaned References**: Does the documentation describe features or flags that no longer exist?
+4. **Principle-Implementation Consistency**: Do README principle descriptions accurately reflect actual enforcement mechanisms?
+5. **Examples and Usage**: Do workflow sequences and code examples match the current phase order and parameter names?
 
-Each finding is classified as `Pre-existing drift` or `Introduced by Pass N changes` — the review process itself must not introduce documentation drift.
+Each finding is classified as `Pre-existing drift` or `Introduced by Pass N changes`; the review process itself must not introduce documentation drift.
 
-### Track D — Regression Guard (autonomous mode only)
+### Track D: Regression Guard (autonomous mode only)
 
 Evaluated by `regression-guard`.
 
-On every Pass 2+, re-reads files affected by previously-fixed findings and verifies each fix is still intact. Returns `Holding`, `Regressed`, or `Indeterminate` per finding. Regressions extend the convergence loop even if assertion confidence is 100% — both conditions must hold simultaneously to exit in autonomous mode.
+On every Pass 2+, re-reads files affected by previously-fixed findings and verifies each fix is still intact. Returns `Holding`, `Regressed`, or `Indeterminate` per finding. Regressions extend the convergence loop even if assertion confidence is 100%; both conditions must hold simultaneously to exit in autonomous mode.
 
 ## Planned Features
 
