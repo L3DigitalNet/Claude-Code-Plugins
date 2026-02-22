@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// Claude Code's MCP client serializes non-string parameters (arrays, numbers) as JSON strings.
+// This preprocessor parses them back to their native types before Zod validation.
+const parseJsonString = (v: unknown) => {
+  if (typeof v !== 'string') return v;
+  try { return JSON.parse(v); } catch { return v; }
+};
+
 export interface ToolDef {
   name: string;
   description: string;
@@ -90,7 +97,7 @@ const sessionTools: ToolDef[] = [
     inputSchema: z.object({
       testId: z.string(),
       status: z.enum(['passing', 'failing', 'skipped']),
-      durationMs: z.number().optional(),
+      durationMs: z.coerce.number().optional(),
       failureReason: z.string().optional().describe('What went wrong, if failing'),
       claudeNotes: z.string().optional().describe("Claude's observations about this test result"),
     }),
@@ -104,7 +111,7 @@ const sessionTools: ToolDef[] = [
     name: 'pth_get_test_impact',
     description: 'Show which tests exercise code in the specified source files (for targeted re-runs after a fix).',
     inputSchema: z.object({
-      files: z.array(z.string()).describe('Source file paths relative to plugin root'),
+      files: z.preprocess(parseJsonString, z.array(z.string()).describe('Source file paths relative to plugin root')),
     }),
   },
   // Fixes
@@ -112,10 +119,10 @@ const sessionTools: ToolDef[] = [
     name: 'pth_apply_fix',
     description: 'Apply a code fix: write file changes and commit to session branch with PTH trailers.',
     inputSchema: z.object({
-      files: z.array(z.object({
+      files: z.preprocess(parseJsonString, z.array(z.object({
         path: z.string().describe('File path relative to plugin root'),
         content: z.string().describe('Full new file content'),
-      })).min(1, 'At least one file change is required'),
+      })).min(1, 'At least one file change is required')),
       commitTitle: z.string().describe('Git commit title, e.g. "fix: handle null group"'),
       testId: z.string().optional().describe('ID of the test this fix addresses'),
       category: z.string().optional().describe('Failure category, e.g. "runtime-exception"'),

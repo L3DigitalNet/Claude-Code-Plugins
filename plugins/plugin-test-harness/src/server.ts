@@ -199,28 +199,37 @@ export function createServer(): Server {
         } else {
           tests = generatePluginTests([]);
         }
-        let newCount = 0;
-        let updatedCount = 0;
-        tests.forEach(t => {
-          if (store.get(t.id)) {
-            store.update(t);
-            updatedCount++;
-          } else {
-            store.add(t);
-            newCount++;
-          }
-        });
         if (tests.length === 0) {
           const guidance = session.pluginMode === 'mcp'
             ? 'No tools discovered from the plugin\'s MCP server. Verify the server starts correctly.'
             : 'No hook scripts found in the plugin. Create tests manually with pth_create_test.';
           return respond(`Generated 0 tests.\n\n${guidance}`);
         }
+        let newCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+        const processedNames: string[] = [];
+        tests.forEach(t => {
+          const existing = store.get(t.id);
+          if (existing?.pinned) {
+            // Preserve hand-tuned tests — pth_edit_test sets pinned: true to opt out of regeneration.
+            skippedCount++;
+          } else if (existing) {
+            store.update(t);
+            updatedCount++;
+            processedNames.push(t.name);
+          } else {
+            store.add(t);
+            newCount++;
+            processedNames.push(t.name);
+          }
+        });
         const summary = [
           newCount > 0 ? `${newCount} new` : '',
           updatedCount > 0 ? `${updatedCount} updated` : '',
+          skippedCount > 0 ? `${skippedCount} pinned` : '',
         ].filter(Boolean).join(', ');
-        return respond(`Generated ${tests.length} tests (${summary}):\n\n${tests.map(t => `- ${t.name}`).join('\n')}`);
+        return respond(`Generated ${newCount + updatedCount} tests (${summary}):\n\n${processedNames.map(n => `- ${n}`).join('\n')}`);
       }
 
       case 'pth_list_tests': {
@@ -271,8 +280,9 @@ export function createServer(): Server {
           return { content: [{ type: 'text' as const, text: 'testId must be a non-empty string.' }], isError: true };
         }
         const test = parseTest(yaml);
-        // Always update by testId (the caller's intent), warn if id changed in YAML
-        const updatedTest = test.id !== testId ? { ...test, id: testId } : test;
+        // Always update by testId (the caller's intent), warn if id changed in YAML.
+        // Set pinned: true so pth_generate_tests won't overwrite manual edits.
+        const updatedTest = { ...(test.id !== testId ? { ...test, id: testId } : test), pinned: true };
         store.update(updatedTest);
         const idChanged = test.id !== testId ? ` (note: YAML id '${test.id}' ignored, kept '${testId}')` : '';
         return respond(`Test updated: ${updatedTest.name}${idChanged}`);

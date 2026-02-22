@@ -36065,6 +36065,14 @@ var Server = class extends Protocol {
 };
 
 // src/tool-registry.ts
+var parseJsonString = (v) => {
+  if (typeof v !== "string") return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return v;
+  }
+};
 var dormantTools = [
   {
     name: "pth_preflight",
@@ -36144,7 +36152,7 @@ var sessionTools = [
     inputSchema: external_exports.object({
       testId: external_exports.string(),
       status: external_exports.enum(["passing", "failing", "skipped"]),
-      durationMs: external_exports.number().optional(),
+      durationMs: external_exports.coerce.number().optional(),
       failureReason: external_exports.string().optional().describe("What went wrong, if failing"),
       claudeNotes: external_exports.string().optional().describe("Claude's observations about this test result")
     })
@@ -36158,7 +36166,7 @@ var sessionTools = [
     name: "pth_get_test_impact",
     description: "Show which tests exercise code in the specified source files (for targeted re-runs after a fix).",
     inputSchema: external_exports.object({
-      files: external_exports.array(external_exports.string()).describe("Source file paths relative to plugin root")
+      files: external_exports.preprocess(parseJsonString, external_exports.array(external_exports.string()).describe("Source file paths relative to plugin root"))
     })
   },
   // Fixes
@@ -36166,10 +36174,10 @@ var sessionTools = [
     name: "pth_apply_fix",
     description: "Apply a code fix: write file changes and commit to session branch with PTH trailers.",
     inputSchema: external_exports.object({
-      files: external_exports.array(external_exports.object({
+      files: external_exports.preprocess(parseJsonString, external_exports.array(external_exports.object({
         path: external_exports.string().describe("File path relative to plugin root"),
         content: external_exports.string().describe("Full new file content")
-      })).min(1, "At least one file change is required"),
+      })).min(1, "At least one file change is required")),
       commitTitle: external_exports.string().describe('Git commit title, e.g. "fix: handle null group"'),
       testId: external_exports.string().optional().describe("ID of the test this fix addresses"),
       category: external_exports.string().optional().describe('Failure category, e.g. "runtime-exception"')
@@ -37700,30 +37708,38 @@ function createServer() {
         } else {
           tests = generatePluginTests([]);
         }
-        let newCount = 0;
-        let updatedCount = 0;
-        tests.forEach((t) => {
-          if (store.get(t.id)) {
-            store.update(t);
-            updatedCount++;
-          } else {
-            store.add(t);
-            newCount++;
-          }
-        });
         if (tests.length === 0) {
           const guidance = session.pluginMode === "mcp" ? "No tools discovered from the plugin's MCP server. Verify the server starts correctly." : "No hook scripts found in the plugin. Create tests manually with pth_create_test.";
           return respond(`Generated 0 tests.
 
 ${guidance}`);
         }
+        let newCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+        const processedNames = [];
+        tests.forEach((t) => {
+          const existing = store.get(t.id);
+          if (existing?.pinned) {
+            skippedCount++;
+          } else if (existing) {
+            store.update(t);
+            updatedCount++;
+            processedNames.push(t.name);
+          } else {
+            store.add(t);
+            newCount++;
+            processedNames.push(t.name);
+          }
+        });
         const summary = [
           newCount > 0 ? `${newCount} new` : "",
-          updatedCount > 0 ? `${updatedCount} updated` : ""
+          updatedCount > 0 ? `${updatedCount} updated` : "",
+          skippedCount > 0 ? `${skippedCount} pinned` : ""
         ].filter(Boolean).join(", ");
-        return respond(`Generated ${tests.length} tests (${summary}):
+        return respond(`Generated ${newCount + updatedCount} tests (${summary}):
 
-${tests.map((t) => `- ${t.name}`).join("\n")}`);
+${processedNames.map((n2) => `- ${n2}`).join("\n")}`);
       }
       case "pth_list_tests": {
         const { mode, status: filterStatus, tag } = args;
@@ -37768,7 +37784,7 @@ ID: ${test.id}`);
           return { content: [{ type: "text", text: "testId must be a non-empty string." }], isError: true };
         }
         const test = parseTest(yaml);
-        const updatedTest = test.id !== testId ? { ...test, id: testId } : test;
+        const updatedTest = { ...test.id !== testId ? { ...test, id: testId } : test, pinned: true };
         store.update(updatedTest);
         const idChanged = test.id !== testId ? ` (note: YAML id '${test.id}' ignored, kept '${testId}')` : "";
         return respond(`Test updated: ${updatedTest.name}${idChanged}`);
