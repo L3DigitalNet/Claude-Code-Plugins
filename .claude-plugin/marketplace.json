@@ -160,6 +160,18 @@
       "category": "development",
       "source": "./plugins/qt-test-suite",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-test-suite"
+    },
+    {
+      "name": "qt-dev-suite",
+      "description": "Qt GUI application development toolkit — proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt. Companion to qt-test-suite.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "development",
+      "source": "./plugins/qt-dev-suite",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-dev-suite"
     }
   ]
 }
