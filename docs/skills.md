@@ -10,10 +10,13 @@ keywords: [skills, yaml, frontmatter, applyTo, triggers]
 
 ## Quick Reference
 
-**Location:** `.claude-plugin/skills/` or `skills/` **File format:** Markdown with YAML
-frontmatter **Invocation:** Context-based (AI determines relevance)
+**Location:** `skills/<skill-name>/SKILL.md` at plugin root — one folder per skill
+**File format:** Markdown with YAML frontmatter
+**Invocation:** Context-based (AI determines relevance)
 
 **Minimum viable skill:**
+
+Create `skills/my-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -39,24 +42,6 @@ description: string # One-line summary of skill purpose and trigger conditions
 applyTo: # File patterns for context matching
   - '**/*.py'
   - 'src/**/*.ts'
-
-triggerPhrases: # User input patterns that trigger skill
-  - 'test driven development'
-  - 'write tests'
-
-priority: string # "high" | "normal" | "low" (default: normal)
-
-arguments: # Parameterized skill inputs
-  argName:
-    type: string # "string" | "number" | "boolean"
-    description: string # Argument purpose
-    default: any # Default value
-
-executeSubagent: # Run skill in isolated subagent
-  name: string # Subagent identifier
-  tools: # Tool access restrictions
-    - 'read_file'
-    - 'run_command'
 ```
 
 ## Field Reference
@@ -439,8 +424,8 @@ a sensor."""
 
 Skills are shared through plugins:
 
-1. Create plugin with skills directory
-2. Add skills to `.claude-plugin/skills/`
+1. Create plugin with a `skills/` directory at plugin root
+2. Add one folder per skill: `skills/<skill-name>/SKILL.md`
 3. Publish plugin to marketplace
 4. Users install and skills are available
 
@@ -453,7 +438,7 @@ See [Plugin marketplaces](./plugin-marketplaces.md) for distribution.
 Check:
 
 1. YAML frontmatter is valid
-2. File is in `.claude-plugin/skills/` directory
+2. File is at `skills/<name>/SKILL.md` at plugin root (not inside `.claude-plugin/`)
 3. Plugin is installed and enabled
 
 ### Skill not being used

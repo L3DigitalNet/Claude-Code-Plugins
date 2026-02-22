@@ -1,26 +1,12 @@
 # Performance Profiler
 
-A plugin to profile and benchmark Claude Code plugins and MCP servers. Not yet implemented.
+Profile and benchmark Claude Code plugins and MCP servers — latency, throughput, flamegraphs, and regression tracking.
+
+> **Status: Planned — not yet implemented.** No commands, tools, or components exist. This is a placeholder for a future plugin.
 
 ## Summary
 
-Performance Profiler will provide latency measurement, flamegraph generation, and regression tracking for MCP server plugins and Claude Code tool calls. It is currently a planned plugin — no tools or commands are available yet.
-
-## Installation
-
-_Not yet available._
-
-## Usage
-
-_Not yet available._
-
-## Commands
-
-_None planned — this plugin will expose tools via MCP rather than slash commands._
-
-## Tools
-
-_Not yet implemented._
+Performance Profiler will measure the runtime characteristics of MCP server plugins and Claude Code tool calls. The intended scope covers latency measurement, visual call-stack profiling, cross-version regression detection, and Claude context cost analysis. No functionality is available yet.
 
 ## Planned Features
 
@@ -29,6 +15,27 @@ _Not yet implemented._
 - **Regression tracking** — compare performance across plugin versions and flag regressions automatically
 - **Claude context cost analysis** — estimate token usage per tool call to identify high-cost tools
 
-## Known Issues
+## Installation
 
-- **Not yet implemented** — this plugin is a placeholder; no tools or commands are available yet
+Not yet available. The plugin is not listed in the marketplace.
+
+Once published, installation will follow the standard pattern:
+
+```
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin install performance-profiler@l3digitalnet-plugins
+```
+
+## Current State
+
+| Component | Status |
+|-----------|--------|
+| `plugin.json` manifest | Not created |
+| Commands | None planned (MCP tools only) |
+| MCP server | Not implemented |
+| Marketplace entry | Not added |
+
+## Links
+
+- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Issues: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)

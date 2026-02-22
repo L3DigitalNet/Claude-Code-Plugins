@@ -1,22 +1,26 @@
 # Design Assistant
 
-Full design document lifecycle in two commands.
+Guided design document authoring and iterative principle-enforced review — from blank slate to implementation-ready spec.
 
 ## Summary
 
-Design Assistant provides a structured approach to technical design — from blank page to reviewed document. `/design-draft` conducts a guided interview that discovers and stress-tests your design principles before writing a single line of architecture. `/design-review` then enforces those principles across multiple passes, surfacing violations, gaps, and ambiguities until the document converges. Both commands share a common principles registry format, enabling automatic warm handoff from draft to review.
+Design Assistant covers the full lifecycle of a design document: `/design-draft` interviews you to discover, stress-test, and lock design principles before any architecture is written, then generates a structured draft; `/design-review` takes that draft through multi-pass structural analysis, principle compliance enforcement, and gap analysis with optional auto-fix. The two commands share a warm handoff contract so principles, tension resolutions, and open questions discovered during drafting carry over into the review session without re-derivation. Use `/design-draft` for new or undocumented projects; use `/design-review` directly when an existing document needs auditing.
 
 ## Principles
 
-**[P1] Principles Before Architecture** — No architecture, diagrams, or design decisions are committed until principles have been discovered, stress-tested, and locked by the human. Architecture serves principles, not the other way around.
+**[P1] Principles before architecture** — Every candidate principle is inferred from what you actually said, stress-tested against a forced tradeoff, and locked before any document sections are written. Generic best practices are rejected; a principle with no cost is not a principle.
 
-**[P2] Tensions Are Resolved, Not Hidden** — Every conflict between candidate principles is surfaced explicitly and traced to a stable tiebreaker rule before drafting begins. Unresolved tensions become design debt.
+**[P2] Tensions are resolved, not smoothed** — Contradictions between answers and conflicts between principles are named explicitly and resolved through concrete domain-specific scenarios. Unresolved tensions become the source of the most expensive design arguments later.
 
-**[P3] Principles Are the Review Standard** — Design review enforces the document's own stated principles, not an external checklist. A proposed fix that closes a gap while violating a principle is not a valid resolution.
+**[P3] Convergence without check-ins** — The review loop runs passes until a full pass produces zero findings across all three tracks and principle compliance and gap coverage are both clean. Progress is silent; blockers surface immediately.
 
-**[P4] PRINCIPLE Findings Are Never Auto-Fixed** — Principle violations always require individual human review, regardless of auto-fix mode or the principle's own eligibility setting. The human who locked the principles decides when to break them.
+**[P4] Principle violations are never auto-fixed** — `PRINCIPLE: Pn` findings always require individual human review regardless of auto-fix mode. Principle violations are design decisions that require conscious author resolution.
 
-**[P5] Convergence, Not Single-Pass** — A document is not complete when a review pass finishes — it is complete when zero findings remain across all tracks. The review loop runs until convergence is measured.
+**[P5] Every fix is screened before it is offered** — Before any proposed resolution is presented, it is screened against all principles in the registry. A fix that closes one finding while violating an established principle is disqualified from auto-fix and surfaced for manual review.
+
+## Requirements
+
+- Claude Code (any recent version)
 
 ## Installation
 
@@ -25,166 +29,98 @@ Design Assistant provides a structured approach to technical design — from bla
 /plugin install design-assistant@l3digitalnet-plugins
 ```
 
+For local development:
+
+```
+claude --plugin-dir ./plugins/design-assistant
+```
+
+## How It Works
+
+```mermaid
+flowchart TD
+    User([User]) -->|"/design-draft [project or file]"| A[Phase 0-1: Orientation & Context Interview]
+    A --> B[Phase 2: Principles Discovery\nCandidate gen → stress-test → tension resolution → registry lock]
+    B --> C[Phase 3-4: Scope, Structure & Content Questions]
+    C --> D((Draft Document\ndocs/design-draft.md))
+    D -->|Option B: warm handoff| E{Handoff or cold start?}
+    D -->|Option A: save then manual| E
+    User -->|"/design-review [path]"| E
+    E -->|Warm handoff| F[Import registry, tensions, OQ log]
+    E -->|Cold start| G[Extract or provide principles]
+    F --> H[Initialization: Health check, gap baseline, auto-fix mode]
+    G --> H
+    H --> I[Multi-pass loop:\nTrack A Structural · Track B Principle · Track C Gap]
+    I -->|Zero findings, all clean| J((DESIGN REVIEW COMPLETE))
+    I -->|Findings remain| I
+```
+
 ## Usage
 
-Typical workflow:
+Start a new document with `/design-draft` and an optional project name or seed file:
 
 ```
-1. /design-draft "Project Name"
-   → Interview → Principles → Draft
-
-2. (B) Begin /design-review immediately  ← automatic warm handoff
-   or: /design-review path/to/draft.md
-
-3. Iterate until convergence (typically 3–5 passes)
-
-4. export log → archive alongside document
+/design-draft "Payment Gateway Redesign"
+/design-draft path/to/project-brief.md
 ```
 
-Both commands accept mid-session commands: `pause / continue`, `show principles`, `show open questions`, `finalize`.
+The command walks you through six phases: orientation, context deep dive (goals, constraints, stakeholders, quality attributes), principles discovery (candidate generation, stress-testing, tension resolution, registry lock), scope and structure confirmation, targeted content questions, and draft generation.
 
-All saved artifacts go to `[project-folder]/docs/` — the project folder is established on the first write of each session.
+At draft completion you can:
+- Save the draft to `[project-folder]/docs/design-draft.md`
+- Hand off directly to `/design-review` with full warm context (principles, tensions, and open questions pre-loaded)
+- Export the principles registry separately to `[project-folder]/docs/principles-registry.md`
 
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `/design-draft` | Guided document authoring — interview, principles discovery, and draft generation |
-| `/design-review` | Iterative review — principle enforcement, gap analysis, and optional auto-fix |
-
-## Skills
-
-| Skill | Description |
-|-------|-------------|
-| `design-draft` | Loaded by `/design-draft` — phases, interview patterns, principles stress-testing |
-| `design-review` | Loaded by `/design-review` — review tracks, auto-fix modes, gap categories |
-
-## `/design-draft` — Guided Document Authoring
-
-A structured interview that discovers your design principles before writing any architecture. Heavy emphasis on surfacing and resolving principle tensions before any diagram is committed.
-
-### Phases
-
-| Phase | What happens |
-|-------|-------------|
-| **0 — Orientation** | Project name, problem statement, document trigger |
-| **1 — Context Deep Dive** | Goals, constraints, stakeholders, quality attributes, risks — three interview rounds with forced-tradeoff questions |
-| **2 — Principles Discovery** | Candidate generation → stress testing → tension resolution → registry lock |
-| **3 — Scope & Structure** | Recommended section structure, confirmed before drafting |
-| **4 — Targeted Content Questions** | Gap-filling between Phase 1 and what each section needs |
-| **5 — Draft Generation** | Complete document with principles cross-referenced; ready for `/design-review` |
-
-### After the draft
-
-```
-  (A) Save to file
-  (B) Begin /design-review now — automatic warm handoff
-  (C) Revise before review
-  (D) Export principles registry separately
-```
-
-### Key commands
-
-```
-pause / continue         Snapshot full session state for resumption
-finalize                 Early exit with readiness assessment
-show principles          Current registry in full
-show tensions            Tension list and resolution status
-show open questions      All open questions collected so far
-export principles        Emit canonical principles export (4 sections)
-stress test [Pn]         Re-run stress test on a specific principle
-revise [Pn]              Edit a locked principle
-skip to [phase]          Jump forward (only from a confirmed gate)
-```
-
-## `/design-review` — Iterative Document Review
-
-Multi-pass principle enforcement, gap analysis, and optional auto-fix. Runs until the document converges to zero findings across all review tracks.
-
-### Usage
+Begin review on an existing document with `/design-review`:
 
 ```
 /design-review path/to/design-doc.md
 ```
 
-### Review tracks
+The command reads the file, builds the principles registry (from the document or the warm handoff block), runs a principle health check, confirms the gap baseline, selects auto-fix mode, and enters the multi-pass loop. Each pass runs three tracks: structural/technical review, principle compliance, and gap analysis. The loop converges when a full pass is clean across all tracks.
 
-| Track | What's checked |
-|-------|---------------|
-| **A — Structural** | Consistency, completeness, logic, ambiguity, security, clarity |
-| **B — Principle Compliance** | Violations against the document's own design principles |
-| **C — Gap Analysis** | Coverage of domain-appropriate categories |
+Sessions can be suspended with `pause` and resumed by pasting the snapshot into a new session with `continue`.
 
-### Auto-Fix Modes
+## Commands
 
-| Mode | Behaviour |
-|------|-----------|
-| A | Interactive — review every finding individually |
-| B | Auto-fix eligible findings, surface the rest for review |
-| C | Full plan, bulk approval, implement all at once |
-| D | Choose per-pass |
+| Command | Description |
+|---|---|
+| `/design-draft [project-name-or-file]` | Guided design document authoring: interviews the user, discovers and locks design principles, scaffolds and generates a full draft |
+| `/design-review [path/to/design-doc.md]` | Iterative review loop with principle enforcement, gap analysis, and optional auto-fix; reads the document from the filesystem |
 
-### No-principles cold start
+## Skills
 
-If the document has no principles section and no warm handoff context:
-```
-  (A) Run /design-draft first (recommended)
-  (B) Provide principles manually
-  (C) Proceed with Tracks A and C only (no principle enforcement)
-```
+| Skill | Loaded when |
+|---|---|
+| `design-draft` | User starts a new design from scratch or a project lacks formal design documentation |
+| `design-review` | User asks to review, audit, or improve a design document, architecture spec, API contract, or technical plan |
 
-### Key commands
+## Hooks
 
-```
-pause / continue             Snapshot state for cross-session resumption
-finalize                     Early exit with readiness assessment
-set mode [A/B/C/D]           Change auto-fix mode
-where are we                 Lightweight status check
-revisit deferred             Pull deferred findings back into queue
-show violations              All open principle/gap/systemic findings
-update principle [Pn]        Modify a principle (triggers health check)
-gap check [Gn]               Full gap sweep for one category on demand
-principle check [Pn]         Compliance sweep for one principle on demand
-export log                   Full session log with auto-fix effectiveness report
-```
-
-## Plugin Structure
-
-```
-plugins/design-assistant/
-├── .claude-plugin/
-│   └── plugin.json
-├── commands/
-│   ├── design-draft.md     ← /design-draft
-│   └── design-review.md    ← /design-review
-├── skills/
-│   ├── design-draft/
-│   │   └── SKILL.md
-│   └── design-review/
-│       └── SKILL.md
-├── tests/
-│   ├── draft/
-│   ├── review/
-│   └── integration/
-└── docs/
-    ├── README.md
-    └── spec/               ← archived spec versions
-```
-
-## Planned Features
-
-- **Domain-specific principle templates** — starter principle registries for common domains (SaaS APIs, IoT firmware, data pipelines) to accelerate Phase 2 of `/design-draft`
-- **Cross-document consistency checks** — reference a second design doc during review to detect contradictions or scope overlaps
-- **Principles library** — persist and reuse a personal principles registry across documents, building up a house style over time
-- **Export adapters** — structured export to Confluence wiki format and Notion page API
+| Hook | Event | What it does |
+|---|---|---|
+| `read-counter.sh` | PostToolUse (Read tool) | Counts file reads per session using `$PPID` as session key; emits a context notice at 10 reads and a strong context pressure warning at 20 reads |
 
 ## Known Issues
 
-- **Large documents cause context pressure** — documents over ~500 lines may push review context near limits during Track B; use `pause/continue` to checkpoint and resume across sessions. The installed plugin includes a read-counter hook that provides early warnings at 10 and 20 reads.
-- **Cold-start review has limited analysis** — without a principles section and without a warm handoff from `/design-draft`, Track B (principle enforcement) is skipped entirely
-- **`pause/continue` state is session-local** — session snapshots are held in the active conversation context; starting a new Claude Code session requires pasting the snapshot
+- **5+ option prompts fall back to formatted text** — `AskUserQuestion` is bounded at 4 options. Decision points with 5 or more choices (finding resolution modes, tension scenarios, escalation choices, health issue resolution) are presented as formatted text rather than structured bounded-choice UI. This is a deliberate constraint imposed by the `AskUserQuestion` primitive, documented in the interaction conventions of both commands.
+
+- **Context pressure accumulates over long review sessions** — The read-counter hook tracks file reads as a proxy for context growth. The `/design-review` end-of-pass summary also tracks estimated context growth lines with GREEN/YELLOW/RED thresholds (GREEN < 4,000 lines, YELLOW 4,000–8,000 or 3+ consecutive Heavy passes, RED > 8,000 or any Critical-volume pass). For large documents or many passes, pausing and resuming in a fresh session is recommended.
+
+- **Behavioral-only architecture** — Both commands implement their state machines entirely through prompt instructions. There are no compiled state machines, no external databases, and no persistent session files between exchanges. All session state lives in the conversation context; the Pause State Snapshot is the only cross-session persistence mechanism.
 
 ## Design Decisions
 
-- **Tension resolution and finding-queue prompts remain as formatted text** — these decision points have 5+ options (A–E or more), which intentionally exceeds the `AskUserQuestion` limit of 4. All 2–4 option decision points use `AskUserQuestion`; 5+ option points use formatted text. This is a deliberate convention, not a limitation.
-- **Large command files** — both commands are 1,000–1,500 lines by design. See [DESIGN.md](DESIGN.md) for rationale (AD3: template externalization doesn't reduce context cost for single-agent behavioral plugins).
+**Two commands instead of one** — Authoring and review are split into separate commands so each can be invoked independently. A team may already have a document that needs reviewing without having gone through the drafting process; similarly, a completed draft may be reviewed separately from when it was written. The warm handoff contract enables seamless flow between them when used together.
+
+**Warm handoff as plain text block** — The handoff from `/design-draft` to `/design-review` is a structured text block emitted into the conversation context rather than a file or API call. This keeps the architecture behavioral-only (no external state) while allowing `/design-review` to import the full principles registry, tension resolution log, and open questions log without re-deriving them from document text.
+
+**Auto-Fix Heuristics are internal only** — Each principle carries an `auto_fix_heuristic` field used by `/design-review` to generate fixes, but this field is explicitly excluded from all user-facing output and from the rendered design document. The reader-facing fields are `Statement`, `Intent`, `Enforcement Heuristic`, `Cost of Following`, `Tiebreaker`, and `Risk Areas`.
+
+**Phase gates block, not warn** — Every phase in `/design-draft` has a completion check that must pass before the next phase begins. Unanswered questions must become `SKIPPED: [reason]`; all candidates must have verdicts; no Active tension may survive Phase 2C. These are hard gates, not advisory checks, because downstream quality depends on each phase's outputs being complete.
+
+## Links
+
+- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+- Issues: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)

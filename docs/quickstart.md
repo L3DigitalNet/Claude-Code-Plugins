@@ -109,7 +109,29 @@ claude --plugin-dir ./my-plugins
 claude --plugin-dir /path/to/plugin
 ```
 
-## Configuration\n\n### File Locations (Linux)\n\n`bash\n# User configuration\n~/.config/claude/settings.json\n\n# Authentication tokens\n~/.config/claude/auth\n\n# Plugin cache\n~/.cache/claude/plugins/\n\n# User plugins\n~/.config/claude/plugins/\n`\n\n### Environment Variables\n\n`bash\nexport CLAUDE_API_KEY=\"your-key\"           # Optional API key\nexport CLAUDE_CONFIG_DIR=\"~/.config/claude\" # Override config location\nexport DEBUG=\"claude:*\"                     # Enable debug logging\n`\n\n## Further Reading
+## Configuration
+
+### File Locations (Linux)
+
+```bash
+# User configuration
+~/.claude/settings.json
+
+# Plugin cache (installed from marketplaces)
+~/.claude/plugins/cache/
+
+# User plugins
+~/.claude/plugins/
+```
+
+### Environment Variables
+
+```bash
+export CLAUDE_API_KEY="your-key"    # Optional API key
+export DEBUG="claude:*"             # Enable debug logging
+```
+
+## Further Reading
 
 - [Create plugins](./plugins.md) - Plugin development guide
 - [Plugin discovery](./discover-plugins.md) - Find and install plugins

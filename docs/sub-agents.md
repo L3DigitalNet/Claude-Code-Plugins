@@ -10,9 +10,10 @@ keywords: [agents, subagents, tools, permissions, specialization]
 
 ## Overview
 
-**Purpose:** Specialized Claude modes with custom tools and prompts **Invocation:**
-`/agent-name [prompt]` **Location:** `agents/*.md` **Format:** Markdown with YAML
-frontmatter
+**Purpose:** Specialized Claude modes with custom tools and prompts
+**Invocation:** `/agent-name [prompt]` (or spawned via the Task tool)
+**Location:** `agents/*.md` at plugin root
+**Format:** Markdown with YAML frontmatter
 
 **Characteristics:**
 
@@ -85,7 +86,7 @@ frontmatter
 
 ## Custom Agent Creation
 
-**Location:** `agents/agent-name.md`
+**Location:** `agents/agent-name.md` at plugin root (not inside `.claude-plugin/`)
 
 ### Agent File Schema
 
@@ -94,12 +95,10 @@ frontmatter
 ```yaml
 name: string # Agent identifier (lowercase-hyphenated)
 description: string # Purpose and use case
-tools: # Allowed tools array
-  - 'read_file'
-  - 'grep_search'
-restrictedTools: # Explicitly denied tools
-  - 'run_in_terminal'
-  - 'replace_string_in_file'
+tools: # Allowed tools array — use Claude Code tool names
+  - 'Read'
+  - 'Grep'
+  - 'Glob'
 ```
 
 **Markdown content:** Agent system prompt and instructions
@@ -113,11 +112,9 @@ cat > my-plugin/agents/reviewer.md << 'EOF'
 name: reviewer
 description: Code review agent
 tools:
-  - "read_file"
-  - "grep_search"
-restrictedTools:
-  - "write_file"
-  - "run_command"
+  - Read
+  - Grep
+  - Glob
 ---
 
 # Code Reviewer
@@ -131,61 +128,53 @@ EOF
 
 ## Available Tools
 
+Use the Claude Code tool names exactly as they appear in the tool list. Common tool names:
+
 ### Read-Only Tools
 
-| Tool              | Purpose              | Use In             |
-| ----------------- | -------------------- | ------------------ |
-| `read_file`       | Read file contents   | All agents         |
-| `grep_search`     | Pattern search       | Research, analysis |
-| `semantic_search` | Semantic code search | Exploration        |
-| `list_dir`        | Directory listing    | Navigation         |
-| `file_search`     | File name search     | Discovery          |
+| Tool    | Purpose                    |
+| ------- | -------------------------- |
+| `Read`  | Read file contents         |
+| `Grep`  | Pattern search in files    |
+| `Glob`  | File name/pattern matching |
 
 ### Write Tools
 
-| Tool                           | Purpose      | Restriction Level |
-| ------------------------------ | ------------ | ----------------- |
-| `write_file`                   | Create files | High risk         |
-| `replace_string_in_file`       | Edit files   | High risk         |
-| `multi_replace_string_in_file` | Batch edits  | High risk         |
+| Tool   | Purpose            |
+| ------ | ------------------ |
+| `Edit` | Edit existing file |
+| `Write`| Create/replace file|
 
 ### Execution Tools
 
-| Tool                  | Purpose             | Restriction Level |
-| --------------------- | ------------------- | ----------------- |
-| `run_in_terminal`     | Execute commands    | Critical risk     |
-| `get_terminal_output` | Read command output | Medium risk       |
-
-### System Tools
-
-| Tool           | Purpose           | Typical Use |
-| -------------- | ----------------- | ----------- |
-| `get_errors`   | Check errors      | Validation  |
-| `switch_agent` | Change agent mode | Workflow    |
+| Tool   | Purpose                 |
+| ------ | ----------------------- |
+| `Bash` | Run shell commands      |
+| `Task` | Spawn a subagent        |
 
 ## Tool Access Control
 
 ### Allowlist Approach
 
-**Strategy:** Explicitly list allowed tools (recommended)
+**Strategy:** Explicitly list allowed tools (recommended for analyst/read-only agents)
 
 ```yaml
 tools:
-  - 'read_file'
-  - 'grep_search'
-  - 'semantic_search'
+  - Read
+  - Grep
+  - Glob
 ```
 
 **Default:** All unlisted tools are restricted
 
 ### Denylist Approach
 
-**Strategy:** Restrict specific tools
+**Strategy:** Restrict specific tools (used less commonly)
 
 ```yaml
 restrictedTools:
-  - 'run_in_terminal'
-  - 'write_file'
+  - Bash
+  - Write
 ```
 
 **Default:** All unlisted tools are allowed
@@ -196,10 +185,10 @@ restrictedTools:
 
 ```yaml
 tools:
-  - 'read_file'
-  - 'grep_search'
+  - Read
+  - Grep
 restrictedTools:
-  - 'run_in_terminal'
+  - Bash
 ```
 
 **Behavior:** `tools` takes precedence, `restrictedTools` adds additional restrictions

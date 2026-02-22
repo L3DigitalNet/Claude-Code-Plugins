@@ -254,7 +254,7 @@ my-plugin/
 Plugins can be installed at different scopes:
 
 - **User scope**: Available across all your projects
-  - Location: `~/.config/claude/plugins/`
+  - Location: `~/.claude/plugins/`
 - **Project scope**: Shared with all collaborators via git
   - Location: `<project>/.claude/plugins/`
 - **Local scope**: Only for you in this project (gitignored)
@@ -264,7 +264,7 @@ Plugins can be installed at different scopes:
 
 Plugins installed from remote sources are cached locally:
 
-**Cache location**: `~/.cache/claude/plugins/`
+**Cache location**: `~/.claude/plugins/cache/<marketplace-name>/<plugin-name>/`
 
 When you install a plugin from a marketplace, Claude:
 
@@ -286,10 +286,11 @@ Run `/plugin` and go to the Errors tab to see loading issues.
 
 Common errors:
 
-- Invalid JSON in `manifest.json`
-- Missing required fields
+- Invalid JSON in `plugin.json`
+- Missing required fields (`name`, `version`, `description`)
+- Unknown fields in `plugin.json` (strict mode rejects them)
 - Skill frontmatter syntax errors
-- Hook configuration issues
+- `hooks.json` `hooks` field is an array instead of a record
 
 ### Check what's loaded
 
@@ -303,7 +304,7 @@ Common errors:
 
 ### Test individual components
 
-- **Skills**: Check `.claude-plugin/skills/` files have valid YAML frontmatter
+- **Skills**: Check `skills/<name>/SKILL.md` files have valid YAML frontmatter
 - **Agents**: Try invoking with `/agent-name` command
 - **Hooks**: Check hook events are firing (see [Hooks debugging](./hooks.md#debugging))
 - **MCP servers**: Test with MCP inspector tools
@@ -347,7 +348,7 @@ Common errors:
 2. **Create manifest**:
 
    ```bash
-   cat > .claude-plugin/manifest.json << 'EOF'
+   cat > .claude-plugin/plugin.json << 'EOF'
    {
      "name": "my-plugin",
      "version": "0.1.0",
@@ -361,14 +362,10 @@ Common errors:
 4. **Test locally**:
 
    ```bash
-   /plugin install /path/to/my-plugin --scope local
+   claude --plugin-dir ./my-plugin
    ```
 
-5. **Iterate**: Make changes and reload
-
-   ```bash
-   /plugin update my-plugin
-   ```
+5. **Iterate**: Make changes and restart Claude Code to reload
 
 6. **Distribute** via marketplace (see [Plugin marketplaces](./plugin-marketplaces.md))
 
@@ -379,7 +376,7 @@ Common errors:
 - **Plugin names**: lowercase-with-hyphens
 - **Skill names**: descriptive-action-names
 - **Agent names**: single-word or hyphenated
-- **Hook files**: match hook type (e.g., `session-start.md`)
+- **Hook config**: `hooks/hooks.json` — a JSON record keyed by event name
 
 ### Version management
 

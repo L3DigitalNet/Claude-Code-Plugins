@@ -11,8 +11,8 @@ keywords: [mcp, model-context-protocol, external-tools, integrations]
 ## Overview
 
 **MCP (Model Context Protocol):** Standard for connecting AI to external services
-**Provides:** External tools, resources, prompts, sampling **Configuration:**
-`manifest.json` `mcpServers` field
+**Provides:** External tools, resources, prompts, sampling
+**Configuration:** `.mcp.json` at plugin root
 
 **Capabilities:**
 
@@ -78,22 +78,29 @@ Standard HTTP, NAT-friendly **Cons:** More complex than stdio
 
 ## Configuration Schema
 
-**Location:** `manifest.json` → `mcpServers` field
+**Location:** `.mcp.json` at plugin root (not inside `.claude-plugin/`)
 
 ### Stdio Server Schema
 
 ```json
 {
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "mcpServers": {
-    "server-name": {
-      "command": "command-to-run",
-      "args": ["arg1", "arg2"],
-      "env": {
-        "VARIABLE": "value"
-      }
+  "server-name": {
+    "command": "node",
+    "args": ["dist/server.js"],
+    "env": {
+      "VARIABLE": "value"
     }
+  }
+}
+```
+
+For npx-based servers:
+
+```json
+{
+  "server-name": {
+    "command": "npx",
+    "args": ["-y", "@scope/package"]
   }
 }
 ```
@@ -306,29 +313,27 @@ Create plugin with MCP server:
 ```
 my-plugin/
 ├── .claude-plugin/
-│   └── manifest.json
-├── server/
-│   ├── package.json
-│   └── index.js
+│   └── plugin.json
+├── .mcp.json                  # MCP server config goes here, at plugin root
+├── dist/
+│   └── server.bundle.cjs      # Pre-built server binary
 └── README.md
 ```
 
-**manifest.json**:
+**.mcp.json**:
 
 ```json
 {
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "mcpServers": {
-    "my-server": {
-      "command": "node",
-      "args": ["${PLUGIN_DIR}/server/index.js"]
-    }
+  "my-server": {
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.bundle.cjs"]
   }
 }
 ```
 
-Use `${PLUGIN_DIR}` to reference plugin directory.
+Use `${CLAUDE_PLUGIN_ROOT}` to reference the plugin's installation directory.
+
+**Note:** Plugin install does not run `npm install`. Distribute a pre-built binary in `dist/`, or use `npx` to install at runtime.
 
 ### 3. Document requirements
 
