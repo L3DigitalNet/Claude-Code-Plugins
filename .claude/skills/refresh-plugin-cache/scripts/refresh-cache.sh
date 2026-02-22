@@ -152,4 +152,81 @@ if os.path.isdir(l3_cache):
 PYEOF
 
 echo ""
+
+# --- Step 3: Detect live MCP process version skew ---
+# Claude Code reads installed_plugins.json once at startup; mid-session path changes don't
+# take effect until the next session. If the running process path version differs from the
+# installed path version, report LIVE_SKEW — normal reinstall won't fix this mid-session.
+
+echo "=== LIVE MCP PROCESS CHECK ==="
+echo ""
+
+python3 - "$TARGET_MARKETPLACE" "$CACHE_DIR" <<'PYEOF'
+import json, os, re, subprocess, sys
+
+target_marketplace = sys.argv[1]
+cache_dir = sys.argv[2]
+installed_file = os.path.expanduser("~/.claude/plugins/installed_plugins.json")
+
+try:
+    with open(installed_file) as f:
+        installed = json.load(f)
+except Exception:
+    print("Could not read installed_plugins.json")
+    sys.exit(0)
+
+# Snapshot all running node process command lines
+try:
+    ps = subprocess.run(["ps", "aux"], capture_output=True, text=True, timeout=5)
+    ps_output = ps.stdout
+except Exception:
+    print("Could not inspect running processes")
+    sys.exit(0)
+
+# Path pattern: .../cache/<marketplace>/<plugin>/<version>/...
+path_re = re.compile(
+    rf"({re.escape(os.path.expanduser('~/.claude/plugins/cache'))}"
+    rf"/{re.escape(target_marketplace)}/([^/]+)/([^/\s]+)/)"
+)
+
+# Build map: plugin_name → set of running version strings
+live_versions: dict[str, set[str]] = {}
+for match in path_re.finditer(ps_output):
+    plugin_name = match.group(2)
+    version = match.group(3)
+    live_versions.setdefault(plugin_name, set()).add(version)
+
+found_any = False
+for plugin_key, entries in installed["plugins"].items():
+    if not entries or not plugin_key.endswith(f"@{target_marketplace}"):
+        continue
+    entry = entries[0]
+    installed_version = entry.get("version", "unknown")
+    plugin_name = plugin_key.rsplit("@", 1)[0]
+
+    running = live_versions.get(plugin_name)
+    if not running:
+        print(f"NOT_RUNNING  {plugin_key}: installed={installed_version} (no live process found)")
+        found_any = True
+        continue
+
+    running_version = next(iter(running))  # typically one process
+    if running_version != installed_version:
+        install_path = entry.get("installPath", "")
+        live_path_match = path_re.search(ps_output)
+        print(
+            f"LIVE_SKEW  {plugin_key}: running={running_version}  installed={installed_version}\n"
+            f"  Running dist: {os.path.expanduser('~/.claude/plugins/cache')}/{target_marketplace}/{plugin_name}/{running_version}/\n"
+            f"  Installed at: {install_path}\n"
+            f"  Fix: cp <installed>/dist/index.js <running>/dist/index.js  then kill the process"
+        )
+    else:
+        print(f"LIVE_OK  {plugin_key}: running={running_version}")
+    found_any = True
+
+if not found_any:
+    print(f"No {target_marketplace} plugins installed.")
+PYEOF
+
+echo ""
 echo "=== DONE ==="
