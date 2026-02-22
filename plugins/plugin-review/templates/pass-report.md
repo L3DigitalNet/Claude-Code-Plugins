@@ -4,11 +4,14 @@
   Loaded by: commands/review.md (orchestrator) at Phase 3, after receiving subagent summaries.
   Not loaded by subagents — subagents return structured text; the orchestrator formats it
     using this template. If subagents load this template, it violates [P3].
-  Output contract: the Convergence table columns (Upheld / Partial / Violated / Checkpoints /
-    UX Issues / Stale Docs / Confidence / Trend) must be consistent across all passes so that
-    final-report.md's Pass History table can aggregate them correctly.
+  Output contract: the Convergence table columns (Tier1/Tier2/Tier3/Upheld/Partial/Violated/
+    Checkpoints/UX Issues/Stale Docs/Confidence/Trend) must be consistent across all passes
+    so that final-report.md's Pass History table can aggregate them correctly.
   Cross-file dependency: final-report.md's Pass History table uses the same column names.
     Changing column headers here requires updating final-report.md's Pass History section.
+  Autonomous mode additions: Tier1/Tier2/Tier3 columns added to Convergence table (populated
+    from tier_counts in state). Regression Guard section added to Pass 2+ format. Both are
+    omitted when --autonomous is not set.
 -->
 
 Use this template to format the unified findings report after collecting subagent summaries.
@@ -57,9 +60,10 @@ Principles <list IDs> are fully upheld. UX touchpoints for <list names> are clea
 - **<file path>**: <issue type> — <brief description>. Triggered by: <pre-existing / Pass N changes>.
 
 ### Convergence
-| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
-|------|--------|---------|----------|-------------|-----------|------------|------------|-------|
-| 1    | ...    | ...     | ...      | ...         | ...       | ...        | N%         | —     |
+| Pass | Tier1 | Tier2 | Tier3 | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
+|------|-------|-------|-------|--------|---------|----------|-------------|-----------|------------|------------|-------|
+| 1    | —     | —     | —     | ...    | ...     | ...      | ...         | ...       | ...        | N%         | —     |
+(Tier1/Tier2/Tier3 columns: autonomous mode only — omit if --autonomous not set)
 ```
 
 ## Pass 2+ Format
@@ -88,10 +92,16 @@ Focus on what changed. Unchanged items get one-line confirmation.
 ### Unchanged Open Findings
 (one line each)
 
+### Regression Guard [AUTONOMOUS MODE, PASS 2+ ONLY]
+(omit if --autonomous not set or no previously-fixed findings)
+- <finding_id> — <Holding ✅ | Regressed ❌ | Indeterminate ⚠️> — <one-line evidence>
+- Summary: <N> holding, <N> regressed, <N> indeterminate
+
 ### Convergence
-| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
-|------|--------|---------|----------|-------------|-----------|------------|------------|-------|
-| ...  | ...    | ...     | ...      | ...         | ...       | ...        | N%         | ...   |
+| Pass | Tier1 | Tier2 | Tier3 | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
+|------|-------|-------|-------|--------|---------|----------|-------------|-----------|------------|------------|-------|
+| ...  | —     | —     | —     | ...    | ...     | ...      | ...         | ...       | ...        | N%         | ...   |
+(Tier1/Tier2/Tier3 columns: autonomous mode only — omit if --autonomous not set)
 ```
 
 ## Rules

@@ -14,3 +14,5 @@ dist/**/*.d.ts
 
 # Node modules (development only)
 node_modules/
+__pycache__/
+*.pyc

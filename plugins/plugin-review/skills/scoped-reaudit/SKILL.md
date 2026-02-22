@@ -7,6 +7,9 @@
   Output contract: the orchestrator extracts the Track A / Track B / Track C determination
     from the File-to-Track Mapping section. Track letters (A, B, C) must match the agent
     names used in review.md Phase 2's spawn instructions.
+  Autonomous mode addition: the regression-guard agent is an exception to the A/B/C mapping.
+    It always runs on Pass 2+ in autonomous mode regardless of which files changed. Its spawn
+    decision is not derived from this skill's track table — see "Regression Guard Exception" below.
   Cross-file dependency: if the mapping table changes, review.md Phase 2 instructions
     must be re-read to verify consistency with the new track scope definitions.
   What breaks if format changes: the orchestrator reading this skill expects the mapping
@@ -43,3 +46,13 @@ For tracks NOT re-audited, carry forward all findings from the previous pass as 
 ## Special Case: README.md or docs/DESIGN.md Modified
 
 Track C must re-analyze for internal consistency. Track A should be included if the `## Principles` section was modified, since principle definitions are what Track A measures against. Track B is typically unaffected by documentation changes.
+
+## Regression Guard Exception [AUTONOMOUS MODE ONLY]
+
+The regression-guard agent (`agents/regression-guard.md`) is not part of the A/B/C track system. It operates on a fixed spawn rule:
+
+- **Always spawned on Pass 2+** in autonomous mode, regardless of which files changed
+- **Never spawned on Pass 1** (no previously-fixed findings exist)
+- **Never spawned in interactive mode** (regression guard is autonomous-only)
+
+The regression guard does not have a track mapping because it checks previously-fixed findings across all tracks. Its input is the `fixed_findings` array from `.claude/state/plugin-review-writes.json`, not a list of modified files. Consult this exception rule before spawning to ensure the regression guard is not incorrectly treated as a track-conditional agent.

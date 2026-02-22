@@ -9,10 +9,13 @@
     change, update the Pass History table here to match.
   Cross-file dependency: pass-report.md defines the data format for each row in Pass History.
     The Principle Status table uses the same status vocabulary as track-a-criteria.md.
-  Cross-file dependency (new): Assertion Coverage table uses confidence score from
+  Cross-file dependency: Assertion Coverage table uses confidence score from
     .claude/state/review-assertions.json read in Phase 6 of commands/review.md.
     Column names (ID / Track / Type / Status / Description) must match the schema
     defined in run-assertions.sh and review-assertions.json.
+  Autonomous mode addition: "### Convergence Metrics" section appended after "### Files Modified"
+    when --autonomous was set. Template for this section is templates/convergence-metrics.md.
+    If that template changes, update the Convergence Metrics row format in the Rules section below.
 -->
 
 Use this template when the review loop terminates (Phase 6).
@@ -24,10 +27,11 @@ Use this template when the review loop terminates (Phase 6).
 ### Passes completed: <N>
 
 ### Pass History
-| Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Changes made |
-|------|--------|---------|----------|-------------|-----------|------------|--------------|
-| 1    | ...    | ...     | ...      | ...         | ...       | ...        | (initial)    |
-| 2    | ...    | ...     | ...      | ...         | ...       | ...        | <brief list> |
+| Pass | Tier1 | Tier2 | Tier3 | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Changes made |
+|------|-------|-------|-------|--------|---------|----------|-------------|-----------|------------|--------------|
+| 1    | —     | —     | —     | ...    | ...     | ...      | ...         | ...       | ...        | (initial)    |
+| 2    | —     | —     | —     | ...    | ...     | ...      | ...         | ...       | ...        | <brief list> |
+(Tier1/Tier2/Tier3 columns: autonomous mode only — omit if --autonomous not set)
 
 ### Principle Status
 | ID  | Principle        | Status | Enforcement Layer | Notes |
@@ -67,6 +71,9 @@ Confidence: N% (N/N assertions passing)
 
 ### Files Modified
 (grouped by pass; omit if no files were modified during the review)
+
+### Convergence Metrics
+(autonomous mode only — omit if --autonomous not set; load convergence-metrics.md template for format)
 ```
 
 ## Rules
@@ -74,3 +81,5 @@ Confidence: N% (N/N assertions passing)
 Every principle from the original checklist must appear in Principle Status. Every checkpoint must appear in Checkpoint Status. Touchpoints clean from Pass 1 can be summarized in one line. Documentation Status lists every reviewed file. Accepted Gaps includes enough context for someone reading months later.
 
 Assertion Coverage is included when assertions were generated. If zero assertions were generated (all findings were judgment-only with no machine-verifiable check), omit the section and note "No machine-verifiable assertions generated."
+
+Convergence Metrics is included only in autonomous mode (`--autonomous` was set). Load `convergence-metrics.md` template and substitute actual values from state. Omit entirely for interactive mode sessions.

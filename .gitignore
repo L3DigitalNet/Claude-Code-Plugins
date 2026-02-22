@@ -41,3 +41,6 @@ plugins/*/tmp/
 
 # ─── Claude Code session state ─────────────────────────────────────────────
 **/.claude/state/
+
+# ─── PTH session lock files (transient, process-scoped) ─────────────────────
+**/.pth/active-session.lock
