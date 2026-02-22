@@ -1,6 +1,6 @@
 # Linux SysAdmin — Claude Code Plugin Design Document
 
-**Version:** 1.1.0 (Implemented — 2026-02-20)
+**Version:** 1.1.2 (Implemented — 2026-02-20)
 **Status:** Implemented — sections marked *[Planned]* describe features not yet implemented
 **Target Runtime:** Claude Code (CLI)
 **Implementation:** TypeScript / Node.js >= 20 LTS
@@ -2121,4 +2121,4 @@ All original open questions have been resolved through collaborative review:
 
 ---
 
-*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.1.0. This document describes the implemented system.*
+*Design finalized 2026-02-18 after four review passes (42 findings identified and resolved). Implementation complete as of v1.1.2. This document describes the implemented system.*

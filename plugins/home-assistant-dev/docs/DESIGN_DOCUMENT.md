@@ -3,7 +3,7 @@
 ## Design Document v2.2
 
 **Document Version:** 2.2
-**Plugin Version:** 2.2.1
+**Plugin Version:** 2.2.2
 **Last Updated:** February 2026  
 **Status:** Complete
 
@@ -336,7 +336,7 @@ User Query
 ```json
 {
   "name": "home-assistant-dev",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Comprehensive Home Assistant integration development toolkit...",
   "author": "Anthropic",
   "skills": "skills/",
@@ -954,8 +954,8 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ### 14.3 Changelog Summary
 
-**v2.2.1** (Current)
-- Incremental improvements and fixes since v2.2.0
+**v2.2.2** (Current)
+- Incremental improvements and fixes since v2.2.1
 
 **v2.0.0**
 - 19 skills (up from 11)

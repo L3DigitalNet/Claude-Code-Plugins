@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 1.6.0 — Interactive release pipeline for any repo. One command, six options.
+**Version:** 2.0.0 — Interactive release pipeline for any repo. One command, six options.
 
 ## Summary
 

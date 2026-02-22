@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [2.0.0] - 2026-02-21
 
+### Changed
+- release-pipeline updates, plugin-review agents, plan doc
+- add release-pipeline tests, refresh-plugin-cache skill, gitignore PTH locks
+
+### Fixed
+- suppress set -e exit in test-fix-git-email.sh
+
+
+## [2.0.0] - 2026-02-21
+
 ### Added
 - `scripts/auto-stash.sh` — auto-stash and restore dirty working tree (stash|pop|check)
 - `scripts/fix-git-email.sh` — check and auto-repair noreply git email before release
