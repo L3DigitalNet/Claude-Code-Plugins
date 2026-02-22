@@ -107,8 +107,12 @@ function buildValidInput(tool: ToolSchema, pluginPath: string): Record<string, u
         // Git SHAs require 7–40 hex characters — use a realistic-format placeholder
         input[field] = 'abc1234def5678901234567890123456789012';
       } else if (fieldLower === 'yaml') {
-        // YAML fields require structurally valid content with at minimum a name field
-        input[field] = 'name: generated-test\nmode: mcp\ntool: example\nexpect:\n  success: true';
+        // YAML fields need a valid test definition. Use pth_list_tests (always available in a PTH
+        // session) instead of 'example' to avoid "tool not found" failures if the stub is later
+        // executed. Timestamp suffix ensures unique IDs across sessions — prevents collision with
+        // stubs left in the persistent store from prior runs.
+        const ts = Date.now();
+        input[field] = `name: pth-create-test-stub-${ts}\nmode: mcp\ntool: pth_list_tests\nexpect:\n  success: true`;
       } else {
         input[field] = 'test-value';
       }
@@ -165,10 +169,12 @@ function buildTestIdScenarioTest(tool: ToolSchema, pluginPath: string): PthTest 
     type: 'scenario',
     steps: [
       {
-        // Step 1: create a stub test to get a real, in-suite test ID
+        // Step 1: create a stub test to get a real, in-suite test ID.
+        // Timestamp suffix prevents ID collision with stubs from prior sessions. pth_list_tests
+        // is used instead of 'example' so the stub can be executed without "tool not found".
         tool: 'pth_create_test',
         input: {
-          yaml: `name: scenario-stub-for-${tool.name}\nmode: mcp\ntool: example\nexpect:\n  success: true`,
+          yaml: `name: scenario-stub-for-${tool.name}-${Date.now()}\nmode: mcp\ntool: pth_list_tests\nexpect:\n  success: true`,
         },
         expect: { success: true },
         // pth_create_test responds: "Test added: <name>\nID: <id>"

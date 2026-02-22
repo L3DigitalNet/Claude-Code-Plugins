@@ -36132,7 +36132,7 @@ var sessionTools = [
     name: "pth_edit_test",
     description: "Update an existing test definition.",
     inputSchema: external_exports.object({
-      testId: external_exports.string(),
+      testId: external_exports.string().min(1, "testId must be a non-empty string"),
       yaml: external_exports.string().describe("New YAML test definition")
     })
   },
@@ -36391,7 +36391,12 @@ function buildValidInput(tool, pluginPath) {
       } else if (fieldLower.includes("hash") || fieldLower.includes("sha") || fieldLower === "commit") {
         input[field] = "abc1234def5678901234567890123456789012";
       } else if (fieldLower === "yaml") {
-        input[field] = "name: generated-test\nmode: mcp\ntool: example\nexpect:\n  success: true";
+        const ts = Date.now();
+        input[field] = `name: pth-create-test-stub-${ts}
+mode: mcp
+tool: pth_list_tests
+expect:
+  success: true`;
       } else {
         input[field] = "test-value";
       }
@@ -36438,12 +36443,14 @@ function buildTestIdScenarioTest(tool, pluginPath) {
     type: "scenario",
     steps: [
       {
-        // Step 1: create a stub test to get a real, in-suite test ID
+        // Step 1: create a stub test to get a real, in-suite test ID.
+        // Timestamp suffix prevents ID collision with stubs from prior sessions. pth_list_tests
+        // is used instead of 'example' so the stub can be executed without "tool not found".
         tool: "pth_create_test",
         input: {
-          yaml: `name: scenario-stub-for-${tool.name}
+          yaml: `name: scenario-stub-for-${tool.name}-${Date.now()}
 mode: mcp
-tool: example
+tool: pth_list_tests
 expect:
   success: true`
         },
@@ -36646,27 +36653,27 @@ ${installResult.stdout}${installResult.stderr}
       message: `Build succeeded but could not find running process matching "${pluginStartPattern}". The plugin may not be running or may need a manual restart.`
     };
   }
-  let terminated = false;
-  try {
-    process.kill(pid, "SIGTERM");
-    terminated = await waitForProcessExit(pid, 5e3);
-  } catch {
-    terminated = true;
-  }
-  if (!terminated) {
+  const KILL_DELAY_MS = 500;
+  void Promise.resolve().then(() => new Promise((resolve) => setTimeout(resolve, KILL_DELAY_MS))).then(async () => {
     try {
-      process.kill(pid, "SIGKILL");
-      terminated = await waitForProcessExit(pid, 2e3);
+      process.kill(pid, "SIGTERM");
+      const ok = await waitForProcessExit(pid, 5e3);
+      if (!ok) {
+        try {
+          process.kill(pid, "SIGKILL");
+        } catch {
+        }
+      }
     } catch {
-      terminated = true;
     }
-  }
+  });
   return {
     buildSucceeded: true,
     buildOutput,
-    processTerminated: terminated,
+    processTerminated: true,
+    // will terminate in ~KILL_DELAY_MS ms
     pid,
-    message: terminated ? `Build succeeded. Process ${pid} terminated. Claude Code should restart the plugin automatically. Please verify by calling one of the plugin's tools before continuing.` : `Build succeeded but process ${pid} did not exit after SIGTERM + SIGKILL. Manual restart may be required.`
+    message: `Build succeeded. Process ${pid} will terminate in ~${KILL_DELAY_MS}ms. Claude Code should restart the plugin automatically. Please verify by calling one of the plugin's tools before continuing.`
   };
 }
 async function waitForProcessExit(pid, timeoutMs) {
@@ -37756,6 +37763,9 @@ ID: ${test.id}`);
       }
       case "pth_edit_test": {
         const { testId, yaml } = args;
+        if (!testId.trim()) {
+          return { content: [{ type: "text", text: "testId must be a non-empty string." }], isError: true };
+        }
         const test = parseTest(yaml);
         const updatedTest = test.id !== testId ? { ...test, id: testId } : test;
         store.update(updatedTest);

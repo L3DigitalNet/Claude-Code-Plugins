@@ -79,7 +79,7 @@ const sessionTools: ToolDef[] = [
     name: 'pth_edit_test',
     description: 'Update an existing test definition.',
     inputSchema: z.object({
-      testId: z.string(),
+      testId: z.string().min(1, 'testId must be a non-empty string'),
       yaml: z.string().describe('New YAML test definition'),
     }),
   },

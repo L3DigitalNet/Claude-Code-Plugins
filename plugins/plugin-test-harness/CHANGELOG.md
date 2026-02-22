@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.2] - 2026-02-22
+
+### Fixed
+- **`pth_edit_test` accepts blank testId**: added `.min(1)` to Zod schema and a whitespace guard in dispatch — empty or whitespace-only testId now returns `isError: true`
+- **`pth_reload_plugin` orphans MCP context when testing itself**: process kill is now deferred 500ms via `setTimeout` so the success response can be sent over stdio before SIGTERM arrives
+- **Schema-generated stubs cause ID collisions across sessions**: `pth_create_test` input YAML now uses `pth_list_tests` (a real tool) and a timestamp suffix; scenario stubs get unique IDs on each `pth_generate_tests` call
+
+### Removed
+- Three artifact stub tests (`test-value`, `generated_test`, `scenario_stub_for_pth_record_result`) removed from persistent store — generator left-overs using `tool: example` (non-existent)
+
 ## [0.6.1] - 2026-02-22
 
 ### Fixed

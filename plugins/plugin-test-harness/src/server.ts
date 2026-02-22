@@ -266,6 +266,10 @@ export function createServer(): Server {
 
       case 'pth_edit_test': {
         const { testId, yaml } = args as { testId: string; yaml: string };
+        // Belt-and-suspenders: Zod schema enforces min(1), but guard here for whitespace-only IDs
+        if (!testId.trim()) {
+          return { content: [{ type: 'text' as const, text: 'testId must be a non-empty string.' }], isError: true };
+        }
         const test = parseTest(yaml);
         // Always update by testId (the caller's intent), warn if id changed in YAML
         const updatedTest = test.id !== testId ? { ...test, id: testId } : test;

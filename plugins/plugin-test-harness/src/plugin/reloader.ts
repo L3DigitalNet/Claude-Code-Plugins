@@ -106,33 +106,27 @@ export async function reloadPlugin(
     };
   }
 
-  // Step 5: SIGTERM with SIGKILL fallback
-  let terminated = false;
-  try {
-    process.kill(pid, 'SIGTERM');
-    terminated = await waitForProcessExit(pid, 5000);
-  } catch {
-    terminated = true; // Process already gone
-  }
-
-  if (!terminated) {
-    // SIGTERM didn't work — try SIGKILL
+  // Step 5: Defer SIGTERM — killing synchronously races with the stdio flush and prevents
+  // this response from reaching the caller. Critically: when PTH reloads itself (dogfooding),
+  // a synchronous kill terminates the process before the MCP response is written.
+  // 500 ms is enough for the stdio layer to flush the response before SIGTERM arrives.
+  const KILL_DELAY_MS = 500;
+  void Promise.resolve().then(() => new Promise<void>(resolve => setTimeout(resolve, KILL_DELAY_MS))).then(async () => {
     try {
-      process.kill(pid, 'SIGKILL');
-      terminated = await waitForProcessExit(pid, 2000);
-    } catch {
-      terminated = true; // Already gone
-    }
-  }
+      process.kill(pid, 'SIGTERM');
+      const ok = await waitForProcessExit(pid, 5000);
+      if (!ok) {
+        try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ }
+      }
+    } catch { /* already gone */ }
+  });
 
   return {
     buildSucceeded: true,
     buildOutput,
-    processTerminated: terminated,
+    processTerminated: true,  // will terminate in ~KILL_DELAY_MS ms
     pid,
-    message: terminated
-      ? `Build succeeded. Process ${pid} terminated. Claude Code should restart the plugin automatically. Please verify by calling one of the plugin's tools before continuing.`
-      : `Build succeeded but process ${pid} did not exit after SIGTERM + SIGKILL. Manual restart may be required.`,
+    message: `Build succeeded. Process ${pid} will terminate in ~${KILL_DELAY_MS}ms. Claude Code should restart the plugin automatically. Please verify by calling one of the plugin's tools before continuing.`,
   };
 }
 
