@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.6.1] - 2026-02-22
 
 ### Fixed
+- fix pth_record_result_valid_input scenario + isError for unknown testId
+- three bugs caught by PTH dogfooding — bump to v0.6.1
+- replace \n with <br/> in mermaid node labels across all plugin READMEs
+
+
+## [0.6.1] - 2026-02-22
+
+### Fixed
 - **`${CLAUDE_PLUGIN_ROOT}` ENOENT on schema discovery**: `fetchToolSchemasFromMcpServer` now expands `${CLAUDE_PLUGIN_ROOT}` in `.mcp.json` args before calling `spawn()`. Claude Code substitutes this variable at load time, but `spawn()` does not invoke a shell so the literal token caused ENOENT on the child process.
 - **"Connection closed" when PTH runs as Claude Code MCP server**: child processes spawned for schema discovery were inheriting the parent's fd 2 (a live Unix socket to Claude Code). Added `stderr: 'pipe'` to `StdioClientTransport` and drain the pipe to prevent backpressure stalls.
 - **Missing-required-field tests returned success instead of `isError: true`**: tool dispatch now validates args against each tool's Zod schema before routing. Invalid args return `{ isError: true }` so MCP clients can distinguish validation errors from successful tool execution without string-parsing the response text.
