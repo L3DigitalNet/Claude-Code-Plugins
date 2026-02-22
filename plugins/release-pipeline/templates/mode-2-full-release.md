@@ -25,6 +25,36 @@ If "Custom version" selected:
 
 Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` for tags and display.
 
+## Phase 0.5 — Auto-Heal
+
+Before launching pre-flight checks, apply automatic recovery for the two most common failure
+modes. Set `auto_stash_pending=false` before starting.
+
+**Step 1 — Auto-stash dirty working tree:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-stash.sh . stash
+```
+
+- `CLEAN` → tree already clean; `auto_stash_pending=false`
+- `STASHED` → `auto_stash_pending=true`; note: `"⚡ Auto-stashed dirty working tree — will restore after release"`
+- Exit 1 → STOP: `"Could not auto-stash. Stash or commit changes manually, then retry."`
+
+**Step 2 — Auto-fix git email:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/fix-git-email.sh .
+```
+
+If exit 1 (not noreply):
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/fix-git-email.sh . --auto-fix
+```
+
+- `OK:` or `FIXED:` → continue; if "FIXED:" note: `"⚡ Auto-fixed git email → <email>"`
+- Still exit 1 → STOP: `"Could not set noreply email. Fix manually: git config user.email '<username>@users.noreply.github.com'"`
+
 ## Phase 1 — Pre-flight (Parallel)
 
 **IMPORTANT:** Before making any tool calls, output this line: `"Launching pre-flight checks for v<version> in parallel..."`
@@ -166,6 +196,18 @@ git push origin main --tags
 ```bash
 git checkout testing
 ```
+
+## Phase 3.5 — Stash Restore
+
+If `auto_stash_pending` is true, restore auto-stashed changes now. All git operations are
+complete — the stash can safely be restored before the GitHub API call:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-stash.sh . pop
+```
+
+- `RESTORED` → note: `"⚡ Restored auto-stashed changes"`
+- Exit 1 → WARN: `"⚠ Could not auto-pop stash — run: git stash pop manually"`
 
 Then create the GitHub release. Use the changelog entry generated in Phase 2 as the release notes:
 

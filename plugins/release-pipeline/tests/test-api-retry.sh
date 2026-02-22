@@ -51,6 +51,57 @@ bash "$SCRIPT" 3 100 -- bash "$CMD" 2>/dev/null && RES=0 || RES=$?
 assert_eq "$RES" "0" "already-exists in stderr treated as success"
 rm -f "$CMD"
 
+# ---- Test 5: HTTP 400 in stderr → exit 1 immediately (no retry) ----
+CMD=$(mktemp)
+COUNTER_FILE=$(mktemp)
+echo "0" > "$COUNTER_FILE"
+cat > "$CMD" <<CMDEOF
+#!/usr/bin/env bash
+count=\$(cat "$COUNTER_FILE")
+count=\$((count + 1))
+echo \$count > "$COUNTER_FILE"
+echo "HTTP 400: Bad Request" >&2
+exit 1
+CMDEOF
+chmod +x "$CMD"
+bash "$SCRIPT" 3 100 -- bash "$CMD" 2>/dev/null && RES=0 || RES=$?
+assert_eq "$RES" "1" "HTTP 400 → exit 1 immediately"
+# Should only attempt once — permanent error, no retry
+attempts=$(cat "$COUNTER_FILE")
+assert_eq "$attempts" "1" "HTTP 400 → only 1 attempt (no retry)"
+rm -f "$CMD" "$COUNTER_FILE"
+
+# ---- Test 6: HTTP 404 in stderr → exit 1 immediately ----
+CMD=$(mktemp)
+cat > "$CMD" <<'CMDEOF'
+#!/usr/bin/env bash
+echo "HTTP 404: Not Found" >&2
+exit 1
+CMDEOF
+chmod +x "$CMD"
+bash "$SCRIPT" 3 100 -- bash "$CMD" 2>/dev/null && RES=0 || RES=$?
+assert_eq "$RES" "1" "HTTP 404 → exit 1 immediately (no retry)"
+rm -f "$CMD"
+
+# ---- Test 7: HTTP 429 (rate-limit) → retried (not immediately aborted) ----
+CMD=$(mktemp)
+COUNTER_FILE=$(mktemp)
+echo "0" > "$COUNTER_FILE"
+cat > "$CMD" <<CMDEOF
+#!/usr/bin/env bash
+count=\$(cat "$COUNTER_FILE")
+count=\$((count + 1))
+echo \$count > "$COUNTER_FILE"
+echo "HTTP 429: Too Many Requests" >&2
+exit 1
+CMDEOF
+chmod +x "$CMD"
+bash "$SCRIPT" 2 50 -- bash "$CMD" 2>/dev/null && RES=0 || RES=$?
+assert_eq "$RES" "1" "HTTP 429 → exhausts retries (not immediately aborted)"
+attempts=$(cat "$COUNTER_FILE")
+assert_eq "$attempts" "2" "HTTP 429 → retried (attempt count = max_attempts)"
+rm -f "$CMD" "$COUNTER_FILE"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

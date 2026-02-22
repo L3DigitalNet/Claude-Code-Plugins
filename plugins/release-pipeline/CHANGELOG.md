@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.0] - 2026-02-21
+
+### Added
+- `scripts/auto-stash.sh` — auto-stash and restore dirty working tree (stash|pop|check)
+- `scripts/fix-git-email.sh` — check and auto-repair noreply git email before release
+- Phase 0.5 (Auto-Heal) in mode-2 and mode-3: auto-stash dirty tree, auto-fix git email before pre-flight
+- Phase 3.5 (Stash Restore) in mode-2 and mode-3: restore stash after push, before GitHub API call
+- Auto-Heal step in mode-7 (Batch Release): global stash before loop, restore after summary
+- `tests/test-auto-stash.sh` — 11 tests including untracked file capture and safety against user stashes
+- `tests/test-fix-git-email.sh` — 7 tests including HTTPS/SSH remote URL parsing and scope handling
+- `tests/test-bump-version.sh` — 7 tests covering plugin.json, pyproject.toml, --plugin, --dry-run
+- `tests/test-generate-changelog.sh` — 8 tests covering categorization, --preview, scoped output
+- `tests/test-suggest-version.sh` — 7 tests covering major/minor/patch bumps and --plugin scope
+- `tests/test-detect-unreleased.sh` — 6 tests covering TSV output, single-plugin guard, per-plugin detection
+- `tests/run-all.sh` — aggregating test runner with `--filter` support
+
+### Changed
+- `scripts/api-retry.sh`: abort immediately on permanent HTTP 4xx errors (400, 401, 403, 404, 409, 410) without retry; 429 (rate-limit) still retried normally
+- `tests/test-api-retry.sh`: added 3 new tests covering HTTP 400, HTTP 404, and HTTP 429 behavior
+
+### Breaking
+- Dirty working tree no longer blocks mode-2/mode-3/mode-7 releases — auto-stash is applied automatically before pre-flight; restore is automatic after release
+- Non-noreply git email no longer blocks releases — auto-fix is applied automatically before pre-flight using gh CLI or remote URL detection
+
 ## [1.6.0] - 2026-02-20
 
 ### Added

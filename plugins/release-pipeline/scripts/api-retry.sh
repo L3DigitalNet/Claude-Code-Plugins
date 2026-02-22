@@ -54,6 +54,19 @@ while [[ $attempt -lt $MAX_ATTEMPTS ]]; do
     exit 0
   fi
 
+  # Permanent HTTP 4xx errors (except 429 Too Many Requests): abort without retry.
+  # gh CLI emits "HTTP XXX: ..." in stderr for API errors. 4xx errors indicate a bad
+  # request or permission issue — retrying the same call will always fail.
+  # 429 (rate-limit) is excluded and falls through to the normal retry path below.
+  if echo "$stderr_content" | grep -qiE 'HTTP 4[0-9]{2}:'; then
+    http_code=$(echo "$stderr_content" | grep -oiE 'HTTP (4[0-9]{2})' | head -1 | grep -oE '[0-9]+' || true)
+    if [[ -n "$http_code" && "$http_code" != "429" ]]; then
+      echo "Error: permanent API error (HTTP ${http_code}) — not retrying." >&2
+      [[ -n "$stderr_content" ]] && echo "Last error: $stderr_content" >&2
+      exit 1
+    fi
+  fi
+
   if [[ $attempt -ge $MAX_ATTEMPTS ]]; then
     echo "Error: command failed after ${MAX_ATTEMPTS} attempts." >&2
     [[ -n "$stderr_content" ]] && echo "Last error: $stderr_content" >&2

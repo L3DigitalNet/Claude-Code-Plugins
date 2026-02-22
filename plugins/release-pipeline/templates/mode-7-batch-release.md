@@ -34,7 +34,40 @@ Use **AskUserQuestion**:
 
 If Abort → stop.
 
-Initialize: `succeeded=[]`, `failed=[]`
+Initialize: `succeeded=[]`, `failed=[]`, `auto_stash_pending=false`
+
+## Auto-Heal (before loop)
+
+Apply automatic recovery once for the entire batch before any plugin is touched.
+
+**Step 1 — Auto-stash dirty working tree:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-stash.sh . stash
+```
+
+- `CLEAN` → `auto_stash_pending=false`
+- `STASHED` → `auto_stash_pending=true`; note: `"⚡ Auto-stashed dirty working tree — will restore after batch completes"`
+- Exit 1 → STOP: `"Could not auto-stash. Stash or commit changes manually, then retry."`
+
+**Step 2 — Auto-fix git email:**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/fix-git-email.sh .
+```
+
+If exit 1 (not noreply):
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/fix-git-email.sh . --auto-fix
+```
+
+- `OK:` or `FIXED:` → continue; if "FIXED:" note: `"⚡ Auto-fixed git email → <email>"`
+- Still exit 1 → STOP: `"Could not set noreply email. This blocks all plugins in the batch."`
+
+**NOTE:** Per-plugin loops (Phases 1–4 below) do NOT run their own stash/pop. The global stash
+above covers the entire batch. Each plugin release only stages its own files, so the working tree
+stays clean between plugins.
 
 ---
 
@@ -104,3 +137,14 @@ If `failed` is non-empty, append:
 ```
 ⚠ <N> plugin(s) require attention. See failures above. Re-run `/release` for each to retry.
 ```
+
+## Stash Restore
+
+After the summary report, if `auto_stash_pending` is true:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-stash.sh . pop
+```
+
+- `RESTORED` → note: `"⚡ Restored auto-stashed changes"`
+- Exit 1 → WARN: `"⚠ Could not auto-pop stash — run: git stash pop manually"`
