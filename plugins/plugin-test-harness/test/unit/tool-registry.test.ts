@@ -7,8 +7,8 @@ describe('ToolRegistry', () => {
   it('getAllTools returns all dormant and session tools', () => {
     const registry = new ToolRegistry();
     const tools = registry.getAllTools();
-    // 3 dormant + 16 session = 19 total
-    expect(tools).toHaveLength(19);
+    // 3 dormant + 17 session = 20 total
+    expect(tools).toHaveLength(20);
   });
 
   it('getAllTools always includes dormant tools', () => {

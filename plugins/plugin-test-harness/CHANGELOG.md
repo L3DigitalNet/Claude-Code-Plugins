@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.0] - 2026-02-22
+
+### Added
+- add pth_delete_test tool (v0.6.5)
+
+### Fixed
+- update tool count expectation to 20 (pth_delete_test)
+- MCP array/number coercion + pinned test protection (v0.6.4)
+- three more dogfooding fixes — bump to v0.6.3
+- four bugs from PTH dogfooding — bump to v0.6.2
+
+
 ## [0.6.5] - 2026-02-22
 
 ### Added
