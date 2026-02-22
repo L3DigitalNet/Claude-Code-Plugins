@@ -46,12 +46,15 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
     checkLines.push(`✗ Not a valid plugin: no .mcp.json or .claude-plugin/ found`);
   }
 
-  // Check for active session lock
+  // Check for active session lock — track separately so the verdict can reflect it.
+  // A live session blocks pth_start_session even when all other checks pass.
+  let liveSessionActive = false;
   const lockPath = path.join(args.pluginPath, '.pth', 'active-session.lock');
   try {
     const lock = JSON.parse(await fs.readFile(lockPath, 'utf-8')) as { pid: number; branch: string };
     try {
       process.kill(lock.pid, 0);  // check if PID is alive
+      liveSessionActive = true;
       checkLines.push(`⚠ Active session detected (PID ${lock.pid}, branch ${lock.branch})`);
     } catch {
       checkLines.push(`⚠ Stale session lock found (PID ${lock.pid} is not running) — will be cleaned up at start`);
@@ -60,10 +63,13 @@ export async function preflight(args: { pluginPath: string }): Promise<string> {
     checkLines.push(`✓ No active session lock`);
   }
 
-  // Verdict first per P3 (lead with findings)
-  const verdict = pluginValid
-    ? '✓ OK — ready to start a session.'
-    : '✗ Cannot start session — fix the issues above first.';
+  // Verdict first per P3 (lead with findings).
+  // Three distinct states: plugin invalid, session active (blocks start), or clear.
+  const verdict = !pluginValid
+    ? '✗ Cannot start session — fix the issues above first.'
+    : liveSessionActive
+      ? '⚠ Session already active — call pth_end_session first, or use pth_resume_session.'
+      : '✓ OK — ready to start a session.';
   return [verdict, '', 'PTH Preflight Check', '', ...checkLines].join('\n');
 }
 
