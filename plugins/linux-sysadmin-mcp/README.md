@@ -61,7 +61,9 @@ claude --plugin-dir ./plugins/linux-sysadmin-mcp
 
 ### Post-Install Steps
 
-The MCP server must be built before first use:
+The MCP server ships as a pre-built esbuild bundle (`dist/server.bundle.cjs`) — no `npm install` or build step is required after plugin installation. The server registers automatically as `linux-sysadmin-mcp` via `.mcp.json`.
+
+If you modify the TypeScript source, rebuild with:
 
 ```bash
 cd ~/.claude/plugins/cache/l3digitalnet-plugins/linux-sysadmin-mcp
