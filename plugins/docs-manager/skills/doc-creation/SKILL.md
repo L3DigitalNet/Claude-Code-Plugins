@@ -1,6 +1,6 @@
 ---
 name: doc-creation
-description: Suggests using /docs new when creating markdown files in managed locations. Use when Claude is about to create a new .md file.
+description: Suggests using /docs new when creating markdown files in managed locations. Use before any Write or Edit tool call that would create a new .md file — especially when the target path is under a known docs/ or documentation/ directory.
 ---
 
 Before creating a new `.md` file, check if the target directory is within a docs-manager library:

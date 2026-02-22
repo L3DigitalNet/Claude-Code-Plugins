@@ -1,9 +1,11 @@
 ---
 name: design-draft
 description: >
-  Guided design document authoring workflow. Use when starting a new
-  design document or when a project lacks formal design documentation.
-  Suggest before /design-review when no existing document is present.
+  Guided design document authoring workflow. Use when the user asks to
+  "design a system", "create a design doc", "write a spec", "document
+  the architecture", "start an RFC", or says a project needs a design
+  before implementation. Suggest proactively when /design-review is
+  invoked but no existing document is present.
 ---
 
 This skill runs the Design Document Authoring Protocol — a guided

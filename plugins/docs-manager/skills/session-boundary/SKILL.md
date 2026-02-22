@@ -1,6 +1,6 @@
 ---
 name: session-boundary
-description: Reminds about queued documentation items at session boundaries. Use when Claude is wrapping up work or the user signals session end.
+description: Reminds about queued documentation items at session boundaries. Use when the user says "wrap up", "I'm done", "let's commit", "end of session", "push and close", or otherwise signals they are finishing work for the day.
 ---
 
 When wrapping up a session, check the docs-manager queue:

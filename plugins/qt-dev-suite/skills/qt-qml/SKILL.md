@@ -21,59 +21,7 @@ version: 1.0.0
 
 For new Python/PySide6 desktop applications, QML offers better visual results with less code. For data-heavy enterprise tools, widgets remain the pragmatic choice.
 
-### Minimal PySide6 + QML Application
-
-```python
-# src/myapp/__main__.py
-import sys
-from pathlib import Path
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtQml import QQmlApplicationEngine
-
-def main() -> None:
-    app = QGuiApplication(sys.argv)
-    app.setApplicationName("MyApp")
-
-    engine = QQmlApplicationEngine()
-    qml_file = Path(__file__).parent / "ui" / "main.qml"
-    engine.load(str(qml_file))
-
-    if not engine.rootObjects():
-        sys.exit(-1)
-
-    sys.exit(app.exec())
-```
-
-```qml
-// src/myapp/ui/main.qml
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-
-ApplicationWindow {
-    id: root
-    visible: true
-    width: 800
-    height: 600
-    title: "MyApp"
-
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 16
-        spacing: 8
-
-        Label {
-            text: "Hello, Qt Quick!"
-            font.pixelSize: 24
-        }
-
-        Button {
-            text: "Click Me"
-            onClicked: console.log("Button clicked")
-        }
-    }
-}
-```
+**Bootstrap and architecture** — see [references/qml-architecture.md](references/qml-architecture.md)
 
 ### Official Best Practices (Qt Quick)
 
@@ -81,7 +29,6 @@ ApplicationWindow {
 ```qml
 // WRONG — prevents static analysis, unclear errors
 property var name
-property var count
 
 // CORRECT
 property string name
@@ -91,7 +38,7 @@ property MyModel optionsModel
 
 **2. Prefer declarative bindings over imperative assignments:**
 ```qml
-// WRONG — imperative assignment overwrites bindings, double-evaluates, breaks Qt Design Studio
+// WRONG — imperative assignment overwrites bindings, breaks Qt Design Studio
 Rectangle {
     Component.onCompleted: color = "red"
 }
@@ -115,7 +62,7 @@ Slider { onMoved: model.update(value) }
 ```qml
 // WRONG — anchors on direct Layout children cause binding loops
 RowLayout {
-    Rectangle { anchors.fill: parent }   // broken
+    Rectangle { anchors.fill: parent }
 }
 
 // CORRECT — use Layout attached properties
@@ -141,164 +88,16 @@ Button { text: qsTr("Cancel") }
 
 ### Exposing Python Objects to QML
 
-**Method 1: Required Properties (preferred — modern Qt 6 approach)**
+Three methods: Required Properties (preferred), Context Property, Registered QML Type.
 
-Instead of `setContextProperty`, use `setInitialProperties` to push named objects in via `required property`:
+**Key rule: `@Slot` is mandatory for any Python method callable from QML.** Missing it causes `TypeError` at runtime.
 
-```python
-# In Python — set initial properties before loading
-backend = Backend()
-engine.setInitialProperties({"backend": backend})
-engine.load("qrc:/ui/main.qml")
-```
-
-```qml
-// In QML root — declare as required property
-ApplicationWindow {
-    required property Backend backend
-    // ...
-}
-```
-
-`required property` is type-checked at load time; `setContextProperty` is untyped and global. Use required properties for new code.
-
-**Method 2: Context Property (still valid for existing code)**
-```python
-from PySide6.QtCore import QObject, Signal, Property, Slot
-
-class Backend(QObject):
-    countChanged = Signal()
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._count = 0
-
-    @Property(int, notify=countChanged)
-    def count(self) -> int:
-        return self._count
-
-    @Slot()                          # @Slot is REQUIRED for QML invocation
-    def increment(self) -> None:
-        self._count += 1
-        self.countChanged.emit()
-
-    @Slot(str, result=str)           # return type declared in @Slot
-    def greet(self, name: str) -> str:
-        return f"Hello, {name}!"
-
-backend = Backend()
-engine.rootContext().setContextProperty("backend", backend)
-```
-
-```qml
-Label { text: "Count: " + backend.count }
-Button { onClicked: backend.increment() }
-Label { text: backend.greet("World") }
-```
-
-**@Slot is mandatory for QML-callable methods.** QML has no `Q_INVOKABLE` equivalent — any Python method callable from QML must have `@Slot`. Missing it causes `TypeError` at runtime.
-
-**Method 3: Registered QML Type (reusable, namespaced)**
-```python
-from PySide6.QtQml import QmlElement
-
-QML_IMPORT_NAME = "com.myorg.myapp"
-QML_IMPORT_MAJOR_VERSION = 1
-
-@QmlElement
-class PersonModel(QAbstractListModel):
-    ...
-```
-
-```qml
-import com.myorg.myapp 1.0
-
-PersonModel { id: model }
-ListView { model: model; ... }
-```
+**Full patterns** — see [references/qml-pyside6.md](references/qml-pyside6.md)
 
 ### QML Signals and Connections
 
-```qml
-// Define signal in QML
-signal dataChanged(var newData)
-
-// Connect in QML
-Connections {
-    target: someItem
-    function onDataChanged(data) {
-        console.log("Got:", data)
-    }
-}
-
-// Connect QML signal to Python slot
-engine.rootObjects()[0].dataChanged.connect(backend.on_data_changed)
-```
+**Full patterns** — see [references/qml-signals-properties.md](references/qml-signals-properties.md)
 
 ### Common QtQuick.Controls Components
 
-```qml
-import QtQuick.Controls
-
-// Layout containers
-ColumnLayout { ... }
-RowLayout { ... }
-GridLayout { columns: 3; ... }
-StackLayout { currentIndex: tabBar.currentIndex; ... }
-
-// Input
-TextField { placeholderText: "Enter name..." }
-TextArea { wrapMode: TextArea.Wrap }
-ComboBox { model: ["Option 1", "Option 2"] }
-CheckBox { text: "Enable feature" }
-Slider { from: 0; to: 100; value: 50 }
-SpinBox { from: 0; to: 999 }
-
-// Display
-Label { text: "Hello"; font.bold: true }
-Image { source: "qrc:/icons/logo.svg" }
-ProgressBar { value: 0.75 }
-
-// Containers
-ScrollView { clip: true; ListView { ... } }
-GroupBox { title: "Settings"; ... }
-TabBar { id: tabBar; TabButton { text: "Tab 1" } }
-```
-
-### Resource Files in QML
-
-Use QRC for all QML assets:
-```xml
-<qresource prefix="/ui">
-  <file>main.qml</file>
-  <file>components/Card.qml</file>
-</qresource>
-<qresource prefix="/icons">
-  <file>logo.svg</file>
-</qresource>
-```
-
-```python
-# Load from QRC
-engine.load("qrc:/ui/main.qml")
-```
-
-```qml
-// Reference QRC resources
-Image { source: "qrc:/icons/logo.svg" }
-```
-
-### Debugging QML
-
-```qml
-// Print to console
-Component.onCompleted: console.log("loaded, width:", width)
-
-// Qt Quick Inspector (Qt Creator integration)
-// QML_IMPORT_PATH env var for custom import paths
-```
-
-```bash
-QML_IMPORT_TRACE=1 python -m myapp   # trace QML imports
-QSG_VISUALIZE=overdraw python -m myapp  # visualize rendering
-```
+**Full component reference** — see [references/qml-components.md](references/qml-components.md)

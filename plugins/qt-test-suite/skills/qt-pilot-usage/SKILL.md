@@ -58,45 +58,14 @@ btn->setObjectName("calculate_btn");
 
 ## Available MCP Tools (15 total)
 
-### App Lifecycle
+**Full argument types, return schemas, and error handling** — see [references/mcp-tools-reference.md](references/mcp-tools-reference.md).
 
-| Tool | Purpose | Key Args |
-|---|---|---|
-| `launch_app` | Start app headlessly via Xvfb | `script_path` or `module` + `working_dir` |
-| `get_app_status` | Check if app is running / get diagnostics | — |
-| `close_app` | Terminate the app and clean up Xvfb | — |
-| `wait_for_idle` | Wait for Qt event queue to drain | `timeout` (float, default 5.0) |
-
-### Discovery
-
-| Tool | Purpose | Key Args |
-|---|---|---|
-| `find_widgets` | List widgets matching a glob pattern | `name_pattern` (default `"*"`) |
-| `list_all_widgets` | List ALL widgets with coordinates | `include_invisible` (bool) |
-| `get_widget_info` | Get size, position, visibility, enabled state | `widget_name` |
-| `list_actions` | List all QActions (menus, toolbars) | — |
-
-### Interaction (by name — requires `setObjectName`)
-
-| Tool | Purpose | Key Args |
-|---|---|---|
-| `click_widget` | Click a named widget | `widget_name`, `button` ("left"/"right"/"middle") |
-| `hover_widget` | Hover over a named widget | `widget_name` |
-| `type_text` | Type into focused or named widget | `text`, optional `widget_name` |
-| `press_key` | Simulate key press with optional modifiers | `key`, `modifiers` list |
-| `trigger_action` | Trigger a QAction directly by name | `action_name` |
-
-### Interaction (by coordinate — no object name needed)
-
-| Tool | Purpose | Key Args |
-|---|---|---|
-| `click_at` | Click at screen coordinates | `x`, `y`, `button` |
-
-### Visual Capture
-
-| Tool | Purpose | Key Args |
-|---|---|---|
-| `capture_screenshot` | Capture PNG screenshot | optional `output_path` |
+Quick reference by category:
+- **App lifecycle**: `launch_app`, `get_app_status`, `wait_for_idle`, `close_app`
+- **Discovery**: `find_widgets`, `list_all_widgets`, `get_widget_info`, `list_actions`
+- **Named interaction** (requires `setObjectName`): `click_widget`, `hover_widget`, `type_text`, `press_key`, `trigger_action`
+- **Coordinate interaction**: `click_at`
+- **Visual capture**: `capture_screenshot`
 
 ## Standard Workflow
 
@@ -173,27 +142,9 @@ close_app()
 
 ## Writing a Markdown Test Report
 
-The `gui-tester` agent saves reports to `tests/reports/gui-YYYY-MM-DD-HH-MM.md`. Report format:
+The `gui-tester` agent saves reports to `tests/reports/gui-YYYY-MM-DD-HH-MM.md`.
 
-```markdown
-# GUI Test Report — 2026-02-22 14:35
-
-**App:** main.py
-**Result:** PASS (4/4 interactions succeeded)
-
-## Test Steps
-
-| Step | Action | Expected | Result |
-|------|--------|----------|--------|
-| 1 | Click calculate_btn | result_label updates | ✅ PASS |
-| 2 | Type "abc" in amount_input | Validation error shown | ✅ PASS |
-| 3 | Press Escape | Dialog closes | ✅ PASS |
-| 4 | Trigger save_action | File saved message | ✅ PASS |
-
-## Screenshots
-- [Before](screenshot_before.png)
-- [After](screenshot_after.png)
-```
+**Full report format and template** — see [references/test-report-template.md](references/test-report-template.md).
 
 ## Additional Resources
 

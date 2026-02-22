@@ -1,6 +1,6 @@
 ---
 name: project-entry
-description: Triggers freshness scan when entering a new project directory. Use when Claude detects a directory context change or the user navigates to a new project.
+description: Triggers freshness scan when entering a new project directory. Use when the working directory changes, the user mentions "working on X project", "switch to X", "open X", or when a new project path first appears in the conversation.
 ---
 
 When entering a project directory, check if docs-manager has a registered library for this location:
