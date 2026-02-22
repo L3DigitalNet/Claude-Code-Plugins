@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.4.0] - 2026-02-21
+
+### Added
+- `--autonomous` flag — enables fully autonomous convergence mode alongside existing interactive mode
+- `agents/regression-guard.md` — 4th read-only analyst subagent; spawned on Pass 2+ in autonomous mode to perform narrative re-verification of previously-fixed findings, returning per-finding holding/regressed/indeterminate status
+- `agents/build-fix-agent.md` — write-capable fix-forward subagent; invoked in Phase 4.5 when build or test commands fail after an implementation pass
+- `scripts/discover-test-commands.sh` — probes a plugin directory for build and test commands (npm scripts, Makefile targets, pytest config, `scripts/test*.sh` files); outputs JSON array
+- `scripts/run-build-test.sh` — runs discovered build/test commands with structured JSON output and human-readable stderr summary; exit 0 = all pass, exit 1 = some fail
+- `templates/convergence-metrics.md` — template for the final report Convergence Metrics section (autonomous mode only)
+- Phase 4.5 (Build/Test Validation) — runs `run-build-test.sh` for target plugin and plugin-review self-check after each implementation pass; spawns `build-fix-agent` on failure (at most once per pass)
+- Tier classification system — orchestrator assigns Tier 1 (docs/formatting), Tier 2 (error handling/validation), or Tier 3 (architectural/behavioral) to each finding before fixing; all tiers auto-fixed; tier affects logging verbosity and metrics only
+- Convergence metrics in Phase 6 — elapsed time, total passes, tier breakdown (T1/T2/T3 counts), regressions caught by guard, build/test failure count
+- Regression guard integration in Phase 2 — spawned alongside analyst subagents on Pass 2+; results processed in Phase 2.5, `regression_guard_regressions` tracked in state
+- Extended state schema for autonomous mode: `mode`, `start_time`, `tier_counts`, `fixed_findings`, `build_test_failures`, `regression_guard_regressions`
+- Tier1/Tier2/Tier3 columns added to Convergence table in pass-report.md and Pass History table in final-report.md (autonomous mode only)
+- Regression Guard section added to Pass 2+ format in pass-report.md (autonomous mode only)
+- Regression Guard Exception section added to scoped-reaudit skill documenting that it always spawns on Pass 2+ in autonomous mode, outside the A/B/C track system
+
+### Changed
+- Convergence criterion in autonomous mode requires BOTH assertion confidence = 100% AND regression guard reporting zero regressions; either condition alone is insufficient
+- Phase 5.5 budget-check extended to include regression guard status in autonomous mode
+- `commands/review.md` trigger description updated to mention `--autonomous` flag
+- Hard Rules updated: autonomous mode tier behavior, Phase 4.5 scope restriction, build-fix-agent spawn limit
+
 ## [0.3.0] - 2026-02-20
 
 ### Added
