@@ -2,6 +2,11 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.2] - 2026-02-22
+
+### Fixed
+- `validate_manifest` MCP tool now throws (returns `isError:true`) when `path` argument is missing, consistent with `validate_strings` and `check_patterns` behavior
+
 ## [2.2.1] - 2026-02-20
 
 ### Changed
