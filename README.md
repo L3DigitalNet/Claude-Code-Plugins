@@ -48,12 +48,17 @@ installed plugins at the start of each session.
 | Plugin | Type | Command | Description |
 |--------|------|---------|-------------|
 | [Agent Orchestrator](#agent-orchestrator) | Commands + Hooks | `/orchestrate` | Delegates complex tasks to agent teams with context management |
+| [Autonomous Refactor](#autonomous-refactor) | Commands + Agents | `/refactor` | Test-driven autonomous refactoring against project design principles |
+| [Context Efficiency Toolkit](#context-efficiency-toolkit) | Commands + Skills | `/review-context-efficiency`, `/tighten-markdown` | Audits and reduces plugin context footprint |
 | [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
+| [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | ~100 tools | Linux system administration across 15 modules |
+| [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review` | Multi-pass assertion-driven audit of plugin principles, UX, and docs |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
+| [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
 
 ## Principles
 
@@ -262,6 +267,133 @@ pre-flight checks, changelog generation, and GitHub release creation.
 
 ---
 
+### Autonomous Refactor
+
+**Test-driven autonomous refactoring** — reads your project's design principles,
+generates a behavioural test baseline, applies each refactoring opportunity in an
+isolated git worktree, and commits only changes that keep tests green.
+
+**Features:**
+
+- Derives refactoring opportunities from principles declared in `README.md`
+- Generates a green test baseline before touching any source file
+- Applies each change in an isolated git worktree — reverts automatically on red tests
+- Detects oscillation (repeated make/undo of the same change) and stops
+- Produces a before/after report with LOC, cyclomatic complexity, and alignment score
+
+**Install:**
+
+```bash
+/plugin install autonomous-refactor@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/autonomous-refactor/README.md](plugins/autonomous-refactor/README.md)
+
+---
+
+### Context Efficiency Toolkit
+
+**Audit and reduce plugin context footprint** — two structured workflows for eliminating
+token waste: a twelve-principle architectural audit and a prose-level rewriting pass.
+
+**Features:**
+
+- `/review-context-efficiency` — audits against 12 structural efficiency principles
+  (deferred loading, hook vs instruction, template extraction, and more)
+- `/tighten-markdown` — rewrites instruction files to remove motivational text,
+  restatements, hedging, and syntax narration without changing meaning
+- Approval-gated: findings presented before any file is modified
+- Designed to run in sequence — architecture first, prose second
+
+**Install:**
+
+```bash
+/plugin install context-efficiency-toolkit@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/context-efficiency-toolkit/README.md](plugins/context-efficiency-toolkit/README.md)
+
+---
+
+### Docs Manager
+
+**Documentation lifecycle management** — monitors file changes via hooks, accumulates
+documentation tasks into a persistent queue without interrupting active work, and
+surfaces the queue for batch review at session end.
+
+**Features:**
+
+- Hook-driven change detection — queues documentation tasks as files are written
+- Persistent queue across sessions — never loses pending items between restarts
+- Central library index with per-document freshness tracking
+- Third-party doc verification against upstream authoritative sources
+- Batch review at session end rather than interrupting active work
+- `/docs` command for manual queue management and auditing
+
+**Install:**
+
+```bash
+/plugin install docs-manager@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/docs-manager/README.md](plugins/docs-manager/README.md)
+
+---
+
+### Plugin Review
+
+**Multi-pass assertion-driven plugin audit** — three parallel analyst subagents cover
+principles alignment, terminal UX quality, and documentation freshness, then the
+orchestrator auto-implements all fixes and re-audits to convergence.
+
+**Features:**
+
+- Three parallel read-only analyst tracks: principles (A), UX (B), docs (C)
+- Assertion-based confidence scoring — loop continues until 100% or budget exhausted
+- `--autonomous` flag adds regression guard (Track D) and build/test validation
+- All fixes auto-implemented by the orchestrator — no manual copy/paste
+- Findings severity-sorted: critical → high → medium → low
+
+**Install:**
+
+```bash
+/plugin install plugin-review@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/plugin-review/README.md](plugins/plugin-review/README.md)
+
+---
+
+### Repo Hygiene
+
+**Autonomous maintenance sweep** — five parallel mechanical checks plus a semantic
+README pass, with safe corrections applied automatically and destructive changes
+requiring explicit approval.
+
+**Features:**
+
+- `.gitignore` pattern validation against actual repo contents
+- `marketplace.json` path and format checks
+- Orphaned plugin cache detection
+- Stale `enabledPlugins` entry cleanup
+- Semantic README freshness scan with inline AI reasoning
+- `--dry-run` flag shows full plan without touching anything
+
+**Install:**
+
+```bash
+/plugin install repo-hygiene@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/repo-hygiene/README.md](plugins/repo-hygiene/README.md)
+
+---
+
 ## Coming Soon
 
 These plugins are in development and not yet available in the marketplace.
@@ -269,7 +401,6 @@ These plugins are in development and not yet available in the marketplace.
 | Plugin | Description |
 |--------|-------------|
 | `performance-profiler` | Latency measurement, flamegraph generation, and regression tracking for MCP servers |
-| `docs-manager` | Documentation lifecycle management — audit, index, and organise project docs |
 
 ---
 
@@ -324,14 +455,18 @@ Claude-Code-Plugins/
 │   └── marketplace.json        # Marketplace catalog
 ├── plugins/                     # All plugin implementations
 │   ├── agent-orchestrator/      # Agent team orchestration
+│   ├── autonomous-refactor/     # Test-driven autonomous refactoring
+│   ├── context-efficiency-toolkit/ # Plugin context footprint audit and reduction
 │   ├── design-assistant/        # Design document lifecycle
-│   ├── docs-manager/            # Documentation management (in development)
+│   ├── docs-manager/            # Documentation lifecycle management
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── linux-sysadmin-mcp/      # Linux sysadmin MCP server (~100 tools)
 │   ├── performance-profiler/    # MCP performance profiling (in development)
+│   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
-│   └── release-pipeline/        # Autonomous release pipeline
+│   ├── release-pipeline/        # Autonomous release pipeline
+│   └── repo-hygiene/            # Autonomous repo maintenance sweep
 ├── scripts/
 │   └── validate-marketplace.sh  # Marketplace validation
 ├── docs/                        # Comprehensive documentation
