@@ -137,7 +137,7 @@ Both hooks match only Bash tool calls and only when the command contains `gh-man
 
 ## Planned Features
 
-- `gh-manager-guard.sh` PreToolUse hook is fully implemented but not yet registered in `hooks.json` — listed in CHANGELOG as Unreleased
+No unreleased items are currently tracked in the changelog.
 
 ## Known Issues
 

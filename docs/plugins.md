@@ -35,7 +35,7 @@ mkdir -p my-plugin/.claude-plugin
 cd my-plugin
 ```
 
-**manifest.json:**
+**plugin.json:**
 
 ```json
 {
@@ -50,7 +50,7 @@ cd my-plugin
 ```
 my-plugin/
 ├── .claude-plugin/
-│   └── manifest.json
+│   └── plugin.json
 ├── skills/
 │   └── example/
 │       └── SKILL.md
@@ -77,9 +77,9 @@ claude --version
 
 ```
 
-## Manifest Schema
+## Plugin Manifest Schema
 
-**Required fields (.claude-plugin/manifest.json):**
+**Required fields (.claude-plugin/plugin.json):**
 
 ```json
 {
@@ -150,14 +150,14 @@ See [hooks.md](./hooks.md) for complete reference.
 
 ### MCP Servers
 
-**Location:** Configured in manifest.json **Purpose:** External tool integrations via
+**Location:** Configured in `.mcp.json` at plugin root **Purpose:** External tool integrations via
 Model Context Protocol
 
 See [mcp.md](./mcp.md) for complete reference.
 
 ### LSP Servers
 
-**Location:** Configured in `.lsp.json` or manifest.json **Purpose:** Language Server
+**Location:** Configured in `.lsp.json` at plugin root **Purpose:** Language Server
 Protocol for code intelligence
 
 ```json
@@ -177,7 +177,7 @@ Protocol for code intelligence
 ```
 plugin-name/
 ├── .claude-plugin/
-│   └── manifest.json          # Required metadata
+│   └── plugin.json            # Required metadata
 ├── commands/                  # Optional command skills
 │   └── command-name.md
 ├── skills/                    # Optional AI skills
@@ -191,7 +191,7 @@ plugin-name/
 └── README.md                  # Documentation — use docs/plugin-readme-template.md
 ```
 
-**Important:** Only `manifest.json` goes inside `.claude-plugin/`. All other directories
+**Important:** Only `plugin.json` goes inside `.claude-plugin/`. All other directories
 are at plugin root.
 
 Every plugin `README.md` should follow `docs/plugin-readme-template.md`. Required sections:
@@ -205,7 +205,7 @@ Decisions, etc.) that don't apply to the specific plugin.
 
 ```bash
 mkdir -p my-plugin/.claude-plugin
-cat > my-plugin/.claude-plugin/manifest.json << 'EOF'
+cat > my-plugin/.claude-plugin/plugin.json << 'EOF'
 {
   "name": "my-plugin",
   "version": "0.1.0",

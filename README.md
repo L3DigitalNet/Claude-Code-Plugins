@@ -59,6 +59,8 @@ installed plugins at the start of each session.
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
+| [Qt Test Suite](#qt-test-suite) | MCP + Commands | `/qt:generate`, `/qt:run`, `/qt:coverage`, `/qt:visual` | AI test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt |
+| [Qt Dev Suite](#qt-dev-suite) | Commands + Skills | `/qt-dev-suite:scaffold`, `/qt-dev-suite:new-component` | Qt GUI development companion — proactive agents, 13 domain skills, and scaffolding commands |
 
 ## Principles
 
@@ -391,6 +393,52 @@ requiring explicit approval.
 
 **Learn more:**
 [plugins/repo-hygiene/README.md](plugins/repo-hygiene/README.md)
+
+---
+
+### Qt Test Suite
+
+**AI-powered Qt testing pipeline** — test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt projects.
+
+**Features:**
+
+- `/qt:generate` — scans codebase and generates unit tests for untested files
+- `/qt:run` — auto-detects Python (pytest) or C++ (CTest) and runs the full suite
+- `/qt:coverage` — gcov/lcov (C++) or coverage.py (Python) → HTML report → gap-targeted test generation loop
+- `/qt:visual` — launches app headlessly via Xvfb, drives UI interactions with the bundled Qt Pilot MCP server
+- Auto-installed virtual environment for Qt Pilot dependencies on first run
+
+**Install:**
+
+```bash
+/plugin install qt-test-suite@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/qt-test-suite/README.md](plugins/qt-test-suite/README.md)
+
+---
+
+### Qt Dev Suite
+
+**Qt GUI application development companion** — proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt projects.
+
+**Features:**
+
+- 4 proactive agents: development specialist, debugger, code reviewer, and UX advisor — activate automatically on context
+- 13 context-aware skills covering signals/slots, layouts, Model/View, threading, QML, styling, and more
+- `/qt-dev-suite:scaffold` — generates a complete PySide6 project with pyproject.toml, src layout, and test config
+- `/qt-dev-suite:new-component` — generates widget, dialog, or window boilerplate with correct `setObjectName()` calls
+- Designed to pair with `qt-test-suite` — scaffolded components are immediately testable by the GUI tester
+
+**Install:**
+
+```bash
+/plugin install qt-dev-suite@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/qt-dev-suite/README.md](plugins/qt-dev-suite/README.md)
 
 ---
 
