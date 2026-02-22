@@ -136,6 +136,18 @@
       },
       "source": "./plugins/repo-hygiene",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
+    },
+    {
+      "name": "autonomous-refactor",
+      "description": "Test-driven autonomous refactoring against project design principles. Snapshots a green test baseline, audits code against README.md principles, applies changes in git worktree isolation, and reverts on test failure — entirely without human input in the loop.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "development",
+      "source": "./plugins/autonomous-refactor",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
     }
   ]
 }

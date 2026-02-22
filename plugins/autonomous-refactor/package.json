@@ -1,0 +1,14 @@
+{
+  "name": "autonomous-refactor",
+  "version": "0.1.0",
+  "description": "Metrics helper for autonomous-refactor plugin",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
