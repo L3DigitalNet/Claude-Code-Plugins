@@ -32,7 +32,7 @@ Manual refactoring is a cognitively expensive loop: understand design principles
 ## Installation
 
 ```
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 /plugin install autonomous-refactor@l3digitalnet-plugins
 ```
 
@@ -156,6 +156,6 @@ No unreleased section exists in the changelog. Gaps identified from the implemen
 
 ## Links
 
-- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Issues: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
+- Issues: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)

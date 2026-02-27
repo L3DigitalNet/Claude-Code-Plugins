@@ -33117,97 +33117,6 @@ function error2(tool, targetHost, durationMs, opts) {
     remediation: opts.remediation ?? []
   };
 }
-function blocked(tool, targetHost, durationMs, opts) {
-  return {
-    status: "blocked",
-    tool,
-    target_host: targetHost,
-    duration_ms: durationMs,
-    command_executed: null,
-    error_code: opts.code,
-    error_category: "lock",
-    message: opts.message,
-    remediation: opts.remediation ?? []
-  };
-}
-function buildCategorizedResponse(tool, targetHost, durationMs, stderr, ctx) {
-  const cat = categorizeError(stderr, ctx);
-  if (cat.code === "RESOURCE_LOCKED") {
-    return blocked(tool, targetHost, durationMs, {
-      code: cat.code,
-      message: stderr.trim() || "Resource is locked by another process",
-      remediation: cat.remediation
-    });
-  }
-  return error2(tool, targetHost, durationMs, { ...cat, message: stderr.trim() });
-}
-var ERROR_PATTERNS = [
-  {
-    test: (s) => s.includes("permission denied") || s.includes("sudo:") || s.includes("Operation not permitted"),
-    code: "PERMISSION_DENIED",
-    category: "privilege",
-    transient: false,
-    remediation: (ctx) => [
-      "Verify passwordless sudo is configured for this user",
-      ctx.distro.family === "debian" ? "Add NOPASSWD rule to /etc/sudoers.d/linux-sysadmin for apt commands" : "Add NOPASSWD rule to /etc/sudoers.d/linux-sysadmin for dnf commands",
-      "Run 'sudo -n true' to test sudo access"
-    ]
-  },
-  {
-    test: (s) => s.includes("Unable to locate package") || s.includes("No match for argument") || s.includes("No packages found"),
-    code: "PACKAGE_NOT_FOUND",
-    category: "not_found",
-    transient: false,
-    remediation: () => ["Check the package name spelling", "Run pkg_search to find available packages"]
-  },
-  {
-    test: (s) => s.includes("not found") && s.includes("Unit") || s.includes("No such file") && s.includes("systemd"),
-    code: "SERVICE_NOT_FOUND",
-    category: "not_found",
-    transient: false,
-    remediation: () => ["Run svc_list to see available services", "Check if the service is installed"]
-  },
-  {
-    test: (s) => s.includes("unmet dependencies") || s.includes("dependency problems") || s.includes("Depsolve Error"),
-    code: "DEPENDENCY_CONFLICT",
-    category: "dependency",
-    transient: false,
-    remediation: () => ["Review the dependency conflict details", "Try running with dry_run to preview"]
-  },
-  {
-    test: (s) => s.includes("No space left on device") || s.includes("Cannot allocate memory"),
-    code: "RESOURCE_EXHAUSTED",
-    category: "resource",
-    transient: false,
-    remediation: () => ["Check disk usage with disk_usage", "Clean up temporary files or old logs"]
-  },
-  {
-    test: (s) => s.includes("Could not get lock") || s.includes("dpkg frontend lock") || s.includes("rpm.lock"),
-    code: "RESOURCE_LOCKED",
-    category: "lock",
-    transient: false,
-    remediation: () => ["Another package manager process may be running", "Wait for it to complete, then retry"]
-  },
-  {
-    test: (s) => s.includes("Could not resolve") || s.includes("Failed to fetch") || s.includes("Connection timed out") || s.includes("Network is unreachable"),
-    code: "NETWORK_ERROR",
-    category: "network",
-    transient: true,
-    remediation: () => ["Check network connectivity with net_test", "Verify DNS resolution with net_dns_show"]
-  }
-];
-function categorizeError(stderr, ctx) {
-  for (const p of ERROR_PATTERNS) {
-    if (p.test(stderr.toLowerCase())) {
-      return { code: p.code, category: p.category, transient: p.transient, remediation: p.remediation(ctx) };
-    }
-  }
-  return { code: "COMMAND_FAILED", category: "state", transient: false, remediation: [
-    "Review the stderr output above for the specific error",
-    "Try with dry_run: true to preview the operation without executing",
-    "Run sysadmin_session_info to verify sudo availability and distro detection"
-  ] };
-}
 async function executeCommand(ctx, toolName, command, duration3) {
   const timeout = ctx.config.errors.command_timeout_ceiling > 0 ? Math.min(DURATION_TIMEOUTS[duration3], ctx.config.errors.command_timeout_ceiling * 1e3) : DURATION_TIMEOUTS[duration3];
   return ctx.executor.execute(command, timeout);
@@ -33320,332 +33229,8 @@ function registerSessionTools(ctx) {
   });
 }
 
-// src/tools/packages/index.ts
-function registerPackageTools(ctx) {
-  registerTool(ctx, {
-    name: "pkg_list_installed",
-    description: "List installed packages, optionally filtered by name.",
-    module: "packages",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({
-      filter: external_exports.string().optional().describe("Filter packages by name substring"),
-      limit: external_exports.number().int().min(1).max(500).optional().default(50)
-    }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const cmd = ctx.commands.packageListInstalled(args.filter);
-    const r = await executeCommand(ctx, "pkg_list_installed", cmd, "quick");
-    if (r.exitCode !== 0 && !r.stdout) return error2("pkg_list_installed", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr });
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const limit = args.limit ?? 50;
-    const packages = lines.slice(0, limit).map((l) => {
-      const [name, version2, arch] = l.split("	");
-      return { name: name?.trim(), version: version2?.trim(), arch: arch?.trim() };
-    });
-    return success("pkg_list_installed", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages }, {
-      total: lines.length,
-      returned: packages.length,
-      truncated: lines.length > limit,
-      filter: args.filter ?? null
-    });
-  });
-  registerTool(ctx, {
-    name: "pkg_search",
-    description: "Search available packages by name/keyword.",
-    module: "packages",
-    riskLevel: "read-only",
-    duration: "normal",
-    inputSchema: external_exports.object({ query: external_exports.string().min(1).describe("Search query"), limit: external_exports.number().int().min(1).max(100).optional().default(20) }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const cmd = ctx.commands.packageSearch(args.query);
-    const r = await executeCommand(ctx, "pkg_search", cmd, "normal");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const limit = args.limit ?? 20;
-    const parsed = lines.slice(0, limit).map((line) => {
-      const dashIdx = line.indexOf(" - ");
-      if (dashIdx !== -1) return { name: line.slice(0, dashIdx).trim(), description: line.slice(dashIdx + 3).trim() };
-      const colonIdx = line.indexOf(" : ");
-      if (colonIdx !== -1) return { name: line.slice(0, colonIdx).trim().split(".")[0], description: line.slice(colonIdx + 3).trim() };
-      return { name: line.trim(), description: "" };
-    });
-    return success("pkg_search", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { results: parsed }, {
-      total: lines.length,
-      returned: Math.min(lines.length, limit),
-      truncated: lines.length > limit
-    });
-  });
-  registerTool(ctx, {
-    name: "pkg_info",
-    description: "Show detailed info for a specific package.",
-    module: "packages",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({ package: external_exports.string().min(1).describe("Package name") }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const cmd = ctx.commands.packageInfo(args.package);
-    const r = await executeCommand(ctx, "pkg_info", cmd, "quick");
-    if (r.exitCode !== 0) return error2("pkg_info", ctx.targetHost, r.durationMs, { ...categorizeError(r.stderr, ctx), message: r.stderr.trim() || `Package '${args.package}' not found` });
-    const parsed = {};
-    let lastKey = "";
-    for (const line of r.stdout.trim().split("\n")) {
-      const m = line.match(/^(\S[^:]+?)\s*:\s+(.*)/);
-      if (m) {
-        lastKey = m[1].trim().toLowerCase().replace(/\s+/g, "_");
-        parsed[lastKey] = m[2].trim();
-      } else if (lastKey && line.startsWith(" ")) {
-        parsed[lastKey] = (parsed[lastKey] ?? "") + " " + line.trim();
-      }
-    }
-    return success("pkg_info", ctx.targetHost, r.durationMs, cmd.argv.join(" "), {
-      name: parsed.package ?? parsed.name ?? args.package,
-      version: parsed.version,
-      description: parsed.description,
-      // apt: Installed-Size field present; apt: Status: install ok installed
-      // dnf/rhel: "Installed packages" section header appears when package is installed
-      installed: "installed-size" in parsed || (parsed.status?.includes("installed") ?? false) || r.stdout.includes("Installed packages"),
-      depends: parsed.depends
-    });
-  });
-  registerTool(ctx, {
-    name: "pkg_install",
-    description: "Install one or more packages. Moderate risk \u2014 requires confirmation.",
-    module: "packages",
-    riskLevel: "moderate",
-    duration: "slow",
-    inputSchema: external_exports.object({
-      packages: external_exports.array(external_exports.string().min(1)).min(1).describe("Package names to install"),
-      confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-      dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-    }),
-    annotations: { readOnlyHint: false, destructiveHint: false }
-  }, async (args) => {
-    const pkgs = args.packages;
-    const cmd = ctx.commands.packageInstall(pkgs, { dryRun: args.dry_run });
-    const gate = ctx.safetyGate.check({
-      toolName: "pkg_install",
-      toolRiskLevel: "moderate",
-      targetHost: ctx.targetHost,
-      command: cmd.argv.join(" "),
-      description: `Install packages: ${pkgs.join(", ")}`,
-      confirmed: args.confirmed,
-      dryRun: args.dry_run
-    });
-    if (gate) return gate;
-    const r = await executeCommand(ctx, "pkg_install", cmd, "slow");
-    if (r.exitCode !== 0 && !(args.dry_run && r.stdout)) return buildCategorizedResponse("pkg_install", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success(
-      "pkg_install",
-      ctx.targetHost,
-      r.durationMs,
-      cmd.argv.join(" "),
-      { packages_installed: pkgs, output: r.stdout.trim() },
-      args.dry_run ? { dry_run: true } : docHint
-    );
-  });
-  registerTool(ctx, {
-    name: "pkg_remove",
-    description: "Remove a package (preserve config files). High risk.",
-    module: "packages",
-    riskLevel: "high",
-    duration: "normal",
-    inputSchema: external_exports.object({
-      packages: external_exports.array(external_exports.string().min(1)).min(1).describe("Package names to remove or purge"),
-      confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-      dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-    }),
-    annotations: { destructiveHint: true }
-  }, async (args) => {
-    const pkgs = args.packages;
-    const cmd = ctx.commands.packageRemove(pkgs, { dryRun: args.dry_run });
-    const gate = ctx.safetyGate.check({
-      toolName: "pkg_remove",
-      toolRiskLevel: "high",
-      targetHost: ctx.targetHost,
-      command: cmd.argv.join(" "),
-      description: `Remove packages: ${pkgs.join(", ")}`,
-      confirmed: args.confirmed,
-      dryRun: args.dry_run
-    });
-    if (gate) return gate;
-    const r = await executeCommand(ctx, "pkg_remove", cmd, "normal");
-    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_remove", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("pkg_remove", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_removed: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : docHint);
-  });
-  registerTool(ctx, {
-    name: "pkg_purge",
-    description: "Remove a package AND its config files. Critical risk.",
-    module: "packages",
-    riskLevel: "critical",
-    duration: "normal",
-    inputSchema: external_exports.object({
-      packages: external_exports.array(external_exports.string().min(1)).min(1).describe("Package names to remove or purge"),
-      confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-      dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-    }),
-    annotations: { destructiveHint: true }
-  }, async (args) => {
-    const pkgs = args.packages;
-    const cmd = ctx.commands.packageRemove(pkgs, { purge: true, dryRun: args.dry_run });
-    const gate = ctx.safetyGate.check({
-      toolName: "pkg_purge",
-      toolRiskLevel: "critical",
-      targetHost: ctx.targetHost,
-      command: cmd.argv.join(" "),
-      description: `Purge packages and configs: ${pkgs.join(", ")}`,
-      confirmed: args.confirmed,
-      dryRun: args.dry_run
-    });
-    if (gate) return gate;
-    const r = await executeCommand(ctx, "pkg_purge", cmd, "normal");
-    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_purge", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("pkg_purge", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { packages_purged: pkgs, output: r.stdout.trim() }, args.dry_run ? { dry_run: true } : docHint);
-  });
-  registerTool(ctx, {
-    name: "pkg_update",
-    description: "Update specific packages or all packages. Moderate risk.",
-    module: "packages",
-    riskLevel: "moderate",
-    duration: "slow",
-    inputSchema: external_exports.object({
-      packages: external_exports.array(external_exports.string()).optional().describe("Specific packages to update. Omit to upgrade ALL installed packages on the system."),
-      confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-      dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-    }),
-    annotations: { destructiveHint: false }
-  }, async (args) => {
-    const pkgs = args.packages ?? void 0;
-    const cmd = ctx.commands.packageUpdate(pkgs, { dryRun: args.dry_run });
-    const gate = ctx.safetyGate.check({
-      toolName: "pkg_update",
-      toolRiskLevel: "moderate",
-      targetHost: ctx.targetHost,
-      command: cmd.argv.join(" "),
-      description: pkgs?.length ? `Update packages: ${pkgs.join(", ")}` : "Update all packages",
-      confirmed: args.confirmed,
-      dryRun: args.dry_run
-    });
-    if (gate) return gate;
-    const r = await executeCommand(ctx, "pkg_update", cmd, "slow");
-    if (r.exitCode !== 0 && !(args.dry_run && r.stdout)) return buildCategorizedResponse("pkg_update", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    const stdout = r.stdout.trim();
-    const upgradedMatch = stdout.match(/(\d+)\s+upgraded/i) ?? stdout.match(/Upgraded:\s+(\d+)/i) ?? stdout.match(/Nothing to upgrade/i);
-    const packages_updated_count = upgradedMatch ? upgradedMatch[0].match(/\d+/) ? parseInt(upgradedMatch[0].match(/\d+/)[0]) : 0 : void 0;
-    const summary = packages_updated_count !== void 0 ? packages_updated_count === 0 ? "No packages updated." : `${packages_updated_count} package(s) updated.` : "Update completed \u2014 check raw output for details.";
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "packages_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("pkg_update", ctx.targetHost, r.durationMs, cmd.argv.join(" "), {
-      ...packages_updated_count !== void 0 ? { packages_updated_count } : {},
-      raw_output: stdout
-    }, args.dry_run ? { dry_run: true } : { summary, ...docHint });
-  });
-  registerTool(ctx, {
-    name: "pkg_check_updates",
-    description: "List available updates without applying them.",
-    module: "packages",
-    riskLevel: "read-only",
-    duration: "normal",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const cmd = ctx.commands.packageCheckUpdates();
-    const r = await executeCommand(ctx, "pkg_check_updates", cmd, "normal");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    return success("pkg_check_updates", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { updates: lines, count: lines.length });
-  });
-  registerTool(ctx, {
-    name: "pkg_history",
-    description: "Show package transaction history.",
-    module: "packages",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({ limit: external_exports.number().int().min(1).max(200).optional().default(50) }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const cmd = ctx.commands.packageHistory();
-    const r = await executeCommand(ctx, "pkg_history", cmd, "quick");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const limit = args.limit ?? 50;
-    return success("pkg_history", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { history: lines.slice(0, limit) }, {
-      total: lines.length,
-      returned: Math.min(lines.length, limit),
-      truncated: lines.length > limit
-    });
-  });
-  registerTool(ctx, {
-    name: "pkg_rollback",
-    description: "Roll back to a previous package version. High risk.",
-    module: "packages",
-    riskLevel: "high",
-    duration: "slow",
-    inputSchema: external_exports.object({
-      package: external_exports.string().min(1).describe("Package name to roll back"),
-      version: external_exports.string().optional().describe("Target version (omit for previous)"),
-      confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-      dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-    }),
-    annotations: { destructiveHint: true }
-  }, async (args) => {
-    const pkg = args.package;
-    const ver = args.version;
-    const cmdStr = ctx.distro.family === "debian" ? ver ? `sudo apt install -y ${pkg}=${ver}` : `sudo apt install -y ${pkg}-` : ver ? `sudo dnf downgrade -y ${pkg}-${ver}` : `sudo dnf history undo -y last`;
-    const gate = ctx.safetyGate.check({
-      toolName: "pkg_rollback",
-      toolRiskLevel: "high",
-      targetHost: ctx.targetHost,
-      command: cmdStr,
-      description: `Rollback ${pkg}${ver ? ` to ${ver}` : " to previous version"}`,
-      confirmed: args.confirmed,
-      dryRun: args.dry_run
-    });
-    if (gate) return gate;
-    if (args.dry_run) {
-      return success("pkg_rollback", ctx.targetHost, 0, null, { preview_command: cmdStr }, { dry_run: true });
-    }
-    const r = await ctx.executor.execute({ argv: ["bash", "-c", cmdStr] }, 6e4);
-    if (r.exitCode !== 0) return buildCategorizedResponse("pkg_rollback", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    return success("pkg_rollback", ctx.targetHost, r.durationMs, cmdStr, { output: r.stdout.trim() });
-  });
-}
-
 // src/tools/services/index.ts
 function registerServiceTools(ctx) {
-  registerTool(ctx, {
-    name: "svc_list",
-    description: "List all services and their states. Supports filtering by status.",
-    module: "services",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({
-      filter: external_exports.string().optional().describe("Filter by unit name or 'failed'/'running'/'inactive'"),
-      limit: external_exports.number().int().min(1).max(500).optional().default(50)
-    }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const filter = args.filter;
-    let cmd = "systemctl list-units --type=service --no-pager --no-legend";
-    if (filter === "failed") cmd = "systemctl list-units --type=service --state=failed --no-pager --no-legend";
-    else if (filter === "running") cmd = "systemctl list-units --type=service --state=running --no-pager --no-legend";
-    else if (filter === "inactive") cmd = "systemctl list-units --type=service --state=inactive --no-pager --no-legend";
-    else if (filter) cmd += ` | grep -i '${filter}'`;
-    const r = await executeBash(ctx, cmd, "quick");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const limit = args.limit ?? 50;
-    const services = lines.slice(0, limit).map((l) => {
-      const parts = l.trim().split(/\s+/);
-      return { unit: parts[0], load: parts[1], active: parts[2], sub: parts[3], description: parts.slice(4).join(" ") };
-    });
-    return success("svc_list", ctx.targetHost, r.durationMs, cmd, { services }, {
-      total: lines.length,
-      returned: services.length,
-      truncated: lines.length > limit,
-      filter: filter ?? null
-    });
-  });
   registerTool(ctx, {
     name: "svc_status",
     description: "Detailed status of a specific service. Enriched with knowledge profile health checks when available.",
@@ -33690,68 +33275,6 @@ function registerServiceTools(ctx) {
     }
     return success("svc_status", ctx.targetHost, r.durationMs, cmd.argv.join(" "), data);
   });
-  for (const action of ["start", "stop", "restart"]) {
-    registerTool(ctx, {
-      name: `svc_${action}`,
-      description: `${action.charAt(0).toUpperCase() + action.slice(1)} a service. Moderate risk (may escalate via knowledge profiles).`,
-      module: "services",
-      riskLevel: "moderate",
-      duration: "quick",
-      inputSchema: external_exports.object({
-        service: external_exports.string().min(1).describe("Service or unit name (e.g. 'nginx', 'nginx.service')"),
-        confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-        dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-      }),
-      annotations: { destructiveHint: action === "stop" }
-    }, async (args) => {
-      const svc = args.service;
-      const cmd = ctx.commands.serviceControl(svc, action);
-      const gate = ctx.safetyGate.check({
-        toolName: `svc_${action}`,
-        toolRiskLevel: "moderate",
-        targetHost: ctx.targetHost,
-        command: cmd.argv.join(" "),
-        description: `${action} service ${svc}`,
-        confirmed: args.confirmed,
-        dryRun: args.dry_run,
-        serviceName: svc
-      });
-      if (gate) return gate;
-      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-      const r = await executeCommand(ctx, `svc_${action}`, cmd, "quick");
-      if (r.exitCode !== 0) return buildCategorizedResponse(`svc_${action}`, ctx.targetHost, r.durationMs, r.stderr, ctx);
-      const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "service_changed", service: svc, suggested_actions: [`doc_generate_service service=${svc}`, `doc_backup_config service=${svc}`] } } : void 0;
-      return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action, result: "ok" }, docHint);
-    });
-  }
-  for (const action of ["enable", "disable"]) {
-    registerTool(ctx, {
-      name: `svc_${action}`,
-      description: `${action.charAt(0).toUpperCase() + action.slice(1)} a service at boot. Moderate risk.`,
-      module: "services",
-      riskLevel: "moderate",
-      duration: "quick",
-      inputSchema: external_exports.object({ service: external_exports.string().min(1).describe("Service or unit name (e.g. 'nginx', 'nginx.service')"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }),
-      annotations: { destructiveHint: false }
-    }, async (args) => {
-      const svc = args.service;
-      const cmd = ctx.commands.serviceControl(svc, action);
-      const gate = ctx.safetyGate.check({
-        toolName: `svc_${action}`,
-        toolRiskLevel: "moderate",
-        targetHost: ctx.targetHost,
-        command: cmd.argv.join(" "),
-        description: `${action} service ${svc} at boot`,
-        confirmed: args.confirmed,
-        dryRun: args.dry_run
-      });
-      if (gate) return gate;
-      if (args.dry_run) return success(`svc_${action}`, ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-      const r = await executeCommand(ctx, `svc_${action}`, cmd, "quick");
-      if (r.exitCode !== 0) return buildCategorizedResponse(`svc_${action}`, ctx.targetHost, r.durationMs, r.stderr, ctx);
-      return success(`svc_${action}`, ctx.targetHost, r.durationMs, cmd.argv.join(" "), { service: svc, action, enabled_at_boot: action === "enable" });
-    });
-  }
   registerTool(ctx, {
     name: "svc_logs",
     description: "Retrieve recent logs for a service. Consults knowledge profile for all log sources.",
@@ -33792,358 +33315,327 @@ function registerServiceTools(ctx) {
     return success("svc_logs", ctx.targetHost, r.durationMs, cmd, data);
   });
   registerTool(ctx, {
-    name: "timer_list",
-    description: "List systemd timers and their schedules.",
+    name: "svc_config_validate",
+    description: "Run config validation commands from knowledge profiles. Validates one service or sweeps all active profiles that declare a validate_command.",
     module: "services",
     riskLevel: "read-only",
     duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const r = await executeBash(ctx, "systemctl list-timers --all --no-pager --no-legend", "quick");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const timers = lines.map((l) => {
-      const parts = l.trim().split(/\s{2,}/);
-      return { next: parts[0], left: parts[1], last: parts[2], passed: parts[3], unit: parts[4], activates: parts[5] };
-    });
-    return success("timer_list", ctx.targetHost, r.durationMs, "systemctl list-timers", { timers, count: timers.length });
-  });
-}
-
-// src/tools/performance/index.ts
-function registerPerformanceTools(ctx) {
-  registerTool(ctx, {
-    name: "perf_overview",
-    description: "System overview: CPU, memory, disk I/O, load averages.",
-    module: "performance",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const [loadR, memR, diskR] = await Promise.all([
-      executeBash(ctx, "cat /proc/loadavg", "instant"),
-      executeBash(ctx, "free -m", "instant"),
-      executeBash(ctx, "df -h --output=source,size,used,avail,pcent,target -x tmpfs -x devtmpfs 2>/dev/null || df -h", "instant")
-    ]);
-    const loadParts = loadR.stdout.trim().split(/\s+/);
-    const memLines = memR.stdout.trim().split("\n");
-    const memParsed = {};
-    for (const line of memLines) {
-      const parts = line.trim().split(/\s+/);
-      if (parts[0]?.toLowerCase().startsWith("mem:")) {
-        memParsed.ram = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0"), free_mb: parseInt(parts[3] ?? "0"), shared_mb: parseInt(parts[4] ?? "0"), bufcache_mb: parseInt(parts[5] ?? "0"), available_mb: parseInt(parts[6] ?? "0") };
-      } else if (parts[0]?.toLowerCase().startsWith("swap:")) {
-        memParsed.swap = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0"), free_mb: parseInt(parts[3] ?? "0") };
-      }
-    }
-    const diskLines = diskR.stdout.trim().split("\n").slice(1).filter(Boolean);
-    const diskParsed = diskLines.map((l) => {
-      const p = l.trim().split(/\s+/);
-      return { filesystem: p[0], size: p[1], used: p[2], avail: p[3], use_pct: p[4], mount: p[5] };
-    }).filter((d) => d.mount);
-    return success("perf_overview", ctx.targetHost, loadR.durationMs, "multiple (loadavg, free, df)", {
-      load_average: { "1m": parseFloat(loadParts[0] ?? "0"), "5m": parseFloat(loadParts[1] ?? "0"), "15m": parseFloat(loadParts[2] ?? "0") },
-      memory: Object.keys(memParsed).length > 0 ? memParsed : { raw: memR.stdout.trim() },
-      disk: diskParsed.length > 0 ? diskParsed : { raw: diskR.stdout.trim() }
-    });
-  });
-  registerTool(ctx, {
-    name: "perf_top_processes",
-    description: "Top processes by CPU or memory usage.",
-    module: "performance",
-    riskLevel: "read-only",
-    duration: "quick",
     inputSchema: external_exports.object({
-      sort_by: external_exports.enum(["cpu", "memory"]).optional().default("cpu"),
-      limit: external_exports.number().int().min(1).max(50).optional().default(10)
+      service: external_exports.string().min(1).optional().describe("Validate one service; omit to validate all active profiles")
     }),
     annotations: { readOnlyHint: true }
   }, async (args) => {
-    const sort = args.sort_by === "memory" ? "--sort=-rss" : "--sort=-pcpu";
-    const limit = args.limit ?? 10;
-    const r = await executeBash(ctx, `ps aux ${sort} | head -n ${limit + 1}`, "quick");
-    const lines = r.stdout.trim().split("\n");
-    const header = lines[0];
-    const processes = lines.slice(1).map((l) => {
-      const p = l.trim().split(/\s+/);
-      return { user: p[0], pid: p[1], cpu: p[2], mem: p[3], vsz: p[4], rss: p[5], command: p.slice(10).join(" ") };
-    });
-    return success("perf_top_processes", ctx.targetHost, r.durationMs, `ps aux ${sort}`, { header, processes });
-  });
-  registerTool(ctx, {
-    name: "perf_memory",
-    description: "Detailed memory breakdown: RAM, swap, buffers/cache, top memory consumers.",
-    module: "performance",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({ top_consumers: external_exports.number().int().min(1).max(20).optional().default(10) }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const n = args.top_consumers ?? 10;
-    const [memR, topR] = await Promise.all([
-      executeBash(ctx, "free -m && echo '---' && cat /proc/meminfo | head -20", "instant"),
-      executeBash(ctx, `ps aux --sort=-rss | head -n ${n + 1}`, "quick")
-    ]);
-    const memSection = memR.stdout.trim().split("---")[0] ?? "";
-    const memParsed = {};
-    for (const line of memSection.trim().split("\n")) {
-      const parts = line.trim().split(/\s+/);
-      if (parts[0]?.toLowerCase().startsWith("mem:")) {
-        memParsed.ram = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0"), free_mb: parseInt(parts[3] ?? "0"), available_mb: parseInt(parts[6] ?? "0") };
-      } else if (parts[0]?.toLowerCase().startsWith("swap:")) {
-        memParsed.swap = { total_mb: parseInt(parts[1] ?? "0"), used_mb: parseInt(parts[2] ?? "0") };
+    const svc = args.service;
+    let targets;
+    if (svc) {
+      const profile = ctx.knowledgeBase.getProfile(svc);
+      if (!profile) {
+        return error2("svc_config_validate", ctx.targetHost, null, {
+          code: "PROFILE_NOT_FOUND",
+          category: "not_found",
+          message: `No knowledge profile found for "${svc}"`,
+          remediation: ["Run sysadmin_session_info to see available profiles", "Check the service name matches a profile id"]
+        });
       }
+      targets = [{ id: profile.id, name: profile.name, validate_command: profile.config.validate_command }];
+    } else {
+      targets = ctx.knowledgeBase.getActiveProfiles().map((rp) => ({
+        id: rp.profile.id,
+        name: rp.profile.name,
+        validate_command: rp.profile.config.validate_command
+      }));
     }
-    const topLines = topR.stdout.trim().split("\n");
-    const topConsumers = topLines.slice(1).map((l) => {
-      const p = l.trim().split(/\s+/);
-      return { user: p[0], pid: p[1], mem_pct: p[3], rss_kb: parseInt(p[5] ?? "0"), command: p.slice(10).join(" ") };
-    });
-    return success("perf_memory", ctx.targetHost, memR.durationMs, "free -m + /proc/meminfo + ps", {
-      memory: Object.keys(memParsed).length > 0 ? memParsed : { raw: memSection.trim() },
-      meminfo_raw: memR.stdout.trim().split("---")[1]?.trim(),
-      top_consumers: topConsumers.length > 0 ? topConsumers : { raw: topR.stdout.trim() }
-    });
+    const withValidator = targets.filter((t) => t.validate_command);
+    const withoutValidator = targets.filter((t) => !t.validate_command);
+    const results = [];
+    let maxDuration = 0;
+    await Promise.all(withValidator.map(async (t) => {
+      const cmd = `sudo -n ${t.validate_command} 2>&1 || ${t.validate_command} 2>&1`;
+      const r = await executeBash(ctx, cmd, "quick");
+      maxDuration = Math.max(maxDuration, r.durationMs);
+      results.push({
+        service: t.id,
+        command: t.validate_command,
+        passed: r.exitCode === 0,
+        output: (r.stdout + "\n" + r.stderr).trim().slice(0, 500)
+      });
+    }));
+    const failNames = results.filter((r) => !r.passed).map((r) => r.service);
+    const severity = failNames.length > 0 ? "warning" : "info";
+    const summaryParts = [`${results.length - failNames.length} of ${results.length} configs valid`];
+    if (failNames.length > 0) summaryParts.push(`${failNames.length} failed (${failNames.join(", ")})`);
+    return success("svc_config_validate", ctx.targetHost, maxDuration, "multiple", {
+      results,
+      ...withoutValidator.length > 0 ? { no_validator: withoutValidator.map((t) => t.id) } : {}
+    }, { summary: summaryParts.join(". ") + ".", severity });
   });
   registerTool(ctx, {
-    name: "perf_disk_io",
-    description: "Disk I/O statistics per device.",
-    module: "performance",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const r = await executeBash(ctx, "cat /proc/diskstats", "quick");
-    const devices = r.stdout.trim().split("\n").filter(Boolean).map((line) => {
-      const p = line.trim().split(/\s+/);
-      const d = {
-        name: p[2],
-        reads_completed: Number(p[3]),
-        reads_merged: Number(p[4]),
-        sectors_read: Number(p[5]),
-        ms_reading: Number(p[6]),
-        writes_completed: Number(p[7]),
-        writes_merged: Number(p[8]),
-        sectors_written: Number(p[9]),
-        ms_writing: Number(p[10]),
-        ios_in_progress: Number(p[11]),
-        ms_doing_io: Number(p[12]),
-        ms_weighted_io: Number(p[13])
-      };
-      if (p.length >= 18) {
-        d.discards_completed = Number(p[14]);
-        d.discards_merged = Number(p[15]);
-        d.sectors_discarded = Number(p[16]);
-        d.ms_discarding = Number(p[17]);
-      }
-      return d;
-    });
-    return success("perf_disk_io", ctx.targetHost, r.durationMs, "cat /proc/diskstats", { devices, count: devices.length });
-  });
-  registerTool(ctx, {
-    name: "perf_network_io",
-    description: "Network throughput statistics per interface.",
-    module: "performance",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const r = await executeBash(ctx, "cat /proc/net/dev", "instant");
-    const netLines = r.stdout.trim().split("\n").slice(2).filter(Boolean);
-    const interfaces = netLines.map((line) => {
-      const [ifacePart, statsPart] = line.split(":");
-      const iface = ifacePart?.trim();
-      const stats = statsPart?.trim().split(/\s+/) ?? [];
-      return {
-        interface: iface,
-        rx_bytes: parseInt(stats[0] ?? "0"),
-        rx_packets: parseInt(stats[1] ?? "0"),
-        rx_errors: parseInt(stats[2] ?? "0"),
-        tx_bytes: parseInt(stats[8] ?? "0"),
-        tx_packets: parseInt(stats[9] ?? "0"),
-        tx_errors: parseInt(stats[10] ?? "0")
-      };
-    }).filter((i) => i.interface);
-    return success("perf_network_io", ctx.targetHost, r.durationMs, "cat /proc/net/dev", {
-      interfaces,
-      note: "rx_bytes/tx_bytes are cumulative since boot \u2014 call twice and diff for throughput rate"
-    });
-  });
-  registerTool(ctx, {
-    name: "perf_uptime",
-    description: "Uptime, boot time, and load averages.",
-    module: "performance",
+    name: "svc_dependency_impact",
+    description: "Analyze cascade impact of stopping or restarting a service. Walks the dependency graph across active knowledge profiles to show direct and transitive dependents.",
+    module: "services",
     riskLevel: "read-only",
     duration: "instant",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const r = await executeBash(ctx, "uptime && echo '---' && who -b", "instant");
-    return success("perf_uptime", ctx.targetHost, r.durationMs, "uptime", { output: r.stdout.trim() });
-  });
-  registerTool(ctx, {
-    name: "perf_bottleneck",
-    description: "Heuristic analysis of likely system bottleneck (CPU/memory/disk/network).",
-    module: "performance",
-    riskLevel: "read-only",
-    duration: "normal",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const [loadR, memR, ioR, topR] = await Promise.all([
-      executeBash(ctx, "cat /proc/loadavg", "instant"),
-      executeBash(ctx, "free -m | grep Mem", "instant"),
-      executeBash(ctx, "cat /proc/stat | head -1", "instant"),
-      executeBash(ctx, "ps aux --sort=-pcpu | head -6", "quick")
-    ]);
-    const loadParts = loadR.stdout.trim().split(/\s+/);
-    const load1m = parseFloat(loadParts[0] ?? "0");
-    const memParts = memR.stdout.trim().split(/\s+/);
-    const memTotal = parseInt(memParts[1] ?? "1");
-    const memAvail = parseInt(memParts[6] ?? memParts[3] ?? "0");
-    const memUsedPct = (memTotal - memAvail) / memTotal * 100;
-    let bottleneck = "none";
-    let severity = "info";
-    let summary = "System appears healthy.";
-    if (load1m > 4) {
-      bottleneck = "cpu";
-      severity = load1m > 8 ? "high" : "warning";
-      summary = `High CPU load (${load1m}). Check top processes.`;
-    }
-    if (memUsedPct > 90) {
-      bottleneck = "memory";
-      severity = memUsedPct > 95 ? "critical" : "high";
-      summary = `Memory pressure at ${memUsedPct.toFixed(1)}%.`;
-    }
-    return success("perf_bottleneck", ctx.targetHost, loadR.durationMs, "multiple (loadavg, free, /proc/stat)", {
-      load_1m: load1m,
-      memory_used_pct: Math.round(memUsedPct),
-      memory_available_mb: memAvail,
-      top_processes: topR.stdout.trim(),
-      bottleneck
-    }, { summary, severity });
-  });
-}
-
-// src/tools/logs/index.ts
-function registerLogTools(ctx) {
-  registerTool(ctx, {
-    name: "log_query",
-    description: "Query system logs via journalctl with time range and unit filters.",
-    module: "logs",
-    riskLevel: "read-only",
-    duration: "normal",
     inputSchema: external_exports.object({
-      unit: external_exports.string().optional().describe("Systemd unit name"),
-      since: external_exports.string().optional().describe("Start time e.g. '1 hour ago'"),
-      until: external_exports.string().optional().describe("End time"),
-      priority: external_exports.enum(["emerg", "alert", "crit", "err", "warning", "notice", "info", "debug"]).optional(),
-      limit: external_exports.number().int().min(1).max(1e3).optional().default(100),
-      grep: external_exports.string().optional().describe("Filter log lines by pattern")
+      service: external_exports.string().min(1).describe("Service to analyze"),
+      action: external_exports.enum(["stop", "restart"]).optional().default("restart").describe("Intended action (default: restart)")
     }),
     annotations: { readOnlyHint: true }
   }, async (args) => {
-    let cmd = "journalctl --no-pager";
-    if (args.unit) cmd += ` -u ${args.unit}`;
-    if (args.since) cmd += ` --since '${args.since}'`;
-    if (args.until) cmd += ` --until '${args.until}'`;
-    if (args.priority) cmd += ` -p ${args.priority}`;
-    cmd += ` -n ${args.limit ?? 100}`;
-    if (args.grep) cmd += ` -g '${args.grep}'`;
-    const r = await executeBash(ctx, cmd, "normal");
-    const rawLines = r.stdout.trim().split("\n").filter(Boolean);
-    const entries = [];
-    let unparsed = 0;
-    for (const line of rawLines) {
-      const m = line.match(/^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+\S+\s+([^\[]+)\[(\d+)\]:\s+(.*)$/);
-      if (m) {
-        entries.push({ timestamp: m[1].trim(), unit: m[2].trim(), pid: parseInt(m[3]), message: m[4] });
-      } else {
-        unparsed++;
+    const svc = args.service;
+    const action = args.action ?? "restart";
+    const profile = ctx.knowledgeBase.getProfile(svc);
+    if (!profile) {
+      return error2("svc_dependency_impact", ctx.targetHost, null, {
+        code: "PROFILE_NOT_FOUND",
+        category: "not_found",
+        message: `No knowledge profile found for "${svc}"`,
+        remediation: ["Run sysadmin_session_info to see available profiles"]
+      });
+    }
+    const activeProfiles = ctx.knowledgeBase.getActiveProfiles();
+    const targetRoles = (profile.dependencies?.required_by ?? []).map((rb) => rb.role);
+    const directDependents = [];
+    for (const rp of activeProfiles) {
+      if (rp.profile.id === svc) continue;
+      for (const req of rp.profile.dependencies?.requires ?? []) {
+        if (targetRoles.includes(req.role) || rp.rolesResolved[req.role] === svc) {
+          if (!directDependents.some((d) => d.service === rp.profile.id && d.role === req.role)) {
+            directDependents.push({
+              service: rp.profile.id,
+              name: rp.profile.name,
+              role: req.role,
+              impact: req.impact_if_down ?? `Depends on ${svc} for ${req.role}`
+            });
+          }
+        }
       }
     }
-    return success("log_query", ctx.targetHost, r.durationMs, cmd, {
-      entries,
-      count: entries.length,
-      // Always emit unparsed_count so consumers can distinguish "all parsed" from "field absent".
-      unparsed_count: unparsed
+    const transitiveDependents = [];
+    const visited = /* @__PURE__ */ new Set([svc]);
+    function walkDependents(serviceId, depth, path) {
+      if (depth >= 3) return;
+      visited.add(serviceId);
+      const p = ctx.knowledgeBase.getProfile(serviceId);
+      if (!p) return;
+      const roles = (p.dependencies?.required_by ?? []).map((rb) => rb.role);
+      for (const rp of activeProfiles) {
+        if (visited.has(rp.profile.id)) continue;
+        for (const req of rp.profile.dependencies?.requires ?? []) {
+          if (roles.includes(req.role) || rp.rolesResolved[req.role] === serviceId) {
+            const newPath = [...path, rp.profile.id];
+            transitiveDependents.push({ service: rp.profile.id, name: rp.profile.name, path: newPath });
+            walkDependents(rp.profile.id, depth + 1, newPath);
+          }
+        }
+      }
+    }
+    for (const dd of directDependents) walkDependents(dd.service, 1, [svc, dd.service]);
+    const warnings = (profile.interactions ?? []).filter((i) => i.warning && (i.trigger.includes(action) || i.trigger.includes("restart") || i.trigger.includes("config"))).map((i) => i.warning);
+    const totalDeps = directDependents.length + transitiveDependents.length;
+    const severity = totalDeps === 0 ? "info" : totalDeps <= 2 ? "warning" : "high";
+    const actionDesc = action === "stop" ? "Stopping" : "Restarting";
+    return success("svc_dependency_impact", ctx.targetHost, null, null, {
+      service: svc,
+      action,
+      roles_provided: targetRoles,
+      direct_dependents: directDependents,
+      ...transitiveDependents.length > 0 ? { transitive_dependents: transitiveDependents } : {},
+      ...warnings.length > 0 ? { warnings } : {}
+    }, {
+      summary: `${actionDesc} ${svc}: ${directDependents.length} direct dependent${directDependents.length !== 1 ? "s" : ""}${transitiveDependents.length > 0 ? `, ${transitiveDependents.length} transitive` : ""}.`,
+      severity
     });
   });
   registerTool(ctx, {
-    name: "log_search",
-    description: "Search across log files and journal for a pattern.",
-    module: "logs",
+    name: "svc_port_audit",
+    description: "Three-way audit of profile-declared ports vs listening ports vs firewall rules. Reports expected ports not listening, listening ports missing firewall rules, and unknown firewall allows.",
+    module: "services",
     riskLevel: "read-only",
     duration: "normal",
-    inputSchema: external_exports.object({
-      pattern: external_exports.string().min(1).describe("Search pattern (grep-compatible)"),
-      paths: external_exports.array(external_exports.string()).optional().describe("Specific log file paths to search"),
-      since: external_exports.string().optional(),
-      limit: external_exports.number().int().min(1).max(500).optional().default(100)
-    }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const limit = args.limit ?? 100;
-    const results = {};
-    let jcmd = `journalctl --no-pager -g '${args.pattern}' -n ${limit}`;
-    if (args.since) jcmd += ` --since '${args.since}'`;
-    const jr = await executeBash(ctx, jcmd, "normal");
-    results.journal = jr.stdout.trim().split("\n").filter(Boolean).slice(0, limit);
-    const paths = args.paths ?? ["/var/log/syslog", "/var/log/messages"];
-    const fileResults = [];
-    for (const p of paths) {
-      const fr = await executeBash(ctx, `grep -i '${args.pattern}' '${p}' 2>/dev/null | tail -n ${limit}`, "quick");
-      if (fr.stdout.trim()) fileResults.push({ path: p, matches: fr.stdout.trim().split("\n").slice(0, limit) });
-    }
-    results.files = fileResults;
-    return success("log_search", ctx.targetHost, jr.durationMs, `journalctl -g + grep`, results);
-  });
-  registerTool(ctx, {
-    name: "log_summary",
-    description: "Summarize recent log activity: error counts by unit, warning spikes.",
-    module: "logs",
-    riskLevel: "read-only",
-    duration: "normal",
-    inputSchema: external_exports.object({ since: external_exports.string().optional().default("1 hour ago") }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const since = args.since ?? "1 hour ago";
-    const r = await executeBash(ctx, `journalctl --no-pager --since '${since}' -p err --output=json 2>/dev/null | wc -l`, "normal");
-    const errCount = parseInt(r.stdout.trim()) || 0;
-    const r2 = await executeBash(ctx, `journalctl --no-pager --since '${since}' -p warning --output=json 2>/dev/null | wc -l`, "normal");
-    const warnCount = parseInt(r2.stdout.trim()) || 0;
-    const r3 = await executeBash(ctx, `journalctl --no-pager --since '${since}' -p err -o short | awk '{print $5}' | sort | uniq -c | sort -rn | head -10`, "normal");
-    const topUnits = r3.stdout.trim();
-    const severity = errCount > 50 ? "high" : errCount > 10 ? "warning" : "info";
-    return success("log_summary", ctx.targetHost, r.durationMs, "journalctl analysis", {
-      error_count: errCount,
-      warning_count: warnCount,
-      top_error_units: topUnits,
-      period: since
-    }, { summary: `${errCount} errors and ${warnCount} warnings in the last period. ${topUnits ? "Top units with errors shown." : "No unit-level breakdown available."}`, severity });
-  });
-  registerTool(ctx, {
-    name: "log_disk_usage",
-    description: "Show disk space used by logs (journal + file logs).",
-    module: "logs",
-    riskLevel: "read-only",
-    duration: "quick",
     inputSchema: external_exports.object({}),
     annotations: { readOnlyHint: true }
   }, async () => {
-    const [jdR, duR] = await Promise.all([
-      executeBash(ctx, "journalctl --disk-usage 2>/dev/null", "quick"),
-      executeBash(ctx, "du -sh /var/log/ 2>/dev/null", "quick")
+    const fwBackend = ctx.distro.firewall_backend;
+    const fwCmd = fwBackend === "ufw" ? "sudo -n ufw status 2>/dev/null || echo 'FW_UNAVAILABLE'" : fwBackend === "firewalld" ? "sudo -n firewall-cmd --list-ports --list-services 2>/dev/null || echo 'FW_UNAVAILABLE'" : "echo 'FW_UNAVAILABLE'";
+    const [ssR, fwR] = await Promise.all([
+      executeBash(ctx, "sudo -n ss -tlnup 2>/dev/null || ss -tlnup 2>/dev/null || ss -tlun", "quick"),
+      executeBash(ctx, fwCmd, "quick")
     ]);
-    const jdStr = jdR.stdout.trim();
-    const journalSizeMatch = jdStr.match(/take up ([\d.]+\s*\S+) in/);
-    const journalUsage = journalSizeMatch ? journalSizeMatch[1].replace(/\s+/, "") : jdStr;
-    return success("log_disk_usage", ctx.targetHost, jdR.durationMs, "journalctl --disk-usage + du", {
-      journal_usage: journalUsage,
-      varlog_usage: duR.stdout.trim().split(/\s+/)[0] ?? null
+    const listeningPorts = /* @__PURE__ */ new Set();
+    for (const line of ssR.stdout.trim().split("\n")) {
+      const parts = line.trim().split(/\s+/);
+      if (parts[0] !== "tcp" && parts[0] !== "udp") continue;
+      const localPart = parts[4] ?? "";
+      const lastColon = localPart.lastIndexOf(":");
+      if (lastColon === -1) continue;
+      const port = parseInt(localPart.slice(lastColon + 1));
+      if (!isNaN(port)) listeningPorts.add(port);
+    }
+    const firewallAllowed = /* @__PURE__ */ new Set();
+    const fwAvailable = !fwR.stdout.includes("FW_UNAVAILABLE");
+    if (fwAvailable && fwBackend === "ufw") {
+      for (const line of fwR.stdout.split("\n")) {
+        const m = line.match(/^(\S+)\s+ALLOW/);
+        if (!m) continue;
+        const portSpec = m[1];
+        const slashIdx = portSpec.indexOf("/");
+        const proto = slashIdx !== -1 ? portSpec.slice(slashIdx + 1) : "any";
+        const portsPart = slashIdx !== -1 ? portSpec.slice(0, slashIdx) : portSpec;
+        for (const p of portsPart.split(",")) {
+          const pNum = parseInt(p.trim());
+          if (isNaN(pNum)) continue;
+          if (proto === "any" || proto === "tcp") firewallAllowed.add(`${pNum}/tcp`);
+          if (proto === "any" || proto === "udp") firewallAllowed.add(`${pNum}/udp`);
+        }
+      }
+    } else if (fwAvailable && fwBackend === "firewalld") {
+      for (const token of fwR.stdout.trim().split(/\s+/)) {
+        if (token.includes("/")) firewallAllowed.add(token);
+      }
+    }
+    const declaredPorts = [];
+    for (const rp of ctx.knowledgeBase.getActiveProfiles()) {
+      for (const p of rp.profile.ports ?? []) {
+        declaredPorts.push({ service: rp.profile.id, port: p.port, protocol: p.protocol, scope: p.scope, description: p.description });
+      }
+    }
+    const expectedNotListening = [];
+    const listeningNoFirewall = [];
+    const healthy = [];
+    for (const dp of declaredPorts) {
+      if (!listeningPorts.has(dp.port)) {
+        expectedNotListening.push({ service: dp.service, port: dp.port, protocol: dp.protocol });
+        continue;
+      }
+      if (dp.scope === "network" && fwAvailable) {
+        const protos = dp.protocol.includes("/") ? dp.protocol.split("/") : [dp.protocol];
+        const hasFwRule = protos.some((proto) => firewallAllowed.has(`${dp.port}/${proto}`));
+        if (!hasFwRule) {
+          listeningNoFirewall.push({ service: dp.service, port: dp.port, protocol: dp.protocol });
+          continue;
+        }
+      }
+      healthy.push({ service: dp.service, port: dp.port, protocol: dp.protocol, scope: dp.scope });
+    }
+    const profilePortSet = new Set(declaredPorts.map((dp) => dp.port));
+    const firewallNoProfile = [];
+    for (const rule of firewallAllowed) {
+      const port = parseInt(rule.split("/")[0]);
+      if (!profilePortSet.has(port)) firewallNoProfile.push(rule);
+    }
+    const severity = expectedNotListening.length > 0 ? "warning" : listeningNoFirewall.length > 0 ? "high" : "info";
+    return success("svc_port_audit", ctx.targetHost, Math.max(ssR.durationMs, fwR.durationMs), "multiple", {
+      profiles_audited: [...new Set(declaredPorts.map((d) => d.service))],
+      healthy,
+      ...expectedNotListening.length > 0 ? { expected_not_listening: expectedNotListening } : {},
+      ...listeningNoFirewall.length > 0 ? { listening_no_firewall: listeningNoFirewall } : {},
+      ...firewallNoProfile.length > 0 ? { firewall_no_profile: firewallNoProfile } : {},
+      firewall_backend: fwBackend,
+      firewall_available: fwAvailable
+    }, {
+      summary: `${healthy.length} healthy, ${expectedNotListening.length} not listening, ${listeningNoFirewall.length} missing fw rules.`,
+      severity
+    });
+  });
+  registerTool(ctx, {
+    name: "svc_troubleshoot",
+    description: "Profile-guided diagnostics. Runs troubleshooting checks from a service's knowledge profile and correlates failures with known common causes. Also runs health checks for context.",
+    module: "services",
+    riskLevel: "read-only",
+    duration: "normal",
+    inputSchema: external_exports.object({
+      service: external_exports.string().min(1).describe("Service to troubleshoot"),
+      symptom: external_exports.string().optional().describe("Match a specific symptom; omit to run all troubleshooting entries")
+    }),
+    annotations: { readOnlyHint: true }
+  }, async (args) => {
+    const svc = args.service;
+    const symptomFilter = args.symptom;
+    const profile = ctx.knowledgeBase.getProfile(svc);
+    if (!profile) {
+      return error2("svc_troubleshoot", ctx.targetHost, null, {
+        code: "PROFILE_NOT_FOUND",
+        category: "not_found",
+        message: `No knowledge profile found for "${svc}"`,
+        remediation: ["Run sysadmin_session_info to see available profiles"]
+      });
+    }
+    if (!profile.troubleshooting?.length) {
+      return error2("svc_troubleshoot", ctx.targetHost, null, {
+        code: "NO_TROUBLESHOOTING_DATA",
+        category: "validation",
+        message: `Profile "${svc}" has no troubleshooting entries`,
+        remediation: [
+          "Use Claude's Bash tool for manual diagnostics: systemctl status, journalctl, ss",
+          "Consider adding troubleshooting entries to the knowledge profile YAML"
+        ]
+      });
+    }
+    let entries = profile.troubleshooting;
+    if (symptomFilter) {
+      const needle = symptomFilter.toLowerCase();
+      entries = entries.filter((e) => e.symptom.toLowerCase().includes(needle));
+      if (entries.length === 0) {
+        return error2("svc_troubleshoot", ctx.targetHost, null, {
+          code: "SYMPTOM_NOT_FOUND",
+          category: "not_found",
+          message: `No troubleshooting entry matches "${symptomFilter}" for ${svc}`,
+          remediation: [
+            `Available symptoms: ${profile.troubleshooting.map((t) => t.symptom).join(", ")}`,
+            "Omit the symptom parameter to run all troubleshooting entries"
+          ]
+        });
+      }
+    }
+    const entryResults = [];
+    let maxDuration = 0;
+    for (const entry of entries) {
+      const checks = await Promise.all(entry.checks.map(async (cmd) => {
+        const r = await executeBash(ctx, cmd, "quick");
+        maxDuration = Math.max(maxDuration, r.durationMs);
+        return { command: cmd, passed: r.exitCode === 0, output: r.stdout.trim().slice(0, 200) };
+      }));
+      const likely_causes = [];
+      checks.forEach((check2, i) => {
+        if (!check2.passed && i < entry.common_causes.length) {
+          likely_causes.push(entry.common_causes[i]);
+        }
+      });
+      entryResults.push({ symptom: entry.symptom, checks, common_causes: entry.common_causes, likely_causes });
+    }
+    const healthResults = [];
+    if (profile.health_checks?.length) {
+      const hcResults = await Promise.all(profile.health_checks.map(async (hc) => {
+        const hr = await executeBash(ctx, hc.command, "quick");
+        maxDuration = Math.max(maxDuration, hr.durationMs);
+        let passed = true;
+        if (hc.expect_exit !== void 0) passed = hr.exitCode === hc.expect_exit;
+        if (hc.expect_output !== void 0) {
+          if (typeof hc.expect_output === "string") {
+            passed = passed && hr.stdout.trim().split("\n").some((line) => line.trim() === hc.expect_output);
+          } else {
+            passed = passed && hr.stdout.trim().length > 0;
+          }
+        }
+        if (hc.expect_contains) passed = passed && hr.stdout.includes(hc.expect_contains);
+        return { description: hc.description, passed, output: hr.stdout.trim().slice(0, 200) };
+      }));
+      healthResults.push(...hcResults);
+    }
+    const totalChecks = entryResults.reduce((sum, e) => sum + e.checks.length, 0);
+    const failedChecks = entryResults.reduce((sum, e) => sum + e.checks.filter((c) => !c.passed).length, 0);
+    const failedHealth = healthResults.filter((h) => !h.passed).length;
+    const likelyCauses = entryResults.flatMap((e) => e.likely_causes);
+    const severity = failedChecks === 0 && failedHealth === 0 ? "info" : failedChecks >= totalChecks * 0.5 ? "high" : "warning";
+    return success("svc_troubleshoot", ctx.targetHost, maxDuration, "multiple", {
+      service: svc,
+      troubleshooting: entryResults,
+      ...healthResults.length > 0 ? { health_checks: healthResults } : {},
+      checks_total: totalChecks,
+      checks_failed: failedChecks
+    }, {
+      summary: `${failedChecks} of ${totalChecks} checks failed. ${likelyCauses.length} likely cause${likelyCauses.length !== 1 ? "s" : ""} identified.`,
+      severity
     });
   });
 }
@@ -34217,642 +33709,10 @@ function registerSecurityTools(ctx) {
       profile_health: profileResults
     }, { summary: `${failedCount} failed services. ${profileResults.length} profiles checked.`, severity });
   });
-  registerTool(ctx, {
-    name: "sec_check_ssh",
-    description: "Audit SSH server configuration for security issues.",
-    module: "security",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const r = await executeBash(ctx, "sudo -n cat /etc/ssh/sshd_config 2>/dev/null || cat /etc/ssh/sshd_config 2>/dev/null || echo 'Cannot read sshd_config'", "quick");
-    const config2 = r.stdout.trim();
-    const findings = [];
-    if (config2.match(/^PermitRootLogin\s+yes/m)) findings.push("Root login is enabled (PermitRootLogin yes)");
-    if (config2.match(/^PasswordAuthentication\s+yes/m)) findings.push("Password authentication is enabled");
-    if (!config2.match(/^MaxAuthTries\s+[1-3]$/m)) findings.push("MaxAuthTries is not restricted (recommend 3)");
-    if (config2.match(/^X11Forwarding\s+yes/m)) findings.push("X11 forwarding is enabled");
-    const severity = findings.length > 2 ? "high" : findings.length > 0 ? "warning" : "info";
-    return success("sec_check_ssh", ctx.targetHost, r.durationMs, "cat /etc/ssh/sshd_config", {
-      config_length: config2.split("\n").length,
-      findings
-    }, { summary: findings.length ? `${findings.length} SSH hardening recommendations found.` : "SSH configuration looks hardened.", severity });
-  });
-  registerTool(ctx, {
-    // Moderate (not high): SSH config edits are reversible — rollback restores sshd_config.bak on failure.
-    // Confirmed: true still required because the gate threshold default is "high" and this is "moderate".
-    name: "sec_harden_ssh",
-    description: "Apply SSH hardening (disable password auth, root login, etc.). Moderate risk.",
-    module: "security",
-    riskLevel: "moderate",
-    duration: "normal",
-    inputSchema: external_exports.object({
-      actions: external_exports.array(external_exports.enum(["disable_root_login", "disable_password_auth", "set_max_auth_tries", "disable_x11"])).min(1).describe("SSH hardening actions to apply (select one or more)"),
-      confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."),
-      dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.")
-    }),
-    annotations: { destructiveHint: true }
-  }, async (args) => {
-    const actions = args.actions;
-    const sedCmds = [];
-    const descriptions = [];
-    for (const a of actions) {
-      switch (a) {
-        case "disable_root_login":
-          sedCmds.push("s/^#*PermitRootLogin.*/PermitRootLogin no/");
-          descriptions.push("Disable root login");
-          break;
-        case "disable_password_auth":
-          sedCmds.push("s/^#*PasswordAuthentication.*/PasswordAuthentication no/");
-          descriptions.push("Disable password auth");
-          break;
-        case "set_max_auth_tries":
-          sedCmds.push("s/^#*MaxAuthTries.*/MaxAuthTries 3/");
-          descriptions.push("Set MaxAuthTries to 3");
-          break;
-        case "disable_x11":
-          sedCmds.push("s/^#*X11Forwarding.*/X11Forwarding no/");
-          descriptions.push("Disable X11 forwarding");
-          break;
-      }
-    }
-    const cmd = `sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak && sudo sed -i '${sedCmds.join(";")}' /etc/ssh/sshd_config && sudo sshd -t && sudo systemctl reload sshd`;
-    const gate = ctx.safetyGate.check({
-      toolName: "sec_harden_ssh",
-      toolRiskLevel: "moderate",
-      targetHost: ctx.targetHost,
-      command: cmd,
-      description: `SSH hardening: ${descriptions.join(", ")}`,
-      confirmed: args.confirmed,
-      dryRun: args.dry_run
-    });
-    if (gate) return gate;
-    if (args.dry_run) return success("sec_harden_ssh", ctx.targetHost, null, null, { preview_command: cmd, preview_actions: descriptions }, { dry_run: true });
-    if (actions.includes("disable_password_auth")) {
-      const keyCheck = await executeBash(ctx, "sudo -n find /home -name authorized_keys -not -empty 2>/dev/null | head -1", "quick");
-      if (!keyCheck.stdout.trim()) {
-        return error2("sec_harden_ssh", ctx.targetHost, keyCheck.durationMs, {
-          code: "LOCK_OUT_RISK",
-          category: "validation",
-          message: "Pre-flight failed: no authorized_keys found in /home/*/. Disabling password auth without an SSH key would lock out remote access.",
-          remediation: [
-            "Add your public key to ~/.ssh/authorized_keys before disabling password authentication",
-            "Verify key auth works in a separate session before applying this change",
-            "Remove 'disable_password_auth' from actions if key-based auth is not configured"
-          ]
-        });
-      }
-    }
-    const r = await executeBash(ctx, cmd, "normal");
-    if (r.exitCode !== 0) {
-      await executeBash(ctx, "sudo cp /etc/ssh/sshd_config.bak /etc/ssh/sshd_config 2>/dev/null", "quick");
-      return error2("sec_harden_ssh", ctx.targetHost, r.durationMs, {
-        code: "VALIDATION_FAILED",
-        category: "validation",
-        message: `sshd config validation failed \u2014 rolled back. ${r.stderr.trim()}`,
-        remediation: ["Check sshd_config syntax", "Review /etc/ssh/sshd_config.bak for the previous state"]
-      });
-    }
-    return success("sec_harden_ssh", ctx.targetHost, r.durationMs, cmd, { applied: descriptions, backup: "/etc/ssh/sshd_config.bak" }, {
-      documentation_action: { type: "config_changed", service: "sshd", suggested_actions: ["doc_backup_config(service='sshd')", "doc_generate_service(service='sshd')"] }
-    });
-  });
-  registerTool(ctx, {
-    name: "sec_update_check",
-    description: "Check for available security updates specifically.",
-    module: "security",
-    riskLevel: "read-only",
-    duration: "normal",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const cmd = ctx.distro.family === "debian" ? "apt list --upgradable 2>/dev/null | grep -i security" : "dnf check-update --security 2>/dev/null";
-    const r = await executeBash(ctx, cmd, "normal");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    return success("sec_update_check", ctx.targetHost, r.durationMs, cmd, { security_updates: lines, count: lines.length });
-  });
-  registerTool(ctx, {
-    name: "sec_mac_status",
-    description: "Show MAC system status (SELinux/AppArmor).",
-    module: "security",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    let cmd;
-    if (ctx.distro.mac_system === "selinux") cmd = "getenforce && sestatus 2>/dev/null";
-    else if (ctx.distro.mac_system === "apparmor") cmd = "sudo -n aa-status 2>/dev/null || echo 'AppArmor status requires sudo'";
-    else cmd = "echo 'No MAC system detected'";
-    const r = await executeBash(ctx, cmd, "quick");
-    return success("sec_mac_status", ctx.targetHost, r.durationMs, cmd, {
-      system: ctx.distro.mac_system,
-      mode: ctx.distro.mac_mode,
-      detail: r.stdout.trim()
-    });
-  });
-  registerTool(ctx, {
-    name: "sec_check_listening",
-    description: "Audit listening ports and identify unexpected services.",
-    module: "security",
-    riskLevel: "read-only",
-    duration: "quick",
-    inputSchema: external_exports.object({}),
-    annotations: { readOnlyHint: true }
-  }, async () => {
-    const r = await executeBash(ctx, "sudo -n ss -tlnp 2>/dev/null || ss -tln", "quick");
-    const listenLines = r.stdout.trim().split("\n").filter(Boolean);
-    const ports = [];
-    for (const line of listenLines) {
-      const parts = line.trim().split(/\s+/);
-      if (parts[0] === "tcp" || parts[0] === "udp") {
-        const localPart = parts[4] ?? "";
-        const lastColon = localPart.lastIndexOf(":");
-        if (lastColon !== -1) {
-          const addr = localPart.slice(0, lastColon);
-          const port = parseInt(localPart.slice(lastColon + 1));
-          if (!isNaN(port)) {
-            ports.push({
-              proto: parts[0],
-              local_addr: addr,
-              port,
-              ...parts[6] ? { process: parts[6].replace(/users:\(\("?([^"]+)"?,.*\)/, "$1") } : {}
-            });
-          }
-        }
-      }
-    }
-    return success("sec_check_listening", ctx.targetHost, r.durationMs, "ss -tlnp", { listening_ports: ports, count: ports.length });
-  });
-  registerTool(ctx, {
-    name: "sec_check_suid",
-    description: "Find SUID/SGID binaries on the system.",
-    module: "security",
-    riskLevel: "read-only",
-    duration: "slow",
-    inputSchema: external_exports.object({
-      path: external_exports.string().optional().default("/").describe("Search root path"),
-      limit: external_exports.number().int().min(1).max(500).optional().default(100).describe("Maximum number of results to return (default 100, max 500)")
-    }),
-    annotations: { readOnlyHint: true }
-  }, async (args) => {
-    const p = args.path ?? "/";
-    const limit = args.limit ?? 100;
-    const r = await executeBash(ctx, `find ${p} -type f \\( -perm -4000 -o -perm -2000 \\) -ls 2>/dev/null | head -${limit}`, "slow");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    return success("sec_check_suid", ctx.targetHost, r.durationMs, "find ... -perm -4000/-2000", { suid_files: lines, count: lines.length }, { truncated: lines.length >= limit });
-  });
-}
-
-// src/tools/storage/index.ts
-function registerStorageTools(ctx) {
-  registerTool(ctx, { name: "disk_usage", description: "Show disk usage by filesystem.", module: "storage", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ path: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    const cmd = args.path ? `df -h '${args.path}'` : "df -h --output=source,size,used,avail,pcent,target -x tmpfs -x devtmpfs 2>/dev/null || df -h";
-    const r = await executeBash(ctx, cmd, "quick");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const filesystems = lines.slice(1).map((l) => {
-      const p = l.trim().split(/\s+/);
-      if (p.length >= 6) return { source: p[0], size: p[1], used: p[2], avail: p[3], use_pct: p[4], mount: p[5] };
-      return null;
-    }).filter(Boolean);
-    return success("disk_usage", ctx.targetHost, r.durationMs, cmd, { filesystems });
-  });
-  registerTool(ctx, { name: "disk_usage_top", description: "Find largest directories under a path.", module: "storage", riskLevel: "read-only", duration: "normal", inputSchema: external_exports.object({ path: external_exports.string().optional().default("/"), limit: external_exports.number().int().min(1).max(50).optional().default(20), depth: external_exports.number().int().min(1).max(5).optional().default(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const cmd = `sudo -n du -h --one-file-system --max-depth=${args.depth ?? 1} '${args.path ?? "/"}' 2>/dev/null | sort -rh | head -n ${args.limit ?? 20}`;
-    const r = await executeBash(ctx, cmd, "normal");
-    const entries = r.stdout.trim().split("\n").filter(Boolean).map((line) => {
-      const tab = line.indexOf("	");
-      return tab !== -1 ? { size: line.slice(0, tab).trim(), path: line.slice(tab + 1).trim() } : { size: line.trim(), path: "" };
-    });
-    return success("disk_usage_top", ctx.targetHost, r.durationMs, "du + sort", { entries });
-  });
-  registerTool(ctx, { name: "mount_list", description: "List all mounted filesystems.", module: "storage", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "findmnt --real -o TARGET,SOURCE,FSTYPE,OPTIONS --noheadings 2>/dev/null || mount", "quick");
-    const lines = r.stdout.trim().split("\n").filter(Boolean);
-    const mounts = lines.map((l) => {
-      const p = l.trim().split(/\s+/);
-      return { target: p[0], source: p[1], fstype: p[2], options: p.slice(3).join(" ") };
-    });
-    return success("mount_list", ctx.targetHost, r.durationMs, "findmnt", { mounts, count: mounts.length });
-  });
-  registerTool(ctx, { name: "mount_add", description: "Add fstab entry and mount. Moderate risk.", module: "storage", riskLevel: "moderate", duration: "normal", inputSchema: external_exports.object({ device: external_exports.string().min(1), mount_point: external_exports.string().min(1), fs_type: external_exports.string().min(1), options: external_exports.string().optional().default("defaults"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const line = `${args.device} ${args.mount_point} ${args.fs_type} ${args.options || "defaults"} 0 2`;
-    const cmd = `sudo mkdir -p '${args.mount_point}' && echo '${line}' | sudo tee -a /etc/fstab && sudo mount '${args.mount_point}'`;
-    const gate = ctx.safetyGate.check({ toolName: "mount_add", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Add fstab: ${line}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("mount_add", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "normal");
-    if (r.exitCode !== 0) return error2("mount_add", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("mount_add", ctx.targetHost, r.durationMs, cmd, { fstab_entry: line, mounted: true });
-  });
-  registerTool(ctx, { name: "mount_remove", description: "Unmount and remove fstab entry. High risk.", module: "storage", riskLevel: "high", duration: "normal", inputSchema: external_exports.object({ mount_point: external_exports.string().min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const mp = args.mount_point;
-    const gate = ctx.safetyGate.check({ toolName: "mount_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: `umount ${mp}`, description: `Unmount ${mp} and remove from fstab`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("mount_remove", ctx.targetHost, 0, null, { preview_command: `sudo umount '${mp}' && sudo sed -i '\\|${mp}|d' /etc/fstab` }, { dry_run: true });
-    const r = await executeBash(ctx, `sudo umount '${mp}' && sudo sed -i '\\|${mp}|d' /etc/fstab`, "normal");
-    if (r.exitCode !== 0) return error2("mount_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "storage_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("mount_remove", ctx.targetHost, r.durationMs, "umount + sed", { unmounted: mp }, docHint);
-  });
-  registerTool(ctx, { name: "lvm_status", description: "Show LVM PVs, VGs, and LVs.", module: "storage", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "sudo -n pvs 2>/dev/null && echo '---VGS---' && sudo -n vgs 2>/dev/null && echo '---LVS---' && sudo -n lvs 2>/dev/null || echo 'LVM not available'", "quick");
-    const output = r.stdout.trim();
-    if (output === "LVM not available" || output === "") {
-      return success("lvm_status", ctx.targetHost, r.durationMs, "pvs+vgs+lvs", { available: false });
-    }
-    const [pvsRaw = "", vgsRaw = "", lvsRaw = ""] = output.split(/---(?:VGS|LVS)---/).map((s) => s.trim());
-    const parseLvmSection = (raw) => {
-      const lines = raw.split("\n").filter(Boolean);
-      if (lines.length < 2) return [];
-      const headers = lines[0].trim().split(/\s{2,}/).map((h) => h.trim().toLowerCase());
-      return lines.slice(1).map((line) => {
-        const values = line.trim().split(/\s{2,}/);
-        const record2 = {};
-        headers.forEach((h, i) => {
-          record2[h] = (values[i] ?? "").trim();
-        });
-        return record2;
-      });
-    };
-    return success("lvm_status", ctx.targetHost, r.durationMs, "pvs+vgs+lvs", {
-      available: true,
-      pvs: parseLvmSection(pvsRaw),
-      vgs: parseLvmSection(vgsRaw),
-      lvs: parseLvmSection(lvsRaw)
-    });
-  });
-  registerTool(ctx, { name: "lvm_create_lv", description: "Create a logical volume. Moderate risk.", module: "storage", riskLevel: "moderate", duration: "normal", inputSchema: external_exports.object({ name: external_exports.string().min(1).describe("Name for the new logical volume"), vg: external_exports.string().min(1).describe("Volume group name to create the LV in"), size: external_exports.string().min(1).describe("Size with unit suffix (e.g. '10G', '500M')"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmd = `sudo lvcreate -L ${args.size} -n ${args.name} ${args.vg}`;
-    const gate = ctx.safetyGate.check({ toolName: "lvm_create_lv", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Create LV ${args.name} (${args.size}) in VG ${args.vg}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("lvm_create_lv", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "normal");
-    if (r.exitCode !== 0) return error2("lvm_create_lv", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "storage_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("lvm_create_lv", ctx.targetHost, r.durationMs, cmd, { created: `${args.vg}/${args.name}` }, docHint);
-  });
-  registerTool(ctx, { name: "lvm_resize", description: "Resize a logical volume. High risk.", module: "storage", riskLevel: "high", duration: "normal", inputSchema: external_exports.object({ lv_path: external_exports.string().min(1).describe("Logical volume device path (e.g. /dev/vg0/data)"), size: external_exports.string().min(1).describe("New absolute size or relative change (e.g. '20G', '+5G')"), resize_fs: external_exports.boolean().optional().default(true), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const cmd = `sudo lvresize ${args.resize_fs !== false ? "-r" : ""} -L ${args.size} ${args.lv_path}`;
-    const gate = ctx.safetyGate.check({ toolName: "lvm_resize", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Resize ${args.lv_path} to ${args.size}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("lvm_resize", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "normal");
-    if (r.exitCode !== 0) return error2("lvm_resize", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "storage_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("lvm_resize", ctx.targetHost, r.durationMs, cmd, { resized: args.lv_path }, docHint);
-  });
-}
-
-// src/tools/users/index.ts
-function registerUserTools(ctx) {
-  registerTool(ctx, { name: "user_list", description: "List system users.", module: "users", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ include_system: external_exports.boolean().optional().default(false) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const filter = args.include_system ? "" : "| awk -F: '$3 >= 1000 || $3 == 0 {print}'";
-    const r = await executeBash(ctx, `getent passwd ${filter}`, "quick");
-    const users = r.stdout.trim().split("\n").filter(Boolean).map((l) => {
-      const [name, , uid, gid, comment, home, shell] = l.split(":");
-      return { name, uid: parseInt(uid ?? "0"), gid: parseInt(gid ?? "0"), comment, home, shell };
-    });
-    return success("user_list", ctx.targetHost, r.durationMs, "getent passwd", { users, count: users.length });
-  });
-  registerTool(ctx, { name: "user_info", description: "Detailed info for a user.", module: "users", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ username: external_exports.string().min(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const u = args.username;
-    const [idR, lastR] = await Promise.all([executeBash(ctx, `id ${u}`, "instant"), executeBash(ctx, `lastlog -u ${u} 2>/dev/null || echo 'N/A'`, "instant")]);
-    if (idR.exitCode !== 0) return error2("user_info", ctx.targetHost, idR.durationMs, { code: "USER_NOT_FOUND", category: "not_found", message: `User '${u}' not found` });
-    return success("user_info", ctx.targetHost, idR.durationMs, "id + lastlog", { identity: idR.stdout.trim(), last_login: lastR.stdout.trim() });
-  });
-  registerTool(ctx, { name: "user_create", description: "Create a user account. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ username: external_exports.string().min(1).max(32), shell: external_exports.string().optional().describe("Login shell path (e.g. '/bin/bash'; omit for system default)"), home: external_exports.string().optional().describe("Home directory path (omit to use system default)"), groups: external_exports.array(external_exports.string()).optional().describe("Additional groups to add the user to"), system: external_exports.boolean().optional().default(false).describe("Create as a system account (no home dir, UID below 1000)"), comment: external_exports.string().optional().describe("GECOS/display name for the account"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmd = ctx.commands.userCreate({ username: args.username, shell: args.shell, home: args.home, groups: args.groups, system: args.system, comment: args.comment });
-    const gate = ctx.safetyGate.check({ toolName: "user_create", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Create user ${args.username}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("user_create", ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-    const r = await executeCommand(ctx, "user_create", cmd, "quick");
-    if (r.exitCode !== 0) return error2("user_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("user_create", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { created: args.username }, docHint);
-  });
-  registerTool(ctx, { name: "user_modify", description: "Modify user properties. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ username: external_exports.string().min(1), shell: external_exports.string().optional(), groups: external_exports.array(external_exports.string()).optional(), append_groups: external_exports.boolean().optional().default(true), lock: external_exports.boolean().optional(), unlock: external_exports.boolean().optional(), comment: external_exports.string().optional(), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmd = ctx.commands.userModify(args.username, { shell: args.shell, groups: args.groups, append_groups: args.append_groups, lock: args.lock, unlock: args.unlock, comment: args.comment });
-    const gate = ctx.safetyGate.check({ toolName: "user_modify", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Modify user ${args.username}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("user_modify", ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-    const r = await executeCommand(ctx, "user_modify", cmd, "quick");
-    if (r.exitCode !== 0) return error2("user_modify", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("user_modify", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { modified: args.username });
-  });
-  registerTool(ctx, { name: "user_delete", description: "Delete a user. Critical risk.", module: "users", riskLevel: "critical", duration: "quick", inputSchema: external_exports.object({ username: external_exports.string().min(1), remove_home: external_exports.boolean().optional().default(false), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const cmd = ctx.commands.userDelete(args.username, { removeHome: args.remove_home });
-    const gate = ctx.safetyGate.check({ toolName: "user_delete", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Delete user ${args.username}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("user_delete", ctx.targetHost, null, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-    const r = await executeCommand(ctx, "user_delete", cmd, "quick");
-    if (r.exitCode !== 0) return error2("user_delete", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("user_delete", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { deleted: args.username }, docHint);
-  });
-  registerTool(ctx, { name: "group_list", description: "List groups and members.", module: "users", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ filter: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `getent group ${args.filter ? `| grep -i '${args.filter}'` : ""}`, "quick");
-    const groups = r.stdout.trim().split("\n").filter(Boolean).map((l) => {
-      const [name, , gid, members] = l.split(":");
-      return { name, gid: parseInt(gid ?? "0"), members: members?.split(",").filter(Boolean) ?? [] };
-    });
-    return success("group_list", ctx.targetHost, r.durationMs, "getent group", { groups, count: groups.length });
-  });
-  registerTool(ctx, { name: "group_create", description: "Create a group. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ name: external_exports.string().min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const gate = ctx.safetyGate.check({ toolName: "group_create", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: `sudo groupadd ${args.name}`, description: `Create group ${args.name}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("group_create", ctx.targetHost, null, null, { preview_command: `sudo groupadd ${args.name}` }, { dry_run: true });
-    const r = await executeBash(ctx, `sudo groupadd ${args.name}`, "quick");
-    if (r.exitCode !== 0) return error2("group_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("group_create", ctx.targetHost, r.durationMs, `sudo groupadd ${args.name}`, { created: args.name }, docHint);
-  });
-  registerTool(ctx, { name: "group_delete", description: "Delete a group. High risk.", module: "users", riskLevel: "high", duration: "quick", inputSchema: external_exports.object({ name: external_exports.string().min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const gate = ctx.safetyGate.check({ toolName: "group_delete", toolRiskLevel: "high", targetHost: ctx.targetHost, command: `sudo groupdel ${args.name}`, description: `Delete group ${args.name}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("group_delete", ctx.targetHost, null, null, { preview_command: `sudo groupdel ${args.name}` }, { dry_run: true });
-    const r = await executeBash(ctx, `sudo groupdel ${args.name}`, "quick");
-    if (r.exitCode !== 0) return error2("group_delete", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "user_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("group_delete", ctx.targetHost, r.durationMs, `sudo groupdel ${args.name}`, { deleted: args.name }, docHint);
-  });
-  registerTool(ctx, { name: "perms_check", description: "Check file/directory permissions.", module: "users", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ path: external_exports.string().min(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `stat -c '%A %U:%G %s %n' '${args.path}' && ls -la '${args.path}' 2>/dev/null | head -20`, "quick");
-    const [statLine, ...lsLines] = r.stdout.trim().split("\n");
-    const result = { path: args.path };
-    const statParts = (statLine ?? "").split(" ");
-    if (statParts.length >= 3) {
-      result.mode = statParts[0];
-      const [owner, group] = (statParts[1] ?? "").split(":");
-      result.owner = owner;
-      result.group = group;
-      result.size_bytes = parseInt(statParts[2] ?? "0");
-    }
-    const entries = lsLines.filter((l) => l.match(/^[dlrwx-]/)).map((l) => {
-      const p = l.split(/\s+/);
-      return { mode: p[0], owner: p[2], group: p[3], size: p[4], name: p[p.length - 1] };
-    });
-    if (entries.length) result.entries = entries;
-    return success("perms_check", ctx.targetHost, r.durationMs, "stat+ls", result);
-  });
-  registerTool(ctx, { name: "perms_set", description: "Set permissions/ownership. Moderate risk.", module: "users", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ path: external_exports.string().min(1), mode: external_exports.string().optional().describe("Permission mode in octal or symbolic notation (e.g. '755', '644', 'u+x')"), owner: external_exports.string().optional().describe("Owner in user[:group] format (e.g. 'www-data', 'deploy:www-data')"), recursive: external_exports.boolean().optional().default(false), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmds = [];
-    const rec = args.recursive ? "-R " : "";
-    if (args.mode) cmds.push(`sudo chmod ${rec}${args.mode} '${args.path}'`);
-    if (args.owner) cmds.push(`sudo chown ${rec}${args.owner} '${args.path}'`);
-    if (!cmds.length) return error2("perms_set", ctx.targetHost, null, { code: "VALIDATION_ERROR", category: "validation", message: "Specify mode or owner" });
-    const cmd = cmds.join(" && ");
-    const gate = ctx.safetyGate.check({ toolName: "perms_set", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Set perms on ${args.path}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("perms_set", ctx.targetHost, null, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("perms_set", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "permissions_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("perms_set", ctx.targetHost, r.durationMs, cmd, { path: args.path }, docHint);
-  });
-}
-
-// src/tools/firewall/index.ts
-var ruleSchema = external_exports.object({
-  action: external_exports.enum(["allow", "deny", "reject"]).describe("Firewall action: allow, deny, or reject the connection"),
-  direction: external_exports.enum(["in", "out"]).describe("Traffic direction: in (inbound) or out (outbound)"),
-  port: external_exports.union([external_exports.number(), external_exports.string()]).describe("Port number or service name (e.g. 22, 80, 'ssh', '8080:8090')"),
-  protocol: external_exports.enum(["tcp", "udp", "any"]).optional().default("any").describe("Protocol filter (default: any)"),
-  source: external_exports.string().optional().describe("Source IP or CIDR to match (omit for any source)"),
-  destination: external_exports.string().optional().describe("Destination IP or CIDR (omit for any destination)"),
-  comment: external_exports.string().optional().describe("Rule comment for documentation")
-});
-function registerFirewallTools(ctx) {
-  registerTool(ctx, { name: "fw_status", description: "Show firewall status and active rules.", module: "firewall", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const cmd = ctx.commands.firewallStatus();
-    const r = await executeCommand(ctx, "fw_status", cmd, "quick");
-    return success("fw_status", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { output: r.stdout.trim(), backend: ctx.distro.firewall_backend });
-  });
-  registerTool(ctx, { name: "fw_list_rules", description: "List all firewall rules in detail.", module: "firewall", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const cmd = ctx.commands.firewallListRules();
-    const r = await executeCommand(ctx, "fw_list_rules", cmd, "quick");
-    return success("fw_list_rules", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { rules: r.stdout.trim(), backend: ctx.distro.firewall_backend });
-  });
-  registerTool(ctx, { name: "fw_add_rule", description: "Add a firewall rule. Moderate risk.", module: "firewall", riskLevel: "moderate", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const rule = { action: args.action, direction: args.direction, port: args.port, protocol: args.protocol, source: args.source, destination: args.destination, comment: args.comment };
-    const cmd = ctx.commands.firewallAddRule(rule, { dryRun: args.dry_run });
-    const gate = ctx.safetyGate.check({ toolName: "fw_add_rule", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Add firewall rule: ${rule.action} ${rule.direction} port ${rule.port}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("fw_add_rule", ctx.targetHost, 0, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-    const r = await executeCommand(ctx, "fw_add_rule", cmd, "quick");
-    if (r.exitCode !== 0) return buildCategorizedResponse("fw_add_rule", ctx.targetHost, r.durationMs, r.stderr, ctx);
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "firewall_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("fw_add_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { added: rule }, docHint);
-  });
-  registerTool(ctx, { name: "fw_remove_rule", description: "Remove a firewall rule. Moderate risk.", module: "firewall", riskLevel: "moderate", duration: "quick", inputSchema: ruleSchema.extend({ confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const rule = { action: args.action, direction: args.direction, port: args.port, protocol: args.protocol, source: args.source };
-    const cmd = ctx.commands.firewallRemoveRule(rule);
-    const gate = ctx.safetyGate.check({ toolName: "fw_remove_rule", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: `Remove firewall rule: port ${rule.port}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("fw_remove_rule", ctx.targetHost, 0, null, { preview_command: cmd.argv.join(" ") }, { dry_run: true });
-    const r = await executeCommand(ctx, "fw_remove_rule", cmd, "quick");
-    if (r.exitCode !== 0) return error2("fw_remove_rule", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    const docHint = ctx.config.documentation.repo_path ? { documentation_action: { type: "firewall_changed", suggested_actions: ["doc_generate_host"] } } : void 0;
-    return success("fw_remove_rule", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { removed: rule }, docHint);
-  });
-  registerTool(ctx, { name: "fw_enable", description: "Enable the firewall. Critical risk.", module: "firewall", riskLevel: "critical", duration: "quick", inputSchema: external_exports.object({ confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmd = ctx.commands.firewallEnable();
-    const gate = ctx.safetyGate.check({ toolName: "fw_enable", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: "Enable firewall", confirmed: args.confirmed, supportsDryRun: false });
-    if (gate) return gate;
-    const r = await executeCommand(ctx, "fw_enable", cmd, "quick");
-    if (r.exitCode !== 0) return error2("fw_enable", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("fw_enable", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { enabled: true });
-  });
-  registerTool(ctx, { name: "fw_disable", description: "Disable the firewall. Critical risk.", module: "firewall", riskLevel: "critical", duration: "quick", inputSchema: external_exports.object({ confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const cmd = ctx.commands.firewallDisable();
-    const gate = ctx.safetyGate.check({ toolName: "fw_disable", toolRiskLevel: "critical", targetHost: ctx.targetHost, command: cmd.argv.join(" "), description: "Disable firewall", confirmed: args.confirmed, supportsDryRun: false });
-    if (gate) return gate;
-    const r = await executeCommand(ctx, "fw_disable", cmd, "quick");
-    if (r.exitCode !== 0) return error2("fw_disable", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("fw_disable", ctx.targetHost, r.durationMs, cmd.argv.join(" "), { disabled: true });
-  });
-}
-
-// src/tools/networking/index.ts
-function registerNetworkingTools(ctx) {
-  registerTool(ctx, { name: "net_interfaces", description: "List network interfaces and config.", module: "networking", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "ip -c addr show 2>/dev/null || ip addr show", "quick");
-    return success("net_interfaces", ctx.targetHost, r.durationMs, "ip addr show", { output: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "net_connections", description: "Show active connections (like ss/netstat).", module: "networking", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ listening_only: external_exports.boolean().optional().default(false) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const flags = args.listening_only ? "-tlnp" : "-tanp";
-    const r = await executeBash(ctx, `sudo -n ss ${flags} 2>/dev/null || ss ${flags.replace("p", "")}`, "quick");
-    return success("net_connections", ctx.targetHost, r.durationMs, `ss ${flags}`, { output: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "net_dns_show", description: "Show DNS configuration.", module: "networking", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "cat /etc/resolv.conf && echo '---' && resolvectl status 2>/dev/null || systemd-resolve --status 2>/dev/null || echo 'systemd-resolved not active'", "quick");
-    return success("net_dns_show", ctx.targetHost, r.durationMs, "resolv.conf + resolvectl", { output: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "net_routes_show", description: "Show routing table.", module: "networking", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "ip route show", "quick");
-    return success("net_routes_show", ctx.targetHost, r.durationMs, "ip route show", { routes: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "net_test", description: "Connectivity tests: ping, traceroute, dig.", module: "networking", riskLevel: "read-only", duration: "normal", inputSchema: external_exports.object({ target: external_exports.string().min(1), test: external_exports.enum(["ping", "traceroute", "dig", "all"]).optional().default("ping").describe("Test to run: 'ping' (ICMP reachability), 'traceroute' (path hops), 'dig' (DNS lookup), or 'all' (runs all three)") }), annotations: { readOnlyHint: true } }, async (args) => {
-    const t = args.target;
-    const test = args.test ?? "ping";
-    const results = {};
-    if (test === "ping" || test === "all") {
-      const r = await executeBash(ctx, `ping -c 4 -W 3 ${t} 2>&1`, "normal");
-      results.ping = r.stdout.trim();
-    }
-    if (test === "traceroute" || test === "all") {
-      const r = await executeBash(ctx, `traceroute -m 15 ${t} 2>&1 || tracepath ${t} 2>&1`, "normal");
-      results.traceroute = r.stdout.trim();
-    }
-    if (test === "dig" || test === "all") {
-      const r = await executeBash(ctx, `dig ${t} +short 2>&1`, "quick");
-      results.dig = r.stdout.trim();
-    }
-    return success("net_test", ctx.targetHost, 0, `connectivity test: ${test}`, results);
-  });
-  registerTool(ctx, { name: "net_dns_modify", description: "Modify DNS configuration. Moderate risk.", module: "networking", riskLevel: "moderate", duration: "normal", inputSchema: external_exports.object({ nameservers: external_exports.array(external_exports.string()).min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const ns = args.nameservers.map((s) => `nameserver ${s}`).join("\n");
-    const cmd = `sudo cp /etc/resolv.conf /etc/resolv.conf.bak && echo '${ns}' | sudo tee /etc/resolv.conf`;
-    const gate = ctx.safetyGate.check({ toolName: "net_dns_modify", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Set DNS servers: ${args.nameservers.join(", ")}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("net_dns_modify", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "normal");
-    if (r.exitCode !== 0) return error2("net_dns_modify", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("net_dns_modify", ctx.targetHost, r.durationMs, cmd, { nameservers: args.nameservers, backup: "/etc/resolv.conf.bak" });
-  });
-  registerTool(ctx, { name: "net_routes_modify", description: "Add/delete routing table entries. High risk.", module: "networking", riskLevel: "high", duration: "quick", inputSchema: external_exports.object({ action: external_exports.enum(["add", "delete"]), destination: external_exports.string().min(1).describe("Route destination in CIDR notation or 'default' (e.g. '192.168.1.0/24')"), gateway: external_exports.string().optional().describe("Next-hop gateway IP address (omit for interface-only routes)"), interface: external_exports.string().optional().describe("Network interface to use (e.g. 'eth0', 'ens3')"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    let cmd = `sudo ip route ${args.action} ${args.destination}`;
-    if (args.gateway) cmd += ` via ${args.gateway}`;
-    if (args.interface) cmd += ` dev ${args.interface}`;
-    const gate = ctx.safetyGate.check({ toolName: "net_routes_modify", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `${args.action} route ${args.destination}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("net_routes_modify", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("net_routes_modify", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("net_routes_modify", ctx.targetHost, r.durationMs, cmd, { action: args.action, destination: args.destination });
-  });
-}
-
-// src/tools/containers/index.ts
-function rt(ctx) {
-  return ctx.distro.container_runtime === "none" ? "docker" : ctx.distro.container_runtime;
-}
-function registerContainerTools(ctx) {
-  registerTool(ctx, { name: "ctr_list", description: "List containers (running and stopped).", module: "containers", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ all: external_exports.boolean().optional().default(true) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `${rt(ctx)} ps ${args.all ? "-a" : ""} --format 'table {{.Names}}	{{.Image}}	{{.Status}}	{{.Ports}}'`, "quick");
-    return success("ctr_list", ctx.targetHost, r.durationMs, `${rt(ctx)} ps`, { output: r.stdout.trim(), runtime: rt(ctx) });
-  });
-  registerTool(ctx, { name: "ctr_images", description: "List container images.", module: "containers", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, `${rt(ctx)} images --format 'table {{.Repository}}	{{.Tag}}	{{.Size}}	{{.CreatedSince}}'`, "quick");
-    return success("ctr_images", ctx.targetHost, r.durationMs, `${rt(ctx)} images`, { output: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "ctr_inspect", description: "Inspect container configuration.", module: "containers", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ container: external_exports.string().min(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const r = await executeBash(ctx, `${rt(ctx)} inspect ${args.container}`, "quick");
-    return success("ctr_inspect", ctx.targetHost, r.durationMs, `${rt(ctx)} inspect`, { inspect: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "ctr_logs", description: "Retrieve container logs.", module: "containers", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ container: external_exports.string().min(1), tail: external_exports.number().int().optional().default(100), since: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    let cmd = `${rt(ctx)} logs --tail ${args.tail ?? 100}`;
-    if (args.since) cmd += ` --since '${args.since}'`;
-    cmd += ` ${args.container}`;
-    const r = await executeBash(ctx, cmd, "quick");
-    return success("ctr_logs", ctx.targetHost, r.durationMs, cmd, { logs: r.stdout.trim() + (r.stderr ? "\n" + r.stderr.trim() : "") });
-  });
-  for (const action of ["start", "stop", "restart"]) {
-    registerTool(ctx, { name: `ctr_${action}`, description: `${action.charAt(0).toUpperCase() + action.slice(1)} a container. Moderate risk.`, module: "containers", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ container: external_exports.string().min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: action === "stop" } }, async (args) => {
-      const cmd = `${rt(ctx)} ${action} ${args.container}`;
-      const gate = ctx.safetyGate.check({ toolName: `ctr_${action}`, toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `${action} container ${args.container}`, confirmed: args.confirmed, dryRun: args.dry_run });
-      if (gate) return gate;
-      if (args.dry_run) return success(`ctr_${action}`, ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-      const r = await executeBash(ctx, cmd, "quick");
-      if (r.exitCode !== 0) return error2(`ctr_${action}`, ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-      return success(`ctr_${action}`, ctx.targetHost, r.durationMs, cmd, { container: args.container, action });
-    });
-  }
-  registerTool(ctx, { name: "ctr_remove", description: "Remove a container. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: external_exports.object({ container: external_exports.string().min(1), force: external_exports.boolean().optional().default(false), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const cmd = `${rt(ctx)} rm ${args.force ? "-f" : ""} ${args.container}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove container ${args.container}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("ctr_remove", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("ctr_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("ctr_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.container });
-  });
-  registerTool(ctx, { name: "ctr_image_pull", description: "Pull a container image. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: external_exports.object({ image: external_exports.string().min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmd = `${rt(ctx)} pull ${args.image}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_image_pull", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Pull image ${args.image}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("ctr_image_pull", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "slow");
-    if (r.exitCode !== 0) return error2("ctr_image_pull", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("ctr_image_pull", ctx.targetHost, r.durationMs, cmd, { pulled: args.image });
-  });
-  registerTool(ctx, { name: "ctr_image_remove", description: "Remove a container image. High risk.", module: "containers", riskLevel: "high", duration: "quick", inputSchema: external_exports.object({ image: external_exports.string().min(1), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const cmd = `${rt(ctx)} rmi ${args.image}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_image_remove", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Remove image ${args.image}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("ctr_image_remove", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("ctr_image_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("ctr_image_remove", ctx.targetHost, r.durationMs, cmd, { removed: args.image });
-  });
-  registerTool(ctx, { name: "ctr_compose_status", description: "Show Compose project status.", module: "containers", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ project_dir: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    const dir = args.project_dir ? `-f ${args.project_dir}/docker-compose.yml` : "";
-    const r = await executeBash(ctx, `${rt(ctx)} compose ${dir} ps 2>/dev/null || docker-compose ${dir} ps 2>/dev/null || echo 'Compose not available'`, "quick");
-    return success("ctr_compose_status", ctx.targetHost, r.durationMs, "compose ps", { output: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "ctr_compose_up", description: "Start a Compose project. Moderate risk.", module: "containers", riskLevel: "moderate", duration: "slow", inputSchema: external_exports.object({ project_dir: external_exports.string().min(1), detach: external_exports.boolean().optional().default(true), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose up ${args.detach ? "-d" : ""}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_compose_up", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Start compose project in ${args.project_dir}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("ctr_compose_up", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "slow");
-    if (r.exitCode !== 0) return error2("ctr_compose_up", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("ctr_compose_up", ctx.targetHost, r.durationMs, cmd, { started: true });
-  });
-  registerTool(ctx, { name: "ctr_compose_down", description: "Stop and remove a Compose project. High risk.", module: "containers", riskLevel: "high", duration: "normal", inputSchema: external_exports.object({ project_dir: external_exports.string().min(1), volumes: external_exports.boolean().optional().default(false).describe("Remove named volumes declared in the compose file. WARNING: permanently deletes all volume data \u2014 use dry_run: true first."), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const cmd = `cd '${args.project_dir}' && ${rt(ctx)} compose down ${args.volumes ? "-v" : ""}`;
-    const gate = ctx.safetyGate.check({ toolName: "ctr_compose_down", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Stop compose project in ${args.project_dir}${args.volumes ? " (with volume removal)" : ""}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("ctr_compose_down", ctx.targetHost, 0, null, { preview_command: cmd, volumes_would_be_deleted: args.volumes === true }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "normal");
-    if (r.exitCode !== 0) return error2("ctr_compose_down", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("ctr_compose_down", ctx.targetHost, r.durationMs, cmd, { stopped: true });
-  });
 }
 
 // src/tools/cron/index.ts
 function registerCronTools(ctx) {
-  registerTool(ctx, { name: "cron_list", description: "List crontab entries for a user or all users.", module: "cron", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ user: external_exports.string().optional().describe("Username (omit for current user, 'all' for all users)") }), annotations: { readOnlyHint: true } }, async (args) => {
-    const u = args.user;
-    let cmd;
-    if (u === "all") cmd = 'for u in $(cut -d: -f1 /etc/passwd); do echo "=== $u ==="; sudo -n crontab -l -u $u 2>/dev/null || true; done';
-    else if (u) cmd = `sudo -n crontab -l -u ${u} 2>/dev/null || crontab -l -u ${u} 2>/dev/null || echo 'No crontab for ${u}'`;
-    else cmd = "crontab -l 2>/dev/null || echo 'No crontab for current user'";
-    const r = await executeBash(ctx, cmd, "quick");
-    return success("cron_list", ctx.targetHost, r.durationMs, cmd, { crontab: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "cron_add", description: "Add a crontab entry. Moderate risk.", module: "cron", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ schedule: external_exports.string().min(9).describe("Cron schedule (e.g. '0 * * * *')"), command: external_exports.string().min(1), user: external_exports.string().optional(), comment: external_exports.string().optional(), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const u = args.user ? `-u ${args.user}` : "";
-    const commentLine = args.comment ? `# ${args.comment}
-` : "";
-    const entry = `${commentLine}${args.schedule} ${args.command}`;
-    const cmd = `(crontab -l ${u} 2>/dev/null; echo '${entry}') | crontab - ${u}`;
-    const gate = ctx.safetyGate.check({ toolName: "cron_add", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Add cron: ${args.schedule} ${args.command}`, confirmed: args.confirmed });
-    if (gate) return gate;
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("cron_add", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("cron_add", ctx.targetHost, r.durationMs, cmd, { added: entry.trim() });
-  });
-  registerTool(ctx, { name: "cron_remove", description: "Remove a crontab entry by pattern. Moderate risk.", module: "cron", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ pattern: external_exports.string().min(1).describe("Pattern to match the line to remove"), user: external_exports.string().optional(), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const u = args.user ? `-u ${args.user}` : "";
-    const cmd = `crontab -l ${u} 2>/dev/null | grep -v '${args.pattern}' | crontab - ${u}`;
-    const gate = ctx.safetyGate.check({ toolName: "cron_remove", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Remove cron entries matching: ${args.pattern}`, confirmed: args.confirmed });
-    if (gate) return gate;
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("cron_remove", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("cron_remove", ctx.targetHost, r.durationMs, cmd, { removed_pattern: args.pattern });
-  });
   registerTool(ctx, { name: "cron_validate", description: "Validate cron expression syntax.", module: "cron", riskLevel: "read-only", duration: "instant", inputSchema: external_exports.object({ expression: external_exports.string().min(9) }), annotations: { readOnlyHint: true } }, async (args) => {
     const parts = args.expression.trim().split(/\s+/);
     const fieldNames = ["minute", "hour", "day-of-month", "month", "day-of-week"];
@@ -34922,107 +33782,6 @@ function registerCronTools(ctx) {
       iterations++;
     }
     return success("cron_next_runs", ctx.targetHost, 0, null, { expression: expr, next_runs: results, searched_minutes: iterations });
-  });
-}
-
-// src/tools/backup/index.ts
-function registerBackupTools(ctx) {
-  registerTool(ctx, { name: "bak_list", description: "List existing backups.", module: "backup", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ path: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    const p = args.path ?? ctx.config.documentation.repo_path ?? "/var/backups";
-    const r = await executeBash(ctx, `ls -lhrt '${p}/' 2>/dev/null | tail -30`, "quick");
-    return success("bak_list", ctx.targetHost, r.durationMs, `ls ${p}`, { backups: r.stdout.trim(), path: p });
-  });
-  registerTool(ctx, { name: "bak_create", description: "Create a backup of paths using tar or rsync. Moderate risk.", module: "backup", riskLevel: "moderate", duration: "slow", inputSchema: external_exports.object({ paths: external_exports.array(external_exports.string().min(1)).min(1).describe("Paths to back up"), destination: external_exports.string().optional().describe("Destination dir (defaults to config)"), method: external_exports.enum(["tar", "rsync"]).optional().default("tar"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const dest = args.destination ?? ctx.config.documentation.repo_path ?? "/var/backups";
-    const ts = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    const hostname3 = ctx.targetHost.replace(/[^a-zA-Z0-9-]/g, "_");
-    let cmd;
-    if (args.method === "rsync") {
-      const destDir = `${dest}/${hostname3}-${ts}`;
-      cmd = `sudo mkdir -p '${destDir}' && sudo rsync -avz ${args.paths.map((p) => `'${p}'`).join(" ")} '${destDir}/'`;
-    } else {
-      const archive = `${dest}/${hostname3}-${ts}.tar.gz`;
-      cmd = `sudo mkdir -p '${dest}' && sudo tar czf '${archive}' ${args.paths.map((p) => `'${p}'`).join(" ")}`;
-    }
-    const gate = ctx.safetyGate.check({ toolName: "bak_create", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Backup ${args.paths.join(", ")} to ${dest}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) return success("bak_create", ctx.targetHost, 0, null, { preview_command: cmd }, { dry_run: true });
-    const r = await executeBash(ctx, cmd, "slow");
-    if (r.exitCode !== 0) return error2("bak_create", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("bak_create", ctx.targetHost, r.durationMs, cmd, { destination: dest, method: args.method });
-  });
-  registerTool(ctx, { name: "bak_restore", description: "Restore from a backup. High risk.", module: "backup", riskLevel: "high", duration: "slow", inputSchema: external_exports.object({ source: external_exports.string().min(1).describe("Backup file/directory"), destination: external_exports.string().optional().default("/").describe("Restore target"), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response."), dry_run: external_exports.boolean().optional().default(false).describe("Preview without executing \u2014 returns the command that would run without making changes.") }), annotations: { destructiveHint: true } }, async (args) => {
-    const src = args.source;
-    const dest = args.destination ?? "/";
-    let cmd;
-    if (src.endsWith(".tar.gz") || src.endsWith(".tgz")) cmd = `sudo tar xzf '${src}' -C '${dest}'`;
-    else cmd = `sudo rsync -avz '${src}/' '${dest}/'`;
-    const gate = ctx.safetyGate.check({ toolName: "bak_restore", toolRiskLevel: "high", targetHost: ctx.targetHost, command: cmd, description: `Restore ${src} to ${dest}`, confirmed: args.confirmed, dryRun: args.dry_run });
-    if (gate) return gate;
-    if (args.dry_run) {
-      const dryCmd = src.endsWith(".tar.gz") ? `tar tzf '${src}' | head -20` : `rsync -avzn '${src}/' '${dest}/'`;
-      const r2 = await executeBash(ctx, dryCmd, "normal");
-      return success("bak_restore", ctx.targetHost, r2.durationMs, dryCmd, { preview_command: cmd, preview_output: r2.stdout.trim() }, { dry_run: true });
-    }
-    const r = await executeBash(ctx, cmd, "slow");
-    if (r.exitCode !== 0) return error2("bak_restore", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("bak_restore", ctx.targetHost, r.durationMs, cmd, { restored_from: src, restored_to: dest });
-  });
-  registerTool(ctx, { name: "bak_schedule", description: "Schedule a recurring backup via cron. Moderate risk.", module: "backup", riskLevel: "moderate", duration: "quick", inputSchema: external_exports.object({ paths: external_exports.array(external_exports.string()).min(1), destination: external_exports.string().min(1), schedule: external_exports.string().min(9).describe("Cron schedule"), retention_days: external_exports.number().int().min(1).optional().default(30), confirmed: external_exports.boolean().optional().default(false).describe("Pass true to confirm execution after reviewing a confirmation_required response.") }), annotations: { destructiveHint: false } }, async (args) => {
-    const paths = args.paths.join(" ");
-    const dest = args.destination;
-    const ret = args.retention_days ?? 30;
-    const hostname3 = ctx.targetHost.replace(/[^a-zA-Z0-9-]/g, "_");
-    const cronCmd = `tar czf ${dest}/${hostname3}-$(date +\\%Y\\%m\\%d-\\%H\\%M\\%S).tar.gz ${paths} && find ${dest} -name '${hostname3}-*.tar.gz' -mtime +${ret} -delete`;
-    const entry = `${args.schedule} ${cronCmd}`;
-    const cmd = `(crontab -l 2>/dev/null; echo '# linux-sysadmin backup'; echo '${entry}') | crontab -`;
-    const gate = ctx.safetyGate.check({ toolName: "bak_schedule", toolRiskLevel: "moderate", targetHost: ctx.targetHost, command: cmd, description: `Schedule backup: ${args.schedule}`, confirmed: args.confirmed });
-    if (gate) return gate;
-    const r = await executeBash(ctx, cmd, "quick");
-    if (r.exitCode !== 0) return error2("bak_schedule", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() });
-    return success("bak_schedule", ctx.targetHost, r.durationMs, cmd, { schedule: args.schedule, paths: args.paths, retention_days: ret });
-  });
-  registerTool(ctx, { name: "bak_verify", description: "Verify backup integrity.", module: "backup", riskLevel: "read-only", duration: "normal", inputSchema: external_exports.object({ path: external_exports.string().min(1) }), annotations: { readOnlyHint: true } }, async (args) => {
-    const p = args.path;
-    let cmd;
-    if (p.endsWith(".tar.gz") || p.endsWith(".tgz")) cmd = `tar tzf '${p}' > /dev/null && echo 'Archive OK: '$(tar tzf '${p}' | wc -l)' files' || echo 'Archive CORRUPT'`;
-    else cmd = `ls -lR '${p}' | wc -l && echo 'files in backup directory'`;
-    const r = await executeBash(ctx, cmd, "normal");
-    return success("bak_verify", ctx.targetHost, r.durationMs, cmd, { output: r.stdout.trim(), path: p });
-  });
-}
-
-// src/tools/ssh/index.ts
-function registerSSHTools(ctx) {
-  registerTool(ctx, { name: "ssh_session_info", description: "SSH transport diagnostics: current target, connection status.", module: "ssh", riskLevel: "read-only", duration: "instant", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    return success("ssh_session_info", ctx.targetHost, 0, null, { target_host: ctx.targetHost, is_remote: ctx.isRemote, connection_status: ctx.isRemote ? "connected" : "local" });
-  });
-  registerTool(ctx, { name: "ssh_config_list", description: "List SSH client config entries from ~/.ssh/config.", module: "ssh", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "cat ~/.ssh/config 2>/dev/null || echo 'No SSH config found'", "quick");
-    return success("ssh_config_list", ctx.targetHost, r.durationMs, "cat ~/.ssh/config", { config: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "ssh_key_list", description: "List SSH keys on the local system.", module: "ssh", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({}), annotations: { readOnlyHint: true } }, async () => {
-    const r = await executeBash(ctx, "ls -la ~/.ssh/*.pub 2>/dev/null && echo '---' && ssh-add -l 2>/dev/null || echo 'No SSH agent or keys found'", "quick");
-    return success("ssh_key_list", ctx.targetHost, r.durationMs, "ls ~/.ssh/*.pub + ssh-add -l", { output: r.stdout.trim() });
-  });
-  registerTool(ctx, { name: "ssh_test_connection", description: "Test SSH connectivity to a host without connecting.", module: "ssh", riskLevel: "read-only", duration: "normal", inputSchema: external_exports.object({ host: external_exports.string().min(1), port: external_exports.number().int().optional().default(22), user: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    const user = args.user ? `${args.user}@` : "";
-    const r = await executeBash(ctx, `ssh -o ConnectTimeout=5 -o BatchMode=yes -p ${args.port ?? 22} ${user}${args.host} 'echo OK' 2>&1`, "normal");
-    const connected = r.stdout.includes("OK");
-    return success("ssh_test_connection", ctx.targetHost, r.durationMs, `ssh ${user}${args.host}`, { host: args.host, reachable: connected, output: (r.stdout + r.stderr).trim() });
-  });
-  registerTool(ctx, { name: "ssh_key_generate", description: "Generate a new SSH key pair. Low risk.", module: "ssh", riskLevel: "low", duration: "quick", inputSchema: external_exports.object({ type: external_exports.enum(["ed25519", "rsa"]).optional().default("ed25519"), comment: external_exports.string().optional(), filename: external_exports.string().optional() }), annotations: { destructiveHint: false } }, async (args) => {
-    const keyType = args.type ?? "ed25519";
-    const fname = args.filename ?? `~/.ssh/id_${keyType}`;
-    const commentArg = args.comment ? `-C '${args.comment}'` : "";
-    const r = await executeBash(ctx, `ssh-keygen -t ${keyType} -f ${fname} -N '' ${commentArg} 2>&1`, "quick");
-    if (r.exitCode !== 0) return error2("ssh_key_generate", ctx.targetHost, r.durationMs, { code: "COMMAND_FAILED", category: "state", message: r.stderr.trim() || r.stdout.trim() || "ssh-keygen failed" });
-    return success("ssh_key_generate", ctx.targetHost, r.durationMs, `ssh-keygen -t ${keyType}`, { generated: fname, type: keyType });
-  });
-  registerTool(ctx, { name: "ssh_authorized_keys", description: "View authorized_keys on the active target.", module: "ssh", riskLevel: "read-only", duration: "quick", inputSchema: external_exports.object({ user: external_exports.string().optional() }), annotations: { readOnlyHint: true } }, async (args) => {
-    const u = args.user ? `/home/${args.user}` : "~";
-    const r = await executeBash(ctx, `cat ${u}/.ssh/authorized_keys 2>/dev/null || echo 'No authorized_keys found'`, "quick");
-    return success("ssh_authorized_keys", ctx.targetHost, r.durationMs, "cat authorized_keys", { keys: r.stdout.trim() });
   });
 }
 
@@ -35291,19 +34050,9 @@ async function main() {
     firstRun
   };
   registerSessionTools(ctx);
-  registerPackageTools(ctx);
   registerServiceTools(ctx);
-  registerPerformanceTools(ctx);
-  registerLogTools(ctx);
   registerSecurityTools(ctx);
-  registerStorageTools(ctx);
-  registerUserTools(ctx);
-  registerFirewallTools(ctx);
-  registerNetworkingTools(ctx);
-  registerContainerTools(ctx);
   registerCronTools(ctx);
-  registerBackupTools(ctx);
-  registerSSHTools(ctx);
   registerDocTools(ctx);
   logger.info({ toolCount: registry2.size }, "All tool modules registered");
   const server = new McpServer({

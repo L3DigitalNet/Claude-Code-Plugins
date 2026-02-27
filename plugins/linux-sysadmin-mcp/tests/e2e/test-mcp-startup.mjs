@@ -153,15 +153,15 @@ console.log("\n--- Tool Registration ---");
 test("4. Log shows toolCount: 106", () => {
   const entry = findLog("All tool modules registered");
   assert(entry !== undefined, "Expected 'All tool modules registered' log entry not found");
-  assertEqual(entry.toolCount, 106, "toolCount should be 106");
+  assertEqual(entry.toolCount, 18, "toolCount should be 18");
 });
 
-test("5. All 15 modules registered (toolCount >= 100)", () => {
+test("5. All 5 modules registered (toolCount >= 18)", () => {
   const entry = findLog("All tool modules registered");
   assert(entry !== undefined, "Expected 'All tool modules registered' log entry not found");
   assert(
-    entry.toolCount >= 100,
-    `toolCount should be >= 100 (got ${entry.toolCount})`
+    entry.toolCount >= 18,
+    `toolCount should be >= 18 (got ${entry.toolCount})`
   );
 });
 

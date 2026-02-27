@@ -3,7 +3,7 @@
   "version": "0.3.1",
   "description": "Full design document lifecycle: guided authoring with principles discovery (/design-draft) followed by iterative principle-enforced review with auto-fix (/design-review). Start with /design-draft for new documents, /design-review for existing ones.",
   "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
   }
 }

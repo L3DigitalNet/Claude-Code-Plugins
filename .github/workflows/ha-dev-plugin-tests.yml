@@ -17,7 +17,7 @@ defaults:
 jobs:
   python-tests:
     name: Python Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, l3digital]
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +41,7 @@ jobs:
 
   integration-tests:
     name: Script Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, l3digital]
     steps:
       - uses: actions/checkout@v4
 
@@ -63,7 +63,7 @@ jobs:
 
   typescript-tests:
     name: TypeScript Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, l3digital]
     defaults:
       run:
         working-directory: plugins/home-assistant-dev/mcp-server
@@ -91,7 +91,7 @@ jobs:
 
   structural-validation:
     name: Plugin Structure
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, l3digital]
     steps:
       - uses: actions/checkout@v4
 
@@ -118,7 +118,7 @@ jobs:
 
   mcp-e2e-tests:
     name: MCP E2E Tests (HA Container)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, l3digital]
     # Only run on main branch merges or when explicitly labeled
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
     services:

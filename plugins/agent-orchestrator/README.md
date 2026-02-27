@@ -32,7 +32,7 @@ Design decisions in this plugin are evaluated against these principles, as state
 ## Installation
 
 ```
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 /plugin install agent-orchestrator@l3digitalnet-plugins
 ```
 
@@ -138,6 +138,6 @@ All hooks are registered declaratively via `hooks/hooks.json`; no runtime setup 
 
 ## Links
 
-- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
+- Issues and feedback: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)

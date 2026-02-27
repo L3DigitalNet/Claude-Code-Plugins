@@ -7,13 +7,13 @@ A Claude Code plugin marketplace. Plugins cover the full development lifecycle: 
 Add this marketplace to your Claude Code installation:
 
 ```bash
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 ```
 
 Or using the full URL:
 
 ```bash
-/plugin marketplace add https://github.com/L3DigitalNet/Claude-Code-Plugins.git
+/plugin marketplace add https://github.com/L3Digital-Net/Claude-Code-Plugins.git
 ```
 
 Then install individual plugins:
@@ -54,7 +54,7 @@ installed plugins at the start of each session.
 | [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
-| [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | ~100 tools | Linux system administration across 15 modules |
+| [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | 18 tools | Knowledge-profile-driven service diagnostics, security audits, cron computation, docs |
 | [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review` | Multi-pass assertion-driven audit of plugin principles, UX, and docs |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
@@ -190,18 +190,17 @@ HA connections, automated validation, example integrations, and project template
 
 ### Linux SysAdmin MCP
 
-**Linux system administration MCP server**: ~100 tools across 15 modules. Covers
-packages, services, users, firewall, networking, security, storage, containers, and more.
+**Linux system administration MCP server**: 18 tools across 5 modules, focused on capabilities that complement Claude Code's Bash tool rather than duplicating it.
 
 **Features:**
 
-- ~100 tools across 15 modules (see the [full tool table](plugins/linux-sysadmin-mcp/README.md#tools))
-- Distro-agnostic command abstraction (Debian/RHEL auto-detection)
-- 5-tier risk classification with confirmation gates
+- Knowledge-profile-driven service status, health checks, and diagnostics (`svc_status`, `svc_logs`, `svc_troubleshoot`)
+- Config validation sweeps, dependency impact analysis, and port/firewall audits (`svc_config_validate`, `svc_dependency_impact`, `svc_port_audit`)
+- Composite security audit with profile enrichment (`sec_audit`)
+- Pure-JS cron expression validation and next-run calculation (`cron_validate`, `cron_next_runs`)
 - YAML knowledge profiles for 8 services (sshd, nginx, docker, ufw, fail2ban, pihole,
   unbound, crowdsec)
-- SSH remote execution support
-- Git-backed documentation generation
+- Git-backed documentation generation (8 `doc_*` tools)
 
 **Install:**
 
@@ -505,7 +504,7 @@ Claude-Code-Plugins/
 │   ├── docs-manager/            # Documentation lifecycle management
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
-│   ├── linux-sysadmin-mcp/      # Linux sysadmin MCP server (~100 tools)
+│   ├── linux-sysadmin-mcp/      # Linux sysadmin MCP server (18 tools, 5 modules)
 │   ├── performance-profiler/    # MCP performance profiling (in development)
 │   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework

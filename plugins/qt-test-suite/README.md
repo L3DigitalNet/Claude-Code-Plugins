@@ -34,7 +34,7 @@ Run `bash <plugin-root>/scripts/check-prerequisites.sh` to verify your setup.
 ## Installation
 
 ```bash
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 /plugin install qt-test-suite@l3digitalnet-plugins
 ```
 
@@ -167,8 +167,8 @@ No unreleased features are currently tracked in the changelog.
 
 ## Links
 
-- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
+- Issues and feedback: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)
 - Qt Pilot MCP server: [github.com/neatobandit0/qt-pilot](https://github.com/neatobandit0/qt-pilot) (MIT License)
 - [qt-dev-suite](../qt-dev-suite/): companion development plugin (agents, skills, scaffolding)

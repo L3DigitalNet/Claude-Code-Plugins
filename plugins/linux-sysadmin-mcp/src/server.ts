@@ -24,20 +24,12 @@ import type { PluginContext } from "./tools/context.js";
 import type { ToolResponse } from "./types/response.js";
 
 // Tool module registrations
+// Removed: packages, performance, logs, storage, users, firewall, networking,
+// containers, ssh, backup — redundant with Claude Code's Bash tool.
 import { registerSessionTools } from "./tools/session/index.js";
-import { registerPackageTools } from "./tools/packages/index.js";
 import { registerServiceTools } from "./tools/services/index.js";
-import { registerPerformanceTools } from "./tools/performance/index.js";
-import { registerLogTools } from "./tools/logs/index.js";
 import { registerSecurityTools } from "./tools/security/index.js";
-import { registerStorageTools } from "./tools/storage/index.js";
-import { registerUserTools } from "./tools/users/index.js";
-import { registerFirewallTools } from "./tools/firewall/index.js";
-import { registerNetworkingTools } from "./tools/networking/index.js";
-import { registerContainerTools } from "./tools/containers/index.js";
 import { registerCronTools } from "./tools/cron/index.js";
-import { registerBackupTools } from "./tools/backup/index.js";
-import { registerSSHTools } from "./tools/ssh/index.js";
 import { registerDocTools } from "./tools/docs/index.js";
 
 const __dirname = typeof import.meta?.url === "string"
@@ -100,21 +92,11 @@ async function main(): Promise<void> {
     configPath: resolvedConfigPath, firstRun,
   };
 
-  // Phase 10: Register all tool modules
+  // Phase 10: Register tool modules (profile-aware + non-trivial logic only)
   registerSessionTools(ctx);
-  registerPackageTools(ctx);
   registerServiceTools(ctx);
-  registerPerformanceTools(ctx);
-  registerLogTools(ctx);
   registerSecurityTools(ctx);
-  registerStorageTools(ctx);
-  registerUserTools(ctx);
-  registerFirewallTools(ctx);
-  registerNetworkingTools(ctx);
-  registerContainerTools(ctx);
   registerCronTools(ctx);
-  registerBackupTools(ctx);
-  registerSSHTools(ctx);
   registerDocTools(ctx);
 
   logger.info({ toolCount: registry.size }, "All tool modules registered");

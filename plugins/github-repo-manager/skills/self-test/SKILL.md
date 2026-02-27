@@ -19,9 +19,9 @@ Run, interpret, and iterate on the gh-manager self-test suite. This skill tells 
 
 ## Test Repo
 
-**Default:** `L3DigitalNet/testing` (private, owned by the plugin author)
+**Default:** `L3Digital-Net/testing` (private, owned by the plugin author)
 
-Set via environment: `export TEST_REPO=L3DigitalNet/testing`
+Set via environment: `export TEST_REPO=L3Digital-Net/testing`
 
 This repo is a dedicated scratch space. Mutation tests (Tier C) create real issues, PRs, branches, labels, releases, and files in this repo. They clean up after themselves where possible, but closed issues/PRs accumulate over time — that's expected.
 
@@ -41,7 +41,7 @@ bash tests/run-all.sh ab    # Infrastructure + read-only
 
 # Environment
 export GITHUB_PAT=ghp_...           # Required for Tiers B and C
-export TEST_REPO=L3DigitalNet/testing  # Default
+export TEST_REPO=L3Digital-Net/testing  # Default
 export GH_MANAGER=gh-manager        # Or full path to binary
 ```
 
@@ -140,12 +140,12 @@ When a test fails:
 
 1. **Run the failing command manually** to see the full JSON output:
    ```bash
-   gh-manager issues label --repo L3DigitalNet/testing --issue 5 --add bug
+   gh-manager issues label --repo L3Digital-Net/testing --issue 5 --add bug
    ```
 
 2. **Check stderr** — errors go to stderr as JSON:
    ```bash
-   gh-manager issues label --repo L3DigitalNet/testing --issue 5 --add bug 2>/tmp/err.json
+   gh-manager issues label --repo L3Digital-Net/testing --issue 5 --add bug 2>/tmp/err.json
    cat /tmp/err.json
    ```
 
@@ -198,7 +198,7 @@ bash tests/run-all.sh
 
 ## Test Repo Preparation
 
-The test repo (`L3DigitalNet/testing`) should have:
+The test repo (`L3Digital-Net/testing`) should have:
 
 | Feature | Required By | How to Enable |
 |---------|------------|---------------|

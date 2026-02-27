@@ -143,8 +143,8 @@ Phase 13: Polish & Release ─────────────────�
   "description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
   "version": "0.1.0",
   "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
   }
 }
 ```
@@ -172,9 +172,9 @@ Add to `.claude-plugin/marketplace.json` `plugins` array:
   "name": "docs-manager",
   "description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
   "version": "0.1.0",
-  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+  "author": { "name": "L3Digital-Net", "url": "https://github.com/L3Digital-Net" },
   "category": "documentation",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/docs-manager",
   "source": "./plugins/docs-manager"
 }
 ```

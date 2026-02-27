@@ -5,7 +5,7 @@
 This is a **dual-purpose repository**:
 
 1. **Plugin marketplace** - Distributes Claude Code plugins via
-   `/plugin marketplace add L3DigitalNet/Claude-Code-Plugins`
+   `/plugin marketplace add L3Digital-Net/Claude-Code-Plugins`
 2. **Development workspace** - Creates and tests new plugins before publication
 
 ## Architecture Overview

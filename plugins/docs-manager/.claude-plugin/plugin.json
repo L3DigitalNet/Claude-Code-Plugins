@@ -3,7 +3,7 @@
   "description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
   "version": "0.2.0",
   "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
   }
 }

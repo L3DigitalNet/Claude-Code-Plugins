@@ -25,7 +25,7 @@ Autonomous maintenance sweep for the Claude-Code-Plugins monorepo.
 ## Installation
 
 ```
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 /plugin install repo-hygiene@l3digitalnet-plugins
 ```
 
@@ -116,6 +116,6 @@ No unreleased items are currently tracked in the changelog. Two checks were cons
 
 ## Links
 
-- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Issues: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
+- Issues: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)

@@ -165,8 +165,8 @@ Test the plugin against this repo immediately after implementation:
   "name": "repo-hygiene",
   "description": "Autonomous maintenance sweep for the Claude-Code-Plugins monorepo — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
   "version": "1.0.0",
-  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+  "author": { "name": "L3Digital-Net", "url": "https://github.com/L3Digital-Net" },
   "source": "./plugins/repo-hygiene",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
 }
 ```

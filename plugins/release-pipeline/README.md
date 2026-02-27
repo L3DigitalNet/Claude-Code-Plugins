@@ -29,7 +29,7 @@ Release Pipeline presents a context-aware menu at invocation, detects monorepo v
 ## Installation
 
 ```
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 /plugin install release-pipeline@l3digitalnet-plugins
 ```
 
@@ -166,6 +166,6 @@ GitHub CLI calls in Phase 3.5 (release create) and Phase 4 (verify) are wrapped 
 
 ## Links
 
-- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
+- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Issues: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
+- Issues: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)

@@ -114,21 +114,11 @@ class TestBundleExists:
 # ---------------------------------------------------------------------------
 
 TOOL_MODULES = [
-    "backup",
-    "containers",
     "cron",
     "docs",
-    "firewall",
-    "logs",
-    "networking",
-    "packages",
-    "performance",
     "security",
     "services",
     "session",
-    "ssh",
-    "storage",
-    "users",
 ]
 
 INFRASTRUCTURE_FILES = [
@@ -175,8 +165,8 @@ class TestTypeScriptSources:
             for d in tools_dir.iterdir()
             if d.is_dir() and (d / "index.ts").exists()
         )
-        assert len(modules) == 15, (
-            f"Expected 15 tool modules, found {len(modules)}: {modules}"
+        assert len(modules) == 5, (
+            f"Expected 5 tool modules, found {len(modules)}: {modules}"
         )
 
     @pytest.mark.parametrize("relpath", INFRASTRUCTURE_FILES)
@@ -325,8 +315,8 @@ class TestCrossReferences:
 
     def test_readme_mentions_module_count(self, plugin_root: Path) -> None:
         readme = (plugin_root / "README.md").read_text()
-        assert "15" in readme, (
-            "README should mention 15 modules"
+        assert "5 modules" in readme, (
+            "README should mention 5 modules"
         )
 
     def test_readme_mentions_all_profiles(self, plugin_root: Path) -> None:

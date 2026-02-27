@@ -30,7 +30,7 @@ Design decisions in this plugin are evaluated against these principles.
 ## Installation
 
 ```bash
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
+/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
 /plugin install qt-dev-suite@l3digitalnet-plugins
 ```
 

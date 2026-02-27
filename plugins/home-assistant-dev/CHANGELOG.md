@@ -41,14 +41,14 @@ All notable changes to the Home Assistant Development Plugin are documented here
 
 ### Fixed
 - `commands/scaffold-integration.md` — added missing `name` frontmatter field
-- `plugin.json` — updated author from `Chris/chrisuthe` to `L3DigitalNet` to match marketplace
-- `plugin.json` — fixed `repository` URL to point to `L3DigitalNet/Claude-Code-Plugins`
+- `plugin.json` — updated author from `Chris/chrisuthe` to `L3Digital-Net` to match marketplace
+- `plugin.json` — fixed `repository` URL to point to `L3Digital-Net/Claude-Code-Plugins`
 - `marketplace.json` — restored MCP server mention in description now that it's wired in
 - `README.md` — replaced stale `chrisuthe/ha-dev-plugin` install URLs with correct marketplace install instructions
 - `README.md` — fixed directory tree root name from `ha-dev-plugin/` to `home-assistant-dev/`
 - `README.md` — fixed skill count in directory tree from 18 to 19
 - `mcp-server/package.json` — changed package name from `@anthropic/ha-dev-mcp-server` to `ha-dev-mcp-server`
-- `mcp-server/package.json` — changed author from `Anthropic` to `L3DigitalNet`
+- `mcp-server/package.json` — changed author from `Anthropic` to `L3Digital-Net`
 
 ## [2.0.4] - 2026-02-17
 

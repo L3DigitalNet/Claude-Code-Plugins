@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Test-driven autonomous refactoring. Captures a behavioural test baseline, audits code against project design principles, applies changes inside git worktree isolation, and reverts on test failure — entirely without human input in the loop.",
   "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
   },
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
 }

@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Qt GUI application development toolkit: specialist agents, domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt development.",
   "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
   },
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-dev-suite"
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/qt-dev-suite"
 }

@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-21
 **Status:** Approved
-**Author:** L3DigitalNet
+**Author:** L3Digital-Net
 
 ---
 

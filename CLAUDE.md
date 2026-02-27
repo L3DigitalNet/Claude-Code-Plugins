@@ -31,7 +31,7 @@ Claude-Code-Plugins/
 │   ├── design-assistant/             # Design document authoring and review
 │   ├── github-repo-manager/          # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
-│   ├── linux-sysadmin-mcp/           # Linux sysadmin MCP server (~100 tools, TypeScript)
+│   ├── linux-sysadmin-mcp/           # Linux sysadmin MCP server (18 tools, 5 modules, TypeScript)
 │   ├── plugin-review/                # Plugin quality review via orchestrator
 │   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
 │   └── release-pipeline/             # Autonomous release pipeline
@@ -155,9 +155,9 @@ Canonical entry template:
   "name": "plugin-name",
   "description": "One or two sentences.",
   "version": "1.0.0",
-  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+  "author": { "name": "L3Digital-Net", "url": "https://github.com/L3Digital-Net" },
   "source": "./plugins/plugin-name",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name"
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/plugin-name"
 }
 ```
 

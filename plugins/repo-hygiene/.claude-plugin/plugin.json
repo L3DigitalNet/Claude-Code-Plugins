@@ -3,7 +3,7 @@
   "version": "1.1.1",
   "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
   "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
   }
 }
