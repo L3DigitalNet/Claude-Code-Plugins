@@ -1,4 +1,4 @@
-# keepass-mcp — Claude Code Implementation Brief
+# keepass-cred-mgr — Claude Code Implementation Brief
 
 > Audience: Claude Code (Opus 4.6), acting as sole implementer.
 > Goal: Produce a complete, tested, publishable Claude Code plugin.
@@ -9,7 +9,7 @@
 
 ## Project Context
 
-Build a Claude Code plugin (`keepass-mcp`) that exposes a KeePass `.kdbx` vault via MCP tools. Authentication is via YubiKey 5C Nano HMAC-SHA1 challenge-response on slot 2. All vault operations use `keepassxc-cli` — no `pykeepass` dependency. Transport is stdio (local only). The plugin is distributed via the L3Digital Claude-Code-Plugins marketplace repo.
+Build a Claude Code plugin (`keepass-cred-mgr`) that exposes a KeePass `.kdbx` vault via MCP tools. Authentication is via YubiKey 5C Nano HMAC-SHA1 challenge-response on slot 2. All vault operations use `keepassxc-cli` — no `pykeepass` dependency. Transport is stdio (local only). The plugin is distributed via the L3Digital Claude-Code-Plugins marketplace repo.
 
 **Runtime constraints that affect implementation:**
 - `keepassxc-cli ls` returns titles only — username/URL metadata requires a `show` call per entry (N+1)
@@ -25,7 +25,7 @@ Build a Claude Code plugin (`keepass-mcp`) that exposes a KeePass `.kdbx` vault 
 Create this exact layout. No additional files unless required by a dependency:
 
 ```
-keepass-mcp/
+keepass-cred-mgr/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── .mcp.json
@@ -92,7 +92,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "keepass-mcp"
+name = "keepass-cred-mgr"
 version = "1.0.0"
 requires-python = ">=3.12"
 dependencies = [
@@ -122,7 +122,7 @@ asyncio_mode = "auto"
 | `allowed_groups` | list[str] | required | Groups visible to all tools |
 | `audit_log_path` | str | required | Absolute path to `.jsonl` audit log |
 
-Config path sourced from env var `KEEPASS_MCP_CONFIG`. Raise `ValueError` with clear message on missing required fields. Expand `~` in paths via `os.path.expanduser`.
+Config path sourced from env var `KEEPASS_CRED_MGR_CONFIG`. Raise `ValueError` with clear message on missing required fields. Expand `~` in paths via `os.path.expanduser`.
 
 **Verification:** `pytest tests/unit/test_config.py` — all pass.
 
@@ -349,7 +349,7 @@ Each tool registration must include a description string accurate to the tool's 
 **`.claude-plugin/plugin.json`:**
 ```json
 {
-  "name": "keepass-mcp",
+  "name": "keepass-cred-mgr",
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
   "version": "1.0.0",
   "author": {
@@ -367,7 +367,7 @@ Each tool registration must include a description string accurate to the tool's 
       "command": "python3",
       "args": ["-m", "server.main"],
       "env": {
-        "KEEPASS_MCP_CONFIG": "${HOME}/.config/keepass-mcp/config.yaml"
+        "KEEPASS_CRED_MGR_CONFIG": "${HOME}/.config/keepass-cred-mgr/config.yaml"
       }
     }
   }
@@ -542,8 +542,8 @@ ELEVATED SENSITIVITY (billing implications):
 
 **`config.example.yaml`:**
 ```yaml
-# keepass-mcp configuration
-# Copy to ~/.config/keepass-mcp/config.yaml and edit paths
+# keepass-cred-mgr configuration
+# Copy to ~/.config/keepass-cred-mgr/config.yaml and edit paths
 
 database_path: /path/to/your/primary.kdbx
 yubikey_slot: 2
@@ -560,14 +560,14 @@ allowed_groups:
   - API Keys
   - Services
 
-audit_log_path: ~/.local/share/keepass-mcp/audit.jsonl
+audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 ```
 
 **`README.md`** must cover (write complete prose, not placeholders):
 - What this plugin does and why
 - Prerequisites: KeePassXC, ykman, Python 3.12+, YubiKey 5C Nano or compatible
-- Installation: `/plugin marketplace add l3digital/claude-code-plugins` then `/plugin install keepass-mcp@l3digital`
-- Setup: point to the keepass-mcp-setup.md document (or inline the steps)
+- Installation: `/plugin marketplace add l3digital/claude-code-plugins` then `/plugin install keepass-cred-mgr@l3digital`
+- Setup: point to the keepass-cred-mgr-setup.md document (or inline the steps)
 - YAML config setup with field reference
 - Complete tool surface reference table (all 8 tools, parameters, return values)
 - Slash commands reference

@@ -1,4 +1,4 @@
-# KeePass MCP — Manual Setup Guide
+# KeePassXC Credential Manager — Manual Setup Guide
 
 > Everything you need to do by hand before the plugin is installed and running.
 > Complete steps in order — each section depends on the previous.
@@ -160,13 +160,13 @@ In KeePassXC, create the following top-level groups in the primary database. Rig
 
 ## Step 7 — Create the YAML Config File
 
-Create the config file at `~/.config/keepass-mcp/config.yaml` (the default path the MCP server expects):
+Create the config file at `~/.config/keepass-cred-mgr/config.yaml` (the default path the MCP server expects):
 
 ```bash
-mkdir -p ~/.config/keepass-mcp
+mkdir -p ~/.config/keepass-cred-mgr
 ```
 
-Then create `~/.config/keepass-mcp/config.yaml` with the following content, updating paths to match your setup:
+Then create `~/.config/keepass-cred-mgr/config.yaml` with the following content, updating paths to match your setup:
 
 ```yaml
 database_path: /path/to/your/primary.kdbx
@@ -184,13 +184,13 @@ allowed_groups:
   - API Keys
   - Services
 
-audit_log_path: ~/.local/share/keepass-mcp/audit.jsonl
+audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 ```
 
 Create the audit log directory:
 
 ```bash
-mkdir -p ~/.local/share/keepass-mcp
+mkdir -p ~/.local/share/keepass-cred-mgr
 ```
 
 ---
@@ -204,14 +204,14 @@ Once the plugin is published to the Claude-Code-Plugins marketplace:
 /plugin marketplace add l3digital/claude-code-plugins
 
 # Install the plugin
-/plugin install keepass-mcp@l3digital
+/plugin install keepass-cred-mgr@l3digital
 ```
 
 Verify installation:
 
 ```bash
 /plugin
-# Select "Manage Plugins" and confirm keepass-mcp is listed and enabled
+# Select "Manage Plugins" and confirm keepass-cred-mgr is listed and enabled
 ```
 
 Test the slash commands:

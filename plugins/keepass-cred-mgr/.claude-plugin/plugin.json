@@ -1,0 +1,10 @@
+{
+  "name": "keepass-cred-mgr",
+  "version": "0.1.0",
+  "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
+  "author": {
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
+  },
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr"
+}
