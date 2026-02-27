@@ -8,7 +8,7 @@ DB="$SCRIPT_DIR/test.kdbx"
 
 rm -f "$DB"
 
-echo "testpassword" | keepassxc-cli db-create --set-password "$DB"
+echo -e "testpassword\ntestpassword" | keepassxc-cli db-create --set-password "$DB"
 
 # Create groups
 for group in "Servers" "SSH Keys" "API Keys"; do

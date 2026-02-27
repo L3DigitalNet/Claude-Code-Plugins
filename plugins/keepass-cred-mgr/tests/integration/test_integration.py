@@ -1,14 +1,17 @@
 """Integration tests against real test.kdbx.
 
 Requires keepassxc-cli installed. No YubiKey needed (test db uses password only).
-These tests are templates; they skip cleanly if keepassxc-cli is unavailable
-or if the test database hasn't been created yet.
+These tests call real keepassxc-cli commands via the PasswordVault helper.
 """
 
 import shutil
 from pathlib import Path
 
 import pytest
+
+from server.audit import AuditLogger
+from server.config import load_config
+from server.vault import DuplicateEntry, GroupNotAllowed
 
 # Skip entire module if keepassxc-cli not available
 pytestmark = pytest.mark.integration
@@ -26,12 +29,9 @@ if not TEST_DB.exists():
 
 @pytest.fixture
 def integration_setup(tmp_path):
-    """Copy test db to tmp, create config, return vault + audit."""
+    """Copy test db to tmp, create config, return PasswordVault + audit."""
     import yaml
-    from server.config import load_config
-    from server.vault import Vault
-    from server.audit import AuditLogger
-    from server.yubikey import MockYubiKey
+    from tests.helpers import PasswordVault
 
     # Copy db so writes don't pollute the fixture
     db_copy = tmp_path / "test.kdbx"
@@ -52,53 +52,84 @@ def integration_setup(tmp_path):
     config_file.write_text(yaml.dump(cfg))
     config = load_config(str(config_file))
 
-    # Use MockYubiKey; integration tests don't need real YubiKey.
-    # Force unlock state for password-only db.
-    yk = MockYubiKey(present=True, slot=2)
-    vault = Vault(config, yk)
+    vault = PasswordVault(config, password="testpassword")
     vault._unlocked = True
     audit = AuditLogger(str(audit_path))
 
     return vault, audit, config, db_copy
 
 
-# NOTE: Integration tests are templates.
-# The exact CLI invocations depend on keepassxc-cli version and password-mode behavior.
-# The implementer should adapt Vault.run_cli or create a PasswordVault subclass
-# for integration testing with password-only databases.
-
-
 class TestIntegrationReadCycle:
     def test_list_groups_returns_allowed(self, integration_setup):
         """list_groups returns only allowed groups."""
-        pass  # Requires password-mode vault override
+        from server.tools.read import list_groups
+
+        vault, audit, config, db = integration_setup
+        groups = list_groups(vault)
+        assert set(groups) == {"Servers", "SSH Keys", "API Keys"}
 
 
 class TestIntegrationWriteCycle:
     def test_create_then_list(self, integration_setup):
         """create_entry then list_entries confirms presence."""
-        pass  # Requires password-mode vault override
+        from server.tools.read import list_entries
+        from server.tools.write import create_entry
+
+        vault, audit, config, db = integration_setup
+        create_entry(vault, audit, title="New Test Entry", group="Servers", username="testuser")
+        entries = list_entries(vault, audit, group="Servers")
+        titles = [e["title"] for e in entries]
+        assert "New Test Entry" in titles
 
 
 class TestIntegrationRotation:
     def test_rotation_cycle(self, integration_setup):
         """create -> deactivate -> confirm [INACTIVE] -> create same title."""
-        pass  # Requires password-mode vault override
+        from server.tools.read import list_entries
+        from server.tools.write import create_entry, deactivate_entry
+
+        vault, audit, config, db = integration_setup
+        create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u")
+        deactivate_entry(vault, audit, title="Rotate Me", group="API Keys")
+        entries = list_entries(vault, audit, group="API Keys", include_inactive=True)
+        titles = [e["title"] for e in entries]
+        assert "[INACTIVE] Rotate Me" in titles
+        # Should be able to create a new entry with the same title
+        create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u2")
 
 
 class TestIntegrationDuplicatePrevention:
     def test_duplicate_raises(self, integration_setup):
         """create_entry twice raises DuplicateEntry on second."""
-        pass  # Requires password-mode vault override
+        from server.tools.write import create_entry
+
+        vault, audit, config, db = integration_setup
+        create_entry(vault, audit, title="Unique Entry", group="SSH Keys", username="u")
+        with pytest.raises(DuplicateEntry):
+            create_entry(vault, audit, title="Unique Entry", group="SSH Keys", username="u2")
 
 
 class TestIntegrationInactiveFiltering:
     def test_inactive_hidden_by_default(self, integration_setup):
         """list_entries hides [INACTIVE]; shows with flag."""
-        pass  # Requires password-mode vault override
+        from server.tools.read import list_entries
+
+        vault, audit, config, db = integration_setup
+        # The seeded db has "[INACTIVE] Old Server" in Servers
+        visible = list_entries(vault, audit, group="Servers")
+        visible_titles = [e["title"] for e in visible]
+        assert "[INACTIVE] Old Server" not in visible_titles
+
+        all_entries = list_entries(vault, audit, group="Servers", include_inactive=True)
+        all_titles = [e["title"] for e in all_entries]
+        assert "[INACTIVE] Old Server" in all_titles
 
 
 class TestIntegrationGroupAllowlist:
     def test_disallowed_group_raises(self, integration_setup):
         """Request for unlisted group raises GroupNotAllowed."""
-        pass  # Requires password-mode vault override
+        from server.tools.read import list_entries
+
+        vault, audit, config, db = integration_setup
+        with pytest.raises(GroupNotAllowed):
+            list_entries(vault, audit, group="Banking")
