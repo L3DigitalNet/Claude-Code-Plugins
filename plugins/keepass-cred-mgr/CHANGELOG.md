@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-02-27
+
+### Fixed
+
+- `add_attachment` handler now catches `binascii.Error` from malformed base64 input
+- All 8 MCP handlers now catch `subprocess.TimeoutExpired` from hanging `keepassxc-cli` processes
+
+### Added
+
+- 100 unit tests (up from 58): full handler layer coverage, edge cases for config, vault, audit, and tools
+- `test_main.py` covering all 8 MCP handlers, `app_lifespan`, and helper functions (~90% coverage on `main.py`)
+
 ## [0.1.0] - 2026-02-27
 
 ### Added
@@ -21,5 +33,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - YAML configuration with env var override (`KEEPASS_CRED_MGR_CONFIG`)
 - 6 credential-type skills: cPanel, FTP/SFTP, SSH, Brave Search API, Anthropic API, hygiene rules
 - 3 slash commands: `/keepass-status`, `/keepass-rotate`, `/keepass-audit`
-- 58 unit tests across config, YubiKey, vault, audit, and tool modules
 - Integration test framework with test database creation script
