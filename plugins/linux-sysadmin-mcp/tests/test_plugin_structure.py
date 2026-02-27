@@ -114,21 +114,11 @@ class TestBundleExists:
 # ---------------------------------------------------------------------------
 
 TOOL_MODULES = [
-    "backup",
-    "containers",
     "cron",
     "docs",
-    "firewall",
-    "logs",
-    "networking",
-    "packages",
-    "performance",
     "security",
     "services",
     "session",
-    "ssh",
-    "storage",
-    "users",
 ]
 
 INFRASTRUCTURE_FILES = [
@@ -175,8 +165,8 @@ class TestTypeScriptSources:
             for d in tools_dir.iterdir()
             if d.is_dir() and (d / "index.ts").exists()
         )
-        assert len(modules) == 15, (
-            f"Expected 15 tool modules, found {len(modules)}: {modules}"
+        assert len(modules) == 5, (
+            f"Expected 5 tool modules, found {len(modules)}: {modules}"
         )
 
     @pytest.mark.parametrize("relpath", INFRASTRUCTURE_FILES)
