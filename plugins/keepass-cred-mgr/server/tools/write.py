@@ -11,7 +11,7 @@ import os
 import stat
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from filelock import FileLock, Timeout
 
@@ -128,7 +128,7 @@ def deactivate_entry(
             existing_notes = line[len("Notes: "):]
             break
 
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     new_notes = f"{existing_notes}\n[DEACTIVATED: {timestamp}]".strip()
     new_title = f"{INACTIVE_PREFIX}{title}"
 

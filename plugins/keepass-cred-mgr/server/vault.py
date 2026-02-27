@@ -11,7 +11,7 @@ import asyncio
 import logging
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from server.config import Config
 from server.yubikey import YubiKeyInterface
@@ -65,7 +65,7 @@ class Vault:
         self._yubikey = yubikey
         self._unlocked = False
         self._unlock_time: datetime | None = None
-        self._grace_timer: asyncio.Task | None = None
+        self._grace_timer: asyncio.Task[None] | None = None
 
     @property
     def is_unlocked(self) -> bool:
@@ -96,7 +96,7 @@ class Vault:
                 f"keepassxc-cli open failed: {result.stderr.strip()}"
             )
         self._unlocked = True
-        self._unlock_time = datetime.now(timezone.utc)
+        self._unlock_time = datetime.now(UTC)
         logger.info("Vault unlocked")
 
     def _lock(self) -> None:

@@ -15,6 +15,7 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
 
@@ -25,7 +26,6 @@ from server.tools import write as write_tools
 from server.vault import (
     DuplicateEntry,
     EntryInactive,
-    EntryNotFound,
     GroupNotAllowed,
     KeePassCLIError,
     Vault,
@@ -48,7 +48,7 @@ logger = logging.getLogger("keepass-cred-mgr")
 class AppContext:
     vault: Vault
     audit: AuditLogger
-    poll_task: asyncio.Task
+    poll_task: asyncio.Task[None]
 
 
 @asynccontextmanager
@@ -72,8 +72,9 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 mcp = FastMCP("keepass", lifespan=app_lifespan)
 
 
-def _get_ctx(ctx: Context) -> AppContext:
-    return ctx.request_context.lifespan_context
+def _get_ctx(ctx: Context[Any, Any, Any]) -> AppContext:
+    app_ctx: AppContext = ctx.request_context.lifespan_context
+    return app_ctx
 
 
 def _error_text(e: Exception) -> str:
@@ -84,7 +85,7 @@ def _error_text(e: Exception) -> str:
 
 
 @mcp.tool()
-def list_groups(ctx: Context) -> list[str]:
+def list_groups(ctx: Context[Any, Any, Any]) -> list[str]:
     """List accessible KeePass groups (filtered by allowlist)."""
     app = _get_ctx(ctx)
     try:
@@ -95,10 +96,10 @@ def list_groups(ctx: Context) -> list[str]:
 
 @mcp.tool()
 def list_entries(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     group: str | None = None,
     include_inactive: bool = False,
-) -> list[dict]:
+) -> list[dict[str, str]]:
     """List entries in a group. Hides [INACTIVE] entries by default."""
     app = _get_ctx(ctx)
     try:
@@ -111,11 +112,11 @@ def list_entries(
 
 @mcp.tool()
 def search_entries(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     query: str,
     group: str | None = None,
     include_inactive: bool = False,
-) -> list[dict]:
+) -> list[dict[str, str | None]]:
     """Search entries by keyword. Filters to allowed groups only."""
     app = _get_ctx(ctx)
     try:
@@ -128,18 +129,21 @@ def search_entries(
 
 
 @mcp.tool()
-def get_entry(ctx: Context, title: str, group: str | None = None) -> dict:
+def get_entry(ctx: Context[Any, Any, Any], title: str, group: str | None = None) -> dict[str, str]:
     """Get full entry details including password. Logs to audit trail."""
     app = _get_ctx(ctx)
     try:
         return read_tools.get_entry(app.vault, app.audit, title=title, group=group)
-    except (VaultLocked, EntryInactive, GroupNotAllowed, KeePassCLIError, subprocess.TimeoutExpired) as e:
+    except (
+        VaultLocked, EntryInactive, GroupNotAllowed,
+        KeePassCLIError, subprocess.TimeoutExpired,
+    ) as e:
         raise ValueError(_error_text(e))
 
 
 @mcp.tool()
 def get_attachment(
-    ctx: Context, title: str, attachment_name: str, group: str | None = None
+    ctx: Context[Any, Any, Any], title: str, attachment_name: str, group: str | None = None
 ) -> str:
     """Export an attachment from an entry. Returns base64-encoded content."""
     app = _get_ctx(ctx)
@@ -149,7 +153,10 @@ def get_attachment(
             title=title, attachment_name=attachment_name, group=group,
         )
         return base64.b64encode(data).decode("ascii")
-    except (VaultLocked, EntryInactive, GroupNotAllowed, KeePassCLIError, subprocess.TimeoutExpired) as e:
+    except (
+        VaultLocked, EntryInactive, GroupNotAllowed,
+        KeePassCLIError, subprocess.TimeoutExpired,
+    ) as e:
         raise ValueError(_error_text(e))
 
 
@@ -158,7 +165,7 @@ def get_attachment(
 
 @mcp.tool()
 def create_entry(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     title: str,
     group: str,
     username: str | None = None,
@@ -185,7 +192,7 @@ def create_entry(
 
 @mcp.tool()
 def deactivate_entry(
-    ctx: Context, title: str, group: str | None = None
+    ctx: Context[Any, Any, Any], title: str, group: str | None = None
 ) -> str:
     """Deactivate an entry by adding [INACTIVE] prefix and deactivation timestamp."""
     app = _get_ctx(ctx)
@@ -204,7 +211,7 @@ def deactivate_entry(
 
 @mcp.tool()
 def add_attachment(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     title: str,
     attachment_name: str,
     content: str,
@@ -228,7 +235,7 @@ def add_attachment(
         raise ValueError(_error_text(e))
 
 
-def main():
+def main() -> None:
     mcp.run(transport="stdio")
 
 

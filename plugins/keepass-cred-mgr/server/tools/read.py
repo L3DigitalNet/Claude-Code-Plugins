@@ -22,7 +22,7 @@ logger.addHandler(logging.StreamHandler(sys.stderr))
 
 def _parse_show_output(stdout: str) -> dict[str, str]:
     """Parse keepassxc-cli show output into a dict."""
-    fields = {}
+    fields: dict[str, str] = {}
     for line in stdout.strip().splitlines():
         if ": " in line:
             key, _, value = line.partition(": ")
@@ -57,14 +57,14 @@ def list_entries(
     *,
     group: str | None = None,
     include_inactive: bool = False,
-) -> list[dict]:
+) -> list[dict[str, str]]:
     if group is not None:
         vault.check_group_allowed(group)
         groups = [group]
     else:
         groups = list(vault.config.allowed_groups)
 
-    results = []
+    results: list[dict[str, str]] = []
     for grp in groups:
         db = vault.config.database_path
         stdout = vault.run_cli("ls", db, grp)
@@ -101,7 +101,7 @@ def search_entries(
     query: str,
     group: str | None = None,
     include_inactive: bool = False,
-) -> list[dict]:
+) -> list[dict[str, str | None]]:
     if group is not None:
         vault.check_group_allowed(group)
 
@@ -109,7 +109,7 @@ def search_entries(
     stdout = vault.run_cli("search", db, query)
     paths = [line.strip() for line in stdout.strip().splitlines() if line.strip()]
 
-    results = []
+    results: list[dict[str, str | None]] = []
     for entry_path in paths:
         if "/" in entry_path:
             grp, _, title = entry_path.partition("/")
@@ -145,7 +145,7 @@ def get_entry(
     *,
     title: str,
     group: str | None = None,
-) -> dict:
+) -> dict[str, str]:
     if title.startswith(INACTIVE_PREFIX):
         raise EntryInactive(f"Entry '{title}' is deactivated")
 

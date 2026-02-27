@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-asyncio"]
+dev = ["pytest", "pytest-asyncio", "pytest-cov", "ruff", "mypy"]
 
 [tool.setuptools.packages.find]
 include = ["server*"]
@@ -26,3 +26,16 @@ markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "integration: Integration tests (require keepassxc-cli)",
 ]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["server"]
+exclude = ["tests/"]
