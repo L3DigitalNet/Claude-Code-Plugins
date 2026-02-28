@@ -1,12 +1,12 @@
 # keepass-cred-mgr
 
-KeePassXC Credential Manager for Claude Code. Exposes a KeePass `.kdbx` vault via 9 MCP tools, authenticated by YubiKey HMAC-SHA1 challenge-response, with credential-type skills and guided rotation commands.
+KeePassXC Credential Manager for Claude Code. Exposes a KeePass `.kdbx` vault via 10 MCP tools, authenticated by YubiKey HMAC-SHA1 challenge-response, with credential-type skills and guided rotation commands.
 
 ## Summary
 
 keepass-cred-mgr gives Claude Code direct, audited access to a KeePass vault for credential retrieval, storage, and rotation. Instead of pasting secrets into conversation or hardcoding them in config files, Claude reads credentials from the vault and writes them to their intended destination (`.env` files, SSH configs, SDK setups) without ever displaying them.
 
-All vault operations go through `keepassxc-cli` via async subprocesses; the YubiKey must be physically present and touched to unlock the vault. A background poller watches for YubiKey removal and locks the vault after a configurable grace period. Write operations are file-locked, secret-returning calls are audit-logged, and temporary files used for attachment import are overwritten with zeros before deletion. Structured logging via `structlog` provides key-value event records throughout.
+Unlocking the vault starts a persistent `keepassxc-cli open` REPL process — one YubiKey touch per session. All subsequent tool calls send commands through that REPL's stdin/stdout without re-authenticating. A background poller watches for YubiKey removal and locks the vault (killing the REPL) after a configurable grace period. Write operations are file-locked, secret-returning calls are audit-logged, and temporary files used for attachment import are overwritten with zeros before deletion. Structured logging via `structlog` provides key-value event records throughout.
 
 ## Principles
 
@@ -23,7 +23,7 @@ All vault operations go through `keepassxc-cli` via async subprocesses; the Yubi
 ## Features
 
 - **Vault state machine**: YubiKey presence polling with configurable grace period; auto-lock on removal, explicit touch required to re-unlock
-- **9 MCP tools**: 1 auth (`unlock_vault`), 5 read (list groups, list entries, search, get entry, get attachment), and 3 write (create entry, deactivate entry, add attachment)
+- **10 MCP tools**: 1 auth (`unlock_vault`), 5 read (list groups, list entries, search, get entry, get attachment), and 4 write (create entry, deactivate entry, add attachment, bulk import)
 - **Credential-type skills**: Per-service rules for cPanel, FTP/SFTP, SSH keys, Brave Search API, and Anthropic API credentials
 - **Guided rotation**: `/keepass-rotate` walks through create-then-deactivate with safety checks at each step
 - **Audit logging**: Structured JSONL log for all secret-returning operations
@@ -92,7 +92,7 @@ flowchart TD
     Poller -.->|removed > grace period| AutoLock[Auto-lock vault]
 ```
 
-The server runs as a stdio MCP process spawned by Claude Code via `scripts/start-server.sh`, which resolves Python dependencies through `uv run` and starts the FastMCP server. On startup it loads the YAML config, initializes the YubiKey poller, and registers all 9 tools. The vault starts locked; call `unlock_vault` first to verify YubiKey presence and perform a physical touch. Once unlocked, the vault stays open as long as the YubiKey is inserted. Removal starts a grace timer (default 10 seconds) to handle transient USB interruptions; if the key isn't reinserted in time, the vault locks and all subsequent tool calls fail with `VaultLocked` until `unlock_vault` is called again.
+The server runs as a stdio MCP process spawned by Claude Code via `scripts/start-server.sh`, which resolves Python dependencies through `uv run` and starts the FastMCP server. On startup it loads the YAML config, initializes the YubiKey poller, and registers all 10 tools. The vault starts locked; call `unlock_vault` first to verify YubiKey presence and perform a physical touch. `unlock_vault` opens a persistent `keepassxc-cli open` REPL process — that single touch covers all subsequent tool calls in the session. Commands are dispatched through the REPL's stdin/stdout with Qt-style double-quote argument escaping; the REPL stays alive until the vault locks. Removal of the YubiKey starts a grace timer (default 10 seconds); if the key isn't reinserted in time, the vault locks (killing the REPL process), and all subsequent tool calls fail with `VaultLocked` until `unlock_vault` is called again.
 
 ## Usage
 
@@ -116,15 +116,16 @@ For structured workflows, use the slash commands:
 
 | Tool | Parameters | Returns | Notes |
 |------|-----------|---------|-------|
-| `unlock_vault` | (none) | Confirmation | Must be called before any other vault tool; requires YubiKey touch |
+| `unlock_vault` | (none) | Confirmation | Must be called before any other vault tool; requires YubiKey touch; starts persistent REPL session |
 | `list_groups` | (none) | Group names | Filtered to `allowed_groups` |
-| `list_entries` | `group?`, `include_inactive?` | Title, username, URL per entry | N+1 CLI calls; capped at `page_size` |
+| `list_entries` | `group?`, `include_inactive?` | Title, username, URL per entry | REPL-dispatched; `ls` + `show` per entry; capped at `page_size` |
 | `search_entries` | `query`, `group?`, `include_inactive?` | Matching entry metadata | Filtered to allowed groups |
 | `get_entry` | `title`, `group?` | Full entry including password | Audit logged; blocked on `[INACTIVE]` entries |
 | `get_attachment` | `title`, `attachment_name`, `group?` | Attachment content (base64) | Audit logged; blocked on `[INACTIVE]` entries |
 | `create_entry` | `title`, `group`, `username?`, `password?`, `url?`, `notes?` | Confirmation | Rejects duplicates and titles with `/` |
 | `deactivate_entry` | `title`, `group?` | Confirmation | Adds `[INACTIVE]` prefix and timestamp to notes |
 | `add_attachment` | `title`, `attachment_name`, `content`, `group?` | Confirmation | Secure temp file; shredded after import |
+| `import_entries` | `entries` (list of `{group, title, ...}`) | Confirmation | Bulk import via XML → staging KDBX → merge; 2 YubiKey touches regardless of entry count; vault locks after import |
 
 ## Commands
 
@@ -183,7 +184,7 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 
 ## Design Decisions
 
-- **`keepassxc-cli` over `pykeepass`**: Using the CLI means the MCP server has no direct database access; KeePassXC owns the file format, locking, and YubiKey integration. All CLI calls use `asyncio.create_subprocess_exec` for non-blocking execution. The trade-off is N+1 subprocess calls for `list_entries` (one `ls` plus one `show` per entry for metadata), capped by `page_size`.
+- **`keepassxc-cli` over `pykeepass`**: Using the CLI means the MCP server has no direct database access; KeePassXC owns the file format, locking, and YubiKey integration. `unlock_vault` opens a persistent `keepassxc-cli open` REPL process; all subsequent commands are dispatched through that process's stdin/stdout without re-authenticating. `list_entries` still issues one `ls` plus one `show` per entry (for metadata), but all within a single session rather than spawning a subprocess per call. Binary attachment exports use a separate subprocess since raw bytes cannot pass through the text REPL without corruption.
 
 - **`ykman list` for presence polling**: `keepassxc-cli` requires a physical touch on every invocation. Using `ykman list` (pure USB enumeration, no touch) allows continuous polling without interrupting the user.
 
@@ -201,7 +202,7 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 
 ## Known Issues
 
-- **N+1 CLI calls on list operations**: `keepassxc-cli ls` returns titles only. Fetching username and URL metadata requires a `show` call per entry. Large groups hit the `page_size` cap; results beyond the cap are silently truncated with a server-side log warning.
+- **N+1 REPL commands on list operations**: `keepassxc-cli ls` returns titles only. Fetching username and URL metadata requires a `show` command per entry, all dispatched through the open REPL (no re-authentication). Large groups hit the `page_size` cap; results beyond the cap are silently truncated with a server-side log warning.
 - **No entry deletion or overwrite**: By design, Claude cannot delete or overwrite entries. Credential rotation requires a create-then-deactivate sequence, and stale `[INACTIVE]` entries accumulate until manually removed in KeePassXC.
 - **Titles with slashes are unsupported**: `keepassxc-cli` uses `/` as a path separator (`Group/Title`). Titles containing `/` produce undefined CLI behavior; `create_entry` rejects them with an error.
 - **`edit --notes` replaces the entire field**: Appending a deactivation timestamp to notes requires reading the existing notes first, then writing the combined string. If the notes update fails after a successful rename, the entry is still deactivated (renamed to `[INACTIVE]`) but the deactivation timestamp in notes may be missing. A warning is logged in this case.

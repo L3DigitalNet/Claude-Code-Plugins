@@ -53,6 +53,8 @@ The MCP server only ever interacts with the primary database. The backup exists 
 - **KeePassXC** provides the GUI for database management on both databases
 - **`keepassxc-cli`** used by the MCP server for programmatic vault interaction (primary database only)
 - `pykeepass` is **not** used — KeePassXC dependency accepted for GUI and YubiKey/SSH agent support
+- **REPL mode**: `keepassxc-cli open <database>` starts a persistent interactive session; all subsequent commands are sent via stdin and read from stdout. One YubiKey touch per session rather than per command.
+- **Qt argument quoting**: The REPL uses Qt's `QProcess::splitCommand` (double-quote style). Arguments with spaces must use double quotes — POSIX single-quote quoting is not recognised and silently breaks entries with spaces in their titles.
 
 ### Authentication
 
@@ -61,20 +63,22 @@ Single path only — YubiKey challenge-response against the primary database:
 1. Server detects YubiKey is inserted (polled via `ykman list`)
 2. Server invokes `keepassxc-cli --yubikey 2 open <database>` — the CLI internally manages the HMAC-SHA1 challenge-response
 3. YubiKey blinks — user physically touches the key to authorize the CLI's challenge
-4. On valid response, the vault is open and tool calls can proceed
+4. On valid response, the REPL session is open; all subsequent `run_cli()` calls reuse it without re-authenticating
 
 If no YubiKey is present, the MCP server returns a `YubiKeyNotPresent` error and does not attempt to open the vault.
 
 ### Session Behavior
 
 - Vault remains open as long as the YubiKey is physically inserted
+- `unlock_vault` opens a persistent `keepassxc-cli open` REPL process — one touch per session
 - Server continuously polls for YubiKey presence
-- **YubiKey removed → 10-second grace period begins, vault stays open**
+- **YubiKey removed → grace period begins (default 10 s), vault stays open**
   - Handles transient USB bus interruptions and accidental dislodging of the 5C Nano
-  - YubiKey reinserted within 10 seconds → grace timer cancelled, session continues uninterrupted, no re-touch required
-  - YubiKey still absent after 10 seconds → vault locks, in-flight tool call fails with a clean error, server logs task context for recovery
-- After grace period expiry and vault lock, any reinsertion always requires a fresh touch challenge — no exceptions
+  - YubiKey reinserted within grace period → timer cancelled, REPL continues uninterrupted, no re-touch required
+  - YubiKey still absent after grace period → vault locks (REPL process killed), in-flight tool call fails with `VaultLocked`
+- After lock, any reinsertion requires a fresh `unlock_vault` call and YubiKey touch — no exceptions
 - No inactivity timeout — physical key presence is the session gate
+- `import_entries` always locks the vault after merge (REPL state would diverge from the merged database); call `unlock_vault` again to continue
 
 ### MCP Transport
 
@@ -136,7 +140,7 @@ keepass-cred-mgr/
 {
   "name": "keepass-cred-mgr",
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "L3Digital-Net",
     "url": "https://github.com/L3Digital-Net"
@@ -528,22 +532,24 @@ Inactive credentials are prefixed with `[INACTIVE]` in their title (e.g. `[INACT
 | `create_entry(title, group, ...)` | `title`, `group`, `username?`, `password?`, `url?`, `notes?` | Creates new entry | Fails if an active entry with the same title already exists in that group |
 | `deactivate_entry(title, group?)` | `title`; `group`: optional | Renames entry to `[INACTIVE] <title>`, appends deactivation timestamp to notes | Cannot be applied to an already-inactive entry |
 | `add_attachment(title, attachment_name, content, group?)` | `title`; `attachment_name`; `content`: binary or text; `group`: optional | Writes content to a `chmod 600` temp file, imports via `keepassxc-cli attachment-import`, immediately shreds temp file | Temp file exists for milliseconds only; fails if entry is `[INACTIVE]` |
+| `import_entries(entries)` | `entries`: list of `{group, title, username?, password?, url?, notes?}` | Builds XML → creates staging KDBX → merges into production database | 2 YubiKey touches regardless of entry count; vault locks after merge |
 
 ### CLI Commands Used
 
-All operations implemented via `keepassxc-cli` — no additional Python dependencies required for the tool surface.
+All operations implemented via `keepassxc-cli` — no additional Python dependencies required for the tool surface. Commands marked **REPL** are dispatched through the persistent REPL stdin/stdout. Commands marked **subprocess** spawn a separate process (binary output or merge operations that must touch the database file directly).
 
-| MCP Tool | keepassxc-cli command |
-|---|---|
-| `list_groups()` | `keepassxc-cli ls <database>` |
-| `list_entries(group?)` | `keepassxc-cli ls <database> <group>` → titles only; `keepassxc-cli show` per entry for username/URL metadata |
-| `search_entries(query)` | `keepassxc-cli search <database> <term>` → titles only; `keepassxc-cli show` per result for username/URL metadata |
-| `get_entry(title)` | `keepassxc-cli show --show-protected <database> <entry>` |
-| `get_attachment(title, name)` | `keepassxc-cli attachment-export --stdout <database> <entry> <name>` |
-| `create_entry(title, ...)` | `keepassxc-cli add <database> <entry> [options]` |
-| `deactivate_entry(title)` | `keepassxc-cli show <entry>` (read existing notes) → `keepassxc-cli edit --title "[INACTIVE] <title>"` → `keepassxc-cli edit --notes "<existing> [DEACTIVATED: <timestamp>]"` |
-| `add_attachment(title, name, content)` | temp file → `keepassxc-cli attachment-import <database> <entry> <name> <tmp>` → shred |
-| YubiKey unlock | `keepassxc-cli --yubikey 2 open <database>` (flag applies to any command — shown here for initial unlock) |
+| MCP Tool | keepassxc-cli command | Dispatch |
+|---|---|---|
+| `list_groups()` | `ls` | REPL |
+| `list_entries(group?)` | `ls <group>` → titles only; `show` per entry for username/URL metadata | REPL |
+| `search_entries(query)` | `search <term>` → titles only; `show` per result for metadata | REPL |
+| `get_entry(title)` | `show --show-protected <entry>` | REPL |
+| `get_attachment(title, name)` | `attachment-export --stdout <entry> <name>` | subprocess (raw bytes can't transit text REPL) |
+| `create_entry(title, ...)` | `add <entry> [--username u] [-p]` (password via stdin) | REPL |
+| `deactivate_entry(title)` | `show <entry>` → `edit --title "[INACTIVE] <title>"` → `edit --notes "<existing+timestamp>"` | REPL |
+| `add_attachment(title, name, content)` | temp file → `attachment-import <entry> <name> <tmp>` → shred | REPL |
+| `import_entries(entries)` | `import --set-password <xml> <staging.kdbx>` → `merge --yubikey 2 --no-password <primary> <staging>` | subprocess (file-level merge) |
+| YubiKey unlock | `keepassxc-cli --yubikey 2 --no-password open <database>` → persistent REPL session | subprocess (starts REPL) |
 
 ### Credential Rotation Workflow
 
@@ -583,16 +589,16 @@ Full unit and integration test suite. YubiKey hardware dependency abstracted beh
 
 ### Integration Tests
 
-- Full vault open/close cycle via `keepassxc-cli` with mocked YubiKey
-- All read tools against a real test `.kdbx` database
+- Full REPL open/close cycle against real `keepassxc-cli` binary (no YubiKey required; `PasswordVault` substitutes password-based auth)
+- All read tools against a real test `.kdbx` database; results verified against known fixture content
 - All write tools against a real test `.kdbx` database, verified by subsequent read
-- Attachment import and shred cycle — confirm temp file does not persist after operation
-- YubiKey removal simulation → grace period → vault lock → error on in-flight tool call
-- Concurrent write lock contention
+- Rotation cycle: create → deactivate → confirm `[INACTIVE]` prefix → re-create same title
+- Duplicate prevention across REPL session boundaries
+- Group allowlist enforcement — unlisted group raises `GroupNotAllowed`
 
 ### Test Database
 
-A dedicated test `.kdbx` database is checked into the repository, unlockable with a known test password (no YubiKey required for CI). YubiKey interactions are mocked via the `YubiKeyInterface` abstraction.
+A dedicated test `.kdbx` database is checked into the repository, unlockable with a known test password (no YubiKey required for CI). The `PasswordVault` helper (in `tests/helpers.py`) subclasses `Vault`, overrides `unlock()` to pipe the password via stdin and open the real REPL, and inherits all `run_cli()` calls from the parent. This tests the full REPL protocol — including Qt-style argument quoting and echo stripping — against the real binary.
 
 ---
 
