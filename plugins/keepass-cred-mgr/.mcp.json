@@ -1,12 +1,6 @@
 {
-  "mcpServers": {
-    "keepass": {
-      "command": "python3",
-      "args": ["-m", "server.main"],
-      "cwd": "${CLAUDE_PLUGIN_ROOT}",
-      "env": {
-        "KEEPASS_CRED_MGR_CONFIG": "${HOME}/.config/keepass-cred-mgr/config.yaml"
-      }
-    }
+  "keepass": {
+    "command": "bash",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/start-server.sh"]
   }
 }
