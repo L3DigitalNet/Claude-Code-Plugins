@@ -1,7 +1,7 @@
 # KeePassXC Credential Manager — Design & Dependency Reference
 
 > Living document — updated throughout the design process.
-> Last updated: 2026-02-27
+> Last updated: 2026-02-28
 
 ---
 
@@ -136,31 +136,29 @@ keepass-cred-mgr/
 {
   "name": "keepass-cred-mgr",
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "author": {
-    "name": "L3Digital",
-    "url": "https://github.com/l3digital"
-  }
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
+  },
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr"
 }
 ```
 
 ### `.mcp.json`
 
-Declares the MCP server to Claude Code so it knows how to launch it:
+Declares the MCP server to Claude Code so it knows how to launch it. Uses flat format (no `mcpServers` wrapper — that format is not supported in plugin context):
 
 ```json
 {
-  "mcpServers": {
-    "keepass": {
-      "command": "python3",
-      "args": ["-m", "server.main"],
-      "env": {
-        "KEEPASS_CRED_MGR_CONFIG": "${HOME}/.config/keepass-cred-mgr/config.yaml"
-      }
-    }
+  "keepass": {
+    "command": "bash",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/start-server.sh"]
   }
 }
 ```
+
+The `start-server.sh` wrapper resolves Python dependencies via `uv run --with` and starts the FastMCP server. This avoids relying on `.mcp.json` `cwd` or `env` fields, which may not work in plugin context.
 
 ### `marketplace.json` (in Claude-Code-Plugins repo root)
 
@@ -357,7 +355,7 @@ dev-marketplace/
 | Package | Purpose |
 |---|---|
 | `mcp` | Anthropic's official MCP Python SDK |
-| `structlog` | Structured audit logging |
+| `structlog` | Structured logging throughout (replaces stdlib logging) |
 | `pyyaml` | YAML config file parsing |
 | `filelock` | Write operation file locking |
 | `pytest` | Test framework |
@@ -483,6 +481,8 @@ yubikey_slot: 2
 grace_period_seconds: 10
 yubikey_poll_interval_seconds: 5
 write_lock_timeout_seconds: 10
+page_size: 50
+log_level: INFO
 
 allowed_groups:
   - Servers

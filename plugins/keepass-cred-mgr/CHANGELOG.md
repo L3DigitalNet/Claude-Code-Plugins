@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-02-28
+
+### Changed
+
+- All vault and tool functions are now async (`asyncio.create_subprocess_exec` replaces `subprocess.run`); polling uses `asyncio.to_thread` for YubiKey checks
+- stdlib `logging` replaced with `structlog` across all modules; structured key-value log events
+- Config validation: types and ranges checked on load (`allowed_groups` must be list of strings, timeouts must be positive integers, `log_level` must be a valid Python log level)
+- Config defaults consolidated into a single `_DEFAULTS` dict (no more scattered literal defaults)
+- Write lock pattern: `_acquire_lock()` replaced with `@contextmanager _write_lock()` — acquire/release is now a single `with` block
+- `YubiKeyInterface` changed from `ABC` to `Protocol` with `@runtime_checkable`
+- Audit logger catches `OSError` on write and logs a warning instead of crashing the MCP server
+- `deactivate_entry` notes-update failure is non-fatal: entry is still renamed, warning logged
+- `_shred_file` logs a warning on `OSError` instead of silently swallowing the error
+- Type aliases use Python 3.12+ `type` keyword (`type EntryFields = dict[str, str]`)
+
+### Added
+
+- `log_level` config field (default: `INFO`); controls structlog output level
+- `run_cli_binary()` vault method returning raw `bytes` for binary attachment content
+- Tool invocation logging: each MCP handler logs `tool_invoked` at INFO level
+- 14 new tests: binary attachment round-trip, notes failure resilience, config validation edge cases, unlock handler coverage; total 129 tests at 96% coverage
+
+### Fixed
+
+- Binary attachment corruption: `get_attachment` now uses `run_cli_binary()` to preserve non-UTF-8 bytes (DER certificates, binary keys)
+- `run_cli` error message when called with no args: now shows `"unknown"` instead of indexing an empty tuple
+
 ## [0.1.2] - 2026-02-28
 
 ### Added

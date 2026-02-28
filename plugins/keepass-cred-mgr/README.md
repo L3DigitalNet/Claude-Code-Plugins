@@ -6,7 +6,7 @@ KeePassXC Credential Manager for Claude Code. Exposes a KeePass `.kdbx` vault vi
 
 keepass-cred-mgr gives Claude Code direct, audited access to a KeePass vault for credential retrieval, storage, and rotation. Instead of pasting secrets into conversation or hardcoding them in config files, Claude reads credentials from the vault and writes them to their intended destination (`.env` files, SSH configs, SDK setups) without ever displaying them.
 
-All vault operations go through `keepassxc-cli`; the YubiKey must be physically present and touched to unlock the vault. A background poller watches for YubiKey removal and locks the vault after a configurable grace period. Write operations are file-locked, secret-returning calls are audit-logged, and temporary files used for attachment import are overwritten with zeros before deletion.
+All vault operations go through `keepassxc-cli` via async subprocesses; the YubiKey must be physically present and touched to unlock the vault. A background poller watches for YubiKey removal and locks the vault after a configurable grace period. Write operations are file-locked, secret-returning calls are audit-logged, and temporary files used for attachment import are overwritten with zeros before deletion. Structured logging via `structlog` provides key-value event records throughout.
 
 ## Principles
 
@@ -156,6 +156,7 @@ grace_period_seconds: 10
 yubikey_poll_interval_seconds: 5
 write_lock_timeout_seconds: 10
 page_size: 50
+log_level: INFO
 
 allowed_groups:
   - Servers
@@ -176,12 +177,13 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 | `yubikey_poll_interval_seconds` | int | `5` | How often to check YubiKey presence via `ykman list` |
 | `write_lock_timeout_seconds` | int | `10` | Max seconds to wait for the database file lock |
 | `page_size` | int | `50` | Max entries returned per `list_entries` or `search_entries` call |
+| `log_level` | str | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) |
 | `allowed_groups` | list | required | Groups visible to all tools; unlisted groups are invisible |
 | `audit_log_path` | str | required | Path to the JSONL audit log; parent directory must exist |
 
 ## Design Decisions
 
-- **`keepassxc-cli` over `pykeepass`**: Using the CLI means the MCP server has no direct database access; KeePassXC owns the file format, locking, and YubiKey integration. The trade-off is N+1 subprocess calls for `list_entries` (one `ls` plus one `show` per entry for metadata), capped by `page_size`.
+- **`keepassxc-cli` over `pykeepass`**: Using the CLI means the MCP server has no direct database access; KeePassXC owns the file format, locking, and YubiKey integration. All CLI calls use `asyncio.create_subprocess_exec` for non-blocking execution. The trade-off is N+1 subprocess calls for `list_entries` (one `ls` plus one `show` per entry for metadata), capped by `page_size`.
 
 - **`ykman list` for presence polling**: `keepassxc-cli` requires a physical touch on every invocation. Using `ykman list` (pure USB enumeration, no touch) allows continuous polling without interrupting the user.
 
@@ -202,7 +204,7 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 - **N+1 CLI calls on list operations**: `keepassxc-cli ls` returns titles only. Fetching username and URL metadata requires a `show` call per entry. Large groups hit the `page_size` cap; results beyond the cap are silently truncated with a server-side log warning.
 - **No entry deletion or overwrite**: By design, Claude cannot delete or overwrite entries. Credential rotation requires a create-then-deactivate sequence, and stale `[INACTIVE]` entries accumulate until manually removed in KeePassXC.
 - **Titles with slashes are unsupported**: `keepassxc-cli` uses `/` as a path separator (`Group/Title`). Titles containing `/` produce undefined CLI behavior; `create_entry` rejects them with an error.
-- **`edit --notes` replaces the entire field**: Appending a deactivation timestamp to notes requires reading the existing notes first, then writing the combined string. A crash between the read and write could lose existing notes.
+- **`edit --notes` replaces the entire field**: Appending a deactivation timestamp to notes requires reading the existing notes first, then writing the combined string. If the notes update fails after a successful rename, the entry is still deactivated (renamed to `[INACTIVE]`) but the deactivation timestamp in notes may be missing. A warning is logged in this case.
 
 ## Security Model
 

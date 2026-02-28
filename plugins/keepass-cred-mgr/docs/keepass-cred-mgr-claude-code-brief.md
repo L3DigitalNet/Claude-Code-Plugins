@@ -119,10 +119,11 @@ asyncio_mode = "auto"
 | `yubikey_poll_interval_seconds` | int | `5` | `ykman list` poll cadence |
 | `write_lock_timeout_seconds` | int | `10` | Max wait for file lock |
 | `page_size` | int | `50` | Max entries returned per list/search call |
+| `log_level` | str | `INFO` | Python log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) |
 | `allowed_groups` | list[str] | required | Groups visible to all tools |
 | `audit_log_path` | str | required | Absolute path to `.jsonl` audit log |
 
-Config path sourced from env var `KEEPASS_CRED_MGR_CONFIG`. Raise `ValueError` with clear message on missing required fields. Expand `~` in paths via `os.path.expanduser`.
+Config path sourced from env var `KEEPASS_CRED_MGR_CONFIG`. Raise `ValueError` with clear message on missing required fields or invalid types/ranges. Expand `~` in paths via `os.path.expanduser`.
 
 **Verification:** `pytest tests/unit/test_config.py` — all pass.
 
@@ -132,7 +133,7 @@ Config path sourced from env var `KEEPASS_CRED_MGR_CONFIG`. Raise `ValueError` w
 
 **Files:** `yubikey.py`
 
-Define an abstract `YubiKeyInterface` with two methods:
+Define a `YubiKeyInterface` Protocol (structural typing, `@runtime_checkable`) with two methods:
 - `is_present() -> bool` — returns True if YubiKey is detected
 - `slot() -> int` — returns configured slot number
 
@@ -170,10 +171,13 @@ Implement `MockYubiKey(YubiKeyInterface)`:
 
 **`_lock()`:** set `_unlocked = False`, log lock event
 
-**`_run_cli(*args) -> str`:**
+**`async run_cli(*args) -> str`:**
 - Raises `VaultLocked` if `not self._unlocked`
-- Runs `keepassxc-cli --yubikey {slot} {args}` via `subprocess.run`
-- Returns stdout. Raises `KeePassCLIError` on non-zero exit.
+- Runs `keepassxc-cli --yubikey {slot} {args}` via `asyncio.create_subprocess_exec` with 30s timeout
+- Returns stdout. Raises `KeePassCLIError` on non-zero exit, `TimeoutError` on timeout.
+
+**`async run_cli_binary(*args) -> bytes`:**
+- Same as `run_cli` but returns raw stdout bytes. Used by `get_attachment` for binary content.
 
 **`_entry_path(title, group) -> str`:**
 - Returns `"{group}/{title}"` if group provided, else `"{title}"`
@@ -305,14 +309,14 @@ config = load_config()
 yubikey = RealYubiKey(config.yubikey_slot)
 vault = Vault(config, yubikey)
 
-# Register all 8 tools with their schemas
+# Register all 9 tools with their schemas (including unlock_vault)
 # Start YubiKey polling background task on server startup
 # Handle VaultLocked / YubiKeyNotPresent as MCP errors
 # Run with stdio transport
 ```
 
 Each tool registration must include a description string accurate to the tool's actual behavior. Tool names must match exactly:
-`list_groups`, `list_entries`, `search_entries`, `get_entry`, `get_attachment`, `create_entry`, `deactivate_entry`, `add_attachment`
+`unlock_vault`, `list_groups`, `list_entries`, `search_entries`, `get_entry`, `get_attachment`, `create_entry`, `deactivate_entry`, `add_attachment`
 
 **Verification:** Server starts without error when invoked as `python3 -m server.main`. Exits cleanly on SIGINT.
 
@@ -351,25 +355,21 @@ Each tool registration must include a description string accurate to the tool's 
 {
   "name": "keepass-cred-mgr",
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "author": {
-    "name": "L3Digital",
-    "url": "https://github.com/l3digital"
-  }
+    "name": "L3Digital-Net",
+    "url": "https://github.com/L3Digital-Net"
+  },
+  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr"
 }
 ```
 
-**`.mcp.json`:**
+**`.mcp.json`** (flat format — `mcpServers` wrapper not supported in plugin context):
 ```json
 {
-  "mcpServers": {
-    "keepass": {
-      "command": "python3",
-      "args": ["-m", "server.main"],
-      "env": {
-        "KEEPASS_CRED_MGR_CONFIG": "${HOME}/.config/keepass-cred-mgr/config.yaml"
-      }
-    }
+  "keepass": {
+    "command": "bash",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/start-server.sh"]
   }
 }
 ```
@@ -591,7 +591,7 @@ with open(tmp_path, 'r+b') as f:
 os.unlink(tmp_path)
 ```
 
-**`asyncio` and `subprocess`:** Use `asyncio.create_subprocess_exec` for the polling loop; use synchronous `subprocess.run` for tool calls that block on YubiKey touch to avoid async complexity.
+**`asyncio` and `subprocess`:** All CLI calls use `asyncio.create_subprocess_exec` with `asyncio.wait_for(timeout=30)`. YubiKey presence polling uses `asyncio.to_thread()` to call the synchronous `ykman list` via `subprocess.run` without blocking the event loop.
 
 **`page_size` applies per call:** `list_entries` and `search_entries` both cap results at `page_size`. Log a warning if results are truncated.
 
