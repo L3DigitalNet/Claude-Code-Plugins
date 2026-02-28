@@ -8,17 +8,15 @@ Group allowlist enforced on all operations.
 from __future__ import annotations
 
 import asyncio
-import logging
-import subprocess
-import sys
+from contextlib import suppress
 from datetime import UTC, datetime
+
+import structlog
 
 from server.config import Config
 from server.yubikey import YubiKeyInterface
 
-# All logging to stderr; stdout is reserved for MCP stdio protocol
-logger = logging.getLogger("keepass-cred-mgr.vault")
-logger.addHandler(logging.StreamHandler(sys.stderr))
+log: structlog.stdlib.BoundLogger = structlog.get_logger("keepass-cred-mgr.vault")
 
 INACTIVE_PREFIX = "[INACTIVE] "
 
@@ -79,29 +77,32 @@ class Vault:
     def config(self) -> Config:
         return self._config
 
-    def unlock(self) -> None:
+    async def unlock(self) -> None:
         if not self._yubikey.is_present():
             raise YubiKeyNotPresent("Insert YubiKey and try again")
 
-        result = subprocess.run(
-            [
-                "keepassxc-cli", "open",
-                "--yubikey", str(self._yubikey.slot()),
-                self._config.database_path,
-            ],
-            capture_output=True, text=True, timeout=30,
+        proc = await asyncio.create_subprocess_exec(
+            "keepassxc-cli", "open",
+            "--yubikey", str(self._yubikey.slot()),
+            self._config.database_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
-        if result.returncode != 0:
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(
+            proc.communicate(), timeout=30
+        )
+        if proc.returncode != 0:
+            stderr = stderr_bytes.decode("utf-8", errors="replace")
             raise KeePassCLIError(
-                f"keepassxc-cli open failed: {result.stderr.strip()}"
+                f"keepassxc-cli open failed: {stderr.strip()}"
             )
         self._unlocked = True
         self._unlock_time = datetime.now(UTC)
-        logger.info("Vault unlocked")
+        log.info("vault_unlocked")
 
     def _lock(self) -> None:
         self._unlocked = False
-        logger.info("Vault locked (YubiKey removed)")
+        log.info("vault_locked", reason="yubikey_removed")
 
     def check_group_allowed(self, group: str) -> None:
         if group not in self._config.allowed_groups:
@@ -114,7 +115,7 @@ class Vault:
             return f"{group}/{title}"
         return title
 
-    def run_cli(self, *args: str) -> str:
+    async def run_cli(self, *args: str) -> str:
         if not self._unlocked:
             raise VaultLocked("Vault is locked; call unlock() first")
 
@@ -123,30 +124,64 @@ class Vault:
             "--yubikey", str(self._yubikey.slot()),
             *args,
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        if result.returncode != 0:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(
+            proc.communicate(), timeout=30
+        )
+        stdout = stdout_bytes.decode("utf-8", errors="replace")
+        if proc.returncode != 0:
+            subcmd = args[0] if args else "unknown"
+            stderr = stderr_bytes.decode("utf-8", errors="replace")
             raise KeePassCLIError(
-                f"keepassxc-cli {args[0]} failed: {result.stderr.strip()}"
+                f"keepassxc-cli {subcmd} failed: {stderr.strip()}"
             )
-        return result.stdout
+        return stdout
+
+    async def run_cli_binary(self, *args: str) -> bytes:
+        """Run keepassxc-cli and return raw stdout bytes (for binary content)."""
+        if not self._unlocked:
+            raise VaultLocked("Vault is locked; call unlock() first")
+
+        cmd = [
+            "keepassxc-cli",
+            "--yubikey", str(self._yubikey.slot()),
+            *args,
+        ]
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(
+            proc.communicate(), timeout=30
+        )
+        if proc.returncode != 0:
+            subcmd = args[0] if args else "unknown"
+            stderr = stderr_bytes.decode("utf-8", errors="replace")
+            raise KeePassCLIError(
+                f"keepassxc-cli {subcmd} failed: {stderr.strip()}"
+            )
+        return stdout_bytes
 
     async def start_polling(self) -> None:
         interval = self._config.yubikey_poll_interval_seconds
         while True:
             try:
-                present = self._yubikey.is_present()
+                present = await asyncio.to_thread(self._yubikey.is_present)
 
                 if not present and self._unlocked and self._grace_timer is None:
-                    logger.info("YubiKey removed — starting grace timer")
+                    log.info("grace_timer_started")
                     self._grace_timer = asyncio.create_task(self._grace_countdown())
 
                 if present and self._grace_timer is not None:
-                    logger.info("YubiKey reinserted — cancelling grace timer")
+                    log.info("grace_timer_cancelled")
                     self._grace_timer.cancel()
-                    try:
+                    with suppress(asyncio.CancelledError):
                         await self._grace_timer
-                    except asyncio.CancelledError:
-                        pass
                     self._grace_timer = None
 
                 await asyncio.sleep(interval)
@@ -154,6 +189,9 @@ class Vault:
                 if self._grace_timer:
                     self._grace_timer.cancel()
                 raise
+            except Exception:
+                log.exception("polling_error")
+                await asyncio.sleep(interval)
 
     async def _grace_countdown(self) -> None:
         await asyncio.sleep(self._config.grace_period_seconds)

@@ -10,6 +10,10 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+import structlog
+
+log: structlog.stdlib.BoundLogger = structlog.get_logger("keepass-cred-mgr.audit")
+
 
 class AuditLogger:
     def __init__(self, audit_log_path: str) -> None:
@@ -37,5 +41,8 @@ class AuditLogger:
             "secret_returned": secret_returned,
             "attachment": attachment,
         }
-        with open(self._path, "a") as f:
-            f.write(json.dumps(record) + "\n")
+        try:
+            with open(self._path, "a") as f:
+                f.write(json.dumps(record) + "\n")
+        except OSError:
+            log.warning("audit_write_failed", path=str(self._path), tool=tool)

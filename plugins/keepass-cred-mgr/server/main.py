@@ -10,13 +10,13 @@ import asyncio
 import base64
 import binascii
 import logging
-import subprocess
 import sys
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from typing import Any
 
+import structlog
 from mcp.server.fastmcp import Context, FastMCP
 
 from server.audit import AuditLogger
@@ -35,13 +35,33 @@ from server.vault import (
 )
 from server.yubikey import RealYubiKey
 
-# All logging to stderr; stdout is MCP stdio protocol
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    stream=sys.stderr,
-)
-logger = logging.getLogger("keepass-cred-mgr")
+log: structlog.stdlib.BoundLogger = structlog.get_logger("keepass-cred-mgr")
+
+
+def _configure_logging(level: str) -> None:
+    """Configure structlog with stdlib integration, output to stderr."""
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stderr,
+        level=getattr(logging, level),
+    )
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.dev.ConsoleRenderer(),
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
 
 
 @dataclass
@@ -54,6 +74,7 @@ class AppContext:
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     config = load_config()
+    _configure_logging(config.log_level)
     yubikey = RealYubiKey(slot=config.yubikey_slot)
     vault = Vault(config, yubikey)
     audit = AuditLogger(config.audit_log_path)
@@ -63,10 +84,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         yield AppContext(vault=vault, audit=audit, poll_task=poll_task)
     finally:
         poll_task.cancel()
-        try:
+        with suppress(asyncio.CancelledError):
             await poll_task
-        except asyncio.CancelledError:
-            pass
 
 
 mcp = FastMCP("keepass", lifespan=app_lifespan)
@@ -85,102 +104,112 @@ def _error_text(e: Exception) -> str:
 
 
 @mcp.tool()
-def unlock_vault(ctx: Context[Any, Any, Any]) -> str:
+async def unlock_vault(ctx: Context[Any, Any, Any]) -> str:
     """Unlock the vault with the connected YubiKey. Must be called before any other vault tool."""
+    log.info("tool_invoked", tool="unlock_vault")
     app = _get_ctx(ctx)
     if app.vault.is_unlocked:
         return "Vault is already unlocked"
     try:
-        app.vault.unlock()
+        await app.vault.unlock()
         return "Vault unlocked successfully"
-    except (YubiKeyNotPresent, KeePassCLIError, subprocess.TimeoutExpired) as e:
-        raise ValueError(_error_text(e))
+    except (YubiKeyNotPresent, KeePassCLIError, TimeoutError) as e:
+        raise ValueError(_error_text(e)) from e
 
 
 # --- Read Tools ---
 
 
 @mcp.tool()
-def list_groups(ctx: Context[Any, Any, Any]) -> list[str]:
+async def list_groups(ctx: Context[Any, Any, Any]) -> list[str]:
     """List accessible KeePass groups (filtered by allowlist)."""
+    log.info("tool_invoked", tool="list_groups")
     app = _get_ctx(ctx)
     try:
-        return read_tools.list_groups(app.vault)
-    except (VaultLocked, YubiKeyNotPresent, KeePassCLIError, subprocess.TimeoutExpired) as e:
-        raise ValueError(_error_text(e))
+        return await read_tools.list_groups(app.vault)
+    except (VaultLocked, YubiKeyNotPresent, KeePassCLIError, TimeoutError) as e:
+        raise ValueError(_error_text(e)) from e
 
 
 @mcp.tool()
-def list_entries(
+async def list_entries(
     ctx: Context[Any, Any, Any],
     group: str | None = None,
     include_inactive: bool = False,
 ) -> list[dict[str, str]]:
     """List entries in a group. Hides [INACTIVE] entries by default."""
+    log.info("tool_invoked", tool="list_entries")
     app = _get_ctx(ctx)
     try:
-        return read_tools.list_entries(
+        return await read_tools.list_entries(
             app.vault, app.audit, group=group, include_inactive=include_inactive
         )
-    except (VaultLocked, GroupNotAllowed, KeePassCLIError, subprocess.TimeoutExpired) as e:
-        raise ValueError(_error_text(e))
+    except (VaultLocked, GroupNotAllowed, KeePassCLIError, TimeoutError) as e:
+        raise ValueError(_error_text(e)) from e
 
 
 @mcp.tool()
-def search_entries(
+async def search_entries(
     ctx: Context[Any, Any, Any],
     query: str,
     group: str | None = None,
     include_inactive: bool = False,
 ) -> list[dict[str, str | None]]:
     """Search entries by keyword. Filters to allowed groups only."""
+    log.info("tool_invoked", tool="search_entries")
     app = _get_ctx(ctx)
     try:
-        return read_tools.search_entries(
+        return await read_tools.search_entries(
             app.vault, app.audit,
             query=query, group=group, include_inactive=include_inactive,
         )
-    except (VaultLocked, GroupNotAllowed, KeePassCLIError, subprocess.TimeoutExpired) as e:
-        raise ValueError(_error_text(e))
+    except (VaultLocked, GroupNotAllowed, KeePassCLIError, TimeoutError) as e:
+        raise ValueError(_error_text(e)) from e
 
 
 @mcp.tool()
-def get_entry(ctx: Context[Any, Any, Any], title: str, group: str | None = None) -> dict[str, str]:
+async def get_entry(
+    ctx: Context[Any, Any, Any], title: str, group: str | None = None,
+) -> dict[str, str]:
     """Get full entry details including password. Logs to audit trail."""
+    log.info("tool_invoked", tool="get_entry")
     app = _get_ctx(ctx)
     try:
-        return read_tools.get_entry(app.vault, app.audit, title=title, group=group)
+        return await read_tools.get_entry(
+            app.vault, app.audit, title=title, group=group,
+        )
     except (
         VaultLocked, EntryInactive, GroupNotAllowed,
-        KeePassCLIError, subprocess.TimeoutExpired,
+        KeePassCLIError, TimeoutError,
     ) as e:
-        raise ValueError(_error_text(e))
+        raise ValueError(_error_text(e)) from e
 
 
 @mcp.tool()
-def get_attachment(
-    ctx: Context[Any, Any, Any], title: str, attachment_name: str, group: str | None = None
+async def get_attachment(
+    ctx: Context[Any, Any, Any], title: str, attachment_name: str, group: str | None = None,
 ) -> str:
     """Export an attachment from an entry. Returns base64-encoded content."""
+    log.info("tool_invoked", tool="get_attachment")
     app = _get_ctx(ctx)
     try:
-        data = read_tools.get_attachment(
+        data = await read_tools.get_attachment(
             app.vault, app.audit,
             title=title, attachment_name=attachment_name, group=group,
         )
         return base64.b64encode(data).decode("ascii")
     except (
         VaultLocked, EntryInactive, GroupNotAllowed,
-        KeePassCLIError, subprocess.TimeoutExpired,
+        KeePassCLIError, TimeoutError,
     ) as e:
-        raise ValueError(_error_text(e))
+        raise ValueError(_error_text(e)) from e
 
 
 # --- Write Tools ---
 
 
 @mcp.tool()
-def create_entry(
+async def create_entry(
     ctx: Context[Any, Any, Any],
     title: str,
     group: str,
@@ -190,9 +219,10 @@ def create_entry(
     notes: str | None = None,
 ) -> str:
     """Create a new entry in the vault. Rejects duplicates and titles with slashes."""
+    log.info("tool_invoked", tool="create_entry")
     app = _get_ctx(ctx)
     try:
-        write_tools.create_entry(
+        await write_tools.create_entry(
             app.vault, app.audit,
             title=title, group=group,
             username=username, password=password, url=url, notes=notes,
@@ -201,32 +231,33 @@ def create_entry(
     except (
         VaultLocked, GroupNotAllowed, DuplicateEntry,
         WriteLockTimeout, KeePassCLIError, ValueError,
-        subprocess.TimeoutExpired,
+        TimeoutError,
     ) as e:
-        raise ValueError(_error_text(e))
+        raise ValueError(_error_text(e)) from e
 
 
 @mcp.tool()
-def deactivate_entry(
-    ctx: Context[Any, Any, Any], title: str, group: str | None = None
+async def deactivate_entry(
+    ctx: Context[Any, Any, Any], title: str, group: str | None = None,
 ) -> str:
     """Deactivate an entry by adding [INACTIVE] prefix and deactivation timestamp."""
+    log.info("tool_invoked", tool="deactivate_entry")
     app = _get_ctx(ctx)
     try:
-        write_tools.deactivate_entry(
+        await write_tools.deactivate_entry(
             app.vault, app.audit, title=title, group=group,
         )
         return f"Deactivated entry '{title}'"
     except (
         VaultLocked, EntryInactive, GroupNotAllowed,
         WriteLockTimeout, KeePassCLIError,
-        subprocess.TimeoutExpired,
+        TimeoutError,
     ) as e:
-        raise ValueError(_error_text(e))
+        raise ValueError(_error_text(e)) from e
 
 
 @mcp.tool()
-def add_attachment(
+async def add_attachment(
     ctx: Context[Any, Any, Any],
     title: str,
     attachment_name: str,
@@ -234,10 +265,11 @@ def add_attachment(
     group: str | None = None,
 ) -> str:
     """Attach a file to an entry. Content is base64-encoded. Temp files are shredded."""
+    log.info("tool_invoked", tool="add_attachment")
     app = _get_ctx(ctx)
     try:
         decoded = base64.b64decode(content)
-        write_tools.add_attachment(
+        await write_tools.add_attachment(
             app.vault, app.audit,
             title=title, attachment_name=attachment_name,
             content=decoded, group=group,
@@ -246,9 +278,9 @@ def add_attachment(
     except (
         VaultLocked, EntryInactive, GroupNotAllowed,
         WriteLockTimeout, KeePassCLIError,
-        binascii.Error, subprocess.TimeoutExpired,
+        binascii.Error, TimeoutError,
     ) as e:
-        raise ValueError(_error_text(e))
+        raise ValueError(_error_text(e)) from e
 
 
 def main() -> None:

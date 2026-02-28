@@ -6,13 +6,14 @@ Temp files for attachment import are overwritten with zeros then unlinked.
 
 from __future__ import annotations
 
-import logging
 import os
 import stat
-import sys
 import tempfile
+from collections.abc import Generator
+from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 
+import structlog
 from filelock import FileLock, Timeout
 
 from server.audit import AuditLogger
@@ -20,24 +21,29 @@ from server.vault import (
     INACTIVE_PREFIX,
     DuplicateEntry,
     EntryInactive,
+    KeePassCLIError,
     Vault,
     WriteLockTimeout,
 )
 
-logger = logging.getLogger("keepass-cred-mgr.tools.write")
-logger.addHandler(logging.StreamHandler(sys.stderr))
+log: structlog.stdlib.BoundLogger = structlog.get_logger("keepass-cred-mgr.tools.write")
 
 
-def _acquire_lock(vault: Vault) -> FileLock:
+@contextmanager
+def _write_lock(vault: Vault) -> Generator[FileLock]:
+    """Acquire and release a file lock around database writes."""
     lock_path = vault.config.database_path + ".lock"
     lock = FileLock(lock_path, timeout=vault.config.write_lock_timeout_seconds)
     try:
         lock.acquire()
-    except Timeout:
+    except Timeout as exc:
         raise WriteLockTimeout(
             f"Could not acquire write lock within {vault.config.write_lock_timeout_seconds}s"
-        )
-    return lock
+        ) from exc
+    try:
+        yield lock
+    finally:
+        lock.release()
 
 
 def _shred_file(path: str) -> None:
@@ -49,15 +55,13 @@ def _shred_file(path: str) -> None:
             f.flush()
             os.fsync(f.fileno())
     except OSError:
-        pass
+        log.warning("shred_failed", path=path)
     finally:
-        try:
+        with suppress(OSError):
             os.unlink(path)
-        except OSError:
-            pass
 
 
-def create_entry(
+async def create_entry(
     vault: Vault,
     audit: AuditLogger,
     *,
@@ -75,7 +79,7 @@ def create_entry(
 
     # Check for duplicate active entry
     db = vault.config.database_path
-    stdout = vault.run_cli("ls", db, group)
+    stdout = await vault.run_cli("ls", db, group)
     existing = [
         line.strip()
         for line in stdout.strip().splitlines()
@@ -85,8 +89,7 @@ def create_entry(
     if title in active_titles:
         raise DuplicateEntry(f"Active entry '{title}' already exists in {group}")
 
-    lock = _acquire_lock(vault)
-    try:
+    with _write_lock(vault):
         path = vault.entry_path(title, group)
         cmd = ["add", db, path]
         if username:
@@ -97,14 +100,12 @@ def create_entry(
             cmd.extend(["--url", url])
         if notes:
             cmd.extend(["--notes", notes])
-        vault.run_cli(*cmd)
-    finally:
-        lock.release()
+        await vault.run_cli(*cmd)
 
     audit.log(tool="create_entry", title=title, group=group)
 
 
-def deactivate_entry(
+async def deactivate_entry(
     vault: Vault,
     audit: AuditLogger,
     *,
@@ -121,7 +122,7 @@ def deactivate_entry(
     path = vault.entry_path(title, group)
 
     # Read existing notes
-    show_out = vault.run_cli("show", db, path)
+    show_out = await vault.run_cli("show", db, path)
     existing_notes = ""
     for line in show_out.strip().splitlines():
         if line.startswith("Notes: "):
@@ -132,20 +133,20 @@ def deactivate_entry(
     new_notes = f"{existing_notes}\n[DEACTIVATED: {timestamp}]".strip()
     new_title = f"{INACTIVE_PREFIX}{title}"
 
-    lock = _acquire_lock(vault)
-    try:
+    with _write_lock(vault):
         # Rename: path changes after this
-        vault.run_cli("edit", "--title", new_title, db, path)
-        # Update notes using new path
+        await vault.run_cli("edit", "--title", new_title, db, path)
+        # Update notes using new path — non-critical, log and continue on failure
         new_path = vault.entry_path(new_title, group)
-        vault.run_cli("edit", "--notes", new_notes, db, new_path)
-    finally:
-        lock.release()
+        try:
+            await vault.run_cli("edit", "--notes", new_notes, db, new_path)
+        except KeePassCLIError:
+            log.warning("deactivate_notes_update_failed", title=title, group=group)
 
     audit.log(tool="deactivate_entry", title=title, group=group)
 
 
-def add_attachment(
+async def add_attachment(
     vault: Vault,
     audit: AuditLogger,
     *,
@@ -166,18 +167,15 @@ def add_attachment(
     if isinstance(content, str):
         content = content.encode("utf-8")
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, prefix="keepass-cred-mgr-")
+    tmp = tempfile.NamedTemporaryFile(delete=False, prefix="keepass-cred-mgr-")  # noqa: SIM115
     tmp_path = tmp.name
     try:
         tmp.write(content)
         tmp.close()
         os.chmod(tmp_path, stat.S_IRUSR | stat.S_IWUSR)  # 600
 
-        lock = _acquire_lock(vault)
-        try:
-            vault.run_cli("attachment-import", db, path, attachment_name, tmp_path)
-        finally:
-            lock.release()
+        with _write_lock(vault):
+            await vault.run_cli("attachment-import", db, path, attachment_name, tmp_path)
     finally:
         _shred_file(tmp_path)
 

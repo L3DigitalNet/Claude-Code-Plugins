@@ -14,7 +14,7 @@ from server.config import load_config
 from server.vault import DuplicateEntry, GroupNotAllowed
 
 # Skip entire module if keepassxc-cli not available
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 KEEPASSXC_CLI = shutil.which("keepassxc-cli")
 if not KEEPASSXC_CLI:
@@ -31,6 +31,7 @@ if not TEST_DB.exists():
 def integration_setup(tmp_path):
     """Copy test db to tmp, create config, return PasswordVault + audit."""
     import yaml
+
     from tests.helpers import PasswordVault
 
     # Copy db so writes don't pollute the fixture
@@ -60,76 +61,77 @@ def integration_setup(tmp_path):
 
 
 class TestIntegrationReadCycle:
-    def test_list_groups_returns_allowed(self, integration_setup):
+    async def test_list_groups_returns_allowed(self, integration_setup):
         """list_groups returns only allowed groups."""
         from server.tools.read import list_groups
 
         vault, audit, config, db = integration_setup
-        groups = list_groups(vault)
+        groups = await list_groups(vault)
         assert set(groups) == {"Servers", "SSH Keys", "API Keys"}
 
 
 class TestIntegrationWriteCycle:
-    def test_create_then_list(self, integration_setup):
+    async def test_create_then_list(self, integration_setup):
         """create_entry then list_entries confirms presence."""
         from server.tools.read import list_entries
         from server.tools.write import create_entry
 
         vault, audit, config, db = integration_setup
-        create_entry(vault, audit, title="New Test Entry", group="Servers", username="testuser")
-        entries = list_entries(vault, audit, group="Servers")
+        await create_entry(
+            vault, audit, title="New Test Entry", group="Servers", username="testuser",
+        )
+        entries = await list_entries(vault, audit, group="Servers")
         titles = [e["title"] for e in entries]
         assert "New Test Entry" in titles
 
 
 class TestIntegrationRotation:
-    def test_rotation_cycle(self, integration_setup):
+    async def test_rotation_cycle(self, integration_setup):
         """create -> deactivate -> confirm [INACTIVE] -> create same title."""
         from server.tools.read import list_entries
         from server.tools.write import create_entry, deactivate_entry
 
         vault, audit, config, db = integration_setup
-        create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u")
-        deactivate_entry(vault, audit, title="Rotate Me", group="API Keys")
-        entries = list_entries(vault, audit, group="API Keys", include_inactive=True)
+        await create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u")
+        await deactivate_entry(vault, audit, title="Rotate Me", group="API Keys")
+        entries = await list_entries(vault, audit, group="API Keys", include_inactive=True)
         titles = [e["title"] for e in entries]
         assert "[INACTIVE] Rotate Me" in titles
         # Should be able to create a new entry with the same title
-        create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u2")
+        await create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u2")
 
 
 class TestIntegrationDuplicatePrevention:
-    def test_duplicate_raises(self, integration_setup):
+    async def test_duplicate_raises(self, integration_setup):
         """create_entry twice raises DuplicateEntry on second."""
         from server.tools.write import create_entry
 
         vault, audit, config, db = integration_setup
-        create_entry(vault, audit, title="Unique Entry", group="SSH Keys", username="u")
+        await create_entry(vault, audit, title="Unique Entry", group="SSH Keys", username="u")
         with pytest.raises(DuplicateEntry):
-            create_entry(vault, audit, title="Unique Entry", group="SSH Keys", username="u2")
+            await create_entry(vault, audit, title="Unique Entry", group="SSH Keys", username="u2")
 
 
 class TestIntegrationInactiveFiltering:
-    def test_inactive_hidden_by_default(self, integration_setup):
+    async def test_inactive_hidden_by_default(self, integration_setup):
         """list_entries hides [INACTIVE]; shows with flag."""
         from server.tools.read import list_entries
 
         vault, audit, config, db = integration_setup
-        # The seeded db has "[INACTIVE] Old Server" in Servers
-        visible = list_entries(vault, audit, group="Servers")
+        visible = await list_entries(vault, audit, group="Servers")
         visible_titles = [e["title"] for e in visible]
         assert "[INACTIVE] Old Server" not in visible_titles
 
-        all_entries = list_entries(vault, audit, group="Servers", include_inactive=True)
+        all_entries = await list_entries(vault, audit, group="Servers", include_inactive=True)
         all_titles = [e["title"] for e in all_entries]
         assert "[INACTIVE] Old Server" in all_titles
 
 
 class TestIntegrationGroupAllowlist:
-    def test_disallowed_group_raises(self, integration_setup):
+    async def test_disallowed_group_raises(self, integration_setup):
         """Request for unlisted group raises GroupNotAllowed."""
         from server.tools.read import list_entries
 
         vault, audit, config, db = integration_setup
         with pytest.raises(GroupNotAllowed):
-            list_entries(vault, audit, group="Banking")
+            await list_entries(vault, audit, group="Banking")

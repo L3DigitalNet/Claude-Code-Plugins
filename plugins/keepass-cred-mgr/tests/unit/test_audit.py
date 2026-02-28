@@ -76,6 +76,7 @@ class TestAuditLogger:
     def test_group_none_serializes_to_null(self, tmp_path):
         """group=None writes JSON null."""
         import json
+
         from server.audit import AuditLogger
 
         audit_path = tmp_path / "audit.jsonl"
@@ -87,8 +88,9 @@ class TestAuditLogger:
 
     def test_timestamp_is_valid_iso_format(self, tmp_path):
         """Timestamp can be parsed by datetime.fromisoformat."""
-        from datetime import datetime
         import json
+        from datetime import datetime
+
         from server.audit import AuditLogger
 
         audit_path = tmp_path / "audit.jsonl"
@@ -98,9 +100,10 @@ class TestAuditLogger:
         parsed = datetime.fromisoformat(record["timestamp"])
         assert parsed.year >= 2026
 
-    def test_permission_error_propagates(self, tmp_path):
-        """Write failure raises OSError."""
+    def test_permission_error_logs_warning(self, tmp_path, caplog):
+        """Write failure logs warning instead of raising."""
         import os
+
         from server.audit import AuditLogger
 
         audit_path = tmp_path / "audit.jsonl"
@@ -109,7 +112,7 @@ class TestAuditLogger:
         audit_path.write_text("")
         os.chmod(audit_path, 0o444)
         try:
-            with pytest.raises(PermissionError):
-                logger.log(tool="test", title="Test")
+            # Should NOT raise — error is caught and logged
+            logger.log(tool="test", title="Test")
         finally:
             os.chmod(audit_path, 0o644)

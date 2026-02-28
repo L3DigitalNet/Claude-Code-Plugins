@@ -6,8 +6,7 @@ No file lock required for reads.
 
 from __future__ import annotations
 
-import logging
-import sys
+import structlog
 
 from server.audit import AuditLogger
 from server.vault import (
@@ -16,11 +15,14 @@ from server.vault import (
     Vault,
 )
 
-logger = logging.getLogger("keepass-cred-mgr.tools.read")
-logger.addHandler(logging.StreamHandler(sys.stderr))
+log: structlog.stdlib.BoundLogger = structlog.get_logger("keepass-cred-mgr.tools.read")
+
+type EntryFields = dict[str, str]
+type EntrySummary = dict[str, str]
+type SearchResult = dict[str, str | None]
 
 
-def _parse_show_output(stdout: str) -> dict[str, str]:
+def _parse_show_output(stdout: str) -> EntryFields:
     """Parse keepassxc-cli show output into a dict."""
     fields: dict[str, str] = {}
     for line in stdout.strip().splitlines():
@@ -40,9 +42,9 @@ def _parse_show_output(stdout: str) -> dict[str, str]:
     return fields
 
 
-def list_groups(vault: Vault) -> list[str]:
+async def list_groups(vault: Vault) -> list[str]:
     db = vault.config.database_path
-    stdout = vault.run_cli("ls", db)
+    stdout = await vault.run_cli("ls", db)
     all_groups = [
         line.rstrip("/")
         for line in stdout.strip().splitlines()
@@ -51,23 +53,23 @@ def list_groups(vault: Vault) -> list[str]:
     return [g for g in all_groups if g in vault.config.allowed_groups]
 
 
-def list_entries(
+async def list_entries(
     vault: Vault,
     audit: AuditLogger,
     *,
     group: str | None = None,
     include_inactive: bool = False,
-) -> list[dict[str, str]]:
+) -> list[EntrySummary]:
     if group is not None:
         vault.check_group_allowed(group)
         groups = [group]
     else:
         groups = list(vault.config.allowed_groups)
 
-    results: list[dict[str, str]] = []
+    results: list[EntrySummary] = []
     for grp in groups:
         db = vault.config.database_path
-        stdout = vault.run_cli("ls", db, grp)
+        stdout = await vault.run_cli("ls", db, grp)
         titles = [
             line.strip()
             for line in stdout.strip().splitlines()
@@ -78,11 +80,11 @@ def list_entries(
             if not include_inactive and title.startswith(INACTIVE_PREFIX):
                 continue
             if len(results) >= vault.config.page_size:
-                logger.warning("Results truncated at page_size=%d", vault.config.page_size)
+                log.warning("results_truncated", page_size=vault.config.page_size)
                 return results
 
             path = vault.entry_path(title, grp)
-            show_out = vault.run_cli("show", db, path)
+            show_out = await vault.run_cli("show", db, path)
             fields = _parse_show_output(show_out)
             results.append({
                 "title": title,
@@ -94,22 +96,22 @@ def list_entries(
     return results
 
 
-def search_entries(
+async def search_entries(
     vault: Vault,
     audit: AuditLogger,
     *,
     query: str,
     group: str | None = None,
     include_inactive: bool = False,
-) -> list[dict[str, str | None]]:
+) -> list[SearchResult]:
     if group is not None:
         vault.check_group_allowed(group)
 
     db = vault.config.database_path
-    stdout = vault.run_cli("search", db, query)
+    stdout = await vault.run_cli("search", db, query)
     paths = [line.strip() for line in stdout.strip().splitlines() if line.strip()]
 
-    results: list[dict[str, str | None]] = []
+    results: list[SearchResult] = []
     for entry_path in paths:
         if "/" in entry_path:
             grp, _, title = entry_path.partition("/")
@@ -124,10 +126,10 @@ def search_entries(
         if not include_inactive and title.startswith(INACTIVE_PREFIX):
             continue
         if len(results) >= vault.config.page_size:
-            logger.warning("Search results truncated at page_size=%d", vault.config.page_size)
+            log.warning("search_results_truncated", page_size=vault.config.page_size)
             return results
 
-        show_out = vault.run_cli("show", db, entry_path)
+        show_out = await vault.run_cli("show", db, entry_path)
         fields = _parse_show_output(show_out)
         results.append({
             "title": title,
@@ -139,13 +141,13 @@ def search_entries(
     return results
 
 
-def get_entry(
+async def get_entry(
     vault: Vault,
     audit: AuditLogger,
     *,
     title: str,
     group: str | None = None,
-) -> dict[str, str]:
+) -> EntryFields:
     if title.startswith(INACTIVE_PREFIX):
         raise EntryInactive(f"Entry '{title}' is deactivated")
 
@@ -154,7 +156,7 @@ def get_entry(
 
     db = vault.config.database_path
     path = vault.entry_path(title, group)
-    stdout = vault.run_cli("show", "--show-protected", db, path)
+    stdout = await vault.run_cli("show", "--show-protected", db, path)
     fields = _parse_show_output(stdout)
 
     audit.log(
@@ -173,7 +175,7 @@ def get_entry(
     }
 
 
-def get_attachment(
+async def get_attachment(
     vault: Vault,
     audit: AuditLogger,
     *,
@@ -189,7 +191,8 @@ def get_attachment(
 
     db = vault.config.database_path
     path = vault.entry_path(title, group)
-    stdout = vault.run_cli(
+    # Use run_cli_binary to preserve raw bytes (avoids UTF-8 corruption)
+    raw_bytes = await vault.run_cli_binary(
         "attachment-export", "--stdout", db, path, attachment_name
     )
 
@@ -201,4 +204,4 @@ def get_attachment(
         attachment=attachment_name,
     )
 
-    return stdout.encode("utf-8")
+    return raw_bytes

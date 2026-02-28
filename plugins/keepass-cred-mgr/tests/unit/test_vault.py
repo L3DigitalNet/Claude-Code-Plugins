@@ -1,23 +1,32 @@
 import asyncio
-import subprocess
-from unittest.mock import patch
+import contextlib
+from datetime import UTC
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from server.yubikey import MockYubiKey
 
 
+def _mock_async_proc(stdout: bytes = b"", stderr: bytes = b"", returncode: int = 0) -> AsyncMock:
+    """Create a mock async subprocess process."""
+    proc = AsyncMock()
+    proc.communicate.return_value = (stdout, stderr)
+    proc.returncode = returncode
+    return proc
+
+
 class TestVaultExceptions:
     def test_all_exceptions_exist(self):
         from server.vault import (
-            VaultLocked,
-            YubiKeyNotPresent,
-            EntryNotFound,
-            GroupNotAllowed,
             DuplicateEntry,
             EntryInactive,
-            WriteLockTimeout,
+            EntryNotFound,
+            GroupNotAllowed,
             KeePassCLIError,
+            VaultLocked,
+            WriteLockTimeout,
+            YubiKeyNotPresent,
         )
         for exc_cls in (
             VaultLocked, YubiKeyNotPresent, EntryNotFound,
@@ -34,114 +43,134 @@ class TestVaultState:
         vault = Vault(test_config, mock_yubikey)
         assert vault.is_unlocked is False
 
-    def test_unlock_raises_when_yubikey_absent(self, test_config):
+    @pytest.mark.asyncio
+    async def test_unlock_raises_when_yubikey_absent(self, test_config):
         from server.vault import Vault, YubiKeyNotPresent
 
         yk = MockYubiKey(present=False)
         vault = Vault(test_config, yk)
         with pytest.raises(YubiKeyNotPresent):
-            vault.unlock()
+            await vault.unlock()
 
-    @patch("subprocess.run")
-    def test_unlock_succeeds_with_yubikey(self, mock_run, test_config, mock_yubikey):
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_unlock_succeeds_with_yubikey(self, mock_exec, test_config, mock_yubikey):
+        mock_exec.return_value = _mock_async_proc()
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
+        await vault.unlock()
         assert vault.is_unlocked is True
 
-    @patch("subprocess.run")
-    def test_unlock_raises_on_cli_error(self, mock_run, test_config, mock_yubikey):
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=1, stdout="", stderr="Error: Invalid credentials"
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_unlock_raises_on_cli_error(self, mock_exec, test_config, mock_yubikey):
+        mock_exec.return_value = _mock_async_proc(
+            stderr=b"Error: Invalid credentials", returncode=1
         )
-        from server.vault import Vault, KeePassCLIError
+        from server.vault import KeePassCLIError, Vault
 
         vault = Vault(test_config, mock_yubikey)
         with pytest.raises(KeePassCLIError):
-            vault.unlock()
+            await vault.unlock()
 
-    @patch("subprocess.run")
-    def test_run_cli_raises_when_locked(self, mock_run, test_config, mock_yubikey):
+    @pytest.mark.asyncio
+    async def test_run_cli_raises_when_locked(self, test_config, mock_yubikey):
         from server.vault import Vault, VaultLocked
 
         vault = Vault(test_config, mock_yubikey)
         with pytest.raises(VaultLocked):
-            vault.run_cli("ls", test_config.database_path)
+            await vault.run_cli("ls", test_config.database_path)
 
 
 class TestVaultGroupAllowlist:
-    @patch("subprocess.run")
-    def test_check_group_allowed(self, mock_run, test_config, mock_yubikey):
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+    def test_check_group_allowed(self, test_config, mock_yubikey):
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
+        vault._unlocked = True
         vault.check_group_allowed("Servers")  # Should not raise
 
-    @patch("subprocess.run")
-    def test_check_group_not_allowed(self, mock_run, test_config, mock_yubikey):
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
-        from server.vault import Vault, GroupNotAllowed
+    def test_check_group_not_allowed(self, test_config, mock_yubikey):
+        from server.vault import GroupNotAllowed, Vault
 
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
+        vault._unlocked = True
         with pytest.raises(GroupNotAllowed):
             vault.check_group_allowed("Banking")
 
 
 class TestVaultRunCli:
-    @patch("subprocess.run")
-    def test_run_cli_returns_stdout(self, mock_run, test_config, mock_yubikey):
-        mock_run.side_effect = [
-            subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr=""),
-            subprocess.CompletedProcess(
-                args=[], returncode=0, stdout="Group1/\nGroup2/\n", stderr=""
-            ),
-        ]
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_run_cli_returns_stdout(self, mock_exec, test_config, mock_yubikey):
+        mock_exec.return_value = _mock_async_proc(stdout=b"Group1/\nGroup2/\n")
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
-        result = vault.run_cli("ls", test_config.database_path)
+        vault._unlocked = True
+        result = await vault.run_cli("ls", test_config.database_path)
         assert "Group1/" in result
 
-    @patch("subprocess.run")
-    def test_run_cli_raises_on_error(self, mock_run, test_config, mock_yubikey):
-        mock_run.side_effect = [
-            subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr=""),
-            subprocess.CompletedProcess(
-                args=[], returncode=1, stdout="", stderr="Error: entry not found"
-            ),
-        ]
-        from server.vault import Vault, KeePassCLIError
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_run_cli_raises_on_error(self, mock_exec, test_config, mock_yubikey):
+        mock_exec.return_value = _mock_async_proc(
+            stderr=b"Error: entry not found", returncode=1
+        )
+        from server.vault import KeePassCLIError, Vault
 
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
+        vault._unlocked = True
         with pytest.raises(KeePassCLIError):
-            vault.run_cli("show", test_config.database_path, "Nonexistent")
+            await vault.run_cli("show", test_config.database_path, "Nonexistent")
 
-    @patch("subprocess.run")
-    def test_run_cli_raises_on_timeout(self, mock_run, test_config, mock_yubikey):
-        """subprocess.TimeoutExpired propagates from run_cli."""
-        mock_run.side_effect = [
-            subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr=""),
-            subprocess.TimeoutExpired(cmd=["keepassxc-cli"], timeout=30),
-        ]
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_run_cli_raises_on_timeout(self, mock_exec, test_config, mock_yubikey):
+        """asyncio.wait_for raises TimeoutError when subprocess exceeds timeout."""
+        mock_proc = AsyncMock()
+        mock_proc.communicate = AsyncMock(side_effect=asyncio.TimeoutError)
+        mock_exec.return_value = mock_proc
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
-        with pytest.raises(subprocess.TimeoutExpired):
-            vault.run_cli("show", test_config.database_path, "Servers/Entry")
+        vault._unlocked = True
+        with pytest.raises(TimeoutError):
+            await vault.run_cli("show", test_config.database_path, "Servers/Entry")
+
+    @pytest.mark.asyncio
+    async def test_run_cli_no_args_error_message(self, test_config, mock_yubikey):
+        """Error message uses 'unknown' when run_cli is called with no args."""
+        from server.vault import KeePassCLIError, Vault
+
+        vault = Vault(test_config, mock_yubikey)
+        vault._unlocked = True
+        with patch("asyncio.create_subprocess_exec") as mock_exec:
+            mock_exec.return_value = _mock_async_proc(stderr=b"error", returncode=1)
+            with pytest.raises(KeePassCLIError, match="unknown"):
+                await vault.run_cli()
+
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_run_cli_binary_returns_bytes(self, mock_exec, test_config, mock_yubikey):
+        """run_cli_binary returns raw bytes, not decoded text."""
+        raw = b"\x00\x01\xff\xfe binary data"
+        mock_exec.return_value = _mock_async_proc(stdout=raw)
+        from server.vault import Vault
+
+        vault = Vault(test_config, mock_yubikey)
+        vault._unlocked = True
+        result = await vault.run_cli_binary("attachment-export", "--stdout", "db", "path", "file")
+        assert result == raw
+
+    @pytest.mark.asyncio
+    async def test_run_cli_binary_raises_when_locked(self, test_config, mock_yubikey):
+        from server.vault import Vault, VaultLocked
+
+        vault = Vault(test_config, mock_yubikey)
+        with pytest.raises(VaultLocked):
+            await vault.run_cli_binary("attachment-export")
 
 
 class TestVaultEntryPath:
@@ -159,20 +188,20 @@ class TestVaultEntryPath:
 
 
 class TestVaultProperties:
-    @patch("subprocess.run")
-    def test_unlock_time_set_after_unlock(self, mock_run, test_config, mock_yubikey):
+    @pytest.mark.asyncio
+    @patch("asyncio.create_subprocess_exec")
+    async def test_unlock_time_set_after_unlock(self, mock_exec, test_config, mock_yubikey):
         """unlock_time is a UTC datetime after successful unlock."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from server.vault import Vault
 
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+        mock_exec.return_value = _mock_async_proc()
         vault = Vault(test_config, mock_yubikey)
         assert vault.unlock_time is None
-        vault.unlock()
+        await vault.unlock()
         assert isinstance(vault.unlock_time, datetime)
-        assert vault.unlock_time.tzinfo == timezone.utc
+        assert vault.unlock_time.tzinfo == UTC
 
     def test_config_property(self, test_config, mock_yubikey):
         """config property returns the Config object."""
@@ -184,16 +213,12 @@ class TestVaultProperties:
 
 
 class TestVaultLock:
-    @patch("subprocess.run")
-    def test_lock_resets_state(self, mock_run, test_config, mock_yubikey):
+    def test_lock_resets_state(self, test_config, mock_yubikey):
         """_lock() sets is_unlocked to False."""
         from server.vault import Vault
 
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
         vault = Vault(test_config, mock_yubikey)
-        vault.unlock()
+        vault._unlocked = True
         assert vault.is_unlocked is True
         vault._lock()
         assert vault.is_unlocked is False
@@ -206,11 +231,7 @@ class TestVaultGraceTimer:
 
         yk = MockYubiKey(present=True)
         vault = Vault(test_config, yk)
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = subprocess.CompletedProcess(
-                args=[], returncode=0, stdout="", stderr=""
-            )
-            vault.unlock()
+        vault._unlocked = True
 
         assert vault.is_unlocked is True
 
@@ -221,10 +242,8 @@ class TestVaultGraceTimer:
         await asyncio.sleep(3)
         assert vault.is_unlocked is False
         poll_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await poll_task
-        except asyncio.CancelledError:
-            pass
 
     @pytest.mark.asyncio
     async def test_reinsertion_cancels_grace(self, test_config):
@@ -232,11 +251,7 @@ class TestVaultGraceTimer:
 
         yk = MockYubiKey(present=True)
         vault = Vault(test_config, yk)
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = subprocess.CompletedProcess(
-                args=[], returncode=0, stdout="", stderr=""
-            )
-            vault.unlock()
+        vault._unlocked = True
 
         poll_task = asyncio.create_task(vault.start_polling())
         await asyncio.sleep(0.1)
@@ -246,10 +261,8 @@ class TestVaultGraceTimer:
         await asyncio.sleep(2)  # Wait past original grace period
         assert vault.is_unlocked is True  # Should still be unlocked
         poll_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await poll_task
-        except asyncio.CancelledError:
-            pass
 
     @pytest.mark.asyncio
     async def test_cancel_polling_during_grace_timer(self, test_config):
@@ -258,11 +271,7 @@ class TestVaultGraceTimer:
 
         yk = MockYubiKey(present=True)
         vault = Vault(test_config, yk)
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = subprocess.CompletedProcess(
-                args=[], returncode=0, stdout="", stderr=""
-            )
-            vault.unlock()
+        vault._unlocked = True
 
         poll_task = asyncio.create_task(vault.start_polling())
         await asyncio.sleep(0.1)
@@ -272,10 +281,8 @@ class TestVaultGraceTimer:
         assert vault._grace_timer is not None
         # Cancel polling while grace timer is mid-countdown (grace=2s, ~0.5s left)
         poll_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await poll_task
-        except asyncio.CancelledError:
-            pass
         # Vault should still be unlocked (grace didn't finish)
         assert vault.is_unlocked is True
 
@@ -292,7 +299,5 @@ class TestVaultGraceTimer:
         assert vault._grace_timer is None
         assert vault.is_unlocked is False
         poll_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await poll_task
-        except asyncio.CancelledError:
-            pass

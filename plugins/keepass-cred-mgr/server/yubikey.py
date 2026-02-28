@@ -7,14 +7,13 @@ Treat any subprocess error as "not present" to avoid blocking the polling loop.
 from __future__ import annotations
 
 import subprocess
-from abc import ABC, abstractmethod
+from typing import Protocol, runtime_checkable
 
 
-class YubiKeyInterface(ABC):
-    @abstractmethod
+@runtime_checkable
+class YubiKeyInterface(Protocol):
     def is_present(self) -> bool: ...
 
-    @abstractmethod
     def slot(self) -> int: ...
 
 

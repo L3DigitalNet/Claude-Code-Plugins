@@ -138,6 +138,7 @@ class TestConfigLoading:
     def test_invalid_yaml_raises(self, tmp_path):
         """Malformed YAML raises yaml.YAMLError."""
         import yaml as yaml_mod
+
         from server.config import load_config
 
         config_file = tmp_path / "bad.yaml"
@@ -145,8 +146,8 @@ class TestConfigLoading:
         with pytest.raises(yaml_mod.YAMLError):
             load_config(str(config_file))
 
-    def test_non_string_path_skips_tilde_expansion(self, tmp_path):
-        """Integer database_path bypasses expanduser but still works."""
+    def test_non_string_database_path_rejected(self, tmp_path):
+        """Non-string database_path is rejected by validation."""
         from server.config import load_config
 
         audit_path = tmp_path / "audit.jsonl"
@@ -157,5 +158,86 @@ class TestConfigLoading:
         }
         config_file = tmp_path / "config.yaml"
         config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(ValueError, match="database_path.*must be a string"):
+            load_config(str(config_file))
+
+    def test_allowed_groups_must_be_list(self, tmp_path):
+        """A plain string instead of a list is rejected."""
+        from server.config import load_config
+
+        cfg = {
+            "database_path": "/tmp/test.kdbx",
+            "allowed_groups": "Servers",
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(ValueError, match="allowed_groups.*list of strings"):
+            load_config(str(config_file))
+
+    def test_yubikey_slot_must_be_positive(self, tmp_path):
+        """Zero or negative yubikey_slot is rejected."""
+        from server.config import load_config
+
+        cfg = {
+            "database_path": "/tmp/test.kdbx",
+            "allowed_groups": ["Servers"],
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "yubikey_slot": 0,
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(ValueError, match="yubikey_slot.*>= 1"):
+            load_config(str(config_file))
+
+    def test_negative_timeout_rejected(self, tmp_path):
+        """Negative timeout values are rejected."""
+        from server.config import load_config
+
+        cfg = {
+            "database_path": "/tmp/test.kdbx",
+            "allowed_groups": ["Servers"],
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "grace_period_seconds": -5,
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(ValueError, match="grace_period_seconds.*>= 1"):
+            load_config(str(config_file))
+
+    def test_log_level_valid(self, tmp_path):
+        """Custom log level is accepted when valid."""
+        from server.config import load_config
+
+        cfg = {
+            "database_path": "/tmp/test.kdbx",
+            "allowed_groups": ["Servers"],
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "log_level": "DEBUG",
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
         config = load_config(str(config_file))
-        assert config.database_path == 12345
+        assert config.log_level == "DEBUG"
+
+    def test_log_level_invalid_rejected(self, tmp_path):
+        """Invalid log level is rejected."""
+        from server.config import load_config
+
+        cfg = {
+            "database_path": "/tmp/test.kdbx",
+            "allowed_groups": ["Servers"],
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "log_level": "TRACE",
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(ValueError, match="log_level"):
+            load_config(str(config_file))
+
+    def test_log_level_default(self, minimal_config):
+        """Log level defaults to INFO when omitted."""
+        from server.config import load_config
+
+        config = load_config(minimal_config)
+        assert config.log_level == "INFO"
