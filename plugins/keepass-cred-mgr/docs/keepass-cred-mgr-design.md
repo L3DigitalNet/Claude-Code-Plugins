@@ -116,7 +116,7 @@ keepass-cred-mgr/
 │   │   └── SKILL.md
 │   └── keepass-credential-anthropic/
 │       └── SKILL.md
-├── agents/                      # Agents (none in v1.0.0 — provisioning agent planned for v1.1.0)
+├── agents/                      # Agents (none yet; provisioning agent planned)
 ├── server/                      # MCP server Python source
 │   ├── main.py
 │   ├── tools/
@@ -209,7 +209,7 @@ Three custom slash commands ship with the plugin. Defined as markdown files in `
 
 ### Skills
 
-Six skills ship with v1.0.0, one per concern. Each is defined as a `SKILL.md` in its own subfolder under `skills/`. Granular structure allows Claude to load only what is relevant to the current task.
+Six skills ship with the plugin, one per concern. Each is defined as a `SKILL.md` in its own subfolder under `skills/`. Granular structure allows Claude to load only what is relevant to the current task.
 
 **1. KeePass Credential Hygiene** (`skills/keepass-hygiene/SKILL.md`)
 
@@ -292,9 +292,9 @@ Storage guidance:
 
 ### Agents
 
-No agents ship with v1.0.0.
+No agents ship with the current release.
 
-**Planned for v1.1.0 — Credential Provisioning Agent** (`agents/provision.md`)
+**Planned — Credential Provisioning Agent** (`agents/provision.md`)
 
 A purpose-built agent for provisioning credentials when setting up a new project or server environment. Intended workflow:
 - Audit existing vault entries relevant to the target environment
@@ -302,7 +302,7 @@ A purpose-built agent for provisioning credentials when setting up a new project
 - Store all new credentials in the correct groups with consistent naming
 - Verify vault state on completion and report what was created
 
-Deferred to v1.1.0 to keep the initial release focused and because the agent requires service-specific context that benefits from real-world usage patterns before codifying.
+Deferred to keep the initial releases focused; the agent requires service-specific context that benefits from real-world usage patterns before codifying.
 
 ### Local Development Testing
 
