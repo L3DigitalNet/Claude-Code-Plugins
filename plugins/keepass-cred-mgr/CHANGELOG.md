@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-02-28
+
+### Added
+- KeePassXC Credential Manager plugin v0.1.0
+- add manual setup guide for KeePass MCP plugin
+
+### Changed
+- add ruff + mypy config, fix lint and type issues
+- fill coverage gaps for handler and search_entries branches
+- fill integration test stubs with real keepassxc-cli calls
+- add PasswordVault helper for integration tests
+- add quality hardening implementation plan
+- add quality hardening design (integration tests, coverage, linting)
+- Release keepass-cred-mgr v0.1.1
+- comprehensive testing (58 -> 100 tests, ~90%+ coverage)
+
+
 ## [0.1.1] - 2026-02-27
 
 ### Fixed
