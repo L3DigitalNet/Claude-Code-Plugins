@@ -6,6 +6,9 @@ Temp files for attachment import are overwritten with zeros then unlinked.
 
 from __future__ import annotations
 
+import asyncio
+import base64
+import io
 import os
 import stat
 import subprocess
@@ -199,7 +202,6 @@ async def add_attachment(
 
 
 def _b64uuid() -> str:
-    import base64
     return base64.b64encode(uuid.uuid4().bytes).decode()
 
 
@@ -324,7 +326,6 @@ def _build_import_xml(entries_by_group: dict[str, list[dict[str, str]]]) -> str:
 
     tree = ET.ElementTree(root_el)
     ET.indent(tree, space="    ")
-    import io
     buf = io.StringIO()
     tree.write(buf, encoding="unicode", xml_declaration=True)
     return buf.getvalue()
@@ -364,8 +365,10 @@ async def import_entries(
     for e in entries:
         by_group.setdefault(e["group"], []).append(e)
 
-    tmp_xml = tempfile.mktemp(prefix="keepass-cred-mgr-import-", suffix=".xml")  # noqa: S306
-    tmp_db = tempfile.mktemp(prefix="keepass-cred-mgr-import-", suffix=".kdbx")
+    xml_fd, tmp_xml = tempfile.mkstemp(prefix="keepass-cred-mgr-import-", suffix=".xml")
+    os.close(xml_fd)
+    kdbx_dir = tempfile.mkdtemp(prefix="keepass-cred-mgr-")
+    tmp_db = os.path.join(kdbx_dir, "staging.kdbx")
     tmp_pass = uuid.uuid4().hex  # random one-time password for the staging database
 
     try:
@@ -374,12 +377,15 @@ async def import_entries(
         Path(tmp_xml).write_text(xml_content, encoding="utf-8")
         os.chmod(tmp_xml, stat.S_IRUSR | stat.S_IWUSR)
 
-        # Step 2: create staging KDBX from XML (password-only, no YubiKey)
-        result = subprocess.run(
+        # Step 2: create staging KDBX from XML (password-only, no YubiKey).
+        # asyncio.to_thread prevents blocking the event loop during the CLI call.
+        result = await asyncio.to_thread(
+            subprocess.run,
             ["keepassxc-cli", "import", "--set-password", tmp_xml, tmp_db],
             input=f"{tmp_pass}\n{tmp_pass}\n",
             capture_output=True,
             text=True,
+            timeout=60,
         )
         if result.returncode != 0:
             raise KeePassCLIError(
@@ -388,12 +394,13 @@ async def import_entries(
 
         # Step 3: lock the vault before merging so the REPL's in-memory state
         # doesn't diverge from what the merge writes to disk.
-        vault._lock()  # noqa: SLF001
+        await vault.lock(reason="import_complete")
 
         # Step 4: merge staging KDBX into production (two YubiKey touches)
         db = vault.config.database_path
         slot = vault.config.yubikey_slot
-        result = subprocess.run(
+        result = await asyncio.to_thread(
+            subprocess.run,
             [
                 "keepassxc-cli", "merge",
                 "--yubikey", str(slot),
@@ -403,6 +410,7 @@ async def import_entries(
             input=tmp_pass + "\n",
             capture_output=True,
             text=True,
+            timeout=60,
         )
         if result.returncode != 0:
             raise KeePassCLIError(
@@ -412,6 +420,8 @@ async def import_entries(
     finally:
         _shred_file(tmp_xml)
         _shred_file(tmp_db)
+        with suppress(OSError):
+            os.rmdir(kdbx_dir)
 
     total = sum(len(v) for v in by_group.values())
     group_summary = ", ".join(f"{g} ({len(v)})" for g, v in by_group.items())

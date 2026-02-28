@@ -190,18 +190,22 @@ class Vault:
                     "repl_stderr",
                     line=line.decode("utf-8", errors="replace").strip(),
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("repl_stderr_drain_error", error=type(e).__name__)
 
-    def _lock(self) -> None:
+    async def lock(self, *, reason: str = "yubikey_removed") -> None:
         self._unlocked = False
         if self._repl_proc is not None:
             self._repl_proc.kill()
+            with suppress(Exception):
+                await asyncio.wait_for(self._repl_proc.wait(), timeout=5)
             self._repl_proc = None
         if self._stderr_drain_task is not None:
             self._stderr_drain_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._stderr_drain_task
             self._stderr_drain_task = None
-        log.info("vault_locked", reason="yubikey_removed")
+        log.info("vault_locked", reason=reason)
 
     def check_group_allowed(self, group: str) -> None:
         if group not in self._config.allowed_groups:
@@ -346,5 +350,5 @@ class Vault:
 
     async def _grace_countdown(self) -> None:
         await asyncio.sleep(self._config.grace_period_seconds)
-        self._lock()
+        await self.lock()
         self._grace_timer = None

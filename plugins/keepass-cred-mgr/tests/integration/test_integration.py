@@ -63,7 +63,7 @@ async def integration_setup(tmp_path):
 
     yield vault, audit, config, db_copy
 
-    vault._lock()  # clean up the REPL process after each test
+    await vault.lock()  # clean up the REPL process after each test
 
 
 class TestIntegrationReadCycle:
