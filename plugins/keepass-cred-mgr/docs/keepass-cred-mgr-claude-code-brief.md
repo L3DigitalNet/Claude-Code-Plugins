@@ -93,7 +93,7 @@ build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "keepass-cred-mgr"
-version = "1.0.0"
+version = "0.2.0"
 requires-python = ">=3.12"
 dependencies = [
     "mcp",
