@@ -8,10 +8,14 @@ from __future__ import annotations
 
 import os
 import stat
+import subprocess
 import tempfile
+import uuid
+import xml.etree.ElementTree as ET
 from collections.abc import Generator
 from contextlib import contextmanager, suppress
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
+from pathlib import Path
 
 import structlog
 from filelock import FileLock, Timeout
@@ -94,13 +98,17 @@ async def create_entry(
         cmd = ["add", db, path]
         if username:
             cmd.extend(["--username", username])
-        if password:
-            cmd.extend(["--password", password])
         if url:
             cmd.extend(["--url", url])
         if notes:
             cmd.extend(["--notes", notes])
-        await vault.run_cli(*cmd)
+        if password:
+            # keepassxc-cli add has no --password flag; -p prompts stdin.
+            # Write the password to stdin upfront so run_cli() doesn't deadlock.
+            cmd.append("-p")
+            await vault.run_cli(*cmd, stdin_lines=[password])
+        else:
+            await vault.run_cli(*cmd)
 
     audit.log(tool="create_entry", title=title, group=group)
 
@@ -184,4 +192,231 @@ async def add_attachment(
         title=title,
         group=group,
         attachment=attachment_name,
+    )
+
+
+# --- Bulk import helpers ---
+
+
+def _b64uuid() -> str:
+    import base64
+    return base64.b64encode(uuid.uuid4().bytes).decode()
+
+
+def _now_kp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _make_times() -> ET.Element:
+    t = ET.Element("Times")
+    for tag in ("LastModificationTime", "CreationTime", "LastAccessTime",
+                "LocationChanged", "ExpiryTime"):
+        ET.SubElement(t, tag).text = _now_kp()
+    ET.SubElement(t, "Expires").text = "False"
+    ET.SubElement(t, "UsageCount").text = "0"
+    return t
+
+
+def _xml_entry(
+    title: str,
+    username: str = "",
+    password: str = "",
+    url: str = "",
+    notes: str = "",
+) -> ET.Element:
+    e = ET.Element("Entry")
+    ET.SubElement(e, "UUID").text = _b64uuid()
+    ET.SubElement(e, "IconID").text = "0"
+    ET.SubElement(e, "ForegroundColor")
+    ET.SubElement(e, "BackgroundColor")
+    ET.SubElement(e, "OverrideURL")
+    ET.SubElement(e, "Tags")
+    e.append(_make_times())
+    for key, val in (("Title", title), ("UserName", username),
+                     ("Password", password), ("URL", url), ("Notes", notes)):
+        s = ET.SubElement(e, "String")
+        ET.SubElement(s, "Key").text = key
+        v = ET.SubElement(s, "Value")
+        v.text = val
+        if key == "Password":
+            v.set("ProtectInMemory", "True")
+    at = ET.SubElement(e, "AutoType")
+    ET.SubElement(at, "Enabled").text = "True"
+    ET.SubElement(at, "DataTransferObfuscation").text = "0"
+    ET.SubElement(e, "History")
+    return e
+
+
+def _xml_group(name: str, entries: list[ET.Element]) -> ET.Element:
+    g = ET.Element("Group")
+    ET.SubElement(g, "UUID").text = _b64uuid()
+    ET.SubElement(g, "Name").text = name
+    ET.SubElement(g, "Notes")
+    ET.SubElement(g, "IconID").text = "48"
+    g.append(_make_times())
+    ET.SubElement(g, "IsExpanded").text = "True"
+    ET.SubElement(g, "DefaultAutoTypeSequence")
+    # "null" is the KeePassXC XML value for inherit-from-parent; "inherit" is rejected.
+    ET.SubElement(g, "EnableAutoType").text = "null"
+    ET.SubElement(g, "EnableSearching").text = "null"
+    ET.SubElement(g, "LastTopVisibleEntry").text = "AAAAAAAAAAAAAAAAAAAAAA=="
+    for entry in entries:
+        g.append(entry)
+    return g
+
+
+def _build_import_xml(entries_by_group: dict[str, list[dict[str, str]]]) -> str:
+    """Build a KeePassXC-compatible XML string from a group → entries mapping."""
+    root_el = ET.Element("KeePassFile")
+
+    meta = ET.SubElement(root_el, "Meta")
+    ET.SubElement(meta, "Generator").text = "KeePassXC"
+    ET.SubElement(meta, "DatabaseName").text = "keepass-cred-mgr-import"
+    ET.SubElement(meta, "DatabaseDescription")
+    ET.SubElement(meta, "DefaultUserName")
+    ET.SubElement(meta, "MaintenanceHistoryDays").text = "365"
+    ET.SubElement(meta, "Color")
+    ET.SubElement(meta, "MasterKeyChanged").text = _now_kp()
+    ET.SubElement(meta, "MasterKeyChangeRec").text = "-1"
+    ET.SubElement(meta, "MasterKeyChangeForce").text = "-1"
+    mp = ET.SubElement(meta, "MemoryProtection")
+    for field, val in (("ProtectTitle", "False"), ("ProtectUserName", "False"),
+                       ("ProtectPassword", "True"), ("ProtectURL", "False"),
+                       ("ProtectNotes", "False")):
+        ET.SubElement(mp, field).text = val
+    ET.SubElement(meta, "CustomIcons")
+    ET.SubElement(meta, "RecycleBinEnabled").text = "True"
+    ET.SubElement(meta, "RecycleBinUUID").text = "AAAAAAAAAAAAAAAAAAAAAA=="
+    ET.SubElement(meta, "RecycleBinChanged").text = _now_kp()
+    ET.SubElement(meta, "EntryTemplatesGroup").text = "AAAAAAAAAAAAAAAAAAAAAA=="
+    ET.SubElement(meta, "EntryTemplatesGroupChanged").text = _now_kp()
+    ET.SubElement(meta, "HistoryMaxItems").text = "10"
+    ET.SubElement(meta, "HistoryMaxSize").text = "6291456"
+    ET.SubElement(meta, "LastSelectedGroup").text = "AAAAAAAAAAAAAAAAAAAAAA=="
+    ET.SubElement(meta, "LastTopVisibleGroup").text = "AAAAAAAAAAAAAAAAAAAAAA=="
+    ET.SubElement(meta, "Binaries")
+    ET.SubElement(meta, "CustomData")
+
+    root_group = ET.SubElement(ET.SubElement(root_el, "Root"), "Group")
+    ET.SubElement(root_group, "UUID").text = _b64uuid()
+    ET.SubElement(root_group, "Name").text = "keepass"
+    ET.SubElement(root_group, "Notes")
+    ET.SubElement(root_group, "IconID").text = "48"
+    root_group.append(_make_times())
+    ET.SubElement(root_group, "IsExpanded").text = "True"
+    ET.SubElement(root_group, "DefaultAutoTypeSequence")
+    ET.SubElement(root_group, "EnableAutoType").text = "null"
+    ET.SubElement(root_group, "EnableSearching").text = "null"
+    ET.SubElement(root_group, "LastTopVisibleEntry").text = "AAAAAAAAAAAAAAAAAAAAAA=="
+
+    for group_name, entry_dicts in entries_by_group.items():
+        xml_entries = [
+            _xml_entry(
+                title=e["title"],
+                username=e.get("username", ""),
+                password=e.get("password", ""),
+                url=e.get("url", ""),
+                notes=e.get("notes", ""),
+            )
+            for e in entry_dicts
+        ]
+        root_group.append(_xml_group(group_name, xml_entries))
+
+    tree = ET.ElementTree(root_el)
+    ET.indent(tree, space="    ")
+    import io
+    buf = io.StringIO()
+    tree.write(buf, encoding="unicode", xml_declaration=True)
+    return buf.getvalue()
+
+
+async def import_entries(
+    vault: Vault,
+    audit: AuditLogger,
+    *,
+    entries: list[dict[str, str]],
+) -> str:
+    """Bulk-import multiple entries via XML → temp KDBX → merge.
+
+    More efficient than calling create_entry in a loop when adding many entries:
+    two YubiKey touches regardless of count (merge open + save).
+
+    The vault is locked after import to prevent the in-memory REPL state from
+    becoming stale relative to the merged database. Call unlock_vault again
+    to continue using the vault.
+
+    Each entry dict requires 'group' and 'title'. Optional: 'username',
+    'password', 'url', 'notes'. Groups must be in the configured allowlist.
+    """
+    if not entries:
+        return "No entries provided"
+
+    # Validate groups and title uniqueness before doing any I/O.
+    for e in entries:
+        if "group" not in e or "title" not in e:
+            raise ValueError("Each entry must have 'group' and 'title'")
+        vault.check_group_allowed(e["group"])
+        if "/" in e["title"]:
+            raise ValueError(f"Entry title cannot contain a slash: {e['title']!r}")
+
+    # Group entries by group name for the XML builder.
+    by_group: dict[str, list[dict[str, str]]] = {}
+    for e in entries:
+        by_group.setdefault(e["group"], []).append(e)
+
+    tmp_xml = tempfile.mktemp(prefix="keepass-cred-mgr-import-", suffix=".xml")  # noqa: S306
+    tmp_db = tempfile.mktemp(prefix="keepass-cred-mgr-import-", suffix=".kdbx")
+    tmp_pass = uuid.uuid4().hex  # random one-time password for the staging database
+
+    try:
+        # Step 1: write XML
+        xml_content = _build_import_xml(by_group)
+        Path(tmp_xml).write_text(xml_content, encoding="utf-8")
+        os.chmod(tmp_xml, stat.S_IRUSR | stat.S_IWUSR)
+
+        # Step 2: create staging KDBX from XML (password-only, no YubiKey)
+        result = subprocess.run(
+            ["keepassxc-cli", "import", "--set-password", tmp_xml, tmp_db],
+            input=f"{tmp_pass}\n{tmp_pass}\n",
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise KeePassCLIError(
+                f"keepassxc-cli import failed: {result.stderr.strip()}"
+            )
+
+        # Step 3: lock the vault before merging so the REPL's in-memory state
+        # doesn't diverge from what the merge writes to disk.
+        vault._lock()  # noqa: SLF001
+
+        # Step 4: merge staging KDBX into production (two YubiKey touches)
+        db = vault.config.database_path
+        slot = vault.config.yubikey_slot
+        result = subprocess.run(
+            [
+                "keepassxc-cli", "merge",
+                "--yubikey", str(slot),
+                "--no-password",
+                db, tmp_db,
+            ],
+            input=tmp_pass + "\n",
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise KeePassCLIError(
+                f"keepassxc-cli merge failed: {result.stderr.strip()}"
+            )
+
+    finally:
+        _shred_file(tmp_xml)
+        _shred_file(tmp_db)
+
+    total = sum(len(v) for v in by_group.values())
+    group_summary = ", ".join(f"{g} ({len(v)})" for g, v in by_group.items())
+    audit.log(tool="import_entries", total=total, groups=list(by_group.keys()))
+    return (
+        f"Imported {total} entries: {group_summary}. "
+        "Vault is now locked — call unlock_vault to continue."
     )

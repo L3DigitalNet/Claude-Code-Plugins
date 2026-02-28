@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 import yaml
@@ -6,9 +7,11 @@ import yaml
 
 @pytest.fixture
 def valid_config(tmp_path):
-    """Write a valid config YAML and set env var."""
+    """Write a valid config YAML and create the database file."""
+    db_path = tmp_path / "test.kdbx"
+    db_path.touch()
     cfg = {
-        "database_path": "/tmp/test.kdbx",
+        "database_path": str(db_path),
         "yubikey_slot": 2,
         "grace_period_seconds": 10,
         "yubikey_poll_interval_seconds": 5,
@@ -25,8 +28,10 @@ def valid_config(tmp_path):
 @pytest.fixture
 def minimal_config(tmp_path):
     """Config with only required fields — defaults should fill the rest."""
+    db_path = tmp_path / "test.kdbx"
+    db_path.touch()
     cfg = {
-        "database_path": "/tmp/test.kdbx",
+        "database_path": str(db_path),
         "allowed_groups": ["Servers"],
         "audit_log_path": str(tmp_path / "audit.jsonl"),
     }
@@ -36,11 +41,11 @@ def minimal_config(tmp_path):
 
 
 class TestConfigLoading:
-    def test_loads_valid_config(self, valid_config):
+    def test_loads_valid_config(self, valid_config, tmp_path):
         from server.config import load_config
 
         config = load_config(valid_config)
-        assert config.database_path == "/tmp/test.kdbx"
+        assert config.database_path == str(tmp_path / "test.kdbx")
         assert config.yubikey_slot == 2
         assert config.allowed_groups == ["Servers", "SSH Keys", "API Keys"]
 
@@ -55,8 +60,11 @@ class TestConfigLoading:
         assert config.page_size == 50
 
     def test_expands_tilde_in_paths(self, tmp_path):
+        # Use a real db path; test tilde expansion on audit_log_path (which need not exist)
+        db_path = tmp_path / "test.kdbx"
+        db_path.touch()
         cfg = {
-            "database_path": "~/vault.kdbx",
+            "database_path": str(db_path),
             "allowed_groups": ["Servers"],
             "audit_log_path": "~/audit.jsonl",
         }
@@ -65,9 +73,8 @@ class TestConfigLoading:
         from server.config import load_config
 
         config = load_config(str(config_file))
-        assert "~" not in config.database_path
         assert "~" not in config.audit_log_path
-        assert config.database_path == os.path.expanduser("~/vault.kdbx")
+        assert config.audit_log_path == os.path.expanduser("~/audit.jsonl")
 
     def test_raises_on_missing_database_path(self, tmp_path):
         cfg = {
@@ -83,7 +90,7 @@ class TestConfigLoading:
 
     def test_raises_on_missing_allowed_groups(self, tmp_path):
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(tmp_path / "test.kdbx"),
             "audit_log_path": str(tmp_path / "audit.jsonl"),
         }
         config_file = tmp_path / "config.yaml"
@@ -95,7 +102,7 @@ class TestConfigLoading:
 
     def test_raises_on_missing_audit_log_path(self, tmp_path):
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(tmp_path / "test.kdbx"),
             "allowed_groups": ["Servers"],
         }
         config_file = tmp_path / "config.yaml"
@@ -110,7 +117,7 @@ class TestConfigLoading:
         from server.config import load_config
 
         config = load_config()
-        assert config.database_path == "/tmp/test.kdbx"
+        assert config.yubikey_slot == 2
 
     def test_raises_on_missing_config_file(self):
         from server.config import load_config
@@ -150,11 +157,10 @@ class TestConfigLoading:
         """Non-string database_path is rejected by validation."""
         from server.config import load_config
 
-        audit_path = tmp_path / "audit.jsonl"
         cfg = {
             "database_path": 12345,
             "allowed_groups": ["Servers"],
-            "audit_log_path": str(audit_path),
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
         }
         config_file = tmp_path / "config.yaml"
         config_file.write_text(yaml.dump(cfg))
@@ -166,7 +172,7 @@ class TestConfigLoading:
         from server.config import load_config
 
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(tmp_path / "test.kdbx"),
             "allowed_groups": "Servers",
             "audit_log_path": str(tmp_path / "audit.jsonl"),
         }
@@ -180,7 +186,7 @@ class TestConfigLoading:
         from server.config import load_config
 
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(tmp_path / "test.kdbx"),
             "allowed_groups": ["Servers"],
             "audit_log_path": str(tmp_path / "audit.jsonl"),
             "yubikey_slot": 0,
@@ -195,7 +201,7 @@ class TestConfigLoading:
         from server.config import load_config
 
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(tmp_path / "test.kdbx"),
             "allowed_groups": ["Servers"],
             "audit_log_path": str(tmp_path / "audit.jsonl"),
             "grace_period_seconds": -5,
@@ -209,8 +215,10 @@ class TestConfigLoading:
         """Custom log level is accepted when valid."""
         from server.config import load_config
 
+        db_path = tmp_path / "test.kdbx"
+        db_path.touch()
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(db_path),
             "allowed_groups": ["Servers"],
             "audit_log_path": str(tmp_path / "audit.jsonl"),
             "log_level": "DEBUG",
@@ -225,7 +233,7 @@ class TestConfigLoading:
         from server.config import load_config
 
         cfg = {
-            "database_path": "/tmp/test.kdbx",
+            "database_path": str(tmp_path / "test.kdbx"),
             "allowed_groups": ["Servers"],
             "audit_log_path": str(tmp_path / "audit.jsonl"),
             "log_level": "TRACE",
@@ -241,3 +249,34 @@ class TestConfigLoading:
 
         config = load_config(minimal_config)
         assert config.log_level == "INFO"
+
+    def test_database_not_found_raises(self, tmp_path):
+        """FileNotFoundError when database_path does not exist on disk."""
+        from server.config import load_config
+
+        cfg = {
+            "database_path": str(tmp_path / "missing.kdbx"),
+            "allowed_groups": ["Servers"],
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(FileNotFoundError, match="KeePass database not found"):
+            load_config(str(config_file))
+
+    def test_non_integer_timeout_rejected(self, tmp_path):
+        """A string value for an integer field raises ValueError with type info."""
+        from server.config import load_config
+
+        db_path = tmp_path / "test.kdbx"
+        db_path.touch()
+        cfg = {
+            "database_path": str(db_path),
+            "allowed_groups": ["Servers"],
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "grace_period_seconds": "ten",  # string, not int
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        with pytest.raises(ValueError, match="must be an integer"):
+            load_config(str(config_file))

@@ -97,6 +97,14 @@ def load_config(path: str | None = None) -> Config:
         if isinstance(raw[key], str):
             raw[key] = os.path.expanduser(raw[key])
 
+    # Fail fast on wrong database path — a missing file produces a confusing
+    # keepassxc-cli error at first unlock rather than a clear config error.
+    db_path = Path(raw["database_path"])
+    if not db_path.exists():
+        raise FileNotFoundError(
+            f"KeePass database not found: {raw['database_path']}"
+        )
+
     # Apply defaults for optional fields
     for key, default in _DEFAULTS.items():
         raw.setdefault(key, default)

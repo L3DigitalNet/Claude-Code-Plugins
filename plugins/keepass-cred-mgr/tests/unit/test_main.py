@@ -13,6 +13,7 @@ from server.vault import (
     DuplicateEntry,
     EntryInactive,
     GroupNotAllowed,
+    KeePassCLIError,
     VaultLocked,
     WriteLockTimeout,
     YubiKeyNotPresent,
@@ -269,6 +270,16 @@ class TestSearchEntriesHandler:
             assert result == entries
             mock_se.assert_called_once()
 
+    @pytest.mark.asyncio
+    async def test_cli_error_maps_to_value_error(self):
+        from server.main import search_entries
+        from server.vault import KeePassCLIError
+        ctx, app = _app()
+        mock_se = AsyncMock(side_effect=KeePassCLIError("timed out"))
+        with patch("server.tools.read.search_entries", mock_se), \
+             pytest.raises(ValueError, match="KeePassCLIError"):
+            await search_entries(ctx, query="x", group=None, include_inactive=False)
+
 
 class TestGetAttachmentErrors:
     @pytest.mark.asyncio
@@ -301,3 +312,47 @@ class TestDeactivateEntryErrors:
         with patch("server.tools.write.deactivate_entry", mock_de), \
              pytest.raises(ValueError, match="WriteLockTimeout"):
             await deactivate_entry(ctx, title="Test", group="Servers")
+
+
+class TestImportEntriesHandler:
+    @pytest.mark.asyncio
+    async def test_happy_path(self):
+        from server.main import import_entries
+        ctx, app = _app()
+        mock_ie = AsyncMock(return_value="Imported 2 entries across 1 group(s)")
+        with patch("server.tools.write.import_entries", mock_ie):
+            result = await import_entries(
+                ctx,
+                entries=[
+                    {"group": "Servers", "title": "A"},
+                    {"group": "Servers", "title": "B"},
+                ],
+            )
+        assert "Imported 2" in result
+
+    @pytest.mark.asyncio
+    async def test_vault_locked_maps_to_value_error(self):
+        from server.main import import_entries
+        ctx, app = _app()
+        mock_ie = AsyncMock(side_effect=VaultLocked("locked"))
+        with patch("server.tools.write.import_entries", mock_ie), \
+             pytest.raises(ValueError, match="VaultLocked"):
+            await import_entries(ctx, entries=[{"group": "Servers", "title": "X"}])
+
+    @pytest.mark.asyncio
+    async def test_group_not_allowed_maps_to_value_error(self):
+        from server.main import import_entries
+        ctx, app = _app()
+        mock_ie = AsyncMock(side_effect=GroupNotAllowed("Banking not allowed"))
+        with patch("server.tools.write.import_entries", mock_ie), \
+             pytest.raises(ValueError, match="GroupNotAllowed"):
+            await import_entries(ctx, entries=[{"group": "Banking", "title": "X"}])
+
+    @pytest.mark.asyncio
+    async def test_value_error_propagates(self):
+        from server.main import import_entries
+        ctx, app = _app()
+        mock_ie = AsyncMock(side_effect=ValueError("missing title"))
+        with patch("server.tools.write.import_entries", mock_ie), \
+             pytest.raises(ValueError, match="missing title"):
+            await import_entries(ctx, entries=[{"group": "Servers"}])

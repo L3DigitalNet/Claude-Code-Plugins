@@ -28,8 +28,12 @@ if not TEST_DB.exists():
 
 
 @pytest.fixture
-def integration_setup(tmp_path):
-    """Copy test db to tmp, create config, return PasswordVault + audit."""
+async def integration_setup(tmp_path):
+    """Copy test db to tmp, create config, unlock PasswordVault, return test fixtures.
+
+    Uses PasswordVault which opens a real keepassxc-cli REPL with password auth.
+    The vault is properly unlocked (REPL running) so all run_cli() calls work.
+    """
     import yaml
 
     from tests.helpers import PasswordVault
@@ -54,10 +58,12 @@ def integration_setup(tmp_path):
     config = load_config(str(config_file))
 
     vault = PasswordVault(config, password="testpassword")
-    vault._unlocked = True
+    await vault.unlock()
     audit = AuditLogger(str(audit_path))
 
-    return vault, audit, config, db_copy
+    yield vault, audit, config, db_copy
+
+    vault._lock()  # clean up the REPL process after each test
 
 
 class TestIntegrationReadCycle:

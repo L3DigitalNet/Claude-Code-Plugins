@@ -1,60 +1,100 @@
 #!/usr/bin/env bash
 # Fake keepassxc-cli for PTH testing.
 #
-# vault.unlock()  calls: keepassxc-cli open --yubikey <slot> <db>
-# vault.run_cli() calls: keepassxc-cli --yubikey <slot> <subcmd> [args...]
+# Two execution modes:
 #
-# This script finds the subcommand by scanning positional args while skipping
-# known flags and their values, then returns hardcoded fixture data.
+#   REPL (primary):  `keepassxc-cli open --yubikey <slot> --no-password <db>`
+#     Emits "> " on stdout (initial prompt), then loops reading commands from stdin.
+#     Commands arrive pre-parsed by shlex.join (no db path, no --yubikey).
+#     Prints output + "\n> " after each command so vault.run_cli()'s readuntil works.
+#
+#   Direct (secondary):  attachment-export (run_cli_binary), import + merge (import_entries)
+#     Called as a plain subprocess with full args including --yubikey and db path.
 
-# --- Arg parsing ---
-POSITIONAL=()
-SHOW_PROTECTED=0
-NOTES_VALUE=""
-TITLE_VALUE=""
-USERNAME_VALUE=""
-PASSWORD_VALUE=""
-URL_VALUE=""
+# --- Shared command handler ---
+# Called in a subshell for REPL mode; called inline for direct mode.
+# Receives: <subcmd> [args...] — no db path, no --yubikey.
+_handle() {
+    local subcmd="$1"; shift
+    local SHOW_PROTECTED=0
+    local NOTES_VALUE="" TITLE_VALUE="" USERNAME_VALUE="" PASSWORD_VALUE="" URL_VALUE=""
+    local -a POS=()
+    local i=0
+    local -a args=("$@")
+
+    while [[ $i -lt ${#args[@]} ]]; do
+        case "${args[$i]}" in
+            --show-protected) SHOW_PROTECTED=1 ;;
+            --stdout)         : ;;
+            --notes)      i=$((i+1)); NOTES_VALUE="${args[$i]}" ;;
+            --title)      i=$((i+1)); TITLE_VALUE="${args[$i]}" ;;
+            --username)   i=$((i+1)); USERNAME_VALUE="${args[$i]}" ;;
+            --password)   i=$((i+1)); PASSWORD_VALUE="${args[$i]}" ;;
+            --url)        i=$((i+1)); URL_VALUE="${args[$i]}" ;;
+            *) POS+=("${args[$i]}") ;;
+        esac
+        i=$((i+1))
+    done
+
+    case "$subcmd" in
+        ls)
+            local group="${POS[0]:-}"
+            if [[ -z "$group" ]]; then
+                printf 'Servers/\nSSH Keys/\nGPG Keys/\nGit/\nAPI Keys/\nServices/\nPersonal/\n'
+            else
+                case "$group" in
+                    Servers)    printf 'test-server-1\ntest-server-2\n[INACTIVE] old-server\n' ;;
+                    "SSH Keys") printf 'github-deploy-key\n' ;;
+                    "API Keys") printf 'openai-key\n' ;;
+                    Git)        printf 'github-token\n' ;;
+                    *) ;;
+                esac
+            fi
+            ;;
+        show)
+            local path_arg="${POS[0]:-}"
+            local entry="${path_arg##*/}"
+            if [[ $SHOW_PROTECTED -eq 1 ]]; then
+                printf 'Title: %s\nUsername: admin\nPassword: s3cr3t!\nURL: https://example.com\nNotes: Test entry\n' "$entry"
+            else
+                printf 'Title: %s\nUsername: admin\nURL: https://example.com\nNotes: Test entry\n' "$entry"
+            fi
+            ;;
+        search)
+            local query="${POS[0]:-}"
+            case "$query" in
+                *server*|*test*) printf 'Servers/test-server-1\nServers/test-server-2\n' ;;
+                *github*|*deploy*|*ssh*) printf 'SSH Keys/github-deploy-key\nGit/github-token\n' ;;
+                *) ;;
+            esac
+            ;;
+        attachment-export)
+            # Binary export — always via run_cli_binary (direct mode), but handle in REPL too
+            printf -- '-----BEGIN CERTIFICATE-----\nMIIBtestcertdata\n-----END CERTIFICATE-----\n'
+            ;;
+        add|edit|attachment-import)
+            echo "Successfully completed ${subcmd}." >&2
+            ;;
+        *)
+            echo "fake-keepassxc-cli: unknown subcommand: ${subcmd}" >&2
+            return 1
+            ;;
+    esac
+}
+
+# --- Top-level: strip known flags, collect positional args ---
 
 i=0
 args=("$@")
+declare -a POSITIONAL=()
+
 while [[ $i -lt ${#args[@]} ]]; do
-    arg="${args[$i]}"
-    case "$arg" in
-        --yubikey|-y)
-            i=$((i + 1))  # skip slot value
-            ;;
-        --show-protected)
-            SHOW_PROTECTED=1
-            ;;
-        --stdout)
-            : # always write to stdout
-            ;;
-        --notes)
-            i=$((i + 1))
-            NOTES_VALUE="${args[$i]}"
-            ;;
-        --title)
-            i=$((i + 1))
-            TITLE_VALUE="${args[$i]}"
-            ;;
-        --username)
-            i=$((i + 1))
-            USERNAME_VALUE="${args[$i]}"
-            ;;
-        --password)
-            i=$((i + 1))
-            PASSWORD_VALUE="${args[$i]}"
-            ;;
-        --url)
-            i=$((i + 1))
-            URL_VALUE="${args[$i]}"
-            ;;
-        *)
-            POSITIONAL+=("$arg")
-            ;;
+    case "${args[$i]}" in
+        --yubikey|-y) i=$((i+1)) ;;   # skip slot value
+        --no-password|--set-password|--stdout) : ;;
+        *) POSITIONAL+=("${args[$i]}") ;;
     esac
-    i=$((i + 1))
+    i=$((i+1))
 done
 
 SUBCMD="${POSITIONAL[0]:-}"
@@ -62,92 +102,46 @@ SUBCMD="${POSITIONAL[0]:-}"
 case "$SUBCMD" in
 
     open)
-        # vault.unlock(): keepassxc-cli open --yubikey 2 <db>
+        # vault.unlock(): keepassxc-cli open --yubikey <slot> --no-password <db>
+        # Start the REPL: emit initial "> " prompt, then loop processing commands.
         echo "Successfully opened database." >&2
+        printf "> "
+
+        # Commands arrive as shlex.join output: shell-quoted, newline-terminated.
+        # eval splits them back into an array, handling quoted args with spaces.
+        # stdout: command output (if any) followed by "\n> " for readuntil(b"\n> ").
+        while IFS= read -r repl_line; do
+            [[ -z "$repl_line" ]] && break
+            eval "repl_cmd_array=($repl_line)"
+            repl_subcmd="${repl_cmd_array[0]:-}"
+            repl_output=$(_handle "$repl_subcmd" "${repl_cmd_array[@]:1}")
+            if [[ -n "$repl_output" ]]; then
+                printf '%s\n> ' "$repl_output"
+            else
+                printf '\n> '
+            fi
+        done
         ;;
 
-    ls)
-        # keepassxc-cli --yubikey 2 ls <db> [group]
-        GROUP="${POSITIONAL[2]:-}"
-        if [[ -z "$GROUP" ]]; then
-            # Root listing — return groups matching allowlist
-            echo 'Servers/'
-            echo 'SSH Keys/'
-            echo 'GPG Keys/'
-            echo 'Git/'
-            echo 'API Keys/'
-            echo 'Services/'
-            echo 'Personal/'
-        else
-            case "$GROUP" in
-                Servers)
-                    echo 'test-server-1'
-                    echo 'test-server-2'
-                    echo '[INACTIVE] old-server'
-                    ;;
-                "SSH Keys")
-                    echo 'github-deploy-key'
-                    ;;
-                "API Keys")
-                    echo 'openai-key'
-                    ;;
-                Git)
-                    echo 'github-token'
-                    ;;
-                *)
-                    ;;
-            esac
-        fi
+    import)
+        # import_entries staging: keepassxc-cli import --set-password <xml> <db>
+        # Reads two password confirmations from stdin; creates an empty staging file.
+        read -r _pass1; read -r _pass2
+        staging_db="${POSITIONAL[2]:-}"
+        [[ -n "$staging_db" ]] && touch "$staging_db" 2>/dev/null
+        echo "Successfully imported database." >&2
         ;;
 
-    show)
-        # keepassxc-cli --yubikey 2 show [--show-protected] <db> <group/title>
-        PATH_ARG="${POSITIONAL[2]:-}"
-        ENTRY="${PATH_ARG##*/}"
-        if [[ $SHOW_PROTECTED -eq 1 ]]; then
-            printf 'Title: %s\nUsername: admin\nPassword: s3cr3t!\nURL: https://example.com\nNotes: Test entry\n' "$ENTRY"
-        else
-            printf 'Title: %s\nUsername: admin\nURL: https://example.com\nNotes: Test entry\n' "$ENTRY"
-        fi
-        ;;
-
-    search)
-        # keepassxc-cli --yubikey 2 search <db> <query>
-        QUERY="${POSITIONAL[2]:-}"
-        case "$QUERY" in
-            *server*|*test*)
-                echo 'Servers/test-server-1'
-                echo 'Servers/test-server-2'
-                ;;
-            *github*|*deploy*|*ssh*)
-                echo 'SSH Keys/github-deploy-key'
-                echo 'Git/github-token'
-                ;;
-            *)
-                ;;
-        esac
+    merge)
+        # import_entries merge: keepassxc-cli merge --yubikey <slot> --no-password <db> <staging>
+        # Reads staging password from stdin; does nothing (fixture merge always succeeds).
+        read -r _pass
+        echo "Successfully merged database." >&2
         ;;
 
     attachment-export)
-        # keepassxc-cli --yubikey 2 attachment-export --stdout <db> <path> <name>
-        # Use printf -- so leading dashes in format string are not parsed as flags
+        # run_cli_binary: keepassxc-cli attachment-export --yubikey <slot> --no-password <db> <path> [--stdout]
         printf -- '-----BEGIN CERTIFICATE-----\nMIIBtestcertdata\n-----END CERTIFICATE-----\n'
-        ;;
-
-    add)
-        # keepassxc-cli --yubikey 2 add <db> <path> [--username ...] [--password ...]
-        echo "Successfully added entry." >&2
-        ;;
-
-    edit)
-        # keepassxc-cli --yubikey 2 edit --title <new> <db> <path>
-        # keepassxc-cli --yubikey 2 edit --notes <notes> <db> <path>
-        echo "Successfully edited entry." >&2
-        ;;
-
-    attachment-import)
-        # keepassxc-cli --yubikey 2 attachment-import <db> <path> <name> <tmpfile>
-        echo "Successfully imported attachment." >&2
         ;;
 
     *)

@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-02-28
+
+### Added
+
+- Persistent REPL mode: `vault.unlock()` opens a single `keepassxc-cli open` process (one YubiKey touch per session); all `run_cli()` calls reuse that process without re-authenticating
+- `import_entries` MCP tool: bulk-import multiple entries via XML → staging KDBX → merge; two YubiKey touches regardless of entry count; vault locked after import
+- pcscd conflict hint appended to YubiKey timeout errors (`sudo systemctl stop pcscd pcscd.socket`)
+- Database path validated at config load: `FileNotFoundError` raised immediately if the configured path does not exist
+
+### Changed
+
+- `run_cli()` now sends commands via REPL stdin and reads output with `asyncio.wait_for(readuntil(...))` instead of spawning a subprocess per call
+- `run_cli_binary()` remains a direct subprocess for binary attachment exports (raw bytes cannot transit the text REPL)
+- REPL stderr drained in a background `asyncio.Task` to prevent the 64 KB pipe buffer from stalling the session
+- `_lock()` kills the REPL process and cancels the stderr drain task
+- `fake-tools/keepassxc-cli` refactored: `open` case is now a REPL loop using `eval` to parse `shlex.join`-produced lines; `import` and `merge` subcommands added
+
+### Fixed
+
+- `list_entries` no longer requires N+1 YubiKey touches; all `show` calls within a session share the single unlocked REPL
+- Entry titles with spaces now persist correctly: `run_cli()` switched from `shlex.join()` (POSIX single-quote style) to `_repl_join()` (Qt double-quote style); the keepassxc-cli REPL uses Qt's `QProcess::splitCommand` which silently ignored single-quoted arguments
+- `create_entry` password field now uses `-p` (`--password-prompt`) and pipes the value via stdin; `keepassxc-cli add` has no `--password <value>` flag so the previous code silently discarded passwords
+
 ## [0.2.0] - 2026-02-28
 
 ### Changed

@@ -283,6 +283,27 @@ async def add_attachment(
         raise ValueError(_error_text(e)) from e
 
 
+@mcp.tool()
+async def import_entries(
+    ctx: Context[Any, Any, Any],
+    entries: list[dict[str, str]],
+) -> str:
+    """Bulk import multiple entries via XML merge. Two YubiKey touches regardless of entry
+    count — more efficient than create_entry in a loop. Vault is locked after import;
+    call unlock_vault to continue.
+
+    Each entry requires 'group' and 'title'. Optional: 'username', 'password', 'url',
+    'notes'. All groups must be in the configured allowlist."""
+    log.info("tool_invoked", tool="import_entries")
+    app = _get_ctx(ctx)
+    try:
+        return await write_tools.import_entries(
+            app.vault, app.audit, entries=entries,
+        )
+    except (VaultLocked, GroupNotAllowed, KeePassCLIError, ValueError) as e:
+        raise ValueError(_error_text(e)) from e
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 

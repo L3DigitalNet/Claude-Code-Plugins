@@ -28,12 +28,13 @@ class AuditLogger:
         self,
         *,
         tool: str,
-        title: str,
+        title: str | None = None,
         group: str | None = None,
         secret_returned: bool = False,
         attachment: str | None = None,
+        **extra: object,
     ) -> None:
-        record = {
+        record: dict[str, object] = {
             "timestamp": datetime.now(UTC).isoformat(),
             "tool": tool,
             "title": title,
@@ -41,6 +42,7 @@ class AuditLogger:
             "secret_returned": secret_returned,
             "attachment": attachment,
         }
+        record.update(extra)
         try:
             with open(self._path, "a") as f:
                 f.write(json.dumps(record) + "\n")

@@ -175,8 +175,8 @@
     },
     {
       "name": "keepass-cred-mgr",
-      "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication. Exposes 9 tools for vault unlock, listing, searching, reading, and writing KeePass entries with audit logging.",
-      "version": "0.2.0",
+      "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication. Exposes 10 tools for vault unlock, listing, searching, reading, writing, and bulk-importing KeePass entries with audit logging.",
+      "version": "0.3.0",
       "author": {
         "name": "L3Digital-Net",
         "url": "https://github.com/L3Digital-Net"
