@@ -9,9 +9,10 @@ PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 
 export KEEPASS_CRED_MGR_CONFIG="${KEEPASS_CRED_MGR_CONFIG:-${HOME}/.config/keepass-cred-mgr/config.yaml}"
 
-# Prepend fake tools to PATH when the directory exists (used during PTH sessions)
+# Prepend fake tools to PATH only when explicitly requested (PTH testing sessions).
+# Never activate based on directory existence alone — fake-tools/ ships in the repo.
 FAKE_TOOLS_DIR="${PLUGIN_ROOT}/scripts/fake-tools"
-if [[ -d "$FAKE_TOOLS_DIR" ]]; then
+if [[ "${KEEPASS_USE_FAKE_TOOLS:-0}" == "1" && -d "$FAKE_TOOLS_DIR" ]]; then
     export PATH="${FAKE_TOOLS_DIR}:${PATH}"
 fi
 
