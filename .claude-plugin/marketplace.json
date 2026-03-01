@@ -150,30 +150,6 @@
       "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
     },
     {
-      "name": "qt-test-suite",
-      "description": "Qt testing pipeline for PySide6 and C++/Qt projects \u2014 AI test generation, coverage-gap analysis with gcov/lcov and coverage.py, and headless GUI testing via bundled Qt Pilot MCP server.",
-      "version": "0.1.0",
-      "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
-      },
-      "category": "development",
-      "source": "./plugins/qt-test-suite",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/qt-test-suite"
-    },
-    {
-      "name": "qt-dev-suite",
-      "description": "Qt GUI application development toolkit \u2014 proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt. Companion to qt-test-suite.",
-      "version": "0.1.0",
-      "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
-      },
-      "category": "development",
-      "source": "./plugins/qt-dev-suite",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/qt-dev-suite"
-    },
-    {
       "name": "keepass-cred-mgr",
       "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication. Exposes 10 tools for vault unlock, listing, searching, reading, writing, and bulk-importing KeePass entries with audit logging.",
       "version": "0.3.1",
@@ -184,6 +160,18 @@
       "category": "security",
       "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr",
       "source": "./plugins/keepass-cred-mgr"
+    },
+    {
+      "name": "qt-suite",
+      "description": "Qt development and testing toolkit: proactive specialist agents, 16 domain skills, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3Digital-Net",
+        "url": "https://github.com/L3Digital-Net"
+      },
+      "category": "development",
+      "source": "./plugins/qt-suite",
+      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/qt-suite"
     }
   ]
 }

@@ -9,7 +9,7 @@ allowed-tools:
   - Glob
 ---
 
-# /qt-dev-suite:new-component — Generate Qt Component
+# /qt-suite:new-component — Generate Qt Component
 
 Create a new PySide6 widget, dialog, or window class with correct boilerplate, layout structure, signal declarations, and `setObjectName()` calls for testability.
 

@@ -37,7 +37,7 @@ description: >
   user: "The gui-tester can't find my buttons — they have no names"
   assistant: "I'll use the qt-ux-advisor agent to audit the widget naming and add setObjectName() calls."
   <commentary>
-  Untestable widgets are a UX and quality issue — the qt-ux-advisor bridges the gap between dev and qt-test-suite.
+  Untestable widgets are a UX and quality issue — the qt-ux-advisor bridges the gap between dev work and visual testing.
   </commentary>
   </example>
 
@@ -55,7 +55,7 @@ You are a Qt UI/UX advisor specializing in widget design quality, keyboard acces
 ## Review Dimensions
 
 ### Widget Naming (Testability)
-Every interactive widget must have `setObjectName()`. Unnamed widgets cannot be targeted by `qt-test-suite`'s `gui-tester` agent.
+Every interactive widget must have `setObjectName()`. Unnamed widgets cannot be targeted by the `gui-tester` agent.
 
 Check for:
 - All `QPushButton`, `QLineEdit`, `QComboBox`, `QCheckBox`, `QSpinBox` — must have names

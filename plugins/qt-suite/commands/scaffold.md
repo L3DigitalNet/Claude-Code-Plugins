@@ -1,6 +1,6 @@
 ---
 name: scaffold
-description: Scaffold a new Python/PySide6 application with pyproject.toml, src layout, and qt-test-suite config.
+description: Scaffold a new Python/PySide6 application with pyproject.toml, src layout, and qt-suite config.
 argument-hint: "[app-name] [optional: description]"
 allowed-tools:
   - Read
@@ -9,13 +9,13 @@ allowed-tools:
   - Glob
 ---
 
-# /qt-dev-suite:scaffold — Scaffold New Qt Application
+# /qt-suite:scaffold — Scaffold New Qt Application
 
 Create a complete Python/PySide6 project structure. Default layout: `pyproject.toml` + `src/` layout with a working `QMainWindow` entry point.
 
 ## Step 1: Determine App Name and Location
 
-If an argument was provided (e.g., `/qt-dev-suite:scaffold my-music-app`), use it as the app name.
+If an argument was provided (e.g., `/qt-suite:scaffold my-music-app`), use it as the app name.
 
 If no argument was provided, check the current directory:
 - If it's an empty or new directory, scaffold here using the directory name as the app name
