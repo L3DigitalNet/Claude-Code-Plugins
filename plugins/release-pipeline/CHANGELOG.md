@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- `sync-local-plugins.sh` marketplace name is now configurable via `RELEASE_PIPELINE_MARKETPLACE` environment variable (default: `l3digitalnet-plugins`)
+
 ## [2.0.0] - 2026-02-21
 
 ### Changed

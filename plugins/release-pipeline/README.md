@@ -156,9 +156,13 @@ This prevents duplicate-tag push failures on retry after a partial release.
 
 GitHub CLI calls in Phase 3.5 (release create) and Phase 4 (verify) are wrapped with `api-retry.sh`: up to 3 attempts with exponential backoff and jitter. HTTP 4xx permanent errors (400, 401, 403, 404, 409, 410) abort immediately without retry. HTTP 429 (rate limit) is retried normally.
 
+## Planned Features
+
+None currently documented in the changelog as unreleased.
+
 ## Known Issues
 
-- `sync-local-plugins.sh` is hardcoded to the `l3digitalnet-plugins` marketplace. It will not sync plugins from a differently named marketplace without modifying the script.
+- `sync-local-plugins.sh` defaults to the `l3digitalnet-plugins` marketplace. Set `RELEASE_PIPELINE_MARKETPLACE=<name>` in your environment to override for differently named marketplaces.
 - Batch Release runs plugins sequentially, not in parallel. Large monorepos with many unreleased plugins will take proportionally longer.
 - Quick Merge always merges `testing` into `main`. Repos using different branch naming must adjust manually.
 - Changelog generation uses conventional commit prefixes. Repos without conventional commits produce a generic "other" section with no semver signal.

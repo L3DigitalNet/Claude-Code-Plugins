@@ -24,7 +24,7 @@ Plugin quality review covering principles alignment, terminal UX, and documentat
 
 **[P8] Enforcement Layers**: Principle enforcement is evaluated against a three-tier hierarchy: Mechanical (hooks that block/warn deterministically) > Structural (file organization, agent tool restrictions) > Behavioral (prompt instructions). A principle that claims mechanical enforcement but relies solely on behavioral instructions is flagged as a gap.
 
-**[P9] Read-Only Analyst Enforcement**: Analyst subagents must not gain write tools. A PostToolUse hook (`validate-agent-frontmatter.sh`) warns when Write, Edit, Bash, or other disallowed tools are added to analyst agent YAML frontmatter.
+**[P9] Read-Only Analyst Enforcement**: Analyst subagents must not gain write tools. A PostToolUse hook (`validate-agent-frontmatter.sh`) blocks (exit 2) when Write, Edit, Bash, or other disallowed tools are added to analyst agent YAML frontmatter.
 
 ## Requirements
 
@@ -98,7 +98,7 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 | `principles-analyst` | A | Read-only. Audits plugin implementation files against stated principles and checkpoints. Returns per-principle status (Upheld / Partially Upheld / Violated), enforcement layer assessment, root architectural alignment, and machine-verifiable assertions. |
 | `ux-analyst` | B | Read-only. Audits user-facing code paths against terminal UX criteria across four categories: information density, user input, progress/feedback, and terminal-specific patterns. Returns severity-grouped findings and assertions. |
 | `docs-analyst` | C | Read-only. Compares documentation files against implementation structure across five drift categories: accuracy, completeness, orphaned references, principle-implementation consistency, and examples. Returns per-file freshness assessment and assertions. |
-| `regression-guard` | — | Read-only. Autonomous mode only, Pass 2+. Re-checks previously-fixed findings to verify fixes are still intact after subsequent implementation changes. Returns per-finding holding/regressed status with file-level evidence. |
+| `regression-guard` | (n/a) | Read-only. Autonomous mode only, Pass 2+. Re-checks previously-fixed findings to verify fixes are still intact after subsequent implementation changes. Returns per-finding holding/regressed status with file-level evidence. |
 | `efficiency-analyst` | D | Read-only. Evaluates P1–P12 context efficiency compliance in parallel with Tracks A/B/C. Uses `track-d-criteria.md` to assess context footprint, enforcement layering, and composability across all plugin components. |
 | `fix-agent` | (n/a) | Write-capable. Invoked after `run-assertions.sh` finds failures. Implements the minimum change needed to make each failing assertion pass, then returns a structured summary. |
 | `build-fix-agent` | (n/a) | Write-capable. Autonomous mode only. Invoked in Phase 4.5 when `run-build-test.sh` reports failures. Implements minimal fixes for build or test breakage introduced during Phase 4. Spawned at most once per pass. |
@@ -116,8 +116,8 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 
 | Hook | Event | What it does |
 |------|-------|--------------|
-| `doc-write-tracker.sh` | PostToolUse — `Write\|Edit\|MultiEdit\|NotebookEdit\|mcp__.*__(write\|edit\|create\|update).*` | Warns when implementation files are modified without a corresponding documentation update. Mechanically enforces the code-change-requires-doc-update contract. |
-| `validate-agent-frontmatter.sh` | PostToolUse — `Write\|Edit\|MultiEdit` | Warns when disallowed tools (Write, Edit, Bash, etc.) are added to analyst agent YAML frontmatter. Secondary enforcement for the read-only analyst boundary. |
+| `doc-write-tracker.sh` | PostToolUse: `Write\|Edit\|MultiEdit\|NotebookEdit\|mcp__.*__(write\|edit\|create\|update).*` | Warns when implementation files are modified without a corresponding documentation update. Mechanically enforces the code-change-requires-doc-update contract. |
+| `validate-agent-frontmatter.sh` | PostToolUse: `Write\|Edit\|MultiEdit` | Blocks (exit 2) when disallowed tools (Write, Edit, Bash, etc.) are added to analyst agent YAML frontmatter. Mechanical enforcement for the read-only analyst boundary. |
 
 ## Review Tracks
 
@@ -173,8 +173,8 @@ None currently documented in the changelog as unreleased.
 
 ## Known Issues
 
-- The `doc-write-tracker.sh` hook does not track writes to `hooks/hooks.json`. Modifications to hook configuration without documentation updates will not trigger the co-mutation warning.
-- `validate-agent-frontmatter.sh` is warn-only, not blocking. An analyst agent gaining write tools will generate a warning but the write will proceed. Full blocking enforcement requires a manual pre-completion check.
+- The `doc-write-tracker.sh` hook tracks all files under `hooks/` (including `hooks/hooks.json`) as implementation files. Hook configuration changes without corresponding documentation updates trigger the co-mutation warning.
+- `validate-agent-frontmatter.sh` blocks (exit 2) when disallowed write tools are detected in analyst agent YAML frontmatter. The hook fires PostToolUse so the write has already occurred; exit 2 surfaces the violation immediately for manual revert before completion.
 - `build-fix-agent` is spawned at most once per pass. If its fix attempt fails, the failure is noted in the final report and convergence continues with unresolved build failures rather than looping.
 - The scoped re-audit skill always runs Track C on re-audit, even when only implementation files unrelated to documentation changed. This is intentional conservatism but means the docs-analyst is always spawned on Pass 2+.
 

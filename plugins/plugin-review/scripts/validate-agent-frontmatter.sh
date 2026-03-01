@@ -34,10 +34,11 @@ if [ ! -f "$FILE_PATH" ]; then
 fi
 
 # Extract the tools: line from YAML frontmatter (between --- delimiters)
-TOOLS_LINE=$(python3 -c "
-import sys, re
+# Use env var to pass FILE_PATH — avoids single-quote injection in Python string literals
+TOOLS_LINE=$(FILE_PATH="$FILE_PATH" python3 -c "
+import sys, re, os
 try:
-    with open('$FILE_PATH', 'r') as f:
+    with open(os.environ['FILE_PATH'], 'r') as f:
         content = f.read()
     # Match YAML frontmatter between --- delimiters
     match = re.search(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
@@ -57,10 +58,11 @@ fi
 
 # Check for disallowed tools in the tools: line
 # Analyst agents are permitted: Read, Grep, Glob, NotebookRead, WebFetch, TodoWrite, WebSearch
-DISALLOWED=$(python3 -c "
-import re, sys
+# Use env var to pass TOOLS_LINE — avoids single-quote injection in Python string literals
+DISALLOWED=$(TOOLS_LINE="$TOOLS_LINE" python3 -c "
+import re, sys, os
 
-tools_line = '$TOOLS_LINE'
+tools_line = os.environ['TOOLS_LINE']
 # Extract tool names from 'tools: Read, Grep, Glob' or 'tools: [Read, Grep]'
 tools_str = re.sub(r'^tools:\s*', '', tools_line)
 tools_str = tools_str.strip('[]')
@@ -76,11 +78,13 @@ if found_disallowed:
 
 if [ -n "$DISALLOWED" ]; then
   echo ""
-  echo "⚠️ [P9] Agent frontmatter: disallowed tool(s) found in $FILE_PATH"
+  echo "🚫 [P9] Blocked: disallowed tool(s) in analyst agent frontmatter: $FILE_PATH"
   echo "  Disallowed: $DISALLOWED"
-  echo "  Analyst agents must only have read-only tools: Read, Grep, Glob (+ optional WebFetch, WebSearch, TodoWrite, NotebookRead)."
-  echo "  Remove disallowed tools from the 'tools:' line in the frontmatter."
+  echo "  Analyst agents must only have read-only tools: Read, Grep, Glob"
+  echo "  (optionally: WebFetch, WebSearch, TodoWrite, NotebookRead)."
+  echo "  Remove disallowed tools from the 'tools:' line before proceeding."
   echo ""
+  exit 2
 fi
 
 exit 0

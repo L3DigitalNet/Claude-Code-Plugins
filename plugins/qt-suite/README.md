@@ -67,6 +67,10 @@ flowchart TD
     User -->|"/qt-suite:visual"| Pilot["Qt Pilot MCP — Xvfb + objectName"]
 ```
 
+## Usage
+
+Run `/qt-suite:scaffold <app-name>` to initialize a new project with the standard layout and test config. Use the commands below as development progresses. The four specialist agents (`qt-app-dev`, `qt-debugger`, `qt-app-reviewer`, `qt-ux-advisor`) activate proactively — no explicit invocation needed.
+
 ## Commands
 
 | Command | Description |
@@ -80,24 +84,24 @@ flowchart TD
 
 ## Skills
 
-| Skill | Loaded when |
-|-------|-------------|
-| `qt-architecture` | Structuring a Qt app, QApplication setup, project layout |
-| `qt-signals-slots` | Connecting signals, defining custom signals, cross-thread communication |
-| `qt-layouts` | Arranging widgets, resize behavior, QSplitter, layout debugging |
-| `qt-model-view` | QAbstractTableModel, QTableView, QSortFilterProxyModel, delegates |
-| `qt-threading` | QThread, QRunnable, thread safety, keeping UI responsive |
-| `qt-styling` | QSS stylesheets, theming, dark/light mode, QPalette |
-| `qt-resources` | .qrc files, pyrcc6, embedding icons and assets |
-| `qt-dialogs` | QDialog, QMessageBox, QFileDialog, custom dialogs |
-| `qt-packaging` | PyInstaller, Briefcase, platform deployment, CI builds |
-| `qt-debugging` | Qt crashes, widget visibility, event loop, threading issues |
-| `qt-qml` | QML/Qt Quick, QQmlApplicationEngine, exposing Python to QML |
-| `qt-settings` | QSettings, persistent preferences, window geometry, recent files |
-| `qt-bindings` | PySide6 vs PyQt6 differences, PyQt5 migration guide |
-| `qtest-patterns` | Writing QTest (C++), pytest-qt (Python), or QML TestCase tests |
-| `qt-coverage-workflow` | Working with coverage gaps, gcov, lcov, or coverage.py |
-| `qt-pilot-usage` | Headless GUI testing, widget interaction, Qt Pilot MCP usage |
+| Skill | Binding | Loaded when |
+|-------|---------|-------------|
+| `qt-architecture` | Both | Structuring a Qt app, QApplication setup, project layout |
+| `qt-signals-slots` | Both | Connecting signals, defining custom signals, cross-thread communication |
+| `qt-layouts` | Both | Arranging widgets, resize behavior, QSplitter, layout debugging |
+| `qt-model-view` | Both | QAbstractTableModel, QTableView, QSortFilterProxyModel, delegates |
+| `qt-threading` | Both | QThread, QRunnable, thread safety, keeping UI responsive |
+| `qt-styling` | Both | QSS stylesheets, theming, dark/light mode, QPalette |
+| `qt-resources` | Both | .qrc files, pyrcc6, embedding icons and assets |
+| `qt-dialogs` | Both | QDialog, QMessageBox, QFileDialog, custom dialogs |
+| `qt-packaging` | Python | PyInstaller, Briefcase, platform deployment, CI builds |
+| `qt-debugging` | Both | Qt crashes, widget visibility, event loop, threading issues |
+| `qt-qml` | Both | QML/Qt Quick, QQmlApplicationEngine, exposing Python to QML |
+| `qt-settings` | Both | QSettings, persistent preferences, window geometry, recent files |
+| `qt-bindings` | Python | PySide6 vs PyQt6 differences, PyQt5 migration guide |
+| `qtest-patterns` | Both | Writing QTest (C++), pytest-qt (Python), or QML TestCase tests |
+| `qt-coverage-workflow` | Both | Working with coverage gaps, gcov, lcov, or coverage.py |
+| `qt-pilot-usage` | Python | Headless GUI testing, widget interaction, Qt Pilot MCP usage |
 
 ## Agents
 
@@ -142,6 +146,10 @@ Or use the portable shell script:
 ```bash
 bash skills/qt-coverage-workflow/templates/run-coverage.sh --python --threshold 80
 ```
+
+## Planned Features
+
+None currently documented in the changelog as unreleased.
 
 ## Known Issues
 

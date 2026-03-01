@@ -53,13 +53,13 @@ installed plugins at the start of each session.
 | [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
+| [KeePass Cred Mgr](#keepass-cred-mgr) | MCP + Commands + Skills | varies | KeePass vault access via 10 MCP tools, YubiKey auth, credential rotation, and audit logging |
 | [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | 18 tools | Knowledge-profile-driven service diagnostics, security audits, cron computation, docs |
 | [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review`, `/review-efficiency`, `/tighten` | Multi-pass assertion-driven audit of plugin principles, UX, docs, and context efficiency |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
-| [Qt Test Suite](#qt-test-suite) | MCP + Commands | `/qt:generate`, `/qt:run`, `/qt:coverage`, `/qt:visual` | AI test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt |
-| [Qt Dev Suite](#qt-dev-suite) | Commands + Skills | `/qt-dev-suite:scaffold`, `/qt-dev-suite:new-component` | Qt GUI development companion with proactive agents, 13 domain skills, and scaffolding commands |
+| [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
 
 ## Principles
 
@@ -184,6 +184,30 @@ HA connections, automated validation, example integrations, and project template
 
 **Learn more:**
 [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
+
+---
+
+### KeePass Cred Mgr
+
+**KeePass credential manager for Claude Code**: 10 MCP tools for vault read/write, YubiKey HMAC-SHA1 authentication, credential rotation workflows, and structured audit logging.
+
+**Features:**
+
+- `unlock_vault` opens a persistent `keepassxc-cli` REPL; one YubiKey touch covers all subsequent tool calls
+- 9 additional tools: list groups/entries, search, get entry/attachment, create, deactivate, add attachment, bulk import
+- Background YubiKey poller auto-locks vault on removal with configurable grace period
+- Per-credential-type skills for cPanel, FTP/SFTP, SSH, Brave Search API, and Anthropic API
+- `/keepass-rotate`: guided create-then-deactivate rotation with safety checks
+- Structured JSONL audit log for all secret-returning operations
+
+**Install:**
+
+```bash
+/plugin install keepass-cred-mgr@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/keepass-cred-mgr/README.md](plugins/keepass-cred-mgr/README.md)
 
 ---
 
@@ -366,59 +390,27 @@ requiring explicit approval.
 
 ---
 
-### Qt Test Suite
+### Qt Suite
 
-**AI-powered Qt testing pipeline**: test generation, coverage-gap analysis, and headless GUI testing for PySide6 and C++/Qt projects.
+**Complete Qt development and testing toolkit**: proactive specialist agents, 16 domain skills, scaffolding commands, and headless GUI testing via the bundled Qt Pilot MCP server. Covers PySide6, PyQt6, and C++/Qt.
 
 **Features:**
 
-- `/qt:generate`: scans codebase and generates unit tests for untested files
-- `/qt:run`: auto-detects Python (pytest) or C++ (CTest) and runs the full suite
-- `/qt:coverage`: gcov/lcov (C++) or coverage.py (Python) → HTML report → gap-targeted test generation loop
-- `/qt:visual`: launches app headlessly via Xvfb, drives UI interactions with the bundled Qt Pilot MCP server
-- Auto-installed virtual environment for Qt Pilot dependencies on first run
+- 4 proactive agents: development specialist, debugger, code reviewer, and UX advisor
+- 16 context-aware skills covering signals/slots, layouts, Model/View, threading, QML, styling, and more
+- `/qt-suite:scaffold`: generates a complete PySide6 project with pyproject.toml, src layout, and test config
+- `/qt-suite:generate`: scans codebase and generates unit tests for untested files
+- `/qt-suite:coverage`: gcov/lcov (C++) or coverage.py (Python) report with gap-targeted test generation
+- `/qt-suite:visual`: launches app headlessly via Xvfb, drives UI via the bundled Qt Pilot MCP server
 
 **Install:**
 
 ```bash
-/plugin install qt-test-suite@l3digitalnet-plugins
+/plugin install qt-suite@l3digitalnet-plugins
 ```
 
 **Learn more:**
-[plugins/qt-test-suite/README.md](plugins/qt-test-suite/README.md)
-
----
-
-### Qt Dev Suite
-
-**Qt GUI application development companion**: proactive specialist agents, 13 domain skills, and scaffolding commands for PySide6, PyQt6, and C++/Qt projects.
-
-**Features:**
-
-- 4 proactive agents: development specialist, debugger, code reviewer, and UX advisor) activate automatically on context
-- 13 context-aware skills covering signals/slots, layouts, Model/View, threading, QML, styling, and more
-- `/qt-dev-suite:scaffold`: generates a complete PySide6 project with pyproject.toml, src layout, and test config
-- `/qt-dev-suite:new-component`: generates widget, dialog, or window boilerplate with correct `setObjectName()` calls
-- Designed to pair with `qt-test-suite`; scaffolded components are immediately testable by the GUI tester
-
-**Install:**
-
-```bash
-/plugin install qt-dev-suite@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/qt-dev-suite/README.md](plugins/qt-dev-suite/README.md)
-
----
-
-## Coming Soon
-
-These plugins are in development and not yet available in the marketplace.
-
-| Plugin | Description |
-|--------|-------------|
-| `performance-profiler` | Latency measurement, flamegraph generation, and regression tracking for MCP servers |
+[plugins/qt-suite/README.md](plugins/qt-suite/README.md)
 
 ---
 
@@ -478,10 +470,11 @@ Claude-Code-Plugins/
 │   ├── docs-manager/            # Documentation lifecycle management
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
+│   ├── keepass-cred-mgr/        # KeePass credential manager (10 MCP tools, YubiKey auth)
 │   ├── linux-sysadmin-mcp/      # Linux sysadmin MCP server (18 tools, 5 modules)
-│   ├── performance-profiler/    # MCP performance profiling (in development)
 │   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
+│   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
 │   ├── release-pipeline/        # Autonomous release pipeline
 │   └── repo-hygiene/            # Autonomous repo maintenance sweep
 ├── scripts/

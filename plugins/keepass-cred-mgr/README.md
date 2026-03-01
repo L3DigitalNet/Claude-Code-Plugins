@@ -6,7 +6,7 @@ KeePassXC Credential Manager for Claude Code. Exposes a KeePass `.kdbx` vault vi
 
 keepass-cred-mgr gives Claude Code direct, audited access to a KeePass vault for credential retrieval, storage, and rotation. Instead of pasting secrets into conversation or hardcoding them in config files, Claude reads credentials from the vault and writes them to their intended destination (`.env` files, SSH configs, SDK setups) without ever displaying them.
 
-Unlocking the vault starts a persistent `keepassxc-cli open` REPL process — one YubiKey touch per session. All subsequent tool calls send commands through that REPL's stdin/stdout without re-authenticating. A background poller watches for YubiKey removal and locks the vault (killing the REPL) after a configurable grace period. Write operations are file-locked, secret-returning calls are audit-logged, and temporary files used for attachment import are overwritten with zeros before deletion. Structured logging via `structlog` provides key-value event records throughout.
+Unlocking the vault starts a persistent `keepassxc-cli open` REPL process; one YubiKey touch per session. All subsequent tool calls send commands through that REPL's stdin/stdout without re-authenticating. A background poller watches for YubiKey removal and locks the vault (killing the REPL) after a configurable grace period. Write operations are file-locked, secret-returning calls are audit-logged, and temporary files used for attachment import are overwritten with zeros before deletion. Structured logging via `structlog` provides key-value event records throughout.
 
 ## Principles
 
@@ -68,7 +68,7 @@ cp config.example.yaml ~/.config/keepass-cred-mgr/config.yaml
 mkdir -p ~/.local/share/keepass-cred-mgr
 ```
 
-The MCP server resolves its Python dependencies automatically via `uv run` on first launch — no manual `pip install` step required.
+The MCP server resolves its Python dependencies automatically via `uv run` on first launch; no manual `pip install` step required.
 
 ## How It Works
 
@@ -92,7 +92,7 @@ flowchart TD
     Poller -.->|removed > grace period| AutoLock[Auto-lock vault]
 ```
 
-The server runs as a stdio MCP process spawned by Claude Code via `scripts/start-server.sh`, which resolves Python dependencies through `uv run` and starts the FastMCP server. On startup it loads the YAML config, initializes the YubiKey poller, and registers all 10 tools. The vault starts locked; call `unlock_vault` first to verify YubiKey presence and perform a physical touch. `unlock_vault` opens a persistent `keepassxc-cli open` REPL process — that single touch covers all subsequent tool calls in the session. Commands are dispatched through the REPL's stdin/stdout with Qt-style double-quote argument escaping; the REPL stays alive until the vault locks. Removal of the YubiKey starts a grace timer (default 10 seconds); if the key isn't reinserted in time, the vault locks (killing the REPL process), and all subsequent tool calls fail with `VaultLocked` until `unlock_vault` is called again.
+The server runs as a stdio MCP process spawned by Claude Code via `scripts/start-server.sh`, which resolves Python dependencies through `uv run` and starts the FastMCP server. On startup it loads the YAML config, initializes the YubiKey poller, and registers all 10 tools. The vault starts locked; call `unlock_vault` first to verify YubiKey presence and perform a physical touch. `unlock_vault` opens a persistent `keepassxc-cli open` REPL process; that single touch covers all subsequent tool calls in the session. Commands are dispatched through the REPL's stdin/stdout with Qt-style double-quote argument escaping; the REPL stays alive until the vault locks. Removal of the YubiKey starts a grace timer (default 10 seconds); if the key isn't reinserted in time, the vault locks (killing the REPL process), and all subsequent tool calls fail with `VaultLocked` until `unlock_vault` is called again.
 
 ## Usage
 
