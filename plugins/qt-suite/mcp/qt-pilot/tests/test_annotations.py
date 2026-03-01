@@ -1,7 +1,6 @@
 """Verify type annotations on key functions."""
 import sys
 import inspect
-import types
 import typing
 from pathlib import Path
 
