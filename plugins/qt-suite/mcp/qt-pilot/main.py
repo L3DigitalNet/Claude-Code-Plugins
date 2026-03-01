@@ -74,16 +74,18 @@ def _cleanup_app() -> None:
             logger.warning(f"Error terminating xvfb: {e}")
         _app_state.xvfb_process = None
 
-    if _app_state.socket_path and os.path.exists(_app_state.socket_path):
+    socket_path = _app_state.socket_path
+    if socket_path and os.path.exists(socket_path):
         try:
-            os.unlink(_app_state.socket_path)
+            os.unlink(socket_path)
         except OSError as e:
             logger.warning(f"Error removing socket: {e}")
     _app_state.socket_path = None
 
-    if _app_state.socket_dir and os.path.exists(_app_state.socket_dir):
+    socket_dir = _app_state.socket_dir
+    if socket_dir and os.path.exists(socket_dir):
         try:
-            os.rmdir(_app_state.socket_dir)
+            os.rmdir(socket_dir)
         except OSError as e:
             logger.warning(f"Error removing socket dir: {e}")
     _app_state.socket_dir = None
@@ -299,7 +301,7 @@ def launch_app(
 
 
 @mcp.tool()
-def capture_screenshot(output_path: str = None) -> dict:
+def capture_screenshot(output_path: str | None = None) -> dict:
     """Capture screenshot of current application.
 
     Args:
@@ -386,7 +388,7 @@ def hover_widget(widget_name: str) -> dict:
 
 
 @mcp.tool()
-def type_text(text: str, widget_name: str = None) -> dict:
+def type_text(text: str, widget_name: str | None = None) -> dict:
     """Type text into a widget or the currently focused widget.
 
     Args:
@@ -413,7 +415,7 @@ def type_text(text: str, widget_name: str = None) -> dict:
 
 
 @mcp.tool()
-def press_key(key: str, modifiers: list[str] = None) -> dict:
+def press_key(key: str, modifiers: list[str] | None = None) -> dict:
     """Simulate a key press.
 
     Args:
