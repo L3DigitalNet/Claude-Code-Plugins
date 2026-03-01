@@ -12,6 +12,8 @@
   Autonomous mode additions: Tier1/Tier2/Tier3 columns added to Convergence table (populated
     from tier_counts in state). Regression Guard section added to Pass 2+ format. Both are
     omitted when --autonomous is not set.
+  Track D addition: "Context Efficiency" summary line added to Pass 1 Summary block.
+    "Open Findings — Context Efficiency" section added after Documentation in Pass 1 Format.
 -->
 
 Use this template to format the unified findings report after collecting subagent summaries.
@@ -28,6 +30,7 @@ Lead with open findings. Roll up clean items.
 - Checkpoints: <N> checked | <status per checkpoint>
 - UX touchpoints: <N> reviewed | <N> clean | <N> with issues
 - Documentation: <N> files reviewed | <N> current | <N> stale
+- Context Efficiency: <N> checked | <N> upheld | <N> partial | <N> violated
 - Open findings: <N> total
 
 ### Upheld (no action needed)
@@ -58,6 +61,13 @@ Principles <list IDs> are fully upheld. UX touchpoints for <list names> are clea
 
 ### Open Findings — Documentation
 - **<file path>**: <issue type> — <brief description>. Triggered by: <pre-existing / Pass N changes>.
+
+### Open Findings — Context Efficiency
+
+#### [Pn] <Principle Name> — <STATUS>
+**Principle**: <one-line definition>
+**Evidence**: <what supports/contradicts, with file reference>
+**Gap**: <specific misalignment — what should be different>
 
 ### Convergence
 | Pass | Tier1 | Tier2 | Tier3 | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
