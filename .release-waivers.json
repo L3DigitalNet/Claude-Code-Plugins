@@ -46,6 +46,16 @@
       "reason": "Markdown/script-only plugin — no executable test suite by design"
     },
     {
+      "check": "missing_tests",
+      "plugin": "qt-suite",
+      "reason": "Tests exist but in a nested subpackage (mcp/qt-pilot/tests/); root-scanning detector cannot find them — 19 pytest tests pass under that path"
+    },
+    {
+      "check": "stale_docs",
+      "plugin": "qt-suite",
+      "reason": "Version refs in plugin.json and marketplace.json are pre-bump state — bump-version.sh updates them in Phase 2 of the release process"
+    },
+    {
       "check": "stale_docs",
       "plugin": "linux-sysadmin-mcp",
       "reason": "Large design documents contain version refs in history tables and implementation notes — user-facing headers, README, CHANGELOG, and plugin.json kept current"

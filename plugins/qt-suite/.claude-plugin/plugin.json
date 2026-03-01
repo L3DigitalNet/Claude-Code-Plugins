@@ -1,6 +1,6 @@
 {
   "name": "qt-suite",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Qt development and testing toolkit: proactive specialist agents, 16 domain skills, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
   "author": {
     "name": "L3Digital-Net",
