@@ -46,7 +46,7 @@ _app_state = {
 HARNESS_PATH = Path(__file__).parent / "harness.py"
 
 
-def _cleanup_app():
+def _cleanup_app() -> None:
     """Clean up any running app and xvfb."""
     if _app_state["process"]:
         try:
@@ -152,10 +152,10 @@ def _send_command(command: dict, timeout: float = 10.0) -> dict:
 
 @mcp.tool()
 def launch_app(
-    script_path: str = None,
-    module: str = None,
-    working_dir: str = None,
-    python_paths: list[str] = None,
+    script_path: str | None = None,
+    module: str | None = None,
+    working_dir: str | None = None,
+    python_paths: list[str] | None = None,
     timeout: int = 10,
 ) -> dict:
     """Launch a Qt application headlessly via xvfb.
@@ -657,7 +657,7 @@ def close_app() -> dict:
     return {"success": True, "message": "App closed"}
 
 
-def main():
+def main() -> None:
     """Run the MCP server."""
     logger.info("Starting Qt GUI Testing MCP Server")
     mcp.run(transport="stdio")
