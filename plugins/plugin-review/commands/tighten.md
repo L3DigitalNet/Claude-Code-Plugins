@@ -1,6 +1,6 @@
 <!--
 Entry point for the markdown tightening workflow.
-Loads MARKDOWN_TIGHTEN.md which contains all five-step behavioral logic.
+Loads skills/markdown-tighten/SKILL.md which contains all five-step behavioral logic.
 If the skill file path changes, update this command to match.
 -->
 

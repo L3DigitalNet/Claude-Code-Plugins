@@ -63,7 +63,7 @@ After your findings, append an `## Assertions` section containing a JSON array o
     "id": "A-D-<number>",
     "finding_id": "<principle ID, e.g. P3>",
     "track": "D",
-    "type": "<grep_not_match | grep_match | file_exists | file_content | shell_exit_zero>",
+    "type": "<grep_not_match | grep_match | file_exists | file_content | typescript_compile | shell_exit_zero>",
     "description": "One sentence: what this assertion verifies",
     "command": "<bash command to run — use full relative paths from repo root>",
     "expected": "<no_match | match | exists | contains | no_output | exit_zero>",

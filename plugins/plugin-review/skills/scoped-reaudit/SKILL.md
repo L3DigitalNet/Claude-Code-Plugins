@@ -31,7 +31,7 @@ The orchestrator has completed a batch of implementation changes and needs to de
 
 **Track C (Docs Analyst)** is affected when **any file was modified**. Documentation drift can be introduced by any change. Track C always runs on re-audit.
 
-**Track D (Efficiency Analyst)** is affected when any of these were modified: `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md`, `hooks/hooks.json`, `scripts/*.sh`, `.mcp.json`, `src/**`, `templates/*.md`, or `.claude/state/**`. Track D evaluates context efficiency patterns that appear in all component types; any component modification may introduce efficiency regressions.
+**Track D (Efficiency Analyst)** is affected when **any file was modified**. Track D evaluates context efficiency patterns that appear in all component types; any component modification may introduce efficiency regressions.
 
 ## Decision Logic
 

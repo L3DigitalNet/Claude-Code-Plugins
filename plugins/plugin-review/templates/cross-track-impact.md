@@ -40,7 +40,7 @@ Use this template in Phase 4 when annotating proposed changes.
 
 ## Track A (Principles) Cross-Track Effects
 
-- Track A → Track D: When Track A finds enforcement that relies on behavioral instructions where a mechanical layer would be more appropriate (P10), that finding is simultaneously a Track D finding. Track A names the enforcement layer violation; Track D measures the context cost of repeating those behavioral instructions across every invocation.
+- Track A → Track D: When Track A finds enforcement that relies on behavioral instructions where a mechanical layer would be more appropriate, that finding is simultaneously a Track D finding. Track A names the enforcement layer violation; Track D measures the context cost of repeating those behavioral instructions across every invocation.
 
 ## Track B (UX) Cross-Track Effects
 

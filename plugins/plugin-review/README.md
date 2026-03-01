@@ -52,9 +52,11 @@ flowchart TD
     Spawn --> TrackA["Track A<br/>Principles Analyst"]
     Spawn --> TrackB["Track B<br/>UX Analyst"]
     Spawn --> TrackC["Track C<br/>Docs Analyst"]
+    Spawn --> TrackD["Track D<br/>Efficiency Analyst"]
     TrackA --> Collect["Phase 2.5: Assertion Collection<br/>(merge assertions into state)"]
     TrackB --> Collect
     TrackC --> Collect
+    TrackD --> Collect
     Collect --> Report["Phase 3: Pass Report<br/>(severity-sorted open findings)"]
     Report --> Fix["Phase 4: Auto-implement all fixes<br/>(orchestrator writes code + docs)"]
     Fix --> Assert["Phase 5.5: Run Assertions<br/>(confidence score)"]
@@ -107,7 +109,7 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 |-------|-------------|
 | `scoped-reaudit` | Consulted by the orchestrator at Phase 2 on Pass 2+ to determine which analyst tracks need re-running based on which files changed in the previous pass. Track C always re-runs; Tracks A and B run only when their mapped file types were modified. |
 | `context-efficiency-workflow` | Consulted during `/review-efficiency` to drive the approval-gated P1–P12 review workflow. |
-| `context-efficiency-reference` | Reference material for P1–P12 principle definitions and layer taxonomy; loaded by the efficiency-analyst and `/review-efficiency`. |
+| `context-efficiency-reference` | Reference material for P1–P12 principle definitions and layer taxonomy; loaded by `/review-efficiency`. |
 | `markdown-tighten` | Loaded during `/tighten`; provides a five-step prose compression workflow for plugin markdown files. |
 
 ## Hooks
