@@ -76,11 +76,13 @@ if found_disallowed:
 
 if [ -n "$DISALLOWED" ]; then
   echo ""
-  echo "⚠️ [P9] Agent frontmatter: disallowed tool(s) found in $FILE_PATH"
+  echo "🚫 [P9] Blocked: disallowed tool(s) in analyst agent frontmatter: $FILE_PATH"
   echo "  Disallowed: $DISALLOWED"
-  echo "  Analyst agents must only have read-only tools: Read, Grep, Glob (+ optional WebFetch, WebSearch, TodoWrite, NotebookRead)."
-  echo "  Remove disallowed tools from the 'tools:' line in the frontmatter."
+  echo "  Analyst agents must only have read-only tools: Read, Grep, Glob"
+  echo "  (optionally: WebFetch, WebSearch, TodoWrite, NotebookRead)."
+  echo "  Remove disallowed tools from the 'tools:' line before proceeding."
   echo ""
+  exit 2
 fi
 
 exit 0

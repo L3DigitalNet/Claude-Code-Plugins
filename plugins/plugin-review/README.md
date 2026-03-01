@@ -174,7 +174,7 @@ None currently documented in the changelog as unreleased.
 ## Known Issues
 
 - The `doc-write-tracker.sh` hook does not track writes to `hooks/hooks.json`. Modifications to hook configuration without documentation updates will not trigger the co-mutation warning.
-- `validate-agent-frontmatter.sh` is warn-only, not blocking. An analyst agent gaining write tools will generate a warning but the write will proceed. Full blocking enforcement requires a manual pre-completion check.
+- `validate-agent-frontmatter.sh` blocks (exit 2) when disallowed write tools are detected in analyst agent YAML frontmatter. The hook fires PostToolUse so the write has already occurred; exit 2 surfaces the violation immediately for manual revert before completion.
 - `build-fix-agent` is spawned at most once per pass. If its fix attempt fails, the failure is noted in the final report and convergence continues with unresolved build failures rather than looping.
 - The scoped re-audit skill always runs Track C on re-audit, even when only implementation files unrelated to documentation changed. This is intentional conservatism but means the docs-analyst is always spawned on Pass 2+.
 
