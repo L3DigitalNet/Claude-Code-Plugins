@@ -35,6 +35,6 @@ def test_main_no_unused_stdlib_imports(name):
     # If the name appears ONLY in an import line and nowhere else, it's unused
     lines_without_import = [l for l in src.splitlines() if f"import {name}" not in l]
     body = "\n".join(lines_without_import)
-    assert name not in body or f"import {name}" not in src, (
+    assert f"import {name}" not in src or name in body, (
         f"'{name}' import exists but is never used in main.py body"
     )
