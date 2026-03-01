@@ -86,7 +86,7 @@ Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_num
 - **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-a-criteria.md`.
 - **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-b-criteria.md`.
 - **Docs Analyst** (`agents/docs-analyst.md`): provide the list of all documentation files, a directory listing of implementation files (NOT full source), and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-c-criteria.md`.
-- **Efficiency Analyst** (`agents/efficiency-analyst.md`): provide the component list to analyze, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-d-criteria.md`.
+- **Efficiency Analyst** (`agents/efficiency-analyst.md`): provide the directory listing of all plugin components (commands, agents, skills, hooks, scripts, templates, src), the list of implementation file paths to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-d-criteria.md`.
 
 Do NOT load those templates yourself — the subagents handle it.
 
