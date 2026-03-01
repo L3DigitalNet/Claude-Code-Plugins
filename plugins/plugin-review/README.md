@@ -24,7 +24,7 @@ Plugin quality review covering principles alignment, terminal UX, and documentat
 
 **[P8] Enforcement Layers**: Principle enforcement is evaluated against a three-tier hierarchy: Mechanical (hooks that block/warn deterministically) > Structural (file organization, agent tool restrictions) > Behavioral (prompt instructions). A principle that claims mechanical enforcement but relies solely on behavioral instructions is flagged as a gap.
 
-**[P9] Read-Only Analyst Enforcement**: Analyst subagents must not gain write tools. A PostToolUse hook (`validate-agent-frontmatter.sh`) warns when Write, Edit, Bash, or other disallowed tools are added to analyst agent YAML frontmatter.
+**[P9] Read-Only Analyst Enforcement**: Analyst subagents must not gain write tools. A PostToolUse hook (`validate-agent-frontmatter.sh`) blocks (exit 2) when Write, Edit, Bash, or other disallowed tools are added to analyst agent YAML frontmatter.
 
 ## Requirements
 
@@ -117,7 +117,7 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 | Hook | Event | What it does |
 |------|-------|--------------|
 | `doc-write-tracker.sh` | PostToolUse: `Write\|Edit\|MultiEdit\|NotebookEdit\|mcp__.*__(write\|edit\|create\|update).*` | Warns when implementation files are modified without a corresponding documentation update. Mechanically enforces the code-change-requires-doc-update contract. |
-| `validate-agent-frontmatter.sh` | PostToolUse: `Write\|Edit\|MultiEdit` | Warns when disallowed tools (Write, Edit, Bash, etc.) are added to analyst agent YAML frontmatter. Secondary enforcement for the read-only analyst boundary. |
+| `validate-agent-frontmatter.sh` | PostToolUse: `Write\|Edit\|MultiEdit` | Blocks (exit 2) when disallowed tools (Write, Edit, Bash, etc.) are added to analyst agent YAML frontmatter. Mechanical enforcement for the read-only analyst boundary. |
 
 ## Review Tracks
 
