@@ -1,9 +1,9 @@
 <!--
-Invoked by: commands/tighten-markdown.md (which reads this file before executing).
+Invoked by: commands/tighten.md (which reads this file before executing).
 Provides: All behavioral logic for the five-step markdown tightening process.
 Scope: Prose-level rewriting only — no architecture or design evaluation (that is skills/context-efficiency-workflow/SKILL.md's domain).
-Operates on one file at a time; commands/tighten-markdown.md handles file targeting and ordering.
-If step structure or checkpoint behavior changes here, update commands/tighten-markdown.md and docs/USAGE.md to match.
+Operates on one file at a time; commands/tighten.md handles file targeting and ordering.
+If step structure or checkpoint behavior changes here, update commands/tighten.md and docs/USAGE.md to match.
 -->
 
 # Markdown Tightening
