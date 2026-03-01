@@ -57,7 +57,7 @@ except (FileNotFoundError, json.JSONDecodeError):
 # Categorize file
 basename = os.path.basename(file_path)
 doc_patterns = ('README.md', 'DESIGN.md', 'CHANGELOG.md')
-impl_dirs = ('commands/', 'agents/', 'skills/', 'scripts/', 'hooks/scripts/', 'src/', 'templates/')
+impl_dirs = ('commands/', 'agents/', 'skills/', 'scripts/', 'hooks/', 'src/', 'templates/')
 
 is_doc = basename in doc_patterns
 is_impl = any(d in file_path for d in impl_dirs)

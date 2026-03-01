@@ -5,6 +5,7 @@
 ### Fixed
 
 - `validate-agent-frontmatter.sh` now exits 2 (blocking) instead of 0 (warn-only) when disallowed write tools are detected in analyst agent YAML frontmatter — closes the P9 enforcement gap
+- `doc-write-tracker.sh` now tracks all `hooks/` files (including `hooks/hooks.json`) as implementation files — changes to hook configuration now trigger the P6 co-mutation warning
 
 ## [0.5.0] - 2026-03-01
 
