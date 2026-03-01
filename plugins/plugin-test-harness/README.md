@@ -308,7 +308,11 @@ When a persistent store exists for a plugin, `pth_start_session` compares the sa
 
 Use `pth_generate_tests` with the `tools[]` parameter to generate tests only for new or modified components from the gap report.
 
-## Known Limitations
+## Planned Features
+
+None currently documented in the changelog as unreleased.
+
+## Known Issues
 
 - `pth_reload_plugin` terminates the MCP server process by pattern-matching against `ps` output. On systems where the process pattern cannot be found (non-standard Claude Code installation paths), pass `processPattern` explicitly.
 - Convergence trend requires at least two distinct iteration snapshots. A session with a single `pth_get_iteration_status` call always returns `unknown`.

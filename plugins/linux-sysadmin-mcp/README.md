@@ -172,6 +172,10 @@ documentation:
 
 Set `LINUX_SYSADMIN_CONFIG` environment variable to override the config file path.
 
+## Planned Features
+
+None currently documented in the changelog as unreleased.
+
 ## Known Issues
 
 - **Arch Linux support is partial**: distro detection targets Debian and RHEL families; Arch falls back to Debian commands with a warning.

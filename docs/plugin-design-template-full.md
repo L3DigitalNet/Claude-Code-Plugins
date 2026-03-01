@@ -119,7 +119,7 @@ purpose could use the same preamble, it's too vague.
 
 <!--
 The full principle format used across this repo. Every field is required.
-See docs-manager/docs/design.md §3 for examples of well-formed principles.
+See plugins/docs-manager/docs/design.md §3 for examples of well-formed principles.
 -->
 
 **Statement**:
