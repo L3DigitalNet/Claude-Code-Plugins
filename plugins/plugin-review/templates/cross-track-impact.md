@@ -36,11 +36,11 @@ Use this template in Phase 4 when annotating proposed changes.
 **Documentation** (README.md, docs/DESIGN.md, CHANGELOG.md):
 - Track A (Principles): affected if change touches `## Principles` section or enforcement layer descriptions
 - Track B (UX): rarely affected unless docs serve as runtime help text
-- Track D (Efficiency): affected if documentation duplicates inline content (P3) or narrates behavior that is already self-evident from code (P1)
+- Track D (Efficiency): affected if documentation duplicates inline content (P3) or contains more content than the reader needs to take the correct action (P1)
 
 ## Track A (Principles) Cross-Track Effects
 
-- Track A → Track D: Principle violations, especially P3 (Reference Over Repetition) and P1 (Imperative Minimalism), often appear as context efficiency violations. The same issue may be surfaced from two different angles — Track A by naming the principle, Track D by measuring the cost.
+- Track A → Track D: When Track A finds enforcement that relies on behavioral instructions where a mechanical layer would be more appropriate (P10), that finding is simultaneously a Track D finding. Track A names the enforcement layer violation; Track D measures the context cost of repeating those behavioral instructions across every invocation.
 
 ## Track B (UX) Cross-Track Effects
 
