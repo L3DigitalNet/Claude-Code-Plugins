@@ -274,7 +274,7 @@ def launch_app(
 
         # Check if process died
         if _app_state["process"].poll() is not None:
-            stdout, stderr = _app_state["process"].communicate()
+            _, stderr = _app_state["process"].communicate()
             _cleanup_app()
             return {
                 "success": False,

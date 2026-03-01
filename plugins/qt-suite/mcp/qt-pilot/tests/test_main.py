@@ -1,12 +1,9 @@
 """Unit tests for main.py resource management."""
 import json
-import os
 import socket as socket_mod
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import main as qt_main
