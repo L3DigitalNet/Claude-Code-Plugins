@@ -7,42 +7,9 @@ import pytest
 
 from server.config import load_config
 from server.yubikey import MockYubiKey
+from tests.helpers import _mock_async_proc, _mock_repl_proc, _repl_resp
 
-
-# ---------------------------------------------------------------------------
-# REPL mock helpers (same pattern as test_vault.py)
-# ---------------------------------------------------------------------------
-
-def _repl_resp(data: bytes = b"") -> bytes:
-    """Wrap output bytes with the REPL prompt sentinel b"\n> "."""
-    return data + b"\n> "
-
-
-def _mock_repl_proc(responses: list[bytes] | None = None) -> MagicMock:
-    """Mock REPL proc with configurable readuntil side effects."""
-    proc = MagicMock()
-    proc.stdin = MagicMock()
-    proc.stdin.write = MagicMock()
-    proc.stdin.drain = AsyncMock(return_value=None)
-    proc.stdout = MagicMock()
-    proc.stdout.readuntil = (
-        AsyncMock(side_effect=responses)
-        if responses is not None
-        else AsyncMock(return_value=_repl_resp())
-    )
-    proc.kill = MagicMock()
-    proc.wait = AsyncMock(return_value=None)
-    return proc
-
-
-def _mock_async_proc(
-    stdout: bytes = b"", stderr: bytes = b"", returncode: int = 0
-) -> AsyncMock:
-    """Mock subprocess for run_cli_binary() which still uses communicate()."""
-    proc = AsyncMock()
-    proc.communicate.return_value = (stdout, stderr)
-    proc.returncode = returncode
-    return proc
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +66,7 @@ class TestParseShowOutput:
 # ---------------------------------------------------------------------------
 
 class TestReadTools:
-    @pytest.mark.asyncio
+
     async def test_list_groups(self, unlocked_vault):
         from server.tools.read import list_groups
 
@@ -110,7 +77,7 @@ class TestReadTools:
         result = await list_groups(vault)
         assert set(result) == {"Servers", "SSH Keys", "API Keys"}
 
-    @pytest.mark.asyncio
+
     async def test_list_entries_filters_inactive(self, unlocked_vault):
         from server.tools.read import list_entries
 
@@ -126,7 +93,7 @@ class TestReadTools:
         assert "Web Server" in titles
         assert "[INACTIVE] Old Server" not in titles
 
-    @pytest.mark.asyncio
+
     async def test_list_entries_includes_inactive(self, unlocked_vault):
         from server.tools.read import list_entries
 
@@ -139,7 +106,7 @@ class TestReadTools:
         result = await list_entries(vault, audit, group="Servers", include_inactive=True)
         assert len(result) == 2
 
-    @pytest.mark.asyncio
+
     async def test_get_entry_returns_full_record(self, unlocked_vault):
         from server.tools.read import get_entry
 
@@ -160,7 +127,7 @@ class TestReadTools:
         assert result["url"] == "https://web.example.com"
         assert result["notes"] == "Production server"
 
-    @pytest.mark.asyncio
+
     async def test_get_entry_raises_on_inactive(self, unlocked_vault):
         from server.tools.read import get_entry
         from server.vault import EntryInactive
@@ -169,7 +136,7 @@ class TestReadTools:
         with pytest.raises(EntryInactive):
             await get_entry(vault, audit, title="[INACTIVE] Old Server", group="Servers")
 
-    @pytest.mark.asyncio
+
     async def test_get_entry_audits_secret(self, unlocked_vault, test_config):
         import json
         from pathlib import Path
@@ -186,7 +153,7 @@ class TestReadTools:
         assert record["tool"] == "get_entry"
         assert record["secret_returned"] is True
 
-    @pytest.mark.asyncio
+
     async def test_search_entries(self, unlocked_vault):
         from server.tools.read import search_entries
 
@@ -201,7 +168,7 @@ class TestReadTools:
         groups = [e["group"] for e in result]
         assert "Banking" not in groups
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_get_attachment(self, mock_exec, unlocked_vault, test_config):
         import json
@@ -225,7 +192,7 @@ class TestReadTools:
         assert record["secret_returned"] is True
         assert record["attachment"] == "id_ed25519.pub"
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_get_attachment_binary_content(self, mock_exec, unlocked_vault):
         """Non-UTF-8 bytes survive the run_cli_binary path."""
@@ -240,7 +207,7 @@ class TestReadTools:
         )
         assert result == binary_blob
 
-    @pytest.mark.asyncio
+
     async def test_get_attachment_raises_on_inactive(self, unlocked_vault):
         from server.tools.read import get_attachment
         from server.vault import EntryInactive
@@ -252,7 +219,7 @@ class TestReadTools:
                 title="[INACTIVE] Old Key", attachment_name="id_rsa", group="SSH Keys",
             )
 
-    @pytest.mark.asyncio
+
     async def test_list_entries_group_not_allowed(self, unlocked_vault):
         from server.tools.read import list_entries
         from server.vault import GroupNotAllowed
@@ -261,7 +228,7 @@ class TestReadTools:
         with pytest.raises(GroupNotAllowed):
             await list_entries(vault, audit, group="Banking")
 
-    @pytest.mark.asyncio
+
     async def test_list_entries_group_none_iterates_all(self, unlocked_vault):
         """group=None iterates all allowed_groups."""
         from server.tools.read import list_entries
@@ -281,7 +248,7 @@ class TestReadTools:
         groups = {e["group"] for e in result}
         assert groups == {"Servers", "SSH Keys", "API Keys"}
 
-    @pytest.mark.asyncio
+
     async def test_list_entries_page_size_truncation(self, unlocked_vault, test_config):
         """Results truncated at page_size limit."""
         import yaml
@@ -325,7 +292,7 @@ class TestReadTools:
 # ---------------------------------------------------------------------------
 
 class TestWriteTools:
-    @pytest.mark.asyncio
+
     async def test_create_entry(self, unlocked_vault):
         from server.tools.write import create_entry
 
@@ -344,7 +311,7 @@ class TestWriteTools:
         write_calls = vault._repl_proc.stdin.write.call_args_list
         assert any(b"add" in c[0][0] for c in write_calls)
 
-    @pytest.mark.asyncio
+
     async def test_create_entry_rejects_duplicate(self, unlocked_vault):
         from server.tools.write import create_entry
         from server.vault import DuplicateEntry
@@ -356,7 +323,7 @@ class TestWriteTools:
         with pytest.raises(DuplicateEntry):
             await create_entry(vault, audit, title="Existing Entry", group="Servers")
 
-    @pytest.mark.asyncio
+
     async def test_create_entry_rejects_slash_in_title(self, unlocked_vault):
         from server.tools.write import create_entry
 
@@ -364,7 +331,7 @@ class TestWriteTools:
         with pytest.raises(ValueError, match="slash"):
             await create_entry(vault, audit, title="Bad/Title", group="Servers")
 
-    @pytest.mark.asyncio
+
     async def test_create_entry_group_not_allowed(self, unlocked_vault):
         from server.tools.write import create_entry
         from server.vault import GroupNotAllowed
@@ -373,7 +340,7 @@ class TestWriteTools:
         with pytest.raises(GroupNotAllowed):
             await create_entry(vault, audit, title="New Entry", group="Banking")
 
-    @pytest.mark.asyncio
+
     async def test_deactivate_entry(self, unlocked_vault):
         from server.tools.write import deactivate_entry
 
@@ -390,7 +357,7 @@ class TestWriteTools:
         rename_cmd = write_calls[1][0][0]  # second write is edit --title
         assert b"[INACTIVE]" in rename_cmd
 
-    @pytest.mark.asyncio
+
     async def test_deactivate_already_inactive(self, unlocked_vault):
         from server.tools.write import deactivate_entry
         from server.vault import EntryInactive
@@ -399,7 +366,7 @@ class TestWriteTools:
         with pytest.raises(EntryInactive):
             await deactivate_entry(vault, audit, title="[INACTIVE] Old Server", group="Servers")
 
-    @pytest.mark.asyncio
+
     async def test_deactivate_notes_failure_logs_warning(self, unlocked_vault):
         """Notes update failure after rename is non-fatal."""
         from server.vault import KeePassCLIError
@@ -414,7 +381,7 @@ class TestWriteTools:
         # Should not raise — notes failure is non-fatal
         await deactivate_entry(vault, audit, title="Test", group="Servers")
 
-    @pytest.mark.asyncio
+
     async def test_add_attachment(self, unlocked_vault):
         from server.tools.write import add_attachment
 
@@ -428,7 +395,7 @@ class TestWriteTools:
             content=b"ssh-ed25519 AAAA...", group="SSH Keys",
         )
 
-    @pytest.mark.asyncio
+
     async def test_add_attachment_cleans_temp_file(self, unlocked_vault):
         import os
         import tempfile
@@ -456,7 +423,7 @@ class TestWriteTools:
         for path in created_paths:
             assert not os.path.exists(path), f"Temp file not cleaned up: {path}"
 
-    @pytest.mark.asyncio
+
     async def test_add_attachment_inactive_rejected(self, unlocked_vault):
         from server.tools.write import add_attachment
         from server.vault import EntryInactive
@@ -500,7 +467,7 @@ class TestWriteTools:
         _shred_file(str(empty_file))
         assert not os.path.exists(str(empty_file))
 
-    @pytest.mark.asyncio
+
     async def test_create_entry_partial_fields(self, unlocked_vault):
         """create_entry with only username omits -p/--url/--notes."""
         from server.tools.write import create_entry
@@ -518,7 +485,7 @@ class TestWriteTools:
         assert b"--url" not in add_cmd
         assert b"--notes" not in add_cmd
 
-    @pytest.mark.asyncio
+
     async def test_create_entry_with_password_uses_stdin_lines(self, unlocked_vault):
         """create_entry with password uses -p flag and writes password to stdin.
 
@@ -546,7 +513,7 @@ class TestWriteTools:
         assert b"--password" not in add_cmd  # never the non-existent --password flag
         assert written_calls[2] == b"s3cr3t\n"  # password written to stdin
 
-    @pytest.mark.asyncio
+
     async def test_add_attachment_with_str_content(self, unlocked_vault):
         """str content is encoded to UTF-8 before writing to temp file."""
         from server.tools.write import add_attachment
@@ -559,7 +526,7 @@ class TestWriteTools:
             content="ssh-ed25519 AAAA... user@host", group="SSH Keys",
         )
 
-    @pytest.mark.asyncio
+
     async def test_write_tools_produce_audit_records(self, unlocked_vault, test_config):
         """All 3 original write tools produce audit records."""
         import json
@@ -594,7 +561,7 @@ class TestWriteTools:
 # ---------------------------------------------------------------------------
 
 class TestSearchEntries:
-    @pytest.mark.asyncio
+
     async def test_search_with_group_filter(self, unlocked_vault):
         """Explicit group filters results to only that group."""
         from server.tools.read import search_entries
@@ -608,7 +575,7 @@ class TestSearchEntries:
         assert len(result) == 1
         assert result[0]["title"] == "Web Server"
 
-    @pytest.mark.asyncio
+
     async def test_search_filters_inactive_by_default(self, unlocked_vault):
         from server.tools.read import search_entries
 
@@ -621,7 +588,7 @@ class TestSearchEntries:
         assert len(result) == 1
         assert result[0]["title"] == "Active Entry"
 
-    @pytest.mark.asyncio
+
     async def test_search_entry_without_group_prefix(self, unlocked_vault):
         """Entries without group prefix get group=None."""
         from server.tools.read import search_entries
@@ -641,7 +608,7 @@ class TestSearchEntries:
 # ---------------------------------------------------------------------------
 
 class TestSearchEntriesTruncation:
-    @pytest.mark.asyncio
+
     async def test_search_truncates_at_page_size(self, unlocked_vault):
         """search_entries stops after page_size results and logs a warning."""
         from server.tools.read import search_entries
@@ -666,7 +633,7 @@ class TestImportEntries:
         result.stdout = ""
         return result
 
-    @pytest.mark.asyncio
+
     async def test_empty_list_returns_message(self, unlocked_vault):
         from server.tools.write import import_entries
 
@@ -674,7 +641,7 @@ class TestImportEntries:
         result = await import_entries(vault, audit, entries=[])
         assert result == "No entries provided"
 
-    @pytest.mark.asyncio
+
     async def test_missing_group_raises(self, unlocked_vault):
         from server.tools.write import import_entries
 
@@ -682,7 +649,7 @@ class TestImportEntries:
         with pytest.raises(ValueError, match="'group'"):
             await import_entries(vault, audit, entries=[{"title": "X"}])
 
-    @pytest.mark.asyncio
+
     async def test_missing_title_raises(self, unlocked_vault):
         from server.tools.write import import_entries
 
@@ -690,7 +657,7 @@ class TestImportEntries:
         with pytest.raises(ValueError, match="'title'"):
             await import_entries(vault, audit, entries=[{"group": "Servers"}])
 
-    @pytest.mark.asyncio
+
     async def test_slash_in_title_raises(self, unlocked_vault):
         from server.tools.write import import_entries
 
@@ -701,7 +668,7 @@ class TestImportEntries:
                 entries=[{"group": "Servers", "title": "Bad/Title"}],
             )
 
-    @pytest.mark.asyncio
+
     async def test_disallowed_group_raises(self, unlocked_vault):
         from server.tools.write import import_entries
         from server.vault import GroupNotAllowed
@@ -713,7 +680,7 @@ class TestImportEntries:
                 entries=[{"group": "Banking", "title": "Entry"}],
             )
 
-    @pytest.mark.asyncio
+
     @patch("subprocess.run")
     async def test_success_locks_vault_and_returns_summary(
         self, mock_run, unlocked_vault
@@ -737,7 +704,7 @@ class TestImportEntries:
         assert "Servers" in result
         assert vault.is_unlocked is False  # vault locked by import_entries
 
-    @pytest.mark.asyncio
+
     @patch("subprocess.run")
     async def test_cli_import_error_raises(self, mock_run, unlocked_vault):
         """KeePassCLIError when keepassxc-cli import fails."""
@@ -753,7 +720,7 @@ class TestImportEntries:
                 vault, audit, entries=[{"group": "Servers", "title": "X"}]
             )
 
-    @pytest.mark.asyncio
+
     @patch("subprocess.run")
     async def test_temp_files_shredded_on_success(self, mock_run, unlocked_vault, tmp_path):
         """Both tmp_xml and tmp_db are unlinked after successful import."""
@@ -768,23 +735,35 @@ class TestImportEntries:
             self._make_subprocess_result(0),
         ]
 
-        created = []
-        real_mktemp = tempfile.mktemp
+        created_files = []
+        created_dirs = []
+        real_mkstemp = tempfile.mkstemp
+        real_mkdtemp = tempfile.mkdtemp
 
-        def tracking_mktemp(**kwargs):
-            path = real_mktemp(**kwargs)
-            created.append(path)
+        def tracking_mkstemp(**kwargs):
+            fd, path = real_mkstemp(**kwargs)
+            created_files.append(path)
+            return fd, path
+
+        def tracking_mkdtemp(**kwargs):
+            path = real_mkdtemp(**kwargs)
+            created_dirs.append(path)
             return path
 
-        with patch("tempfile.mktemp", side_effect=tracking_mktemp):
+        with (
+            patch("tempfile.mkstemp", side_effect=tracking_mkstemp),
+            patch("tempfile.mkdtemp", side_effect=tracking_mkdtemp),
+        ):
             await import_entries(
                 vault, audit, entries=[{"group": "Servers", "title": "T"}]
             )
 
-        for path in created:
+        for path in created_files:
             assert not os.path.exists(path), f"Temp file not cleaned: {path}"
+        for path in created_dirs:
+            assert not os.path.exists(path), f"Temp dir not cleaned: {path}"
 
-    @pytest.mark.asyncio
+
     @patch("subprocess.run")
     async def test_cli_merge_error_raises(self, mock_run, unlocked_vault):
         """KeePassCLIError when keepassxc-cli merge fails."""
@@ -801,7 +780,7 @@ class TestImportEntries:
                 vault, audit, entries=[{"group": "Servers", "title": "X"}]
             )
 
-    @pytest.mark.asyncio
+
     @patch("subprocess.run")
     async def test_audit_record_written(self, mock_run, unlocked_vault, test_config):
         """import_entries writes an audit record with tool=import_entries."""

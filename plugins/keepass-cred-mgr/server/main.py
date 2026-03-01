@@ -1,6 +1,6 @@
 """keepass-cred-mgr: MCP server entry point.
 
-Wires config, YubiKey, vault, audit, and all 9 tools into a FastMCP server.
+Wires config, YubiKey, vault, audit, and all 10 tools into a FastMCP server.
 Runs over stdio transport. All logging goes to stderr.
 """
 

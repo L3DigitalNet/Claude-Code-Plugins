@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1] - 2026-02-28
+
+### Fixed
+
+- `.mcp.json` was absent from the installed cache directory, preventing Claude Code from registering the MCP server
+- `start-server.sh` activated fake tools based on directory existence (`scripts/fake-tools/` is in the git tree); now requires `KEEPASS_USE_FAKE_TOOLS=1` to be set explicitly, so production sessions always use the real `keepassxc-cli`
+
 ## [0.3.0] - 2026-02-28
 
 ### Added

@@ -20,17 +20,17 @@ class Config:
     database_path: str
     allowed_groups: list[str]
     audit_log_path: str
-    yubikey_slot: int = 2
-    grace_period_seconds: int = 10
-    yubikey_poll_interval_seconds: int = 5
-    write_lock_timeout_seconds: int = 10
-    page_size: int = 50
-    log_level: str = "INFO"
+    yubikey_slot: int
+    grace_period_seconds: int
+    yubikey_poll_interval_seconds: int
+    write_lock_timeout_seconds: int
+    page_size: int
+    log_level: str
 
 
 _REQUIRED_FIELDS = ("database_path", "allowed_groups", "audit_log_path")
 
-# Single source of truth for optional field defaults — mirrors the dataclass
+# Defaults for optional fields — applied by load_config() before constructing Config.
 _DEFAULTS: dict[str, int | str] = {
     "yubikey_slot": 2,
     "grace_period_seconds": 10,
