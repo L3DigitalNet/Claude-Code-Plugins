@@ -34,7 +34,7 @@ Lead with open findings. Roll up clean items.
 - Open findings: <N> total
 
 ### Upheld (no action needed)
-Principles <list IDs> are fully upheld. UX touchpoints for <list names> are clean. Docs for <list paths> are current.
+Principles <list IDs> are fully upheld. UX touchpoints for <list names> are clean. Docs for <list paths> are current. Context efficiency principles <list IDs> are fully upheld.
 
 ### Open Findings — Principles
 
