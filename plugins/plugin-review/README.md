@@ -4,7 +4,7 @@ Plugin quality review covering principles alignment, terminal UX, and documentat
 
 ## Summary
 
-`plugin-review` runs a multi-pass, assertion-driven audit of any Claude Code plugin. Three read-only analyst subagents work in parallel across three tracks (principles alignment, Track A; terminal UX quality, Track B; and documentation freshness, Track C) then report findings back to the orchestrator, which auto-implements all fixes and re-audits until the assertion confidence score reaches 100% or the pass budget is exhausted. An optional `--autonomous` flag adds a fourth subagent (regression guard), tier-classified auto-fixing, and build/test validation after each implementation pass.
+`plugin-review` runs a multi-pass, assertion-driven audit of any Claude Code plugin. Four read-only analyst subagents work in parallel across four tracks (principles alignment, Track A; terminal UX quality, Track B; documentation freshness, Track C; and context efficiency, Track D) then report findings back to the orchestrator, which auto-implements all fixes and re-audits until the assertion confidence score reaches 100% or the pass budget is exhausted. An optional `--autonomous` flag adds a fifth subagent (regression guard), tier-classified auto-fixing, and build/test validation after each implementation pass.
 
 ## Principles
 
@@ -20,7 +20,7 @@ Plugin quality review covering principles alignment, terminal UX, and documentat
 
 **[P6] Documentation Co-mutation**: Every implementation change must include corresponding documentation updates. A PostToolUse hook (`doc-write-tracker.sh`) mechanically warns when implementation files are modified without a corresponding documentation write.
 
-**[P7] Analyst/Orchestrator Separation**: Three categories of subagents are held strictly apart: read-only analysts (principles-analyst, ux-analyst, docs-analyst, regression-guard) that only produce findings; write-capable fixers (fix-agent, build-fix-agent) that implement minimal targeted fixes; and the orchestrator command that synthesizes results and implements the main body of changes.
+**[P7] Analyst/Orchestrator Separation**: Three categories of subagents are held strictly apart: read-only analysts (principles-analyst, ux-analyst, docs-analyst, efficiency-analyst, regression-guard) that only produce findings; write-capable fixers (fix-agent, build-fix-agent) that implement minimal targeted fixes; and the orchestrator command that synthesizes results and implements the main body of changes.
 
 **[P8] Enforcement Layers**: Principle enforcement is evaluated against a three-tier hierarchy: Mechanical (hooks that block/warn deterministically) > Structural (file organization, agent tool restrictions) > Behavioral (prompt instructions). A principle that claims mechanical enforcement but relies solely on behavioral instructions is flagged as a gap.
 
@@ -96,7 +96,7 @@ The review loop is fully automated: analysts report findings, the orchestrator a
 | `principles-analyst` | A | Read-only. Audits plugin implementation files against stated principles and checkpoints. Returns per-principle status (Upheld / Partially Upheld / Violated), enforcement layer assessment, root architectural alignment, and machine-verifiable assertions. |
 | `ux-analyst` | B | Read-only. Audits user-facing code paths against terminal UX criteria across four categories: information density, user input, progress/feedback, and terminal-specific patterns. Returns severity-grouped findings and assertions. |
 | `docs-analyst` | C | Read-only. Compares documentation files against implementation structure across five drift categories: accuracy, completeness, orphaned references, principle-implementation consistency, and examples. Returns per-file freshness assessment and assertions. |
-| `regression-guard` | D | Read-only. Autonomous mode only, Pass 2+. Re-checks previously-fixed findings to verify fixes are still intact after subsequent implementation changes. Returns per-finding holding/regressed status with file-level evidence. |
+| `regression-guard` | — | Read-only. Autonomous mode only, Pass 2+. Re-checks previously-fixed findings to verify fixes are still intact after subsequent implementation changes. Returns per-finding holding/regressed status with file-level evidence. |
 | `efficiency-analyst` | D | Read-only. Evaluates P1–P12 context efficiency compliance in parallel with Tracks A/B/C. Uses `track-d-criteria.md` to assess context footprint, enforcement layering, and composability across all plugin components. |
 | `fix-agent` | (n/a) | Write-capable. Invoked after `run-assertions.sh` finds failures. Implements the minimum change needed to make each failing assertion pass, then returns a structured summary. |
 | `build-fix-agent` | (n/a) | Write-capable. Autonomous mode only. Invoked in Phase 4.5 when `run-build-test.sh` reports failures. Implements minimal fixes for build or test breakage introduced during Phase 4. Spawned at most once per pass. |
@@ -155,7 +155,11 @@ Compares all documentation files against the actual implementation across five d
 
 Each finding is classified as `Pre-existing drift` or `Introduced by Pass N changes`; the review process itself must not introduce documentation drift.
 
-### Track D: Regression Guard (autonomous mode only)
+### Track D: Context Efficiency
+
+The `efficiency-analyst` agent evaluates all component types against twelve context efficiency principles (P1–P12), covering instruction design, runtime efficiency, agent architecture, and token budget. Track D runs in parallel with Tracks A/B/C on every pass.
+
+### Regression Guard (autonomous mode only)
 
 Evaluated by `regression-guard`.
 
