@@ -19,13 +19,15 @@ import os
 import socket
 import sys
 import threading
+import time
+import traceback
 from pathlib import Path
 
 # Must import Qt before creating QApplication
-from PySide6.QtCore import QCoreApplication, QTimer, Qt
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import QCoreApplication, QPoint, QTimer, Qt
+from PySide6.QtGui import QAction, QGuiApplication
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QMenu, QMenuBar, QWidget
 
 
 class CommandHandler:
@@ -158,7 +160,6 @@ class CommandHandler:
         button = button_map.get(button_str, Qt.MouseButton.LeftButton)
 
         # Find the widget at the coordinates
-        from PySide6.QtCore import QPoint
         global_pos = QPoint(x, y)
 
         # Get widget at position
@@ -460,9 +461,6 @@ class CommandHandler:
             return {"success": False, "error": "action_name is required"}
 
         # Search for the action in all windows and menus
-        from PySide6.QtGui import QAction
-        from PySide6.QtWidgets import QMenuBar, QMenu
-
         def find_action(widget) -> QAction | None:
             """Recursively find action by name."""
             # Check direct actions
@@ -513,9 +511,6 @@ class CommandHandler:
 
     def _handle_list_actions(self, cmd: dict) -> dict:
         """List all QActions in the application."""
-        from PySide6.QtGui import QAction
-        from PySide6.QtWidgets import QMenuBar, QMenu
-
         actions = []
 
         def collect_actions(widget, path=""):
@@ -591,8 +586,6 @@ class CommandHandler:
 
     def _handle_wait_idle(self, cmd: dict) -> dict:
         """Wait for the application to finish processing events."""
-        import time
-
         timeout = cmd.get("timeout", 5.0)
         start_time = time.time()
 
@@ -790,7 +783,6 @@ def main():
         sys.exit(e.code if e.code is not None else 0)
     except Exception as e:
         print(f"Error loading app: {e}", file=sys.stderr)
-        import traceback
         traceback.print_exc(file=sys.stderr)
         if server:
             server.stop()

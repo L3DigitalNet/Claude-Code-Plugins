@@ -11,12 +11,9 @@ IMPORTANT: This is a stdio MCP server - NEVER use print() or write to stdout!
 All logging must go to stderr or a file.
 """
 
-import asyncio
-import base64
 import json
 import logging
 import os
-import signal
 import socket
 import subprocess
 import sys
