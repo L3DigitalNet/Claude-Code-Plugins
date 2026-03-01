@@ -1,5 +1,6 @@
 """Unit tests for main.py resource management."""
 import json
+import os
 import socket as socket_mod
 import sys
 from pathlib import Path
@@ -140,3 +141,48 @@ def test_app_state_has_expected_fields():
     field_names = {f.name for f in dataclasses.fields(qt_main._app_state)}
     expected = {"process", "socket_path", "socket_dir", "display", "xvfb_process"}
     assert expected == field_names, f"AppState fields mismatch: {field_names}"
+
+
+def test_constants_defined():
+    """Named constants must exist at module level."""
+    assert hasattr(qt_main, "_XVFB_DISPLAY_START"), "Missing _XVFB_DISPLAY_START"
+    assert hasattr(qt_main, "_XVFB_STARTUP_WAIT_SECS"), "Missing _XVFB_STARTUP_WAIT_SECS"
+    assert isinstance(qt_main._XVFB_DISPLAY_START, int), "_XVFB_DISPLAY_START must be int"
+    assert isinstance(qt_main._XVFB_STARTUP_WAIT_SECS, float), (
+        "_XVFB_STARTUP_WAIT_SECS must be float"
+    )
+
+
+def test_launch_app_uses_display_start_constant():
+    """launch_app must read display start from the constant, not a literal."""
+    import tempfile
+
+    display_nums_seen = []
+
+    original_exists = os.path.exists
+
+    def mock_exists(path):
+        if path == "/fake/app.py":
+            return True  # pass script validation — must happen before display check
+        if path.startswith("/tmp/.X") and "-lock" in path:
+            num = int(path.split(".X")[1].split("-")[0])
+            display_nums_seen.append(num)
+            return False  # pretend display is free
+        return original_exists(path)
+
+    _mock_proc = MagicMock()
+    _mock_proc.poll.return_value = None
+
+    with patch.object(tempfile, "mkdtemp", return_value="/tmp/fake_dir_abc"), \
+         patch("os.path.exists", side_effect=mock_exists), \
+         patch("subprocess.Popen", return_value=_mock_proc), \
+         patch("time.sleep"), \
+         patch.object(qt_main, "_XVFB_DISPLAY_START", 150):
+        try:
+            qt_main.launch_app(script_path="/fake/app.py", timeout=0)
+        except Exception:
+            pass
+
+    assert 150 in display_nums_seen, (
+        f"launch_app did not check display 150 — constant not used (saw: {display_nums_seen})"
+    )

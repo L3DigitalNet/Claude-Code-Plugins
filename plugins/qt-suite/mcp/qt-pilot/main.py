@@ -52,6 +52,11 @@ mcp = FastMCP("qt-pilot")
 # Global state for tracking launched apps
 _app_state = AppState()
 
+# Xvfb display numbering: start at 99 to avoid conflicts with user displays (0-10 range)
+_XVFB_DISPLAY_START: int = 99
+# Seconds to wait after starting Xvfb before launching the harness
+_XVFB_STARTUP_WAIT_SECS: float = 0.5
+
 # Path to the test harness script (same directory as this file)
 HARNESS_PATH = Path(__file__).parent / "harness.py"
 
@@ -213,7 +218,7 @@ def launch_app(
     _app_state.socket_dir = socket_dir
 
     # Find available display number
-    display_num = 99
+    display_num = _XVFB_DISPLAY_START
     while os.path.exists(f"/tmp/.X{display_num}-lock"):
         display_num += 1
     display = f":{display_num}"
@@ -227,7 +232,7 @@ def launch_app(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        time.sleep(0.5)  # Wait for Xvfb to start
+        time.sleep(_XVFB_STARTUP_WAIT_SECS)
 
         # Build harness command
         env = os.environ.copy()
