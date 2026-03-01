@@ -1,14 +1,14 @@
 <!--
-Invoked by: commands/review-efficiency.md (which reads this file and CONTEXT_EFFICIENCY_REFERENCE.md).
+Invoked by: commands/review-efficiency.md (which reads this file and skills/context-efficiency-reference/SKILL.md).
 Provides: Five-stage workflow for auditing a plugin against the twelve context efficiency principles.
-Interacts with: CONTEXT_EFFICIENCY_REFERENCE.md (principle definitions) and MARKDOWN_TIGHTEN.md (Stage 5 follow-up).
+Interacts with: skills/context-efficiency-reference/SKILL.md (principle definitions) and skills/markdown-tighten/SKILL.md (Stage 5 follow-up).
 If stage structure or checkpoint behavior changes here, update commands/review-efficiency.md
 and docs/USAGE.md to match.
 -->
 
 # Context Efficiency Review
 
-Principles P1–P12 are defined in CONTEXT_EFFICIENCY_REFERENCE.md. Reference them by ID in all findings.
+Principles P1–P12 are defined in skills/context-efficiency-reference/SKILL.md. Reference them by ID in all findings.
 
 ## Review Process
 
@@ -42,7 +42,7 @@ Present the plan as a numbered sequence. End with a summary of files touched, es
 
 Implement the approved sequence in order. After each step, emit a brief progress note (e.g., "✓ Step 2 complete — removed redundant preamble"). Do not request confirmation between steps. Pause only if a planned change proves more complex or risky than anticipated — do not improvise and do not continue past a known deviation. Do not make changes beyond the approved plan. Preserve all content classified as COMPLIANT or intentional in Stage 1.
 
-After all steps are complete, present a summary listing every change made, the expected token efficiency improvements, and any items flagged during implementation for a future review pass. You may optionally note any instruction markdown files in the plugin as candidates for prose-level tightening via `MARKDOWN_TIGHTEN.md`.
+After all steps are complete, present a summary listing every change made, the expected token efficiency improvements, and any items flagged during implementation for a future review pass. You may optionally note any instruction markdown files in the plugin as candidates for prose-level tightening via `skills/markdown-tighten/SKILL.md`.
 
 ## Uncertainty Protocol
 

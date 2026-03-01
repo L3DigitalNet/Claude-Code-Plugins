@@ -1,8 +1,8 @@
 <!--
 Reference document for the twelve context efficiency principles.
-Loaded by: commands/review-efficiency.md alongside CONTEXT_EFFICIENCY_REVIEW.md.
+Loaded by: commands/review-efficiency.md alongside skills/context-efficiency-workflow/SKILL.md.
 Can be loaded independently when a user asks about any principle P1-P12 by name or ID.
-If principle definitions change here, update CONTEXT_EFFICIENCY_REVIEW.md's cross-reference note
+If principle definitions change here, update skills/context-efficiency-workflow/SKILL.md's cross-reference note
 and docs/USAGE.md to match.
 -->
 
