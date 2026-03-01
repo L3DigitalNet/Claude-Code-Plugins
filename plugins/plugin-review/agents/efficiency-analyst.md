@@ -33,6 +33,7 @@ On Pass 2+, focus on changed files and affected principles. Carry forward unchan
 ## Context Efficiency — Pass <N>
 
 ### Open Findings
+(Violated and Partially Upheld findings only — each gets a detail block)
 
 #### [Pn] <Principle Name> — <STATUS>
 **Principle**: <one-line definition>
@@ -43,7 +44,8 @@ On Pass 2+, focus on changed files and affected principles. Carry forward unchan
 [P1], [P3], [P4] — fully upheld with concrete implementation evidence.
 
 ### Partially Upheld
-[P2] — intent present; inconsistently applied in <specific components>.
+[P2], [P5] — intent present; [one-line summary per principle]
+(detail block already in Open Findings above)
 ```
 
 Do not deviate from this format. The orchestrator parses it to build the unified report.
@@ -64,7 +66,7 @@ After your findings, append an `## Assertions` section containing a JSON array o
     "type": "<grep_not_match | grep_match | file_exists | file_content | shell_exit_zero>",
     "description": "One sentence: what this assertion verifies",
     "command": "<bash command to run — use full relative paths from repo root>",
-    "expected": "<no_match | match | exists | contains | exit_zero>",
+    "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
     "path": "<file path — only for file_exists and file_content types>",
     "needle": "<search string — only for file_content type>"
   }
