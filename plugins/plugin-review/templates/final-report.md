@@ -16,6 +16,8 @@
   Autonomous mode addition: "### Convergence Metrics" section appended after "### Files Modified"
     when --autonomous was set. Template for this section is templates/convergence-metrics.md.
     If that template changes, update the Convergence Metrics row format in the Rules section below.
+  Track D addition: "Context Efficiency Status" section added after Documentation Status.
+    Rules section updated to require all P1–P12 principles in that table.
 -->
 
 Use this template when the review loop terminates (Phase 6).
@@ -56,6 +58,22 @@ Use this template when the review loop terminates (Phase 6).
 | README.md        | ✅ Current   |       |
 | docs/DESIGN.md   | ✅ Updated   | Updated in Pass 2 |
 
+### Context Efficiency Status
+| Principle | Status | Notes |
+|-----------|--------|-------|
+| P1 Imperative Minimalism | ✅ / ⚠️ / ❌ | |
+| P2 Format Matches Data Type | | |
+| P3 Reference Over Repetition | | |
+| P4 Lazy Context Loading | | |
+| P5 Process and Discard | | |
+| P6 Output Verbosity | | |
+| P7 Decompose by Scope | | |
+| P8 Subagents Return Structured Extracts | | |
+| P9 Orchestrator Synthesizes | | |
+| P10 Fail Fast | | |
+| P11 Choose Lighter Path | | |
+| P12 Verbosity Scales Inverse to Context Depth | | |
+
 ### Assertion Coverage
 Confidence: N% (N/N assertions passing)
 (omit if no assertions were generated — all findings were judgment-only)
@@ -78,7 +96,7 @@ Confidence: N% (N/N assertions passing)
 
 ## Rules
 
-Every principle from the original checklist must appear in Principle Status. Every checkpoint must appear in Checkpoint Status. Touchpoints clean from Pass 1 can be summarized in one line. Documentation Status lists every reviewed file. Accepted Gaps includes enough context for someone reading months later.
+Every principle from the original checklist must appear in Principle Status. Every P1–P12 context efficiency principle must appear in Context Efficiency Status. Every checkpoint must appear in Checkpoint Status. Touchpoints clean from Pass 1 can be summarized in one line. Documentation Status lists every reviewed file. Accepted Gaps includes enough context for someone reading months later.
 
 Assertion Coverage is included when assertions were generated. If zero assertions were generated (all findings were judgment-only with no machine-verifiable check), omit the section and note "No machine-verifiable assertions generated."
 
