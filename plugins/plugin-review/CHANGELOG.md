@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.5.0] - 2026-03-02
+
+### Added
+- bump to v0.5.0 — Track D context efficiency integration
+- migrate tighten command with corrected skill path
+- migrate review-efficiency command with corrected skill paths
+- add context-efficiency-workflow, context-efficiency-reference, markdown-tighten skills
+- add Track D file-to-track mapping in scoped-reaudit skill
+- register Track D in cross-track impact map
+- add Track D context efficiency status to final-report template
+- add Track D context efficiency to pass-report template
+- add efficiency-analyst Track D to Phase 2 spawn and tier table
+- add efficiency-analyst agent for Track D
+- add track-d-criteria template for context efficiency
+
+### Changed
+- update P9 and hooks table to say 'blocks' not 'warns'
+- em dash cleanup, root README sync
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- reduce AI writing signals across all plugin READMEs
+- Enhance Release Pipeline and Repo Hygiene Plugins
+- update plugin docs, PTH README for v0.6.0, and repo template
+
+### Fixed
+- fix path injection in validate-agent-frontmatter.sh; fix CHANGELOG em dashes
+- extend doc-write-tracker to cover hooks/ (including hooks.json)
+- make validate-agent-frontmatter.sh blocking (exit 2)
+- final review fixes — Track D label, type enum, cross-refs, diagram
+- resolve Track D collision and update Summary/P7 in README
+- update stale skill cross-references to new structured paths
+- add state file pattern and Track D to Decision Logic in scoped-reaudit
+- correct A→D relationship to P10 and tighten P1 paraphrase
+- align P9/P10 names and clean up P1 placeholder in final-report
+- add context efficiency to Upheld roll-up in pass-report
+- anchor efficiency-analyst spawn to concrete Phase 1 artifacts
+- clarify output contract and align assertion schema in efficiency-analyst
+- align track-d P7/P9/P10 definitions with canonical source
+- remove em dashes from all READMEs; add hygiene check
+- replace \n with <br/> in mermaid node labels across all plugin READMEs
+
+
 ## [Unreleased]
 
 ### Fixed
