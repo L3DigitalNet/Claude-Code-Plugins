@@ -1,0 +1,311 @@
+---
+# playbook.yml — Annotated example covering all major playbook structures.
+#
+# A playbook is a list of "plays". Each play maps a set of tasks to a set of hosts.
+# Run with: ansible-playbook playbook.yml
+#
+# Validate syntax before running: ansible-playbook playbook.yml --syntax-check
+# Dry run (no changes made):       ansible-playbook playbook.yml --check --diff
+
+
+# ============================================================
+# PLAY DEFINITION
+# ============================================================
+
+- name: Configure and deploy web application   # Always use a descriptive name — it appears in output
+  hosts: webservers                             # Inventory group, hostname, or 'all'
+  become: yes                                   # Privilege escalation (sudo) for all tasks in this play
+  gather_facts: yes                             # Collect host info before tasks run.
+                                                # Sets ansible_os_family, ansible_distribution,
+                                                # ansible_hostname, ansible_default_ipv4, etc.
+                                                # Set to 'no' when facts aren't needed — saves ~2s per host.
+
+  # ============================================================
+  # VARIABLES
+  # ============================================================
+
+  vars:
+    # Inline variables. Useful for play-scoped constants.
+    # Precedence: lower than host_vars/group_vars but higher than role defaults.
+    app_port: 8080
+    app_user: "www-data"
+    app_version: "2.4.1"
+
+  vars_files:
+    # Load variables from external YAML files (paths relative to the playbook).
+    # Evaluated in order — later files can override earlier ones.
+    # Encrypted vault files are transparently decrypted if --vault-password-file is provided.
+    - vars/main.yml
+    - vars/secrets.yml   # Can be an ansible-vault encrypted file
+
+  # ============================================================
+  # PRE-TASKS: run before roles, before regular tasks
+  # ============================================================
+
+  pre_tasks:
+    # pre_tasks execute before roles and tasks blocks, in order.
+    # Use for bootstrapping prerequisites that roles depend on.
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600   # Only refresh if cache is older than 1 hour; avoids redundant updates
+      when: ansible_os_family == "Debian"
+      # 'when' accepts any Jinja2 expression. Falsy results skip the task entirely.
+
+  # ============================================================
+  # ROLES
+  # ============================================================
+
+  roles:
+    # Roles are reusable, structured units of tasks/handlers/templates/files.
+    # They run after pre_tasks but before tasks.
+    # Simple form: just the role name (looked up in roles_path)
+    - role: common
+
+    # Parameterized form: pass variables that override the role's defaults/main.yml
+    - role: nginx
+      vars:
+        nginx_worker_processes: auto
+        nginx_worker_connections: 1024
+
+  # ============================================================
+  # TASKS
+  # ============================================================
+
+  tasks:
+
+    # --- Basic task with FQCN module ---
+    # Use fully qualified collection names (FQCN) for all modules.
+    # ansible.builtin.* for core modules; community.general.* for community modules.
+    # Short names like 'package' still work but are deprecated style.
+    - name: Ensure nginx is installed
+      ansible.builtin.package:          # Distro-agnostic module — uses apt, yum, dnf, or pacman as appropriate
+        name: nginx
+        state: present                  # present: install if missing; latest: upgrade if newer; absent: remove
+      tags: [nginx, packages]           # Run selectively: ansible-playbook playbook.yml --tags nginx
+
+    # --- File management with template ---
+    # template renders a Jinja2 file on the control node and copies it to the target.
+    # The 'validate' option runs a command against a temp file before overwriting the destination.
+    - name: Deploy nginx config from template
+      ansible.builtin.template:
+        src: templates/nginx.conf.j2    # Relative to the playbook directory
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: "0644"
+        validate: "nginx -t -c %s"      # %s is replaced with the temp file path; non-zero exit aborts
+      notify: Reload nginx              # Schedules the handler — only fires if this task reports 'changed'
+
+    # --- Register and use command output ---
+    # 'register' captures the module's return value (rc, stdout, stderr, stdout_lines, etc.)
+    # into a variable for subsequent tasks. The 'command' module always reports 'changed'
+    # unless you suppress it — use changed_when: false when the command is purely a check.
+    - name: Check if app user exists
+      ansible.builtin.command: id {{ app_user }}
+      register: user_check
+      changed_when: false               # Read-only check — never actually changes anything
+      failed_when: false                # Don't fail if the user doesn't exist; handle it below
+
+    - name: Create app user if missing
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        system: yes
+        shell: /usr/sbin/nologin
+        home: /var/www/app
+        create_home: no
+      when: user_check.rc != 0         # Only create user if the 'id' command above failed
+
+    # --- Debug task for visibility ---
+    - name: Show app user check result
+      ansible.builtin.debug:
+        msg: "User {{ app_user }} check: rc={{ user_check.rc }}"
+      # debug is useful during development; remove or gate with verbosity in production
+      verbosity: 1                      # Only show this message when -v (verbose) is passed
+
+    # --- Loop ---
+    # 'loop' iterates over a list. The current item is available as {{ item }}.
+    # For dicts, use 'loop' with a list of dicts and access {{ item.key }}.
+    - name: Create app directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        mode: "0755"
+      loop:
+        - /var/www/app
+        - /var/log/app
+        - /etc/app
+
+    # --- Loop with dict items ---
+    - name: Set app config values
+      ansible.builtin.lineinfile:
+        path: /etc/app/config.ini
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+        create: yes
+      loop:
+        - { key: PORT,    value: "{{ app_port }}" }
+        - { key: LOG_DIR, value: /var/log/app }
+
+    # --- Block / rescue / always (structured error handling) ---
+    # block groups related tasks. If any task in block fails, rescue runs.
+    # always runs regardless of block success or failure — like a try/catch/finally.
+    - name: Deploy application
+      block:
+        - name: Download app archive
+          ansible.builtin.get_url:
+            url: "https://releases.example.com/app-{{ app_version }}.tar.gz"
+            dest: /tmp/app.tar.gz
+            checksum: "sha256:{{ app_checksum }}"   # Verify integrity before extracting
+
+        - name: Extract app
+          ansible.builtin.unarchive:
+            src: /tmp/app.tar.gz
+            dest: /var/www/app
+            remote_src: yes                          # Archive is on the target, not the control node
+            extra_opts: ["--strip-components=1"]
+
+        - name: Set ownership
+          ansible.builtin.file:
+            path: /var/www/app
+            owner: "{{ app_user }}"
+            recurse: yes
+
+      rescue:
+        # Runs only if the block fails. Use to capture and log failures, send alerts,
+        # or roll back partial state. {{ ansible_failed_result }} contains the failed task's output.
+        - name: Log deployment failure
+          ansible.builtin.debug:
+            msg: "Deployment failed at task: {{ ansible_failed_task.name }}\nError: {{ ansible_failed_result.msg }}"
+
+        - name: Remove partial extraction
+          ansible.builtin.file:
+            path: /var/www/app
+            state: absent
+
+      always:
+        # Runs regardless of block success or failure. Use for cleanup that must happen either way.
+        - name: Clean up temp archive
+          ansible.builtin.file:
+            path: /tmp/app.tar.gz
+            state: absent
+
+    # --- Manage a systemd service ---
+    - name: Enable and start app service
+      ansible.builtin.systemd:
+        name: myapp
+        enabled: yes
+        state: started
+        daemon_reload: yes    # Equivalent to 'systemctl daemon-reload' before managing the unit
+
+    # --- Copy a static file ---
+    - name: Copy SSL certificate
+      ansible.builtin.copy:
+        src: files/myapp.crt   # Looked up relative to playbook or role's files/ directory
+        dest: /etc/ssl/certs/myapp.crt
+        owner: root
+        group: root
+        mode: "0644"
+
+    # --- Manage cron jobs ---
+    - name: Schedule log rotation for app
+      ansible.builtin.cron:
+        name: "rotate app logs"         # Unique name used to identify/idempotently manage this cron entry
+        minute: "0"
+        hour: "2"
+        job: "/usr/bin/logrotate /etc/logrotate.d/app"
+        user: root
+
+    # --- Wait for a condition ---
+    - name: Wait for app to be ready
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: health_check
+      retries: 5                        # Retry up to 5 times
+      delay: 10                         # Wait 10 seconds between retries
+      until: health_check.status == 200
+
+    # --- include_tasks vs import_tasks ---
+    # import_tasks: static, parsed at playbook load time.
+    #   - Tags and when conditions on the import apply to all imported tasks.
+    #   - Cannot use variables in the filename.
+    # include_tasks: dynamic, loaded at runtime.
+    #   - Variables in the filename work (as shown below).
+    #   - Tags must be applied to the include_tasks call, not the individual tasks inside.
+    - name: Include OS-specific tasks
+      ansible.builtin.include_tasks: "tasks/{{ ansible_os_family | lower }}.yml"
+
+    # --- Force handlers mid-play ---
+    # Handlers normally run once at the very end of the play, after all tasks complete.
+    # flush_handlers forces any pending handlers to run immediately at this point.
+    # Use when later tasks depend on a service restart that would otherwise be deferred.
+    - name: Apply pending handlers before running smoke tests
+      ansible.builtin.meta: flush_handlers
+
+    # --- Smoke test after flush ---
+    - name: Verify nginx is serving
+      ansible.builtin.uri:
+        url: "http://localhost/health"
+        status_code: 200
+      tags: [smoke-test]
+
+  # ============================================================
+  # HANDLERS: triggered by 'notify', run once at play end
+  # ============================================================
+
+  handlers:
+    # Handlers are tasks that only run when notified AND when the notifying task reports 'changed'.
+    # Multiple tasks notifying the same handler only trigger it once, even if all of them changed.
+    # Handler names must be unique within a play. Use 'listen:' to subscribe a handler to a topic.
+
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded                 # SIGHUP — graceful reload without dropping connections
+      listen: "reload nginx"            # Tasks can notify by handler name OR by listen topic
+
+    - name: Restart app
+      ansible.builtin.service:
+        name: myapp
+        state: restarted                # Full stop + start — needed after binary replacement or major config change
+
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+  # ============================================================
+  # POST-TASKS: run after roles and tasks, before final handlers
+  # ============================================================
+
+  post_tasks:
+    # post_tasks run after all tasks and roles but before the final handler execution round.
+    # Use for smoke tests, notifications, or cleanup that should happen after everything else.
+    - name: Verify app health endpoint
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      retries: 3
+      delay: 5
+
+    - name: Notify deployment complete
+      ansible.builtin.debug:
+        msg: "Deployment of app v{{ app_version }} complete on {{ inventory_hostname }}"
+
+
+# ============================================================
+# SECOND PLAY — can target a different group of hosts
+# ============================================================
+
+- name: Reload load balancer after deployment
+  hosts: loadbalancers
+  become: yes
+  gather_facts: no     # Skip fact gathering when you don't need ansible_* variables — faster
+
+  tasks:
+    - name: Reload haproxy
+      ansible.builtin.service:
+        name: haproxy
+        state: reloaded
