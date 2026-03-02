@@ -93,7 +93,7 @@ build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "keepass-cred-mgr"
-version = "0.3.1"
+version = "0.3.2"
 requires-python = ">=3.12"
 dependencies = [
     "mcp",
@@ -355,7 +355,7 @@ Each tool registration must include a description string accurate to the tool's 
 {
   "name": "keepass-cred-mgr",
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": {
     "name": "L3Digital-Net",
     "url": "https://github.com/L3Digital-Net"
