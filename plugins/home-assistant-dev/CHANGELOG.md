@@ -2,6 +2,23 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.3] - 2026-03-02
+
+### Changed
+- fix structural README issues and docs path
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- reduce AI writing signals across all plugin READMEs
+- revert(ha-dev): restore original HA skill files, remove extracted references
+- strengthen triggers and extract long content to references
+- Enhance Release Pipeline and Repo Hygiene Plugins
+
+### Fixed
+- standardize agent-orchestrator author; fix ha-dev skill count
+- remove em dashes from all READMEs; add hygiene check
+- cross-cutting standards sweep across marketplace
+- remove invalid plugin.json fields and refactor mutation guards
+
+
 ## [2.2.2] - 2026-02-22
 
 ### Fixed
