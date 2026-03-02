@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-03-02
+
+### Added
+- `ansible` skill: playbooks, inventory, ad-hoc commands, roles, vault, galaxy, and ansible-lint
+  with annotated `ansible.cfg`, annotated playbook, common patterns, and docs references
+- `restic` skill: repository management, backup, restore, forget/prune, FUSE mount, and all
+  major backends (local, SFTP, S3/MinIO, Backblaze B2, REST server) with cheatsheet, common
+  patterns including systemd timer automation, and docs references
+- `skill-inventory-and-gaps.md`: comprehensive gap analysis of existing 95 skills with 40+
+  candidates tiered by priority for future development
+
 ## [1.0.0] - 2026-03-02
 
 ### Added

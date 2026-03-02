@@ -1,7 +1,7 @@
 {
   "name": "linux-sysadmin",
-  "version": "1.0.0",
-  "description": "Linux system administration skills: 94 per-service guides covering daemons, CLI tools, and filesystems with annotated configs, cheatsheets, and a guided /sysadmin stack design workflow",
+  "version": "1.1.0",
+  "description": "Linux system administration skills: 97 per-service guides covering daemons, CLI tools, and filesystems with annotated configs, cheatsheets, and a guided /sysadmin stack design workflow",
   "author": {
     "name": "L3Digital-Net",
     "url": "https://github.com/L3Digital-Net"

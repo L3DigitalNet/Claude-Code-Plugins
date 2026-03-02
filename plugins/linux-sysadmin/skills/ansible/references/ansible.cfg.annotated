@@ -1,0 +1,184 @@
+# Annotated ansible.cfg
+# Each directive includes: what it does, the default value, and when to change it.
+#
+# Config file search order (first match wins):
+#   1. ANSIBLE_CONFIG environment variable (any path)
+#   2. ./ansible.cfg — project-level config in the current working directory;
+#      checked first after the env var, making it the standard for per-repo overrides
+#   3. ~/.ansible.cfg — user-level overrides applied to all projects
+#   4. /etc/ansible/ansible.cfg — system-wide defaults
+#
+# Create a project-level ansible.cfg in the same directory as your playbooks.
+# Most teams commit this file to version control so everyone gets the same behavior.
+# Never commit vault passwords or private key paths that are user-specific.
+
+# ---------------------------------------------------------------------------
+[defaults]
+# ---------------------------------------------------------------------------
+
+# inventory — path to the default inventory file or directory.
+# Default: /etc/ansible/hosts
+# Change when: your inventory lives elsewhere or you use a dynamic inventory script.
+inventory = /etc/ansible/hosts
+
+# remote_user — SSH user ansible logs in as on target hosts.
+# Default: the user running ansible (i.e., $USER)
+# Change when: your target hosts require a dedicated service account.
+remote_user = ansible
+
+# private_key_file — SSH private key used for connections.
+# Default: ~/.ssh/id_rsa (then ~/.ssh/id_dsa, etc., via SSH agent)
+# Change when: you provision a dedicated key for automation so it can be rotated independently.
+private_key_file = ~/.ssh/ansible_ed25519
+
+# host_key_checking — whether to verify SSH host keys against known_hosts.
+# Default: True
+# Change to False only in ephemeral dev/CI environments where hosts are disposable.
+# Never disable in production — you lose protection against MITM attacks.
+host_key_checking = True
+
+# forks — number of hosts managed in parallel.
+# Default: 5
+# Raise to 20-50 for large inventories. Constrained by control node CPU and file descriptors.
+# Check ulimits if you see "too many open files" at high fork counts.
+forks = 10
+
+# timeout — SSH connection timeout in seconds.
+# Default: 10
+# Change when: target hosts are on a slow WAN link or have high connection latency.
+timeout = 30
+
+# interpreter_python — controls Python interpreter discovery on target hosts.
+# Default: auto (probes for /usr/bin/python, /usr/bin/python3, etc.)
+# auto_silent picks the right interpreter without emitting discovery warnings.
+# Set to auto_silent for modern distros (RHEL 8+, Ubuntu 22.04+, Fedora) where
+# /usr/bin/python does not exist. Avoids the common "interpreter_path" warning.
+interpreter_python = auto_silent
+
+# roles_path — colon-separated list of directories ansible searches for roles.
+# Default: ~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles
+# Change when: you keep roles in a non-standard location or a shared team directory.
+roles_path = ~/.ansible/roles:/etc/ansible/roles
+
+# collections_path — where ansible-galaxy installs collections.
+# Default: ~/.ansible/collections:/usr/share/ansible/collections
+# Uncomment to redirect to a project-local directory for reproducible installs.
+# collections_path = ~/.ansible/collections
+
+# log_path — write a log of all ansible runs to this file.
+# Default: disabled (no persistent log)
+# Change when: you need an audit trail or want to debug intermittent failures.
+# Note: the log file is not rotated automatically — use logrotate if enabling long-term.
+# log_path = /var/log/ansible.log
+
+# stdout_callback — controls the output format for ansible-playbook runs.
+# Default: default
+# Options: default, yaml, json, minimal, debug, dense, oneline
+# yaml is readable and shows task results in a structured format.
+# json is useful when piping output to jq or another tool.
+stdout_callback = yaml
+
+# retry_files_enabled — whether to create a .retry file on playbook failure.
+# Default: True
+# The .retry file lists hosts that failed so you can re-run with --limit @file.retry.
+# Set False to suppress clutter in version-controlled directories.
+retry_files_enabled = False
+
+# gathering — controls when facts are gathered (smart, implicit, explicit).
+# Default: implicit (gather_facts runs at play start unless gather_facts: no is set)
+# smart: only gather facts if not already cached; saves time on repeated runs.
+# explicit: never gather facts unless gather_facts: yes is explicitly set in the play.
+# gathering = smart
+
+# fact_caching — store gathered facts to disk or Redis between runs.
+# Default: memory (no persistence)
+# jsonfile caching avoids re-gathering facts on every run for large inventories.
+# fact_caching = jsonfile
+# fact_caching_connection = /tmp/ansible_facts_cache
+# fact_caching_timeout = 86400   # seconds (24 hours)
+
+# deprecation_warnings — suppress deprecation notices in output.
+# Default: True
+# Set False to clean up output in stable automation pipelines.
+# deprecation_warnings = True
+
+# nocolor — disable ANSI color codes in output.
+# Default: 0 (colors enabled)
+# Set 1 when capturing output to a log file or CI system that doesn't interpret escape codes.
+# nocolor = 0
+
+# ---------------------------------------------------------------------------
+[privilege_escalation]
+# ---------------------------------------------------------------------------
+
+# become — enable privilege escalation (sudo) globally for all tasks.
+# Default: False
+# Change when: most tasks in your playbooks require root. Can be overridden per play or task.
+become = False
+
+# become_method — the escalation mechanism to use.
+# Default: sudo
+# Options: sudo, su, pbrun, pfexec, doas, dzdo, ksu, runas (Windows), machinectl
+# Change when: your target hosts use doas (OpenBSD/Alpine) or a PAM-based mechanism.
+become_method = sudo
+
+# become_user — the user to become after escalation.
+# Default: root
+# Change when: tasks need to run as a specific service user rather than root.
+become_user = root
+
+# become_ask_pass — prompt interactively for the become password.
+# Default: False
+# Use the -K flag on the command line instead for automation-friendly password input.
+# Never set True in playbooks intended for unattended CI/CD runs.
+become_ask_pass = False
+
+# ---------------------------------------------------------------------------
+[ssh_connection]
+# ---------------------------------------------------------------------------
+
+# pipelining — send multiple SSH commands over a single connection instead of
+# opening a new SSH connection for each task module transfer.
+# Default: False
+# Setting True reduces round-trips dramatically — 5-10x faster on playbooks with
+# many tasks. Requires that `Defaults !requiretty` is set in /etc/sudoers on targets.
+# This is the single highest-impact performance setting for most environments.
+pipelining = True
+
+# ssh_args — extra arguments passed to the ssh binary for every connection.
+# Default: -C -o ControlMaster=auto -o ControlPersist=60s
+# ControlMaster=auto + ControlPersist=60s enables SSH multiplexing: the first
+# connection to a host opens a master socket; subsequent connections reuse it
+# without a new TCP handshake or key exchange.
+# -C enables compression (helpful over slow links; counterproductive on fast LAN).
+ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s
+
+# scp_if_ssh — use scp instead of sftp for file transfers.
+# Default: smart (prefers sftp, falls back to scp)
+# Change to True for very old SSH servers that don't support sftp subsystem.
+# scp_if_ssh = smart
+
+# transfer_method — controls how modules are copied to targets.
+# Default: smart (tries piped stream, falls back to scp/sftp)
+# Options: smart, piped, scp, sftp
+# transfer_method = smart
+
+# control_path — path template for SSH ControlMaster socket files.
+# Default: %(directory)s/%%h-%%r-%%p
+# Shorten if the generated socket path exceeds the OS limit (~104 chars on Linux).
+# control_path = %(directory)s/%%C
+
+# ---------------------------------------------------------------------------
+[diff]
+# ---------------------------------------------------------------------------
+
+# always — show a diff for every task that modifies a file.
+# Default: False
+# Equivalent to passing --diff on every ansible-playbook invocation.
+# Useful during development; can be verbose in production with many file changes.
+always = False
+
+# context — number of context lines shown in unified diffs.
+# Default: 3
+# Increase when reviewing large template changes; decrease for noise reduction.
+context = 3
