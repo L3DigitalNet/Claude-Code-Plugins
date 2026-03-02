@@ -3,6 +3,22 @@
 All notable changes to the autonomous-refactor plugin will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0] - 2026-03-02
+
+### Added
+- add --dry-run flag for opportunity preview
+
+### Changed
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- reduce AI writing signals across all plugin READMEs
+- Enhance documentation and structure for multiple plugins
+
+### Fixed
+- fix dry-run output style and exit scope
+- remove em dashes from all READMEs; add hygiene check
+- replace \n with <br/> in mermaid node labels across all plugin READMEs
+
+
 ## [Unreleased]
 
 ### Added
