@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.0.4] - 2026-03-02
+
+### Changed
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- reduce AI writing signals across all plugin READMEs
+- Enhance documentation and structure for multiple plugins
+
+### Fixed
+- standardize agent-orchestrator author; fix ha-dev skill count
+- remove em dashes from all READMEs; add hygiene check
+- cross-cutting standards sweep across marketplace
+- remove invalid plugin.json fields and refactor mutation guards
+
+
 ## [1.0.3] - 2026-02-20
 
 ### Changed
