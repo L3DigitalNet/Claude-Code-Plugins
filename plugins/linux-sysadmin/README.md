@@ -94,24 +94,13 @@ The `/sysadmin` command walks through:
 | Skill | Loaded when |
 |-------|-------------|
 | `linux-overview` | Broad queries: "web server", "database", "what should I use for..." |
-| Per-service skills | Mentioned by name: "nginx", "ZFS", "nmap", "fail2ban", etc. |
+| Per-service skills (94) | Mentioned by name: "nginx", "ZFS", "nmap", "fail2ban", "tmux", etc. |
 
 **Service categories covered:**
 
 Web/Proxy, Containers/Virtualization, DNS, Security/Firewall, Databases, Monitoring, System Services, Storage/Backup, Filesystems, Network Services, Mail, Self-Hosted Apps, IoT/Home Automation, Certificates, CLI Monitoring Tools, Network Diagnostics, Disk Tools, Process/Debug, Text/Data, Misc Utilities.
 
 See the [design document](../../docs/plans/2026-03-01-linux-sysadmin-design.md) for the full service inventory.
-
-## Planned Features
-
-- **Per-service skills**: ~75 skills covering services, CLI tools, and filesystems (in progress)
-- **Annotated config files**: complete default configs with every option documented
-- **Invocation cheatsheets**: task-organized CLI tool references
-- **Filesystem property references**: full option tables for ZFS, Btrfs, ext4, XFS
-
-## Known Issues
-
-- **Skill coverage is incremental**: services are being added in phases. Check the skills directory for current coverage.
 
 ## Design Decisions
 

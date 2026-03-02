@@ -9,7 +9,7 @@
     {
       "name": "agent-orchestrator",
       "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": {
         "name": "L3Digital-Net",
         "url": "https://github.com/L3Digital-Net"

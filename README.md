@@ -54,7 +54,7 @@ installed plugins at the start of each session.
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [KeePass Cred Mgr](#keepass-cred-mgr) | MCP + Commands + Skills | varies | KeePass vault access via 10 MCP tools, YubiKey auth, credential rotation, and audit logging |
-| [Linux SysAdmin MCP](#linux-sysadmin-mcp) | MCP | 18 tools | Knowledge-profile-driven service diagnostics, security audits, cron computation, docs |
+| [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 94 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
 | [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review`, `/review-efficiency`, `/tighten` | Multi-pass assertion-driven audit of plugin principles, UX, docs, and context efficiency |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
@@ -211,28 +211,26 @@ HA connections, automated validation, example integrations, and project template
 
 ---
 
-### Linux SysAdmin MCP
+### Linux SysAdmin
 
-**Linux system administration MCP server**: 18 tools across 5 modules, focused on capabilities that complement Claude Code's Bash tool rather than duplicating it.
+**Linux system administration knowledge base**: 94 per-service skills covering daemons, CLI tools, and filesystems. Skills load automatically when you mention a service by name; no commands required for most usage.
 
 **Features:**
 
-- Knowledge-profile-driven service status, health checks, and diagnostics (`svc_status`, `svc_logs`, `svc_troubleshoot`)
-- Config validation sweeps, dependency impact analysis, and port/firewall audits (`svc_config_validate`, `svc_dependency_impact`, `svc_port_audit`)
-- Composite security audit with profile enrichment (`sec_audit`)
-- Pure-JS cron expression validation and next-run calculation (`cron_validate`, `cron_next_runs`)
-- YAML knowledge profiles for 8 services (sshd, nginx, docker, ufw, fail2ban, pihole,
-  unbound, crowdsec)
-- Git-backed documentation generation (8 `doc_*` tools)
+- Per-service skills for 94 services across web/proxy, DNS, databases, security/VPN, containers, monitoring, filesystems, storage, mail, self-hosted apps, IoT, and 30+ CLI tools
+- Annotated configs for daemons (nginx, sshd, samba, postfix, mosquitto, and more) with every directive documented
+- Task-organized cheatsheets for CLI tools (nmap, tcpdump, jq, rsync, borg, tmux, and more)
+- `/sysadmin` command: guided interview to design a complete server stack with rationale and setup order
+- No build step, no MCP server, no dependencies
 
 **Install:**
 
 ```bash
-/plugin install linux-sysadmin-mcp@l3digitalnet-plugins
+/plugin install linux-sysadmin@l3digitalnet-plugins
 ```
 
 **Learn more:**
-[plugins/linux-sysadmin-mcp/README.md](plugins/linux-sysadmin-mcp/README.md)
+[plugins/linux-sysadmin/README.md](plugins/linux-sysadmin/README.md)
 
 ---
 
@@ -471,7 +469,7 @@ Claude-Code-Plugins/
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── keepass-cred-mgr/        # KeePass credential manager (10 MCP tools, YubiKey auth)
-│   ├── linux-sysadmin-mcp/      # Linux sysadmin MCP server (18 tools, 5 modules)
+│   ├── linux-sysadmin/          # Linux sysadmin skills (94 per-service guides)
 │   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
