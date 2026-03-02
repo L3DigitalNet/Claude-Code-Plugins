@@ -20,6 +20,15 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Auto-detect local helper binary when gh-manager is not in PATH
+if ! command -v "${GH_MANAGER:-gh-manager}" &>/dev/null; then
+  _LOCAL_BIN="$SCRIPT_DIR/../helper/bin/gh-manager.js"
+  if [[ -f "$_LOCAL_BIN" ]]; then
+    export GH_MANAGER="node $_LOCAL_BIN"
+  fi
+  unset _LOCAL_BIN
+fi
+
 # Colors
 if [[ -t 1 ]]; then
   BOLD='\033[1m'; CYAN='\033[0;36m'; GREEN='\033[0;32m'

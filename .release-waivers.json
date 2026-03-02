@@ -18,7 +18,7 @@
     {
       "check": "missing_tests",
       "plugin": "github-repo-manager",
-      "reason": "Markdown/script-only plugin — no executable test suite by design"
+      "reason": "Has a real test suite but requires gh-manager binary in PATH — tests auto-detect local binary via run-all.sh helper fallback"
     },
     {
       "check": "missing_tests",
@@ -59,6 +59,21 @@
       "check": "stale_docs",
       "plugin": "home-assistant-dev",
       "reason": "Large design documents contain version refs in history tables and implementation notes — user-facing headers, README, CHANGELOG, and plugin.json kept current"
+    },
+    {
+      "check": "stale_docs",
+      "plugin": "github-repo-manager",
+      "reason": "Design doc and USAGE.md contain example CLI output showing historical version refs — illustrative examples, not declarations requiring update on each release"
+    },
+    {
+      "check": "stale_docs",
+      "plugin": "design-assistant",
+      "reason": "Docs auditor false-positive: plugin.json and marketplace.json show pre-bump version at Phase 1 time — bump-version.sh updates them in Phase 2. No stale .md refs exist."
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "linux-sysadmin",
+      "reason": "Skill-only plugin — 94 service knowledge files with no executable test suite by design"
     }
   ]
 }
