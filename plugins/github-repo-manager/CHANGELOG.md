@@ -2,6 +2,20 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [0.2.3] - 2026-03-02
+
+### Changed
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- reduce AI writing signals across all plugin READMEs
+- Enhance documentation and structure for multiple plugins
+
+### Fixed
+- add missing waivers and fix gh-manager PATH detection
+- remove em dashes from all READMEs; add hygiene check
+- apply auto-fixes from /hygiene sweep
+- remove invalid plugin.json fields and refactor mutation guards
+
+
 ## [0.2.2] - 2026-02-20
 
 ### Changed
