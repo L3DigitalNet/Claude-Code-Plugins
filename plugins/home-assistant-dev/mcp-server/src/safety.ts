@@ -66,8 +66,12 @@ export class SafetyChecker {
     // Check configured blocklist
     for (const blocked of this.config.blockedServices) {
       if (blocked.includes("*")) {
-        // Wildcard pattern
-        const pattern = blocked.replace("*", ".*");
+        // Wildcard pattern: escape all regex metacharacters first, then convert
+        // * to .* globally. String.replace() only replaces the first occurrence,
+        // so a pattern like "light.*.toggle.*" would leave the second * as a
+        // bare quantifier and throw a SyntaxError at runtime.
+        const escaped = blocked.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+        const pattern = escaped.replace(/\*/g, ".*");
         if (new RegExp(`^${pattern}$`).test(fullService)) {
           return {
             allowed: false,
