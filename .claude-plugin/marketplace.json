@@ -128,7 +128,7 @@
     {
       "name": "autonomous-refactor",
       "description": "Test-driven autonomous refactoring against project design principles. Snapshots a green test baseline, audits code against README.md principles, applies changes in git worktree isolation, and reverts on test failure \u2014 entirely without human input in the loop.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "L3Digital-Net",
         "url": "https://github.com/L3Digital-Net"
