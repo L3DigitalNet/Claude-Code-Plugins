@@ -1,0 +1,326 @@
+# Annotated grafana.ini
+# Each directive includes: what it does, default value, and when to change it.
+# Grafana's config uses INI sections: [section_name] followed by key = value pairs.
+# Commented lines (starting with ;) are the Grafana-shipped defaults as documentation.
+# Uncomment and set a value to override the default.
+#
+# After changes: sudo systemctl restart grafana-server
+# Config location: /etc/grafana/grafana.ini
+# Env var override pattern: GF_<SECTION>_<KEY>=value (e.g. GF_SERVER_HTTP_PORT=3000)
+
+#################################### Paths ####################################
+
+[paths]
+
+# Where Grafana stores the SQLite database, sessions, and image render cache.
+# Default: /var/lib/grafana  |  Change when: using a non-standard data dir or
+# running multiple Grafana instances on the same host.
+;data = /var/lib/grafana
+
+# Where Grafana writes its log files (if log mode = file).
+# Default: /var/log/grafana  |  Change when: centralizing logs under a custom path.
+;logs = /var/log/grafana
+
+# Where grafana-cli installs plugins. Must be writable by the grafana user.
+# Default: /var/lib/grafana/plugins  |  Change when: mounting a shared plugin volume.
+;plugins = /var/lib/grafana/plugins
+
+# Root of the provisioning tree (datasources, dashboards, notifiers, etc.).
+# Default: /etc/grafana/provisioning  |  Change when: managing config from a
+# non-standard path or when running in a container with a mounted config volume.
+;provisioning = /etc/grafana/provisioning
+
+#################################### Server ####################################
+
+[server]
+
+# HTTP or HTTPS. Use 'https' only if you're doing TLS termination in Grafana itself;
+# for nginx/Caddy reverse proxy setups, leave this as 'http'.
+# Default: http  |  Change when: terminating TLS directly in Grafana (uncommon).
+;protocol = http
+
+# IP address to bind the HTTP listener. Empty string binds to all interfaces.
+# Default: (empty — all interfaces)  |  Change when: running behind a reverse proxy
+# and you want to restrict Grafana to loopback only (set to 127.0.0.1).
+;http_addr =
+
+# TCP port Grafana listens on.
+# Default: 3000  |  Change when: 3000 conflicts with another service, or you want
+# Grafana on a privileged port (requires capability or running as root — avoid).
+;http_port = 3000
+
+# Public-facing hostname for Grafana. Used in generated URLs (e.g., alert links).
+# Default: localhost  |  Change when: Grafana is accessible at a real domain name.
+;domain = localhost
+
+# Full public URL including protocol, domain, and optional subpath.
+# Must match exactly what users type in the browser.
+# Default: %(protocol)s://%(domain)s:%(http_port)s/
+# Change when: running behind a reverse proxy, especially with a subpath.
+# Example for subpath: root_url = https://monitoring.example.com/grafana/
+;root_url = %(protocol)s://%(domain)s:%(http_port)s/
+
+# Set to true when root_url contains a subpath (e.g. /grafana/).
+# Grafana will strip the subpath from incoming requests.
+# Default: false  |  Change when: root_url ends in a non-root subpath.
+;serve_from_sub_path = false
+
+# Path where Grafana static files live (CSS, JS, etc.).
+# Default: public (relative to binary)  |  Rarely changed.
+;static_root_path = public
+
+# Enable gzip compression of HTTP responses.
+# Default: false  |  Change when: not using a reverse proxy that handles gzip
+# (nginx gzip is usually preferred since it can cache compressed responses).
+;enable_gzip = false
+
+#################################### Database ##################################
+
+[database]
+
+# Backend database type. Options: sqlite3, mysql, postgres.
+# Default: sqlite3  |  Change when: running multi-user or production — SQLite
+# is single-writer and will produce "database is locked" errors under concurrency.
+;type = sqlite3
+
+# SQLite database file path (only relevant when type = sqlite3).
+# Default: grafana.db (inside the data dir)  |  Rarely changed.
+;path = grafana.db
+
+# Host:port for MySQL or PostgreSQL.
+# Default: 127.0.0.1:3306  |  Change when: database is on a remote host.
+;host = 127.0.0.1:3306
+
+# Database name.
+# Default: grafana  |  Change when: sharing a database server with other services.
+;name = grafana
+
+# Database user.
+# Default: root  |  Change when: using a dedicated least-privilege DB user (recommended).
+;user = root
+
+# Database password. Leave empty for no password.
+# Default: (empty)  |  Change when: using an actual password (always in production).
+;password =
+
+# SSL mode for database connections.
+# Options: disable, require, verify-ca, verify-full (PostgreSQL); true, false, skip-verify (MySQL)
+# Default: disable  |  Change when: database is on a remote host — use at least 'require'.
+;ssl_mode = disable
+
+# Maximum number of idle connections in the connection pool.
+# Default: 2  |  Change when: profiling shows connection churn on a busy instance.
+;max_idle_conn = 2
+
+# Maximum number of open connections.
+# Default: 0 (unlimited)  |  Change when: database has a connection limit you must respect.
+;max_open_conn = 0
+
+#################################### Security ##################################
+
+[security]
+
+# Username of the Grafana admin account.
+# Default: admin  |  Change when: hardening against credential guessing attacks.
+;admin_user = admin
+
+# Admin password set on first start. The Grafana default is well-known — change
+# immediately via the UI (you are prompted on first login) or via:
+#   sudo grafana-cli admin reset-admin-password <newpassword>
+# Editing this directive does NOT reset an already-set password.
+# Default: (well-known default — change before exposing to a network)
+;admin_password = <set-on-first-login>
+
+# HMAC secret used to sign cookies and internal tokens.
+# Default: auto-generated on install by most package managers.
+# Change when: rotating secrets or setting a deterministic value for containers.
+;secret_key = <auto-generated-on-install>
+
+# Allow Grafana to be embedded in <iframe> tags on other sites.
+# Default: false  |  Change when: embedding dashboards in a portal or wiki.
+# Security implication: enables clickjacking risk — only enable for trusted origins.
+;allow_embedding = false
+
+# Mark session cookie as Secure (HTTPS only).
+# Default: false  |  Change when: Grafana is served over HTTPS — set to true.
+;cookie_secure = false
+
+# SameSite cookie policy. Options: lax, strict, none, disabled.
+# Default: lax  |  Change when: embedding Grafana in cross-origin iframes (use none,
+# but requires cookie_secure = true).
+;cookie_samesite = lax
+
+# Disable Gravatar for user profile pictures.
+# Default: false  |  Change when: operating in an air-gapped environment.
+;disable_gravatar = false
+
+#################################### Users ####################################
+
+[users]
+
+# Allow new accounts to be created via the sign-up form.
+# Default: true  |  Change when: you want to control user creation manually
+# or via provisioning (set to false for any non-open instance).
+;allow_sign_up = true
+
+# Default org role for new users when auto-joining an org.
+# Options: Viewer, Editor, Admin
+# Default: Viewer  |  Change when: you want new users to have edit access by default.
+;auto_assign_org_role = Viewer
+
+# Automatically add new users to the default organization.
+# Default: true  |  Change when: using multiple organizations and you want to
+# assign users manually.
+;auto_assign_org = true
+
+# Treat email addresses as case-insensitive during login.
+# Default: false  |  Change when: users report login failures due to case mismatches.
+;case_insensitive_login = false
+
+#################################### Auth ####################################
+
+[auth]
+
+# Disable the username/password login form. Useful when using SSO exclusively.
+# Default: false  |  Change when: all users authenticate via OAuth/SAML and you
+# want to remove the fallback form. Keep at least one admin able to log in.
+;disable_login_form = false
+
+# Disable sign-out link in the UI (for embedded or kiosk deployments).
+# Default: false
+;disable_signout_menu = false
+
+# Token expiry in seconds. After this time, users must re-login.
+# Default: 86400 (24 hours)  |  Change when: tightening session security.
+;login_maximum_inactive_lifetime_duration =
+;login_maximum_lifetime_duration =
+
+[auth.anonymous]
+
+# Enable anonymous (unauthenticated) read-only access to Grafana.
+# Default: false  |  Change when: embedding public dashboards without login.
+# Security implication: anyone with network access can view dashboards.
+;enabled = false
+
+# Org name the anonymous user belongs to.
+# Default: Main Org.  |  Change when: you have multiple orgs and want anonymous
+# access scoped to a specific one.
+;org_name = Main Org.
+
+# Role for anonymous users.
+# Default: Viewer  |  Rarely change — Viewer is already minimal access.
+;org_role = Viewer
+
+[auth.github]
+
+# GitHub OAuth integration. Requires a GitHub OAuth App.
+# Create at: https://github.com/settings/applications/new
+# Callback URL must be: <root_url>/login/github
+;enabled = false
+;client_id = <your-github-oauth-app-id>
+;client_secret = <your-github-oauth-app-secret>
+;scopes = user:email,read:org
+;auth_url = https://github.com/login/oauth/authorize
+;token_url = https://github.com/login/oauth/access_token
+;api_url = https://api.github.com/user
+# Restrict login to members of specific GitHub organizations.
+;allowed_organizations = your-org-name
+
+[auth.google]
+
+# Google OAuth integration. Requires a Google Cloud OAuth 2.0 client.
+# Create at: https://console.cloud.google.com/apis/credentials
+# Callback URL must be: <root_url>/login/google
+;enabled = false
+;client_id = <your-client-id>.apps.googleusercontent.com
+;client_secret = <your-client-secret>
+;scopes = https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email
+;auth_url = https://accounts.google.com/o/oauth2/auth
+;token_url = https://accounts.google.com/o/oauth2/token
+;api_url = https://www.googleapis.com/oauth2/v1/userinfo
+# Restrict login to specific Google-hosted domains (leave empty to allow any Google account).
+;allowed_domains = example.com
+
+#################################### SMTP / Email ###########################
+
+[smtp]
+
+# Master switch for all Grafana email sending (alerts, invites, etc.).
+# Default: false  |  Change when: you want alert notifications or user invitations
+# to work via email.
+;enabled = false
+
+# SMTP server address and port.
+# Common ports: 25 (plain), 465 (implicit TLS), 587 (STARTTLS).
+# Default: localhost:25  |  Change when: using an external SMTP provider.
+;host = localhost:25
+
+# SMTP username. Leave empty for unauthenticated relay (rare on external providers).
+;user =
+
+# SMTP password. Store in an env var rather than in this file:
+#   GF_SMTP_PASSWORD=mysecret in the grafana-server systemd override.
+;password =
+
+# Skip TLS certificate verification. Only for self-signed cert lab setups.
+# Default: false  |  Do not enable in production.
+;skip_verify = false
+
+# From address shown in emails.
+# Default: admin@grafana.localhost  |  Change when: enabling SMTP — use a real address.
+;from_address = admin@grafana.localhost
+
+# From display name.
+# Default: Grafana
+;from_name = Grafana
+
+#################################### Alerting #################################
+
+[alerting]
+
+# Legacy alerting engine (Grafana 7 and earlier style, kept for compatibility).
+# Default: false in Grafana 9+  |  Do not enable for new deployments — use
+# [unified_alerting] instead.
+;enabled = false
+
+[unified_alerting]
+
+# Grafana's built-in alerting engine (introduced in Grafana 8, default from Grafana 9).
+# Default: true  |  Change when: you need legacy alerting for migration reasons only.
+;enabled = true
+
+# How long to wait before re-sending a firing alert notification.
+# Default: 4h  |  Change when: you want more or less frequent re-notification.
+;min_interval = 10s
+
+#################################### Logging ##################################
+
+[log]
+
+# Log output target. Options: console, file, syslog (comma-separated for multiple).
+# Default: console file  |  Change when: running in a container (use console only);
+# or centralizing to syslog.
+;mode = console file
+
+# Log level. Options: debug, info, warn, error, critical.
+# Default: info  |  Change when: debugging (use debug); or reducing noise in production (warn).
+;level = info
+
+# Per-logger level overrides. Format: logger1:level,logger2:level
+# Useful for silencing noisy subsystems without switching global level.
+# Example: filters = tsdb.graphite:error rendering:debug
+;filters =
+
+[log.file]
+
+# Max size in megabytes before rotating the log file.
+# Default: 256  |  Change when: disk space is constrained.
+;max_size_mb = 256
+
+# Number of days to retain rotated log files.
+# Default: 7  |  Change when: adjusting log retention policy.
+;max_days = 7
+
+# Number of rotated files to keep.
+# Default: 0 (keep all)  |  Change when: setting a hard upper bound on log file count.
+;max_files = 0

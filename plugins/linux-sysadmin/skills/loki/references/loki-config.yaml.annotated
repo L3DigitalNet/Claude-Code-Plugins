@@ -1,0 +1,381 @@
+# Annotated loki-config.yaml — single-binary mode (all components in one process)
+# Each directive includes: what it does, default value, and when to change it.
+# This is the minimal-but-complete config for a single-node production deployment
+# using local filesystem storage. For distributed/HA deployments, replace the
+# filesystem/BoltDB backend with S3/GCS and add a distributed ring configuration.
+#
+# Reference: https://grafana.com/docs/loki/latest/configuration/
+
+# ---------------------------------------------------------------------------
+# AUTH
+# ---------------------------------------------------------------------------
+
+# When false (default), all logs go into a single "fake" tenant.
+# Set to true for multi-tenant deployments — every request must carry
+# the X-Scope-OrgID header or Loki returns 401.
+# Default: false  |  Change when: running Loki as a shared service across teams.
+auth_enabled: false
+
+# ---------------------------------------------------------------------------
+# SERVER
+# ---------------------------------------------------------------------------
+
+server:
+  # Port for the HTTP API, Promtail push endpoint, and the built-in UI.
+  # Default: 3100  |  Change when: port conflicts or running multiple Loki instances.
+  http_listen_port: 3100
+
+  # Port for gRPC inter-component communication (ingester ring, ruler, etc.).
+  # In single-binary mode this only matters if you expose gRPC to external components.
+  # Default: 9095  |  Change when: port conflicts.
+  grpc_listen_port: 9095
+
+  # Log level for Loki's own operational logs (not ingested logs).
+  # Options: debug, info, warn, error  |  Default: info
+  # Change when: debugging startup or query issues — set to debug temporarily.
+  log_level: info
+
+# ---------------------------------------------------------------------------
+# COMMON (Loki 2.8+)
+# ---------------------------------------------------------------------------
+
+# Shared path prefix for all storage directories. Avoids repeating the base path
+# in every storage_config section. Each component appends its own subdirectory.
+# Default: not set  |  Change when: you want all Loki data under a single root.
+common:
+  path_prefix: /var/lib/loki
+  storage:
+    filesystem:
+      # Directory where chunk object data is stored.
+      # Loki creates subdirectories per tenant and per period.
+      # Default: not set (required for filesystem storage)  |  Change when: moving data.
+      chunks_directory: /var/lib/loki/chunks
+      rules_directory: /var/lib/loki/rules
+  replication_factor: 1  # Single node — no replication. Set to 3 for HA ring setups.
+  ring:
+    # kvstore backend for the ingester ring. "inmemory" is correct for single-node.
+    # Use "consul" or "etcd" for multi-node deployments.
+    # Default: consul  |  Change when: running single-node (use inmemory).
+    kvstore:
+      store: inmemory
+
+# ---------------------------------------------------------------------------
+# QUERY RANGE
+# ---------------------------------------------------------------------------
+
+query_range:
+  # Cache query results to speed up repeated or overlapping time range queries.
+  # Default: false  |  Change when: query latency matters and you query similar ranges repeatedly.
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100  # In-process cache; increase for high query volume.
+
+# ---------------------------------------------------------------------------
+# SCHEMA CONFIG
+# ---------------------------------------------------------------------------
+
+# Defines which storage backend and index schema to use for each time period.
+# Multiple entries allow migrating schemas without rewriting existing data.
+# Never remove a period entry — Loki needs it to read data written during that period.
+schema_config:
+  configs:
+    - # Start date for this schema period. Must be in the past on first deploy.
+      # Loki rejects data written before the earliest 'from' date.
+      # Default: required  |  Change when: adding a new period for schema migration.
+      from: "2024-01-01"
+
+      # Index store type. "tsdb" is current recommended (Loki 2.8+).
+      # Older: "boltdb-shipper" (still supported). "tsdb" is more efficient for queries.
+      # Default: required  |  Change when: upgrading — add a new period entry, don't change existing.
+      store: tsdb
+
+      # Object store for chunks. "filesystem" for local disk; "s3", "gcs", "azure" for cloud.
+      # Default: required  |  Change when: scaling beyond a single node.
+      object_store: filesystem
+
+      # Log schema version. v13 is current as of Loki 3.x.
+      # Default: required  |  Change when: Loki release notes indicate a new schema version.
+      schema: v13
+
+      index:
+        # Prefix for index table names. Convention is "loki_" for tsdb, "index_" for boltdb.
+        prefix: loki_
+        # Index table rotation period. 24h (daily) is standard.
+        # Default: 24h  |  Change when: Grafana Labs explicitly recommends a different period.
+        period: 24h
+
+# ---------------------------------------------------------------------------
+# STORAGE CONFIG
+# ---------------------------------------------------------------------------
+
+storage_config:
+  # TSDB index storage — used when schema store is "tsdb".
+  tsdb_shipper:
+    # Directory where active (current period) TSDB index files are written.
+    # Default: not set (required)  |  Change when: using common.path_prefix (then this is redundant).
+    active_index_directory: /var/lib/loki/tsdb-index
+    cache_location: /var/lib/loki/tsdb-cache
+
+  # Filesystem object storage — used when object_store is "filesystem".
+  filesystem:
+    # Directory where chunk files are stored. Must be writable by the Loki process user.
+    # Default: not set (required)  |  Change when: using common.path_prefix (auto-set).
+    directory: /var/lib/loki/chunks
+
+# ---------------------------------------------------------------------------
+# COMPACTOR
+# ---------------------------------------------------------------------------
+
+compactor:
+  # Working directory for the compactor's index compaction operations.
+  # The compactor reads index shards, merges them, and writes the result here.
+  # Default: not set (required)  |  Change when: disk layout changes.
+  working_directory: /var/lib/loki/compactor
+
+  # Must match the object_store in schema_config.
+  # Default: not set (required)
+  shared_store: filesystem
+
+  # Enable log retention enforcement. Without this, retention_period in limits_config
+  # is parsed but not applied — data accumulates indefinitely.
+  # Default: false  |  Change when: you want Loki to delete old data automatically.
+  retention_enabled: true
+
+  # How long after a chunk's retention period expires before the compactor deletes it.
+  # Grace period allows in-flight queries to complete before the data disappears.
+  # Default: 2h  |  Change when: long-running queries need more time.
+  retention_delete_delay: 2h
+
+  # How often the compactor runs its retention/compaction cycle.
+  # Default: 10m  |  Change when: very high ingest volume (shorten) or low-traffic node (lengthen).
+  compaction_interval: 10m
+
+# ---------------------------------------------------------------------------
+# LIMITS CONFIG
+# ---------------------------------------------------------------------------
+
+limits_config:
+  # How long to retain logs. Applied per tenant (or globally when auth_enabled: false).
+  # Requires compactor.retention_enabled: true to take effect.
+  # Default: 0 (no retention)  |  Change when: disk capacity planning requires time-bounded data.
+  retention_period: 744h  # 31 days
+
+  # Maximum ingest rate per tenant in MB/s. Burst up to ingestion_burst_size_mb.
+  # Default: 4 MB/s  |  Change when: high-volume applications hit "rate limit exceeded" errors.
+  ingestion_rate_mb: 16
+
+  # Maximum burst ingestion in MB above the rate limit, for short spikes.
+  # Default: 6 MB  |  Change when: applications produce large log bursts during deploys.
+  ingestion_burst_size_mb: 32
+
+  # Maximum number of label names per log stream (stream = unique set of label key-value pairs).
+  # Enforces the low-cardinality label discipline. Reject streams with too many labels.
+  # Default: 15  |  Change when: you have a legitimate need for more labels (unusual — reconsider design first).
+  max_label_names_per_series: 15
+
+  # Maximum length of a single label value (characters).
+  # Default: 1024  |  Change when: a label value (e.g., a long path) legitimately exceeds this.
+  max_label_value_length: 2048
+
+  # Maximum number of concurrent tail (WebSocket) connections.
+  # Default: 10  |  Change when: many users tail logs simultaneously via Grafana Explore.
+  max_concurrent_tail_requests: 20
+
+  # Allow log entries to arrive out of chronological order within a stream.
+  # Required when log shippers replay historical data or multi-threaded apps emit non-monotonic timestamps.
+  # Default: false  |  Change when: "entry out of order" errors appear in Loki logs.
+  unordered_writes: true
+
+# ---------------------------------------------------------------------------
+# RULER (alert rules in LogQL)
+# ---------------------------------------------------------------------------
+
+ruler:
+  # Backend where alert rules are stored. "local" reads YAML files from the filesystem.
+  # Use "s3" or "gcs" for shared rule storage in multi-node deployments.
+  # Default: local  |  Change when: scaling to multiple Loki nodes that need shared rules.
+  storage:
+    type: local
+    local:
+      directory: /var/lib/loki/rules
+
+  # Where to send alerts. Points to an Alertmanager instance.
+  # Default: not set (alerts are evaluated but not sent)  |  Change when: you define alert rules.
+  alertmanager_url: http://localhost:9093
+
+  # Embed an Alertmanager client in the ruler so it can send alerts directly.
+  # Default: false  |  Change when: using the ruler with Alertmanager.
+  enable_alertmanager_v2: true
+
+  # How often to poll the rule storage for changes (new/deleted rule files).
+  # Default: 1m  |  Change when: you need faster rule propagation during development.
+  poll_interval: 1m
+
+---
+# ===========================================================================
+# ANNOTATED promtail-config.yaml
+# Promtail is the log collection agent. It tails files or reads from systemd
+# journal, applies pipeline transforms, and pushes to Loki.
+# Reference: https://grafana.com/docs/loki/latest/clients/promtail/configuration/
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SERVER
+# ---------------------------------------------------------------------------
+
+server:
+  # Promtail's own HTTP server — exposes /metrics (Prometheus) and /targets (debug UI).
+  # Default: 9080  |  Change when: port conflict on the host.
+  http_listen_port: 9080
+  grpc_listen_port: 0  # Disable gRPC listener (Promtail doesn't use gRPC internally).
+
+# ---------------------------------------------------------------------------
+# POSITIONS
+# ---------------------------------------------------------------------------
+
+# Promtail writes file read offsets here so it resumes from the right position
+# after a restart. If this file is lost, Promtail re-reads files from the beginning
+# (causing duplicate ingestion) or from the end (losing logs between restart and resume).
+# Default: /tmp/positions.yaml  |  Change when: /tmp is cleared on reboot (common on Linux).
+positions:
+  filename: /var/lib/promtail/positions.yaml
+
+# ---------------------------------------------------------------------------
+# CLIENTS
+# ---------------------------------------------------------------------------
+
+# One or more Loki endpoints to push logs to. Multiple entries for fan-out replication
+# (unusual; typically one entry pointing to your Loki instance or load balancer).
+clients:
+  - # Loki push API URL. Must include /loki/api/v1/push.
+    # Default: required  |  Change when: Loki is on a different host or port.
+    url: http://localhost:3100/loki/api/v1/push
+
+    # Tenant ID. Only meaningful when Loki auth_enabled: true.
+    # Default: "fake" (Loki's single-tenant mode placeholder)
+    # Change when: sending to a multi-tenant Loki — set to the tenant's OrgID.
+    # tenant_id: myteam
+
+    # How long to wait for Loki to acknowledge a push before retrying.
+    # Default: 10s  |  Change when: high-latency network path to Loki.
+    timeout: 10s
+
+    # Back-off and retry configuration for failed push attempts.
+    backoff_config:
+      min_period: 500ms
+      max_period: 5m
+      max_retries: 10
+
+# ---------------------------------------------------------------------------
+# SCRAPE CONFIGS
+# ---------------------------------------------------------------------------
+
+scrape_configs:
+
+  # -------------------------------------------------------------------------
+  # Example 1: Static file path with labels
+  # -------------------------------------------------------------------------
+  - job_name: myapp
+
+    static_configs:
+      - # List of file globs to tail. Promtail watches these paths with inotify.
+        # Default: required  |  Change when: log file location changes.
+        targets:
+          - localhost  # Placeholder — required by static_configs syntax; not a network target.
+        labels:
+          # Stream labels attached to every log line from this scrape config.
+          # Keep label count low and cardinality low. These become the Loki index.
+          job: myapp
+          env: production
+          host: __hostname__  # Special: resolved to the hostname at runtime.
+
+          # __path__ is a special label consumed by Promtail — it is not sent to Loki.
+          # It specifies which file(s) to tail.
+          __path__: /var/log/myapp/*.log
+
+    # Pipeline stages transform each log line before sending to Loki.
+    # Stages run in order: each stage receives the output of the previous stage.
+    pipeline_stages:
+
+      # regex: extract named capture groups from the raw log line.
+      # Named captures become temporary extracted values usable in later stages.
+      # Default: not set  |  Change when: parsing structured text logs with a fixed format.
+      - regex:
+          expression: '^(?P<timestamp>\S+) (?P<level>\w+) (?P<message>.+)$'
+
+      # timestamp: parse an extracted value as the log's official timestamp.
+      # Without this, Promtail uses the time the line was tailed (wall clock), not
+      # the time in the log — causing "entry out of order" on replay.
+      # Default: not set  |  Change when: log lines contain their own timestamp.
+      - timestamp:
+          source: timestamp
+          format: "2006-01-02T15:04:05.000Z"  # Go reference time format.
+
+      # labels: promote extracted values to stream labels.
+      # WARNING: only promote low-cardinality values (level, status_code) —
+      # never IP addresses, user IDs, or request IDs.
+      - labels:
+          level:  # Promote the "level" capture from the regex stage.
+
+      # output: replace the log line sent to Loki with an extracted value.
+      # Useful when the raw line includes a timestamp prefix you've already extracted.
+      # Default: not set (sends raw line)  |  Change when: line has redundant prefix after parsing.
+      # - output:
+      #     source: message
+
+  # -------------------------------------------------------------------------
+  # Example 2: systemd journal
+  # -------------------------------------------------------------------------
+  - job_name: journal
+
+    journal:
+      # Read the systemd journal from this path. Default path varies by distro.
+      # Default: /var/log/journal  |  Change when: journal is stored at a non-standard path.
+      path: /var/log/journal
+      # Maximum journal entries to load on startup (prevents replaying the entire journal).
+      # Default: unlimited (all entries since last positions save)  |  Change when: catching up is too slow.
+      max_age: 12h
+      # Label journal fields as stream labels. __journal_<field_name> maps to label <field_name>.
+      labels:
+        job: journal
+        host: __hostname__
+
+    pipeline_stages:
+      # journal messages arrive as the MESSAGE field; set it as the log output.
+      - output:
+          source: message
+
+  # -------------------------------------------------------------------------
+  # Example 3: Docker container logs (via file path)
+  # -------------------------------------------------------------------------
+  - job_name: docker
+
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+    pipeline_stages:
+      # Docker logs are JSON objects: {"log":"...\n","stream":"stdout","time":"..."}
+      - json:
+          # Extract fields from the JSON log line into the pipeline context.
+          # expressions maps extracted_key: json_key_path.
+          expressions:
+            output: log
+            stream: stream
+            timestamp: time
+
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+      # Optionally label by stream type (stdout vs stderr).
+      - labels:
+          stream:
+
+      - output:
+          source: output
