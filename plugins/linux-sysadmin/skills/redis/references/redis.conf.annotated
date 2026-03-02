@@ -1,0 +1,308 @@
+# Annotated redis.conf
+# Each directive includes: what it does, default value, recommended value,
+# and when to change it. Directive order follows the standard redis.conf layout.
+#
+# After editing redis.conf, restart the service for most changes:
+#   sudo systemctl restart redis-server
+# Runtime-safe changes can be applied without restart:
+#   redis-cli CONFIG SET <directive> <value>
+#   redis-cli CONFIG REWRITE   # persist runtime changes back to this file
+
+# ---------------------------------------------------------------------------
+# NETWORK
+# ---------------------------------------------------------------------------
+
+# Interfaces Redis listens on. Accepts multiple space-separated addresses.
+# Default: 127.0.0.1 -::1  |  Recommended: 127.0.0.1 (never 0.0.0.0 unless
+#   you have firewall rules or requirepass set and know what you're doing)
+# Change when: another host on the network needs direct access (Sentinel,
+#   cross-host replication). Prefer VPN or SSH tunnel over direct exposure.
+bind 127.0.0.1
+
+# TCP port Redis listens on. 0 disables TCP entirely (use unixsocket only).
+# Default: 6379  |  Recommended: 6379 (change only to avoid conflicts or for
+#   security-through-obscurity in multi-instance setups)
+port 6379
+
+# Reject connections from interfaces not listed in bind when enabled.
+# Default: yes  |  Recommended: yes — keep enabled unless bind is exhaustive
+# Change when: you bind 0.0.0.0 and want to allow all IPs without protected-mode warnings.
+protected-mode yes
+
+# Maximum number of simultaneous client connections.
+# Default: 10000  |  Recommended: 10000; raise for high-concurrency apps
+# Change when: redis-cli INFO clients shows blocked_clients climbing or
+#   you see "max number of clients reached" errors in logs.
+maxclients 10000
+
+# TCP backlog queue size. Pending connection queue between OS accept() calls.
+# Default: 511  |  Recommended: 511; match /proc/sys/net/core/somaxconn if raising
+# Change when: short bursts of new connections are being dropped. Also:
+#   sysctl -w net.core.somaxconn=<value> and net.ipv4.tcp_max_syn_backlog=<value>
+tcp-backlog 511
+
+# UNIX domain socket path. Faster than TCP for local connections; no network stack.
+# Default: not set (TCP only)  |  Recommended: enable for apps on the same host
+# Change when: you want lower-latency local connections. Disable TCP (port 0)
+#   if only local access is needed.
+# unixsocket /run/redis/redis-server.sock
+# unixsocketperm 770
+
+# How often to send TCP keepalive probes to detect dead clients (seconds).
+# Default: 300  |  Recommended: 300
+# Change when: you have many long-idle connections from clients behind NAT
+#   firewalls that silently drop idle connections.
+tcp-keepalive 300
+
+# ---------------------------------------------------------------------------
+# AUTHENTICATION AND ACL
+# ---------------------------------------------------------------------------
+
+# Password required for all clients (sets the default user's password).
+# Default: not set (no auth)  |  Recommended: always set in production
+# Change when: you set up Redis. For multi-user setups, use aclfile instead.
+# requirepass your-strong-password-here
+
+# Path to ACL rules file (Redis 6+). Replaces or supplements requirepass.
+# Default: not set  |  Recommended: use for production multi-user or restricted access
+# Change when: you need per-user command restrictions or multiple credentials.
+# Format: one rule per line, e.g.:
+#   user default off nopass nocommands
+#   user appuser on >password ~app:* +@read +@write +DEL
+# aclfile /etc/redis/users.acl
+
+# ---------------------------------------------------------------------------
+# GENERAL
+# ---------------------------------------------------------------------------
+
+# Run Redis as a background daemon (writes PID to pidfile).
+# Default: no  |  Recommended: no when managed by systemd (systemd handles daemonization)
+# Change when: running Redis outside systemd (e.g., manual init script).
+daemonize no
+
+# Log verbosity level: debug, verbose, notice, warning.
+# Default: notice  |  Recommended: notice (warning in high-volume production)
+# Change when: debugging connection issues (verbose) or reducing log noise (warning).
+loglevel notice
+
+# Log file path. Empty string logs to stdout (systemd captures this to journald).
+# Default: "" (stdout)  |  Recommended: "" for systemd-managed instances
+# Change when: you need persistent log files outside of journald, or are running
+#   daemonized without systemd.
+logfile ""
+
+# Number of logical databases (0–N-1). SELECT <n> switches databases.
+# Default: 16  |  Recommended: 16; reduce to 1 if you use only DB 0 for clarity
+# Change when: you rely on multiple databases for namespace separation. Note:
+#   Redis Cluster only supports DB 0 — avoid multi-db patterns if cluster migration
+#   is ever anticipated.
+databases 16
+
+# ---------------------------------------------------------------------------
+# SNAPSHOTS (RDB PERSISTENCE)
+# ---------------------------------------------------------------------------
+
+# Automatic save schedule: "save <seconds> <changes>" — save if at least
+# <changes> keys changed in the last <seconds> seconds.
+# Default: save 3600 1 / save 300 100 / save 60 10000
+# Recommended: keep defaults for mixed use; comment out all save lines to
+#   disable RDB entirely for pure cache deployments (use AOF or no persistence).
+# Change when: you want less frequent snapshots (reduce disk I/O) or more
+#   frequent ones (reduce data loss window for RDB-only setups).
+save 3600 1
+save 300 100
+save 60 10000
+
+# Whether to stop accepting writes if the last BGSAVE failed.
+# Default: yes  |  Recommended: yes — surfaces disk problems immediately
+# Change when: you prefer Redis to keep serving reads even when persistence
+#   is broken (set no, but monitor logs actively).
+stop-writes-on-bgsave-error yes
+
+# Compress RDB files using LZF compression.
+# Default: yes  |  Recommended: yes (saves 20-40% disk space at minimal CPU cost)
+# Change when: CPU is a bottleneck and disk is cheap.
+rdbcompression yes
+
+# Add a CRC64 checksum to the end of RDB files for corruption detection.
+# Default: yes  |  Recommended: yes
+# Change when: maximum RDB save/load speed is needed (checksum adds ~10% overhead).
+rdbchecksum yes
+
+# RDB snapshot filename.
+# Default: dump.rdb  |  Recommended: dump.rdb (change only for multi-instance setups)
+dbfilename dump.rdb
+
+# Working directory for RDB and AOF files. Redis writes files relative to this path.
+# Default: ./  |  Recommended: /var/lib/redis
+# Change when: you want snapshots in a specific location (e.g., a dedicated volume).
+dir /var/lib/redis
+
+# ---------------------------------------------------------------------------
+# AOF (APPEND-ONLY FILE) PERSISTENCE
+# ---------------------------------------------------------------------------
+
+# Enable AOF persistence. Every write command is appended to the AOF log.
+# Default: no  |  Recommended: yes for data you can't afford to lose
+# Change when: you're using Redis as a database (not just cache). For pure cache
+#   use cases, disable AOF and disable RDB saves to minimize I/O.
+appendonly no
+
+# AOF filename.
+# Default: appendonly.aof  |  Recommended: appendonly.aof
+appendfilename "appendonly.aof"
+
+# AOF fsync strategy: always, everysec, no.
+#   always  — fsync after every write. Safest; highest disk I/O.
+#   everysec — fsync once per second. Risk: up to 1 second of data loss.
+#   no      — let OS decide when to fsync. Fastest; highest data loss risk.
+# Default: everysec  |  Recommended: everysec (best balance of safety and performance)
+# Change when: you need zero data loss (always) or maximum throughput (no).
+appendfsync everysec
+
+# Disable fsync during AOF rewrite to avoid blocking the main thread.
+# Default: no  |  Recommended: yes for write-heavy workloads
+# Change when: you observe latency spikes during AOF rewrite on heavily loaded servers.
+no-appendfsync-on-rewrite no
+
+# Trigger AOF rewrite when AOF file grows by this percentage over its last rewrite size.
+# Default: 100  |  Recommended: 100 (double the last rewrite size)
+# Change when: AOF file grows too large before rewrite (lower %) or you want
+#   less frequent rewrites (raise %).
+auto-aof-rewrite-percentage 100
+
+# Minimum AOF file size before auto-rewrite is triggered.
+# Default: 64mb  |  Recommended: 64mb; raise for large datasets
+# Change when: small datasets trigger rewrites too frequently.
+auto-aof-rewrite-min-size 64mb
+
+# ---------------------------------------------------------------------------
+# MEMORY MANAGEMENT
+# ---------------------------------------------------------------------------
+
+# Maximum memory Redis will use. 0 means no limit (uses all available RAM).
+# Default: 0 (no limit)  |  Recommended: always set in production — leave
+#   20-30% headroom for fork overhead during BGSAVE/AOF rewrite.
+# Format: 512mb, 2gb, etc.
+# Change when: initial setup. This is the single most important production setting.
+# maxmemory 512mb
+
+# Policy for evicting keys when maxmemory is reached:
+#   noeviction     — return errors on writes. Safe for databases; bad for caches.
+#   allkeys-lru    — evict any key by LRU. Best for pure cache deployments.
+#   volatile-lru   — evict only keys with TTL set, by LRU. For mixed cache+db.
+#   allkeys-lfu    — evict any key by LFU (least frequently used). Better for
+#                    non-uniform access patterns than LRU.
+#   volatile-lfu   — evict TTL keys by LFU.
+#   allkeys-random — random eviction of any key. Rarely the right choice.
+#   volatile-random — random eviction of TTL keys.
+#   volatile-ttl   — evict the key with the shortest TTL first.
+# Default: noeviction  |  Recommended: allkeys-lru for cache; noeviction for database
+# Change when: setting up Redis for a specific use case.
+# maxmemory-policy noeviction
+
+# Number of keys sampled per eviction candidate evaluation.
+# Default: 5  |  Recommended: 10 (closer to true LRU at slight CPU cost)
+# Change when: eviction quality matters more than CPU overhead.
+maxmemory-samples 5
+
+# ---------------------------------------------------------------------------
+# LAZY FREEING (ASYNC KEY DELETION)
+# ---------------------------------------------------------------------------
+
+# Free memory asynchronously in a background thread instead of blocking the
+# main thread. Critical for large keys (multi-MB strings, large hashes/sets).
+# Default: no for all  |  Recommended: yes for all for production deployments
+# Change when: you observe latency spikes on DEL of large keys or on eviction.
+lazyfree-lazy-eviction no
+lazyfree-lazy-expire no
+lazyfree-lazy-server-del no
+replica-lazy-flush no
+
+# ---------------------------------------------------------------------------
+# SLOW LOG
+# ---------------------------------------------------------------------------
+
+# Log commands that take longer than this many microseconds. 0 logs everything;
+# -1 disables slow logging.
+# Default: 10000 (10ms)  |  Recommended: 1000 (1ms) for latency-sensitive apps
+# Change when: you want to catch moderately slow commands (lower threshold) or
+#   reduce slow log noise (raise threshold).
+slowlog-log-slower-than 10000
+
+# Maximum entries to keep in the slow log. Older entries are discarded when full.
+# Default: 128  |  Recommended: 256
+# Change when: investigating a high volume of slow commands that exceed the limit.
+slowlog-max-len 128
+
+# ---------------------------------------------------------------------------
+# LATENCY MONITORING
+# ---------------------------------------------------------------------------
+
+# Enable latency monitoring for events exceeding this threshold (milliseconds).
+# 0 disables latency monitoring.
+# Default: 0  |  Recommended: 100 for production (catch latency spikes > 100ms)
+# Change when: diagnosing intermittent latency spikes.
+# Access results: redis-cli LATENCY LATEST / LATENCY HISTORY <event>
+latency-monitor-threshold 0
+
+# ---------------------------------------------------------------------------
+# REPLICATION
+# ---------------------------------------------------------------------------
+
+# Make this instance a replica of another Redis server.
+# Default: not set (standalone master)  |  Recommended: set only on replica instances
+# Format: replicaof <masterip> <masterport>
+# Change when: setting up master-replica replication.
+# replicaof 192.168.1.10 6379
+
+# Password for authenticating with the master (must match master's requirepass).
+# Default: not set  |  Recommended: required when master has requirepass set
+# Change when: master uses authentication.
+# masterauth your-master-password
+
+# Whether replicas serve read-only requests. Writes to a replica are discarded
+# at the next sync — never write to replicas in production.
+# Default: yes  |  Recommended: yes
+# Change when: you intentionally need to write to replicas (uncommon, risky).
+replica-read-only yes
+
+# Number of seconds replica waits before considering itself disconnected from master.
+# During this window, the replica can serve slightly stale data.
+# Default: 10  |  Recommended: 10
+# Change when: network latency between master and replica is high.
+repl-timeout 60
+
+# Whether replicas announce their IP and port to the master for INFO replication.
+# Default: not set  |  Recommended: set when replica is behind NAT or in containers
+# replica-announce-ip 1.2.3.4
+# replica-announce-port 6379
+
+# ---------------------------------------------------------------------------
+# REDIS CLUSTER
+# ---------------------------------------------------------------------------
+
+# Enable cluster mode. Requires at least 3 masters (6 nodes for HA with replicas).
+# Default: no  |  Recommended: no unless you need horizontal sharding
+# Change when: dataset exceeds single-instance capacity or you need horizontal scale.
+# cluster-enabled no
+
+# Cluster node configuration file (auto-managed by Redis; do not edit manually).
+# Default: nodes.conf  |  Recommended: cluster-<port>.conf for multi-instance hosts
+# cluster-config-file nodes.conf
+
+# Time (ms) a node can be unavailable before considered failing.
+# Default: 15000  |  Recommended: 15000
+# cluster-node-timeout 15000
+
+# ---------------------------------------------------------------------------
+# ADVANCED CONFIG
+# ---------------------------------------------------------------------------
+
+# Number of databases to hash-slot-map for expires. Reducing saves memory.
+# Default: 16  |  Recommended: match 'databases' setting
+# hz 10  # Background task frequency (Hz); raise to 100 for faster expiry precision
+
+# Adaptive hz: automatically scale hz based on number of connected clients.
+# Default: yes  |  Recommended: yes
+aof-use-rdb-preamble yes
