@@ -6,6 +6,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.2] - 2026-03-02
+
+### Changed
+- fix structural README issues and docs path
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- strengthen triggers and extract long content to references
+- Enhance documentation and structure for multiple plugins
+
+### Fixed
+- remove em dashes from all READMEs; add hygiene check
+- replace \n with <br/> in mermaid node labels across all plugin READMEs
+
+
 ## [0.3.1] - 2026-02-20
 
 ### Changed
