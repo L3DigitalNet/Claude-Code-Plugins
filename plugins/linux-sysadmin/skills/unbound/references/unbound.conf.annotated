@@ -1,0 +1,364 @@
+# unbound.conf — Annotated Reference
+#
+# Format: directive with type, default, and recommended values.
+# "Production" values are suitable for a home/small-office recursive resolver.
+# "Pi-hole stack" values are specific to the Pi-hole + unbound integration
+# where unbound listens on 127.0.0.1:5335 and Pi-hole forwards to it.
+#
+# Official man page: https://www.nlnetlabs.nl/documentation/unbound/unbound.conf/
+
+# =============================================================================
+# server: Main configuration section
+# =============================================================================
+server:
+
+    # verbosity: Logging verbosity level.
+    # 0=errors only, 1=operational info, 2=detailed query info, 3+=debug
+    # Default: 1  |  Production: 1  |  Debugging: 2-3
+    verbosity: 1
+
+    # num-threads: Number of threads to create for handling queries.
+    # Set to the number of CPU cores. Each thread has its own cache slice.
+    # Default: 1  |  Production: match CPU core count (e.g. 4)
+    num-threads: 1
+
+    # interface: IP address to listen on. Repeat for multiple addresses.
+    # Default: 127.0.0.1 (localhost only)
+    # Network-wide: 0.0.0.0 (all IPv4 interfaces)
+    # Pi-hole stack: 127.0.0.1 (Pi-hole calls unbound; clients never reach unbound directly)
+    interface: 127.0.0.1
+
+    # port: UDP/TCP port to listen on.
+    # Default: 53  |  Pi-hole stack: 5335
+    port: 53
+
+    # do-ip4: Enable or disable IPv4 transport.
+    # Default: yes
+    do-ip4: yes
+
+    # do-ip6: Enable or disable IPv6 transport.
+    # Set to no if the host has no IPv6 connectivity to avoid timeouts querying
+    # AAAA records at root servers over IPv6 when it is not reachable.
+    # Default: yes  |  Production (no IPv6): no
+    do-ip6: yes
+
+    # do-udp: Enable or disable UDP.
+    # Default: yes
+    do-udp: yes
+
+    # do-tcp: Enable or disable TCP. Required for large responses (DNSSEC, >512B).
+    # Default: yes
+    do-tcp: yes
+
+    # access-control: Who may query this resolver.
+    # Default allows only localhost. Add subnets for network-wide use.
+    # Syntax: access-control: <subnet> <action>
+    # Actions: allow, allow_snoop, deny, refuse
+    # Default: 127.0.0.0/8 allow (implicit)
+    access-control: 127.0.0.0/8 allow
+    # Uncomment for LAN access:
+    # access-control: 192.168.1.0/24 allow
+    # access-control: 0.0.0.0/0 refuse  # explicit default deny for everything else
+
+    # root-hints: Path to the root hints file listing the root DNS servers.
+    # Download latest: curl -o /var/lib/unbound/root.hints https://www.internic.net/domain/named.cache
+    # Unbound ships with compiled-in root servers but using a file keeps them current.
+    # Default: (compiled-in list)  |  Production: explicit file path
+    root-hints: /var/lib/unbound/root.hints
+
+    # hide-identity: Refuse id.server and hostname.bind queries (hides server identity).
+    # Default: no  |  Production: yes
+    hide-identity: yes
+
+    # hide-version: Refuse version.server and version.bind queries (hides software version).
+    # Default: no  |  Production: yes
+    hide-version: yes
+
+    # harden-glue: Only trust glue if it is within the servers authority.
+    # Protects against cache poisoning via out-of-bailiwick glue records.
+    # Default: yes
+    harden-glue: yes
+
+    # harden-dnssec-stripped: Require DNSSEC data for trust-anchored zones.
+    # If a trusted zone strips DNSSEC records, treat it as a BOGUS response.
+    # Default: yes
+    harden-dnssec-stripped: yes
+
+    # harden-referral-path: Perform additional validation on referral path.
+    # Sends queries to validate NS records returned in referrals.
+    # Default: no  |  Production: yes (adds latency but improves security)
+    harden-referral-path: no
+
+    # use-caps-for-id: Use 0x20 randomization (mixed-case query names) to
+    # make cache poisoning harder. Some authoritative servers may fail with this.
+    # Default: no  |  Production: yes
+    use-caps-for-id: yes
+
+    # edns-buffer-size: EDNS reassembly buffer size (bytes) advertised to peers.
+    # 1232 is the recommended value (avoids fragmentation on most networks).
+    # Default: 4096  |  Production: 1232
+    edns-buffer-size: 1232
+
+    # prefetch: If yes, fetch expiring cache entries before TTL hits zero.
+    # Keeps frequently-queried records warm. Small CPU cost.
+    # Default: no  |  Production: yes
+    prefetch: yes
+
+    # prefetch-key: Prefetch DNSKEY and DS records before they expire.
+    # Reduces DNSSEC validation latency for prefetched records.
+    # Default: no  |  Production: yes (requires prefetch: yes)
+    prefetch-key: yes
+
+    # num-queries-per-thread: Maximum queries in flight per thread.
+    # Default: 512  |  High-traffic: 1024+
+    num-queries-per-thread: 512
+
+    # rrset-roundrobin: Rotate RRset order in replies for load distribution.
+    # Default: yes
+    rrset-roundrobin: yes
+
+    # msg-cache-size: Memory for message cache (stores full DNS responses).
+    # rrset-cache-size should be 2× msg-cache-size.
+    # Default: 4m  |  Home network: 32m  |  Server: 128m+
+    msg-cache-size: 4m
+
+    # rrset-cache-size: Memory for RRset cache (stores individual resource record sets).
+    # Default: 4m  |  Home network: 64m  |  Server: 256m+
+    rrset-cache-size: 4m
+
+    # cache-min-ttl: Minimum TTL applied to cached records (seconds).
+    # Prevents short-TTL records from flooding the resolver with queries.
+    # Default: 0  |  Production: 300
+    cache-min-ttl: 0
+
+    # cache-max-ttl: Maximum TTL applied to cached records (seconds).
+    # Default: 86400 (24h)
+    cache-max-ttl: 86400
+
+    # cache-max-negative-ttl: Maximum TTL for NXDOMAIN/NODATA negative responses.
+    # Default: 3600 (1h)
+    cache-max-negative-ttl: 3600
+
+    # unwanted-reply-threshold: Log and discard if this many unwanted replies received.
+    # Detects and defends against certain amplification/spoofing patterns.
+    # Default: 0 (disabled)  |  Production: 10000000
+    unwanted-reply-threshold: 10000000
+
+    # do-not-query-localhost: Disallow queries to loopback addresses.
+    # Set to no ONLY when forwarding to a local service (e.g. a local authoritative
+    # server on loopback). In a pure recursive setup, leave as yes.
+    # Default: yes
+    do-not-query-localhost: yes
+
+    # val-clean-additional: Remove additional section data that fails validation.
+    # Default: yes
+    val-clean-additional: yes
+
+    # use-syslog: Log to syslog instead of a file.
+    # Default: yes
+    use-syslog: yes
+
+    # logfile: Path to log file. Only used when use-syslog is no.
+    # Default: "" (stderr)
+    # logfile: /var/log/unbound/unbound.log
+
+    # log-queries: Log all incoming queries (verbose; disable in production).
+    # Default: no  |  Debugging: yes
+    log-queries: no
+
+    # log-replies: Log all outgoing replies (verbose; disable in production).
+    # Default: no  |  Debugging: yes
+    log-replies: no
+
+    # log-tag-queryreply: Tag log lines with "query:" and "reply:" prefixes
+    # when log-queries/log-replies are enabled.
+    # Default: no
+    log-tag-queryreply: no
+
+    # log-local-actions: Log local zone actions (blocked/redirected queries).
+    # Default: no  |  Useful for auditing blocklists
+    log-local-actions: no
+
+    # chroot: Change root directory for the unbound process.
+    # Requires config and data files to be inside the chroot path.
+    # Default: "" (no chroot)  |  Debian/Ubuntu default: /etc/unbound
+    chroot: ""
+
+    # username: Drop privileges to this user after binding to port 53.
+    # Default: "unbound"
+    username: "unbound"
+
+    # directory: Working directory for the unbound process.
+    # Default: /etc/unbound
+    directory: "/etc/unbound"
+
+    # pidfile: Path to write the PID file.
+    # Default: /run/unbound.pid
+    pidfile: "/run/unbound.pid"
+
+    # auto-trust-anchor-file: Path to the root trust anchor file for DNSSEC.
+    # Managed automatically via RFC 5011 key rollover tracking.
+    # Created/updated by: unbound-anchor (usually run by the init script or timer).
+    # Default: "" (disabled)  |  Production: /var/lib/unbound/root.key
+    auto-trust-anchor-file: "/var/lib/unbound/root.key"
+
+    # trust-anchor-file: Static trust anchor file (alternative to auto-trust-anchor-file).
+    # Use auto-trust-anchor-file instead unless you need a static anchor.
+    # Default: ""
+    # trust-anchor-file: /etc/unbound/root.key
+
+    # domain-insecure: Declare a domain as insecure (bypass DNSSEC for it).
+    # Use when a domain has broken DNSSEC and you cannot wait for the owner to fix it.
+    # domain-insecure: "example.com"
+
+    # private-address: Prevent the resolver from returning these addresses
+    # from public DNS zones (rebinding protection).
+    private-address: 10.0.0.0/8
+    private-address: 172.16.0.0/12
+    private-address: 192.168.0.0/16
+    private-address: 169.254.0.0/16
+    private-address: fd00::/8
+    private-address: fe80::/10
+
+    # private-domain: Allow returning private addresses for this domain.
+    # Use when you have internal domains that legitimately resolve to RFC-1918 space.
+    # private-domain: "home.example.com"
+
+
+# =============================================================================
+# remote-control: Enable unbound-control management interface
+# =============================================================================
+remote-control:
+    # control-enable: Allow unbound-control to connect.
+    # Run `sudo unbound-control-setup` to generate keys before enabling.
+    # Default: no
+    control-enable: yes
+
+    # control-interface: Socket for unbound-control.
+    # Default: 127.0.0.1  |  Unix socket: /run/unbound.ctl
+    control-interface: 127.0.0.1
+
+    # control-port: Port for the control interface (TCP).
+    # Default: 8953
+    control-port: 8953
+
+    # server-key-file / server-cert-file: TLS key and cert for the daemon side.
+    # Generated by unbound-control-setup.
+    server-key-file: "/etc/unbound/unbound_server.key"
+    server-cert-file: "/etc/unbound/unbound_server.pem"
+
+    # control-key-file / control-cert-file: TLS key and cert for unbound-control.
+    control-key-file: "/etc/unbound/unbound_control.key"
+    control-cert-file: "/etc/unbound/unbound_control.pem"
+
+
+# =============================================================================
+# forward-zone: Forward queries to upstream resolvers instead of resolving
+# recursively. Mutually exclusive with recursive resolution for the same zones.
+# Remove or comment out this section for a pure recursive resolver.
+# =============================================================================
+# forward-zone:
+#     name: "."                  # "." means all zones not handled elsewhere
+#     forward-addr: 1.1.1.1      # Cloudflare
+#     forward-addr: 1.0.0.1      # Cloudflare secondary
+#     forward-tls-upstream: no   # Set to yes for DNS-over-TLS forwarding
+
+
+# =============================================================================
+# stub-zone: Send queries for a specific zone directly to its authoritative
+# servers, bypassing normal resolution or forwarding. Used for split-horizon
+# DNS where an internal zone has different answers inside vs outside the LAN.
+# =============================================================================
+# stub-zone:
+#     name: "internal.example.com"
+#     stub-addr: 192.168.1.1     # Internal authoritative server
+#     stub-prime: no             # yes to prime (find NS records) before querying
+
+
+# =============================================================================
+# local-zone and local-data: Custom DNS entries and blocking
+#
+# local-zone types:
+#   static      — Return NXDOMAIN for any name not explicitly defined
+#   redirect    — Return the same local-data record for all names in the zone
+#   transparent — Answer locally if data exists; recurse upstream otherwise
+#   typetransparent — Like transparent but per record type
+#   deny        — Drop queries (no response)
+#   refuse      — Return REFUSED
+#   nodefault   — Remove default content (e.g. reverse zones) without a replacement
+#   inform      — Answer normally but log the query
+#   inform_deny — Drop and log
+# =============================================================================
+
+# Block a domain (return NXDOMAIN for all names under ads.example.com):
+# local-zone: "ads.example.com" static
+
+# Redirect a domain to a different IP (e.g. sinkhole):
+# local-zone: "tracker.example.com" redirect
+# local-data: "tracker.example.com A 0.0.0.0"
+
+# Internal host record (transparent so upstream resolves everything else):
+# local-zone: "home.lan" transparent
+# local-data: "router.home.lan A 192.168.1.1"
+# local-data: "nas.home.lan A 192.168.1.100"
+# local-data-ptr: "192.168.1.1 router.home.lan"    # Reverse PTR record
+
+
+# =============================================================================
+# Pi-hole + Unbound Integration
+#
+# In this stack:
+#   - Pi-hole listens on :53 and handles ad blocking / local DNS
+#   - Unbound listens on 127.0.0.1:5335 and handles recursive resolution
+#   - Pi-hole is configured to forward unblocked queries to 127.0.0.1#5335
+#
+# Pi-hole settings (set in Pi-hole admin UI or /etc/pihole/dnsmasq.d/):
+#   Custom upstream DNS server: 127.0.0.1#5335
+#   Disable "Use Conditional Forwarding" for cleaner recursive path
+#
+# This config goes in: /etc/unbound/unbound.conf.d/pi-hole.conf
+# =============================================================================
+# server:
+#     verbosity: 1
+#
+#     # Listen only on loopback — Pi-hole reaches us; clients never contact us directly
+#     interface: 127.0.0.1
+#     port: 5335
+#
+#     do-ip4: yes
+#     do-ip6: yes
+#     do-udp: yes
+#     do-tcp: yes
+#
+#     # Only Pi-hole on localhost queries us
+#     access-control: 127.0.0.1/32 allow
+#
+#     root-hints: /var/lib/unbound/root.hints
+#
+#     # Security hardening
+#     hide-identity: yes
+#     hide-version: yes
+#     harden-glue: yes
+#     harden-dnssec-stripped: yes
+#     use-caps-for-id: yes
+#     edns-buffer-size: 1232
+#
+#     # Performance
+#     prefetch: yes
+#     prefetch-key: yes
+#
+#     # Cache — generous for Pi-hole stack; Pi-hole has its own cache on top
+#     msg-cache-size: 32m
+#     rrset-cache-size: 64m
+#     cache-min-ttl: 300
+#
+#     # Rebinding protection
+#     private-address: 10.0.0.0/8
+#     private-address: 172.16.0.0/12
+#     private-address: 192.168.0.0/16
+#     private-address: 169.254.0.0/16
+#
+#     # DNSSEC — auto-managed trust anchor
+#     auto-trust-anchor-file: "/var/lib/unbound/root.key"
+#
+#     unwanted-reply-threshold: 10000000

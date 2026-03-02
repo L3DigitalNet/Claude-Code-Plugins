@@ -1,0 +1,352 @@
+# Annotated nginx.conf
+# Each directive includes: what it does, default value, recommended production value,
+# and when to change it. Directive order follows the standard nginx.conf layout.
+#
+# nginx config has three context levels:
+#   main   — top-level, outside any block
+#   events — connection processing config
+#   http   — HTTP server config (contains server{} and upstream{} blocks)
+
+# ---------------------------------------------------------------------------
+# MAIN CONTEXT
+# ---------------------------------------------------------------------------
+
+# Number of worker processes. Each handles connections independently.
+# Default: 1  |  Recommended: auto  |  Change when: you want manual control
+#   over CPU affinity (rare). "auto" detects available CPU cores.
+worker_processes auto;
+
+# Maximum number of open file descriptors per worker process.
+# Default: OS default (often 1024)  |  Recommended: 65535
+# Change when: high-traffic sites hit "too many open files" errors.
+# Must also raise system ulimits: /etc/security/limits.conf or systemd LimitNOFILE.
+worker_rlimit_nofile 65535;
+
+# Where to write error log. Level options: debug, info, notice, warn, error, crit.
+# Default: logs/error.log error  |  Recommended: /var/log/nginx/error.log warn
+# Change when: debugging (use debug or info), or you want a custom path.
+error_log /var/log/nginx/error.log warn;
+
+# PID file location. nginx writes its master process PID here.
+# Default: logs/nginx.pid  |  Recommended: /run/nginx.pid (follows FHS)
+# Change when: init scripts or systemd unit point to a specific path.
+pid /run/nginx.pid;
+
+# Load dynamic modules compiled into nginx. Present in package installs.
+# Default: not present  |  Recommended: include as needed
+# Change when: you need stream, mail, or other optional module support.
+include /usr/share/nginx/modules/*.conf;
+
+# ---------------------------------------------------------------------------
+# EVENTS CONTEXT
+# ---------------------------------------------------------------------------
+
+events {
+
+    # Maximum simultaneous connections per worker.
+    # Actual max clients = worker_processes × worker_connections.
+    # Default: 512  |  Recommended: 1024–4096 for typical servers; up to 65535 for
+    #   high-traffic proxies  |  Change when: you increase worker_rlimit_nofile.
+    worker_connections 1024;
+
+    # Which I/O event model to use.
+    # Default: OS-dependent  |  Recommended: epoll (Linux)
+    # Change when: running on BSD (use kqueue). On Linux, always prefer epoll.
+    use epoll;
+
+    # Accept multiple connections per event loop iteration.
+    # Default: off  |  Recommended: on for high-traffic servers
+    # Change when: you observe worker idle time under load (use nginx status module).
+    multi_accept on;
+
+}
+
+# ---------------------------------------------------------------------------
+# HTTP CONTEXT
+# ---------------------------------------------------------------------------
+
+http {
+
+    # -----------------------------------------------------------------------
+    # MIME types
+    # -----------------------------------------------------------------------
+
+    # Maps file extensions to Content-Type headers.
+    # Default: text/plain for unknown types  |  Recommended: always include
+    # Change when: you have custom file types that need specific MIME mappings.
+    include /etc/nginx/mime.types;
+
+    # Fallback MIME type for unrecognized extensions.
+    # Default: text/plain  |  Recommended: application/octet-stream
+    #   (forces download rather than rendering unknown content in browser)
+    # Change when: you specifically want to render unknown content as text.
+    default_type application/octet-stream;
+
+    # Hash table size for MIME types mapping. Increase if nginx warns about it.
+    # Default: 1024  |  Recommended: 2048
+    # Change when: nginx startup emits "could not build the types_hash" warning.
+    types_hash_max_size 2048;
+
+    # -----------------------------------------------------------------------
+    # Logging
+    # -----------------------------------------------------------------------
+
+    # Defines a named log format. $remote_addr is the client IP (or CDN/proxy IP).
+    # Use $http_x_forwarded_for to log the original IP behind a proxy.
+    # Default: the built-in "combined" format  |  Recommended: custom format with
+    #   request time and upstream info for debugging
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for" '
+                    'rt=$request_time uct=$upstream_connect_time '
+                    'uht=$upstream_header_time urt=$upstream_response_time';
+
+    # Access log path and format name. "off" disables it for performance.
+    # Default: logs/access.log combined  |  Recommended: /var/log/nginx/access.log main
+    # Change when: high-volume sites can benefit from disabling access logging for
+    #   static assets (set "access_log off" inside a specific location block).
+    access_log /var/log/nginx/access.log main;
+
+    # -----------------------------------------------------------------------
+    # Performance: file serving
+    # -----------------------------------------------------------------------
+
+    # Enable sendfile(2) syscall for file serving. Bypasses userspace copy.
+    # Default: off  |  Recommended: on
+    # Change when: rarely — disable only if serving from network filesystems (NFS)
+    #   where sendfile causes issues.
+    sendfile on;
+
+    # Sends HTTP response headers and file data in one packet when using sendfile.
+    # Reduces TCP overhead. Only effective when sendfile is on.
+    # Default: off  |  Recommended: on
+    # Change when: serving small files where latency matters more than throughput;
+    #   in that case combine with tcp_nodelay.
+    tcp_nopush on;
+
+    # Disables Nagle's algorithm, sending data immediately without buffering.
+    # Default: on  |  Recommended: on
+    # Change when: you need to trade latency for throughput on large transfers
+    #   (pair with tcp_nopush in that case).
+    tcp_nodelay on;
+
+    # -----------------------------------------------------------------------
+    # Keepalive
+    # -----------------------------------------------------------------------
+
+    # How long to keep an idle client connection open (seconds).
+    # Default: 75  |  Recommended: 65
+    # Change when: proxying via CDN (set lower, e.g. 10–20); clients often
+    #   disconnect before nginx times out, causing log noise.
+    keepalive_timeout 65;
+
+    # Maximum number of requests per keepalive connection before closing it.
+    # Default: 100  |  Recommended: 1000 for API-heavy workloads
+    # Change when: benchmark shows frequent connection setup overhead.
+    keepalive_requests 1000;
+
+    # -----------------------------------------------------------------------
+    # Security
+    # -----------------------------------------------------------------------
+
+    # Whether to include nginx version in Server response header and error pages.
+    # Default: on  |  Recommended: off (reduces information disclosure)
+    # Change when: you need version info for debugging — but do it via logs, not headers.
+    server_tokens off;
+
+    # Maximum allowed size of the client request body. Applies to POST/PUT bodies.
+    # Default: 1m  |  Recommended: match your largest expected upload
+    # Change when: file upload endpoints need larger values; set to 0 to disable limit.
+    client_max_body_size 16m;
+
+    # Buffer size for reading client request body in memory before writing to disk.
+    # Default: 8k (32-bit) or 16k (64-bit)  |  Recommended: 128k for API servers
+    # Change when: many small request bodies — larger buffer avoids temp file writes.
+    client_body_buffer_size 128k;
+
+    # -----------------------------------------------------------------------
+    # Proxy buffers (applies to reverse proxy scenarios)
+    # -----------------------------------------------------------------------
+
+    # Buffer size for reading the first part of the upstream response (headers).
+    # Default: 4k or 8k (one memory page)  |  Recommended: 8k
+    # Change when: upstream sends very large response headers (rare).
+    proxy_buffer_size 8k;
+
+    # Number and size of buffers for proxied response body.
+    # Default: 8 4k or 4 8k  |  Recommended: 8 16k
+    # Change when: large responses cause "upstream sent too big header" errors,
+    #   or you see excessive disk writes for proxied content.
+    proxy_buffers 8 16k;
+
+    # Maximum amount of proxy buffers in active use at once for sending to client.
+    # Default: proxy_buffer_size + 2 × proxy_buffers  |  Recommended: 32k
+    # Change when: tuning memory vs throughput trade-off for high-concurrency proxy.
+    proxy_busy_buffers_size 32k;
+
+    # Timeout for establishing a connection to the upstream server.
+    # Default: 60s  |  Recommended: 10s
+    # Change when: upstream is on a slow network link; increase if connects legitimately
+    #   take longer than 10s (unusual — investigate upstream if so).
+    proxy_connect_timeout 10s;
+
+    # Timeout for sending a request to the upstream server.
+    # Default: 60s  |  Recommended: 60s
+    # Change when: your app has legitimately slow request processing; this timer
+    #   resets on each write, not the total transfer duration.
+    proxy_send_timeout 60s;
+
+    # Timeout for reading a response from the upstream server.
+    # Default: 60s  |  Recommended: 60s; increase for long-running requests
+    # Change when: background jobs or streaming endpoints regularly take > 60s.
+    # Do NOT inflate globally — set per-location for slow endpoints only.
+    proxy_read_timeout 60s;
+
+    # -----------------------------------------------------------------------
+    # Gzip compression
+    # -----------------------------------------------------------------------
+
+    # Enable gzip response compression.
+    # Default: off  |  Recommended: on
+    # Change when: serving predominantly already-compressed assets (images, video) —
+    #   compression wastes CPU for no gain.
+    gzip on;
+
+    # Disable gzip for IE6, which had broken gzip support.
+    # Default: msie6  |  Recommended: msie6
+    # Change when: you no longer care about IE6 (still harmless to leave).
+    gzip_disable "msie6";
+
+    # Vary: Accept-Encoding header tells CDNs to cache gzip and non-gzip separately.
+    # Default: off  |  Recommended: on
+    # Change when: you're not using a CDN and want to save a few bytes per response.
+    gzip_vary on;
+
+    # Compress responses for proxied requests too (matching upstream cache status).
+    # Default: off  |  Recommended: any
+    # Change when: you only want to compress direct client requests (omit this line).
+    gzip_proxied any;
+
+    # Compression level: 1 (fastest) to 9 (best compression). 6 is the default.
+    # Default: 1  |  Recommended: 6
+    # Change when: CPU-bound — lower to 4 or 5; storage/bandwidth-bound — raise to 8.
+    gzip_comp_level 6;
+
+    # Minimum response size to compress. Responses smaller than this are sent as-is.
+    # Default: 20 bytes  |  Recommended: 256 bytes
+    # Change when: you have many tiny responses; compressing a 50-byte body adds
+    #   more bytes (headers) than it saves.
+    gzip_min_length 256;
+
+    # Buffer count and size for gzip compression.
+    # Default: 32 4k or 16 8k  |  Recommended: 16 8k
+    # Change when: memory is a constraint; this is rarely worth tuning explicitly.
+    gzip_buffers 16 8k;
+
+    # Minimum HTTP version for gzip. HTTP/1.0 clients don't support Transfer-Encoding.
+    # Default: 1.1  |  Recommended: 1.1
+    # Change when: you need to support very old HTTP/1.0 clients (unusual).
+    gzip_http_version 1.1;
+
+    # MIME types to compress. text/html is always compressed regardless.
+    # Default: text/html  |  Recommended: expand to all text-based types
+    # Change when: you serve additional text-based custom types not listed here.
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/javascript
+        application/x-javascript
+        application/json
+        application/xml
+        application/xml+rss
+        application/atom+xml
+        image/svg+xml
+        font/truetype
+        font/opentype
+        application/vnd.ms-fontobject;
+
+    # -----------------------------------------------------------------------
+    # SSL / TLS (global defaults — override per server{} block as needed)
+    # -----------------------------------------------------------------------
+
+    # TLS protocol versions to accept.
+    # Default: TLSv1 TLSv1.1 TLSv1.2 (older nginx)  |  Recommended: TLSv1.2 TLSv1.3
+    # Change when: you must support very old clients that lack TLS 1.2 (PCI DSS
+    #   requires TLS 1.2+; avoid TLS 1.0/1.1 on public-facing servers).
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Cipher suite string. See Mozilla SSL config generator for current recommendations.
+    # Default: HIGH:!aNULL:!MD5 (varies by version)  |  Recommended: Mozilla Intermediate
+    # Change when: you need FIPS compliance or specific cipher requirements.
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+
+    # Let the server determine cipher order rather than the client.
+    # Default: off  |  Recommended: off for TLS 1.3 (TLS 1.3 ignores this anyway)
+    # Change when: you need to enforce specific cipher priority for TLS 1.2 compliance.
+    ssl_prefer_server_ciphers off;
+
+    # Shared session cache across workers, reducing TLS handshake overhead.
+    # Default: none  |  Recommended: shared:SSL:10m (10MB, roughly 40K sessions)
+    # Change when: high-traffic HTTPS — larger cache reduces handshake CPU cost.
+    ssl_session_cache shared:SSL:10m;
+
+    # How long clients can reuse a cached TLS session without a full handshake.
+    # Default: 5m  |  Recommended: 1d
+    # Change when: PCI DSS or internal policy requires shorter session lifetimes.
+    ssl_session_timeout 1d;
+
+    # Disable TLS session tickets (stateless resumption). Tickets can undermine
+    # perfect forward secrecy if ticket keys are not rotated.
+    # Default: on  |  Recommended: off (unless you rotate ticket keys every hour)
+    ssl_session_tickets off;
+
+    # OCSP stapling: nginx fetches and caches the cert revocation status, so clients
+    # don't need to query the CA directly. Requires ssl_trusted_certificate.
+    # Default: off  |  Recommended: on for public-facing HTTPS
+    # Change when: your CA doesn't support OCSP or you're on an internal CA.
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    # Resolver for OCSP stapling lookups. Must be reachable from the server.
+    # Default: not set (required when ssl_stapling on)  |  Recommended: your DNS or 1.1.1.1
+    # Change when: you use an internal DNS server.
+    resolver 1.1.1.1 8.8.8.8 valid=300s;
+    resolver_timeout 5s;
+
+    # -----------------------------------------------------------------------
+    # Default security headers (set globally; override per server/location)
+    # -----------------------------------------------------------------------
+
+    # Prevent MIME type sniffing in browsers.
+    add_header X-Content-Type-Options nosniff always;
+
+    # Deny clickjacking: prevent embedding in iframes from other origins.
+    add_header X-Frame-Options SAMEORIGIN always;
+
+    # Enable browser XSS protection (legacy; modern browsers use CSP instead).
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # HTTP Strict Transport Security: tell browsers to always use HTTPS.
+    # includeSubDomains and preload require careful evaluation before enabling.
+    # Only set this in HTTPS server blocks — it's included here as a reference.
+    # add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # Referrer policy: how much URL info to send when navigating to other sites.
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # -----------------------------------------------------------------------
+    # Include additional config files
+    # -----------------------------------------------------------------------
+
+    # Load per-service config from conf.d/ (e.g., upstream definitions, rate limits).
+    # Default: not present  |  Recommended: use for modular configuration
+    include /etc/nginx/conf.d/*.conf;
+
+    # Load virtual host configs. On Debian/Ubuntu, sites-available/ holds all
+    # configs; sites-enabled/ holds symlinks to the active ones.
+    # Default: not present  |  Recommended: symlink pattern separates active from inactive
+    include /etc/nginx/sites-enabled/*;
+
+}
