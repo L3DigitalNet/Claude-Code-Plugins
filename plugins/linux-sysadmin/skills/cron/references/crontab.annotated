@@ -1,0 +1,172 @@
+# Annotated crontab
+# Each section explains the syntax, constraints, and common mistakes.
+# This is a USER crontab (edited with `crontab -e`). The username field
+# used in /etc/crontab and /etc/cron.d/ is NOT present here.
+
+# ---------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# ---------------------------------------------------------------------------
+# Set at the top before any job lines. Cron does not source ~/.bashrc or
+# ~/.profile, so any variable a script needs must be declared here.
+
+# Shell used to execute job commands. Default: /bin/sh (NOT bash).
+# Change to /bin/bash if your commands use bash-specific syntax ([[ ]], arrays).
+SHELL=/bin/bash
+
+# PATH seen by all jobs in this crontab. The default is extremely minimal
+# (typically /usr/bin:/bin). Always set this or use full paths in every command.
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Where to send stdout/stderr output. Default: current user's mail spool.
+# Set to "" to discard all output. Set to an address to route to a mailserver.
+# Even with MAILTO="", stderr goes to mail unless you redirect in the job line.
+MAILTO=""
+
+# Home directory for relative paths. Default: the user's home from /etc/passwd.
+HOME=/home/myuser
+
+# Timezone for interpreting the schedule. Without this, cron uses the system
+# timezone (usually UTC on servers). Required when the system TZ and the
+# desired job TZ differ.
+TZ=America/New_York
+
+# ---------------------------------------------------------------------------
+# CRON EXPRESSION FORMAT
+# ---------------------------------------------------------------------------
+#
+# Field:    Minute   Hour    DOM     Month   DOW     Command
+# Position:   1        2       3       4       5       6+
+# Range:    0-59     0-23    1-31    1-12    0-7     any
+#
+# Special characters:
+#   *   — every unit (wildcard)
+#   */n — every n units (step); e.g., */5 in minutes = every 5 minutes
+#   n-m — range inclusive; e.g., 9-17 in hours = 9am through 5pm
+#   a,b — list of values; e.g., 1,15 in DOM = 1st and 15th of the month
+#
+# DOW note: 0 and 7 both mean Sunday. 1=Monday … 6=Saturday.
+# DOM+DOW note: if BOTH dom and dow are non-wildcard, the job runs when
+#   EITHER condition is true (OR semantics, not AND).
+
+# ---------------------------------------------------------------------------
+# SCHEDULE EXAMPLES
+# ---------------------------------------------------------------------------
+
+# Every minute
+* * * * * /usr/bin/check-heartbeat.sh
+
+# Every 5 minutes
+*/5 * * * * /usr/bin/poll-queue.sh
+
+# Every 15 minutes
+*/15 * * * * /usr/local/bin/sync-data.sh
+
+# Every 30 minutes
+0,30 * * * * /usr/local/bin/refresh-cache.sh
+
+# Every hour, on the hour
+0 * * * * /usr/local/bin/hourly-report.sh
+
+# Every 2 hours
+0 */2 * * * /usr/local/bin/rotate-logs.sh
+
+# Every day at midnight
+0 0 * * * /usr/local/bin/daily-cleanup.sh
+
+# Every day at 6:30 AM
+30 6 * * * /usr/local/bin/morning-digest.sh
+
+# Every weekday (Mon–Fri) at 8 AM
+0 8 * * 1-5 /usr/local/bin/workday-start.sh
+
+# Every weekend (Sat+Sun) at noon
+0 12 * * 6,0 /usr/local/bin/weekend-backup.sh
+
+# Every Sunday at 2 AM
+0 2 * * 0 /usr/local/bin/weekly-report.sh >> /var/log/weekly-report.log 2>&1
+
+# Every Monday at 3 AM (equivalent using 1 for Monday)
+0 3 * * 1 /usr/local/bin/prune-old-records.sh
+
+# 1st of every month at midnight
+0 0 1 * * /usr/local/bin/monthly-invoice.sh
+
+# Last day of each month is not directly expressible; use a script instead.
+# Workaround: run daily and check date inside the script.
+
+# Every year on January 1st at midnight
+0 0 1 1 * /usr/local/bin/new-year-reset.sh
+
+# Specific date and time: March 15 at 10:30 AM (any day of week)
+30 10 15 3 * /usr/local/bin/quarterly-audit.sh
+
+# Between 9 AM and 5 PM, every 30 minutes, weekdays only
+*/30 9-17 * * 1-5 /usr/local/bin/business-hours-check.sh
+
+# ---------------------------------------------------------------------------
+# SPECIAL SHORTCUTS (@reboot, @hourly, etc.)
+# ---------------------------------------------------------------------------
+# These are aliases for common schedules. Clearer than the 5-field equivalent.
+
+# Run once at system startup (after cron starts). Useful for daemons
+# that don't have systemd units. Runs as the crontab owner.
+@reboot /usr/local/bin/start-my-daemon.sh
+
+# Equivalent to: 0 * * * *
+@hourly /usr/local/bin/hourly-task.sh
+
+# Equivalent to: 0 0 * * *
+@daily /usr/local/bin/daily-task.sh
+
+# Equivalent to: 0 0 * * 0
+@weekly /usr/local/bin/weekly-task.sh
+
+# Equivalent to: 0 0 1 * *
+@monthly /usr/local/bin/monthly-task.sh
+
+# Equivalent to: 0 0 1 1 *
+@yearly /usr/local/bin/yearly-task.sh
+
+# ---------------------------------------------------------------------------
+# OUTPUT AND LOGGING PATTERNS
+# ---------------------------------------------------------------------------
+
+# Discard all output (stdout and stderr) — use when the script handles its
+# own logging or failures are acceptable without notification.
+0 4 * * * /usr/local/bin/silent-job.sh > /dev/null 2>&1
+
+# Log stdout only; stderr still goes to mail (or is discarded if MAILTO="").
+0 5 * * * /usr/local/bin/job.sh >> /var/log/myjob.log
+
+# Log both stdout and stderr to the same file (most common pattern).
+0 6 * * * /usr/local/bin/job.sh >> /var/log/myjob.log 2>&1
+
+# Log with a timestamp prefix. Requires bash (set SHELL=/bin/bash above).
+0 7 * * * echo "[$(date '+\%Y-\%m-\%d \%H:\%M:\%S')] starting" >> /var/log/myjob.log && /usr/local/bin/job.sh >> /var/log/myjob.log 2>&1
+
+# Rotate logs — pair with logrotate config in /etc/logrotate.d/ for production.
+
+# ---------------------------------------------------------------------------
+# SYSTEM CRONTAB FORMAT (/etc/crontab and /etc/cron.d/ files)
+# ---------------------------------------------------------------------------
+# These files require a USERNAME field between the DOW and the COMMAND.
+# The job runs as that user. This format does NOT apply to user crontabs.
+#
+# Field:   Min  Hour  DOM  Month  DOW  USER     Command
+# Example:
+#
+#   0 2 * * 0  root   /usr/local/bin/weekly-cleanup.sh
+#   */5 * * * * www-data /usr/local/bin/poll-queue.sh
+#
+# Placed in /etc/cron.d/myjob — filename must not contain a dot (run-parts
+# will silently skip files with dots on Debian-based systems).
+#
+# The MAILTO and other env vars can also be set at the top of these files.
+#
+# Example /etc/cron.d/backup:
+#
+#   SHELL=/bin/bash
+#   PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+#   MAILTO=""
+#
+#   0 3 * * * root /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1

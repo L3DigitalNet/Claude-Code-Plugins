@@ -1,0 +1,293 @@
+# Annotated Dovecot configuration
+# Covers the key conf.d files in the order Dovecot processes them.
+# Each directive includes: what it does, default value, and when to change it.
+#
+# Dovecot config is split across /etc/dovecot/dovecot.conf (top-level includes)
+# and /etc/dovecot/conf.d/ (included files, processed in filename order).
+# Use `doveconf -n` to see the effective merged config (non-defaults only).
+# Use `doveconf -a` to see every setting including compiled-in defaults.
+#
+# File layout (standard package install):
+#   10-auth.conf       — authentication mechanisms, passdb, userdb
+#   10-mail.conf       — mail storage location, namespace, index paths
+#   10-master.conf     — service processes, listeners, socket paths
+#   10-ssl.conf        — TLS cert, key, protocol, cipher settings
+#   20-imap.conf       — IMAP-specific tuning (capabilities, limits)
+#   20-pop3.conf       — POP3-specific settings
+#   90-quota.conf      — per-user quota rules and dict backend
+#   90-sieve.conf      — Sieve filtering (if dovecot-sieve installed)
+
+# ===========================================================================
+# 10-master.conf — service process configuration
+# Controls how each Dovecot service process listens and how many workers run.
+# ===========================================================================
+
+service imap-login {
+  # Pre-forked login process for IMAP. Handles the unauthenticated phase;
+  # hands off to a per-user imap process after auth succeeds.
+  # Running as dovenull (unprivileged) limits damage from pre-auth exploits.
+  inet_listener imap {
+    # Plain IMAP port. Clients use STARTTLS to upgrade.
+    # Default: 143  |  Change when: running behind a proxy on a non-standard port.
+    port = 143
+  }
+  inet_listener imaps {
+    # Implicit TLS (IMAPS). Connection is encrypted from the first byte.
+    # Default: 993  |  Change when: using an alternate port; set ssl = yes here.
+    port = 993
+    ssl = yes
+  }
+
+  # Number of processes to pre-fork waiting for connections.
+  # Default: 0 (auto-scales)  |  Change when: burst traffic causes login delays.
+  # process_min_avail = 0
+
+  # Per-process connection limit before spawning a new process.
+  # Default: 100  |  Recommended: leave at default unless profiling shows contention.
+  # service_count = 100
+}
+
+service pop3-login {
+  # Same pattern as imap-login but for POP3.
+  inet_listener pop3 {
+    # Default: 110  |  Set to 0 to disable POP3 entirely if not needed.
+    port = 110
+  }
+  inet_listener pop3s {
+    # Default: 995
+    port = 995
+    ssl = yes
+  }
+}
+
+service lmtp {
+  # LMTP (Local Mail Transfer Protocol) — Postfix delivers mail here.
+  # Unix socket is preferred over TCP for local delivery: no port exposure,
+  # faster, and permissions control which processes can connect.
+
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    # Mode must give the Postfix user read+write access.
+    # Default: 0600  |  Recommended: 0600 with group = postfix
+    mode = 0600
+    user = postfix
+    group = postfix
+  }
+
+  # Alternatively, expose LMTP over TCP (use only on loopback):
+  # inet_listener lmtp {
+  #   address = 127.0.0.1
+  #   port = 24
+  # }
+}
+
+service auth {
+  # Authentication master process. Other services (Postfix SASL, etc.) connect
+  # to the sockets below to authenticate users against Dovecot's passdb/userdb.
+
+  # Auth socket for Postfix SMTP AUTH (SASL). Postfix connects here to verify
+  # credentials for MSA submissions (port 587).
+  # Path must match smtpd_sasl_path in Postfix main.cf.
+  unix_listener /var/spool/postfix/private/auth {
+    # Default: 0600 root:root  |  Must be writable by the Postfix user.
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+
+  # Internal auth socket used by Dovecot's own IMAP/POP3 services.
+  # Default path: /var/run/dovecot/auth-userdb
+  # Change when: mail_uid/mail_gid settings require elevated access.
+  unix_listener auth-userdb {
+    mode = 0600
+    user = dovecot
+  }
+}
+
+service auth-worker {
+  # Spawned by the auth process to handle blocking lookups (PAM, LDAP, SQL).
+  # Runs as root by default to read /etc/shadow for PAM auth.
+  # Default user: root  |  Change to a lower-privilege user if using non-PAM auth.
+  user = root
+}
+
+service imap {
+  # Per-user IMAP process after authentication.
+  # Default vsz_limit: 256MB  |  Increase for users with very large mailboxes.
+  # vsz_limit = 256M
+}
+
+# ===========================================================================
+# 10-auth.conf — authentication configuration
+# Defines how Dovecot verifies passwords (passdb) and looks up user info (userdb).
+# ===========================================================================
+
+# Disallow cleartext password authentication unless SSL/TLS is active.
+# Default: yes  |  NEVER set to no on a network-exposed server.
+# Change when: debugging on a local loopback-only setup — revert immediately.
+disable_plaintext_auth = yes
+
+# Authentication mechanisms offered to clients.
+# Default: plain  |  Recommended: plain login (clients use STARTTLS/SSL first)
+# CRAM-MD5 / DIGEST-MD5 require plaintext password storage — avoid unless legacy clients demand it.
+auth_mechanisms = plain login
+
+passdb {
+  # Backend that verifies the password. PAM delegates to /etc/pam.d/dovecot
+  # which typically reads /etc/shadow (system accounts).
+  # Default: (none set — must be configured)  |  Common: pam, passwd-file, ldap, sql
+  # Change when: users are in LDAP, a database, or a flat passwd-file instead of /etc/shadow.
+  driver = pam
+
+  # PAM service name. Reads /etc/pam.d/dovecot.
+  # Default: %Ls (lowercased service name, i.e., "dovecot")
+  # args = dovecot
+}
+
+userdb {
+  # Backend that returns uid, gid, and home directory after auth succeeds.
+  # passwd reads /etc/passwd — works for system accounts.
+  # Default: (none set — must be configured)  |  Common: passwd, static, ldap, sql
+  # Change when: virtual users (no /etc/passwd entry) — use static or sql driver.
+  driver = passwd
+}
+
+# ===========================================================================
+# 10-mail.conf — mail storage location and namespace
+# ===========================================================================
+
+# Where to store user mail. The format prefix determines the storage layout.
+# Default: (empty — Dovecot will look in common locations, not recommended for production)
+# Recommended: Maildir in user's home directory
+# Change when: using mbox (legacy), or a shared filesystem path (e.g., NFS).
+#
+# Common formats:
+#   maildir:~/Maildir           — one file per message, recommended
+#   mbox:~/mail:INBOX=/var/mail/%u  — single-file-per-folder, legacy
+#   sdbox:~/dbox               — Dovecot single-dbox, single file per message with metadata
+mail_location = maildir:~/Maildir
+
+# System user and group that owns mail files. Leave at default for system accounts.
+# Default: (derived from userdb lookup)
+# Change when: using virtual users with a fixed uid/gid (e.g., vmail:5000).
+# mail_uid = vmail
+# mail_gid = vmail
+
+# Supplementary group for mail access. Used when mail is group-readable
+# (e.g., /var/mail/<user> with group mail).
+# Default: (none)
+# mail_privileged_group = mail
+
+namespace inbox {
+  # Defines the "INBOX" namespace — the primary mailbox namespace visible to clients.
+  # inbox = yes marks this as the namespace containing INBOX.
+  # Default: defined in 10-mail.conf  |  Change when: adding shared or public namespaces.
+  inbox = yes
+
+  # Separator between folder hierarchy levels as shown to IMAP clients.
+  # Default: (auto-detected from mail_location format)  |  Maildir: /  mbox: .
+  # separator = /
+}
+
+# ===========================================================================
+# 10-ssl.conf — TLS configuration
+# ===========================================================================
+
+# Master SSL switch. Controls whether TLS is available and/or required.
+# Default: yes (available but not required)
+# Options: no | yes | required
+# Recommended: required — forces all connections through TLS.
+# Change when: debugging locally without a cert; set back to required immediately.
+ssl = required
+
+# PEM-encoded certificate file. Must include the full chain (cert + intermediates).
+# Default: (none — must be configured before enabling ssl)
+# Change when: renewing cert (point to new file and reload).
+# The < prefix tells Dovecot to read the file contents, not treat it as a literal string.
+ssl_cert = </etc/letsencrypt/live/mail.example.com/fullchain.pem
+
+# PEM-encoded private key file. Must be readable only by root/dovecot.
+# Default: (none — must be configured)
+# Change when: key is rotated or stored in a different path.
+ssl_key = </etc/letsencrypt/live/mail.example.com/privkey.pem
+
+# Minimum TLS protocol version accepted. Rejects older negotiation attempts.
+# Default: TLSv1 (older Dovecot) or TLSv1.2 (newer)  |  Recommended: TLSv1.2
+# Change when: you need TLS 1.3 only (ssl_min_protocol = TLSv1.3) — verify client support first.
+ssl_min_protocol = TLSv1.2
+
+# TLS cipher list (OpenSSL format). Controls which cipher suites are negotiated.
+# Default: ALL:!kRSA:!SRP:!kDHd:!DSS:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!MD5:!PSK:!RC4:!ADH:!LOW@STRENGTH
+# Recommended: Use Mozilla Intermediate configuration (https://ssl-config.mozilla.org/)
+# Change when: compliance requirements mandate specific ciphers (FIPS, PCI DSS).
+# ssl_cipher_list = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:...
+
+# DH parameters file for DHE cipher suites. Must be pre-generated.
+# Default: (built-in 1024-bit, not recommended)
+# Generate: openssl dhparam -out /etc/dovecot/dh.pem 4096
+# Change when: upgrading from default — 4096-bit DH is current best practice.
+# ssl_dh = </etc/dovecot/dh.pem
+
+# ===========================================================================
+# 20-imap.conf — IMAP-specific settings
+# ===========================================================================
+
+protocol imap {
+  # IMAP CAPABILITY string sent to clients on connect.
+  # Default: auto-generated from compiled-in features
+  # Change when: a specific client requires or breaks on a certain capability advertisement.
+  # imap_capability =
+
+  # Maximum IMAP command line length in bytes.
+  # Default: 65536  |  Increase if clients send very long SEARCH or FETCH commands.
+  # imap_max_line_length = 65536
+
+  # Idle notification interval. Dovecot sends EXISTS notifications to idle clients.
+  # Default: 120s  |  Change when: push email clients need faster delivery signaling.
+  # imap_idle_notify_interval = 2 mins
+
+  # Number of IMAP processes to keep alive when idle.
+  # Default: 0  |  Increase to reduce spawn latency for reconnecting clients.
+  # mail_max_userip_connections = 10
+}
+
+# ===========================================================================
+# 90-quota.conf — per-user mailbox quota
+# Requires the quota plugin compiled in (package: dovecot-core usually includes it).
+# ===========================================================================
+
+plugin {
+  # Enable the quota plugin for IMAP and LMTP.
+  # Quota is enforced at delivery time (LMTP) and can be queried via IMAP GETQUOTA.
+  # Default: (not set)  |  Add to mail_plugins to activate.
+  # mail_plugins = $mail_plugins quota
+
+  # Quota backend and rules. "count" tracks message count and storage size using
+  # Dovecot's own index files — no external database required.
+  # Format: quota = <backend>:<rule-name>:<parameters>
+  # Default: (not set)
+  # Change when: you need per-domain or per-user quotas from a database — use dict backend.
+  quota = count:User quota
+
+  # Hard storage limit per user. Delivery is rejected when this is exceeded.
+  # Default: (unlimited)  |  Change to a reasonable value for your storage capacity.
+  # quota_rule = *:storage=1G
+
+  # Hard message count limit per user.
+  # Default: (unlimited)  |  Change when: per-message limits are needed (anti-spam).
+  # quota_rule2 = *:messages=50000
+
+  # Grace percentage: allow delivery up to N% over quota before hard rejection.
+  # Default: 0%  |  Set to 10% to allow one more message for "over quota" notifications.
+  # quota_grace = 10%%
+
+  # Warning threshold: run a script when user exceeds N% of quota.
+  # Default: (not set)  |  Change when: you want to notify users before hard rejection.
+  # quota_warning = storage=95%% quota-warning 95 %u
+  # quota_warning2 = storage=80%% quota-warning 80 %u
+}
+
+protocol lmtp {
+  # Activate quota enforcement on incoming LMTP deliveries.
+  # Without this, quota is checked only at IMAP access, not at delivery time.
+  # mail_plugins = $mail_plugins quota
+}

@@ -1,0 +1,286 @@
+# Annotated Caddyfile
+# Each directive includes: what it does, default value, and when to change it.
+#
+# Caddyfile has two structural levels:
+#   global options block  — appears first, wrapped in { }, no site address
+#   site blocks           — one or more address lines followed by a { } body
+#
+# Caddy converts this format internally to JSON before running.
+# Use `caddy adapt --config /etc/caddy/Caddyfile | jq .` to see the result.
+
+# ---------------------------------------------------------------------------
+# GLOBAL OPTIONS BLOCK
+# Applies to the entire server, not to individual sites.
+# Must appear before any site blocks if present.
+# ---------------------------------------------------------------------------
+
+{
+    # Email used for ACME account registration. Let's Encrypt sends expiry notices here.
+    # Default: not set (Caddy still registers, but you get no email warnings)
+    # Change when: you want renewal failure notifications.
+    email admin@example.com
+
+    # ACME CA endpoint. Default is Let's Encrypt production.
+    # Default: https://acme-v02.api.letsencrypt.org/directory
+    # Change when: testing (use Let's Encrypt staging to avoid rate limits) or
+    #   using an internal CA (e.g., Step CA, HashiCorp Vault PKI).
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+
+    # Disable automatic HTTPS globally. Per-site override: use `tls off` inside
+    # the site block. Default: enabled for any qualifying hostname.
+    # Change when: all sites are internal-only or you manage TLS externally.
+    # auto_https off
+
+    # Admin API address. Caddy's live-reload and config API listens here.
+    # Default: localhost:2019
+    # Change when: running multiple Caddy instances on the same host (change port),
+    #   or you need to disable the API entirely (set to "off").
+    admin localhost:2019
+
+    # Default HTTPS port. Default: 443
+    # Change when: running rootless (e.g., 8443) or behind a port-forwarding firewall.
+    # https_port 8443
+
+    # Default HTTP port. Default: 80
+    # Change when: rootless deployment or non-standard HTTP port.
+    # http_port 8080
+
+    # Grace period before Caddy exits on SIGTERM — time for in-flight requests to finish.
+    # Default: 10s
+    # Change when: your app has long-running requests (uploads, streaming).
+    # grace_period 30s
+
+    # Global structured log output — applies in addition to per-site access logs.
+    # Default: stderr, text format, WARN level
+    # Change when: centralizing logs (send to file or JSON pipeline).
+    log {
+        output file /var/log/caddy/caddy.log {
+            roll_size 100mb    # Rotate when log exceeds this size.
+            roll_keep 5        # Keep 5 rotated files.
+        }
+        level  INFO            # Options: DEBUG, INFO, WARN, ERROR
+        format json            # Options: json (machine-readable), console (human-readable)
+    }
+
+    # Server options applied to all HTTP servers Caddy creates.
+    # Default: HTTP/1.1, HTTP/2, HTTP/3 all enabled.
+    servers {
+        # HTTP/3 (QUIC) requires UDP 443 open in your firewall.
+        # Default: enabled for HTTPS sites
+        # Change when: your firewall blocks UDP 443 or you observe connection issues.
+        # protocols h1 h2  # Disable h3 by omitting it
+
+        # Trusted proxy IPs — Caddy uses these to read X-Forwarded-For accurately.
+        # Default: none (all X-Forwarded-For headers treated as untrusted)
+        # Change when: sitting behind a load balancer or CDN.
+        trusted_proxies static 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+    }
+}
+
+# ---------------------------------------------------------------------------
+# SIMPLE STATIC SITE
+# Serves files from a directory. Caddy obtains a TLS cert automatically.
+# ---------------------------------------------------------------------------
+
+example.com {
+    # Root directory for file serving. Default: current working directory.
+    # Change when: your web root is not the default.
+    root * /var/www/example.com
+
+    # file_server enables static file serving. Without this directive,
+    # Caddy returns a blank response for all requests.
+    # Default: disabled
+    # `browse` enables directory listing when no index file is found.
+    # Remove `browse` to return 404 for directories without index.html.
+    file_server
+
+    # encode enables response compression. Caddy negotiates gzip or zstd
+    # based on the client's Accept-Encoding header.
+    # Default: disabled
+    # Change when: serving text assets (HTML, CSS, JS, JSON) — always enable.
+    encode gzip zstd
+
+    # Access log for this site. Omit to suppress access logging.
+    # Default: no access log
+    log {
+        output file /var/log/caddy/example.com.access.log
+        format json
+    }
+}
+
+# ---------------------------------------------------------------------------
+# REVERSE PROXY
+# Proxies all traffic to a local application on port 3000.
+# Caddy handles HTTPS automatically.
+# ---------------------------------------------------------------------------
+
+app.example.com {
+    # reverse_proxy forwards requests to the specified upstream.
+    # Caddy adds X-Forwarded-For, X-Forwarded-Proto, and X-Forwarded-Host by default.
+    # Default headers added automatically — no manual proxy_set_header equivalent needed
+    # for basic setups.
+    reverse_proxy localhost:3000
+
+    # For WebSocket support, no special config is needed — Caddy upgrades the
+    # connection automatically when the upstream sends a 101 response.
+}
+
+# ---------------------------------------------------------------------------
+# MULTIPLE DOMAINS (SAME CONFIG)
+# Each site block handles its own TLS cert independently.
+# ---------------------------------------------------------------------------
+
+site-a.example.com {
+    root * /var/www/site-a
+    file_server
+}
+
+site-b.example.com {
+    root * /var/www/site-b
+    file_server
+}
+
+# Multiple addresses in one block — all share the same config.
+# Caddy obtains a cert for each address separately.
+www.example.com, example.com {
+    root * /var/www/example.com
+    file_server
+}
+
+# ---------------------------------------------------------------------------
+# PHP-FPM VIA FASTCGI
+# Passes .php requests to a PHP-FPM socket or TCP address.
+# ---------------------------------------------------------------------------
+
+php.example.com {
+    root * /var/www/php-site
+
+    # php_fastcgi is Caddy's convenience wrapper around the raw `fastcgi` directive.
+    # It sets common FastCGI params (SCRIPT_FILENAME, PATH_INFO, etc.) automatically.
+    # Default: not configured
+    # Change the socket path or port to match your php-fpm pool configuration.
+    # Typical paths: /run/php/php8.2-fpm.sock (Debian), /run/php-fpm/www.sock (RHEL)
+    php_fastcgi unix//run/php/php8.2-fpm.sock
+
+    # Serve static assets directly without going through FastCGI.
+    # Default: all requests are handled by directives in order; file_server here
+    #   serves anything not matched by php_fastcgi.
+    file_server
+}
+
+# ---------------------------------------------------------------------------
+# FILE SERVER WITH BROWSE (DIRECTORY LISTING)
+# Exposes a directory with a navigable listing. Useful for artifact stores,
+# internal download servers, or local development.
+# ---------------------------------------------------------------------------
+
+files.example.com {
+    root * /srv/files
+
+    # `browse` enables the built-in directory listing template.
+    # Default: disabled (returns 404 for directories)
+    # Change when: you want to share directory contents without a custom index.html.
+    file_server browse
+
+    # Restrict access to specific IP ranges using the `remote_ip` matcher.
+    # Default: no IP restriction
+    # Change when: the listing should not be public.
+    @internal remote_ip 10.0.0.0/8 192.168.0.0/16
+    handle @internal {
+        file_server browse
+    }
+    handle {
+        respond "Access denied" 403
+    }
+}
+
+# ---------------------------------------------------------------------------
+# BASIC AUTHENTICATION
+# Protects routes with HTTP Basic Auth. Passwords must be bcrypt-hashed.
+# Generate hash: caddy hash-password --plaintext "yourpassword"
+# ---------------------------------------------------------------------------
+
+admin.example.com {
+    # basicauth restricts matched routes to authenticated users.
+    # The block contains username: <bcrypt-hash> pairs.
+    # Default: no authentication
+    # Change when: protecting admin UIs, dashboards, or internal tools.
+    basicauth * {
+        # Username: admin
+        # Hash generated by: caddy hash-password --plaintext "secret"
+        admin $2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG
+    }
+
+    reverse_proxy localhost:9000
+}
+
+# ---------------------------------------------------------------------------
+# REDIRECT RULES
+# ---------------------------------------------------------------------------
+
+# Permanent redirect from www to apex domain.
+www.example.com {
+    # redir issues an HTTP redirect. Default status code is 302 (temporary).
+    # Use 301 for permanent redirects (cached by browsers).
+    redir https://example.com{uri} 301
+}
+
+# Path-based redirect.
+old.example.com {
+    # Redirect /old-path to /new-path, preserving query string.
+    redir /old-path* /new-path{path} 301
+
+    # Redirect everything else to the new domain.
+    redir * https://new.example.com{uri} 301
+}
+
+# ---------------------------------------------------------------------------
+# HEADER MANIPULATION
+# Caddy's `header` directive sets, deletes, or replaces response headers.
+# ---------------------------------------------------------------------------
+
+secure.example.com {
+    reverse_proxy localhost:4000
+
+    # header sets or modifies response headers sent to the client.
+    # Default: Caddy adds minimal headers; upstream headers pass through.
+    header {
+        # Add security headers.
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+
+        # Remove headers that leak implementation details.
+        # The - prefix deletes the header.
+        -Server
+        -X-Powered-By
+
+        # Replace a header value using a regex substitution.
+        # Format: header_name   search_regex   replacement
+        # Content-Security-Policy "default-src 'self'" "default-src 'self' cdn.example.com"
+    }
+}
+
+# ---------------------------------------------------------------------------
+# RATE LIMITING
+# NOTE: The built-in `rate_limit` directive is NOT included in the standard
+# Caddy binary. It requires a custom build via xcaddy:
+#   xcaddy build --with github.com/mholt/caddy-ratelimit
+#
+# Without the plugin, implement basic rate limiting at the upstream (app) level
+# or use a WAF/CDN in front of Caddy.
+#
+# Example below assumes xcaddy build with caddy-ratelimit:
+# ---------------------------------------------------------------------------
+
+# api.example.com {
+#     rate_limit {
+#         zone api_zone {
+#             key {remote_host}
+#             events 100
+#             window 1m
+#         }
+#     }
+#     reverse_proxy localhost:3000
+# }

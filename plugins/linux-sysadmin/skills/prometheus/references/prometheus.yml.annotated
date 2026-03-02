@@ -1,0 +1,301 @@
+# Annotated prometheus.yml
+# Each directive includes: what it does, default value, and when to change it.
+# Place this file at /etc/prometheus/prometheus.yml.
+#
+# Prometheus config has four top-level keys:
+#   global        — defaults applied to all scrape jobs and rule evaluations
+#   alerting      — how to reach Alertmanager
+#   rule_files     — glob list of alerting/recording rule files to load
+#   scrape_configs — one entry per monitored target group (a "job")
+
+# ---------------------------------------------------------------------------
+# GLOBAL
+# ---------------------------------------------------------------------------
+
+global:
+
+  # How often Prometheus scrapes each target to collect metrics.
+  # Default: 1m  |  Change when: high-resolution dashboards need shorter intervals
+  #   (15s is common for infrastructure); longer intervals save disk and CPU.
+  scrape_interval: 15s
+
+  # How often Prometheus evaluates alerting and recording rules.
+  # Default: 1m  |  Recommended: match scrape_interval so rules see fresh data.
+  # Change when: alerts need sub-minute reaction time.
+  evaluation_interval: 15s
+
+  # Maximum time to wait for a target to respond before marking the scrape failed.
+  # Default: 10s  |  Must be less than scrape_interval.
+  # Change when: a specific job's exporter is slow — override per-job instead of globally.
+  scrape_timeout: 10s
+
+  # Labels added to all time series and alerts originating from this Prometheus instance.
+  # Used to distinguish data when writing to a shared remote storage or Alertmanager.
+  # Default: empty  |  Change when: you have multiple Prometheus instances.
+  external_labels:
+    cluster: "prod-eu-west"
+    env: "production"
+
+# ---------------------------------------------------------------------------
+# ALERTING
+# ---------------------------------------------------------------------------
+
+alerting:
+
+  # Describes where Alertmanager is running. Prometheus sends firing alerts here.
+  # Default: empty (alerts never sent)  |  Change when: you want alert notifications.
+  alertmanagers:
+    - static_configs:
+        - targets:
+            # Alertmanager default port is 9093.
+            - "localhost:9093"
+
+      # Optional: path prefix if Alertmanager is behind a reverse proxy.
+      # Default: /  |  Change when: Alertmanager is mounted at a subpath.
+      # path_prefix: /alertmanager
+
+      # Timeout for sending alerts to Alertmanager.
+      # Default: 10s
+      # timeout: 10s
+
+      # Optional: TLS config if Alertmanager requires HTTPS.
+      # tls_config:
+      #   ca_file: /etc/prometheus/certs/ca.pem
+      #   cert_file: /etc/prometheus/certs/client.pem
+      #   key_file: /etc/prometheus/certs/client.key
+
+# ---------------------------------------------------------------------------
+# RULE FILES
+# ---------------------------------------------------------------------------
+
+# Glob patterns pointing to YAML files containing alerting and recording rules.
+# Prometheus reloads these on SIGHUP or POST /-/reload.
+# Default: empty  |  Change when: you define any alerting or recording rules.
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+  - "/etc/prometheus/rules/*.yaml"
+
+# ---------------------------------------------------------------------------
+# SCRAPE CONFIGS
+# ---------------------------------------------------------------------------
+
+# Each entry is a "job" — a logical group of targets sharing the same scrape
+# behavior (interval, auth, path, etc.). Job name becomes the `job` label on
+# every metric scraped from that group.
+
+scrape_configs:
+
+  # -----------------------------------------------------------------------
+  # JOB 1: Prometheus scraping itself
+  # Prometheus exposes its own operational metrics at /metrics on port 9090.
+  # Self-scraping is essential for monitoring Prometheus's own health.
+  # -----------------------------------------------------------------------
+  - job_name: "prometheus"
+
+    # How often to scrape targets in this job.
+    # Default: inherits global scrape_interval  |  Change when: this job needs a different rate.
+    scrape_interval: 30s
+
+    # HTTP path where the exporter exposes metrics.
+    # Default: /metrics  |  Change when: an exporter uses a non-standard path.
+    metrics_path: /metrics
+
+    # HTTP or HTTPS.
+    # Default: http  |  Change when: the target has TLS enabled.
+    scheme: http
+
+    # Static list of host:port targets for this job.
+    # Default: none required  |  Used when target list is known and stable.
+    static_configs:
+      - targets:
+          - "localhost:9090"
+        # Extra labels added to all metrics from these specific targets.
+        # Do not add high-cardinality labels here — they create series per label value.
+        labels:
+          instance_role: "monitoring"
+
+  # -----------------------------------------------------------------------
+  # JOB 2: node_exporter — OS-level host metrics
+  # node_exporter runs on each host and exposes CPU, memory, disk, network metrics.
+  # Install: apt install prometheus-node-exporter  or binary from GitHub releases.
+  # Default port: 9100.
+  # -----------------------------------------------------------------------
+  - job_name: "node_exporter"
+
+    static_configs:
+      - targets:
+          - "localhost:9100"
+          - "10.0.0.10:9100"
+          - "10.0.0.11:9100"
+        labels:
+          datacenter: "hetzner-fsn"
+
+  # -----------------------------------------------------------------------
+  # JOB 3: Custom application exposing metrics at /metrics on port 8080
+  # -----------------------------------------------------------------------
+  - job_name: "myapp"
+
+    scrape_interval: 10s
+    scrape_timeout: 8s
+
+    # Path to metrics endpoint if non-default.
+    metrics_path: /internal/metrics
+
+    # HTTP basic auth if the metrics endpoint is protected.
+    # Default: none  |  Change when: the target requires credentials.
+    basic_auth:
+      username: "prometheus"
+      # Use password_file in production — avoids storing plaintext in this file.
+      password_file: "/etc/prometheus/secrets/myapp-password"
+
+    # TLS configuration for HTTPS targets.
+    # Default: system CA pool  |  Change when: target uses a self-signed or internal CA.
+    # tls_config:
+    #   ca_file: /etc/prometheus/certs/myapp-ca.pem
+    #   # Disable verification for self-signed certs (not recommended in production).
+    #   insecure_skip_verify: false
+
+    # honor_labels: if the target exposes a label that conflicts with a Prometheus
+    # generated label (job, instance), this controls which wins.
+    # Default: false (Prometheus labels overwrite target labels)
+    # Change when: federating from another Prometheus that already sets these labels.
+    honor_labels: false
+
+    static_configs:
+      - targets:
+          - "10.0.1.5:8080"
+          - "10.0.1.6:8080"
+
+    # -----------------------------------------------------------------------
+    # RELABELING (before ingestion)
+    # relabel_configs modifies labels on the scraped target before ingestion.
+    # Runs before the scrape. metric_relabel_configs runs after the scrape on
+    # individual metrics. Use metric_relabel_configs to drop high-cardinality
+    # metrics; use relabel_configs to transform target identity.
+    # -----------------------------------------------------------------------
+    relabel_configs:
+      # Rewrite the `instance` label to strip the port number for cleaner display.
+      # Source label: __address__ (host:port)  ->  instance (host only)
+      - source_labels: [__address__]
+        regex: "([^:]+):\\d+"
+        target_label: instance
+        replacement: "$1"
+
+    # Drop individual metrics after scrape if they match a pattern.
+    # This is where to cut high-cardinality or unwanted metrics before they hit the TSDB.
+    metric_relabel_configs:
+      # Drop any metric whose name starts with "go_" to reduce Go runtime noise.
+      - source_labels: [__name__]
+        regex: "go_.*"
+        action: drop
+
+  # -----------------------------------------------------------------------
+  # JOB 4: File-based service discovery
+  # Targets are loaded from JSON or YAML files on disk, which Prometheus watches
+  # and reloads automatically. Useful when a provisioning system manages targets.
+  # -----------------------------------------------------------------------
+  - job_name: "file_sd_example"
+
+    file_sd_configs:
+      # Prometheus watches these files and reloads targets when they change.
+      # The file must contain a list of target groups (see common-patterns.md).
+      - files:
+          - "/etc/prometheus/file_sd/*.json"
+          - "/etc/prometheus/file_sd/*.yaml"
+        # How often to re-read the files even if inotify doesn't fire.
+        # Default: 5m  |  Change when: files change faster or slower than this.
+        refresh_interval: 1m
+
+  # -----------------------------------------------------------------------
+  # JOB 5: Kubernetes service discovery (brief reference)
+  # Discovers pods and services inside a Kubernetes cluster via the API server.
+  # Requires RBAC access to read pods/services/endpoints.
+  # -----------------------------------------------------------------------
+  # - job_name: "kubernetes_pods"
+  #   kubernetes_sd_configs:
+  #     - role: pod              # pod | service | endpoints | node | ingress
+  #       api_server: https://kubernetes.default.svc
+  #       namespaces:
+  #         names: ["default", "monitoring"]
+  #   relabel_configs:
+  #     # Only scrape pods with annotation prometheus.io/scrape: "true"
+  #     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+  #       action: keep
+  #       regex: "true"
+  #     # Use annotation prometheus.io/port to set the scrape port.
+  #     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+  #       action: replace
+  #       target_label: __address__
+  #       regex: (.+)
+  #       replacement: $1
+
+
+# ===========================================================================
+# ALERTING RULE FILE EXAMPLE
+# Save as /etc/prometheus/rules/node_alerts.yml
+# Validate with: promtool check rules /etc/prometheus/rules/node_alerts.yml
+# ===========================================================================
+#
+# groups:
+#   # Rules are organized into named groups. All rules in a group share the
+#   # evaluation interval (defaults to global evaluation_interval).
+#   - name: node_exporter_alerts
+#
+#     # Optional: override the evaluation interval for this group only.
+#     # interval: 30s
+#
+#     rules:
+#
+#       # -----------------------------------------------------------------------
+#       # ALERTING RULE: fires when a host is unreachable (up == 0)
+#       # -----------------------------------------------------------------------
+#       - alert: InstanceDown
+#
+#         # PromQL expression. Alert fires when this evaluates to a non-empty result.
+#         # `up == 0` means the last scrape failed — exporter down or unreachable.
+#         expr: up == 0
+#
+#         # How long the condition must be true before the alert fires.
+#         # Default: 0s (fires immediately)
+#         # Change when: brief flaps should not page on-call (use 1m or 5m).
+#         for: 1m
+#
+#         # Labels attached to the alert — used by Alertmanager for routing.
+#         labels:
+#           severity: critical
+#           team: infrastructure
+#
+#         # Human-readable annotations — shown in notifications. Not used for routing.
+#         annotations:
+#           summary: "Instance {{ $labels.instance }} is down"
+#           description: "{{ $labels.job }}/{{ $labels.instance }} has been unreachable for more than 1 minute."
+#           runbook: "https://wiki.example.com/runbooks/instance-down"
+#
+#       # -----------------------------------------------------------------------
+#       # ALERTING RULE: fires when disk usage > 85%
+#       # -----------------------------------------------------------------------
+#       - alert: DiskSpaceLow
+#         expr: |
+#           (
+#             node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}
+#             / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}
+#           ) * 100 < 15
+#         for: 5m
+#         labels:
+#           severity: warning
+#         annotations:
+#           summary: "Low disk space on {{ $labels.instance }}"
+#           description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has {{ $value | printf \"%.1f\" }}% free."
+#
+#       # -----------------------------------------------------------------------
+#       # RECORDING RULE: pre-computes a CPU usage ratio for dashboards
+#       # Recording rules are like alerting rules but write a new metric instead
+#       # of firing an alert. The convention is namespace:metric:aggregation.
+#       # -----------------------------------------------------------------------
+#       - record: node:cpu_usage_percent:avg1m
+#         expr: |
+#           100 - (
+#             avg by (instance) (
+#               rate(node_cpu_seconds_total{mode="idle"}[1m])
+#             ) * 100
+#           )

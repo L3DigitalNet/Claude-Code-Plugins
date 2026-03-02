@@ -1,0 +1,290 @@
+# dnsmasq.conf — Annotated Reference
+#
+# Default config location: /etc/dnsmasq.conf
+# Drop-in directory:       /etc/dnsmasq.d/*.conf  (included via conf-dir below)
+#
+# After any change: dnsmasq --test && sudo systemctl reload dnsmasq
+# Syntax check only (no daemon):  dnsmasq --test -C /etc/dnsmasq.conf
+#
+# Format: key=value, one directive per line. Blank lines and # comments ignored.
+# Boolean flags: write the key alone (no =value) to enable.
+
+##############################################################################
+# INTERFACE BINDING
+##############################################################################
+
+# Listen on this interface only. Repeat for multiple interfaces.
+# Required when running DHCP — dnsmasq silently drops DHCP on unlisted interfaces.
+# Default: listen on all interfaces.
+interface=eth0
+
+# Alternatively: bind to a specific IP address. Use instead of interface=
+# when the interface name is variable (e.g. container networking).
+# Default: not set.
+#listen-address=192.168.1.1
+
+# Also listen on loopback so the host itself can use dnsmasq for DNS.
+# Combine with interface= using a second listen-address= line.
+listen-address=127.0.0.1
+
+# Bind only to the listed interfaces/addresses rather than listening on all
+# and filtering. Required on multi-homed hosts where another DNS service
+# (e.g. systemd-resolved) owns other interfaces on port 53.
+# Default: not set (listen-all, filter-by-interface).
+bind-interfaces
+
+# Reject DNS queries from addresses not in the served subnets.
+# Prevents the server from acting as an open resolver.
+# Default: not set.
+#local-service
+
+##############################################################################
+# DNS — UPSTREAM RESOLVERS
+##############################################################################
+
+# Forward all queries to this upstream resolver. Repeat for multiple.
+# If omitted, dnsmasq reads /etc/resolv.conf for upstream servers.
+# Default: use /etc/resolv.conf.
+server=8.8.8.8
+server=8.8.4.4
+
+# Do NOT read /etc/resolv.conf for upstream servers (use server= above only).
+# Prevents NetworkManager or other tools from silently overriding upstreams.
+# Default: not set (resolv.conf IS read).
+no-resolv
+
+# Forward queries for a specific domain to a specific server.
+# Useful for split-horizon: internal domain → internal DNS, everything else → upstream.
+# Format: server=/<domain>/<ip>
+#server=/internal.corp/10.0.0.1
+
+# Reverse-lookup queries for an address block → specific server.
+#server=/10.in-addr.arpa/10.0.0.1
+
+##############################################################################
+# DNS — LOCAL DOMAIN
+##############################################################################
+
+# Declare a local domain. Queries for names in this domain are answered
+# from /etc/hosts and DHCP leases only — never forwarded upstream.
+# Prevents leaking internal hostnames to public DNS.
+# Default: not set.
+local=/home.lan/
+
+# The domain appended to hostnames given out via DHCP.
+# Clients will register as hostname.domain (e.g. laptop.home.lan).
+# Default: not set.
+domain=home.lan
+
+# Expand simple hostname lookups to domain queries.
+# "ping server" becomes "ping server.home.lan" before any upstream lookup.
+# Default: not set.
+expand-hosts
+
+##############################################################################
+# DNS — HOSTS FILES
+##############################################################################
+
+# Do NOT read /etc/hosts. All static name→IP mappings must come from addn-hosts.
+# Default: not set (/etc/hosts IS read).
+#no-hosts
+
+# Read additional hosts-format files. Repeat for multiple files or directories.
+# Useful to keep local DNS records separate from system /etc/hosts.
+# Default: not set.
+#addn-hosts=/etc/dnsmasq-hosts
+
+##############################################################################
+# DNS — ADDRESS OVERRIDES (SINKHOLE / BLOCK)
+##############################################################################
+
+# Return a specific IP for all queries matching a domain (and all subdomains).
+# Use an empty address= to return NXDOMAIN instead of an IP.
+# Sinkhole to localhost (blocks HTTP and DNS):
+#address=/badsite.com/127.0.0.1
+# NXDOMAIN sinkhole (DNS-only block):
+#address=/tracker.example.com/
+# Override a single hostname (not subdomains) with a fixed IP:
+#address=/myhost.home.lan/192.168.1.50
+
+##############################################################################
+# DNS — CACHING
+##############################################################################
+
+# Size of the DNS cache (number of entries). 0 disables caching entirely.
+# Default: 150. Increase for busy networks or large host lists.
+cache-size=1000
+
+# Minimum TTL for cached records (seconds). Forces caching even for low-TTL records.
+# Useful to reduce upstream query volume. Set to 0 to respect original TTLs.
+# Default: 0.
+#min-cache-ttl=300
+
+# Log cache statistics on SIGUSR1. Useful for tuning cache-size.
+# Default: not set.
+#log-facility=/var/log/dnsmasq.log   # (see Logging section)
+
+##############################################################################
+# DNS — DNSSEC
+##############################################################################
+
+# Enable DNSSEC validation. Requires correct system time.
+# Only works reliably when upstream resolvers pass DNSSEC records (AD bit).
+# Breaks behind DNS-intercepting proxies.
+# Default: not set (DNSSEC disabled).
+#dnssec
+
+# Trust anchor file for DNSSEC root keys (packaged with dnsmasq).
+# Required when dnssec is enabled.
+#trust-anchor=.,19036,8,2,49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5
+#dnssec-check-unsigned
+
+##############################################################################
+# DHCP — RANGES AND LEASES
+##############################################################################
+
+# Hand out addresses from this range on interface=eth0.
+# Format: dhcp-range=start,end,lease-time
+# Lease time: h (hours), m (minutes), or "infinite".
+# Default: no DHCP (disabled until at least one dhcp-range is set).
+dhcp-range=192.168.1.100,192.168.1.200,24h
+
+# Multiple ranges (one per interface in a multi-interface setup):
+#dhcp-range=interface:eth1,10.0.0.50,10.0.0.150,12h
+
+# Lease file location. Must be writable by dnsmasq user.
+# Default: /var/lib/misc/dnsmasq.leases
+#dhcp-leasefile=/var/lib/misc/dnsmasq.leases
+
+# Do not read /etc/ethers for static lease mappings.
+# Default: /etc/ethers IS read if it exists.
+#no-ethers
+
+##############################################################################
+# DHCP — STATIC LEASES
+##############################################################################
+
+# Assign a fixed IP to a client by MAC address.
+# Format: dhcp-host=MAC,IP[,hostname][,lease-time]
+dhcp-host=aa:bb:cc:dd:ee:ff,192.168.1.10,myserver,infinite
+
+# Match by hostname instead of MAC (useful for VMs that change MACs):
+#dhcp-host=clienthostname,192.168.1.20
+
+# Ignore a host (refuse to hand out a lease for this MAC):
+#dhcp-host=aa:bb:cc:00:00:00,ignore
+
+##############################################################################
+# DHCP — OPTIONS SENT TO CLIENTS
+##############################################################################
+
+# Option 3 — Default gateway (router). Required for clients to reach the internet.
+dhcp-option=3,192.168.1.1
+
+# Option 6 — DNS server(s). Set to this machine's IP so clients use dnsmasq.
+dhcp-option=6,192.168.1.1
+
+# Option 15 — Domain name sent to clients.
+#dhcp-option=15,home.lan
+
+# Option 42 — NTP server.
+#dhcp-option=42,192.168.1.1
+
+# Option 28 — Broadcast address (usually auto-computed, rarely needed).
+#dhcp-option=28,192.168.1.255
+
+# Option 119 — DNS search domain list (RFC 3397). Some clients ignore it.
+#dhcp-option=119,home.lan
+
+# Vendor-class options (advanced): target options to specific client types.
+#dhcp-vendorclass=set:android,android-dhcp
+#dhcp-option=tag:android,option:mtu,1280
+
+##############################################################################
+# DHCP — AUTHORITATIVE MODE
+##############################################################################
+
+# Tell dnsmasq it is the only DHCP server on this network.
+# Causes it to respond immediately (no wait for other servers) and to
+# reply with NAK to clients that have stale leases from old servers.
+# Recommended for home/lab networks. Do NOT enable on corporate networks
+# with existing DHCP infrastructure.
+# Default: not set.
+dhcp-authoritative
+
+##############################################################################
+# LOGGING
+##############################################################################
+
+# Log all DNS queries (name + result). High volume on busy networks.
+# Default: not set (queries not logged).
+log-queries
+
+# Log DHCP events (discover, offer, request, ack, release).
+# Default: not set.
+log-dhcp
+
+# Write logs to a file instead of syslog/journald.
+# Default: not set (logs go to syslog/journald).
+#log-facility=/var/log/dnsmasq.log
+
+# Log each line with a timestamp (only meaningful with log-facility).
+# Default: not set.
+#log-async=25
+
+##############################################################################
+# TFTP / PXE NETWORK BOOT
+##############################################################################
+
+# Enable the built-in TFTP server (for PXE booting).
+# Default: not set (TFTP disabled).
+#enable-tftp
+
+# Root directory served by TFTP.
+# Default: not set.
+#tftp-root=/var/lib/tftpboot
+
+# PXE boot file for BIOS clients.
+#dhcp-boot=pxelinux.0
+
+# PXE boot file for UEFI 64-bit clients (match by vendor class).
+#dhcp-match=set:efi-x86_64,option:client-arch,7
+#dhcp-boot=tag:efi-x86_64,grubx64.efi
+
+##############################################################################
+# DROP-IN CONFIGURATION DIRECTORY
+##############################################################################
+
+# Include all *.conf files from this directory.
+# This is the standard way to split config into logical files
+# (e.g. 01-interfaces.conf, 10-dhcp-hosts.conf, 20-blocklist.conf).
+# Default: not set. Debian/Ubuntu packages typically include this already.
+conf-dir=/etc/dnsmasq.d/,*.conf
+
+##############################################################################
+# MISCELLANEOUS
+##############################################################################
+
+# Do not forward plain names (no dots) to upstream resolvers.
+# Prevents leaking single-label queries like "server" to public DNS.
+# Default: not set.
+domain-needed
+
+# Do not forward addresses in the private RFC 1918 ranges to upstream.
+# Default: not set.
+bogus-priv
+
+# Strip the local domain suffix before forwarding to upstream.
+# e.g. "server.home.lan" → forward as "server" only (combined with domain-needed
+# this means local-only names are never forwarded).
+# Default: not set.
+#strip-subnet=home.lan
+
+# Set the PID file location.
+# Default: /run/dnsmasq/dnsmasq.pid (varies by distro).
+#pid-file=/run/dnsmasq.pid
+
+# Run as this user/group (drop privileges after binding to port 53).
+# Default: nobody/nogroup (Debian), dnsmasq/dnsmasq (Fedora).
+#user=dnsmasq
+#group=dnsmasq

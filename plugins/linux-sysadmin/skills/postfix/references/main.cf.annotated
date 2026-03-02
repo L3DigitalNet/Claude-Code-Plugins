@@ -1,0 +1,279 @@
+# Annotated /etc/postfix/main.cf
+# Each directive includes: what it does, default value, and when to change it.
+# Directive order follows the logical grouping used in standard Postfix installs.
+#
+# After editing this file, apply changes with: sudo postfix reload
+# Validate syntax first with:               sudo postfix check
+# View all non-default active values with:  postconf -n
+
+# ---------------------------------------------------------------------------
+# IDENTITY
+# These three together tell Postfix who it is and what it sends mail as.
+# ---------------------------------------------------------------------------
+
+# Fully qualified domain name of this mail server.
+# Default: system hostname (from gethostname())  |  Change when: the system
+#   hostname is a short name or doesn't match your DNS A/MX records.
+#   Must match the PTR record for your IP to avoid spam filtering.
+myhostname = mail.example.com
+
+# Domain name used to complete unqualified hostnames (e.g., "mail" → "mail.example.com").
+# Default: $myhostname with the first component stripped  |  Change when:
+#   myhostname is already a subdomain and you want mydomain to be the parent.
+mydomain = example.com
+
+# Domain appended to mail from local users with no @domain (e.g., root → root@example.com).
+# Default: $myhostname  |  Change when: you want outbound mail to show your
+#   domain instead of the full hostname (myorigin = $mydomain is typical).
+myorigin = $mydomain
+
+# ---------------------------------------------------------------------------
+# NETWORK INTERFACES
+# Which IP addresses and protocols Postfix listens on.
+# ---------------------------------------------------------------------------
+
+# Which local interfaces to accept incoming SMTP connections on.
+# Default: all  |  Options: all, loopback-only, specific IPs
+# Change when:
+#   "loopback-only" — sending local mail only (null client, cron notifications)
+#   "all"           — accepting inbound mail from the internet
+#   Specific IP     — multi-homed server, listen only on the mail-designated IP
+inet_interfaces = all
+
+# IP address families Postfix will use for outbound connections.
+# Default: all  |  Options: all, ipv4, ipv6
+# Change when: your server has IPv6 but your PTR/SPF records only cover IPv4
+#   (spam filters check both; set to ipv4 to avoid IPv6 reputation issues).
+inet_protocols = ipv4
+
+# ---------------------------------------------------------------------------
+# LOCAL DELIVERY
+# Which mail Postfix considers "local" and delivers to mailboxes on this host.
+# ---------------------------------------------------------------------------
+
+# Domains for which Postfix delivers mail locally (not relayed elsewhere).
+# Default: $myhostname, localhost.$mydomain, localhost  |  Change when:
+#   you want to receive mail for your primary domain. Add $mydomain here.
+#   Do NOT add $mydomain if this is a null client (relay-only) — it would
+#   try to deliver locally instead of forwarding.
+mydestination = $myhostname, localhost.$mydomain, localhost
+
+# Where to deliver local mail. Either a directory path (Maildir) or empty
+# (use mailbox_command). Trailing slash = Maildir format; no slash = mbox.
+# Default: not set (uses /var/mail/$user mbox via mailbox_command)
+# Change when: you want Maildir delivery for IMAP servers like Dovecot.
+home_mailbox = Maildir/
+
+# External command to run for local delivery. Overrides home_mailbox if set.
+# Default: not set  |  Common: procmail, maildrop, or Dovecot LDA
+# Change when: using a delivery agent that provides filtering, sieve rules, etc.
+# mailbox_command = /usr/bin/procmail -a "$EXTENSION"
+
+# ---------------------------------------------------------------------------
+# ALIAS MAPS
+# Map local addresses to other addresses or commands. Required for postmaster.
+# ---------------------------------------------------------------------------
+
+# Lookup table for local address aliases (e.g., root → admin@example.com).
+# Default: hash:/etc/aliases  |  Change when: using LDAP or a different format.
+# After editing /etc/aliases, run: newaliases
+alias_maps = hash:/etc/aliases
+
+# The alias database file to rebuild when newaliases is run.
+# Default: hash:/etc/aliases  |  Usually matches alias_maps.
+alias_database = hash:/etc/aliases
+
+# ---------------------------------------------------------------------------
+# RELAY CONTROL
+# Who Postfix will relay mail for, and where to send it.
+# ---------------------------------------------------------------------------
+
+# Networks from which Postfix will relay mail unconditionally (no auth needed).
+# Default: 127.0.0.0/8, [::1]/128  |  Change when: adding trusted internal
+#   networks (e.g., 192.168.1.0/24) whose machines send mail through this server.
+#   WARNING: adding 0.0.0.0/0 makes this an open relay — never do this.
+mynetworks = 127.0.0.0/8 [::1]/128
+
+# Upstream relay host to forward all non-local outbound mail through.
+# Default: empty (deliver directly via MX lookup)  |  Change when:
+#   using an SMTP relay service (SendGrid, SES, Mailjet) or a corporate smarthost.
+#   Format: [host]:port to skip MX lookup and connect directly.
+#   Example (with SASL auth): relayhost = [smtp.sendgrid.net]:587
+relayhost =
+
+# Domains Postfix will relay mail for without local delivery (relay domains).
+# Default: empty  |  Change when: acting as a backup MX or relay for another domain.
+relay_domains =
+
+# ---------------------------------------------------------------------------
+# TLS (OUTBOUND — smtp client)
+# Controls how Postfix encrypts outbound mail to remote servers.
+# ---------------------------------------------------------------------------
+
+# Security level for outbound TLS to remote SMTP servers.
+# Default: may  |  Options: none, may, encrypt, dane, secure
+#   may      — opportunistic TLS; use if available, plaintext if not
+#   encrypt  — require TLS; reject if remote doesn't support it (strict)
+#   dane     — use DNS-Based Authentication (DNSSEC + TLSA records required)
+# Change when: you want to enforce encrypted delivery to specific destinations
+#   (use smtp_tls_policy_maps for per-domain rules instead of changing globally).
+smtp_tls_security_level = may
+
+# Log TLS connection details. Useful for debugging relay TLS handshakes.
+# Default: not set (no TLS logging)  |  Options: 0 (none) to 4 (verbose)
+# Change when: debugging TLS failures to remote servers.
+smtp_tls_loglevel = 1
+
+# ---------------------------------------------------------------------------
+# TLS (INBOUND — smtpd server)
+# Controls how Postfix presents TLS to connecting clients and servers.
+# ---------------------------------------------------------------------------
+
+# Path to the server's TLS certificate (PEM format, full chain preferred).
+# Default: not set  |  Change when: enabling TLS on port 25 or 587.
+# Let's Encrypt example: /etc/letsencrypt/live/mail.example.com/fullchain.pem
+smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
+
+# Path to the server's private key.
+# Default: not set  |  Change when: enabling TLS. Must match the cert.
+smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
+
+# Security level for inbound TLS offered to connecting clients.
+# Default: may  |  Options: none, may, encrypt
+#   may     — offer STARTTLS but don't require it (standard for port 25)
+#   encrypt — require TLS for all connections (appropriate for port 587)
+# Change when: hardening the submission port (587) to require encrypted auth.
+smtpd_tls_security_level = may
+
+# Log TLS connection details for inbound connections.
+# Default: not set  |  Options: 0–4
+# Change when: debugging client TLS handshake failures.
+smtpd_tls_loglevel = 1
+
+# TLS session cache for inbound connections. Reduces repeated handshake overhead.
+# Default: not set  |  Change when: server handles moderate to high mail volume.
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+
+# Minimum TLS protocol version for inbound connections.
+# Default: not set (TLSv1 and up)  |  Change when: disabling old protocol versions.
+smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+
+# ---------------------------------------------------------------------------
+# SASL AUTHENTICATION (INBOUND)
+# Enables clients to authenticate before submitting mail.
+# Required for submission port (587) setups.
+# ---------------------------------------------------------------------------
+
+# Enable SASL authentication for incoming SMTP clients.
+# Default: no  |  Change when: allowing authenticated clients to relay mail
+#   (e.g., mail clients submitting via port 587).
+smtpd_sasl_auth_enable = no
+
+# SASL implementation to use. Dovecot SASL is preferred over Cyrus.
+# Default: cyrus  |  Change when: using Dovecot as the IMAP/auth server.
+smtpd_sasl_type = dovecot
+
+# Path to the SASL authentication socket. For Dovecot, this is a Unix socket.
+# Default: smtpd  |  Change when: using Dovecot SASL.
+#   Dovecot socket path: private/auth (relative to Postfix queue dir)
+smtpd_sasl_path = private/auth
+
+# SASL security options. "noanonymous" prevents anonymous authentication.
+# Default: noplaintext, noanonymous  |  Change when: allowing plaintext auth
+#   (acceptable on port 587 with TLS enforced via smtpd_tls_security_level = encrypt).
+smtpd_sasl_security_options = noanonymous
+
+# ---------------------------------------------------------------------------
+# ACCESS RESTRICTIONS
+# Rules applied to incoming SMTP connections, evaluated in order.
+# ---------------------------------------------------------------------------
+
+# Restrictions checked after the client sends RCPT TO. This is the main gate
+# controlling who can send mail through this server.
+# Default: permit_mynetworks, reject_unauth_destination
+# Common additions (in order):
+#   permit_mynetworks         — allow trusted network hosts unconditionally
+#   permit_sasl_authenticated — allow authenticated clients (submission port)
+#   reject_unauth_destination — reject if Postfix isn't the final destination
+#                               and sender isn't authorized to relay
+smtpd_recipient_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_unauth_destination
+
+# Restrictions on the HELO/EHLO hostname presented by clients.
+# Default: empty (no restrictions)  |  Change when: blocking clients that send
+#   invalid hostnames (common spam filter).
+smtpd_helo_restrictions =
+    permit_mynetworks,
+    reject_invalid_helo_hostname,
+    reject_non_fqdn_helo_hostname
+
+# Restrictions applied when a client first connects. Applied before EHLO.
+# Default: empty  |  Change when: blocking IPs via DNSBL or rate limits.
+# smtpd_client_restrictions =
+#     permit_mynetworks,
+#     reject_rbl_client zen.spamhaus.org,
+#     permit
+
+# ---------------------------------------------------------------------------
+# RATE LIMITING
+# Protect against flooding and brute-force attacks on the submission port.
+# ---------------------------------------------------------------------------
+
+# Maximum simultaneous SMTP connections from a single client IP.
+# Default: 50  |  Change when: hardening against connection floods.
+smtpd_client_connection_count_limit = 10
+
+# Maximum messages a single client IP can send per 60-second window.
+# Default: 0 (unlimited)  |  Change when: limiting bulk senders.
+smtpd_client_message_rate_limit = 100
+
+# Maximum recipients per message from a single client IP per 60-second window.
+# Default: 0 (unlimited)  |  Change when: limiting large-recipient-list senders.
+smtpd_client_recipient_rate_limit = 200
+
+# ---------------------------------------------------------------------------
+# VIRTUAL DOMAINS
+# Deliver mail for multiple domains without Unix accounts for each address.
+# ---------------------------------------------------------------------------
+
+# Maps virtual addresses to real delivery addresses or mailboxes.
+# Default: not set  |  Change when: hosting multiple domains on one server.
+# After editing the map file, run: postmap /etc/postfix/virtual
+# virtual_alias_maps = hash:/etc/postfix/virtual
+
+# Domains hosted with virtual mailboxes (full mailbox per address, not aliases).
+# Default: not set  |  Change when: using Dovecot or another IMAP server
+#   with virtual users stored in a database or flat file.
+# virtual_mailbox_domains = example.org, example.net
+
+# Map from virtual mailbox address to mailbox file path.
+# Default: not set  |  Change when: using virtual_mailbox_domains.
+# virtual_mailbox_maps = hash:/etc/postfix/vmailbox
+
+# ---------------------------------------------------------------------------
+# MISCELLANEOUS
+# ---------------------------------------------------------------------------
+
+# Disable the local UNIX-domain socket used by sendmail(1) to submit mail
+# when Postfix acts as a relay-only (null client) and local delivery is disabled.
+# Default: not set  |  Change when: null client config where you want local
+#   programs (cron, scripts) to still be able to send mail via sendmail.
+# local_transport = error:local mail delivery is disabled
+
+# Maximum message size in bytes. Default 10MB.
+# Default: 10240000  |  Change when: your users need to send larger attachments.
+message_size_limit = 10240000
+
+# Maximum size of the mailbox. 0 = unlimited.
+# Default: 51200000  |  Change when: disk space is constrained.
+mailbox_size_limit = 0
+
+# Delimiter character for address extensions (e.g., user+tag@example.com).
+# Default: not set  |  Change when: enabling plus-addressing for filtering.
+recipient_delimiter = +
+
+# Data directory for Postfix-maintained data (TLS caches, etc.).
+# Default: /var/lib/postfix  |  Rarely changed.
+data_directory = /var/lib/postfix

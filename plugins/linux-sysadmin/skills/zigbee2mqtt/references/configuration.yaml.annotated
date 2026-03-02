@@ -1,0 +1,258 @@
+# Zigbee2MQTT configuration.yaml — annotated reference
+#
+# Default location (bare metal): /opt/zigbee2mqtt/data/configuration.yaml
+# Default location (Docker):     /app/data/configuration.yaml (mounted volume)
+#
+# After editing, restart the service:
+#   systemctl restart zigbee2mqtt
+#   docker restart zigbee2mqtt
+#
+# YAML gotcha: values like "true"/"false" without quotes are booleans.
+# Keys with colons need quoting: "192.168.1.1:1883" must be a quoted string.
+
+# ---------------------------------------------------------------------------
+# Home Assistant Integration
+# ---------------------------------------------------------------------------
+
+# Enable MQTT discovery so HA auto-creates entities for every paired device.
+# Requires the HA MQTT integration to be configured with the same broker.
+# Default: false
+homeassistant:
+  enabled: true
+  # legacy_action_sensor: false  # Set true only if upgrading from Z2M < 1.34
+
+# ---------------------------------------------------------------------------
+# Pairing Control
+# ---------------------------------------------------------------------------
+
+# Allow new devices to join the Zigbee network.
+# IMPORTANT: Set to false after initial setup. Use the MQTT API or frontend
+# to open briefly when pairing. Leaving true is a security risk.
+# Default: false
+permit_join: false
+
+# ---------------------------------------------------------------------------
+# MQTT Broker
+# ---------------------------------------------------------------------------
+
+mqtt:
+  # Topic prefix for all Z2M messages. Change if running multiple Z2M instances
+  # on the same broker — each instance needs a unique base_topic.
+  # Default: "zigbee2mqtt"
+  base_topic: zigbee2mqtt
+
+  # MQTT broker address. Use mqtt:// for plain, mqtts:// for TLS.
+  # Default: "mqtt://localhost"
+  server: "mqtt://localhost:1883"
+
+  # Broker credentials. Omit (or leave blank) if the broker allows anonymous.
+  # Match the username/password defined in /etc/mosquitto/passwd.
+  user: zigbee2mqtt
+  password: "your-mqtt-password"
+
+  # Client ID sent to the broker. Useful for broker-side ACLs.
+  # Default: auto-generated
+  # client_id: zigbee2mqtt-bridge
+
+  # Retain messages on MQTT so consumers get the last state on subscribe.
+  # Default: true — leave this on for HA and most integrations.
+  force_disable_retain: false
+
+  # TLS — only needed if using mqtts:// or a broker with client cert auth.
+  # ca: /etc/ssl/certs/ca-certificates.crt
+  # cert: /path/to/client.crt
+  # key: /path/to/client.key
+  # reject_unauthorized: true  # Set false only for self-signed certs in dev
+
+  # Keepalive interval in seconds. Lower values detect disconnects faster
+  # but increase broker load. Default: 60
+  # keepalive: 60
+
+# ---------------------------------------------------------------------------
+# Serial / Coordinator
+# ---------------------------------------------------------------------------
+
+serial:
+  # USB coordinator path.
+  # CRITICAL: Use the stable by-id path, not /dev/ttyUSB0 or /dev/ttyACM0.
+  # Those are assigned dynamically and change when other USB devices are added.
+  # Find yours: ls /dev/serial/by-id/
+  # Example CC2652P (Sonoff Zigbee 3.0 USB Plus): usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_...
+  port: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_<serial>-if00-port0
+
+  # Adapter type — MUST match the physical hardware.
+  # zstack   : Texas Instruments CC2652/CC1352 chips (most common, recommended)
+  # ezsp     : Silicon Labs EZSP protocol (ConBee II, Elelabs, Nortek HUSBZB-1)
+  # deconz   : dresden elektronik ConBee / RaspBee (via deconz daemon)
+  # zigate   : ZiGate USB adapters
+  # ember    : Silabs EmberZNet (newer Elelabs, HUSBZB-1 with newer firmware)
+  # Default: auto-detect (unreliable — always set explicitly)
+  adapter: zstack
+
+  # Set true for EZSP (Silicon Labs) adapters that require hardware flow control.
+  # Default: false. Required for: ConBee II, Elelabs ELR023/ELU013, HUSBZB-1.
+  # rtscts: false
+
+  # Serial port baudrate. Default: 115200. Only change if firmware requires it.
+  # baudrate: 115200
+
+  # Disable LED on coordinator USB stick (if supported by adapter).
+  # Default: false
+  # disable_led: false
+
+# ---------------------------------------------------------------------------
+# Frontend (Web UI)
+# ---------------------------------------------------------------------------
+
+frontend:
+  # Enable the built-in web UI. NOT enabled by default.
+  # Access at http://<host>:8080 once enabled.
+  enabled: true
+
+  # Port the frontend listens on. Default: 8080.
+  port: 8080
+
+  # Bind address. Default: 0.0.0.0 (all interfaces).
+  # Set to 127.0.0.1 to allow only local access (reverse proxy pattern).
+  # host: 0.0.0.0
+
+  # Bearer token for frontend authentication. Strongly recommended when
+  # accessible from outside localhost. Pass as "Authorization: Bearer <token>"
+  # or enter in the UI login prompt.
+  # auth_token: "your-secret-token-here"
+
+  # URL used to generate links in notifications. Set when behind a reverse proxy.
+  # url: "https://zigbee2mqtt.example.com"
+
+# ---------------------------------------------------------------------------
+# Advanced Network Settings
+# ---------------------------------------------------------------------------
+
+advanced:
+  # Zigbee PAN ID (Personal Area Network ID). 16-bit hex value.
+  # Identifies your Zigbee network. Change if you have neighbors running Z2M
+  # on the same channel — PAN ID collisions cause pairing failures.
+  # Default: randomly generated on first start (stored in coordinator flash).
+  # pan_id: 0x1a62
+
+  # Zigbee channel. Valid range: 11–26.
+  # Avoid channels that overlap with your WiFi 2.4GHz channels:
+  #   WiFi ch 1  → avoid Zigbee 11–14
+  #   WiFi ch 6  → avoid Zigbee 19–21
+  #   WiFi ch 11 → avoid Zigbee 24–26
+  # Best choices for minimal WiFi interference: 15, 20, 25
+  # WARNING: Changing channel after pairing requires re-pairing all devices.
+  # Default: 11
+  channel: 25
+
+  # Zigbee network encryption key. 128-bit (16 bytes) hex array.
+  # Generated randomly on first start; stored in coordinator flash.
+  # Record this if you want to restore devices without re-pairing after
+  # replacing the coordinator. KEEP PRIVATE.
+  # network_key: GENERATE  # "GENERATE" creates a random key on first start
+  # network_key: [1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 13]
+
+  # Log level: debug | info | warning | error
+  # Use debug temporarily when troubleshooting pairing or device issues.
+  # Default: info
+  log_level: info
+
+  # Log output format: attribute | json | both
+  # "attribute" emits one MQTT message per attribute (legacy, high volume).
+  # "json" emits a single JSON payload per update (preferred for HA/Node-RED).
+  # "both" emits both formats — only use if a consumer needs attribute format.
+  # Default: attribute (legacy default; prefer json for new installs)
+  output: json
+
+  # Where Z2M writes logs when file logging is enabled.
+  # Default: data/log/
+  # log_directory: data/log/%TIMESTAMP%
+
+  # Set false to disable writing logs to disk. Useful on SD cards to reduce wear.
+  # Default: true
+  # log_file: true
+
+  # Elapsed time before a device is marked unavailable after missing heartbeat.
+  # Default: 25 hours (for battery devices) / false (disabled)
+  # availability: true  # Enable availability tracking (uses default timeouts)
+  # availability:
+  #   active:  { timeout: 10 }  # minutes, for mains-powered devices
+  #   passive: { timeout: 1500 }  # minutes, for battery devices
+
+  # Transmit power in dBm. Range depends on coordinator hardware.
+  # Increasing transmit_power can improve range but may cause regulatory issues.
+  # Default: coordinator default (usually 5 or 9 dBm)
+  # transmit_power: 9
+
+  # Timestamp format in log output. Default: ISO 8601.
+  # timestamp_format: "YYYY-MM-DD HH:mm:ss"
+
+  # Home Assistant entity naming: default | legacy
+  # "default" uses HA-recommended naming (shorter, no device name prefix).
+  # "legacy" preserves pre-1.29.0 entity IDs for existing HA installs.
+  # Default: default
+  # homeassistant:
+  #   legacy_entity_attributes: false
+
+# ---------------------------------------------------------------------------
+# OTA (Over-the-Air) Firmware Updates
+# ---------------------------------------------------------------------------
+
+ota:
+  # Automatically check for OTA updates on startup.
+  # Default: false — updates must be triggered manually via MQTT or frontend.
+  update_check_interval: 1440  # minutes; 1440 = once per day
+
+  # Disable all OTA for specific devices or globally.
+  # Default: false
+  # disable_automatic_update_check: false
+
+  # Path to a local OTA index file (for air-gapped environments).
+  # Default: Z2M fetches from github.com/Koenkk/zigbee-OTA
+  # ikea_ota_use_test_url: false  # Use IKEA's test server (newer firmware)
+
+# ---------------------------------------------------------------------------
+# Device Configuration Overrides
+# ---------------------------------------------------------------------------
+# Override per-device settings. Key is the device's IEEE address (0x...) or
+# friendly_name. These override auto-detected values from the device definition.
+
+devices:
+  # Example: rename a device and set a description
+  "0x00158d0001234567":
+    friendly_name: "living_room/motion_sensor"
+    description: "Aqara motion sensor above TV"
+
+  # Example: override a device's reported exposes (advanced — rarely needed)
+  # "0x001788010abcdef0":
+  #   friendly_name: "kitchen/plug"
+  #   exposes_overrides:
+  #     - type: numeric
+  #       name: power
+  #       unit: W
+
+# ---------------------------------------------------------------------------
+# Group Configuration
+# ---------------------------------------------------------------------------
+# Groups allow sending a single command to multiple devices simultaneously.
+# Devices must support groupcast (most mains-powered Zigbee devices do).
+
+# groups:
+#   "1":
+#     friendly_name: all_lights
+#     devices:
+#       - living_room/light_1/left
+#       - living_room/light_1/right
+#       - bedroom/ceiling
+
+# ---------------------------------------------------------------------------
+# Blocklist / Passlist
+# ---------------------------------------------------------------------------
+# Control which devices can join the network.
+
+# Blocklist: reject joins from these IEEE addresses.
+# blocklist: []
+
+# Passlist: ONLY allow joins from these IEEE addresses (allowlist).
+# If set, all other devices are rejected.
+# passlist: []

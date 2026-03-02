@@ -1,0 +1,300 @@
+# Annotated my.cnf
+# Each directive includes: what it does, default value, recommended production value,
+# and when to change it.
+#
+# Layout mirrors a typical Debian/Ubuntu MariaDB installation. On RHEL/Fedora the
+# main file is /etc/my.cnf with includes from /etc/my.cnf.d/.
+#
+# Sections:
+#   [mysqld]  — server process configuration (most directives live here)
+#   [client]  — applies to all client programs (mysql, mysqldump, etc.)
+#   [mysql]   — applies to the interactive mysql CLI only
+#   [mysqldump] — applies to mysqldump only
+
+# ---------------------------------------------------------------------------
+# [mysqld] — Server process
+# ---------------------------------------------------------------------------
+
+[mysqld]
+
+# ---------------------------------------------------------------------------
+# Network / Identity
+# ---------------------------------------------------------------------------
+
+# IP address the server listens on.
+# Default: 127.0.0.1  |  Recommended: 127.0.0.1 (local only) unless remote access needed
+# Change when: applications on other hosts need to connect. Set to 0.0.0.0 for all
+#   interfaces, or a specific IP to bind to one NIC. Always pair with firewall rules.
+bind-address            = 127.0.0.1
+
+# TCP port to listen on.
+# Default: 3306  |  Recommended: 3306 unless running multiple instances
+# Change when: port 3306 conflicts with another service or for security-by-obscurity
+#   (not a meaningful security control on its own).
+port                    = 3306
+
+# Directory where InnoDB tablespaces, MyISAM tables, and metadata are stored.
+# Default: /var/lib/mysql  |  Recommended: keep default; move to dedicated volume if disk I/O bound
+# Change when: /var/lib/mysql is on the OS disk and you want data on a separate partition.
+datadir                 = /var/lib/mysql
+
+# Unix socket file path. Client connections to 'localhost' use this by default.
+# Default: /run/mysqld/mysqld.sock (Debian) or /var/lib/mysql/mysql.sock (RHEL)
+# Change when: running multiple instances or when socket path conflicts with an init script.
+socket                  = /run/mysqld/mysqld.sock
+
+# OS user the server process runs as.
+# Default: mysql  |  Recommended: mysql (never run as root)
+# Change when: your distro uses a different service account (some use mariadb).
+user                    = mysql
+
+# ---------------------------------------------------------------------------
+# InnoDB Storage Engine
+# ---------------------------------------------------------------------------
+
+# Size of the InnoDB buffer pool — the primary cache for table data and indexes.
+# This is the single most impactful tuning parameter for a dedicated database server.
+# Default: 128M  |  Recommended: 70–80% of total RAM for a dedicated DB server
+#   Example: 12G on a 16GB server. Reduce if other services share the host.
+# Change when: iostat shows high disk reads on a DB workload — the pool is too small.
+#   Decrease if OOM kills appear or the server swaps.
+innodb_buffer_pool_size = 1G
+
+# Number of buffer pool instances. Reduces internal mutex contention at high concurrency.
+# Default: 8 (or 1 if buffer pool < 1G)  |  Recommended: 1 per GB of buffer pool, up to 64
+# Change when: buffer pool is >= 4G and you see contention in SHOW ENGINE INNODB STATUS.
+innodb_buffer_pool_instances = 1
+
+# Size of each InnoDB redo log file (two files by default, pre-MariaDB 10.5).
+# Larger files improve write throughput but extend crash recovery time.
+# Default: 48M  |  Recommended: 256M–1G for write-heavy workloads
+# Change when: SHOW ENGINE INNODB STATUS shows checkpoint age frequently near log capacity.
+#   Requires stopping the server, deleting old log files (ib_logfile0/1), and restarting.
+innodb_log_file_size    = 256M
+
+# Size of the redo log buffer in memory before flushing to disk.
+# Default: 16M  |  Recommended: 64M for write-heavy workloads
+# Change when: many large transactions cause frequent buffer flushes.
+innodb_log_buffer_size  = 64M
+
+# Controls when InnoDB flushes the redo log and data files to disk.
+# 1 (default): flush log on every commit — safest, ACID-compliant, slowest.
+# 0: flush once per second — data loss up to 1s on crash, fastest.
+# 2: flush log per commit but fsync data files once per second — moderate; safe on
+#   battery-backed RAID or cloud storage with durable writes.
+# Default: 1  |  Recommended: 1 for ACID compliance; 2 for higher throughput when
+#   the storage layer guarantees durability (e.g., EBS, Ceph, battery-backed RAID)
+# Change when: write latency is a bottleneck and you accept the data-loss trade-off.
+innodb_flush_log_at_trx_commit = 1
+
+# I/O method used to flush data and log files.
+# O_DIRECT: bypasses OS page cache for data files (writes go direct to storage).
+# Default: fsync  |  Recommended: O_DIRECT on Linux with local storage
+#   Avoids double-buffering (InnoDB buffer pool + OS cache). Do NOT use O_DIRECT
+#   with NFS — it causes corruption.
+# Change when: profiling shows double-buffering overhead. Leave as fsync on NFS or
+#   virtualized storage where O_DIRECT is unreliable.
+innodb_flush_method     = O_DIRECT
+
+# Percentage of dirty pages in the buffer pool that triggers flushing.
+# Default: 75  |  Recommended: 75 for most workloads
+# Change when: you see I/O spikes from aggressive flushing — lower to 50;
+#   or increase to 90 if storage has very high sequential write throughput.
+innodb_max_dirty_pages_pct = 75
+
+# Whether to use file-per-table tablespaces (each table gets its own .ibd file).
+# Default: ON  |  Recommended: ON
+# Change when: rarely — shared tablespace (OFF) was the old default and has poor
+#   space reclamation. Keep ON to allow OPTIMIZE TABLE to reclaim disk space.
+innodb_file_per_table   = ON
+
+# ---------------------------------------------------------------------------
+# Connections
+# ---------------------------------------------------------------------------
+
+# Maximum number of simultaneous client connections.
+# Default: 151  |  Recommended: size to (peak concurrent connections × 1.2)
+#   Typical web apps: 100–500. Each connection uses ~1MB RAM for stack overhead.
+# Change when: "Too many connections" errors appear in logs. Don't set arbitrarily
+#   high — excess connections increase memory pressure.
+max_connections         = 151
+
+# Time in seconds to wait for a connection to be established.
+# Default: 10  |  Recommended: 10
+# Change when: connecting from geographically distant clients over slow links.
+connect_timeout         = 10
+
+# Time in seconds an idle non-interactive connection is kept open before closing.
+# Default: 28800 (8 hours)  |  Recommended: 600 (10 minutes)
+# Change when: connection pools keep connections alive (set to match pool timeout);
+#   lowering reduces stale connections accumulating in SHOW PROCESSLIST.
+wait_timeout            = 600
+
+# Same as wait_timeout but for interactive sessions (mysql CLI).
+# Default: 28800  |  Recommended: 28800 (leave long for human sessions)
+interactive_timeout     = 28800
+
+# Maximum packet size sent or received. Controls max query size and result set row size.
+# Default: 16M  |  Recommended: 64M if BLOB/TEXT columns or large imports are common
+# Change when: "Packet too large" errors on INSERT or SELECT of large BLOBs.
+max_allowed_packet      = 64M
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+# Path to the server error log. Contains startup info, warnings, and InnoDB messages.
+# Default: /var/log/mysql/error.log (Debian) or /var/log/mariadb/mariadb.log (RHEL)
+# Change when: centralizing logs to a non-default path.
+log_error               = /var/log/mysql/error.log
+
+# Enable the general query log (logs every query received).
+# Default: OFF  |  Recommended: OFF in production (high I/O overhead)
+# Change when: debugging an application that generates unexpected queries.
+#   Disable immediately after — it logs credentials in GRANT/SET PASSWORD statements.
+general_log             = OFF
+general_log_file        = /var/log/mysql/mysql-general.log
+
+# Enable the slow query log to capture queries exceeding long_query_time.
+# Default: OFF  |  Recommended: ON in production for performance monitoring
+# Change when: turning off only if the log volume causes I/O problems (rare).
+slow_query_log          = ON
+slow_query_log_file     = /var/log/mysql/mysql-slow.log
+
+# Threshold in seconds. Queries taking longer are written to the slow query log.
+# Default: 10  |  Recommended: 1–2 for most production workloads
+# Change when: slow log is too noisy (increase) or you want to catch more queries (lower to 0.5).
+long_query_time         = 2
+
+# Log queries that don't use an index, regardless of execution time.
+# Default: OFF  |  Recommended: ON during index optimization phases; OFF in steady state
+# Change when: auditing a database for missing indexes.
+log_queries_not_using_indexes = OFF
+
+# ---------------------------------------------------------------------------
+# Binary Logging (replication and point-in-time recovery)
+# ---------------------------------------------------------------------------
+
+# Enable binary logging. Required for replication and point-in-time recovery.
+# Default: OFF (MariaDB) or ON with auto-generated name (MySQL)
+# Recommended: ON if you need PITR or replication; OFF for standalone servers
+#   where the overhead is not justified.
+# Change when: setting up replication or needing PITR capability.
+log_bin                 = /var/log/mysql/mysql-bin
+
+# How long to keep binary log files before automatic deletion.
+# Default: 0 (never deleted)  |  Recommended: 7–14 days
+# Change when: disk fills with binary logs. Also available as binlog_expire_logs_seconds
+#   in MariaDB 10.6+ (set in seconds: 604800 = 7 days).
+expire_logs_days        = 7
+
+# Binary log format.
+# STATEMENT: logs SQL text — smaller, but non-deterministic functions (NOW(), RAND())
+#   can cause replication inconsistency.
+# ROW: logs the actual row changes — larger, but deterministic and required for
+#   Galera/Group Replication.
+# MIXED: uses STATEMENT by default, switches to ROW for non-deterministic statements.
+# Default: MIXED  |  Recommended: ROW for new setups; MIXED for compatibility
+# Change when: setting up row-based replication or Galera.
+binlog_format           = ROW
+
+# Maximum size of a single binary log file before rotation.
+# Default: 1G  |  Recommended: 100M–500M to keep individual files manageable
+# Change when: PITR restoration is too slow due to massive log files.
+max_binlog_size         = 256M
+
+# ---------------------------------------------------------------------------
+# Replication
+# ---------------------------------------------------------------------------
+
+# Unique ID for this server in a replication topology. Must be unique across all
+# servers in the cluster. 1 = master/primary by convention (not required).
+# Default: 1  |  Recommended: set explicitly on all servers; use distinct values
+# Change when: adding a new replica to an existing topology.
+server_id               = 1
+
+# Relay log file path and prefix. Used on replicas only.
+# Default: <hostname>-relay-bin  |  Recommended: explicit path to avoid issues if
+#   hostname changes.
+relay_log               = /var/log/mysql/mysql-relay-bin
+
+# Automatically delete relay log files once the SQL thread has processed them.
+# Default: OFF  |  Recommended: ON to prevent relay log accumulation
+relay_log_purge         = ON
+
+# ---------------------------------------------------------------------------
+# Character Set
+# ---------------------------------------------------------------------------
+
+# Default character set for new databases, tables, and columns.
+# utf8mb4 is the correct 4-byte Unicode encoding (supports emoji and supplementary chars).
+# "utf8" in MariaDB/MySQL is actually utf8mb3 (3-byte), which cannot store emoji.
+# Default: latin1 (old installs) or utf8mb4 (newer MariaDB defaults)
+# Recommended: utf8mb4 — always set explicitly to avoid latin1 legacy issues.
+character_set_server    = utf8mb4
+
+# Default collation for utf8mb4.
+# utf8mb4_unicode_ci: accurate Unicode sort order, case-insensitive.
+# utf8mb4_general_ci: faster but slightly inaccurate sort order.
+# utf8mb4_bin: case-sensitive, byte-by-byte comparison.
+# Default: utf8mb4_general_ci  |  Recommended: utf8mb4_unicode_ci for correctness
+# Change when: you need case-sensitive comparisons (use utf8mb4_bin).
+collation_server        = utf8mb4_unicode_ci
+
+# ---------------------------------------------------------------------------
+# MyISAM (keep small; prefer InnoDB for all tables)
+# ---------------------------------------------------------------------------
+
+# Key buffer size for MyISAM index caching. Only relevant if you still use MyISAM.
+# Default: 8M  |  Recommended: 8M (minimize; use InnoDB instead)
+# Change when: you have a legacy MyISAM-heavy schema and can't convert yet.
+key_buffer_size         = 8M
+
+# ---------------------------------------------------------------------------
+# [client] — Applies to all client programs
+# ---------------------------------------------------------------------------
+
+[client]
+
+# Default character set for client connections. Must match server character_set_server
+# to avoid conversion overhead or mojibake.
+# Default: latin1  |  Recommended: utf8mb4
+default-character-set   = utf8mb4
+
+# Default socket path for local connections.
+# Change when: socket path differs from default on your distro.
+socket                  = /run/mysqld/mysqld.sock
+
+# ---------------------------------------------------------------------------
+# [mysql] — Interactive CLI only
+# ---------------------------------------------------------------------------
+
+[mysql]
+
+# Prompt format for the interactive CLI. Makes it obvious which host/db you're on.
+# %u = user, %h = host, %d = current database, \n = newline.
+# Default: mysql>  |  Recommended: set to include host/db to prevent running queries
+#   on the wrong server.
+prompt                  = \\u@\\h [\\d]>\\_
+
+# Enables auto-rehash for tab completion of table and column names.
+# Default: ON  |  Recommended: ON for interactive use
+# Change when: connecting to a very large schema where rehash on connect is slow.
+auto-rehash
+
+# ---------------------------------------------------------------------------
+# [mysqldump] — mysqldump client only
+# ---------------------------------------------------------------------------
+
+[mysqldump]
+
+# Maximum packet size for mysqldump operations. Must be >= max_allowed_packet on server.
+# Default: 16M  |  Recommended: match server max_allowed_packet
+max_allowed_packet      = 64M
+
+# Use single-transaction for consistent InnoDB dumps without locking tables.
+# This is equivalent to passing --single-transaction on the command line.
+# Default: not set  |  Recommended: set for InnoDB-only databases
+# Note: does not work correctly with MyISAM tables (they are not transactional).
+# Omit this section or use --lock-tables if you have MyISAM tables.
+# quick and single-transaction are typically passed as CLI flags rather than here.

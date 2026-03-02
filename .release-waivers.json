@@ -52,11 +52,6 @@
     },
     {
       "check": "stale_docs",
-      "plugin": "linux-sysadmin-mcp",
-      "reason": "Large design documents contain version refs in history tables and implementation notes — user-facing headers, README, CHANGELOG, and plugin.json kept current"
-    },
-    {
-      "check": "stale_docs",
       "plugin": "home-assistant-dev",
       "reason": "Large design documents contain version refs in history tables and implementation notes — user-facing headers, README, CHANGELOG, and plugin.json kept current"
     }

@@ -1,0 +1,245 @@
+# jail.local — Annotated Reference
+#
+# This file overrides /etc/fail2ban/jail.conf. NEVER edit jail.conf directly;
+# it is replaced on package upgrades. Only settings listed here are applied —
+# unmentioned directives fall through to jail.conf defaults.
+#
+# Drop-in alternative: place per-jail files in /etc/fail2ban/jail.d/*.conf
+# instead of one monolithic jail.local. Both approaches are valid.
+
+[DEFAULT]
+
+# ignoreip: IPs/CIDRs that fail2ban will never ban. Always include your own
+# admin IPs here. A typo that bans your only access path is a hard recovery.
+# Default: 127.0.0.1/8 ::1
+# Space-separated list; CIDR notation supported.
+ignoreip = 127.0.0.1/8 ::1 192.168.1.0/24
+
+# ignoreself: Whether to automatically add the server's own IPs to ignoreip.
+# Default: true
+# Set false only if you're testing ban logic against localhost.
+ignoreself = true
+
+# bantime: How long (seconds) an IP is banned. Negative value = permanent ban.
+# Default: 10m (600 seconds)
+# Common values: 1h = 3600, 1d = 86400, 1w = 604800
+bantime = 1h
+
+# bantime.increment: Enable the recidivism multiplier. When true, each repeat
+# offender gets a longer ban, calculated from bantime.formula. This is the
+# most effective setting for persistent attackers.
+# Default: false
+bantime.increment = true
+
+# bantime.factor: Multiplier applied per recidivism cycle when using the
+# default formula. Doubles the ban time with each repeat offense by default.
+# Default: 1
+bantime.factor = 1
+
+# bantime.formula: Python expression computing the ban duration. Variables:
+#   ban.Time — base bantime value
+#   ban.Count — number of times this IP has been banned
+#   failures — number of failures in the current window
+# Default: ban.Time * (1 << (ban.Count if ban.Count < 20 else 20)) * banFactor
+# This produces: 1h, 2h, 4h, 8h, ... capped at 1h * 2^20 (~1000 days).
+bantime.formula = ban.Time * (1 << (ban.Count if ban.Count < 20 else 20)) * banFactor
+
+# bantime.multiplier: Shorthand alias for bantime.increment. Setting either
+# one enables the behavior. Use bantime.increment for clarity.
+# Default: (not set)
+# bantime.multiplier = true
+
+# bantime.overalljails: When true, the recidivism count is global across all
+# jails, not per-jail. An IP that triggers sshd and nginx both together gets
+# escalated bans. Useful for aggressive scanners.
+# Default: false
+bantime.overalljails = false
+
+# findtime: Window (seconds) within which maxretry failures trigger a ban.
+# Default: 10m (600 seconds)
+# An IP must accumulate maxretry failures within this window to be banned.
+findtime = 10m
+
+# maxretry: Number of failures within findtime before an IP is banned.
+# Default: 5
+# Lower values are more aggressive; consider raising for high-traffic services
+# where false positives are costly (e.g., webmail).
+maxretry = 5
+
+# maxmatches: Maximum number of match lines stored in the database per IP.
+# Default: the value of maxretry
+# Raising this helps when debugging why an IP was banned (more evidence stored).
+# maxmatches = 10
+
+# backend: How fail2ban reads log files. Options:
+#   auto     — tries pyinotify, then gamin, then polling (default)
+#   pyinotify — inotify-based, efficient, Linux only; requires python-inotify
+#   gamin    — gamin-based; less common
+#   polling  — polls at intervals; works everywhere, higher CPU
+#   systemd  — reads from journald; use when logs go to journald instead of files
+# Default: auto
+# For most modern systemd distros with journald, set per-jail: backend = systemd
+backend = auto
+
+# usedns: Controls reverse DNS lookups for host matching.
+#   yes   — perform lookups (slower, resolves hostnames in failregex)
+#   warn  — perform lookups but log a warning each time
+#   no    — never look up DNS; match only on IP addresses (recommended)
+#   raw   — match on raw log line without DNS or IP extraction
+# Default: warn
+# Set no to eliminate DNS latency and avoid dependency on external resolvers.
+usedns = no
+
+# logencoding: Encoding of log files. Use auto to detect from locale.
+# Default: auto
+logencoding = auto
+
+# enabled: Whether jails defined in this file are active.
+# Default: false
+# Jails defined in jail.conf have enabled = true; override here to disable them,
+# or set enabled = true in jail.local to activate additional jails.
+enabled = false
+
+# mode: Level of filter aggressiveness for jails that support it.
+# Options depend on the filter; common values: normal, ddos, extra, aggressive
+# Default: normal
+mode = normal
+
+# filter: Name of the filter file (without .conf extension) from filter.d/.
+# Default: %(__name__)s — uses the jail section name as the filter name.
+# Override when the filter name differs from the jail name.
+# filter = sshd
+
+# destemail: Email address for alert notifications.
+# Default: root@localhost
+# Only relevant if the action sends email (e.g., action = %(action_mwl)s).
+destemail = root@localhost
+
+# sender: From address in notification emails.
+# Default: fail2ban@<hostname>
+sender = fail2ban@localhost
+
+# mta: Mail transfer agent used to send notifications.
+# Default: sendmail
+# Options: sendmail, mail
+mta = sendmail
+
+# protocol: Protocol to block in iptables rules.
+# Default: tcp
+protocol = tcp
+
+# chain: iptables chain where ban rules are inserted.
+# Default: <known from action> — usually INPUT
+chain = INPUT
+
+# port: Ports to block for the banned IP. Used by banaction.
+# Default: 0:65535 (all ports) — jails override this per-service.
+# port = ssh
+
+# fail2ban_agent: User-agent string for whois lookups in notification emails.
+# Default: fail2ban/%(fail2ban_version)s
+# fail2ban_agent = Fail2Ban/%(fail2ban_version)s
+
+# banaction: Default ban action. The action file must exist in action.d/.
+# Default: iptables-multiport
+# On nftables-only systems (e.g., Fedora 37+, Debian 12+), use:
+#   banaction = nftables-multiport
+# or the all-ports variant:
+#   banaction = nftables
+banaction = iptables-multiport
+
+# banaction_allports: Action used when the jail blocks all ports for the IP.
+# Default: iptables-allports
+banaction_allports = iptables-allports
+
+# action: The compound action template applied to each jail. Three presets:
+#   %(action_)s   — ban only (default)
+#   %(action_mw)s — ban + email with whois report
+#   %(action_mwl)s — ban + email with whois + matching log lines
+# Default: %(action_)s
+action = %(action_)s
+
+
+# ---------------------------------------------------------------------------
+# JAIL EXAMPLES
+# ---------------------------------------------------------------------------
+
+[sshd]
+# Built-in SSH jail. The filter ships with fail2ban and matches common
+# auth failure patterns from /var/log/auth.log or journald.
+
+# enabled: Override DEFAULT's false to activate this jail.
+enabled = true
+
+# port: SSH port(s) to block. Accepts service names or numbers.
+# Default (from jail.conf): ssh
+# Change if sshd runs on a non-standard port:
+port = ssh,2222
+
+# filter: Uses the built-in sshd filter from filter.d/sshd.conf.
+# Default: sshd (matches the jail name)
+filter = sshd
+
+# logpath: Log file(s) to monitor. Multiple paths are space-separated.
+# On systemd distros, prefer backend = systemd + journalmatch instead.
+logpath = /var/log/auth.log
+           /var/log/secure
+
+# backend: Override to systemd when SSH logs go to journald.
+# When using systemd backend, logpath is ignored; journalmatch is used instead.
+# backend = systemd
+
+# journalmatch: systemd journal filter expression. Only relevant when
+# backend = systemd. Matches journal fields — see `man systemd.journal-fields`.
+# journalmatch = _SYSTEMD_UNIT=sshd.service + _COMM=sshd
+
+# maxretry: Override DEFAULT for SSH — 3 is reasonable for key-auth-only servers.
+maxretry = 3
+
+# bantime: Aggressive for SSH — 1 day for repeat scanners.
+bantime = 1d
+
+# findtime: 10-minute window for 3 failures.
+findtime = 10m
+
+
+[nginx-http-auth]
+# Block IPs that repeatedly fail HTTP basic auth against nginx.
+# Filter: filter.d/nginx-http-auth.conf (ships with fail2ban)
+
+enabled = true
+port = http,https
+filter = nginx-http-auth
+logpath = /var/log/nginx/error.log
+maxretry = 5
+bantime = 1h
+findtime = 10m
+
+
+[nginx-limit-req]
+# Block IPs triggering nginx rate-limit rejections (limit_req_zone).
+# Useful when combined with nginx rate limiting for API endpoints.
+
+enabled = false
+port = http,https
+filter = nginx-limit-req
+logpath = /var/log/nginx/error.log
+maxretry = 10
+bantime = 10m
+findtime = 2m
+
+
+[myapp]
+# Custom jail for an application that logs to its own file.
+# Requires a matching custom filter in filter.d/myapp.conf.
+# See references/custom-filters.md for how to write the filter.
+
+enabled = true
+port = 8080
+filter = myapp
+logpath = /var/log/myapp/app.log
+maxretry = 5
+bantime = 30m
+findtime = 5m
+# backend = systemd
+# journalmatch = _SYSTEMD_UNIT=myapp.service

@@ -1,0 +1,178 @@
+# Jellyfin Docker Compose — Annotated Reference
+#
+# Three deployment profiles are shown below:
+#   1. Basic (no hardware transcoding)
+#   2. Intel / AMD hardware transcoding via VA-API (/dev/dri)
+#   3. NVIDIA hardware transcoding via NVENC
+#
+# Pick one profile and delete the others. Most fields are shared; hardware-specific
+# sections are marked clearly.
+#
+# Media directory organization matters for metadata scraping:
+#   /media/
+#     Movies/
+#       Alien (1979)/          <-- "Title (Year)" format works best
+#         Alien (1979).mkv
+#     TV Shows/
+#         Stranger Things/
+#           Season 01/
+#             s01e01.mkv
+#     Music/
+#         Artist Name/
+#           Album Name/
+#             01 - Track.flac
+#
+# Jellyfin identifies library type at creation time (Movies, Shows, Music, etc.).
+# Wrong structure → wrong scraper → missing metadata, posters, episode info.
+
+---
+
+# ============================================================
+# PROFILE 1: Basic (software transcoding only)
+# ============================================================
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+
+    # PUID/PGID: run Jellyfin as the same UID/GID that owns your media files.
+    # Find your user's UID/GID: `id $(whoami)` on the host.
+    # Without this, the container runs as root and may create config files owned
+    # by root — making future permission changes harder.
+    environment:
+      - PUID=1000
+      - PGID=1000
+      # Optional: set the public URL Jellyfin advertises to clients.
+      # Required when behind a reverse proxy so client apps get the correct
+      # address for playback URLs (especially iOS/Android apps and Chromecast).
+      - JELLYFIN_PublishedServerUrl=https://jellyfin.example.com
+
+    volumes:
+      # Config volume: Jellyfin's database, user data, plugin state.
+      # MUST be read/write. Back this up — losing it means reconfiguring everything.
+      - /opt/jellyfin/config:/config
+
+      # Cache volume: transcoded segments, image thumbnails.
+      # Safe to delete if disk space is needed; Jellyfin regenerates it.
+      # Keeping it on a separate volume (or even tmpfs) avoids filling your config disk.
+      - /opt/jellyfin/cache:/cache
+
+      # Media volumes: read-only (:ro) is recommended — Jellyfin never needs to write
+      # to source media. The `:z` suffix is required on SELinux systems (RHEL/Fedora)
+      # to relabel the mount for container access.
+      - /data/media/movies:/media/movies:ro
+      - /data/media/tv:/media/tv:ro
+      - /data/media/music:/media/music:ro
+      # Add more media directories as needed.
+
+    ports:
+      # Use network_mode: host instead if you need DLNA/uPnP discovery (see below).
+      - "8096:8096"    # HTTP — main web UI and API
+      - "8920:8920"    # HTTPS (optional; configure cert in Dashboard → Networking)
+      - "7359:7359/udp"  # Jellyfin client auto-discovery (LAN)
+      - "1900:1900/udp"  # DLNA/uPnP discovery (multicast — often broken in bridge mode)
+
+    restart: unless-stopped
+
+    # Optional: limit how much CPU software transcoding can consume.
+    # Without this, a single 4K transcode can saturate all cores.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "4.0"
+
+
+# ============================================================
+# PROFILE 2: Intel or AMD hardware transcoding (VA-API)
+# ============================================================
+#
+# Requires: Intel iGPU (Broadwell+) or AMD GPU with VA-API driver installed on the host.
+# Install drivers: `apt install intel-media-va-driver-non-free` (Intel) or
+#                  `apt install mesa-va-drivers` (AMD/Mesa).
+# Verify host support: `vainfo` — should list encoders/decoders.
+# In Jellyfin: Dashboard → Playback → Transcoding → Enable hardware acceleration → VA-API.
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - JELLYFIN_PublishedServerUrl=https://jellyfin.example.com
+
+    # The jellyfin user inside the container needs access to /dev/dri.
+    # Check the group ID of /dev/dri/renderD128 on the host:
+    #   `stat -c '%g' /dev/dri/renderD128`
+    # Add that GID to group_add so the jellyfin process can open the device.
+    group_add:
+      - "989"   # Replace with the actual GID of /dev/dri/renderD128 on your host
+
+    devices:
+      # Pass the GPU render node into the container.
+      # /dev/dri/card0 is the display node (may not be needed for headless servers).
+      # /dev/dri/renderD128 is the render node used for VA-API transcoding.
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      # - /dev/dri/card0:/dev/dri/card0   # Uncomment if VA-API requires card0
+
+    volumes:
+      - /opt/jellyfin/config:/config
+      - /opt/jellyfin/cache:/cache
+      - /data/media/movies:/media/movies:ro
+      - /data/media/tv:/media/tv:ro
+      - /data/media/music:/media/music:ro
+
+    # network_mode: host is the simplest way to make DLNA discovery work.
+    # Downside: Jellyfin binds directly to the host network stack — no port isolation.
+    # If you don't need DLNA, use the ports: block from Profile 1 instead.
+    network_mode: host
+
+    restart: unless-stopped
+
+
+# ============================================================
+# PROFILE 3: NVIDIA hardware transcoding (NVENC/NVDEC)
+# ============================================================
+#
+# Requires:
+#   - NVIDIA GPU on the host
+#   - NVIDIA drivers installed on the host
+#   - NVIDIA Container Toolkit installed: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+#   - `nvidia-container-runtime` set as the default or specified runtime
+# Verify: `nvidia-smi` on the host should show the GPU.
+# In Jellyfin: Dashboard → Playback → Transcoding → Enable hardware acceleration → NVENC.
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - JELLYFIN_PublishedServerUrl=https://jellyfin.example.com
+      # Tell the NVIDIA runtime which GPU(s) to expose. "all" exposes every GPU.
+      - NVIDIA_VISIBLE_DEVICES=all
+      # Expose all NVIDIA driver capabilities needed for transcoding.
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+    # Use the NVIDIA container runtime instead of the default runc.
+    # Alternatively, set this as the system default in /etc/docker/daemon.json.
+    runtime: nvidia
+
+    volumes:
+      - /opt/jellyfin/config:/config
+      - /opt/jellyfin/cache:/cache
+      - /data/media/movies:/media/movies:ro
+      - /data/media/tv:/media/tv:ro
+      - /data/media/music:/media/music:ro
+
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+      - "7359:7359/udp"
+      - "1900:1900/udp"
+
+    restart: unless-stopped

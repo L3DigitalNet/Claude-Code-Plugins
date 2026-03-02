@@ -1,0 +1,336 @@
+# Annotated postgresql.conf
+# Each directive includes: what it does, default value, recommended production
+# value, and when to change it.
+#
+# PostgreSQL reads this file at startup and on reload (SIGHUP / SELECT pg_reload_conf()).
+# Some settings require a full restart (marked as "restart required").
+# Debian path: /etc/postgresql/16/main/postgresql.conf
+# RHEL path:   /var/lib/pgsql/16/data/postgresql.conf
+#
+# Units: memory values accept kB, MB, GB. Time values accept ms, s, min, h, d.
+# Use units explicitly — avoids silent misinterpretation.
+
+# ---------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+# ---------------------------------------------------------------------------
+
+# Which IP addresses PostgreSQL listens on for incoming connections.
+# Default: 'localhost'  |  Recommended: 'localhost' for local-only; '*' for remote access
+# Change when: applications on other hosts need to connect directly. Always
+#   pair with a matching pg_hba.conf rule — listen_addresses controls whether
+#   PostgreSQL binds the port; pg_hba.conf controls who may authenticate.
+# Restart required.
+listen_addresses = 'localhost'
+
+# TCP port for all databases on this instance.
+# Default: 5432  |  Recommended: 5432 (change only to run multiple instances)
+# Restart required.
+port = 5432
+
+# Maximum total client connections (including superuser connections).
+# Default: 100  |  Recommended: 100–400 for direct connections; lower (25–50) when
+#   using PgBouncer in transaction mode (PgBouncer multiplexes, so PostgreSQL
+#   needs fewer server-side connections).
+# Higher values increase memory use: each idle connection consumes ~5–10MB.
+# Restart required.
+max_connections = 100
+
+# Number of connections reserved for superusers after max_connections is reached.
+# Default: 3  |  Recommended: 3
+# Change when: you want more emergency headroom for DBA access when the pool is
+#   exhausted. Non-superuser connections will be refused before this threshold.
+superuser_reserved_connections = 3
+
+# ---------------------------------------------------------------------------
+# MEMORY
+# ---------------------------------------------------------------------------
+
+# Shared memory allocated at startup for shared buffer pool (PostgreSQL cache).
+# Default: 128MB  |  Recommended: 25% of total RAM (e.g., 4GB on a 16GB server)
+# This is the single most impactful memory setting. Larger values reduce disk I/O
+#   for hot data. Diminishing returns above 40% of RAM (OS file cache also helps).
+# Restart required.
+shared_buffers = 128MB
+
+# Planner's estimate of total memory available for disk caching (OS + shared_buffers).
+# Default: 4GB  |  Recommended: 50–75% of total RAM
+# Does NOT allocate memory — only informs the query planner. Too low causes the
+#   planner to prefer sequential scans; too high causes over-optimistic index plans.
+effective_cache_size = 4GB
+
+# Memory allocated per sort operation, hash join, or hash aggregate.
+# Default: 4MB  |  Recommended: 4–64MB depending on workload
+# CAUTION: this is per operation per backend, not per session. A complex query
+#   may allocate work_mem many times in parallel. Start conservative (4–16MB)
+#   and raise per-session with SET work_mem for known heavy queries.
+work_mem = 4MB
+
+# Memory for maintenance operations: VACUUM, CREATE INDEX, ALTER TABLE, pg_restore.
+# Default: 64MB  |  Recommended: 256MB–1GB (one maintenance op at a time normally)
+# Higher values speed up index builds and VACUUM. Safe to raise more aggressively
+#   than work_mem since maintenance ops don't multiply like query operations.
+maintenance_work_mem = 64MB
+
+# Maximum memory used by each backend for caching catalog metadata.
+# Default: 16MB  |  Recommended: 16MB (rarely needs changing)
+# Change when: schemas with thousands of tables or columns cause high planner overhead.
+from_collapse_limit = 8
+join_collapse_limit = 8
+
+# ---------------------------------------------------------------------------
+# WRITE-AHEAD LOG (WAL)
+# ---------------------------------------------------------------------------
+
+# WAL verbosity level. Affects what's recorded and what replication can do.
+# Default: replica  |  Recommended: replica (enables streaming replication)
+# Options: minimal (no replication possible), replica (streaming replication),
+#   logical (logical replication and decoding — required for tools like Debezium).
+# Change when: setting up logical replication or CDC; restart required.
+wal_level = replica
+
+# Enable WAL archiving to a command (for point-in-time recovery).
+# Default: off  |  Recommended: on for production databases requiring PITR
+# archive_command must be set before enabling; a failing command eventually stalls
+#   the server when pg_wal fills up. Restart required.
+archive_mode = off
+
+# Shell command to archive a completed WAL segment. %p = full path, %f = filename.
+# Default: ''  |  Recommended: a script that copies to S3, NFS, or another host
+# Example: 'aws s3 cp %p s3://my-bucket/wal/%f'
+# archive_command = ''
+
+# Maximum number of WAL sender processes (streaming replication connections).
+# Default: 10  |  Recommended: number of replicas + 1 for pg_basebackup
+# Restart required.
+max_wal_senders = 10
+
+# Minimum WAL to retain on the primary for replicas to catch up after lag.
+# Default: 0 (no retention)  |  Recommended: 1GB or more if replicas may lag
+# Alternative: use replication slots (they retain WAL automatically but can cause
+#   unbounded WAL growth if a replica disconnects indefinitely).
+wal_keep_size = 0
+
+# Target number of WAL segments between automatic checkpoints.
+# Default: 5  |  Recommended: 16–32 for write-heavy workloads
+# Larger values spread checkpoint I/O over more time, reducing write spikes.
+# Pairs with checkpoint_completion_target.
+checkpoint_segments = 32    # PostgreSQL 9.4 and earlier; use max_wal_size on 9.5+
+
+# Upper bound on WAL between checkpoints (replaces checkpoint_segments in 9.5+).
+# Default: 1GB  |  Recommended: 4–16GB for write-heavy servers
+# Higher values reduce checkpoint frequency; more WAL to replay after a crash.
+max_wal_size = 1GB
+
+# Fraction of checkpoint interval over which to spread checkpoint I/O.
+# Default: 0.9  |  Recommended: 0.9
+# At 0.9, PostgreSQL has 90% of the interval to write dirty pages, smoothing I/O.
+checkpoint_completion_target = 0.9
+
+# ---------------------------------------------------------------------------
+# QUERY TUNING
+# ---------------------------------------------------------------------------
+
+# Planner's estimate of random page fetch cost relative to sequential page cost.
+# Default: 4.0  |  Recommended: 1.1 for SSD storage; 4.0 for spinning disk
+# Lowering this makes the planner prefer index scans over sequential scans.
+# Most cloud/SSD systems benefit from a value of 1.1–2.0.
+random_page_cost = 4.0
+
+# Hint about concurrent disk I/O operations available to a single query.
+# Default: 1  |  Recommended: 200 for SSD; 2–4 for spinning disk
+# Affects bitmap heap scans and parallel query I/O. Set to the drive's max
+#   concurrent IOPS capacity. Does not limit actual I/O — planner hint only.
+effective_io_concurrency = 1
+
+# Default number of histogram buckets for column statistics.
+# Default: 100  |  Recommended: 100–500 for columns with skewed distributions
+# Higher values improve planner accuracy for columns in WHERE clauses. Increase
+#   per-column with ALTER TABLE ... ALTER COLUMN ... SET STATISTICS n.
+default_statistics_target = 100
+
+# Maximum number of parallel worker processes for a single query.
+# Default: 2  |  Recommended: floor(CPU cores / 2) for mixed workloads
+# Set to 0 to disable parallelism (useful for debugging bad parallel plans).
+max_parallel_workers_per_gather = 2
+
+# ---------------------------------------------------------------------------
+# LOGGING
+# ---------------------------------------------------------------------------
+
+# Where to send server log output.
+# Default: stderr  |  Recommended: stderr (let systemd capture) or csvlog for
+#   structured log parsing. 'syslog' for centralized logging.
+log_destination = 'stderr'
+
+# Whether to redirect stderr/csvlog to log files managed by PostgreSQL.
+# Default: off  |  Recommended: off on systemd systems (journald captures stderr);
+#   on when log_destination includes csvlog or you need file-based rotation.
+logging_collector = off
+
+# Directory for log files when logging_collector = on.
+# Default: 'log' (relative to data dir)  |  Recommended: absolute path for clarity
+log_directory = 'log'
+
+# Log filename pattern. %Y/%m/%d for date-based rotation.
+# Default: 'postgresql-%Y-%m-%d_%H%M%S.log'  |  Recommended: keep default
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+
+# Log every statement taking longer than this many milliseconds.
+# Default: -1 (disabled)  |  Recommended: 1000 (log queries over 1 second)
+# Essential for identifying slow queries in production. Set to 0 to log everything
+#   (very high volume — only for short debugging sessions).
+log_min_duration_statement = -1
+
+# Log each successful connection.
+# Default: off  |  Recommended: off (high-volume apps generate enormous log noise)
+# Change when: auditing connection patterns or debugging auth failures.
+log_connections = off
+
+# Log each session termination.
+# Default: off  |  Recommended: off
+log_disconnections = off
+
+# Log statements that wait longer than this for a lock (milliseconds).
+# Default: off  |  Recommended: 1000 (log lock waits over 1 second)
+# Critical for diagnosing lock contention without pg_stat_activity polling.
+log_lock_waits = off
+
+# Log temporary file creation above this size (in kilobytes). -1 disables.
+# Default: -1  |  Recommended: 65536 (log temp files over 64MB)
+# Temp files mean work_mem was insufficient; large ones indicate tuning needed.
+log_temp_files = -1
+
+# Prefix added to each log line.
+# Default: ''  |  Recommended: '%m [%p] %q%u@%d '
+# %m = timestamp with ms, %p = PID, %q = empty for non-session, %u = user, %d = db.
+log_line_prefix = '%m [%p] %q%u@%d '
+
+# Minimum severity level to log.
+# Default: WARNING  |  Recommended: WARNING (INFO adds noise; DEBUG is very verbose)
+log_min_messages = WARNING
+
+# ---------------------------------------------------------------------------
+# AUTOVACUUM
+# ---------------------------------------------------------------------------
+
+# Master switch for the autovacuum daemon.
+# Default: on  |  Recommended: on — NEVER disable in production
+# Autovacuum reclaims space from dead tuples, updates table statistics, and
+#   prevents transaction ID wraparound. Disabling causes table bloat and eventually
+#   forces an emergency VACUUM FREEZE that takes the table offline.
+autovacuum = on
+
+# Maximum number of autovacuum worker processes.
+# Default: 3  |  Recommended: 3–6 for databases with many tables
+# Each worker consumes memory proportional to maintenance_work_mem.
+autovacuum_max_workers = 3
+
+# Minimum delay between vacuum operations on a table (milliseconds).
+# Default: 2ms  |  Recommended: 2ms (reduce to 0 for very fast SSDs to allow
+#   autovacuum to keep up with high write workloads)
+# Higher values reduce I/O pressure from autovacuum but may allow bloat to accumulate.
+autovacuum_vacuum_cost_delay = 2ms
+
+# ---------------------------------------------------------------------------
+# REPLICATION — STANDBY/REPLICA SETTINGS
+# (Set these on the replica when running as a streaming standby)
+# ---------------------------------------------------------------------------
+
+# Specifies that this server is in standby mode (reads WAL from primary).
+# Managed by recovery.conf (PostgreSQL < 12) or standby.signal file (12+).
+# Do not set in postgresql.conf directly on PostgreSQL 12+; create an empty
+#   standby.signal file in PGDATA instead.
+
+# Connection string used by the WAL receiver to connect to the primary.
+# PostgreSQL 12+: set in postgresql.conf directly.
+# Default: ''  |  Recommended: 'host=primary_ip user=replication password=... dbname=replication'
+# primary_conninfo = ''
+
+# Delay applying WAL on the replica (for protection against accidental data loss).
+# Default: 0  |  Recommended: 0 for most cases; set to '5min' for a delayed replica
+# recovery_min_apply_delay = 0
+
+# ---------------------------------------------------------------------------
+# CLIENT DEFAULTS
+# ---------------------------------------------------------------------------
+
+# Default search path for schema resolution.
+# Default: '"$user", public'  |  Recommended: keep default; set per-user or per-db
+# Change when: application assumes a specific schema without qualifying table names.
+search_path = '"$user", public'
+
+# Statement timeout: cancel queries running longer than this (ms). 0 = disabled.
+# Default: 0  |  Recommended: 0 globally; set per-role for web application users
+# Example: ALTER ROLE webapp SET statement_timeout = '30s';
+statement_timeout = 0
+
+# Lock timeout: fail if a lock cannot be acquired in this time (ms). 0 = disabled.
+# Default: 0  |  Recommended: set per-session for DDL operations (prevents indefinite waits)
+lock_timeout = 0
+
+# ---------------------------------------------------------------------------
+# LOCALE AND FORMATTING
+# ---------------------------------------------------------------------------
+
+# Server-side time zone for displaying timestamps.
+# Default: system timezone  |  Recommended: 'UTC' for consistent log timestamps
+timezone = 'UTC'
+
+# ---------------------------------------------------------------------------
+# ANNOTATED pg_hba.conf EXAMPLE
+# ---------------------------------------------------------------------------
+#
+# File location (Debian): /etc/postgresql/16/main/pg_hba.conf
+# File location (RHEL):   /var/lib/pgsql/16/data/pg_hba.conf
+#
+# Format: TYPE  DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# Rules are evaluated top-to-bottom. First match wins — order matters.
+# Reload after changes: SELECT pg_reload_conf(); (no restart needed)
+#
+# TYPE values:
+#   local   — Unix domain socket connections (no ADDRESS column)
+#   host    — TCP/IP (both SSL and non-SSL)
+#   hostssl — TCP/IP requiring SSL
+#   hostnossl — TCP/IP refusing SSL
+#
+# AUTH METHODS:
+#   trust        — No password required. Only safe for local sockets in controlled environments.
+#   peer         — OS username must match database username. Local socket only.
+#   md5          — MD5-hashed password. Works but scram-sha-256 preferred.
+#   scram-sha-256— Current standard password hashing. Requires PostgreSQL 10+.
+#   reject       — Unconditionally refuse the connection (useful for explicit denies).
+#
+# ---------------------------------------------------------------------------
+#
+# TYPE    DATABASE   USER       ADDRESS          METHOD
+#
+# Allow the postgres OS user to connect to all databases via Unix socket
+# without a password (peer = OS-level identity check).
+local   all        postgres                    peer
+#
+# Allow all local OS users to connect to databases matching their username
+# via Unix socket without a password. Typical for developer workstations.
+local   all        all                         peer
+#
+# Allow password connections from localhost (IPv4).
+# Use scram-sha-256 for new deployments; md5 for legacy compatibility.
+host    all        all        127.0.0.1/32     scram-sha-256
+#
+# Allow password connections from localhost (IPv6).
+host    all        all        ::1/128          scram-sha-256
+#
+# Allow the 'replication' user to connect for streaming replication from
+# a specific replica IP. Replication uses a dedicated pseudo-database name.
+host    replication  replicator  10.0.0.20/32  scram-sha-256
+#
+# Allow the application user to connect from the app server subnet.
+# More specific rules should appear before broader ones.
+host    myapp      myapp_user  10.0.1.0/24    scram-sha-256
+#
+# Deny all connections from a specific IP regardless of other rules.
+# (Place before a broader allow rule that would otherwise match.)
+# host  all        all        192.168.99.99/32  reject
+#
+# Allow all other remote hosts with password authentication.
+# WARNING: Exposing PostgreSQL to 0.0.0.0/0 requires firewall protection.
+# host  all        all        0.0.0.0/0        scram-sha-256

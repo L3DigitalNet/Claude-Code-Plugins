@@ -1,0 +1,224 @@
+# Annotated journald.conf
+# Each directive includes: what it does, default value, recommended value,
+# and when to change it. All directives go under the [Journal] section.
+#
+# Active config: /etc/systemd/journald.conf
+# Drop-in overrides: /etc/systemd/journald.conf.d/*.conf  (preferred for partial changes)
+# Runtime reload: systemctl kill --signal=SIGUSR1 systemd-journald  (for most settings)
+#                 OR systemctl restart systemd-journald  (required for Storage changes)
+#
+# Precedence: /etc/systemd/journald.conf.d/*.conf overrides /etc/systemd/journald.conf.
+# Use drop-ins so package upgrades don't overwrite your changes.
+
+[Journal]
+
+# ---------------------------------------------------------------------------
+# STORAGE
+# ---------------------------------------------------------------------------
+
+# Where to store journal files.
+# Default: auto
+# Values:
+#   volatile    — /run/log/journal/ only; lost on reboot
+#   persistent  — /var/log/journal/; survives reboot (creates dir if absent)
+#   auto        — persistent if /var/log/journal/ exists, else volatile
+#   none        — discard all log data (forward to syslog/console still works)
+# Recommended: persistent for servers; auto is fine for desktops
+# Change when: you need reboot-persistent logs and /var/log/journal/ was not
+#   pre-created. After changing to persistent, restart systemd-journald and
+#   verify: ls /var/log/journal/
+#Storage=auto
+
+# Compress journal entries larger than a threshold.
+# Default: yes (threshold ~512 bytes)
+# Recommended: yes — reduces disk usage with minimal CPU cost
+# Change when: profiling shows journal compression is a measurable CPU bottleneck
+#   (extremely rare). Or set to a size like "1M" to only compress large entries.
+#Compress=yes
+
+# Enable Forward Secure Sealing — cryptographically chain journal entries so
+# past entries cannot be tampered with without detection.
+# Default: yes (if libgcrypt is available)
+# Recommended: yes for audit-sensitive environments; leave default elsewhere
+# Change when: you want to disable the tamper-detection overhead, or you use
+#   an HSM/TPM-based approach for integrity instead.
+# Verify sealed journals with: journalctl --verify
+#Seal=yes
+
+# ---------------------------------------------------------------------------
+# FORWARDING
+# ---------------------------------------------------------------------------
+
+# Forward journal messages to the kernel log buffer (/dev/kmsg).
+# Default: no
+# Recommended: no (creates noise in dmesg; use journalctl -k for kernel messages)
+# Change when: you need all user-space log messages accessible via dmesg
+#   (rare; mostly useful for debugging early-boot before journal is running).
+#ForwardToKMsg=no
+
+# Forward journal messages to the classic syslog socket (/dev/log).
+# Default: yes on most distributions
+# Recommended: yes if rsyslog or syslog-ng is installed and reads /dev/log;
+#   no otherwise to avoid wasting CPU on forwarding to nothing.
+# Change when: you're removing rsyslog and want to stop forwarding; or you're
+#   adding rsyslog and need to enable its journal input. Note: rsyslog's imjournal
+#   plugin reads the journal directly and is more reliable than socket forwarding.
+#ForwardToSyslog=yes
+
+# Forward journal messages to the system console (/dev/console).
+# Default: no
+# Recommended: no for normal operation; yes only for headless servers where
+#   you need boot messages visible on a serial console or KVM.
+# Change when: debugging boot failures where the journal itself isn't accessible.
+#ForwardToConsole=no
+
+# Forward journal messages to the kernel wall message service.
+# Default: no
+# Recommended: no — wall broadcasts to all logged-in terminals, creating noise.
+# Change when: you need critical alerts to appear on all terminals (uncommon).
+#ForwardToWall=no
+
+# Console device to use when ForwardToConsole=yes.
+# Default: /dev/console
+# Change when: you have a serial console at a different path (e.g. /dev/ttyS0).
+#TTYPath=/dev/console
+
+# Maximum log level to forward to console/wall. Messages above this level are
+# not forwarded even when forwarding is enabled.
+# Default: info
+# Values: emerg, alert, crit, err, warning, notice, info, debug
+# Change when: you only want critical messages on the console to reduce noise.
+#MaxLevelConsole=info
+
+# Maximum log level to forward to the kernel message log (/dev/kmsg).
+# Default: notice
+# Change when: you need debug messages in dmesg for early-boot investigation.
+#MaxLevelKMsg=notice
+
+# Maximum log level to forward to syslog.
+# Default: debug (forward everything)
+# Change when: your syslog daemon should only receive warnings and above to
+#   reduce syslog volume; set to warning to filter below that threshold.
+#MaxLevelSyslog=debug
+
+# Maximum log level to forward to wall broadcasts.
+# Default: emerg
+# Change when: rarely — emerg-only is already the right default for wall.
+#MaxLevelWall=emerg
+
+# ---------------------------------------------------------------------------
+# DISK USAGE LIMITS (persistent storage: /var/log/journal/)
+# ---------------------------------------------------------------------------
+
+# Maximum disk space the journal may consume under /var/log/journal/.
+# Default: 10% of the filesystem (capped at 4 GiB)
+# Recommended: set explicitly; 500M–2G is typical for servers
+# Change when: the root filesystem is small (set lower); or you need long
+#   retention and have disk to spare (set higher).
+# Vacuuming: journalctl --vacuum-size=500M trims immediately.
+#SystemMaxUse=
+
+# Minimum disk space to keep free under /var/log/journal/'s filesystem.
+# Default: 15% of the filesystem (capped at 4 GiB)
+# Recommended: set explicitly alongside SystemMaxUse; 1G is a safe buffer
+# Change when: SystemMaxUse alone governs retention and you want to ensure
+#   a free-space floor regardless of journal size.
+#SystemKeepFree=
+
+# Maximum size of a single journal file under /var/log/journal/.
+# Default: 1/8 of SystemMaxUse
+# Recommended: leave at default unless you have specific rotation requirements
+# Change when: you need many small files (faster seeks) or fewer large files
+#   (fewer inodes). Affects rotation frequency.
+#SystemMaxFileSize=
+
+# Maximum number of journal files to keep under /var/log/journal/.
+# Default: 100
+# Recommended: 10–50 for typical servers to keep rotation manageable
+# Change when: you need to limit the file count for inode reasons, or you
+#   want more granular retention control alongside MaxRetentionSec.
+#SystemMaxFiles=100
+
+# ---------------------------------------------------------------------------
+# DISK USAGE LIMITS (volatile storage: /run/log/journal/)
+# ---------------------------------------------------------------------------
+
+# Maximum disk space the journal may consume under /run/log/journal/.
+# Default: 10% of /run filesystem (capped at 4 GiB)
+# Recommended: 50M–200M; /run is tmpfs and competes with other processes
+# Change when: high-log-volume services fill /run and cause OOM or starve
+#   other tmpfs users. Lower this before increasing SystemMaxUse.
+#RuntimeMaxUse=
+
+# Minimum free space to keep in the /run filesystem.
+# Default: 15% of /run (capped at 4 GiB)
+# Recommended: leave at default; /run is tmpfs so the floor is memory-backed
+# Change when: you have specific tmpfs memory budget constraints.
+#RuntimeKeepFree=
+
+# Maximum size of a single journal file under /run/log/journal/.
+# Default: 1/8 of RuntimeMaxUse
+#RuntimeMaxFileSize=
+
+# Maximum number of journal files under /run/log/journal/.
+# Default: 100
+#RuntimeMaxFiles=100
+
+# ---------------------------------------------------------------------------
+# RETENTION AND ROTATION
+# ---------------------------------------------------------------------------
+
+# Maximum time to keep journal entries, regardless of disk usage.
+# Default: 0 (no time-based expiry)
+# Recommended: set for compliance environments (e.g., 90d, 1year)
+# Change when: you have a log retention policy that requires entries older
+#   than N days to be deleted. journalctl --vacuum-time=30d applies immediately.
+#MaxRetentionSec=0
+
+# How long a single journal file spans before rotating to a new file.
+# Default: 1month
+# Recommended: 1week for servers (easier to manage individual files)
+# Change when: you need finer-grained rotation (e.g., daily) or want fewer,
+#   longer-lived files. Shorter periods generate more files.
+#MaxFileSec=1month
+
+# How frequently journal data is flushed from memory to disk (fsync interval).
+# Default: 5min
+# Recommended: 1min for important logs; longer for performance-critical hosts
+# Change when: you're trading durability for throughput. The journal buffers
+#   writes in memory — a crash within this window loses buffered entries.
+#   Set to 0 to sync every write (high I/O cost).
+#SyncIntervalSec=5m
+
+# ---------------------------------------------------------------------------
+# RATE LIMITING
+# ---------------------------------------------------------------------------
+
+# Time window for per-service rate limiting.
+# Default: 30s
+# Recommended: 30s is usually fine; increase if legitimate services emit bursts
+# Change when: a service legitimately emits many messages in bursts (e.g., a
+#   build system). Pair with RateLimitBurst increase, not just this value.
+# Set both to 0 to disable rate limiting entirely — risk: disk exhaustion from
+#   a runaway service.
+#RateLimitIntervalSec=30s
+
+# Maximum number of messages a service may emit per RateLimitIntervalSec window.
+# Default: 10000
+# Recommended: 10000 is high enough for almost all services; lower to 1000 for
+#   noisy environments, or raise for high-throughput logging services.
+# Change when: you see "suppressed N messages" in the journal for a service
+#   that legitimately logs at high rates (application servers, databases).
+#RateLimitBurst=10000
+
+# ---------------------------------------------------------------------------
+# AUDIT
+# ---------------------------------------------------------------------------
+
+# Connect to the kernel audit subsystem and import audit records into the journal.
+# Default: no on most distributions
+# Recommended: yes if you use auditd-style logging but want a single journal
+#   interface; no if auditd is already running (they conflict).
+# Change when: you want kernel audit events (login, file access, syscalls) in
+#   journalctl output without deploying a separate auditd.
+#Audit=no

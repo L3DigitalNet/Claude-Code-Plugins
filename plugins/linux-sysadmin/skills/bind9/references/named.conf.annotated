@@ -1,0 +1,408 @@
+// Annotated named.conf — BIND9 (ISC BIND 9.16+)
+// Each directive includes: what it does, default value, and when to change it.
+// This is a Debian-style layout using include files; on RHEL, all of this
+// lives in a single /etc/named.conf.
+//
+// named.conf is the entry point; it includes the other files.
+// Context levels: options{}, logging{}, zone{}, acl{}, view{}.
+
+// ---------------------------------------------------------------------------
+// ACL DEFINITIONS
+// Must be declared before they are referenced in options{} or zone{}.
+// ---------------------------------------------------------------------------
+
+// Named list of IP addresses/subnets. Referenced by name in allow-* directives.
+// Default: not defined (only built-ins: "any", "none", "localhost", "localnets")
+// Change when: you want to apply the same ACL in multiple places without repeating IPs.
+acl "trusted-clients" {
+    127.0.0.1;          // loopback IPv4
+    ::1;                // loopback IPv6
+    10.0.0.0/8;         // private RFC1918 range A
+    172.16.0.0/12;      // private RFC1918 range B
+    192.168.0.0/16;     // private RFC1918 range C
+};
+
+acl "secondary-servers" {
+    192.168.1.20;       // IP of your secondary/slave nameserver
+    192.168.1.21;
+};
+
+// ---------------------------------------------------------------------------
+// OPTIONS BLOCK
+// Global settings affecting all zones unless overridden in a view{} or zone{}.
+// ---------------------------------------------------------------------------
+
+options {
+
+    // ---------------------------------------------------------------------------
+    // File paths
+    // ---------------------------------------------------------------------------
+
+    // Working directory for named. Zone files without absolute paths are
+    // relative to this directory.
+    // Default (RHEL): /var/named  |  Default (Debian): /var/cache/bind
+    // Change when: you want zone files in a non-standard location.
+    directory "/var/cache/bind";
+
+    // Where named writes its PID file.
+    // Default: /run/named/named.pid (systemd)
+    // Change when: init scripts or monitoring tools expect a specific path.
+    // pid-file "/run/named/named.pid";
+
+    // ---------------------------------------------------------------------------
+    // Listening interfaces
+    // ---------------------------------------------------------------------------
+
+    // Which IPv4 addresses and port named listens on for DNS queries.
+    // Default: { any; }  |  Recommended: restrict to specific interfaces for
+    // security; use { any; } only on a dedicated resolver.
+    // Change when: the server has multiple NICs and should only answer on one.
+    listen-on port 53 { any; };
+
+    // IPv6 equivalent of listen-on.
+    // Default: { any; }  |  Recommended: { ::1; } if IPv6 DNS isn't needed externally.
+    listen-on-v6 port 53 { any; };
+
+    // ---------------------------------------------------------------------------
+    // Query access control
+    // ---------------------------------------------------------------------------
+
+    // Who is allowed to send queries to this server.
+    // Default: { any; }  |  Recommended: { trusted-clients; } for internal resolvers;
+    // { any; } is acceptable for public authoritative servers.
+    // Change when: you want to prevent outside hosts from querying internal zones.
+    allow-query { any; };
+
+    // Who is allowed to use this server as a recursive resolver.
+    // Default: { localnets; localhost; }
+    // CRITICAL: Set to { none; } on authoritative-only servers, or to a trusted
+    // ACL on internal resolvers. Leaving this open to "any" creates an open resolver
+    // that can be abused for DNS amplification DDoS attacks.
+    allow-recursion { trusted-clients; };
+
+    // Who can request zone transfers (AXFR/IXFR) from this server.
+    // Default: { none; }  |  Recommended: { secondary-servers; } — list only your
+    // known secondaries. Open zone transfer leaks your full DNS dataset to anyone.
+    allow-transfer { secondary-servers; };
+
+    // ---------------------------------------------------------------------------
+    // Recursion and forwarding
+    // ---------------------------------------------------------------------------
+
+    // Whether named performs recursive lookups on behalf of clients.
+    // Default: yes  |  For authoritative-only servers: no
+    // Change when: this server should only answer for zones it is authoritative for
+    // (typical for public-facing authoritative DNS).
+    recursion yes;
+
+    // Forward all recursive queries to these servers instead of resolving from root.
+    // Default: not set (resolve from root hints)
+    // Use for: internal corporate resolvers that should use upstream DNS.
+    // Do NOT use on public authoritative servers — it adds unnecessary latency and
+    // dependencies. Use "forwarders { };" with "forward only;" if you want to
+    // force all queries through a specific upstream (e.g., corporate DNS filtering).
+    // forwarders {
+    //     8.8.8.8;
+    //     8.8.4.4;
+    //     1.1.1.1;
+    // };
+
+    // "first" tries forwarders, then falls back to full recursion if they fail.
+    // "only" uses forwarders exclusively and returns SERVFAIL if all forwarders fail.
+    // Default: first  |  Change to "only" when you must route all DNS through a proxy.
+    // forward first;
+
+    // ---------------------------------------------------------------------------
+    // DNSSEC
+    // ---------------------------------------------------------------------------
+
+    // Whether named validates DNSSEC signatures on responses.
+    // Default: yes (BIND 9.16+)  |  Options: yes, no, auto
+    // "auto" fetches the root trust anchor automatically (requires internet access).
+    // "yes" requires manually specifying trusted-keys or managed-keys.
+    // Change to "no" only in isolated networks with no DNSSEC deployment.
+    dnssec-validation auto;
+
+    // ---------------------------------------------------------------------------
+    // Response policy
+    // ---------------------------------------------------------------------------
+
+    // Prevent named from leaking its version string in response to version queries.
+    // Default: the actual version string  |  Recommended: "none" or a fake string
+    // to reduce information disclosure. "none" causes a REFUSED response to queries
+    // for version.bind or version.server.
+    version "none";
+
+    // Maximum UDP message size named will send and accept (EDNS0).
+    // Default: 1232 (BIND 9.16+, changed from 4096 to match fragmentation guidance)
+    // Change when: network path doesn't support standard EDNS0; lower to 512 to
+    // disable EDNS0 effectively (not recommended unless troubleshooting).
+    // edns-udp-size 1232;
+
+    // Authoritative servers: send NOTIFY messages to secondaries after zone changes.
+    // Default: yes  |  Change to "no" only when testing or for stub zones.
+    notify yes;
+
+    // Whether to also notify servers in the zone's NS records, in addition to
+    // those listed in also-notify.
+    // Default: yes
+    notify-source 0.0.0.0;
+
+};
+
+// ---------------------------------------------------------------------------
+// LOGGING BLOCK
+// named writes nothing to a file by default on systemd systems — it uses
+// stderr captured by journald. Configure file logging here if you need
+// separate named log files with rotation.
+// ---------------------------------------------------------------------------
+
+logging {
+
+    // A "channel" defines where and how to write log messages.
+    // Built-in channels: default_syslog, default_stderr, default_debug, null.
+
+    channel default_log {
+        // Log to a file. "versions 5" keeps 5 rotated copies; "size 20m" rotates
+        // when the file reaches 20MB.
+        file "/var/log/named/named.log" versions 5 size 20m;
+
+        // Log severity: critical, error, warning, notice, info, debug [N], dynamic
+        // Default: info  |  For production: warning or notice
+        // Change to debug 3 temporarily when diagnosing a specific issue.
+        severity dynamic;
+
+        // Include timestamp and severity in each line.
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+
+    channel queries_log {
+        file "/var/log/named/queries.log" versions 3 size 50m;
+        severity info;
+        print-time yes;
+    };
+
+    // "null" channel discards all messages — use to silence noisy categories.
+    channel null_channel {
+        null;
+    };
+
+    // Categories route specific message types to channels.
+    // See BIND ARM for the full category list.
+
+    // General named messages.
+    category default { default_log; };
+
+    // DNS query logging — high volume, separate channel.
+    // Disable in production unless actively debugging; generates enormous logs.
+    // category queries { queries_log; };
+
+    // Zone transfer messages.
+    category xfer-in  { default_log; };
+    category xfer-out { default_log; };
+
+    // DNSSEC key management.
+    category dnssec   { default_log; };
+
+    // Suppress LAME_SERVER noise (common for misconfigured delegations).
+    category lame-servers { null_channel; };
+
+};
+
+// ---------------------------------------------------------------------------
+// ZONE DEFINITIONS
+// ---------------------------------------------------------------------------
+// On Debian: these go in /etc/bind/named.conf.local (included by named.conf).
+// On RHEL: place directly in /etc/named.conf or in /etc/named/ and include.
+
+// ---------------------------------------------------------------------------
+// PRIMARY (MASTER) ZONE
+// This server is authoritative and holds the zone source data.
+// ---------------------------------------------------------------------------
+
+zone "example.com" {
+    // "master" is the BIND 9.15 and earlier term; "primary" is the BIND 9.16+ synonym.
+    // Both work in all current versions. Prefer "primary" in new configs.
+    type primary;
+
+    // Path to the zone file. Relative paths are resolved from the "directory" option.
+    file "/etc/bind/db.example.com";
+
+    // Send NOTIFY to secondaries listed in also-notify and in the zone NS records.
+    // Inherited from options{} unless overridden here.
+    notify yes;
+
+    // Allow zone transfers only to our known secondaries.
+    // Overrides the global allow-transfer for this zone.
+    allow-transfer { secondary-servers; };
+
+    // Allow dynamic DNS updates (DDNS) from specific clients.
+    // Default: { none; }  |  Change when: DHCP server or Let's Encrypt needs to
+    // update records automatically. Use TSIG keys rather than raw IPs for security.
+    // allow-update { key "ddns-key.example.com"; };
+};
+
+// ---------------------------------------------------------------------------
+// REVERSE ZONE (PTR records)
+// The zone name for 192.168.1.0/24 is "1.168.192.in-addr.arpa".
+// Build the name by reversing the network octets and appending .in-addr.arpa.
+// For a /16 (192.168.0.0): "168.192.in-addr.arpa"
+// For IPv6: reversed nibbles + .ip6.arpa
+// ---------------------------------------------------------------------------
+
+zone "1.168.192.in-addr.arpa" {
+    type primary;
+    file "/etc/bind/db.192.168.1";
+    allow-transfer { secondary-servers; };
+};
+
+// ---------------------------------------------------------------------------
+// SECONDARY (SLAVE) ZONE
+// This server receives zone data from the primary via AXFR/IXFR.
+// The file path is where named caches the transferred zone locally.
+// ---------------------------------------------------------------------------
+
+zone "partner.example.com" {
+    // "slave" is pre-9.16 terminology; "secondary" is the current term.
+    type secondary;
+
+    // IP address(es) of the primary server for this zone.
+    // named queries these for zone transfers and expects NOTIFY from them.
+    masters { 192.168.1.10; };
+
+    // Where named caches the transferred zone data locally.
+    // Must be writable by the named user. On Debian: /var/lib/bind/
+    file "/var/lib/bind/db.partner.example.com";
+};
+
+// ---------------------------------------------------------------------------
+// STUB ZONE
+// Caches only the NS records for a zone, not the full zone data.
+// Useful for internal resolvers that need to know where to find a zone
+// without hosting it as a full secondary.
+// ---------------------------------------------------------------------------
+
+// zone "internal.corp" {
+//     type stub;
+//     masters { 10.10.0.1; };
+//     file "/var/cache/bind/db.internal.corp.stub";
+// };
+
+// ---------------------------------------------------------------------------
+// FORWARD ZONE
+// Forwards queries for a specific zone to different servers, without
+// caching or transferring zone data. Useful in split-horizon setups.
+// ---------------------------------------------------------------------------
+
+// zone "corp.internal" {
+//     type forward;
+//     forwarders { 10.0.0.53; 10.0.0.54; };
+//     forward only;
+// };
+
+// ============================================================================
+// ANNOTATED ZONE FILE: /etc/bind/db.example.com
+// ============================================================================
+//
+// This is a separate file referenced by the zone{} block above.
+// Place it at the path specified in the zone definition.
+// Use "named-checkzone example.com /etc/bind/db.example.com" to validate.
+//
+// $ORIGIN example.com.           ; Default domain suffix for unqualified names
+// $TTL 3600                      ; Default TTL: 1 hour. Individual records can override.
+//
+// ; ---------------------------------------------------------------------------
+// ; SOA — Start of Authority. Required exactly once, first in every zone file.
+// ; ---------------------------------------------------------------------------
+// ; Format: zone  TTL  class  SOA  primary-ns  admin-email (serial refresh retry expire min-ttl)
+// ; Admin email: replace @ with . (e.g., admin@example.com → admin.example.com.)
+// ; Trailing dot on names = fully qualified (FQDN). Without dot, $ORIGIN is appended.
+//
+// @   IN SOA  ns1.example.com.  hostmaster.example.com. (
+//                 2024031501   ; Serial — YYYYMMDDNN format by convention.
+//                              ; Must be incremented on every zone change.
+//                              ; Slaves compare this integer; higher = newer.
+//                 3600         ; Refresh — how often slaves poll for changes (1 hour).
+//                 900          ; Retry — how long after a failed refresh to retry (15 min).
+//                 604800       ; Expire — how long a slave continues serving if it
+//                              ;   can't reach the primary (7 days). After expiry,
+//                              ;   the slave stops answering for this zone.
+//                 300          ; Negative TTL — how long NXDOMAIN responses are cached (5 min).
+//             )
+//
+// ; ---------------------------------------------------------------------------
+// ; NS — Nameserver records. List all authoritative nameservers for this zone.
+// ; These must match the NS records at the parent registrar/zone.
+// ; ---------------------------------------------------------------------------
+//
+// @   IN NS   ns1.example.com.
+// @   IN NS   ns2.example.com.
+//
+// ; ---------------------------------------------------------------------------
+// ; A / AAAA — Address records.
+// ; Unqualified names (no trailing dot) have $ORIGIN appended, so "ns1" → ns1.example.com.
+// ; ---------------------------------------------------------------------------
+//
+// ns1         IN A        192.168.1.10    ; Glue record for primary nameserver
+// ns1         IN AAAA     2001:db8::10
+// ns2         IN A        192.168.1.20    ; Glue record for secondary nameserver
+// @           IN A        192.168.1.1     ; Apex record for example.com itself
+// www         IN A        192.168.1.1     ; www.example.com → same IP
+// mail        IN A        192.168.1.5
+//
+// ; ---------------------------------------------------------------------------
+// ; CNAME — Canonical name alias. CANNOT coexist with other record types at
+// ; the same name. CANNOT be used at the zone apex (@).
+// ; ---------------------------------------------------------------------------
+//
+// ftp         IN CNAME    www.example.com.    ; ftp.example.com → www.example.com (FQDN)
+// blog        IN CNAME    www                 ; blog.example.com → www.example.com (relative)
+//
+// ; ---------------------------------------------------------------------------
+// ; MX — Mail exchanger. The number is priority; lower = preferred.
+// ; The MX target must be an A/AAAA record, not a CNAME.
+// ; ---------------------------------------------------------------------------
+//
+// @   IN MX   10  mail.example.com.       ; Primary mail server (priority 10)
+// @   IN MX   20  mail2.example.com.      ; Backup mail server (priority 20)
+//
+// ; ---------------------------------------------------------------------------
+// ; TXT — Free-form text. Used for SPF, DKIM, DMARC, domain verification, etc.
+// ; Multiple strings are concatenated; max 255 chars per string, but you can
+// ; span multiple quoted strings in a single TXT record.
+// ; ---------------------------------------------------------------------------
+//
+// @   IN TXT  "v=spf1 mx ip4:192.168.1.5 -all"    ; SPF: authorize mail server by MX
+// _dmarc      IN TXT  "v=DMARC1; p=reject; rua=mailto:dmarc@example.com"
+//
+// ; DKIM public key — the selector (e.g., "default") is set in your mail server config.
+// default._domainkey  IN TXT  "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBA..."
+//
+// ; ---------------------------------------------------------------------------
+// ; SRV — Service locator records. Format: _service._proto  TTL  class  SRV  priority  weight  port  target
+// ; ---------------------------------------------------------------------------
+//
+// _sip._tcp   IN SRV  10 20 5060 sip.example.com.
+//
+// ; ---------------------------------------------------------------------------
+// ; ANNOTATED REVERSE ZONE FILE: /etc/bind/db.192.168.1
+// ; Zone name: 1.168.192.in-addr.arpa
+// ; ---------------------------------------------------------------------------
+//
+// $ORIGIN 1.168.192.in-addr.arpa.
+// $TTL 3600
+//
+// @   IN SOA  ns1.example.com.  hostmaster.example.com. (
+//                 2024031501  3600  900  604800  300 )
+//
+// @   IN NS   ns1.example.com.
+// @   IN NS   ns2.example.com.
+//
+// ; PTR records — reverse map IP last-octet to FQDN (must end with trailing dot).
+// ; "10" expands to 10.1.168.192.in-addr.arpa. → ns1.example.com.
+// 10  IN PTR  ns1.example.com.
+// 20  IN PTR  ns2.example.com.
+// 1   IN PTR  example.com.
+// 5   IN PTR  mail.example.com.

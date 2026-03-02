@@ -1,0 +1,294 @@
+# Traefik v3 Static Configuration — Annotated
+#
+# This is the static config (traefik.yml). Changes here require a Traefik restart.
+# Dynamic config (routers, services, middlewares) lives in Docker labels or the
+# file provider and reloads automatically.
+#
+# Place at: /etc/traefik/traefik.yml
+# Or pass with: --configfile /etc/traefik/traefik.yml
+
+# ---------------------------------------------------------------------------
+# global
+# ---------------------------------------------------------------------------
+global:
+  # Send version check pings to Traefik's servers. Default: true.
+  # Disable if your environment blocks outbound HTTPS or you prefer silence.
+  checkNewVersion: false
+
+  # Send anonymized usage statistics. Default: false.
+  sendAnonymousUsage: false
+
+# ---------------------------------------------------------------------------
+# api — dashboard and REST API
+# ---------------------------------------------------------------------------
+api:
+  # Enable the dashboard UI and /api/* endpoints. Default: false.
+  # Without this, /dashboard/ and /api/ return 404.
+  dashboard: true
+
+  # Expose the API on port 8080 without authentication. Default: false.
+  # ONLY safe on loopback or in a trusted private network. In production,
+  # remove this and expose the API via a secured router (see common-patterns.md).
+  insecure: true
+
+  # Include debug endpoints (/api/rawdata) that dump full config. Default: false.
+  # Useful for troubleshooting; disable in production.
+  debug: false
+
+# ---------------------------------------------------------------------------
+# entryPoints — named TCP/UDP listeners
+# ---------------------------------------------------------------------------
+# Entrypoints are STATIC — you cannot add or modify them via Docker labels or
+# the file provider. Restart Traefik after any change here.
+entryPoints:
+  # "web" is the conventional name for port 80. You can name it anything,
+  # but Docker labels and routers must reference the exact name you use here.
+  web:
+    address: ":80"
+
+    # Redirect all HTTP traffic to HTTPS automatically.
+    # This is a permanent redirect (308) at the entrypoint level.
+    # Alternatively, define a RedirectScheme middleware on individual routers.
+    http:
+      redirections:
+        entryPoint:
+          to: websecure        # Target entrypoint name.
+          scheme: https
+          permanent: true      # 308 redirect. Set false for 302 during testing.
+
+  # "websecure" is the conventional name for port 443.
+  websecure:
+    address: ":443"
+
+    # Opt all routers on this entrypoint into TLS by default.
+    # Without this, routers must explicitly set `tls: true`.
+    http:
+      tls:
+        certResolver: letsencrypt   # Must match a certificatesResolvers name below.
+
+  # Optional: a custom high port for the dashboard if you don't want to use
+  # the built-in insecure mode. Bind only to localhost.
+  # traefik:
+  #   address: "127.0.0.1:8080"
+
+# ---------------------------------------------------------------------------
+# providers — where Traefik reads dynamic config from
+# ---------------------------------------------------------------------------
+providers:
+  docker:
+    # Connect to the Docker daemon via the socket.
+    # The socket must be mounted into the Traefik container:
+    #   volumes:
+    #     - /var/run/docker.sock:/var/run/docker.sock:ro
+    endpoint: "unix:///var/run/docker.sock"
+
+    # Watch only the Docker network named "proxy" (optional).
+    # Traefik will only see containers attached to this network.
+    # Remove to watch all networks.
+    # network: proxy
+
+    # Do NOT create routers for containers that don't have traefik.enable=true.
+    # Default: true (dangerous — every container gets a router, including databases).
+    # Always set to false in production.
+    exposedByDefault: false
+
+    # Poll interval for container changes. Default: 100ms.
+    # Increase if Traefik uses too much CPU in large environments.
+    # watch: true  # Default: true
+
+  # File provider — reads dynamic config from files or a directory.
+  # Useful for non-Docker services (VMs, bare-metal apps, static upstreams).
+  file:
+    # Watch a directory. All .yml and .toml files inside are loaded.
+    directory: /etc/traefik/dynamic
+
+    # Reload automatically when files change. Default: false.
+    watch: true
+
+    # Alternative: point to a single file instead of a directory.
+    # filename: /etc/traefik/dynamic/services.yml
+
+# ---------------------------------------------------------------------------
+# certificatesResolvers — ACME (Let's Encrypt) configuration
+# ---------------------------------------------------------------------------
+# ACME state is stored in acme.json. Losing this file forces re-issuance.
+# Let's Encrypt rate limits: 5 duplicate certs per week, 50 certs per domain per week.
+# Always test with the staging CA first.
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      # Contact email — required by Let's Encrypt. Used only for expiry warnings.
+      email: "admin@example.com"
+
+      # Where to store issued certs. Must survive Traefik restarts.
+      # In Docker: use a named volume mounted here, or a bind mount.
+      # Permissions must be 600 — Traefik refuses world-readable acme.json.
+      storage: /letsencrypt/acme.json
+
+      # --- HTTP-01 Challenge ---
+      # Traefik answers the challenge over port 80. Simplest option when
+      # port 80 is publicly reachable and your DNS points to this server.
+      httpChallenge:
+        entryPoint: web   # Must reference the entrypoint bound to :80.
+
+      # --- DNS-01 Challenge (alternative — comment out httpChallenge above) ---
+      # Required when port 80 is blocked or you need wildcard certs.
+      # Supported providers: cloudflare, route53, digitalocean, etc.
+      # https://doc.traefik.io/traefik/https/acme/#providers
+      # dnsChallenge:
+      #   provider: cloudflare
+      #   resolvers:
+      #     - "1.1.1.1:53"
+      #     - "8.8.8.8:53"
+
+      # Staging CA — use during development to avoid rate limits.
+      # Comment out for production (Traefik defaults to the production CA).
+      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+  # Second resolver for a DNS challenge provider (optional — multiple resolvers
+  # let different routers use different challenge types or accounts).
+  # letsencrypt-dns:
+  #   acme:
+  #     email: "admin@example.com"
+  #     storage: /letsencrypt/acme-dns.json
+  #     dnsChallenge:
+  #       provider: cloudflare
+
+# ---------------------------------------------------------------------------
+# log — Traefik process log (not access log)
+# ---------------------------------------------------------------------------
+log:
+  # Level: DEBUG, INFO, WARN, ERROR. Default: ERROR.
+  # Use DEBUG when diagnosing routing failures; revert to INFO or WARN for production.
+  level: INFO
+
+  # Format: common (text), json. Default: common.
+  # json is easier to parse with log aggregators (Loki, Datadog, etc.).
+  format: common
+
+  # Write logs to a file instead of stdout. Default: stdout.
+  # If running in Docker, leave unset — Docker captures stdout automatically.
+  # filePath: /var/log/traefik/traefik.log
+
+  # Rotate logs. Only applies when filePath is set.
+  # maxSize: 10   # MB
+  # maxBackups: 3
+  # maxAge: 7     # days
+  # compress: true
+
+# ---------------------------------------------------------------------------
+# accessLog — HTTP access log (one line per request)
+# ---------------------------------------------------------------------------
+accessLog:
+  # Write to stdout by default (captured by Docker). Set filePath for file output.
+  # filePath: /var/log/traefik/access.log
+
+  # Log format: common (CLF) or json. Default: common.
+  format: common
+
+  # Buffer writes for performance. Default: 0 (unbuffered).
+  # bufferingSize: 100
+
+  # Only log requests matching these status codes (optional filter).
+  # filters:
+  #   statusCodes:
+  #     - "400-599"
+  #   retryAttempts: true
+  #   minDuration: "10ms"
+
+  # Fields to include or redact in the access log.
+  # fields:
+  #   defaultMode: keep
+  #   names:
+  #     ClientUsername: drop
+  #   headers:
+  #     defaultMode: drop
+  #     names:
+  #       User-Agent: keep
+  #       Authorization: redact
+
+# ---------------------------------------------------------------------------
+# metrics — observability
+# ---------------------------------------------------------------------------
+# metrics:
+#   prometheus:
+#     # Expose /metrics on the Traefik internal router (accessible via API port).
+#     # Scrape with: curl http://localhost:8080/metrics
+#     addEntryPointsLabels: true
+#     addServicesLabels: true
+#     addRoutersLabels: true
+#     buckets:
+#       - 0.1
+#       - 0.3
+#       - 1.2
+#       - 5.0
+
+# ---------------------------------------------------------------------------
+# DYNAMIC CONFIG EXAMPLE
+# ---------------------------------------------------------------------------
+# The following is NOT part of traefik.yml. It belongs in a separate file,
+# e.g. /etc/traefik/dynamic/services.yml (loaded by the file provider above).
+# Routers, services, and middlewares defined here reload without a restart.
+#
+# ---
+# http:
+#   routers:
+#     my-app:
+#       # Which entrypoints this router listens on.
+#       entryPoints:
+#         - websecure
+#
+#       # Rule determines which requests this router matches.
+#       # Syntax: Host(`domain`), PathPrefix(`/path`), Headers(`Key`, `Value`), etc.
+#       rule: "Host(`app.example.com`)"
+#
+#       # Name of the service that handles matched requests.
+#       service: my-app-svc
+#
+#       # Enable TLS for this router.
+#       tls:
+#         certResolver: letsencrypt
+#
+#       # Apply middlewares by name. Suffix @file for file-provider middlewares.
+#       middlewares:
+#         - secure-headers@file
+#
+#   services:
+#     my-app-svc:
+#       loadBalancer:
+#         servers:
+#           # Static upstream — useful for services not in Docker.
+#           - url: "http://192.168.1.10:3000"
+#           - url: "http://192.168.1.11:3000"
+#
+#         # Health check for the upstream. Traefik polls this path.
+#         healthCheck:
+#           path: /healthz
+#           interval: "10s"
+#           timeout: "3s"
+#
+#         # Sticky sessions — send the same client to the same server.
+#         # sticky:
+#         #   cookie:
+#         #     name: lb_session
+#         #     secure: true
+#         #     httpOnly: true
+#
+#   middlewares:
+#     secure-headers:
+#       headers:
+#         browserXssFilter: true
+#         contentTypeNosniff: true
+#         frameDeny: true
+#         sslRedirect: true
+#         stsSeconds: 31536000
+#         stsIncludeSubdomains: true
+#         stsPreload: true
+#
+#     basic-auth:
+#       basicAuth:
+#         # Generate with: htpasswd -nB username
+#         # The $ in bcrypt hashes must be escaped as $$ in Docker labels,
+#         # but NOT in YAML files.
+#         users:
+#           - "admin:$2y$05$..."

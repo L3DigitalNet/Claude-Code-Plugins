@@ -1,0 +1,304 @@
+# Annotated sshd_config
+# Reference for /etc/ssh/sshd_config
+#
+# Format: directives shown at recommended values (uncommented).
+#         Defaults that differ from the recommended value are shown commented out.
+#         Run `sudo sshd -T` to see the full effective config with all defaults applied.
+#
+# ALWAYS validate before reloading: sudo sshd -t
+
+##############################################################################
+# NETWORK / LISTENING
+##############################################################################
+
+# Which TCP port sshd listens on. Multiple Port lines are allowed.
+# Default: 22  |  Recommended: 22 (or a non-standard port to reduce log noise)
+# Security impact: changing away from 22 reduces automated scan noise but is
+# not a security control — obscurity is not protection.
+Port 22
+
+# Address family to use. "any" listens on both IPv4 and IPv6.
+# Default: any  |  Options: any, inet (IPv4 only), inet6 (IPv6 only)
+# Security impact: low — restrict to inet if IPv6 is unused to reduce surface.
+AddressFamily any
+
+# Which local address(es) to bind. 0.0.0.0 means all IPv4 interfaces.
+# Multiple ListenAddress lines are allowed.
+# Default: 0.0.0.0 (all)  |  Recommended: specific IP if server has multiple interfaces
+# Security impact: medium — binding to a specific interface prevents exposure on others.
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+##############################################################################
+# HOST KEYS
+##############################################################################
+
+# Paths to the server's private host key files. sshd presents these to clients
+# during the key exchange to prove server identity.
+# Default: depends on distro; typically includes rsa, ecdsa, ed25519
+# Security impact: high — ed25519 preferred; RSA >= 3072 bits acceptable.
+# Remove DSA and older ECDSA if present.
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+# HostKey /etc/ssh/ssh_host_ecdsa_key   # acceptable but ed25519 is preferred
+# Do NOT include ssh_host_dsa_key — DSA is deprecated and weak.
+
+##############################################################################
+# LOGGING
+##############################################################################
+
+# Syslog facility for auth messages.
+# Default: AUTH  |  Recommended: AUTH (or AUTHPRIV on systems that separate it)
+SyslogFacility AUTH
+
+# Verbosity of logging. INFO logs successful logins and key fingerprints.
+# VERBOSE additionally logs the user's public key fingerprint on auth.
+# Default: INFO  |  Recommended: VERBOSE (helps audit which key was used)
+# Security impact: medium — more detail aids forensics; no perf concern.
+LogLevel VERBOSE
+
+##############################################################################
+# AUTHENTICATION — TIMING AND LIMITS
+##############################################################################
+
+# How long (seconds) sshd waits for a successful login before disconnecting.
+# Default: 120  |  Recommended: 30
+# Security impact: medium — shorter window reduces exposure from unauthenticated connections.
+LoginGraceTime 30
+
+# Whether root can log in directly. "prohibit-password" allows root login only
+# with public key auth (not password). "no" is stricter.
+# Default: prohibit-password (OpenSSH 7.0+)  |  Recommended: no
+# Security impact: high — direct root login should be avoided; use sudo instead.
+PermitRootLogin no
+
+# Whether sshd checks file permissions on home dirs, ~/.ssh, and authorized_keys.
+# If "yes", rejects login when permissions are too open (e.g., group-writable home).
+# Default: yes  |  Recommended: yes
+# Security impact: high — prevents key auth bypass via permissive file ownership.
+StrictModes yes
+
+# Maximum auth attempts per connection. Connection dropped after this many failures.
+# Default: 6  |  Recommended: 3
+# Security impact: medium — limits password guessing per connection. fail2ban handles
+# multi-connection brute force at the firewall level.
+MaxAuthTries 3
+
+# Maximum sessions multiplexed over a single connection (ControlMaster use case).
+# Default: 10  |  Recommended: 10 (reduce if multiplexing is not used)
+MaxSessions 10
+
+##############################################################################
+# AUTHENTICATION — METHODS
+##############################################################################
+
+# Whether public key authentication is allowed.
+# Default: yes  |  Recommended: yes
+# Security impact: high — the primary secure auth method; must be enabled for key-only auth.
+PubkeyAuthentication yes
+
+# Path(s) to authorized_keys file(s). Relative paths are relative to user's home dir.
+# %h = home dir, %u = username.
+# Default: .ssh/authorized_keys .ssh/authorized_keys2
+# Recommended: .ssh/authorized_keys (drop the legacy authorized_keys2)
+# Security impact: medium — the authorized_keys2 file is a legacy holdover; removing it
+# reduces ambiguity about which file controls access.
+AuthorizedKeysFile .ssh/authorized_keys
+
+# File listing principal names that are authorized for certificate auth.
+# Only relevant when using SSH certificates (not common keys).
+# Default: none (disabled)
+#AuthorizedPrincipalsFile none
+
+# Whether password authentication is allowed.
+# Default: yes  |  Recommended: no (enforce key-only auth)
+# Security impact: critical — disabling passwords eliminates password brute force entirely.
+# Do NOT disable until at least one key-based login has been verified.
+PasswordAuthentication no
+
+# Whether empty passwords are accepted. Almost always no.
+# Default: no  |  Recommended: no
+PermitEmptyPasswords no
+
+# Challenge-response authentication (used by some PAM modules, e.g. TOTP/OTP).
+# On OpenSSH 8.7+, this directive was renamed to KbdInteractiveAuthentication.
+# Keep "no" unless you specifically need challenge-response (e.g., Google Authenticator).
+# Default: yes (pre-8.7) / no (8.7+ on many distros)  |  Recommended: no
+ChallengeResponseAuthentication no
+
+# Renamed form of ChallengeResponseAuthentication in OpenSSH 8.7+.
+# Controls keyboard-interactive authentication (includes TOTP if PAM is configured).
+# Default: varies by distro  |  Recommended: no unless using MFA via PAM
+KbdInteractiveAuthentication no
+
+# Whether to use PAM for authentication. Required on most Linux distros for
+# account/session management even when password auth is off.
+# Default: yes (on most distros)  |  Recommended: yes
+# Security impact: medium — disabling PAM breaks account expiry enforcement on some distros.
+UsePAM yes
+
+##############################################################################
+# FORWARDING AND TUNNELING
+##############################################################################
+
+# Whether SSH agent forwarding is allowed. Agent forwarding lets the remote host
+# use your local SSH agent to authenticate to other hosts.
+# Default: yes  |  Recommended: no (unless specifically needed)
+# Security impact: high — a compromised server with AllowAgentForwarding yes can
+# hijack your agent and use your keys. Disable when not required.
+AllowAgentForwarding no
+
+# Whether TCP forwarding (port forwarding / tunneling) is allowed.
+# "yes" allows both local (-L) and remote (-R) forwarding.
+# Default: yes  |  Recommended: no (unless tunneling is intentionally used)
+# Security impact: high — TCP forwarding can be used to bypass firewall rules.
+AllowTcpForwarding no
+
+# Whether remote port forwarding can bind to non-loopback addresses.
+# "yes" means remote -R forwards bind on all interfaces (not just localhost).
+# Default: no  |  Recommended: no
+# Security impact: high — enabling makes forwarded ports reachable from the network.
+GatewayPorts no
+
+# Whether X11 (graphical) forwarding is allowed.
+# Default: no  |  Recommended: no (only enable when running GUI apps over SSH)
+# Security impact: medium — X11 forwarding can expose the client display to the server.
+X11Forwarding no
+
+# Whether tun(4) device forwarding (VPN-over-SSH) is allowed.
+# Default: no  |  Recommended: no (use a real VPN if needed)
+PermitTunnel no
+
+##############################################################################
+# SESSION BEHAVIOR
+##############################################################################
+
+# Whether to print /etc/motd after login.
+# Default: yes  |  Recommended: no (most distros handle motd via PAM pam_motd instead)
+PrintMotd no
+
+# Whether to print the date/time of the user's last login.
+# Default: yes  |  Recommended: yes (useful audit trail)
+PrintLastLog yes
+
+# Whether to send TCP keepalive packets to detect dead connections.
+# Default: yes  |  Recommended: yes
+# Note: TCPKeepAlive is at the TCP layer and detects network failures.
+# ClientAliveInterval is at the SSH layer and is generally preferred.
+TCPKeepAlive yes
+
+# Whether to do reverse DNS lookups on connecting IP addresses.
+# Default: yes  |  Recommended: no (eliminates DNS-induced login delays)
+# Security impact: low — the lookup result is only used in logs and Match Host blocks.
+UseDNS no
+
+# Path to a file displayed before authentication (legal banner / warning message).
+# Default: none  |  Recommended: /etc/issue.net if required by policy
+# Security impact: low — some compliance frameworks require a login warning.
+#Banner /etc/issue.net
+
+# Environment variables the client is allowed to pass through.
+# LC_* and LANG allow locale to follow the user across the connection.
+# Default: none  |  Recommended: locale variables only
+AcceptEnv LANG LC_*
+
+# The SFTP subsystem. Required for sftp/scp file transfers.
+# Default: depends on distro  |  Recommended: internal-sftp for chroot setups
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+##############################################################################
+# RATE LIMITING AND CONNECTION LIMITS
+##############################################################################
+
+# Rate-limits unauthenticated connection attempts to prevent DoS.
+# Format: start:rate:full
+#   start = number of unauthenticated connections before dropping begins
+#   rate  = percentage chance of dropping a connection once start is reached
+#   full  = maximum unauthenticated connections; all above this are dropped
+# Default: 10:30:100  |  Recommended: 10:30:60
+# Security impact: medium — limits half-open connection DoS; not a substitute for fail2ban.
+MaxStartups 10:30:60
+
+# SSH-layer keepalive: send a null packet to the client every N seconds.
+# If the client doesn't respond after ClientAliveCountMax messages, disconnect.
+# Default: 0 (disabled)  |  Recommended: 60
+# Security impact: low — frees server resources from dead sessions.
+ClientAliveInterval 60
+
+# Number of keepalive messages to send without a response before disconnecting.
+# Default: 3  |  Recommended: 3
+# With ClientAliveInterval 60 and CountMax 3: sessions time out after ~3 minutes idle.
+ClientAliveCountMax 3
+
+##############################################################################
+# ACCESS CONTROL
+##############################################################################
+
+# Restrict logins to specific users. All others are denied.
+# Multiple users separated by spaces. Patterns (* and ?) are supported.
+# Order of evaluation: DenyUsers, AllowUsers, DenyGroups, AllowGroups
+# Default: (none — all users allowed)  |  Recommended: set explicitly in production
+#AllowUsers alice bob deploy
+
+# Deny specific users regardless of other settings.
+# Default: (none)
+#DenyUsers tempuser contractor
+
+# Restrict logins to members of specific groups.
+# Default: (none)
+#AllowGroups ssh-users sudo
+
+# Deny members of specific groups.
+# Default: (none)
+#DenyGroups nossh
+
+##############################################################################
+# CRYPTOGRAPHIC ALGORITHMS
+##############################################################################
+# These defaults apply to OpenSSH 8.x+. Run `ssh-audit` to scan for weaknesses.
+# Remove algorithms only if you control all connecting clients — older clients
+# may fail to connect if you remove algorithms they rely on.
+
+# Key exchange algorithms. curve25519 and sntrup761 are the modern choices.
+# Default: negotiated from compiled-in list  |  Recommended: modern set below
+# Removing diffie-hellman-* eliminates all DH group-based exchanges.
+KexAlgorithms sntrup761x25519-sha512@openssh.com,curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+
+# Symmetric ciphers for encrypting the session. ChaCha20 and AES-GCM are preferred.
+# Default: negotiated  |  Recommended: authenticated encryption modes only (GCM/CCM/poly1305)
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+# Message authentication codes. Encrypt-then-MAC (-etm) variants are preferred.
+# Default: negotiated  |  Recommended: etm variants first, then standard HMAC-SHA2
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+
+# Host key algorithms the server will offer. Controls which host key types are
+# presented to clients. ed25519 first; rsa-sha2-512 as fallback.
+# Default: negotiated  |  Recommended: remove ssh-rsa (SHA-1) and all DSA/ECDSA variants
+HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512,rsa-sha2-256
+
+##############################################################################
+# MATCH BLOCKS
+##############################################################################
+# Match blocks override global settings for connections matching criteria.
+# Criteria: User, Group, Host, Address, LocalAddress, LocalPort, RDomain
+# Settings inside a Match block apply ONLY to matched connections — they do
+# NOT affect other sessions. `sshd -t` validates syntax but does not evaluate
+# Match conditions.
+
+# Example: Allow password auth only from a trusted internal subnet
+#Match Address 192.168.1.0/24
+#    PasswordAuthentication yes
+
+# Example: Restrict a service account to SFTP only, chrooted to its home dir
+#Match User sftpuser
+#    ForceCommand internal-sftp
+#    ChrootDirectory %h
+#    AllowTcpForwarding no
+#    X11Forwarding no
+#    PasswordAuthentication no
+
+# Example: Allow agent forwarding only for a specific admin group
+#Match Group ssh-admins
+#    AllowAgentForwarding yes
+#    AllowTcpForwarding yes

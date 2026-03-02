@@ -1,4 +1,4 @@
-"""Test helpers for integration tests.
+"""Test helpers for unit and integration tests.
 
 PasswordVault overrides the YubiKey-based auth with a password piped via stdin,
 enabling integration tests against a password-only test.kdbx.
@@ -8,16 +8,64 @@ after the initial password prompt succeeds. PasswordVault sends the password and
 waits for that prompt with readuntil(), then delegates run_cli() to the parent
 class (which sends commands via stdin/stdout). run_cli_binary() uses a separate
 subprocess per call — binary data can't transit the text REPL.
+
+_repl_resp / _mock_repl_proc / _mock_async_proc are shared mock helpers for
+unit tests in test_vault.py and test_tools.py.
 """
 
 from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
 from server.config import Config
 from server.vault import KeePassCLIError, Vault, VaultLocked
 from server.yubikey import MockYubiKey
+
+
+# ---------------------------------------------------------------------------
+# Shared REPL mock helpers (used by test_vault.py and test_tools.py)
+# ---------------------------------------------------------------------------
+
+def _repl_resp(data: bytes = b"") -> bytes:
+    """Wrap output bytes with the REPL prompt sentinel b"\\n> ".
+
+    Each value in readuntil.side_effect must include the sentinel because
+    run_cli() strips the last len(b"\\n> ") = 3 bytes to recover command output.
+    """
+    return data + b"\n> "
+
+
+def _mock_repl_proc(responses: list[bytes] | None = None) -> MagicMock:
+    """Create a mock REPL process for vault.run_cli() calls.
+
+    responses: readuntil return values, one per run_cli() call.
+    None → returns empty response (_repl_resp()) for every call.
+    """
+    proc = MagicMock()
+    proc.stdin = MagicMock()
+    proc.stdin.write = MagicMock()
+    proc.stdin.drain = AsyncMock(return_value=None)
+    proc.stdout = MagicMock()
+    proc.stdout.readuntil = (
+        AsyncMock(side_effect=responses)
+        if responses is not None
+        else AsyncMock(return_value=_repl_resp())
+    )
+    proc.kill = MagicMock()
+    proc.wait = AsyncMock(return_value=None)
+    return proc
+
+
+def _mock_async_proc(
+    stdout: bytes = b"", stderr: bytes = b"", returncode: int = 0
+) -> AsyncMock:
+    """Mock subprocess for run_cli_binary() which uses communicate()."""
+    proc = AsyncMock()
+    proc.communicate.return_value = (stdout, stderr)
+    proc.returncode = returncode
+    return proc
 
 _REPL_INITIAL_PROMPT = b"> "
 _REPL_TIMEOUT = 30

@@ -1,0 +1,207 @@
+# Annotated /etc/lvm/lvm.conf
+#
+# This file covers the sections and directives most relevant to day-to-day
+# LVM administration. Directive format:
+#   directive = value   # What it does | Default | When to change
+#
+# Sections not covered here (activation, dmeventd, etc.) rarely need manual
+# editing and are documented in `man lvm.conf`.
+#
+# View the full generated config with current defaults:
+#   lvmconfig --type default
+# View only non-default settings:
+#   lvmconfig --type diff
+
+# ---------------------------------------------------------------------------
+# config section — LVM config file handling
+# ---------------------------------------------------------------------------
+
+config {
+    # Whether to abort if an unknown setting is found in lvm.conf.
+    # Default: 0  |  When to change: set to 1 in CI or hardened environments
+    #   to catch typos in custom configs early.
+    abort_on_errors = 0
+
+    # Profile directory for per-VG overrides.
+    # Default: /etc/lvm/profile  |  When to change: rarely; only if you
+    #   relocate /etc to a non-standard path.
+    profile_dir = "/etc/lvm/profile"
+}
+
+# ---------------------------------------------------------------------------
+# devices section — which block devices LVM scans
+# ---------------------------------------------------------------------------
+#
+# This section determines what LVM sees. The filter directive is the most
+# critical setting here — misconfiguring it causes PVs to disappear.
+
+devices {
+    # Directories to search for device files.
+    # Default: ["/dev"]  |  When to change: custom udev rules that place
+    #   device nodes in a non-standard location.
+    dir = "/dev"
+
+    # Directories under dir to scan for block devices.
+    # Default: ["disk", "mapper", "bus"]  |  When to change: add entries for
+    #   custom device mapper prefixes (e.g., "nvme") if LVM misses NVMe disks.
+    scan = ["/dev/disk", "/dev/mapper"]
+
+    # Filter controls which devices LVM considers. Rules are evaluated left
+    # to right; first match wins. "a" = accept, "r" = reject.
+    # Default: ["a/.*/"]  (accept everything)
+    #
+    # Example: accept only /dev/sd* and /dev/md* devices, reject everything else.
+    #   filter = ["a|/dev/sd.*|", "a|/dev/md.*|", "r|.*|"]
+    #
+    # Example: reject loop devices and CD-ROMs, accept everything else.
+    #   filter = ["r|/dev/loop.*|", "r|/dev/cdrom|", "a|.*|"]
+    #
+    # CRITICAL: If a PV is accidentally rejected by the filter, the entire
+    # VG becomes inaccessible. Test filter changes with `pvs` before rebooting.
+    # When to change: exclude non-LVM disks to prevent spurious "Found PV on ..."
+    #   messages, or to avoid LVM touching iSCSI or multipath devices directly.
+    filter = ["a|.*|"]
+
+    # global_filter applies before filter and affects all LVM commands including
+    # those run inside the initrd. Use global_filter to exclude devices that
+    # should NEVER be touched by LVM (e.g., raw iSCSI LUNs managed by multipath).
+    # Default: ["a|.*|"]  |  When to change: multipath or iSCSI setups where
+    #   individual paths should be hidden from LVM; only the multipath device visible.
+    # global_filter = ["a|/dev/mapper/mpath.*|", "r|/dev/sd.*|", "a|.*|"]
+
+    # Preferred device name patterns, evaluated in order. When a device has
+    # multiple names (e.g., /dev/sda and /dev/disk/by-id/...), LVM picks the
+    # first match as the canonical name displayed in pvs/lvs output.
+    # Default: []  |  When to change: prefer stable by-id or by-path names to
+    #   survive disk reordering across reboots.
+    preferred_names = ["^/dev/disk/by-id/", "^/dev/mapper/"]
+
+    # Whether to use udev to enumerate devices rather than scanning /dev directly.
+    # Default: 1  |  When to change: set to 0 on systems without udev (containers,
+    #   rescue environments) or when udev is not populating /dev correctly.
+    obtain_device_list_from_udev = 1
+
+    # Whether to detect and skip individual mdadm component devices.
+    # When on, LVM ignores /dev/sdb if it is a member of /dev/md0, preventing
+    # accidental PV creation on a RAID component.
+    # Default: 1  |  When to change: set to 0 only if you intentionally want
+    #   LVM to see RAID component devices (unusual and dangerous).
+    md_component_detection = 1
+
+    # Whether to detect and skip individual multipath component paths.
+    # Same logic as md_component_detection but for dm-multipath.
+    # Default: 0  |  When to change: set to 1 on SAN-connected hosts where
+    #   multiple /dev/sd* paths represent the same LUN.
+    multipath_component_detection = 0
+
+    # Skip devices with more than this many open file descriptors (held by
+    # other processes). Prevents LVM from scanning heavily used devices.
+    # Default: 0 (disabled)  |  When to change: rarely needed; useful if LVM
+    #   scanning causes contention on a busy database disk.
+    # ignore_suspended_devices = 1
+}
+
+# ---------------------------------------------------------------------------
+# allocation section — how LVM allocates extents
+# ---------------------------------------------------------------------------
+
+allocation {
+    # Thin pool chunk size policy. "generic" lets LVM choose; "performance"
+    # aligns chunk size to the underlying device's optimal I/O size.
+    # Default: "generic"  |  When to change: use "performance" for SSDs or
+    #   RAID arrays where the optimal chunk size differs from the LVM default.
+    thin_pool_chunk_size_policy = "generic"
+
+    # Percentage of thin pool data space used before auto-extension triggers.
+    # Requires lvm2-monitor (dmeventd) to be running.
+    # Default: 100 (disabled)  |  When to change: set to 80 to trigger extension
+    #   before the pool fills completely. Pool at 100% causes I/O errors on ALL
+    #   thin volumes simultaneously — this setting is critical for thin setups.
+    thin_pool_autoextend_threshold = 80
+
+    # How much to extend the thin pool (as % of current size) when the threshold
+    # is crossed. A 100 GiB pool at 80% full with percent=20 grows by 20 GiB.
+    # Default: 20  |  When to change: increase for large pools where 20% growth
+    #   is insufficient buffer; decrease to conserve VG free space.
+    thin_pool_autoextend_percent = 20
+
+    # Same auto-extension settings but for thin pool metadata LV.
+    # Metadata LV is small but if it fills, the pool is suspended.
+    # Default: 70  |  When to change: lower threshold = earlier warning.
+    thin_pool_metadata_require_separate_pvs = 0
+}
+
+# ---------------------------------------------------------------------------
+# log section — LVM logging behavior
+# ---------------------------------------------------------------------------
+
+log {
+    # Whether to log LVM messages to syslog.
+    # Default: 1  |  When to change: set to 0 in environments where syslog
+    #   is unavailable or you want to suppress LVM noise (rare).
+    syslog = 1
+
+    # Verbosity level for file logging (0=no file log, higher=more verbose).
+    # Default: 0  |  When to change: set to 2 or 3 to log all LVM commands
+    #   to file for auditing or debugging persistent issues.
+    verbose = 0
+
+    # LVM log level for messages sent to stderr/stdout.
+    # 2=fatal, 3=error, 4=warn, 5=notice, 6=info, 7=debug
+    # Default: 5  |  When to change: set to 7 for detailed debugging output;
+    #   set to 3 to suppress all but errors in automated scripts.
+    level = 5
+
+    # Whether to include the command name in log output.
+    # Default: 0  |  When to change: set to 1 when multiple LVM commands run
+    #   concurrently and you need to correlate log lines to specific invocations.
+    command_names = 0
+
+    # Whether to include the file and line number of LVM source in log output.
+    # Default: 0  |  When to change: set to 1 only when debugging LVM itself
+    #   (developer use; not useful for normal administration).
+    prefix = "  "
+}
+
+# ---------------------------------------------------------------------------
+# global section — miscellaneous global behavior
+# ---------------------------------------------------------------------------
+
+global {
+    # umask for files LVM creates (metadata backups, lock files).
+    # Default: 077  |  When to change: if a monitoring tool needs to read
+    #   /etc/lvm/backup as a non-root user, use 022.
+    umask = 077
+
+    # Whether to create a metadata backup to /etc/lvm/backup/ after every
+    # VG modification. This is a plain-text JSON-like backup, not a snapshot.
+    # Default: 1  |  When to change: never disable; the backup is used for
+    #   disaster recovery when PV metadata is corrupted.
+    backup = 1
+
+    # Whether to archive old metadata to /etc/lvm/archive/ before each change.
+    # Combined with backup, this gives a history of VG state changes.
+    # Default: 1  |  When to change: disable only on embedded/low-storage systems
+    #   where /etc is on a small filesystem.
+    archive = 1
+
+    # Number of archive files to retain per VG.
+    # Default: 10  |  When to change: increase for high-churn VGs where you
+    #   want more rollback history.
+    archive_count = 10
+
+    # Whether to use an external locking mechanism (clvmd for shared storage).
+    # 1 = file-based local locking (default for non-clustered setups)
+    # 3 = read-only locking (useful for monitoring-only access)
+    # Default: 1  |  When to change: use clvmd/lvmlockd for shared SAN/cluster.
+    locking_type = 1
+
+    # Path to the LVM locking directory.
+    # Default: /run/lock/lvm  |  When to change: non-standard /run location.
+    locking_dir = "/run/lock/lvm"
+
+    # Whether to activate LVs flagged as clustered on a non-clustered host.
+    # Default: 0  |  When to change: importing VGs from a cluster node to a
+    #   standalone host for recovery.
+    activation = 1
+}

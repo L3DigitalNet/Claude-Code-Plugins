@@ -1,0 +1,462 @@
+# Annotated app.ini — Gitea / Forgejo
+# Each directive includes: what it controls, default value, and when to change it.
+# Forgejo uses the same format and keys — this file applies to both.
+#
+# Format: INI sections ([SECTION_NAME]) with KEY = VALUE pairs.
+# Unset keys inherit Gitea's compiled-in defaults, which are documented at:
+#   https://docs.gitea.com/administration/config-cheat-sheet
+#
+# Location (native):  /etc/gitea/app.ini
+# Location (Docker):  /data/gitea/conf/app.ini
+
+APP_NAME = My Gitea Instance
+; Human-readable name shown in the web UI title bar and emails.
+; Default: Gitea: Git with a cup of tea
+; Change when: branding for your organization.
+
+RUN_USER = git
+; OS user that runs the Gitea process. Must own the data directory.
+; Default: git
+; Change when: you created a different system user during install (rare).
+
+RUN_MODE = prod
+; Logging verbosity and error presentation. Options: dev, prod.
+; Default: prod
+; Change when: debugging — dev mode shows full stack traces in the browser.
+
+; ---------------------------------------------------------------------------
+; [server] — Network and URL configuration
+; ---------------------------------------------------------------------------
+; ROOT_URL is the single most important setting. Every link, OAuth redirect,
+; and webhook HMAC signature is derived from it. Must match what users actually
+; type in their browser, including protocol, port, and trailing slash.
+
+[server]
+PROTOCOL = http
+; Protocol Gitea listens on. Options: http, https, fcgi, http+unix, fcgi+unix.
+; Default: http
+; Change when: terminating TLS at Gitea itself (set to https and add CERT_FILE/KEY_FILE).
+; For a reverse proxy setup, leave as http — the proxy handles TLS.
+
+DOMAIN = localhost
+; The public hostname of this instance (no port, no protocol).
+; Default: localhost
+; Change when: always — set to your actual domain (e.g., git.example.com).
+
+HTTP_PORT = 3000
+; TCP port Gitea binds on for HTTP traffic.
+; Default: 3000
+; Change when: port conflict, or you want to run on port 80 directly (needs root or capabilities).
+
+ROOT_URL = http://localhost:3000/
+; Full public base URL including protocol, domain, port (if non-standard), and trailing slash.
+; Default: %(PROTOCOL)s://%(DOMAIN)s:%(HTTP_PORT)s/
+; Change when: ALWAYS set this explicitly in production. Mismatches break OAuth, webhooks,
+; clone URLs, and avatar links in subtle, hard-to-diagnose ways.
+
+SSH_DOMAIN = localhost
+; Hostname advertised in clone URLs for SSH access (e.g., the "git@<SSH_DOMAIN>" part).
+; Default: value of DOMAIN
+; Change when: SSH is reachable on a different hostname than HTTP (common in Docker setups).
+
+SSH_PORT = 22
+; SSH port advertised in clone URLs. Does not affect which port sshd binds on.
+; Default: 22
+; Change when: Docker deployments exposing SSH on 2222 — set SSH_PORT = 2222.
+
+SSH_LISTEN_PORT = 22
+; Port the Gitea built-in SSH server listens on (only applies if START_SSH_SERVER = true).
+; Default: 22
+; Change when: using Gitea's built-in SSH server instead of system sshd passthrough.
+
+START_SSH_SERVER = false
+; Whether to use Gitea's built-in SSH server instead of relying on system sshd.
+; Default: false
+; Change when: Docker deployments where no system sshd is available — set to true and
+; map the container port.
+
+DISABLE_SSH = false
+; Completely disables SSH clone/push support in the UI and config.
+; Default: false
+; Change when: HTTP-only deployments where you want to suppress SSH clone URLs in the UI.
+
+LFS_START_SERVER = false
+; Enable the Git Large File Storage (LFS) server.
+; Default: false
+; Change when: any repository uses git-lfs. Also configure LFS_JWT_SECRET and storage.
+
+LFS_CONTENT_PATH =
+; Filesystem path where LFS objects are stored (legacy flat storage).
+; Default: <data dir>/lfs
+; Change when: you need LFS objects on a separate volume, or are migrating to object storage.
+; For S3/Minio, configure [lfs] section instead.
+
+OFFLINE_MODE = false
+; Serve static assets from the local server instead of CDN URLs.
+; Default: false
+; Change when: air-gapped deployments with no internet access — set to true.
+
+[server.ssh.minimum_rsa_key_size]
+; Minimum accepted RSA key size in bits. Smaller keys are rejected on upload.
+; Default: 2048 (Gitea 1.20+)
+; Change when: you need to accept legacy 1024-bit keys (not recommended).
+
+; ---------------------------------------------------------------------------
+; [database] — Database connection
+; ---------------------------------------------------------------------------
+; Gitea supports SQLite3, MySQL/MariaDB, PostgreSQL, and MSSQL.
+; SQLite3 is fine for small teams. Use PostgreSQL or MySQL for production.
+
+[database]
+DB_TYPE = sqlite3
+; Database engine. Options: sqlite3, mysql, postgres, mssql.
+; Default: sqlite3
+; Change when: deploying for a team — use postgres or mysql for better concurrency and backup options.
+
+HOST = 127.0.0.1:3306
+; TCP address:port for MySQL/MariaDB/PostgreSQL. Ignored for sqlite3.
+; Default: 127.0.0.1:3306 (MySQL) or 127.0.0.1:5432 (PostgreSQL)
+; Change when: database is on a different host or port.
+
+NAME = gitea
+; Database name to connect to.
+; Default: gitea
+; Change when: you created the database under a different name.
+
+USER = gitea
+; Database user.
+; Default: gitea
+; Change when: you created the database with a different username.
+
+PASSWD =
+; Database password. Use backtick quoting if the password contains special characters: `my$pass`.
+; Default: empty
+; Change when: always set a strong password in production.
+
+SSL_MODE = disable
+; TLS mode for the database connection. Options for PostgreSQL: disable, require, verify-ca, verify-full.
+; MySQL options: false, true, skip-verify, prefer.
+; Default: disable
+; Change when: database is on a remote host — enable at least require.
+
+PATH = /var/lib/gitea/data/gitea.db
+; Filesystem path for the SQLite3 database file. Ignored for other DB types.
+; Default: <AppDataPath>/gitea.db
+; Change when: you want the SQLite file on a separate volume.
+
+LOG_SQL = false
+; Log every SQL query Gitea executes. Produces very high log volume.
+; Default: false
+; Change when: debugging database performance issues — enable temporarily only.
+
+; ---------------------------------------------------------------------------
+; [repository] — Repository storage and defaults
+; ---------------------------------------------------------------------------
+
+[repository]
+ROOT = /var/lib/gitea/repositories
+; Absolute path where Gitea stores all bare git repositories.
+; Default: <home of RUN_USER>/gitea-repositories
+; Change when: you want repos on a separate volume (common in production). Must be
+; owned by RUN_USER and have rwx permissions.
+
+DEFAULT_BRANCH = main
+; Default branch name for new repositories.
+; Default: main (Gitea 1.14+), master (older versions)
+; Change when: your organization standardizes on a different branch name.
+
+ENABLE_PUSH_CREATE_USER = false
+; Allow users to create a new repo by pushing to a non-existent repo path.
+; Default: false
+; Change when: you want GitHub-style push-to-create behavior.
+
+DEFAULT_PRIVATE = last
+; Privacy setting for new repos. Options: last (inherit user's last choice), private, public.
+; Default: last
+; Change when: you want all new repos to default to private on an internal instance.
+
+MAX_CREATION_LIMIT = -1
+; Maximum number of repos a user can create. -1 = unlimited.
+; Default: -1
+; Change when: hosting a shared instance and want to limit resource usage per user.
+
+; ---------------------------------------------------------------------------
+; [security] — Secrets, tokens, and access control
+; ---------------------------------------------------------------------------
+; SECRET_KEY and INTERNAL_TOKEN are generated on first run. Back them up — they
+; encrypt cookies and internal API tokens respectively. Losing them invalidates
+; all active sessions and internal service calls.
+
+[security]
+INSTALL_LOCK = true
+; Disables the web-based install page after initial setup.
+; Default: false (shows install page on first run)
+; Change when: ALWAYS set to true in automated/Docker deployments before first start,
+; to prevent an unauthenticated visitor from taking over as the first admin.
+
+SECRET_KEY =
+; Random string used to sign cookies and CSRF tokens. Auto-generated on first run.
+; Default: auto-generated (stored in app.ini)
+; Change when: do not change after setup — invalidates all active sessions.
+
+INTERNAL_TOKEN =
+; JWT token used for internal API communication between Gitea processes.
+; Default: auto-generated
+; Change when: do not change after setup.
+
+PASSWORD_HASH_ALGO = pbkdf2
+; Algorithm used to hash user passwords. Options: argon2, bcrypt, pbkdf2, scrypt.
+; Default: pbkdf2
+; Change when: hardening security — argon2 or bcrypt are more resistant to GPU attacks.
+; Existing passwords are migrated to the new algorithm on next login.
+
+DISABLE_GIT_HOOKS = false
+; Prevent repository admins from creating server-side git hooks.
+; Default: false
+; Change when: multi-tenant hosting where you do not trust repo admins to run arbitrary code.
+
+ONLY_ALLOW_PUSH_IF_GITEA_ENVIRONMENT_SET = true
+; Refuse git pushes from outside Gitea's managed environment (blocks direct SSH bypass).
+; Default: true
+; Change when: almost never — protects against hook bypass attacks.
+
+; ---------------------------------------------------------------------------
+; [service] — Registration and access policies
+; ---------------------------------------------------------------------------
+
+[service]
+REGISTER_EMAIL_CONFIRM = false
+; Require new users to confirm their email address before their account is active.
+; Default: false
+; Change when: open registration instances — set true to reduce spam accounts.
+
+ENABLE_NOTIFY_MAIL = false
+; Send email notifications for issue/PR events.
+; Default: false
+; Change when: you have SMTP configured and want users to receive notifications.
+
+REQUIRE_SIGNIN_VIEW = false
+; Require login to view any page (makes the entire instance private).
+; Default: false
+; Change when: internal/corporate deployments where unauthenticated browsing is not allowed.
+
+DISABLE_REGISTRATION = false
+; Block new user self-registration. Accounts must be created by an admin.
+; Default: false
+; Change when: closed deployments — set true after creating your initial users.
+
+ALLOW_ONLY_EXTERNAL_REGISTRATION = false
+; Require all new accounts to be created via OAuth2/LDAP — disables Gitea's own registration form.
+; Default: false
+; Change when: you want SSO-only authentication with no local password accounts.
+
+SHOW_REGISTRATION_BUTTON = true
+; Show or hide the "Register" link on the login page (purely cosmetic — does not prevent registration).
+; Default: true
+; Change when: DISABLE_REGISTRATION = true — hiding the button reduces confusion.
+
+DEFAULT_KEEP_EMAIL_PRIVATE = false
+; Hide email addresses from public profiles by default for new users.
+; Default: false
+; Change when: privacy-conscious deployments — recommended true for public instances.
+
+NO_REPLY_ADDRESS = noreply.example.com
+; Domain used in the "noreply" email address shown in git commit metadata when user hides their email.
+; Default: noreply.<DOMAIN>
+; Change when: you want a specific noreply domain.
+
+; ---------------------------------------------------------------------------
+; [mailer] — Email / SMTP configuration
+; ---------------------------------------------------------------------------
+
+[mailer]
+ENABLED = false
+; Master switch for all outbound email. Notifications, confirmation emails, and
+; password resets all require this to be true.
+; Default: false
+; Change when: you have an SMTP relay and want email features.
+
+SMTP_ADDR = smtp.example.com
+; SMTP server hostname or IP.
+; Default: empty
+; Change when: ENABLED = true — set to your mail relay address.
+
+SMTP_PORT = 587
+; SMTP port. Common values: 25 (unencrypted relay), 465 (implicit TLS), 587 (STARTTLS).
+; Default: 465
+; Change when: your SMTP server uses a non-standard port. Use 587 with STARTTLS for most
+; modern providers (Gmail, Sendgrid, etc.).
+
+FROM = "Gitea" <noreply@example.com>
+; The From address on all outbound emails. Must be a valid address accepted by your SMTP server.
+; Default: empty (required when ENABLED = true)
+; Change when: ENABLED = true — always set this.
+
+USER = smtp-user@example.com
+; SMTP authentication username. Leave empty for unauthenticated relay.
+; Default: empty
+; Change when: your SMTP server requires authentication.
+
+PASSWD =
+; SMTP authentication password.
+; Default: empty
+; Change when: USER is set.
+
+PROTOCOL = starttls
+; Connection security. Options: starttls, smtps (implicit TLS), smtp (plain), smtp+unix.
+; Default: auto-detected from SMTP_PORT
+; Change when: you need to explicitly control TLS negotiation mode.
+
+; ---------------------------------------------------------------------------
+; [log] — Logging
+; ---------------------------------------------------------------------------
+
+[log]
+MODE = console
+; Log output targets. Comma-separated list: console, file, conn, smtp, database.
+; Default: console
+; Change when: production deployments — add file to persist logs to disk.
+
+LEVEL = Info
+; Minimum log level. Options: Trace, Debug, Info, Warn, Error, Critical, Fatal, None.
+; Default: Info
+; Change when: debugging — temporarily set Debug or Trace. Do not leave Debug on in production.
+
+ROOT_PATH = /var/lib/gitea/log
+; Directory for log files (used when MODE includes file).
+; Default: <AppWorkPath>/log
+; Change when: you want logs on a separate volume or to match your log rotation setup.
+
+[log.file]
+MAX_SIZE_SHIFT = 28
+; Maximum log file size before rotation, expressed as a bit shift: 28 = 256MB.
+; Default: 28 (256MB)
+; Change when: disk is constrained — lower to 24 (16MB) or 25 (32MB).
+
+DAILY_ROTATE = true
+; Rotate log files daily regardless of size.
+; Default: true
+; Change when: rarely — high-volume logs may warrant more frequent rotation.
+
+MAX_DAYS = 7
+; Number of rotated log files to keep.
+; Default: 7
+; Change when: adjust retention to match your disk capacity.
+
+; ---------------------------------------------------------------------------
+; [cache] — In-memory and external caching
+; ---------------------------------------------------------------------------
+
+[cache]
+ENABLED = true
+; Enable caching for repository stats, user avatars, and other expensive queries.
+; Default: true
+; Change when: almost never — disabling degrades performance significantly.
+
+ADAPTER = memory
+; Cache backend. Options: memory (in-process), redis, redis-cluster, memcache, twoqueue.
+; Default: memory
+; Change when: multi-instance deployments or when you need cache persistence across restarts.
+; Use redis for production.
+
+HOST = network=tcp,addr=127.0.0.1:6379,password=,db=0,pool_size=100,idle_timeout=180
+; Connection string for redis/memcache adapter. Format depends on adapter.
+; Default: empty (memory adapter ignores this)
+; Change when: ADAPTER = redis — set addr, password, and db to match your Redis instance.
+
+INTERVAL = 60
+; Garbage collection interval in seconds for the memory adapter.
+; Default: 60
+; Change when: memory adapter holds stale data too long — lower interval, but watch CPU.
+
+; ---------------------------------------------------------------------------
+; [session] — User session storage
+; ---------------------------------------------------------------------------
+; Sessions track logged-in users. Memory sessions are lost on restart; redis sessions
+; survive restarts and support multiple Gitea instances sharing state.
+
+[session]
+PROVIDER = memory
+; Session storage backend. Options: memory, file, redis, redis-cluster, db, mysql, couchbase.
+; Default: memory
+; Change when: production deployments — use redis (survives restarts; required for multi-instance).
+
+PROVIDER_CONFIG = network=tcp,addr=127.0.0.1:6379,password=,db=1,pool_size=100,idle_timeout=180
+; Connection string for the session provider. Format matches [cache] HOST.
+; Default: empty for memory; path for file
+; Change when: PROVIDER = redis — match your Redis instance config. Use db=1 to separate
+; sessions from cache on the same Redis instance.
+
+COOKIE_NAME = i_like_gitea
+; Name of the session cookie set in the user's browser.
+; Default: i_like_gitea
+; Change when: cosmetic preference or cookie name collision with another app on the same domain.
+
+COOKIE_SECURE = false
+; Set the Secure flag on the session cookie, restricting it to HTTPS connections.
+; Default: false
+; Change when: ALWAYS set to true when serving over HTTPS.
+
+SESSION_LIFE_TIME = 86400
+; Session lifetime in seconds. Default is 24 hours.
+; Default: 86400
+; Change when: you want longer persistent logins (e.g., 604800 = 7 days) or shorter for security.
+
+; ---------------------------------------------------------------------------
+; [webhook] — Outbound webhook settings
+; ---------------------------------------------------------------------------
+
+[webhook]
+ALLOWED_HOST_LIST = external
+; Controls which hosts webhooks can be delivered to. Options: external (no localhost),
+; a comma-separated list of CIDR/hostnames, or * (allow all).
+; Default: external
+; Change when: internal webhooks to localhost or RFC1918 addresses — set to * or add specific CIDRs.
+
+DELIVER_TIMEOUT = 5
+; Timeout in seconds for webhook HTTP delivery attempts.
+; Default: 5
+; Change when: webhook targets are slow to respond — increase to 10–30.
+
+SKIP_TLS_VERIFY = false
+; Skip TLS certificate verification for webhook delivery.
+; Default: false
+; Change when: internal webhook targets use self-signed certificates. Not recommended for
+; external targets.
+
+; ---------------------------------------------------------------------------
+; [lfs] — Git LFS object storage (when LFS_START_SERVER = true)
+; ---------------------------------------------------------------------------
+
+[lfs]
+PATH = /var/lib/gitea/data/lfs
+; Filesystem path for LFS object storage (flat file storage).
+; Default: <AppDataPath>/lfs
+; Change when: LFS objects need to live on a separate high-capacity volume.
+; For S3/Minio, set STORAGE_TYPE = minio and configure [lfs.minio] instead.
+
+STORAGE_TYPE = local
+; LFS storage backend. Options: local, minio (S3-compatible).
+; Default: local
+; Change when: scaling beyond a single server or integrating with object storage.
+
+; ---------------------------------------------------------------------------
+; [indexer] — Code and issue search
+; ---------------------------------------------------------------------------
+
+[indexer]
+ISSUE_INDEXER_TYPE = bleve
+; Search engine for issues. Options: bleve (built-in), elasticsearch, meilisearch, db (SQL only).
+; Default: bleve
+; Change when: large instances needing full-text code search — use elasticsearch or meilisearch.
+
+REPO_INDEXER_ENABLED = false
+; Enable full-text code search across repository contents.
+; Default: false
+; Change when: you want to search code, not just issue/PR titles. Requires significant disk I/O
+; on indexing pass; disable for low-resource servers.
+
+REPO_INDEXER_PATH = indexers/repos.bleve
+; Path for the Bleve repository index.
+; Default: indexers/repos.bleve (relative to AppDataPath)
+; Change when: you want the index on a faster disk (SSD recommended).

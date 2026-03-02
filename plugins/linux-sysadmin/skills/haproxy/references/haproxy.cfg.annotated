@@ -1,0 +1,369 @@
+# Annotated haproxy.cfg
+# Each directive includes: what it does, default value, recommended production value,
+# and when to change it. Directive order follows the required HAProxy section sequence:
+#   global → defaults → frontend → backend
+#
+# HAProxy config has four section types:
+#   global   — process-wide settings (one section only)
+#   defaults — fallback values inherited by all frontend/backend/listen sections
+#   frontend — defines listening sockets and connection acceptance rules
+#   backend  — defines server pool and load balancing algorithm
+#   listen   — combines frontend+backend into one block (TCP mode common)
+
+# ---------------------------------------------------------------------------
+# GLOBAL SECTION
+# Affects the entire process. Settings here cannot be overridden per-frontend.
+# ---------------------------------------------------------------------------
+
+global
+
+    # Syslog target. HAProxy does not write log files directly — it sends to syslog.
+    # Format: log <address> <facility> [<level>]
+    # Default: none (no logging)  |  Recommended: log 127.0.0.1 local2 notice
+    # Change when: using a remote syslog server (replace 127.0.0.1 with its IP).
+    # Requires rsyslog to have a UDP listener: /etc/rsyslog.d/49-haproxy.conf
+    log 127.0.0.1 local2
+
+    # Chroot jail directory. HAProxy drops filesystem access to this path after startup.
+    # Default: none  |  Recommended: /var/lib/haproxy (package default)
+    # Change when: you need HAProxy to access files outside the chroot (e.g., OCSP).
+    # Note: SSL cert files must be readable before chroot takes effect (read at startup).
+    chroot /var/lib/haproxy
+
+    # Stats socket path. Enables the runtime API for server management and stats.
+    # Format: stats socket <path> mode <perms> level <admin|operator|user> [expose-fd listeners]
+    # Default: none  |  Recommended: expose the socket with level admin, restricted to root
+    # Change when: you want operator-level access for monitoring without admin rights.
+    # expose-fd listeners: required to pass file descriptors during graceful reload.
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+
+    # Stats timeout for socket connections.
+    # Default: 10s  |  Recommended: 30s
+    # Change when: slow automation scripts reading large stat outputs time out.
+    stats timeout 30s
+
+    # User and group for the worker process after privilege drop.
+    # Default: root  |  Recommended: haproxy haproxy
+    # Change when: you need a different system user for file permission compatibility.
+    user haproxy
+    group haproxy
+
+    # Run HAProxy as a daemon (background process).
+    # Default: not set (foreground)  |  Recommended: daemon (for systemd-managed installs)
+    # Change when: running inside a container — omit daemon, let the supervisor handle it.
+    daemon
+
+    # Number of worker threads per process. Requires HAProxy compiled with thread support.
+    # Default: 1  |  Recommended: match CPU core count (e.g., 4 for a 4-core server)
+    # Change when: single-threaded HAProxy saturates one CPU under high connection load.
+    # Check max: haproxy -vv | grep THREAD_LIMIT
+    nbthread 4
+
+    # Maximum number of concurrent connections for the whole process.
+    # Default: 2000  |  Recommended: tune based on ulimits and expected load
+    # Change when: hitting "connection limit exceeded" errors; also raise system nofile limits.
+    maxconn 50000
+
+    # SSL/TLS default cipher list for frontend bind directives (TLS 1.2 and below).
+    # Default: (OpenSSL default)  |  Recommended: Mozilla Intermediate profile
+    # Change when: FIPS compliance or PCI DSS requires specific ciphers.
+    ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+
+    # Minimum TLS version for bind directives. Applies globally; override per bind.
+    # Default: none  |  Recommended: TLSv1.2
+    # Change when: you must support TLS 1.3 only (set TLSv1.3) or need legacy clients (avoid).
+    ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+    # SSL/TLS defaults for server (outbound) connections — when HAProxy connects to backends over TLS.
+    ssl-default-server-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+    ssl-default-server-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+    # Path to Diffie-Hellman parameters for DHE cipher suites.
+    # Default: none (uses built-in 1024-bit params — insecure)  |  Recommended: generate 2048-bit
+    # Generate: openssl dhparam -out /etc/haproxy/dhparams.pem 2048
+    # Change when: you use DHE cipher suites (recommended for TLS 1.2 forward secrecy).
+    ssl-dh-param-file /etc/haproxy/dhparams.pem
+
+
+# ---------------------------------------------------------------------------
+# DEFAULTS SECTION
+# Values set here are inherited by all frontend, backend, and listen sections.
+# Any value can be overridden in a specific frontend or backend block.
+# ---------------------------------------------------------------------------
+
+defaults
+
+    # Proxy mode: http (layer 7, understands HTTP) or tcp (layer 4, raw stream).
+    # Default: tcp  |  Recommended: http for web workloads, tcp for database/arbitrary TCP
+    # Change when: proxying MySQL, PostgreSQL, Redis — use tcp mode.
+    mode http
+
+    # Log target. Inherits the global log directive unless overridden here.
+    # Default: none  |  Recommended: global (use the global log directive)
+    # Change when: you want different log targets per frontend/backend.
+    log global
+
+    # Log HTTP request details (method, URL, status, timing) in combined format.
+    # Default: not set  |  Recommended: option httplog (for http mode)
+    # Change when: using tcp mode — use "option tcplog" instead.
+    option httplog
+
+    # Do not log connections that were closed immediately without data (e.g., health checks).
+    # Default: not set  |  Recommended: option dontlognull
+    # Change when: you want to log all connections including empty ones for security auditing.
+    option dontlognull
+
+    # Insert X-Forwarded-For header so backends see the real client IP.
+    # Default: not set  |  Recommended: option forwardfor
+    # Change when: backends should NOT receive client IP (privacy requirement) — omit this.
+    option forwardfor
+
+    # Close the server-side connection after each response (HTTP/1.0 behavior).
+    # Reduces server keepalive load when HAProxy manages its own keepalives to clients.
+    # Default: not set  |  Recommended: option http-server-close
+    # Change when: using http-reuse or need persistent backend connections — use
+    #   "option http-keep-alive" instead, but benchmark the trade-off.
+    option http-server-close
+
+    # Abort request if client disconnects before backend responds.
+    # Default: not set  |  Recommended: option abortonclose
+    # Change when: you want backends to complete processing even after client disconnect
+    #   (e.g., async job submission endpoints).
+    option abortonclose
+
+    # Number of connection retries to a backend server before marking it down.
+    # Default: 3  |  Recommended: 3
+    # Change when: backends are unstable (lower to 1 for faster failover) or on
+    #   high-latency links (raise to 5).
+    retries 3
+
+    # Maximum concurrent connections per frontend (overridable per frontend/backend).
+    # Default: 2000  |  Recommended: set to match expected peak load per listener
+    # Change when: a specific frontend needs a different cap from the global default.
+    maxconn 2000
+
+    # Timeout for establishing a TCP connection to a backend server.
+    # Default: none (required)  |  Recommended: 5s
+    # Change when: backends are on high-latency networks; don't inflate globally —
+    #   investigate why connect takes longer than 5s.
+    timeout connect 5s
+
+    # Timeout for inactivity on the client side. Resets on each received byte.
+    # Default: none (required)  |  Recommended: 50s
+    # Change when: long-polling or streaming clients need longer idle connections;
+    #   for WebSocket proxying, set to 1h or higher.
+    timeout client 50s
+
+    # Timeout for inactivity on the server side. Resets on each received byte.
+    # Default: none (required)  |  Recommended: 50s
+    # Change when: backends have legitimately slow processing (e.g., report generation);
+    #   tune per-backend rather than raising the global value.
+    timeout server 50s
+
+    # Timeout for HTTP request header to be completely received.
+    # Default: none  |  Recommended: 10s
+    # Change when: slow clients sending large headers (rare); lower to protect against
+    #   Slowloris-style attacks.
+    timeout http-request 10s
+
+    # Time to wait for next HTTP request on a keepalive connection.
+    # Default: none  |  Recommended: 5s
+    # Change when: high-traffic sites — shorter value frees connections faster.
+    timeout http-keep-alive 5s
+
+    # Timeout for a server to become available when all servers are at maxconn.
+    # Default: none  |  Recommended: 10s
+    # Change when: queuing is expected and you want clients to wait longer before 503.
+    timeout queue 10s
+
+    # Timeout for a tunnel (e.g., WebSocket upgrade or CONNECT method).
+    # Default: none  |  Recommended: 1h for WebSocket; not needed if not proxying tunnels
+    # Change when: WebSocket sessions disconnect prematurely.
+    timeout tunnel 1h
+
+    # Default HTTP error response format. "errorfile" maps HTTP codes to custom HTML files.
+    # Default: haproxy built-in  |  Recommended: customize for user-facing errors
+    # Change when: you have a custom maintenance page or branded error pages.
+    # errorfile 503 /etc/haproxy/errors/503.http
+
+
+# ---------------------------------------------------------------------------
+# FRONTEND SECTION
+# Defines a listening socket and the rules for dispatching connections to backends.
+# Multiple frontend sections are allowed; each needs a unique name.
+# ---------------------------------------------------------------------------
+
+frontend http_in
+
+    # Bind address and port. Multiple bind lines are allowed per frontend.
+    # Default: none (required)
+    # Change when: binding to a specific IP (replace * with the IP) or a Unix socket.
+    bind *:80
+
+    # HTTPS listener with SSL termination. Certificate is a PEM bundle:
+    #   cat fullchain.pem privkey.pem > /etc/haproxy/certs/example.com.pem
+    # alpn h2,http/1.1: advertises HTTP/2 support via ALPN (TLS extension).
+    # Default: no SSL  |  Recommended: use ssl crt with a PEM bundle
+    # Change when: you have multiple certs — use "crt-list" for SNI-based selection.
+    bind *:443 ssl crt /etc/haproxy/certs/example.com.pem alpn h2,http/1.1
+
+    # Protocol mode for this frontend. Overrides defaults.
+    # Default: inherits from defaults  |  Recommended: http for web, tcp for raw streams
+    mode http
+
+    # Log target override. Inherits global if not set.
+    log global
+
+    # Redirect HTTP to HTTPS. Applied before backend dispatch.
+    # Default: not set  |  Recommended: always redirect if running HTTPS
+    # Change when: you intentionally serve plaintext (internal-only services).
+    http-request redirect scheme https unless { ssl_fc }
+
+    # Add HSTS header on HTTPS responses.
+    # Default: not set  |  Recommended: set for public HTTPS frontends
+    http-response set-header Strict-Transport-Security "max-age=63072000"
+
+    # ACL definitions. Name them descriptively — they are referenced by use_backend rules.
+    # ACL syntax: acl <name> <criterion> <value>
+    # Default: none
+    acl is_api path_beg /api/
+    acl is_static path_beg /static/ /assets/
+    acl host_admin hdr(host) -i admin.example.com
+
+    # Route to a specific backend based on ACL match. Evaluated top-to-bottom;
+    # first match wins. Use_backend with no ACL is unconditional.
+    # Default: none (use default_backend if no use_backend matches)
+    use_backend api_servers if is_api
+    use_backend static_servers if is_static
+    use_backend admin_backend if host_admin
+
+    # Fallback backend when no use_backend rule matches.
+    # Default: none (required unless all traffic is handled by use_backend rules)
+    default_backend web_servers
+
+    # Strip the X-Forwarded-Proto header from client requests before adding our own.
+    # Prevents clients from spoofing the protocol.
+    http-request del-header X-Forwarded-Proto
+    http-request set-header X-Forwarded-Proto https if { ssl_fc }
+    http-request set-header X-Forwarded-Proto http unless { ssl_fc }
+
+
+# ---------------------------------------------------------------------------
+# BACKEND SECTION
+# Defines the pool of servers and load balancing algorithm.
+# ---------------------------------------------------------------------------
+
+backend web_servers
+
+    # Load balancing algorithm.
+    # Options: roundrobin (default), leastconn, source, random, uri, hdr, rdp-cookie
+    # Default: roundrobin  |  Recommended: roundrobin for stateless HTTP; leastconn for
+    #   long-lived or variable-duration connections; source for sticky-by-IP (use cookie instead)
+    # Change when: backends have significantly unequal capacity — use weights with roundrobin.
+    balance roundrobin
+
+    # Protocol mode. Should match the frontend mode.
+    mode http
+
+    # HTTP health check. HAProxy sends this request to each server.
+    # Default: TCP connect only (no HTTP request)  |  Recommended: option httpchk
+    # Change when: your health endpoint is at a non-root path or requires a Host header.
+    option httpchk GET /health HTTP/1.1\r\nHost:\ localhost
+
+    # Expected HTTP status codes that count as "healthy". Requires option httpchk.
+    # Default: 200  |  Recommended: 200 or a range like 200-399
+    # Change when: your health endpoint returns 204 No Content or a redirect.
+    http-check expect status 200
+
+    # Forward the real client IP in X-Forwarded-For. Inherits from defaults if set there.
+    option forwardfor
+
+    # Cookie-based session persistence. HAProxy inserts a cookie to tie a client to a server.
+    # "insert" adds the cookie if not present; "indirect" removes it from upstream responses.
+    # "nocache" prevents the cookie from being cached by intermediaries.
+    # Default: none  |  Recommended: use only when the application requires session stickiness
+    # Change when: your app has server-side sessions that cannot be shared (legacy apps).
+    cookie SERVERID insert indirect nocache
+
+    # Server lines. Format: server <name> <address>:<port> [params]
+    # check: enables health checking (uses httpchk if defined, else TCP connect)
+    # inter: health check interval (default 2s)
+    # rise: consecutive successes to mark UP (default 2)
+    # fall: consecutive failures to mark DOWN (default 3)
+    # weight: relative weight for roundrobin/leastconn (default 1)
+    # maxconn: max concurrent connections to this specific server (default unlimited)
+    # cookie: the value to set in the persistence cookie for this server
+    server web1 10.0.0.1:8080 check inter 2s rise 2 fall 3 weight 1 cookie web1
+    server web2 10.0.0.2:8080 check inter 2s rise 2 fall 3 weight 1 cookie web2
+    server web3 10.0.0.3:8080 check inter 2s rise 2 fall 3 weight 1 cookie web3
+
+    # Backup server: only used when all primary servers are DOWN.
+    # Default: not set  |  Recommended: configure a maintenance page backend as backup
+    server maintenance 10.0.0.99:8080 backup check
+
+
+backend api_servers
+
+    balance leastconn
+
+    mode http
+
+    # Health check with a custom path. The \r\n Host header is required for
+    # virtual-hosted backends that reject requests without a Host header.
+    option httpchk GET /api/health HTTP/1.1\r\nHost:\ api.example.com
+
+    # Longer server timeout for API endpoints that may process slowly.
+    # Overrides the defaults value for this backend only.
+    timeout server 120s
+
+    server api1 10.0.1.1:8080 check inter 5s rise 2 fall 2
+    server api2 10.0.1.2:8080 check inter 5s rise 2 fall 2
+
+
+backend static_servers
+
+    balance roundrobin
+
+    mode http
+
+    # Disable health checks for static file servers if they don't have a health endpoint.
+    # Default: check disabled  |  Not recommended for production — use a health check path.
+    server static1 10.0.2.1:80 check
+    server static2 10.0.2.2:80 check
+
+
+# ---------------------------------------------------------------------------
+# LISTEN SECTION (frontend + backend combined — common for TCP mode and stats)
+# ---------------------------------------------------------------------------
+
+# Stats page. Expose only on localhost or a restricted IP in production.
+listen stats
+    bind *:9000
+
+    mode http
+    log global
+
+    # Enable the built-in stats page.
+    # Default: not set
+    stats enable
+
+    # URI path for the stats page.
+    # Default: /haproxy?stats
+    stats uri /stats
+
+    # Realm string shown in the HTTP auth dialog.
+    stats realm HAProxy\ Statistics
+
+    # Basic auth credentials for the stats page.
+    # Default: none  |  Recommended: always set credentials; or bind to 127.0.0.1 only
+    # Change when: using an external auth proxy in front of the stats page.
+    stats auth admin:changeme
+
+    # Enable server management buttons (enable/disable/drain) on the stats page.
+    # Default: not set  |  Recommended: admin (allows runtime server control via browser)
+    # Change when: you want read-only stats — omit stats admin.
+    stats admin if TRUE
+
+    # Refresh interval for the stats page auto-refresh.
+    # Default: none (no auto-refresh)  |  Recommended: 30s for dashboards
+    stats refresh 30s

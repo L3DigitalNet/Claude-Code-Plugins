@@ -1,0 +1,165 @@
+# Annotated chrony.conf
+# Each directive includes: what it does, default/typical value, and when to change it.
+# Config path: /etc/chrony.conf (RHEL/Fedora) or /etc/chrony/chrony.conf (Debian/Ubuntu)
+#
+# chrony has two components:
+#   chronyd  — daemon that adjusts the system clock
+#   chronyc  — client tool for querying and controlling chronyd at runtime
+#
+# Directives are processed in order. Comments start with #.
+
+# ---------------------------------------------------------------------------
+# NTP SOURCES
+# ---------------------------------------------------------------------------
+
+# pool: use multiple servers from a DNS round-robin pool. chrony queries the
+# pool name and picks up to `maxsources` servers (default 4).
+# iburst: send a burst of 4–8 requests at startup to reach synchronization faster.
+# Default: no sources configured  |  Change when: replacing with a local NTP server,
+#   a GPS refclock, or a corporate NTP hierarchy.
+pool 2.pool.ntp.org iburst
+
+# Use NTP Pool Project regional pools for lower latency and better availability.
+# Replace "pool.ntp.org" with your continent/country subdomain as appropriate.
+# Examples: 0.us.pool.ntp.org, europe.pool.ntp.org, 2.debian.pool.ntp.org
+# pool 2.us.pool.ntp.org iburst
+
+# server: use a single specific NTP server instead of a pool.
+# Useful for corporate time servers or when you need a fixed IP.
+# prefer: this source is preferred over others of equal quality.
+# offline: start in offline state; use `chronyc online` to bring it online.
+# minpoll N / maxpoll N: polling interval exponent (2^N seconds). Default: 6/10.
+#   Lower minpoll for faster convergence after start; raise maxpoll to reduce traffic.
+# server ntp.example.com iburst prefer
+# server 192.168.1.1 iburst minpoll 4 maxpoll 8
+
+# sourcedir: scan a directory for additional source files at startup and on SIGHUP.
+# Each file in the directory may contain `server`, `pool`, or `peer` lines.
+# Default: not set  |  Change when: sources are managed externally (e.g., by Ansible
+#   or DHCP) and you want to avoid rewriting the main config file.
+# sourcedir /etc/chrony.d
+
+# ---------------------------------------------------------------------------
+# DRIFT FILE
+# ---------------------------------------------------------------------------
+
+# driftfile: stores the measured frequency error of the system clock between
+# restarts. Without this, chrony must rediscover the drift after every boot,
+# which delays accurate synchronization.
+# Default: not set — but all distro packages configure this  |  Change when:
+#   the filesystem is read-only (use a tmpfs path, accepting loss of drift data
+#   across reboots).
+driftfile /var/lib/chrony/drift
+
+# ---------------------------------------------------------------------------
+# CLOCK STEPPING
+# ---------------------------------------------------------------------------
+
+# makestep: allow chronyd to step (jump) the clock rather than slew (gradually
+# adjust) it when the offset is large. Without this, a clock that is minutes or
+# hours off will take days to slew to the correct time.
+#
+# makestep <threshold> <limit>
+#   threshold: step if offset exceeds this many seconds
+#   limit: only step during the first N clock updates; -1 means always allow stepping
+#
+# Default (distro): makestep 1.0 3  — step if offset > 1s, but only on first 3 updates.
+# Change when:
+#   - VMs that may wake from suspend: use `makestep 1.0 -1` to always allow stepping
+#   - Production systems where time jumps break applications: keep a small threshold
+#     and limit (e.g., makestep 0.5 3)
+makestep 1.0 3
+
+# ---------------------------------------------------------------------------
+# HARDWARE CLOCK (RTC) SYNC
+# ---------------------------------------------------------------------------
+
+# rtcsync: instruct the kernel to synchronize the hardware clock (RTC) to the
+# system clock every 11 minutes. Reduces drift after power cycles.
+# Default: not set  |  Change when: running in a VM (the hypervisor manages the
+#   RTC; enabling rtcsync is harmless but unnecessary on most hypervisors).
+rtcsync
+
+# ---------------------------------------------------------------------------
+# NTP SERVER MODE (serving time to LAN clients)
+# ---------------------------------------------------------------------------
+
+# allow: permit NTP client queries from the specified network. Without this,
+# chronyd acts as a client only and refuses all incoming NTP requests.
+# Default: no allow rules (client-only mode)
+# Change when: this host should serve time to LAN machines.
+# allow 192.168.0.0/16
+# allow 10.0.0.0/8
+
+# bindaddress: restrict which local address chronyd listens on for NTP requests.
+# Default: listens on all addresses  |  Change when: multi-homed server and you
+#   want to serve NTP only on the internal interface.
+# bindaddress 192.168.1.100
+
+# ---------------------------------------------------------------------------
+# LOCAL FALLBACK (isolated networks)
+# ---------------------------------------------------------------------------
+
+# local stratum N: advertise the local clock as stratum N when no NTP sources
+# are reachable. Allows LAN clients to sync from this host even with no internet.
+# Without this, chronyd stops serving time when its upstream sources are lost.
+# Default: not set  |  Change when: air-gapped or intermittently connected networks
+#   where continuity of time service matters more than accuracy.
+# local stratum 10
+
+# ---------------------------------------------------------------------------
+# LOGGING
+# ---------------------------------------------------------------------------
+
+# logdir: directory where chrony writes log files.
+# Default: /var/log/chrony (distro default; directory must exist)
+# Change when: directing logs to a different volume or centralized log path.
+logdir /var/log/chrony
+
+# log: which data to log. Options:
+#   tracking    — clock offset, frequency, and skew over time
+#   measurements — raw NTP measurements for each source
+#   statistics  — rolling statistics about each source
+# Default: nothing logged to files (journald only)  |  Change when: debugging
+#   time stability issues or auditing clock behavior over days.
+# log tracking measurements statistics
+
+# ---------------------------------------------------------------------------
+# QUALITY THRESHOLDS
+# ---------------------------------------------------------------------------
+
+# maxdistance: maximum root distance (combined dispersion + delay/2) that a source
+# must have to be considered usable. Sources above this threshold are discarded.
+# Default: 1.5 (seconds)  |  Change when: sources on high-latency links (e.g.,
+#   satellite) are being rejected — raise to 3.0 or higher.
+# maxdistance 1.5
+
+# maxjitter: if all selectable sources exceed this jitter threshold, the best
+# available source is still used. Acts as a warning threshold, not a hard filter.
+# Default: not set (no jitter ceiling enforced)  |  Change when: you want to alert
+#   when source quality degrades (combine with log measurements to capture data).
+# maxjitter 0.1
+
+# ---------------------------------------------------------------------------
+# SECURITY
+# ---------------------------------------------------------------------------
+
+# keyfile: path to the NTP authentication key file. Required for authenticated NTP
+# (NTPv4 symmetric key or NTS). Not needed for typical public pool usage.
+# Default: not set  |  Change when: using authenticated NTP in a corporate network.
+# keyfile /etc/chrony.keys
+
+# cmdallow / cmddeny: restrict which hosts can send chronyc control commands.
+# Default: only 127.0.0.1 and ::1 can send commands  |  Change when: managing
+#   chrony remotely via chronyc -h (not common; prefer SSH + local chronyc).
+# cmdallow 192.168.1.0/24
+
+# ---------------------------------------------------------------------------
+# LEAP SECOND HANDLING
+# ---------------------------------------------------------------------------
+
+# leapsectz: time zone database file chrony uses to look up scheduled leap seconds.
+# Chrony can smear leap seconds across a window rather than inserting them abruptly.
+# Default: not set (uses kernel leap second announcement)
+# Change when: applications cannot tolerate a 1-second clock jump on leap second days.
+# leapsectz right/UTC

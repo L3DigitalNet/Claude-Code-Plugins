@@ -1,0 +1,224 @@
+# Annotated Corefile
+# Each plugin includes: what it does, default value/behavior, and when to change it.
+# Corefile structure: one or more server blocks. Each block declares a zone (or list of
+# zones) and a port, then lists plugins top-to-bottom in execution order.
+#
+# Execution model: plugins run in the order listed. A plugin can handle the query
+# (return a response), pass it to the next plugin, or short-circuit the chain.
+# Order matters: cache before forward, rewrite before forward, errors before log.
+#
+# Zone matching: CoreDNS matches the most-specific zone. A query for foo.example.com
+# matches the "example.com" block over the "." catch-all block if both are defined.
+
+# ---------------------------------------------------------------------------
+# BASIC RECURSIVE RESOLVER WITH CACHE AND LOGGING
+# Suitable for: a simple LAN or container DNS server forwarding to upstream resolvers.
+# ---------------------------------------------------------------------------
+
+.:53 {
+    # errors — log DNS errors (SERVFAIL, NXDOMAIN, etc.) to stdout.
+    # Default: not loaded  |  Recommended: always include
+    # Change when: you want silent operation (omit), or want errors only at warning level.
+    errors
+
+    # log — log every DNS query to stdout in Common Log Format.
+    # Default: not loaded  |  Recommended: include during debugging; remove in production
+    #   if query volume is high (each query becomes a log line).
+    # Format: {remote} {port} {proto} {type} {class} {name} {size} {do} {bufsize}
+    # Change when: you want query-level visibility, audit trails, or debugging latency.
+    log
+
+    # cache — cache DNS responses in memory.
+    # Default: not loaded  |  Recommended: always include for recursive resolvers
+    # Argument is max TTL in seconds (cap on how long records are cached).
+    # Default TTL cap: 3600 (1 hour)  |  Recommended: 300 for general use; lower for
+    #   dynamic environments where records change frequently.
+    # Cache is per-server-block — not shared between blocks.
+    # Change when: you want shorter TTLs (lower arg) or a larger in-memory cache
+    #   (add: cache 300 { max_items 10000 })
+    cache 300
+
+    # forward — send unresolved queries to upstream resolvers.
+    # Must come after cache and rewrite — those plugins must process the query first.
+    # Default: not loaded (CoreDNS won't resolve anything without this or a zone file)
+    # First arg: which queries to forward (. = all)
+    # Remaining args: upstream nameserver addresses (IP:port, defaults to :53)
+    # prefer_udp: try UDP first; fall back to TCP if response is truncated.
+    # health_check: how often to probe each upstream (default: 2s).
+    # policy: random | round_robin | sequential — how to pick among upstreams.
+    # Change when: you need a different upstream (ISP DNS, 1.1.1.1, internal resolver).
+    forward . 1.1.1.1 8.8.8.8 {
+        prefer_udp
+        health_check 5s
+        policy round_robin
+    }
+
+    # prometheus — expose metrics in Prometheus scrape format.
+    # Default: not loaded  |  Recommended: include if you run a Prometheus stack
+    # Address defaults to :9153. Metrics include query counts, latency histograms,
+    # cache hit rates, and forward health status.
+    # Change when: you need a different port (e.g., 0.0.0.0:9153 for external access).
+    prometheus :9153
+
+    # health — HTTP health check endpoint (liveness).
+    # Default: not loaded  |  Recommended: include when running as a service
+    # Returns "OK" at http://localhost:8080/health once the server is listening.
+    # Does NOT wait for plugins to finish initialization — use ready for that.
+    # Change when: you need a different port or want to bind to a specific interface.
+    health :8080
+
+    # ready — HTTP readiness endpoint.
+    # Default: not loaded  |  Recommended: include in Kubernetes deployments
+    # Returns "OK" at http://localhost:8181/ready only after all plugins signal ready.
+    # The kubernetes plugin delays readiness until it has synced the API server state.
+    # Change when: you need a different port.
+    ready :8181
+}
+
+# ---------------------------------------------------------------------------
+# AUTHORITATIVE ZONE FOR A LOCAL DOMAIN
+# Suitable for: serving internal domain records (e.g., home lab, staging env).
+# This block handles example.internal; the "." block above handles everything else.
+# ---------------------------------------------------------------------------
+
+example.internal:53 {
+    errors
+
+    # file — serve DNS records from a zone file (RFC 1035 format).
+    # Default: not loaded  |  Required for authoritative zones
+    # First arg: path to zone file  |  Second arg: zone name (must match block zone)
+    # reload: how often to check the file for changes (default: 0 = disabled).
+    # Change when: you add, remove, or update records — edit the zone file, CoreDNS
+    #   picks it up on the next reload interval or after SIGUSR1.
+    file /etc/coredns/zones/example.internal {
+        reload 30s
+    }
+
+    # transfer — allow zone transfers (AXFR) to specific IPs.
+    # Default: not loaded (zone transfers denied)  |  Recommended: restrict to secondary servers
+    # Remove this block entirely if you have no secondary DNS servers.
+    # Change when: you add a secondary nameserver that needs to replicate the zone.
+    transfer {
+        to 192.168.1.10
+    }
+
+    log
+}
+
+# ---------------------------------------------------------------------------
+# KUBERNETES CLUSTER DNS INTEGRATION
+# Suitable for: running CoreDNS as the in-cluster DNS server (kube-dns replacement).
+# In Kubernetes, this block lives in a ConfigMap and is mounted into CoreDNS pods.
+# ---------------------------------------------------------------------------
+
+.:53 {
+    errors
+    log
+
+    # health and ready — same as above; mandatory for k8s liveness/readiness probes.
+    health {
+        lameduck 5s
+        # lameduck: on SIGTERM, keep answering for N seconds before shutting down.
+        # Gives in-flight requests time to complete. Recommended: 5s in k8s.
+    }
+    ready
+
+    # kubernetes — resolve in-cluster service and pod DNS names.
+    # Default: not loaded  |  Required for Kubernetes DNS to function
+    # First args: cluster domain (cluster.local) and reverse zones for cluster CIDR.
+    # ttl: TTL for synthetic records (default: 5s). Lower values mean faster propagation
+    #   of service changes, at the cost of more queries hitting CoreDNS.
+    # pods insecure: synthesize A records for pods using their IP in name form
+    #   (e.g., 10-0-0-1.default.pod.cluster.local → 10.0.0.1). Needed for some
+    #   workloads. Alternatives: verified (checks pod IP against API), disabled.
+    # fallthrough: if the kubernetes plugin can't resolve a name in these zones,
+    #   pass the query to the next plugin instead of returning NXDOMAIN.
+    # Change when: your cluster domain differs from cluster.local, you need shorter TTLs
+    #   for faster service discovery, or you need pod IP DNS records.
+    kubernetes cluster.local in-addr.arpa ip6.arpa {
+        pods insecure
+        fallthrough in-addr.arpa ip6.arpa
+        ttl 30
+    }
+
+    # rewrite — rewrite query names or types before they are processed.
+    # Default: not loaded  |  Recommended: use for legacy name compatibility, shortnames
+    # Must appear before forward so the rewritten name reaches the upstream.
+    # Example below: rewrite queries for svc.example.com to svc.cluster.local,
+    #   enabling short external names that resolve to in-cluster services.
+    # stop: stop processing further rewrite rules after this one matches.
+    # Change when: you need query aliasing, type coercion, or EDNS rewriting.
+    rewrite stop {
+        name regex (.*)\.example\.com\.$ {1}.cluster.local.
+        answer name (.*)\.cluster\.local\.$ {1}.example.com.
+    }
+
+    # hosts — serve records from a hosts-file format file.
+    # Default: not loaded  |  Recommended: useful for overriding specific names
+    # Evaluated before forward — allows pinning names to IPs regardless of upstream.
+    # fallthrough: pass unmatched names to the next plugin (e.g., forward).
+    # Change when: you need manual A/AAAA overrides without editing a full zone file.
+    hosts /etc/coredns/custom-hosts {
+        fallthrough
+    }
+
+    # prometheus — metrics; same as basic block above.
+    prometheus :9153
+
+    # forward — send all unresolved queries to the node's resolver.
+    # In Kubernetes, /etc/resolv.conf on the node typically points to the VPC DNS.
+    # This ensures external names (google.com, etc.) resolve correctly.
+    # Change when: you want to hardcode upstream IPs instead of reading resolv.conf
+    #   (replace /etc/resolv.conf with 169.254.169.254 or your VPC DNS IP).
+    forward . /etc/resolv.conf {
+        max_concurrent 1000
+        # max_concurrent: maximum simultaneous outstanding requests to upstreams.
+        # Default: 0 (unlimited)  |  Recommended: cap to avoid overwhelming upstream.
+    }
+
+    # cache — cache external DNS responses. Internal k8s records use TTL from kubernetes plugin.
+    # ttl of 30s balances freshness with load reduction on upstream.
+    cache 30
+
+    # loop — detect and halt forwarding loops.
+    # Default: not loaded  |  Recommended: always include in Kubernetes
+    # If CoreDNS detects it is forwarding to itself, it crashes with a message.
+    # This is intentional — a loop is a misconfiguration; crashing is safer than
+    # spiraling resource consumption.
+    loop
+
+    # loadbalance — randomize the order of A/AAAA records in responses.
+    # Default: not loaded  |  Recommended: include when serving multiple A records
+    # Implements round-robin by shuffling record order per response. Simple but
+    # effective client-side load distribution without a dedicated load balancer.
+    # Change when: you serve single-IP records (no effect; harmless to leave in).
+    loadbalance
+}
+
+# ---------------------------------------------------------------------------
+# FORWARD TO UPSTREAM WITH FINE-GRAINED HEALTH CHECKING
+# Suitable for: selective forwarding of specific zones to internal resolvers.
+# Example: corp.example.com queries go to the internal AD DNS; everything else uses 1.1.1.1.
+# ---------------------------------------------------------------------------
+
+corp.example.com:53 {
+    errors
+
+    # forward to a specific internal resolver for the corporate domain.
+    # except: do not forward these names even if they match the zone — let them fall
+    #   to the catch-all "." block instead. Useful for carving out subnets.
+    # force_tcp: always use TCP (required by some enterprise resolvers that reject UDP).
+    # expire: remove an upstream from the pool if it fails for this long (default: 10s).
+    forward . 192.168.0.10 192.168.0.11 {
+        except internal.corp.example.com
+        force_tcp
+        health_check 3s
+        expire 20s
+        policy sequential
+        # sequential: always try the first upstream first; fall back to next only on failure.
+        # Useful when 192.168.0.10 is primary and 192.168.0.11 is warm standby.
+    }
+
+    cache 60
+    log
+}

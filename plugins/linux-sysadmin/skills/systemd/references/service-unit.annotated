@@ -1,0 +1,259 @@
+# Annotated systemd Unit Files
+#
+# Three unit types covered:
+#   1. Service unit  (.service) — the most common; manages a long-running process or oneshot task
+#   2. Timer unit    (.timer)   — schedule-based activation (replaces cron)
+#   3. Socket unit   (.socket)  — socket activation; service starts on first connection
+#
+# File locations (highest priority first):
+#   /etc/systemd/system/       — admin-created units; override /lib units of same name
+#   /lib/systemd/system/       — package-installed units; do not edit
+#   ~/.config/systemd/user/    — user instance; no root required
+#
+# After editing any unit: sudo systemctl daemon-reload
+
+# ============================================================
+# 1. SERVICE UNIT — /etc/systemd/system/myapp.service
+# ============================================================
+
+[Unit]
+# Human-readable name shown in status output and logs.
+# Default: derived from filename. Change: always set this.
+Description=My Application Service
+
+# URI(s) for documentation. Any scheme works: https://, man:, info:, file://
+# Default: unset. Change: informational; no functional effect.
+Documentation=https://myapp.example.com/docs man:myapp(8)
+
+# Start this unit only after the listed units have started.
+# ORDERING only — does not cause those units to start. Pair with Wants= or Requires= for that.
+# Default: unset. Change: add network-online.target for services that need internet.
+After=network-online.target postgresql.service
+
+# Soft dependency: activate the listed units alongside this one; failure of listed units
+# does not stop this unit.
+# Default: unset. Change: use when this unit benefits from another but can run without it.
+Wants=network-online.target
+
+# Hard dependency: if any listed unit stops or fails, this unit stops too.
+# Default: unset. Change: use only when this unit cannot function without the dependency.
+Requires=postgresql.service
+
+# Binds lifecycle bidirectionally: if the listed unit stops, this unit stops.
+# Stronger than Requires= — also propagates stop in the reverse direction.
+# Default: unset. Change: rarely needed; use for tightly coupled units.
+# BindsTo=postgresql.service
+
+# Propagates stop/restart to this unit when the listed unit stops/restarts.
+# Does not affect start ordering.
+# Default: unset. Change: use for sidecars that should reload when their parent does.
+# PartOf=myapp-parent.service
+
+# This unit cannot run at the same time as the listed unit. Starting one stops the other.
+# Default: unset. Change: use for mutex services (e.g., two versions of the same app).
+# Conflicts=myapp-staging.service
+
+# ============================================================
+[Service]
+# Controls when systemd considers the service "started":
+#   simple   — ExecStart process IS the main process. Systemd proceeds immediately.
+#              Default if ExecStart= is set. Best for processes that stay in foreground.
+#   exec     — Like simple but waits for exec() to succeed before proceeding. More reliable.
+#   forking  — Parent exits; child (daemon) continues. Requires PIDFile=. Legacy pattern.
+#   notify   — Service calls sd_notify("READY=1") when ready. Most reliable for complex startup.
+#   oneshot  — Process runs to completion and exits. Unit stays active until explicit stop.
+#              Use for scripts or tasks, not daemons. Often paired with RemainAfterExit=yes.
+#   dbus     — Service registers a D-Bus name when ready. Requires BusName=.
+# Default: simple (when ExecStart= is set).
+Type=simple
+
+# Main process command. Must be an absolute path. Shell syntax not supported —
+# use ExecStart=/bin/sh -c '...' or a wrapper script for shell features.
+# Only one ExecStart= allowed (except for Type=oneshot which allows multiple).
+ExecStart=/usr/local/bin/myapp --config /etc/myapp/config.yaml
+
+# Runs before ExecStart. Multiple directives allowed; they run in order.
+# Prefix with - to ignore failure (e.g., ExecStartPre=-/bin/mkdir -p /run/myapp).
+# Default: unset.
+ExecStartPre=/bin/mkdir -p /run/myapp
+ExecStartPre=-/usr/local/bin/myapp --validate-config
+
+# Runs after ExecStart but before the unit is considered active.
+# Default: unset.
+# ExecStartPost=/usr/local/bin/notify-startup.sh
+
+# Command to stop the service gracefully. If unset, systemd sends SIGTERM then SIGKILL.
+# Default: unset (SIGTERM after TimeoutStopSec).
+# ExecStop=/usr/local/bin/myapp --stop
+
+# Command to reload config without restarting. systemctl reload sends SIGHUP by default.
+# Only set this if the service actually handles config reload.
+# Default: unset.
+ExecReload=/bin/kill -HUP $MAINPID
+
+# When to restart automatically:
+#   no           — never (default)
+#   on-success   — only when exit code is 0
+#   on-failure   — on non-zero exit, signal, or timeout (most common choice)
+#   on-abnormal  — signal, timeout, or watchdog (not clean exit)
+#   on-abort     — uncaught signal only
+#   always       — regardless of exit reason
+# Default: no. Change to on-failure for any production service.
+Restart=on-failure
+
+# Time to wait before restarting. Prevents rapid restart loops.
+# Default: 100ms. Increase to 5s or more for services that may crash-loop.
+RestartSec=5s
+
+# Run as this user instead of root. The user must exist.
+# Default: root. Always set this for security.
+User=myapp
+
+# Run as this group.
+# Default: primary group of User=. Set explicitly if the service needs a shared group.
+Group=myapp
+
+# Working directory for ExecStart and related commands.
+# Default: / (root). Set to the app's home directory if it uses relative paths.
+WorkingDirectory=/var/lib/myapp
+
+# Load environment variables from a file (KEY=VALUE format, one per line).
+# Prefix with - to ignore if file is missing: EnvironmentFile=-/etc/myapp/env
+# Default: unset. Use for secrets and config that shouldn't be in the unit file.
+EnvironmentFile=-/etc/myapp/environment
+
+# Set individual environment variables. Overrides EnvironmentFile for the same key.
+# Default: unset.
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+# Where to send stdout. Options: journal (default), null, tty, kmsg, file:/path, socket, fd:name
+# Default: journal. Change to append:/var/log/myapp/out.log to keep a separate file.
+StandardOutput=journal
+
+# Where to send stderr.
+# Default: journal. Set to inherit to merge with stdout.
+StandardError=journal
+
+# Seconds to wait for the service to report ready (Type=notify) or start (others).
+# Default: 90s (system), infinity (user). Increase for slow-starting services.
+TimeoutStartSec=30s
+
+# Seconds to wait for graceful stop before sending SIGKILL.
+# Default: 90s. Decrease for fast-shutdown requirements; increase for long cleanup.
+TimeoutStopSec=30s
+
+# Raise the file descriptor limit (ulimit -n equivalent).
+# Default: system default (~1024). Increase for high-connection services.
+LimitNOFILE=65536
+
+# Give the service its own /tmp and /var/tmp. Files are invisible to other processes
+# and cleaned up when the service stops. Safe default for most services.
+# Default: no.
+PrivateTmp=yes
+
+# Mount /usr, /boot, /efi read-only (strict) or keep writable (full).
+# Options: no, yes (alias for strict), strict, full.
+# Default: no. Use strict unless the service needs to write to system dirs.
+ProtectSystem=strict
+
+# Restrict access to home directories.
+# Options: no, yes, read-only, tmpfs.
+# Default: no. Use yes for services that should not read user files.
+ProtectHome=yes
+
+# Prevent the service from gaining new privileges via setuid/capabilities.
+# Default: no. Enable for nearly all services.
+NoNewPrivileges=yes
+
+# Allow writes to specific paths even when ProtectSystem=strict.
+# List all paths the service needs to write to.
+# Default: unset.
+ReadWritePaths=/var/lib/myapp /run/myapp
+
+# ============================================================
+[Install]
+# Determines which target activates this unit when enabled.
+# multi-user.target — normal multi-user boot (equivalent to runlevel 3/5). Most services go here.
+# graphical.target  — after the GUI is up. Only for GUI-dependent services.
+# Default: unset (enable has no effect without this section).
+WantedBy=multi-user.target
+
+# Hard-dependency version of WantedBy. The listed target cannot start without this unit.
+# Default: unset. Rarely used — prefer WantedBy.
+# RequiredBy=multi-user.target
+
+# Additional names for this unit file. Creates symlinks on enable.
+# Default: unset.
+# Alias=myapp-server.service
+
+
+# ============================================================
+# 2. TIMER UNIT — /etc/systemd/system/myapp-backup.timer
+#
+# Paired with a service of the same base name: myapp-backup.service
+# The timer activates the service; the service does the actual work.
+# ============================================================
+
+# [Unit]
+# Description=Daily backup for myapp
+# Requires=myapp-backup.service
+#
+# [Timer]
+# # Calendar expression for when the timer fires. Syntax mirrors cron but more readable.
+# # Examples: daily, weekly, hourly, monthly
+# #           "Mon-Fri 09:00"   — weekdays at 09:00
+# #           "*-*-* 02:30:00"  — every day at 02:30
+# # Validate syntax: systemd-analyze calendar '<expression>'
+# # Default: unset (required).
+# OnCalendar=daily
+#
+# # If the timer was missed (system was off), run immediately on next start.
+# # Default: no. Enable for backups and any task where missing a run matters.
+# Persistent=true
+#
+# # Add a random delay up to this value to spread load across many hosts.
+# # Default: 0. Set to a fraction of the interval (e.g., 1h for a daily timer).
+# RandomizedDelaySec=15min
+#
+# # The service unit to activate. Defaults to the same base name as the timer.
+# # Only set if the service name differs from the timer name.
+# # Unit=myapp-backup.service
+#
+# [Install]
+# WantedBy=timers.target
+
+
+# ============================================================
+# 3. SOCKET UNIT — /etc/systemd/system/myapp.socket
+#
+# systemd listens on the socket; passes it to myapp.service on first connection.
+# The service does not start until a client connects — saves resources.
+# Service must use sd_listen_fds() or systemd socket activation API to accept the fd.
+# ============================================================
+
+# [Unit]
+# Description=myapp socket activation
+#
+# [Socket]
+# # TCP socket on a port.
+# ListenStream=8080
+#
+# # UNIX domain socket (common for local IPC).
+# # ListenStream=/run/myapp/myapp.sock
+#
+# # UDP socket.
+# # ListenDatagram=8080
+#
+# # Set socket permissions (for UNIX sockets).
+# SocketMode=0660
+# SocketUser=myapp
+# SocketGroup=myapp
+#
+# # Pass open file descriptors to each spawned service instance.
+# # Default: no (one service instance handles all connections).
+# # Accept=yes — spawns a new service instance per connection (inetd model).
+# Accept=no
+#
+# [Install]
+# WantedBy=sockets.target

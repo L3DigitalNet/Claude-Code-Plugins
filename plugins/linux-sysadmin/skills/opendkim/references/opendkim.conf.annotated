@@ -1,0 +1,186 @@
+# /etc/opendkim.conf — Annotated Reference
+#
+# opendkim acts as a Postfix milter: it signs outbound mail with the domain's
+# private key and verifies DKIM signatures on inbound mail.  The daemon reads
+# this file at startup; `systemctl reload opendkim` re-reads it without dropping
+# the milter connection.
+#
+# Distro defaults often put supporting tables in /etc/opendkim/*.table or
+# /etc/opendkim/keys/ — paths below match that convention.
+
+# ─── Mode ────────────────────────────────────────────────────────────────────
+
+# s = sign outbound, v = verify inbound.  Both are almost always wanted.
+# Omitting 's' means outbound mail will not carry a DKIM-Signature header.
+Mode                    sv
+
+# ─── Signing identity ────────────────────────────────────────────────────────
+
+# Domain(s) this instance signs for.  Comma-separated list or a file:// path.
+# Must match the d= value in DKIM signatures and the DNS TXT record location.
+Domain                  example.com
+
+# Selector: the label before ._domainkey in the DNS lookup.
+# DNS lookup performed: <Selector>._domainkey.<Domain>  →  TXT record
+# Change the selector to rotate keys without breaking the old one.
+Selector                mail
+
+# Absolute path to the private key for Domain+Selector.
+# Must be owned by opendkim, mode 600.  opendkim refuses world-readable keys.
+KeyFile                 /etc/opendkim/keys/example.com/mail.private
+
+# When managing multiple domains or selectors, replace KeyFile with a KeyTable
+# and SigningTable (see below).  KeyFile and KeyTable are mutually exclusive.
+
+# ─── Key tables (multi-domain / multi-selector setup) ────────────────────────
+
+# KeyTable maps a short symbolic key ID to Domain:Selector:KeyPath.
+# Format (one entry per line):
+#   <key-id>    <domain>:<selector>:<path-to-private-key>
+#
+# Example /etc/opendkim/key.table:
+#   mail._domainkey.example.com    example.com:mail:/etc/opendkim/keys/example.com/mail.private
+#   mail._domainkey.other.com      other.com:mail:/etc/opendkim/keys/other.com/mail.private
+#
+# The key-id is arbitrary but must match what SigningTable references.
+KeyTable                /etc/opendkim/key.table
+
+# SigningTable maps sender addresses or domains to a key-id from KeyTable.
+# Format (one entry per line):
+#   <address-or-glob>    <key-id>
+#
+# Examples:
+#   *@example.com    mail._domainkey.example.com
+#   *@other.com      mail._domainkey.other.com
+#
+# The glob *@example.com matches any sender in that domain.
+# Use refile:/etc/opendkim/signing.table to load from a file.
+SigningTable            refile:/etc/opendkim/signing.table
+
+# ─── Socket ──────────────────────────────────────────────────────────────────
+
+# Unix domain socket (recommended for same-host Postfix).
+# The directory must be writable by the opendkim user.
+Socket                  local:/run/opendkim/opendkim.sock
+
+# Alternative: TCP socket on localhost.
+# Use this if Postfix runs in a container or chroot that can't reach the unix socket.
+# Socket                  inet:8891@127.0.0.1
+
+# ─── Process identity ────────────────────────────────────────────────────────
+
+# Drop privileges to this user after binding the socket.
+UserID                  opendkim
+
+# File creation mask.  022 → socket is group-readable (needed for Postfix milter).
+UMask                   022
+
+# PID file location (systemd units may override this).
+PidFile                 /run/opendkim/opendkim.pid
+
+# ─── Logging ─────────────────────────────────────────────────────────────────
+
+# Send events to syslog (appears in /var/log/mail.log or journald under opendkim).
+Syslog                  yes
+
+# Log successful signing/verification operations (verbose; useful during setup).
+SyslogSuccess           yes
+
+# Log the reason for any signature failure (highly recommended for debugging).
+LogWhy                  yes
+
+# ─── Canonicalization ────────────────────────────────────────────────────────
+
+# Controls how the message is normalized before signing.
+# relaxed/relaxed: tolerates minor whitespace and header folding changes in transit.
+# simple/simple: strictest — any modification breaks the signature.
+# relaxed/relaxed is the safe default for most mail paths.
+Canonicalization        relaxed/relaxed
+
+# ─── Trusted hosts ───────────────────────────────────────────────────────────
+
+# InternalHosts: mail from these addresses/ranges gets signed (not just verified).
+# Must include 127.0.0.1 / ::1 so locally-submitted mail is signed.
+# File format: one entry per line — IPs, CIDR ranges, or hostnames.
+InternalHosts           refile:/etc/opendkim/trusted.hosts
+
+# Example /etc/opendkim/trusted.hosts:
+#   127.0.0.1
+#   ::1
+#   localhost
+#   10.0.0.0/8        # sign mail from internal network too
+
+# ─── Resilience ──────────────────────────────────────────────────────────────
+
+# Seconds to wait for a DNS response before giving up on key retrieval.
+DNSTimeout              5
+
+# Sign subdomains of Domain using the same key (off by default).
+# Enable if you send from mail.example.com but Domain=example.com.
+SubDomains              no
+
+# Restart the daemon if it crashes.  Pairs with systemd Restart= directive.
+AutoRestart             yes
+AutoRestartRate         10/1h
+
+# ─── Postfix integration ─────────────────────────────────────────────────────
+#
+# Add these lines to /etc/postfix/main.cf:
+#
+#   # Milter for outbound SMTP (port 25, submission 587)
+#   smtpd_milters = local:/run/opendkim/opendkim.sock
+#
+#   # Milter for mail injected locally via sendmail/pickup
+#   non_smtpd_milters = $smtpd_milters
+#
+#   # What to do if the milter fails to respond (accept = deliver unsigned rather than bounce)
+#   milter_default_action = accept
+#
+#   # Protocol version opendkim expects
+#   milter_protocol = 6
+#
+# After editing main.cf: `postfix check && systemctl reload postfix`
+#
+# Postfix's postfix user must be in the opendkim group to read the unix socket:
+#   sudo adduser postfix opendkim
+#   sudo systemctl restart postfix opendkim
+
+# ─── DNS TXT record format ───────────────────────────────────────────────────
+#
+# opendkim-genkey writes the ready-to-publish record to mail.txt:
+#
+#   mail._domainkey  IN  TXT  ( "v=DKIM1; k=rsa; "
+#                               "p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA..." )
+#
+# Publish this as a single TXT record on the subdomain:
+#   mail._domainkey.example.com
+#
+# The value between the outer quotes must be exact — no extra spaces, no line breaks
+# in the base64 blob.  DNS providers that split long records into 255-byte chunks
+# must join them without inserting spaces between chunks.
+#
+# Verify after publishing:
+#   dig +short TXT mail._domainkey.example.com
+#
+# Then confirm the key matches the private key:
+#   opendkim-testkey -d example.com -s mail -vvv
+
+# ─── SPF note ────────────────────────────────────────────────────────────────
+#
+# SPF is a separate DNS TXT record on the bare domain:
+#   example.com  IN  TXT  "v=spf1 ip4:203.0.113.1 include:sendgrid.net ~all"
+#
+# SPF and DKIM are independent; DMARC requires at least one of them to align
+# with the From: domain.  See references/docs.md for full SPF/DMARC guides.
+
+# ─── DMARC note ──────────────────────────────────────────────────────────────
+#
+# DMARC is published as a TXT record on _dmarc.<domain>:
+#   _dmarc.example.com  IN  TXT  "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; pct=100"
+#
+# p=none (monitoring only) → p=quarantine → p=reject  (ramp up after verifying
+# DKIM and SPF are consistently passing in aggregate reports).
+#
+# DMARC only passes when at least one of DKIM or SPF is aligned:
+#   - DKIM alignment: d= in DKIM-Signature matches From: domain
+#   - SPF alignment: envelope sender (Return-Path) domain matches From: domain

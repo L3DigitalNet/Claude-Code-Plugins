@@ -1,0 +1,342 @@
+# Annotated netdata.conf
+# Each directive includes: what it does, default value, and when to change it.
+# Netdata's config uses INI-style sections. Most settings can be left at
+# defaults and overridden only where your environment diverges.
+#
+# Location: /etc/netdata/netdata.conf
+# Override dir: /etc/netdata/ — drop *.conf files here to override per-plugin
+# Apply changes: sudo systemctl restart netdata  (most settings require restart)
+# Apply health alarms only: sudo netdatacli reload-health  (no restart needed)
+#
+# Generate a commented config with current defaults:
+#   netdata -W dumpconfig > /tmp/netdata.conf.generated
+
+# ---------------------------------------------------------------------------
+# [global]
+# Core agent identity, data retention, and memory management.
+# ---------------------------------------------------------------------------
+
+[global]
+
+    # Human-readable hostname shown in the dashboard and alerts.
+    # Default: system hostname  |  Change when: the system hostname is generic
+    #   (e.g., "ubuntu") or you want a more descriptive name in Cloud.
+    hostname = my-server
+
+    # How many seconds of per-second data to retain in RAM (RAM and save modes)
+    # or the basis for dbengine tier sizing. Not directly used in dbengine mode —
+    # retention there is controlled by disk space, not this value.
+    # Default: 3600  |  Change when: using RAM/save mode and want longer in-memory history.
+    history = 3600
+
+    # Memory storage mode for metrics.
+    #   dbengine — write-ahead log + tiered disk storage; survives restart; best for production
+    #   ram      — all in RAM; lost on restart; fastest; use for ephemeral containers
+    #   save     — RAM during run, flushes to disk on shutdown/startup
+    #   map      — RAM-mapped files; use only for debugging or short-lived data
+    # Default: dbengine  |  Change when: running in a container where disk I/O is
+    #   expensive (use ram) or on a very low-memory device (use save with small history).
+    memory mode = dbengine
+
+    # Maximum RAM (MiB) used by the dbengine page cache.
+    # Larger cache = fewer disk reads = faster dashboard loads.
+    # Default: 32  |  Change when: Netdata consumes too much memory (lower it) or
+    #   you have many metrics and dashboard queries are slow (raise it).
+    page cache size = 32
+
+    # Directory for dbengine metric files. Must have sufficient free space.
+    # Default: /var/cache/netdata  |  Change when: you mount a dedicated volume for metrics.
+    dbengine multihost disk space = 256
+
+    # Whether Netdata can run as root. Strongly discouraged — Netdata drops to
+    # the netdata user after startup regardless.
+    # Default: no  |  Change only if: a plugin explicitly requires root and you
+    #   accept the security implications.
+    # run as user = netdata
+
+    # Path to the Netdata plugins directory.
+    # Default: /usr/libexec/netdata/plugins.d  |  Change when: custom install path.
+    # plugins directory = /usr/libexec/netdata/plugins.d
+
+    # Number of parallel threads for chart dimension collection.
+    # Default: 1  |  Change when: Netdata CPU usage is high and you have spare cores.
+    # OEM installers often set this automatically.
+    # glibc malloc arena max for plugins = 1
+
+    # Debug flags bitmask. Non-zero values produce verbose output to debug.log.
+    # Default: 0x0000000000000000  |  Change when: asked by Netdata support for a trace.
+    # Refer to netdata source for flag definitions.
+    debug flags = 0x0000000000000000
+
+# ---------------------------------------------------------------------------
+# [web]
+# Built-in HTTP server: the dashboard and API both run here.
+# ---------------------------------------------------------------------------
+
+[web]
+
+    # Interfaces and port Netdata listens on.
+    # Default: *:19999  |  Change when:
+    #   - Bind to localhost only (safest if no Cloud, no remote access needed):
+    #       bind to = localhost:19999
+    #   - Bind to a specific interface:
+    #       bind to = 192.168.1.10:19999
+    #   - Multiple interfaces:
+    #       bind to = localhost:19999 eth0:19999
+    bind to = *:19999
+
+    # Default port when no port is specified in bind to.
+    # Default: 19999  |  Rarely changed — only if 19999 conflicts with another service.
+    default port = 19999
+
+    # Which IPs may connect to the dashboard. Applies to the built-in web server.
+    # Default: localhost  |  Change when: accessing dashboard from a remote host.
+    #   Comma-separated CIDRs and IPs. "localhost" means 127.x.x.x and ::1 only.
+    #   "any" opens to all — combine with firewall rules for safety.
+    allow connections from = localhost
+
+    # Enable gzip compression on HTTP responses (dashboard assets and API).
+    # Default: yes  |  Change when: Netdata CPU is high and compression overhead matters
+    #   (unusual — the savings in bandwidth almost always outweigh the cost).
+    enable gzip compression = yes
+
+    # Compression level: 1 (fastest) to 9 (smallest). Tradeoff: CPU vs bandwidth.
+    # Default: 3  |  Change when: bandwidth is constrained (raise to 6+) or
+    #   CPU is the bottleneck (lower to 1).
+    gzip compression level = 3
+
+    # Maximum number of simultaneous client connections to the web server.
+    # Default: 30  |  Change when: many simultaneous dashboard users or API consumers.
+    web server threads = 6
+
+    # Maximum HTTP request size (bytes). Guards against malformed large requests.
+    # Default: 16777216 (16MB)  |  Rarely changed.
+    # web server max request size = 16777216
+
+# ---------------------------------------------------------------------------
+# [plugins]
+# Enable or disable entire plugin categories. Disabled plugins use zero resources.
+# Individual plugin configuration lives in /etc/netdata/<plugin>.conf or
+# /etc/netdata/go.d/<collector>.conf.
+# ---------------------------------------------------------------------------
+
+[plugins]
+
+    # Internal C plugins (proc, cgroups, diskspace, etc.) — core collectors.
+    # Default: yes  |  Disable only if you're running a very stripped-down agent.
+    proc = yes
+    diskspace = yes
+    cgroups = yes
+    tc = yes
+    idlejitter = yes
+    netdata monitoring = yes
+
+    # Python-based collectors. Handles many third-party services (redis, mysql, etc.).
+    # Default: yes  |  Disable when: you're replacing Python collectors with Go equivalents
+    #   (go.d) or on a low-CPU device where Python interpreter overhead matters.
+    python.d = yes
+
+    # Go-based collectors (go.d). Faster and lower overhead than Python.
+    # Default: yes  |  Disable when: a specific Go collector conflicts with a Python one.
+    go.d = yes
+
+    # Node.js-based collectors. Rarely needed — most use cases covered by Go or Python.
+    # Default: yes  |  Disable when: Node.js is not installed and you want to suppress
+    #   the startup warning.
+    node.d = yes
+
+    # External plugins directory (custom user-written plugins).
+    # Default: yes  |  Disable only if you have no custom plugins.
+    charts.d = yes
+
+    # Netdata's own performance metrics (number of queries, latency, etc.).
+    # Default: yes  |  Rarely disabled — useful for diagnosing Netdata itself.
+    netdata monitoring = yes
+
+# ---------------------------------------------------------------------------
+# [plugin:proc]
+# Controls the internal proc plugin, which reads /proc and /sys for system
+# metrics. Each sub-section enables/disables specific collectors.
+# ---------------------------------------------------------------------------
+
+[plugin:proc]
+
+    # Enable network interface statistics (/proc/net/dev).
+    # Default: yes  |  Disable when: you have hundreds of virtual interfaces (e.g.,
+    #   Kubernetes nodes) and don't need per-interface metrics.
+    /proc/net/dev = yes
+
+    # Enable per-CPU statistics (/proc/stat).
+    # Default: yes  |  Disable when: CPU count is very high and per-CPU charts add noise.
+    /proc/stat = yes
+
+    # Enable memory statistics (/proc/meminfo).
+    # Default: yes  |  Rarely disabled.
+    /proc/meminfo = yes
+
+    # Enable disk I/O statistics (/proc/diskstats).
+    # Default: yes  |  Disable when: many loop devices or ephemeral block devices.
+    /proc/diskstats = yes
+
+    # Enable socket statistics (/proc/net/snmp, /proc/net/netstat).
+    # Default: yes  |  Disable when: network metric cardinality is too high.
+    /proc/net/snmp = yes
+    /proc/net/netstat = yes
+
+# ---------------------------------------------------------------------------
+# [plugin:python.d]
+# Python collector framework settings. Per-collector config lives in
+# /etc/netdata/python.d/<module>.conf.
+# ---------------------------------------------------------------------------
+
+[plugin:python.d]
+
+    # How often (seconds) to run all Python collectors. Individual collectors
+    # can override this with their own update_every.
+    # Default: 1  |  Change when: Python collector CPU overhead is too high.
+    #   Setting to 5 reduces calls by 5x with minimal impact on most dashboards.
+    update every = 1
+
+    # Number of retries before marking a Python collector as failed.
+    # Default: 3  |  Raise when: a service is intermittently unavailable.
+    retries = 3
+
+    # Run each Python module in a separate process for isolation.
+    # Default: yes  |  Change when: you want a single python.d process for all modules
+    #   (lower overhead but a crash in one module affects all).
+    # multiprocessing = yes
+
+# ---------------------------------------------------------------------------
+# [health]
+# Health monitoring and alerting engine.
+# ---------------------------------------------------------------------------
+
+[health]
+
+    # Enable or disable health monitoring globally.
+    # Default: yes  |  Disable when: using Netdata purely for visualization,
+    #   routing alerts elsewhere, or temporarily suppressing all notifications.
+    enabled = yes
+
+    # Maximum number of alarm transitions to keep in the in-memory health log.
+    # Default: 1000  |  Change when: you have many alarms and need longer history
+    #   visible in the dashboard without querying the log file.
+    in memory max health log entries = 1000
+
+    # How many seconds of health alarm history to keep on disk.
+    # Default: 432000 (5 days)  |  Change when: compliance requires longer history
+    #   or disk space is constrained.
+    health log history = 432000
+
+    # Directory containing alarm definition files.
+    # Default: /etc/netdata/health.d  |  Change when: using a non-standard install.
+    # health configuration directory = /etc/netdata/health.d
+
+    # How often (seconds) to re-evaluate all alarm expressions.
+    # Default: 10  |  Change when: you need faster alarm response (lower to 5)
+    #   or want to reduce CPU on a busy system (raise to 30).
+    # run at least every seconds = 10
+
+    # Silences all alarms without disabling health. Useful during maintenance.
+    # Default: no  |  Set temporarily via netdatacli rather than editing this file.
+    # silenced = no
+
+# ---------------------------------------------------------------------------
+# [logs]
+# Log file paths and verbosity.
+# ---------------------------------------------------------------------------
+
+[logs]
+
+    # Syslog facility to use when logging to syslog.
+    # Default: daemon  |  Change when: you route Netdata logs to a dedicated syslog category.
+    facility = daemon
+
+    # Debug log path. Only written when debug flags are non-zero.
+    # Default: /var/log/netdata/debug.log  |  Change when: custom log dir.
+    debug log = /var/log/netdata/debug.log
+
+    # Error log path. Covers errors, warnings, and info messages.
+    # Default: /var/log/netdata/error.log  |  Change when: custom log dir or
+    #   redirecting to syslog (set to syslog).
+    error log = /var/log/netdata/error.log
+
+    # Access log for the built-in web server (dashboard and API requests).
+    # Default: /var/log/netdata/access.log  |  Set to none to disable (saves disk I/O
+    #   on high-query setups where access logging adds noise).
+    access log = /var/log/netdata/access.log
+
+    # Level of detail for the error log.
+    #   debug, info, warning, error  (in increasing severity; lower = more verbose)
+    # Default: error  |  Change when: investigating a bug (use info or debug temporarily).
+    # error log severity = error
+
+# ---------------------------------------------------------------------------
+# [backend]
+# Export metrics to external time-series systems (Graphite, OpenTSDB,
+# Prometheus remote_write, etc.). Disabled by default.
+# For modern installs, prefer the "Exporting Engine" (go.d exporter connector)
+# which supersedes this section and supports more targets.
+# ---------------------------------------------------------------------------
+
+[backend]
+
+    # Enable metric export to an external backend.
+    # Default: no  |  Change when: you want to send Netdata metrics to InfluxDB,
+    #   Graphite, Prometheus, or another TSDB for long-term storage or cross-tool dashboards.
+    enabled = no
+
+    # Export type. Options: graphite | opentsdb:telnet | opentsdb:http | json | prometheus_remote_write
+    # Default: graphite  |  Change when: your backend expects a different wire format.
+    type = graphite
+
+    # Hostname or IP of the backend receiver.
+    # Default: localhost  |  Change when: backend is on a different host.
+    destination = localhost:2003
+
+    # Data prefix prepended to all metric names sent to the backend.
+    # Default: netdata  |  Change when: you run multiple Netdata agents writing to the
+    #   same backend and need to distinguish them.
+    prefix = netdata
+
+    # How often (seconds) to flush metrics to the backend.
+    # Default: 10  |  Change when: your backend expects a different scrape cadence
+    #   or the network link has high latency.
+    update every = 10
+
+    # Buffer size (data points) to hold if the backend is temporarily unreachable.
+    # Default: 10  |  Increase when: backend restarts frequently and you want to
+    #   avoid gaps in the exported data.
+    buffer on failures = 10
+
+    # Send only the most recent value per interval, or all collected values.
+    # Default: average  |  Options: average | sum | max | min
+    # Change when: your backend expects raw counters (use sum) or peak values (use max).
+    send charts matching = *
+
+# ---------------------------------------------------------------------------
+# Key plugin config override locations
+# Drop a file here to override defaults for a specific plugin or collector.
+# ---------------------------------------------------------------------------
+#
+# /etc/netdata/go.d/<collector>.conf
+#   Go-based collector config (nginx, apache, redis, mysql, prometheus, etc.)
+#   Each collector has its own YAML file. Example: go.d/nginx.conf controls
+#   how Netdata scrapes the nginx stub_status endpoint.
+#
+# /etc/netdata/python.d/<module>.conf
+#   Python collector config. Overrides defaults for that module. If the file
+#   doesn't exist, the module uses built-in defaults.
+#
+# /etc/netdata/health.d/<alarm>.conf
+#   Alarm definitions. Files here override or extend the built-in alarms.
+#   Copy a built-in alarm file from /usr/lib/netdata/conf.d/health.d/ and
+#   modify — do NOT edit files under /usr/lib/netdata directly (overwritten on update).
+#
+# /etc/netdata/stream.conf
+#   Streaming/replication: configure this agent as a Netdata parent (receiving
+#   metrics from child agents) or child (sending metrics to a parent).
+#
+# /etc/netdata/exporting.conf
+#   Exporting engine config (supersedes [backend] above for new installs).
+#   Defines connectors for Prometheus remote_write, InfluxDB, Graphite, etc.

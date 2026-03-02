@@ -1,0 +1,282 @@
+# Nextcloud Docker Compose — annotated reference
+#
+# This is a complete production-ready stack. All environment variable annotations
+# describe what the variable does, the default when omitted, and any gotchas.
+#
+# Recommended: copy this to your project, remove the comments, and fill in secrets
+# from a .env file (never commit plain-text passwords).
+#
+# Project layout:
+#   ./docker-compose.yml        <- this file (without comments)
+#   ./.env                      <- secrets (gitignored)
+#   ./nextcloud/                <- Nextcloud app files (named volume or bind mount)
+#   ./nextcloud-data/           <- user data (named volume or bind mount)
+#   ./mariadb/                  <- database files (named volume)
+#   ./nginx/nextcloud.conf      <- nginx vhost config
+
+services:
+
+  # ─── Nextcloud application ────────────────────────────────────────────────
+  nextcloud:
+    image: nextcloud:30-fpm-alpine
+    # nextcloud:<version>-fpm-alpine  — PHP-FPM variant, smaller image, works with nginx
+    # nextcloud:<version>-apache      — bundled Apache, simpler but less flexible
+    # nextcloud:latest                — tracks latest stable; pin to a minor version in production
+    container_name: nextcloud-app
+    restart: unless-stopped
+
+    depends_on:
+      mariadb:
+        condition: service_healthy   # wait for DB to pass its healthcheck before starting
+      redis:
+        condition: service_started   # Redis has no healthcheck by default; service_started is sufficient
+
+    volumes:
+      - nextcloud-app:/var/www/html
+      # The Nextcloud code + config lives here. config/config.php is inside this volume.
+      # config.php is auto-generated on first run; do not pre-create it.
+      - nextcloud-data:/var/www/html/data
+      # Separate data volume — keeps user files isolated from app code.
+      # Back this volume up independently from the app volume.
+
+    environment:
+      # ── Database connection ──────────────────────────────────────────────
+      MYSQL_HOST: mariadb
+      # Hostname of the DB service. Must match the service name in this compose file.
+
+      MYSQL_DATABASE: nextcloud
+      # Database name. Must match MYSQL_DATABASE in the mariadb service.
+
+      MYSQL_USER: nextcloud
+      # DB user Nextcloud connects as. Must match MYSQL_USER in mariadb service.
+
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      # DB user password. Pull from .env — never hardcode.
+      # .env entry: MYSQL_PASSWORD=a_long_random_password
+
+      # ── Redis ────────────────────────────────────────────────────────────
+      REDIS_HOST: redis
+      # Enables Redis for both local memcache (APCu replacement) and distributed
+      # file locking. Without this, Nextcloud uses no locking — dangerous with
+      # multiple users. Corresponds to config.php memcache.locking and memcache.local.
+
+      REDIS_HOST_PORT: 6379
+      # Default Redis port. Omit if using default.
+
+      # REDIS_HOST_PASSWORD: ${REDIS_PASSWORD}
+      # Uncomment if Redis is configured with requirepass. Matches the Redis
+      # service's --requirepass argument.
+
+      # ── Admin account (first-run only) ───────────────────────────────────
+      NEXTCLOUD_ADMIN_USER: admin
+      # Username for the initial admin account. Only used on first-run install.
+      # After install, changing this has no effect — manage users via occ instead.
+
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
+      # Admin password. First-run only. Pull from .env.
+      # .env entry: NEXTCLOUD_ADMIN_PASSWORD=another_long_random_password
+
+      # ── Trusted domains ──────────────────────────────────────────────────
+      NEXTCLOUD_TRUSTED_DOMAINS: cloud.example.com 192.168.1.10
+      # Space-separated list of hostnames/IPs Nextcloud will accept requests from.
+      # Without this, accessing via any domain other than localhost produces a
+      # "Access through untrusted domain" error.
+      # You can also set this in config.php manually (see config.php pattern below).
+
+      # ── PHP memory and upload limits ─────────────────────────────────────
+      PHP_MEMORY_LIMIT: 512M
+      # Overrides PHP memory_limit. 512M is the Nextcloud-recommended minimum.
+      # Increase to 1G or more for large file operations or many concurrent users.
+
+      PHP_UPLOAD_LIMIT: 10G
+      # Sets PHP upload_max_filesize and post_max_size. Match this to the largest
+      # file you expect users to upload. nginx client_max_body_size must also match.
+
+      # ── SMTP (optional) ──────────────────────────────────────────────────
+      # SMTP_HOST: smtp.example.com
+      # SMTP_SECURE: ssl          # ssl or tls; empty for plain
+      # SMTP_PORT: 465
+      # SMTP_AUTHTYPE: LOGIN
+      # SMTP_NAME: nextcloud@example.com
+      # SMTP_PASSWORD: ${SMTP_PASSWORD}
+      # MAIL_FROM_ADDRESS: nextcloud
+      # MAIL_DOMAIN: example.com
+      # These configure config.php mail settings. Can also be set via occ config:system:set.
+
+    networks:
+      - nextcloud-internal
+      - nextcloud-proxy
+    # nextcloud-internal: isolated backend network (NC ↔ DB ↔ Redis)
+    # nextcloud-proxy:    shared with nginx so nginx can reach the FPM socket
+
+  # ─── Cron container ───────────────────────────────────────────────────────
+  nextcloud-cron:
+    image: nextcloud:30-fpm-alpine
+    # Must use the same image as the nextcloud service so occ has the same code.
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    volumes:
+      - nextcloud-app:/var/www/html
+      - nextcloud-data:/var/www/html/data
+      # Mount the same volumes as the main app so occ can access config and data.
+    entrypoint: /cron.sh
+    # The official nextcloud image ships /cron.sh which runs `php occ background:cron`
+    # every 5 minutes. This is the recommended approach over host cron for Docker installs.
+    depends_on:
+      - nextcloud
+    networks:
+      - nextcloud-internal
+
+  # ─── MariaDB ──────────────────────────────────────────────────────────────
+  mariadb:
+    image: mariadb:11
+    # Pin to a major version. mariadb:latest can break on unexpected upgrades.
+    container_name: nextcloud-db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    # --transaction-isolation=READ-COMMITTED: required by Nextcloud for correct
+    #   behavior with concurrent transactions.
+    # --log-bin / --binlog-format=ROW: enables binary logging in ROW format.
+    #   Required if you want point-in-time recovery. Remove if storage is tight and
+    #   you don't need replication or PITR.
+
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # healthcheck.sh is bundled in the official mariadb image.
+    # nextcloud service uses `condition: service_healthy` — this healthcheck gates startup.
+
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      # Database files. Back this up with mysqldump or mariadb-backup, not raw file copy.
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      # Root password for the DB. Required by the mariadb image.
+      # .env entry: MYSQL_ROOT_PASSWORD=yet_another_long_random_password
+
+      MYSQL_DATABASE: nextcloud
+      # Database created on first run. Must match MYSQL_DATABASE in nextcloud service.
+
+      MYSQL_USER: nextcloud
+      # Application DB user created on first run. Must match MYSQL_USER in nextcloud.
+
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      # Application DB user password. Must match MYSQL_PASSWORD in nextcloud.
+
+      MARIADB_AUTO_UPGRADE: 1
+      # Runs mysql_upgrade automatically when the container starts after a version bump.
+      # Safe to leave on; avoids manual upgrade steps after pulling a new mariadb image.
+
+    networks:
+      - nextcloud-internal
+
+  # ─── Redis ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    # Pin to a major version. redis:alpine is fine; -alpine saves ~20MB.
+    container_name: nextcloud-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    # --save 60 1: persist to disk if at least 1 key changed in 60 seconds.
+    #   Remove --save entirely if you don't need Redis persistence (cache only).
+    # --loglevel warning: suppresses verbose startup output.
+    # Add --requirepass ${REDIS_PASSWORD} here if you set REDIS_HOST_PASSWORD above.
+
+    volumes:
+      - redis-data:/data
+      # Persist Redis RDB snapshots. Can be omitted if Redis is cache-only.
+
+    networks:
+      - nextcloud-internal
+
+  # ─── nginx reverse proxy ──────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: nextcloud-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      # Expose HTTP and HTTPS to the host. If running behind another proxy (Traefik,
+      # Caddy) on the same host, remove the ports block and use a shared proxy network.
+
+    volumes:
+      - ./nginx/nextcloud.conf:/etc/nginx/conf.d/default.conf:ro
+      # Mount your nginx vhost config (see nginx skill for annotated config patterns).
+      # Key settings for Nextcloud: client_max_body_size 10G, fastcgi_pass nextcloud:9000,
+      # proxy_read_timeout 3600, include fastcgi_params.
+
+      - ./ssl:/etc/nginx/ssl:ro
+      # TLS certificates. Use Certbot or Caddy for automatic renewal.
+      # For self-signed: openssl req -x509 -nodes -newkey rsa:4096 -keyout ssl/key.pem -out ssl/cert.pem -days 365
+
+      - nextcloud-app:/var/www/html:ro
+      # nginx needs read access to Nextcloud's static files (CSS, JS, .htaccess-equivalent
+      # deny rules). The :ro flag prevents nginx from writing to the app volume.
+
+    depends_on:
+      - nextcloud
+    networks:
+      - nextcloud-proxy
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  nextcloud-app:
+    # Nextcloud PHP application code + config/config.php.
+    # Shared between nextcloud and nextcloud-cron services.
+  nextcloud-data:
+    # User files. The only volume that grows unboundedly over time.
+    # Mount a bind mount to a large disk path if needed: driver: local with device:
+  mariadb-data:
+    # MariaDB InnoDB files. Back up with mysqldump, not raw copy.
+  redis-data:
+    # Redis RDB persistence. Safe to lose — Nextcloud rebuilds caches automatically.
+
+# ─── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  nextcloud-internal:
+    # Isolated backend network. Only services that need DB/Redis access join this.
+    # No external access.
+  nextcloud-proxy:
+    # Connects nginx to the nextcloud FPM container.
+    # If using an external proxy (Traefik/Caddy), make this an `external: true`
+    # network shared with the proxy stack instead.
+
+# ─── config.php overrides ─────────────────────────────────────────────────────
+# The Docker image generates config/config.php on first run from environment variables.
+# For settings not covered by env vars, add a custom config file:
+#
+# Mount: ./nextcloud/custom.config.php:/var/www/html/config/custom.config.php
+#
+# Contents of custom.config.php:
+# <?php
+# $CONFIG = [
+#   'trusted_domains' => ['cloud.example.com', '192.168.1.10'],
+#   'default_phone_region' => 'US',
+#   'maintenance_window_start' => 1,   // hour in UTC for background maintenance tasks
+#   'memcache.local' => '\\OC\\Memcache\\Redis',
+#   'memcache.locking' => '\\OC\\Memcache\\Redis',
+#   'redis' => [
+#     'host' => 'redis',
+#     'port' => 6379,
+#   ],
+#   'default_locale' => 'en_US',
+#   'overwrite.cli.url' => 'https://cloud.example.com',
+#   'overwriteprotocol' => 'https',  // force HTTPS in generated URLs (needed behind reverse proxy)
+# ];
+#
+# Nextcloud merges all .php files in config/ — no need to edit the generated config.php directly.
+
+# ─── Host cron alternative ────────────────────────────────────────────────────
+# If you prefer host cron over the cron container:
+#
+# 1. Remove the nextcloud-cron service above.
+# 2. Add to the host's www-data crontab (sudo crontab -u www-data -e):
+#    */5 * * * * docker exec --user www-data nextcloud-app php /var/www/html/occ background:cron
+#
+# The cron container approach is cleaner for Docker Compose installs; it keeps
+# scheduling self-contained and doesn't require host-level cron configuration.

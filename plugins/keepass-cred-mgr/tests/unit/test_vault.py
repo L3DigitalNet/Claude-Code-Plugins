@@ -8,40 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from server.yubikey import MockYubiKey
+from tests.helpers import _mock_async_proc, _mock_repl_proc, _repl_resp
 
-
-# ---------------------------------------------------------------------------
-# REPL mock helpers
-# ---------------------------------------------------------------------------
-
-def _repl_resp(data: bytes = b"") -> bytes:
-    """Wrap output bytes with the REPL prompt sentinel b"\n> ".
-
-    Each value in readuntil.side_effect must include the sentinel because
-    run_cli() strips the last len(b"\n> ") = 3 bytes to recover the command output.
-    """
-    return data + b"\n> "
-
-
-def _mock_repl_proc(responses: list[bytes] | None = None) -> MagicMock:
-    """Create a mock REPL process for vault.run_cli() calls.
-
-    responses: readuntil return values, one per run_cli() call.
-    None → returns empty response (_repl_resp()) for every call.
-    """
-    proc = MagicMock()
-    proc.stdin = MagicMock()
-    proc.stdin.write = MagicMock()
-    proc.stdin.drain = AsyncMock(return_value=None)
-    proc.stdout = MagicMock()
-    proc.stdout.readuntil = (
-        AsyncMock(side_effect=responses)
-        if responses is not None
-        else AsyncMock(return_value=_repl_resp())
-    )
-    proc.kill = MagicMock()
-    proc.wait = AsyncMock(return_value=None)
-    return proc
+pytestmark = pytest.mark.unit
 
 
 def _mock_unlock_proc(
@@ -74,16 +43,6 @@ def _mock_unlock_proc(
     else:
         # Successful unlock: return the initial "> " prompt
         proc.stdout.readuntil = AsyncMock(return_value=b"> ")
-    return proc
-
-
-def _mock_async_proc(
-    stdout: bytes = b"", stderr: bytes = b"", returncode: int = 0
-) -> AsyncMock:
-    """Mock subprocess for run_cli_binary() which still uses communicate()."""
-    proc = AsyncMock()
-    proc.communicate.return_value = (stdout, stderr)
-    proc.returncode = returncode
     return proc
 
 
@@ -122,7 +81,7 @@ class TestVaultState:
         vault = Vault(test_config, mock_yubikey)
         assert vault.is_unlocked is False
 
-    @pytest.mark.asyncio
+
     async def test_unlock_raises_when_yubikey_absent(self, test_config):
         from server.vault import Vault, YubiKeyNotPresent
 
@@ -131,7 +90,7 @@ class TestVaultState:
         with pytest.raises(YubiKeyNotPresent):
             await vault.unlock()
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_unlock_succeeds_with_yubikey(self, mock_exec, test_config, mock_yubikey):
         """unlock() opens a REPL process and waits for the initial '> ' prompt."""
@@ -143,7 +102,7 @@ class TestVaultState:
         assert vault.is_unlocked is True
         assert vault._repl_proc is not None
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_unlock_raises_on_cli_error(self, mock_exec, test_config, mock_yubikey):
         """IncompleteReadError from stdout (process exited) → KeePassCLIError."""
@@ -154,7 +113,7 @@ class TestVaultState:
         with pytest.raises(KeePassCLIError):
             await vault.unlock()
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_unlock_pcscd_hint_in_timeout_error(
         self, mock_exec, test_config, mock_yubikey
@@ -167,7 +126,7 @@ class TestVaultState:
         with pytest.raises(KeePassCLIError, match="pcscd"):
             await vault.unlock()
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_raises_when_locked(self, test_config, mock_yubikey):
         from server.vault import Vault, VaultLocked
 
@@ -202,7 +161,7 @@ class TestVaultGroupAllowlist:
 # ---------------------------------------------------------------------------
 
 class TestVaultRunCli:
-    @pytest.mark.asyncio
+
     async def test_run_cli_returns_stdout(self, test_config, mock_yubikey):
         """run_cli strips the trailing REPL prompt and returns decoded output."""
         from server.vault import Vault
@@ -213,7 +172,7 @@ class TestVaultRunCli:
         result = await vault.run_cli("ls", test_config.database_path)
         assert "Group1/" in result
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_strips_command_echo(self, test_config, mock_yubikey):
         """Real keepassxc-cli echoes the command text; run_cli strips it."""
         from server.vault import Vault
@@ -227,7 +186,7 @@ class TestVaultRunCli:
         assert result.startswith("Group1/")
         assert not result.startswith("ls")
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_strips_echo_only_output(self, test_config, mock_yubikey):
         """Echo with no following output produces empty string (not the echo itself)."""
         from server.vault import Vault
@@ -239,7 +198,7 @@ class TestVaultRunCli:
         result = await vault.run_cli("ls", test_config.database_path)
         assert result == ""
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_raises_on_error(self, test_config, mock_yubikey):
         """Output starting with 'Error:' is converted to KeePassCLIError."""
         from server.vault import KeePassCLIError, Vault
@@ -250,7 +209,7 @@ class TestVaultRunCli:
         with pytest.raises(KeePassCLIError, match="entry not found"):
             await vault.run_cli("show", test_config.database_path, "Nonexistent")
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_raises_on_invalid_prefix(self, test_config, mock_yubikey):
         """Output starting with 'Invalid ' is also converted to KeePassCLIError."""
         from server.vault import KeePassCLIError, Vault
@@ -261,7 +220,7 @@ class TestVaultRunCli:
         with pytest.raises(KeePassCLIError, match="Invalid"):
             await vault.run_cli("show", test_config.database_path, "X")
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_raises_on_timeout(self, test_config, mock_yubikey):
         """TimeoutError from readuntil wraps to KeePassCLIError with pcscd hint."""
         from server.vault import KeePassCLIError, Vault
@@ -272,7 +231,7 @@ class TestVaultRunCli:
         with pytest.raises(KeePassCLIError, match="pcscd"):
             await vault.run_cli("show", test_config.database_path, "Servers/Entry")
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_empty_args_raises(self, test_config, mock_yubikey):
         """run_cli() with no args raises KeePassCLIError mentioning 'unknown'."""
         from server.vault import KeePassCLIError, Vault
@@ -283,7 +242,7 @@ class TestVaultRunCli:
         with pytest.raises(KeePassCLIError, match="unknown"):
             await vault.run_cli()
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_strips_db_path_from_repl_args(self, test_config, mock_yubikey):
         """Database path is filtered out before sending to the REPL stdin."""
         from server.vault import Vault
@@ -298,7 +257,7 @@ class TestVaultRunCli:
         assert test_config.database_path.encode() not in written
         assert written.startswith(b"ls")
 
-    @pytest.mark.asyncio
+
     async def test_repl_interrupted_mid_command_marks_vault_locked(
         self, test_config, mock_yubikey
     ):
@@ -316,7 +275,7 @@ class TestVaultRunCli:
         assert vault.is_unlocked is False
         assert vault._repl_proc is None
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_run_cli_binary_returns_bytes(self, mock_exec, test_config, mock_yubikey):
         """run_cli_binary returns raw bytes, not decoded text."""
@@ -331,7 +290,7 @@ class TestVaultRunCli:
         )
         assert result == raw
 
-    @pytest.mark.asyncio
+
     async def test_run_cli_binary_raises_when_locked(self, test_config, mock_yubikey):
         from server.vault import Vault, VaultLocked
 
@@ -339,7 +298,7 @@ class TestVaultRunCli:
         with pytest.raises(VaultLocked):
             await vault.run_cli_binary("attachment-export")
 
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_run_cli_binary_raises_on_nonzero_returncode(
         self, mock_exec, test_config, mock_yubikey
@@ -379,7 +338,7 @@ class TestVaultEntryPath:
 # ---------------------------------------------------------------------------
 
 class TestVaultProperties:
-    @pytest.mark.asyncio
+
     @patch("asyncio.create_subprocess_exec")
     async def test_unlock_time_set_after_unlock(self, mock_exec, test_config, mock_yubikey):
         """unlock_time is a UTC datetime after successful unlock."""
@@ -407,49 +366,50 @@ class TestVaultProperties:
 # ---------------------------------------------------------------------------
 
 class TestVaultLock:
-    def test_lock_resets_unlocked_flag(self, test_config, mock_yubikey):
+    async def test_lock_resets_unlocked_flag(self, test_config, mock_yubikey):
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
         vault._unlocked = True
-        vault._lock()
+        await vault.lock()
         assert vault.is_unlocked is False
 
-    def test_lock_kills_repl_proc(self, test_config, mock_yubikey):
-        """_lock() kills the REPL process and clears the reference."""
+    async def test_lock_kills_repl_proc(self, test_config, mock_yubikey):
+        """lock() kills the REPL process and clears the reference."""
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
         vault._unlocked = True
         mock_proc = MagicMock()
+        mock_proc.wait = AsyncMock(return_value=None)
         vault._repl_proc = mock_proc
 
-        vault._lock()
+        await vault.lock()
 
         mock_proc.kill.assert_called_once()
         assert vault._repl_proc is None
 
-    def test_lock_cancels_stderr_drain_task(self, test_config, mock_yubikey):
-        """_lock() cancels the stderr drain task."""
+    async def test_lock_cancels_stderr_drain_task(self, test_config, mock_yubikey):
+        """lock() cancels the stderr drain task."""
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
         vault._unlocked = True
-        mock_task = MagicMock()
-        vault._stderr_drain_task = mock_task
+        drain_task = asyncio.create_task(asyncio.sleep(100))
+        vault._stderr_drain_task = drain_task
 
-        vault._lock()
+        await vault.lock()
 
-        mock_task.cancel.assert_called_once()
+        assert drain_task.cancelled()
         assert vault._stderr_drain_task is None
 
-    def test_lock_noop_when_no_repl_proc(self, test_config, mock_yubikey):
-        """_lock() is safe when _repl_proc is None (already locked)."""
+    async def test_lock_noop_when_no_repl_proc(self, test_config, mock_yubikey):
+        """lock() is safe when _repl_proc is None (already locked)."""
         from server.vault import Vault
 
         vault = Vault(test_config, mock_yubikey)
         vault._unlocked = True
-        vault._lock()  # _repl_proc is None, should not raise
+        await vault.lock()  # _repl_proc is None, should not raise
         assert vault.is_unlocked is False
 
 
@@ -458,7 +418,7 @@ class TestVaultLock:
 # ---------------------------------------------------------------------------
 
 class TestVaultGraceTimer:
-    @pytest.mark.asyncio
+
     async def test_lock_after_grace_period(self, test_config):
         from server.vault import Vault
 
@@ -476,7 +436,7 @@ class TestVaultGraceTimer:
         with contextlib.suppress(asyncio.CancelledError):
             await poll_task
 
-    @pytest.mark.asyncio
+
     async def test_reinsertion_cancels_grace(self, test_config):
         """Grace timer is cancelled when YubiKey is reinserted before expiry.
 
@@ -502,7 +462,7 @@ class TestVaultGraceTimer:
         with contextlib.suppress(asyncio.CancelledError):
             await poll_task
 
-    @pytest.mark.asyncio
+
     async def test_cancel_polling_during_grace_timer(self, test_config):
         """Cancelling poll task while grace timer is active cleans up both tasks."""
         from server.vault import Vault
@@ -521,7 +481,7 @@ class TestVaultGraceTimer:
             await poll_task
         assert vault.is_unlocked is True
 
-    @pytest.mark.asyncio
+
     async def test_poll_noop_when_locked_and_yubikey_removed(self, test_config):
         """No grace timer starts when vault is already locked."""
         from server.vault import Vault
@@ -536,7 +496,7 @@ class TestVaultGraceTimer:
         with contextlib.suppress(asyncio.CancelledError):
             await poll_task
 
-    @pytest.mark.asyncio
+
     async def test_polling_exception_logged_and_loop_continues(self, test_config):
         """An unexpected exception in is_present is logged and polling continues."""
         from server.vault import Vault
@@ -612,7 +572,7 @@ class TestReplQuoting:
 # ---------------------------------------------------------------------------
 
 class TestRunCliStdinLines:
-    @pytest.mark.asyncio
+
     async def test_stdin_lines_written_before_drain(self, test_config, mock_yubikey):
         """stdin_lines are written to stdin before the drain() call."""
         from server.vault import Vault
@@ -632,7 +592,7 @@ class TestRunCliStdinLines:
         assert written_calls[0].startswith(b"add")
         assert written_calls[1] == b"mysecret\n"
 
-    @pytest.mark.asyncio
+
     async def test_stdin_lines_multiple(self, test_config, mock_yubikey):
         """Multiple stdin_lines are all written in order."""
         from server.vault import Vault
@@ -655,7 +615,7 @@ class TestRunCliStdinLines:
 # ---------------------------------------------------------------------------
 
 class TestVaultReplProcNoneGuard:
-    @pytest.mark.asyncio
+
     async def test_run_cli_raises_when_repl_proc_is_none_despite_unlocked(
         self, test_config, mock_yubikey
     ):
@@ -678,7 +638,7 @@ class TestVaultReplProcNoneGuard:
 # ---------------------------------------------------------------------------
 
 class TestDrainStderr:
-    @pytest.mark.asyncio
+
     async def test_drain_stderr_exception_is_swallowed(self, test_config, mock_yubikey):
         """_drain_stderr catches any exception and exits silently (keeps REPL alive)."""
         from server.vault import Vault
@@ -691,7 +651,7 @@ class TestDrainStderr:
         # Should complete without raising
         await vault._drain_stderr(proc)
 
-    @pytest.mark.asyncio
+
     async def test_drain_stderr_exits_on_empty_line(self, test_config, mock_yubikey):
         """_drain_stderr stops when readline() returns empty bytes (EOF)."""
         from server.vault import Vault

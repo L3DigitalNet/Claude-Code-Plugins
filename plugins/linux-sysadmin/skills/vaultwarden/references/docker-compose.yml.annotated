@@ -1,0 +1,224 @@
+# Vaultwarden Docker Compose — annotated reference
+#
+# This compose file shows a production-ready Vaultwarden setup with Caddy
+# handling HTTPS termination. Caddy auto-obtains and renews Let's Encrypt certs.
+#
+# Minimum to change before use:
+#   - DOMAIN: your actual HTTPS URL
+#   - ADMIN_TOKEN: generate with `docker run --rm -it vaultwarden/server /vaultwarden hash --preset owasp`
+#   - SMTP_* variables: your mail provider credentials
+#   - vault.example.com in the Caddyfile: same domain as DOMAIN
+
+version: "3.8"
+
+services:
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    # Pin to a specific version tag in production (e.g., vaultwarden/server:1.30.5)
+    # to prevent unexpected breakage from upstream updates.
+    container_name: vaultwarden
+    restart: unless-stopped
+
+    volumes:
+      # Mount the host data directory to /data inside the container.
+      # This single directory contains everything: the SQLite database,
+      # attachments, RSA keys, icon cache, and send files.
+      # Back up this directory — it is the complete Vaultwarden state.
+      - ./data:/data
+
+    environment:
+      # -----------------------------------------------------------------------
+      # Core
+      # -----------------------------------------------------------------------
+
+      # The externally reachable HTTPS URL. Must match what clients connect to.
+      # Used for invitation links, TOTP URIs, push notification callbacks,
+      # and WebAuthn origin validation. Mismatch causes subtle client errors.
+      - DOMAIN=https://vault.example.com
+
+      # Path inside the container where all persistent data is stored.
+      # Change this only if you have a specific reason; must match the volume mount.
+      - DATA_FOLDER=/data
+
+      # Log verbosity: error, warn, info (default), debug, trace
+      # Use debug when investigating issues; revert to info in steady state.
+      - LOG_LEVEL=info
+
+      # -----------------------------------------------------------------------
+      # Database
+      # -----------------------------------------------------------------------
+
+      # SQLite (default) — fine for personal or small-team use.
+      # The path below is the default; no need to set it unless you move the DB.
+      - DATABASE_URL=data/db.sqlite3
+
+      # PostgreSQL alternative (uncomment and remove SQLite line above):
+      # - DATABASE_URL=postgresql://vaultwarden:password@db:5432/vaultwarden
+      #
+      # MySQL/MariaDB alternative:
+      # - DATABASE_URL=mysql://vaultwarden:password@db:3306/vaultwarden
+
+      # -----------------------------------------------------------------------
+      # Admin panel
+      # -----------------------------------------------------------------------
+
+      # Enables the /admin endpoint. Without this set, the admin panel returns 404.
+      #
+      # STRONGLY PREFER the argon2 hash form over a plaintext token.
+      # Generate with: docker run --rm -it vaultwarden/server /vaultwarden hash --preset owasp
+      # The output looks like: $argon2id$v=19$m=65540,t=3,p=4$...
+      #
+      # If you use a plaintext token, Vaultwarden logs a warning on every startup.
+      - ADMIN_TOKEN=$argon2id$v=19$m=65540,t=3,p=4$REPLACE_WITH_REAL_HASH
+
+      # -----------------------------------------------------------------------
+      # Registration
+      # -----------------------------------------------------------------------
+
+      # Allow anyone to register a new account. Set to false after initial setup.
+      - SIGNUPS_ALLOWED=true
+
+      # Restrict registration to specific email domains (comma-separated).
+      # Only effective when SIGNUPS_ALLOWED=true.
+      # - SIGNUPS_DOMAINS_WHITELIST=example.com,example.org
+
+      # Require an invitation from an existing user to register.
+      # Useful when SIGNUPS_ALLOWED=false but you still want to invite specific users.
+      # - INVITATIONS_ALLOWED=true
+
+      # -----------------------------------------------------------------------
+      # SMTP / Email
+      # -----------------------------------------------------------------------
+
+      # Vaultwarden sends email for: account verification, invitations,
+      # emergency access requests, and two-step login codes.
+
+      - SMTP_HOST=smtp.example.com
+      - SMTP_PORT=587
+
+      # Security mode: starttls (port 587, recommended), force_tls (port 465),
+      # or off (port 25, plaintext — do not use in production).
+      - SMTP_SECURITY=starttls
+
+      # The From address shown in emails.
+      - SMTP_FROM=vaultwarden@example.com
+      - SMTP_FROM_NAME=Vaultwarden
+
+      - SMTP_USERNAME=vaultwarden@example.com
+      - SMTP_PASSWORD=your-smtp-password
+
+      # Accept invalid TLS certs from the SMTP server (not recommended for production).
+      # - SMTP_ACCEPT_INVALID_CERTS=false
+
+      # -----------------------------------------------------------------------
+      # Mobile push notifications
+      # -----------------------------------------------------------------------
+
+      # Vaultwarden relays push notifications through Bitwarden's cloud relay.
+      # This requires a free account at https://bitwarden.com/host/ to get
+      # an installation ID and key. Without this, mobile clients still sync
+      # but only via polling — notifications are delayed, not absent.
+      - PUSH_ENABLED=false
+      # - PUSH_INSTALLATION_ID=your-installation-id
+      # - PUSH_INSTALLATION_KEY=your-installation-key
+      # - PUSH_RELAY_URI=https://push.bitwarden.com   # default; leave unchanged
+
+      # -----------------------------------------------------------------------
+      # WebSocket (live sync)
+      # -----------------------------------------------------------------------
+
+      # WebSocket notifications keep browser/desktop clients in sync in real time.
+      # The WebSocket server listens on port 3012 by default.
+      # This port must be proxied alongside port 80 — see the Caddy config below.
+      # Without WebSocket, clients fall back to polling (sync works, just slower).
+      - WEBSOCKET_ENABLED=true
+
+    # Do not expose port 80 or 3012 directly to the host if Caddy is on the
+    # same Docker network. If Caddy is external, map: "127.0.0.1:8080:80"
+    # and "127.0.0.1:3012:3012".
+    expose:
+      - "80"
+      - "3012"
+
+    networks:
+      - vaultwarden_net
+
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+
+    ports:
+      - "80:80"    # HTTP → redirected to HTTPS by Caddy automatically
+      - "443:443"  # HTTPS
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data     # Let's Encrypt certs and account keys
+      - caddy_config:/config # Caddy internal config cache
+
+    networks:
+      - vaultwarden_net
+
+    depends_on:
+      - vaultwarden
+
+
+# -----------------------------------------------------------------------
+# Caddyfile (save alongside this compose file as ./Caddyfile)
+# -----------------------------------------------------------------------
+#
+# vault.example.com {
+#     # Proxy standard HTTP traffic to Vaultwarden
+#     reverse_proxy /notifications/hub/negotiate vaultwarden:80
+#     reverse_proxy /notifications/hub           vaultwarden:3012
+#     reverse_proxy *                            vaultwarden:80
+# }
+#
+# Explanation of the three reverse_proxy directives:
+#   /notifications/hub/negotiate — HTTP negotiation endpoint (goes to port 80)
+#   /notifications/hub           — actual WebSocket connection (goes to port 3012)
+#   *                            — all other traffic (goes to port 80)
+#
+# Order matters: Caddy evaluates matchers top-down. The negotiate path
+# must appear before the wildcard, and the WebSocket path before negotiate
+# is fine but the wildcard must be last.
+# -----------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------
+# nginx alternative (instead of Caddy)
+# -----------------------------------------------------------------------
+# If you prefer nginx + Certbot, the critical additions beyond a standard
+# reverse proxy are:
+#
+#   location /notifications/hub {
+#       proxy_pass http://127.0.0.1:3012;
+#       proxy_http_version 1.1;
+#       proxy_set_header Upgrade $http_upgrade;
+#       proxy_set_header Connection "upgrade";
+#   }
+#
+#   location /notifications/hub/negotiate {
+#       proxy_pass http://127.0.0.1:80;
+#   }
+#
+#   location / {
+#       proxy_pass http://127.0.0.1:80;
+#       proxy_set_header Host $host;
+#       proxy_set_header X-Real-IP $remote_addr;
+#       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#       proxy_set_header X-Forwarded-Proto $scheme;
+#   }
+# -----------------------------------------------------------------------
+
+
+networks:
+  vaultwarden_net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

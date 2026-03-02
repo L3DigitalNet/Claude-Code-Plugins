@@ -1,0 +1,235 @@
+# daemon.json — Annotated Docker Daemon Configuration
+#
+# Location: /etc/docker/daemon.json
+# Apply changes: systemctl restart docker  (causes brief downtime unless live-restore is enabled)
+# Validate before restart: dockerd --validate --config-file /etc/docker/daemon.json
+#
+# Real JSON does not support comments. Strip all lines beginning with # before
+# deploying. This file is documentation only — not a deployable config.
+
+```json
+{
+  // ---------------------------------------------------------------------------
+  // STORAGE
+  // ---------------------------------------------------------------------------
+
+  // data-root: Where Docker stores images, containers, volumes, build cache.
+  // Default: /var/lib/docker
+  // Change when: mounting a larger or faster disk for Docker data. Move existing
+  // data with rsync or 'docker save/load' before switching.
+  "data-root": "/var/lib/docker",
+
+  // storage-driver: Overlay filesystem used for image layers.
+  // Default: overlay2 on modern kernels (recommended — do not change without reason)
+  // Alternatives: devicemapper (legacy RHEL/CentOS), btrfs, zfs (requires kernel module)
+  // overlay2 requires a kernel >= 4.0 and an xfs/ext4 backing filesystem.
+  "storage-driver": "overlay2",
+
+  // storage-opts: Driver-specific options.
+  // overlay2.size limits the maximum size of a container's writable layer.
+  // Useful for preventing runaway containers from filling the disk.
+  "storage-opts": [
+    "overlay2.size=20G"
+  ],
+
+  // ---------------------------------------------------------------------------
+  // LOGGING
+  // ---------------------------------------------------------------------------
+
+  // log-driver: Default logging driver for all containers (unless overridden per-container).
+  // Default: json-file
+  // Alternatives: journald (integrates with systemd), syslog, fluentd, awslogs, splunk, none
+  // journald is recommended on systemd hosts — logs are rotated by journald and
+  // accessible via 'journalctl -u docker' alongside the daemon logs.
+  "log-driver": "json-file",
+
+  // log-opts: Options for the selected log driver.
+  // max-size: rotate a log file when it reaches this size (k/m/g suffix)
+  // max-file: number of rotated files to keep (total disk = max-size * max-file)
+  // Without these, json-file logs grow unbounded and can fill /var/lib/docker.
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+
+  // ---------------------------------------------------------------------------
+  // NETWORKING
+  // ---------------------------------------------------------------------------
+
+  // dns: DNS servers injected into every container's /etc/resolv.conf.
+  // Default: inherits from the host's resolv.conf
+  // Set when: host uses systemd-resolved (127.0.0.53 is not routable inside containers)
+  // or when containers need a specific internal resolver.
+  "dns": ["1.1.1.1", "8.8.8.8"],
+
+  // dns-search: Search domains appended to bare hostnames inside containers.
+  // Default: inherits from host
+  "dns-search": ["internal.example.com"],
+
+  // default-address-pools: CIDR ranges Docker draws from when creating new bridge networks.
+  // Default: 172.17.0.0/16 for the default bridge; 172.18-31.x for user-defined bridges.
+  // Change when: the default ranges conflict with existing VPN or LAN subnets.
+  // base: the supernet to carve from; size: prefix length of each new network (/24 = 254 usable IPs).
+  "default-address-pools": [
+    { "base": "192.168.100.0/22", "size": 24 }
+  ],
+
+  // icc (inter-container communication): Whether containers on the default bridge
+  // network can communicate with each other without explicit links or exposed ports.
+  // Default: true
+  // Set to false to isolate containers by default; use user-defined networks
+  // (which always allow intra-network communication) to opt specific containers in.
+  "icc": false,
+
+  // iptables: Whether Docker manages iptables rules for NAT and port forwarding.
+  // Default: true
+  // Set to false only if you manage iptables yourself (e.g., with nftables or a
+  // custom firewall). Disabling breaks container port publishing and outbound NAT.
+  "iptables": true,
+
+  // ip-forward: Enables net.ipv4.ip_forward on the host, required for container routing.
+  // Default: true — Docker sets this at startup. Rarely needs to be changed.
+  "ip-forward": true,
+
+  // userland-proxy: Uses a Go userland proxy (docker-proxy) for port forwarding when
+  // iptables rules alone are insufficient (e.g., localhost loopback).
+  // Default: true
+  // Set to false for better performance at the cost of localhost port publishing quirks.
+  "userland-proxy": true,
+
+  // ---------------------------------------------------------------------------
+  // REGISTRIES
+  // ---------------------------------------------------------------------------
+
+  // insecure-registries: Registries allowed over plain HTTP or with self-signed TLS.
+  // Default: [] (all registries must use valid TLS)
+  // Use for internal/private registries during development. Never use in production
+  // for public-facing services — MITM attacks can inject malicious images.
+  "insecure-registries": ["registry.internal.example.com:5000"],
+
+  // registry-mirrors: Pull-through caches for Docker Hub or other registries.
+  // Reduces external bandwidth and avoids Docker Hub pull rate limits on CI systems.
+  // Default: [] (go directly to registry)
+  "registry-mirrors": ["https://mirror.internal.example.com"],
+
+  // ---------------------------------------------------------------------------
+  // REMOTE API / TLS
+  // ---------------------------------------------------------------------------
+
+  // hosts: Sockets the Docker daemon listens on.
+  // Default: ["unix:///var/run/docker.sock"] — implicit when using systemd socket activation.
+  // WARNING: Adding a TCP host without TLS (tcp://0.0.0.0:2375) exposes unauthenticated
+  // root-equivalent access to anyone who can reach the port. Always pair TCP with TLS.
+  // NOTE: If Docker is managed by systemd with socket activation, setting "hosts" here
+  // conflicts with the ExecStart in the unit file — use a drop-in instead:
+  //   /etc/systemd/system/docker.service.d/override.conf
+  "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"],
+
+  // TLS configuration for the TCP remote API.
+  // tls: enable TLS verification (requires tlscacert, tlscert, tlskey)
+  // tlscacert: CA that signed the client certificates (for mutual TLS)
+  // tlscert: server certificate presented to clients
+  // tlskey: private key for the server certificate
+  // Generate with: openssl or docker/tls documentation
+  "tls": true,
+  "tlscacert": "/etc/docker/ca.pem",
+  "tlscert": "/etc/docker/server-cert.pem",
+  "tlskey": "/etc/docker/server-key.pem",
+
+  // ---------------------------------------------------------------------------
+  // RUNTIME BEHAVIOR
+  // ---------------------------------------------------------------------------
+
+  // live-restore: Keep containers running when the Docker daemon is stopped or restarted.
+  // Default: false
+  // Enable on production hosts so daemon upgrades or crashes don't kill running containers.
+  // Containers must be started with a restart policy for this to be meaningful.
+  "live-restore": true,
+
+  // max-concurrent-downloads: Parallel layer pulls per 'docker pull'.
+  // Default: 3
+  // Increase on high-bandwidth connections; decrease on slow or metered links.
+  "max-concurrent-downloads": 3,
+
+  // max-concurrent-uploads: Parallel layer pushes per 'docker push'.
+  // Default: 5
+  "max-concurrent-uploads": 5,
+
+  // default-ulimits: Resource limits applied to all containers unless overridden.
+  // nofile: max open file descriptors (soft/hard). Default container limit is often
+  // too low for apps that open many connections. 65535 is a common production value.
+  "default-ulimits": {
+    "nofile": {
+      "name": "nofile",
+      "soft": 65535,
+      "hard": 65535
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // BUILD
+  // ---------------------------------------------------------------------------
+
+  // features: Feature flags for experimental or opt-in behavior.
+  // buildkit: Enable BuildKit builder (parallel builds, better caching, secrets support).
+  // Default as of Docker 23+: BuildKit is on by default. Explicit opt-in for older versions.
+  "features": {
+    "buildkit": true
+  },
+
+  // experimental: Enable experimental daemon features (may change or be removed).
+  // Default: false — only enable if you specifically need an experimental feature.
+  "experimental": false,
+
+  // ---------------------------------------------------------------------------
+  // RUNTIMES
+  // ---------------------------------------------------------------------------
+
+  // default-runtime: OCI runtime used for all containers unless overridden per-container.
+  // Default: runc
+  // Alternatives: runsc (gVisor — kernel syscall interception for isolation),
+  //               kata-runtime (Kata Containers — lightweight VMs per container)
+  "default-runtime": "runc",
+
+  // runtimes: Register additional OCI-compatible runtimes.
+  // After registering, select per-container with: docker run --runtime=runsc ...
+  // gVisor (runsc): install via https://gvisor.dev/docs/user_guide/install/
+  // Kata Containers: install via https://katacontainers.io/
+  "runtimes": {
+    "runsc": {
+      "path": "/usr/bin/runsc"
+    },
+    "kata": {
+      "path": "/usr/bin/kata-runtime"
+    }
+  }
+}
+```
+
+## Deployment Notes
+
+**Validate before restarting:**
+```bash
+dockerd --validate --config-file /etc/docker/daemon.json
+```
+
+**Apply changes:**
+```bash
+systemctl restart docker
+# With live-restore: running containers survive the restart.
+# Without live-restore: all containers stop.
+```
+
+**Conflict with systemd socket activation:**
+If Docker is started via `docker.socket` (default on most distros), do not set `"hosts"` in
+`daemon.json` — it conflicts with the `-H fd://` in the unit's `ExecStart`. Instead, add a
+drop-in:
+
+```ini
+# /etc/systemd/system/docker.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd --host unix:///var/run/docker.sock --host tcp://0.0.0.0:2376
+```
+
+Then: `systemctl daemon-reload && systemctl restart docker`

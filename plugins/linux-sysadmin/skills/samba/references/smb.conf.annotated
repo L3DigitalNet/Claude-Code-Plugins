@@ -1,0 +1,261 @@
+# Annotated smb.conf
+# Each directive includes: what it does, default value, and when to change it.
+# Samba config is INI-style: [section] headers followed by key = value pairs.
+# [global] applies server-wide; all other sections define shares.
+#
+# After editing, validate with: testparm
+# Reload without restarting: sudo smbcontrol smbd reload-config
+
+# ---------------------------------------------------------------------------
+# [global] — server-wide settings
+# ---------------------------------------------------------------------------
+
+[global]
+
+    # Short name for the Windows workgroup or NT domain this server joins.
+    # Default: WORKGROUP  |  Must match the workgroup name used by your clients.
+    # Change when: your network uses a non-default workgroup (e.g., HOMENET, OFFICE).
+    # For Active Directory membership, set this to the AD short domain name.
+    workgroup = WORKGROUP
+
+    # Human-readable description shown in Windows Network or macOS Finder.
+    # Default: Samba %v  |  Recommended: something descriptive for your environment.
+    # %h expands to hostname, %v to Samba version.
+    server string = File Server on %h
+
+    # NetBIOS name for this server — used in legacy Windows browsing.
+    # Default: first component of the hostname  |  Recommended: set explicitly.
+    # Change when: your hostname has dots or is longer than 15 characters (NetBIOS limit).
+    netbios name = MYSERVER
+
+    # Minimum SMB protocol version the server will accept from clients.
+    # Default: NT1 (SMB1)  |  Recommended: SMB2
+    # Change when: you need to support very old embedded clients that only speak SMB1
+    # (a significant security risk — avoid if possible).
+    min protocol = SMB2
+
+    # Maximum SMB protocol version the server will offer.
+    # Default: SMB3  |  Recommended: leave at default (SMB3).
+    # Change when: debugging a client that can't negotiate SMB3 correctly.
+    max protocol = SMB3
+
+    # Authentication mode.
+    # Default: user  |  Recommended: user (the only sane option for standalone servers).
+    # "ads" for Active Directory member; "domain" for NT4-style domain (legacy).
+    security = user
+
+    # Backend storage for the Samba user/password database.
+    # Default: tdbsam  |  Recommended: tdbsam for standalone servers.
+    # Use "ldapsam:ldap://..." for centralized LDAP auth; "smbpasswd" is legacy plaintext.
+    passdb backend = tdbsam
+
+    # Where to write per-client log files. %m expands to the client's NetBIOS name.
+    # Default: /var/log/samba/log.%m  |  Recommended: leave at default.
+    # Change when: centralizing logs or using a different log directory.
+    log file = /var/log/samba/log.%m
+
+    # Maximum size (KB) for each per-client log file before it rolls over.
+    # Default: 5000 (5 MB)  |  Recommended: 50000 for busy servers; lower for disk-constrained.
+    max log size = 50000
+
+    # Log verbosity. 0=errors only, 1=warnings, 2=debug, 3+=verbose debug.
+    # Default: 1  |  Recommended: 1 for production; raise to 3+ for debugging a specific client.
+    log level = 1
+
+    # Whether Samba answers NetBIOS DNS-proxy queries (resolving names via DNS).
+    # Default: no  |  Recommended: no (DNS proxy is rarely useful and adds overhead).
+    dns proxy = no
+
+    # Whether this server registers as a WINS server.
+    # Default: no  |  Recommended: no unless you need legacy NetBIOS name resolution.
+    # Only one WINS server should exist per network; setting this conflicts if one already exists.
+    wins support = no
+
+    # Network interfaces to listen on. Default is all interfaces.
+    # Recommended: restrict to your LAN interface(s) for security.
+    # Change when: the server has multiple NICs and you want to avoid exposing Samba on all.
+    # interfaces = eth0 lo
+    # bind interfaces only = yes
+
+    # What to do with requests from users who have no valid Samba account.
+    # Default: Never  |  Set to "Bad User" to allow guest access on shares that enable it.
+    # "Bad Password" maps failed logins to guest (risky). "Never" is the safe default.
+    map to guest = Never
+
+    # Character set used when communicating with DOS/legacy Windows clients.
+    # Default: CP850  |  Recommended: leave at default unless you have legacy DOS clients.
+    # dos charset = CP850
+
+    # Character set used on the server for file names.
+    # Default: UTF-8  |  Recommended: UTF-8.
+    unix charset = UTF-8
+
+
+# ---------------------------------------------------------------------------
+# [homes] — automatically shares each user's home directory
+# ---------------------------------------------------------------------------
+# When a user connects to //server/username, Samba maps this to their home dir.
+# The share name used is the username — not literally "[homes]".
+
+[homes]
+
+    # Human-readable comment shown in share listings.
+    comment = Home Directories
+
+    # Whether the share appears in network browsing listings.
+    # Default: yes  |  Set to no so home shares don't clutter the browse list.
+    # Users can still connect directly by UNC path.
+    browseable = no
+
+    # Allow the authenticated user to write to their own home directory.
+    # Default (per Samba): read only = yes  |  Recommended: no (writable) for home dirs.
+    read only = no
+
+    # File creation mask. 0600 = owner read/write only; no group or world access.
+    # Default: 0744  |  Recommended: 0600 for home directories.
+    create mask = 0600
+
+    # Directory creation mask. 0700 = owner full access only.
+    # Default: 0755  |  Recommended: 0700 for home directories.
+    directory mask = 0700
+
+    # Only the authenticated user can access their own home share.
+    # %S expands to the name of the share being accessed (i.e., the username).
+    valid users = %S
+
+
+# ---------------------------------------------------------------------------
+# [printers] — print spooler share (disable if not running a print server)
+# ---------------------------------------------------------------------------
+
+[printers]
+
+    comment = All Printers
+
+    # Spool directory for queued print jobs.
+    path = /var/spool/samba
+
+    # Hide from network browsing — printers aren't file shares.
+    browseable = no
+
+    # Allow all users to submit print jobs (the share is writable for printing).
+    guest ok = no
+    writable = no
+    printable = yes
+
+    # If you don't use Samba as a print server, disable this share entirely
+    # by commenting it out or setting:
+    # [printers]
+    #   path = /dev/null
+    #   printable = yes
+    #   browseable = no
+    # Or simply remove the [printers] section and set "load printers = no" in [global].
+
+
+# ---------------------------------------------------------------------------
+# [data] — example: a shared directory for a specific group of users
+# ---------------------------------------------------------------------------
+
+[data]
+
+    comment = Shared Data
+
+    # Absolute path to the directory being shared. Must exist and be accessible
+    # by the smbd process (check file system permissions AND SELinux context).
+    path = /srv/samba/data
+
+    # Whether unauthenticated (guest) access is allowed.
+    # Default: no  |  Leave no for any share that requires a login.
+    guest ok = no
+
+    # Show this share in network browsing.
+    # Default: yes  |  Recommended: yes for intended shared directories.
+    browseable = yes
+
+    # Space-separated list of users (or @groupname) allowed to connect at all.
+    # Anyone not listed is rejected before file permissions are checked.
+    # @developers means all members of the Linux group "developers".
+    valid users = @developers
+
+    # Users who get write access in addition to read access.
+    # Must also be in valid users (or have no valid users restriction).
+    write list = @developers
+
+    # If read only = no, everyone in valid users gets write access.
+    # Use write list instead when you want mixed read-only/read-write access.
+    read only = yes
+
+    # Unix permission mask applied to newly created files.
+    # 0664 = owner rw, group rw, world r — appropriate for group-shared dirs.
+    create mask = 0664
+
+    # Unix permission mask applied to newly created directories.
+    # 0775 = owner rwx, group rwx, world rx.
+    directory mask = 0775
+
+    # Force all new files and directories to be owned by this group.
+    # Ensures group members can always access each other's files.
+    # Requires the smbd process user (nobody/smbd) to be able to set GID.
+    force group = developers
+
+    # Preserve case of file names as sent by the client.
+    # Default: yes  |  Recommended: yes (changing case causes confusion on mixed systems).
+    preserve case = yes
+
+
+# ---------------------------------------------------------------------------
+# [public] — example: a guest (unauthenticated) read-only share
+# ---------------------------------------------------------------------------
+
+[public]
+
+    comment = Public Files (read-only, no login required)
+
+    path = /srv/samba/public
+
+    # Allow anyone to read without a Samba account.
+    # map to guest = Bad User must be set in [global] for this to work.
+    guest ok = yes
+
+    # Read-only for everyone including guests.
+    read only = yes
+
+    browseable = yes
+
+    # Force all connections through a specific unix user (the guest account).
+    # Default: nobody  |  Recommended: set explicitly to control what permissions apply.
+    guest account = nobody
+
+    # Prevent guests from creating files even if the filesystem would allow it.
+    # (read only = yes already enforces this, but being explicit avoids surprises.)
+    create mask = 0444
+    directory mask = 0555
+
+
+# ---------------------------------------------------------------------------
+# macOS / Time Machine compatibility additions
+# ---------------------------------------------------------------------------
+# Add these to [global] and to the target Time Machine share.
+# Requires: apt install samba-vfs-modules  (Debian/Ubuntu) or included in samba (RHEL)
+
+# In [global], add:
+#   vfs objects = fruit streams_xattr
+#   fruit:metadata = stream
+#   fruit:model = MacSamba
+#   fruit:posix_rename = yes
+#   fruit:veto_appledouble = no
+#   fruit:nfs_aces = no
+#   fruit:wipe_intentionally_left_blank_rfork = yes
+#   fruit:delete_empty_adfiles = yes
+
+# Example Time Machine share:
+# [TimeMachine]
+#     comment = Time Machine Backup
+#     path = /srv/samba/timemachine/%U
+#     valid users = %U
+#     read only = no
+#     browseable = yes
+#     fruit:time machine = yes
+#     fruit:time machine max size = 500G
+#     # vfs objects inherits from [global] if set there; set explicitly if not.
+#     vfs objects = fruit streams_xattr

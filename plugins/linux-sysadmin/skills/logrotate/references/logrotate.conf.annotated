@@ -1,0 +1,197 @@
+# Annotated /etc/logrotate.conf
+# Each directive includes: what it does, its default, and when to change it.
+# Structure: global defaults at the top; per-application blocks in /etc/logrotate.d/.
+# Drop-in files inherit global defaults but can override any directive locally.
+#
+# logrotate runs once daily (cron.daily or systemd logrotate.timer).
+# It consults /var/lib/logrotate/status to decide whether each log is due.
+
+# ---------------------------------------------------------------------------
+# GLOBAL DEFAULTS
+# These apply to every log file unless overridden in a per-application block.
+# ---------------------------------------------------------------------------
+
+# Rotation frequency. One of: daily, weekly, monthly, yearly.
+# Default: weekly  |  Change when: high-traffic apps produce large logs daily;
+#   use "daily" for apps that log >100 MB/day, "monthly" for rarely-written logs.
+daily
+
+# Number of rotated files to keep before deleting the oldest.
+# Default: 4  |  Change when: you need more history (raise) or disk is tight (lower).
+#   A value of 7 with daily keeps one week of logs.
+rotate 7
+
+# Compress rotated log files using gzip.
+# Default: not set (no compression)  |  Change when: disk space matters; nearly always
+#   worth enabling unless the app re-reads its own rotated logs without decompression.
+compress
+
+# Delay compression by one rotation cycle. The most-recently rotated file (e.g.,
+# app.log.1) is left uncompressed; only app.log.2 and older get compressed.
+# Default: not set  |  Change when: the application keeps the old FD open after
+#   rotation — delaying compression avoids gzip racing with active writes.
+delaycompress
+
+# Do not raise an error if the log file is missing. Useful for optional or
+# conditionally-running services.
+# Default: not set (missing file = error)  |  Change when: service may not be
+#   running at rotation time (e.g., optional daemons, dev environments).
+missingok
+
+# Skip rotation if the log file is empty.
+# Default: not set (empty files still rotated)  |  Change when: almost always —
+#   rotating empty logs wastes inode churn and clutters the state file.
+notifempty
+
+# Create the new (empty) log file immediately after rotation, with specified
+# permissions, owner, and group. Without this, no new log file exists until the
+# application creates one itself.
+# Default: not set  |  Recommended: always set with correct owner/group.
+# Format: create <mode> <owner> <group>
+# Change when: your app runs as a non-root user and needs to write to the new file.
+create 0640 root adm
+
+# Use date-stamped filenames instead of numeric suffixes.
+# Numeric: app.log.1, app.log.2 (each rotation shifts all files)
+# dateext: app.log-20240315 (stable names, easier to grep by date)
+# Default: not set (numeric suffixes)  |  Change when: you want human-readable
+#   archives or multiple rotations per day (numeric suffixes collide).
+dateext
+
+# Format string for dateext filenames. Must start with '-'.
+# Default: -%Y%m%d  |  Change when: you need hourly granularity (add -%H%M%S),
+#   or prefer ISO format (-%Y-%m-%d). Only meaningful when dateext is set.
+dateformat -%Y%m%d
+
+# Load per-application configs from this directory.
+# Default: /etc/logrotate.d  |  Change when: using a non-standard config layout.
+# Each file in this directory is processed as if included here.
+include /etc/logrotate.d
+
+# ---------------------------------------------------------------------------
+# PER-APPLICATION BLOCK STRUCTURE
+# Each block matches one or more log files with a glob pattern.
+# Multiple paths can be listed space-separated or one per line.
+# Options here override global defaults for this block only.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# NGINX EXAMPLE — /etc/logrotate.d/nginx
+# Rotate access and error logs daily; signal nginx to reopen after rotation.
+# ---------------------------------------------------------------------------
+/var/log/nginx/*.log {
+    # Override global frequency for this block.
+    # Default: inherits global  |  Change when: this app logs at a different rate.
+    daily
+
+    # Keep 14 days of rotated logs.
+    # Default: inherits global  |  Change when: compliance or debugging requires more.
+    rotate 14
+
+    # Inherit global compress + delaycompress (not repeated here for brevity).
+    # missingok: nginx may not be running in dev environments.
+    missingok
+
+    # Don't rotate if the log hasn't been written to.
+    notifempty
+
+    # Run postrotate once even if the glob matched multiple files (access + error).
+    # Without sharedscripts, the postrotate block runs once per matched file —
+    # sending SIGHUP to nginx twice would be harmless but wasteful; for other apps
+    # it could cause issues.
+    sharedscripts
+
+    # Create new log file with nginx's expected owner/mode.
+    create 0640 www-data adm
+
+    # Run before rotation begins. Rarely needed; prerotate is useful for flushing
+    # in-memory log buffers before the file is renamed.
+    # Default: not set  |  Change when: application needs to flush before rename.
+    # prerotate
+    #     /usr/bin/app --flush-logs
+    # endscript
+
+    # Run after all matched files have been rotated.
+    # SIGHUP tells nginx to reopen its log file descriptors (USR1 on some distros).
+    # The `if` guard skips the signal if nginx is not running.
+    # Default: not set  |  Required when: application holds an open FD to the log.
+    postrotate
+        if [ -f /run/nginx.pid ]; then
+            kill -USR1 $(cat /run/nginx.pid)
+        fi
+    endscript
+}
+
+# ---------------------------------------------------------------------------
+# CUSTOM APP EXAMPLE — /etc/logrotate.d/myapp
+# App runs as 'myapp' user; uses systemd reload; size-based + age-based limits.
+# ---------------------------------------------------------------------------
+/var/log/myapp/*.log {
+    # Rotate when file exceeds 100 MB, regardless of schedule.
+    # Can be combined with a frequency directive: size takes priority if the file
+    # is already large enough, even if the schedule hasn't elapsed.
+    # Default: not set  |  Change when: log volume is burst-driven, not time-driven.
+    size 100M
+
+    # Also enforce a maximum age in days, even if size hasn't been reached.
+    # Default: not set  |  Change when: you want a hard upper bound on log age
+    #   independent of rotation count (useful when log volume is unpredictable).
+    maxage 30
+
+    # Minimum size below which rotation is skipped even if the schedule is due.
+    # Prevents rotating a near-empty log that was just reset.
+    # Default: not set  |  Change when: you use size-triggered rotation but want
+    #   to avoid rotating tiny files after a service restart.
+    minsize 1M
+
+    # Keep 10 rotated files.
+    rotate 10
+
+    # Inherit compress/delaycompress from global.
+
+    missingok
+    notifempty
+
+    # Set the owner of the new log file to match the running application user.
+    # This block runs as root; 'create' sets the new file's owner/group/mode.
+    create 0640 myapp myapp
+
+    # su directive: run the rotation itself as this user (needed when the log dir
+    # is not writable by root, e.g., home directory logs).
+    # Default: not set (runs as root)  |  Change when: log file or directory is
+    #   owned by a non-root user and root can't rename/create files there.
+    su myapp myapp
+
+    sharedscripts
+
+    postrotate
+        # Reload via systemd so the app reopens its log FDs cleanly.
+        systemctl reload myapp.service 2>/dev/null || true
+    endscript
+}
+
+# ---------------------------------------------------------------------------
+# COPYTRUNCATE EXAMPLE — for apps that cannot reopen log file descriptors
+# Use only when the application has no reload/SIGHUP mechanism.
+# ---------------------------------------------------------------------------
+/var/log/legacyapp/app.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+
+    # Copy the current log to app.log.1, then truncate the original to zero bytes.
+    # The application keeps writing to the same inode (same FD) — no signal needed.
+    # WARNING: log lines written between the copy and the truncate are silently lost.
+    # Use postrotate + SIGHUP when possible; reserve copytruncate for legacy apps.
+    # Default: not set  |  Change when: the application cannot be signaled to reopen logs.
+    copytruncate
+
+    # dateext is especially useful with copytruncate — numbered suffixes would
+    # shift on every rotation, which interacts poorly with long-running reads
+    # of rotated files.
+    dateext
+    dateformat -%Y%m%d
+}

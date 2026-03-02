@@ -16,11 +16,6 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "npm"
-    directory: "/plugins/linux-sysadmin-mcp"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "npm"
     directory: "/plugins/plugin-test-harness"
     schedule:
       interval: "weekly"
