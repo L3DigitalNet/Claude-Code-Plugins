@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.1] - 2026-03-02
+
+### Changed
+- em dash cleanup, root README sync
+- fix structural README issues and docs path
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- reduce AI writing signals across all plugin READMEs
+
+### Fixed
+- remove em dashes from all READMEs; add hygiene check
+- cross-cutting standards sweep across marketplace
+
+
 ## [0.7.0] - 2026-02-22
 
 ### Added
