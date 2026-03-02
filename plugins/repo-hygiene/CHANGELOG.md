@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.1] - 2026-03-02
+
+### Added
+- add Step 8 — auto-commit fixes and push to remote (v1.1.1)
+- expand Check 3 to leaf-to-root README and docs/ accuracy scan (v1.1.0)
+
+### Changed
+- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Enhance Release Pipeline and Repo Hygiene Plugins
+- update plugin docs, PTH README for v0.6.0, and repo template
+
+### Fixed
+- remove em dashes from all READMEs; add hygiene check
+- cross-cutting standards sweep across marketplace
+- replace \n with <br/> in mermaid node labels across all plugin READMEs
+
+
 ## [1.1.1] - 2026-02-22
 
 ### Added
