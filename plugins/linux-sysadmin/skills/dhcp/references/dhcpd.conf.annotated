@@ -1,0 +1,287 @@
+# Annotated dhcpd.conf
+# Each directive includes: what it does, default value, and when to change it.
+# This covers a typical production deployment: one primary subnet, static
+# reservations, shared-network for dual-subnet interfaces, and optional
+# dynamic DNS integration.
+#
+# ISC DHCP config is parsed top-to-bottom. Global options apply unless
+# overridden in a subnet{} or host{} block. Subnet blocks must cover the
+# network address of every interface dhcpd listens on — even if you don't
+# want to serve that network, declare it as a subnet with no range.
+
+# ---------------------------------------------------------------------------
+# GLOBAL TIMING
+# ---------------------------------------------------------------------------
+
+# Lease time offered to clients when they don't request a specific duration.
+# Default: 43200 (12 hours)  |  Recommended: 86400 (24 hours) for stable LANs
+# Change when: laptops or VMs that churn frequently — shorter leases reclaim
+#   IPs faster. IoT or servers with known-good configs — longer is fine.
+default-lease-time 86400;
+
+# Hard upper limit on any lease time, regardless of client request.
+# Default: 86400 (24 hours)  |  Recommended: 604800 (7 days) for stable networks
+# Change when: pool is small and devices disappear without releasing — lower
+#   this to reclaim addresses sooner.
+max-lease-time 604800;
+
+# Marks this server as the authoritative DHCP server for all declared subnets.
+# Without this, the server ignores DHCPREQUEST for unknown leases rather than
+# sending DHCPNAK, causing clients to get stuck retrying.
+# Default: not-authoritative  |  Recommended: always set on the primary server
+# Change when: you have a secondary server that should defer to the primary.
+authoritative;
+
+# Syslog facility for dhcpd log messages.
+# Default: daemon  |  Recommended: local7 if you want separate log routing
+# Change when: you route logs to a separate file or remote syslog target.
+log-facility local7;
+
+# ---------------------------------------------------------------------------
+# DYNAMIC DNS INTEGRATION
+# ---------------------------------------------------------------------------
+# dhcpd can update a BIND DNS server when leases are issued or released.
+# For most deployments, dynamic DNS is disabled — set 'none' to silence
+# the startup warning about the deprecated default.
+
+# DNS update style. Options: none, interim, ad-hoc (deprecated), standard.
+# Default: none (explicitly recommended)  |  Recommended: none unless you need it
+# Change when: you want dhcpd to register A/PTR records in BIND automatically.
+#   Requires a TSIG key and zone config on the DNS server side.
+ddns-update-style none;
+
+# Whether to attempt DNS updates at all. Redundant with 'none' above, but
+# explicit is safer when copying configs between environments.
+# Default: off  |  Recommended: off unless ddns-update-style is interim/standard
+ddns-updates off;
+
+# ---------------------------------------------------------------------------
+# GLOBAL OPTIONS
+# These are sent to all clients unless overridden in a subnet{} or host{} block.
+# ---------------------------------------------------------------------------
+
+# The domain name suffix appended to unqualified hostnames in DNS lookups.
+# Default: none  |  Recommended: set to your internal domain
+# Change when: you have multiple internal domains — set per-subnet instead.
+option domain-name "internal.example.com";
+
+# DNS servers given to clients (comma-separated, up to 8).
+# Default: none  |  Recommended: your local resolver(s) first, public fallback
+# Change when: you run a local DNS (Pi-hole, Unbound, BIND) — point here first.
+option domain-name-servers 192.168.1.1, 8.8.8.8;
+
+# Default gateway sent to clients.
+# Default: none  |  Recommended: set per-subnet (global rarely makes sense)
+# Change when: all subnets share the same gateway — acceptable for simple setups.
+# option routers 192.168.1.1;   # typically set per-subnet; commented here
+
+# NTP servers for time synchronization.
+# Default: none  |  Recommended: your local NTP server or pool.ntp.org IPs
+# Change when: you run a local NTP server (e.g. chrony on this host).
+option ntp-servers 192.168.1.1;
+
+# ---------------------------------------------------------------------------
+# SUBNET DECLARATION
+# Every interface dhcpd listens on must have a matching subnet block.
+# The subnet address and mask must match the interface's network exactly.
+# ---------------------------------------------------------------------------
+
+subnet 192.168.1.0 netmask 255.255.255.0 {
+
+    # Address range offered to dynamic clients. Must be within the subnet.
+    # Default: no range (no dynamic leases issued)  |  Recommended: leave a
+    #   gap at the bottom for static infrastructure (routers, servers, printers).
+    # Change when: pool is exhausted — expand range or add a second subnet.
+    range 192.168.1.100 192.168.1.200;
+
+    # Gateway for clients on this subnet. Overrides the global option routers.
+    # Default: inherits global  |  Recommended: always set per-subnet explicitly
+    option routers 192.168.1.1;
+
+    # Subnet mask sent to clients.
+    # Default: derived from netmask keyword above  |  Recommended: explicit is safer
+    option subnet-mask 255.255.255.0;
+
+    # Broadcast address for this subnet.
+    # Default: derived from subnet and mask  |  Recommended: explicit
+    option broadcast-address 192.168.1.255;
+
+    # DNS servers for this subnet — overrides global domain-name-servers.
+    # Remove this line to inherit the global setting.
+    # option domain-name-servers 192.168.1.53;
+
+    # Per-subnet lease time overrides. Useful for guest networks (short) vs
+    # servers (long). Remove to inherit global defaults.
+    # default-lease-time 3600;
+    # max-lease-time 7200;
+
+}
+
+# ---------------------------------------------------------------------------
+# HOST BLOCKS (STATIC RESERVATIONS)
+# Bind a specific IP to a MAC address. The client always gets this IP.
+# The host block can live outside all subnet{} blocks — dhcpd matches by MAC
+# regardless of position. The reserved IP must still be in a declared subnet.
+# ---------------------------------------------------------------------------
+
+host fileserver {
+    # Hardware type is always "ethernet" for wired/wireless clients.
+    # MAC must be colon-separated lowercase hex — NOT hyphens or uppercase.
+    hardware ethernet aa:bb:cc:dd:ee:01;
+
+    # The fixed IP to assign. Must be within a declared subnet.
+    # If inside the dynamic range, dhcpd will still honour the reservation —
+    # but best practice is to keep static reservations outside the range.
+    fixed-address 192.168.1.10;
+
+    # Optional: override hostname sent to the client.
+    # Default: not set  |  Recommended: set for clarity in leases log
+    option host-name "fileserver";
+}
+
+host printer {
+    hardware ethernet aa:bb:cc:dd:ee:02;
+    fixed-address 192.168.1.15;
+    # Printers often need a longer lease; override here rather than globally.
+    default-lease-time 2592000;  # 30 days
+    max-lease-time 2592000;
+}
+
+# ---------------------------------------------------------------------------
+# CLASS AND SUBCLASS (CONDITIONAL ASSIGNMENT)
+# Classes match clients by vendor, user-class, or other option, and can
+# assign a specific pool, options, or lease duration to matching clients.
+# ---------------------------------------------------------------------------
+
+# Define a class that matches clients sending a specific vendor identifier.
+# vendor-class-identifier is option 60; its value is a string from the client.
+class "VoIP-Phones" {
+    # Match any client whose option 60 starts with "Cisco SPA".
+    match if substring(option vendor-class-identifier, 0, 9) = "Cisco SPA";
+}
+
+# A subclass matches a specific value of an option against a fixed string.
+# Here we match on option 61 (client-identifier), i.e. a specific MAC.
+# Subclasses are faster than nested if/match blocks for many-entry lists.
+class "trusted-clients" {
+    match option dhcp-client-identifier;
+}
+subclass "trusted-clients" 1:aa:bb:cc:dd:ee:03;
+subclass "trusted-clients" 1:aa:bb:cc:dd:ee:04;
+
+subnet 192.168.1.0 netmask 255.255.255.0 {
+    # A pool can restrict leases to a class. Here, VoIP phones get a
+    # dedicated range separate from the main dynamic pool.
+    pool {
+        allow members of "VoIP-Phones";
+        range 192.168.1.201 192.168.1.220;
+        # VoIP-specific options — example: TFTP server for phone firmware
+        option tftp-server-name "192.168.1.5";
+        option bootfile-name "spa-firmware.bin";
+    }
+
+    pool {
+        deny members of "VoIP-Phones";
+        range 192.168.1.100 192.168.1.200;
+    }
+}
+
+# ---------------------------------------------------------------------------
+# SHARED-NETWORK
+# When two or more subnets share a single physical interface, wrap them in a
+# shared-network block. dhcpd uses the incoming interface to locate the right
+# shared-network, then selects the subnet based on the client's requested IP
+# or relay agent information.
+# ---------------------------------------------------------------------------
+
+shared-network office-lan {
+    # Primary subnet — most clients
+    subnet 192.168.1.0 netmask 255.255.255.0 {
+        range 192.168.1.100 192.168.1.200;
+        option routers 192.168.1.1;
+        option subnet-mask 255.255.255.0;
+        option broadcast-address 192.168.1.255;
+    }
+
+    # Secondary subnet — management VLAN (if tagged on same interface)
+    subnet 192.168.2.0 netmask 255.255.255.0 {
+        range 192.168.2.50 192.168.2.100;
+        option routers 192.168.2.1;
+        option subnet-mask 255.255.255.0;
+        option broadcast-address 192.168.2.255;
+    }
+}
+
+# ---------------------------------------------------------------------------
+# FAILOVER PEER (HIGH AVAILABILITY)
+# Two dhcpd servers can share a pool and synchronize lease state.
+# Both peers must have matching failover peer declarations with reversed roles.
+# ---------------------------------------------------------------------------
+
+# failover peer "dhcp-ha" {
+#     primary;                             # or "secondary" on the other server
+#     address 192.168.1.1;                 # this server's IP
+#     port 647;                            # TCP port for peer communication
+#     peer address 192.168.1.2;            # the other server's IP
+#     peer port 647;
+#     max-response-delay 30;
+#     max-unacked-updates 10;
+#     load balance max seconds 3;
+#     mclt 1800;                           # max client lead time (primary only)
+#     split 128;                           # 50/50 split (primary only); 0-255
+# }
+#
+# In the pool:
+#   pool {
+#     failover peer "dhcp-ha";
+#     range 192.168.1.100 192.168.1.200;
+#   }
+
+# ---------------------------------------------------------------------------
+# KEA DHCP — EQUIVALENT CONCEPTS (JSON)
+# The block below is a minimal kea-dhcp4.conf showing the same concepts.
+# Kea uses JSON with a strict schema; see /etc/kea/kea-dhcp4.conf for the
+# full installed example and `man kea-dhcp4` for schema reference.
+#
+# {
+#     "Dhcp4": {
+#         "interfaces-config": {
+#             "interfaces": ["eth0"]         // replaces /etc/default/isc-dhcp-server
+#         },
+#         "lease-database": {
+#             "type": "memfile",
+#             "persist": true,
+#             "name": "/var/lib/kea/kea-leases4.csv"
+#         },
+#         "valid-lifetime": 86400,           // default-lease-time
+#         "max-valid-lifetime": 604800,      // max-lease-time
+#         "option-data": [
+#             { "name": "domain-name-servers", "data": "192.168.1.1, 8.8.8.8" },
+#             { "name": "domain-name", "data": "internal.example.com" }
+#         ],
+#         "subnet4": [
+#             {
+#                 "subnet": "192.168.1.0/24",
+#                 "pools": [{ "pool": "192.168.1.100-192.168.1.200" }],
+#                 "option-data": [
+#                     { "name": "routers", "data": "192.168.1.1" }
+#                 ],
+#                 "reservations": [
+#                     {
+#                         "hw-address": "aa:bb:cc:dd:ee:01",
+#                         "ip-address": "192.168.1.10",
+#                         "hostname": "fileserver"
+#                     }
+#                 ]
+#             }
+#         ],
+#         "loggers": [
+#             {
+#                 "name": "kea-dhcp4",
+#                 "output_options": [{ "output": "syslog" }],
+#                 "severity": "INFO"
+#             }
+#         ]
+#     }
+# }
+# ---------------------------------------------------------------------------
