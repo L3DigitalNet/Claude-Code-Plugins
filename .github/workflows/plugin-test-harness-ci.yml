@@ -14,7 +14,7 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, l3digital]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: plugins/plugin-test-harness
