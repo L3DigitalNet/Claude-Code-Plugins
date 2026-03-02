@@ -81,11 +81,12 @@ You will need this path when spawning subagents (see Phase 2).
 
 ### Phase 2 — Analyze
 
-Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Before spawning subagents, emit a brief progress signal: `"Pass <N>: spawning analyst subagents..."`. Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
+Read `pass_number` from `.claude/state/plugin-review-writes.json` (the `pass_number` field; defaults to 1 if not present or file is missing). Before spawning subagents, emit a brief progress signal: `"Pass <N>: spawning analyst subagents..."`. Spawn all four analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
 
 - **Principles Analyst** (`agents/principles-analyst.md`): provide the principles checklist, the list of implementation files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-a-criteria.md`.
 - **UX Analyst** (`agents/ux-analyst.md`): provide the touchpoint map, the list of user-facing code files to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-b-criteria.md`.
 - **Docs Analyst** (`agents/docs-analyst.md`): provide the list of all documentation files, a directory listing of implementation files (NOT full source), and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-c-criteria.md`.
+- **Efficiency Analyst** (`agents/efficiency-analyst.md`): provide the directory listing of all plugin components (commands, agents, skills, hooks, scripts, templates, src), the list of implementation file paths to read, and the template path: `$CLAUDE_PLUGIN_ROOT/templates/track-d-criteria.md`.
 
 Do NOT load those templates yourself — the subagents handle it.
 
@@ -148,8 +149,9 @@ For each open finding, propose and immediately implement a concrete fix. Do **no
 | 2 | 3 | Track A; finding type "Violated"; affects `commands/` or `agents/` files |
 | 3 | 2 | Description keywords: "error handling", "validation", "missing check", "test gap", "boundary", "exception" |
 | 4 | 1 | Track C finding (documentation) |
-| 5 | 1 | Description keywords: "formatting", "comment", "type annotation", "import ordering", "whitespace", "style" |
-| 6 | 2 | Default (unclassified) |
+| 5 | 2 | Track D finding (context efficiency); finding type "Violated" |
+| 6 | 1 | Description keywords: "formatting", "comment", "type annotation", "import ordering", "whitespace", "style" |
+| 7 | 2 | Default (unclassified) |
 
 All tiers are auto-fixed without a human gate. Tier affects only logging and metrics:
 - **Tier 1**: implement silently; update `tier_counts.t1` in state

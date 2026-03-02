@@ -154,7 +154,7 @@ Tests are defined in YAML and parsed into `PthTest` objects. The `id` field is a
 
 ```yaml
 id: pkg-info-valid-input          # optional; slugified from name if omitted
-name: pkg_info — valid input
+name: pkg_info - valid input
 mode: mcp
 type: single
 tool: pkg_info
@@ -170,7 +170,7 @@ tags: [smoke]
 ### Multi-step scenario (captures output between steps)
 
 ```yaml
-name: pth_get_commit — valid input
+name: pth_get_commit - valid input
 mode: mcp
 type: scenario
 steps:
@@ -198,7 +198,7 @@ generated_from: schema
 ### Plugin hook script validation
 
 ```yaml
-name: write-guard.sh — script exists and is readable
+name: write-guard.sh - script exists and is readable
 mode: plugin
 type: validate
 checks:
@@ -308,7 +308,11 @@ When a persistent store exists for a plugin, `pth_start_session` compares the sa
 
 Use `pth_generate_tests` with the `tools[]` parameter to generate tests only for new or modified components from the gap report.
 
-## Known Limitations
+## Planned Features
+
+None currently documented in the changelog as unreleased.
+
+## Known Issues
 
 - `pth_reload_plugin` terminates the MCP server process by pattern-matching against `ps` output. On systems where the process pattern cannot be found (non-standard Claude Code installation paths), pass `processPattern` explicitly.
 - Convergence trend requires at least two distinct iteration snapshots. A session with a single `pth_get_iteration_status` call always returns `unknown`.

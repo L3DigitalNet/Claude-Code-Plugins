@@ -204,7 +204,7 @@ The `ha-dev-mcp` MCP server (`mcp-server/dist/server.bundle.cjs`) provides 12 to
 
 No unreleased features are currently staged in the changelog.
 
-## Known Limitations
+## Known Issues
 
 - **Live HA connection is optional.** MCP HA tools require a running Home Assistant instance and a valid long-lived access token. Skills and commands function fully without a live connection.
 - **`ha_call_service` dry-runs by default.** Set `dry_run: false` explicitly to execute service calls against a real instance.

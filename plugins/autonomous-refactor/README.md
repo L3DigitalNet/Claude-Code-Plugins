@@ -108,6 +108,8 @@ refactor the auth module
 
 If no target files are specified, the plugin lists `.ts`, `.tsx`, and `.py` files under `src/` (or project root if no `src/` exists) and presents up to 4 bounded choices. If more than 4 candidates exist, the 3 most recently modified are offered plus an "Other" option. This is the only interactive step.
 
+Use `--dry-run` to preview what the session would do without applying any changes. Phases 1 and 2 run in full (baseline snapshot and opportunity analysis), then a ranked list of opportunities is displayed and the session exits. No worktrees are created and no code is modified. Run without `--dry-run` to apply the changes once you're satisfied with the opportunity list.
+
 **Numbered workflow phases:**
 
 1. **Snapshot**: `test-generator` generates a behavioural test suite from all exported symbols, runs it to confirm a green baseline, and saves results to `.claude/state/refactor-tests/`. LOC and cyclomatic complexity are snapshotted. Baseline failure stops the session.
@@ -119,7 +121,7 @@ If no target files are specified, the plugin lists `.ts`, `.tsx`, and `.py` file
 
 | Command | Description |
 |---------|-------------|
-| `/refactor [files...] [--max-changes=N]` | Run a 4-phase autonomous refactoring session. Default max changes: 10. |
+| `/refactor [files...] [--max-changes=N] [--dry-run]` | Run a 4-phase autonomous refactoring session. Default max changes: 10. `--dry-run` runs Phases 1 and 2 (baseline snapshot and opportunity analysis) and displays ranked opportunities without creating worktrees or applying any changes. |
 
 ## Agents
 

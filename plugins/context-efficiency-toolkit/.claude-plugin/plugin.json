@@ -1,9 +1,0 @@
-{
-  "name": "context-efficiency-toolkit",
-  "version": "0.2.0",
-  "description": "Audits Claude Code plugins for token and context efficiency, then rewrites instruction files to be as lean as possible without losing behavioral information.",
-  "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
-  }
-}

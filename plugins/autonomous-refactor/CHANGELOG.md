@@ -3,6 +3,12 @@
 All notable changes to the autonomous-refactor plugin will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- `--dry-run` flag: runs Phases 1 and 2 (baseline snapshot + opportunity analysis) and displays ranked opportunities without creating worktrees or applying any changes
+
 ## [0.1.0] - 2026-02-21
 
 ### Added

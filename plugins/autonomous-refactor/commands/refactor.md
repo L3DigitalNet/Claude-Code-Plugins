@@ -14,6 +14,7 @@ User says "refactor", "refactor `<file>`", "/refactor `<file>`", "autonomous ref
 
 Parse arguments from the invocation:
 - `--max-changes=N` → integer, default 10
+- `--dry-run` → boolean, default false. When true: run Phases 1 and 2 only, display ranked opportunities, then exit without creating worktrees or applying any changes.
 - Remaining non-flag arguments → target file paths
 
 Store the plugin root path for template and script references:
@@ -26,6 +27,7 @@ Initialise the session state and working directories:
 mkdir -p .claude/state/refactor-tests .claude/worktrees
 
 MAX_CHANGES=10  # replace with --max-changes=N value if provided
+DRY_RUN=false   # set to true if --dry-run was provided
 
 python3 -c "
 import json
@@ -41,6 +43,7 @@ state = {
     'skipped_changes': [],
     'convergence_reason': '',
     'max_changes': $MAX_CHANGES,
+    'dry_run': $DRY_RUN,
     'current_worktree': None
 }
 json.dump(state, open('.claude/state/refactor-session.json', 'w'), indent=2)
@@ -153,6 +156,27 @@ List the opportunities as a numbered table:
 | 1 | 🔴 high   | Extract shared validation logic |
 | 2 | 🟡 medium | Add error handling to async calls |
 ```
+
+---
+
+## Dry-Run Exit
+
+**If `--dry-run` was specified**, stop here. Do not proceed to Phase 3.
+
+Display:
+
+```
+Dry-run complete. N opportunities identified (max changes: M).
+
+Ranked opportunities:
+  1. [HIGH]   <file>:<line>: <opportunity description>
+  2. [MEDIUM] <file>:<line>: <opportunity description>
+  ...
+
+No changes applied. Run without --dry-run to execute.
+```
+
+Exit cleanly after displaying this output. Do NOT proceed to Phase 3 or Phase 4.
 
 ---
 

@@ -101,6 +101,10 @@ Sessions can be suspended with `pause` and resumed by pasting the snapshot into 
 |---|---|---|
 | `read-counter.sh` | PostToolUse (Read tool) | Counts file reads per session using `$PPID` as session key; emits a context notice at 10 reads and a strong context pressure warning at 20 reads |
 
+## Planned Features
+
+None currently documented in the changelog as unreleased.
+
 ## Known Issues
 
 - **5+ option prompts fall back to formatted text**: `AskUserQuestion` is bounded at 4 options. Decision points with 5 or more choices (finding resolution modes, tension scenarios, escalation choices, health issue resolution) are presented as formatted text rather than structured bounded-choice UI. This is a deliberate constraint imposed by the `AskUserQuestion` primitive, documented in the interaction conventions of both commands.

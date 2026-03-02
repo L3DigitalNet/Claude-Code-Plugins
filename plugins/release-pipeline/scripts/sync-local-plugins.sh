@@ -19,9 +19,9 @@
 
 set -euo pipefail
 
-CACHE_DIR="$HOME/.claude/plugins/cache/l3digitalnet-plugins"
+MARKETPLACE="${RELEASE_PIPELINE_MARKETPLACE:-l3digitalnet-plugins}"
+CACHE_DIR="$HOME/.claude/plugins/cache/$MARKETPLACE"
 INSTALLED_PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
-MARKETPLACE="l3digitalnet-plugins"
 
 # Nothing to do if the plugin isn't even installed
 [ -d "$CACHE_DIR" ] || exit 0

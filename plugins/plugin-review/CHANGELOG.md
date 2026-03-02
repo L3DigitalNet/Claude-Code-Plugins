@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- `validate-agent-frontmatter.sh` now exits 2 (blocking) instead of 0 (warn-only) when disallowed write tools are detected in analyst agent YAML frontmatter; this closes the P9 enforcement gap
+- `doc-write-tracker.sh` now tracks all `hooks/` files (including `hooks/hooks.json`) as implementation files; changes to hook configuration now trigger the P6 co-mutation warning
+
+## [0.5.0] - 2026-03-01
+
+### Added
+
+- Track D context efficiency analysis: `efficiency-analyst` agent evaluates P1–P12 compliance in parallel with Tracks A/B/C
+- `track-d-criteria.md` template: P1–P12 evaluation criteria with component examination table
+- `review-efficiency` command: standalone 5-stage interactive context efficiency review (migrated from context-efficiency-toolkit)
+- `tighten` command: prose tightening workflow for plugin markdown files (migrated from context-efficiency-toolkit)
+- `context-efficiency-workflow` skill: approval-gated P1–P12 review workflow
+- `context-efficiency-reference` skill: P1–P12 principle definitions and layer taxonomy
+- `markdown-tighten` skill: five-step prose compression workflow
+- Track D entries in `pass-report.md` and `final-report.md` templates
+- Track D mapping in `cross-track-impact.md` and `scoped-reaudit/SKILL.md`
+
 ## [0.4.0] - 2026-02-21
 
 ### Added

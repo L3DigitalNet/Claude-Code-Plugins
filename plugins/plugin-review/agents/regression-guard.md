@@ -1,6 +1,6 @@
 ---
 name: regression-guard
-description: Track D analysis — receives a list of previously-fixed findings and the current state of relevant files, then performs a narrative re-check to verify each fix is still intact. Returns per-finding holding/regressed status with evidence.
+description: Receives a list of previously-fixed findings and the current state of relevant files, then performs a narrative re-check to verify each fix is still intact. Returns per-finding holding/regressed status with evidence.
 tools: Read, Grep, Glob
 ---
 
