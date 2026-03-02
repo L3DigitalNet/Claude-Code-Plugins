@@ -1,0 +1,234 @@
+# Annotated OpenVPN server.conf
+# Each directive includes: what it does, default value, recommended value,
+# and when to change it. Layout follows a typical production server config.
+#
+# Assumed PKI layout (Easy-RSA):
+#   CA cert:     /etc/openvpn/server/ca.crt
+#   Server cert: /etc/openvpn/server/server.crt
+#   Server key:  /etc/openvpn/server/server.key
+#   TLS key:     /etc/openvpn/server/ta.key
+#   CRL:         /etc/openvpn/server/crl.pem
+#
+# After editing: systemctl restart openvpn@server
+# Validate syntax: openvpn --config /etc/openvpn/server/server.conf --test-crypto
+
+# ---------------------------------------------------------------------------
+# TRANSPORT
+# ---------------------------------------------------------------------------
+
+# UDP port to listen on. Clients must match.
+# Default: 1194  |  Recommended: 1194 (UDP); use 443 only to bypass firewalls
+# Change when: your network blocks 1194, or you want TCP on 443 for firewall bypass.
+port 1194
+
+# Transport protocol. UDP is strongly preferred.
+# Default: udp  |  Recommended: udp
+# Change when: you explicitly need TCP 443 to traverse very restrictive firewalls.
+# WARNING: TCP-over-TCP (OpenVPN TCP inside a TCP network) causes severe meltdown
+# under packet loss. Never choose TCP without a documented firewall bypass reason.
+proto udp
+
+# Virtual network device type. tun = routed IP tunnel; tap = bridged Ethernet.
+# Default: not set (required)  |  Recommended: tun
+# Change when: you need layer-2 bridging (rare: LAN gaming, DHCP relay). For
+# almost all VPN use cases, tun is correct.
+dev tun
+
+# ---------------------------------------------------------------------------
+# PKI / CERTIFICATES
+# ---------------------------------------------------------------------------
+
+# CA certificate — used to verify client certificates.
+# All certs signed by this CA are trusted.
+ca /etc/openvpn/server/ca.crt
+
+# Server certificate — identifies this server to connecting clients.
+cert /etc/openvpn/server/server.crt
+
+# Server private key — must be kept secret; readable only by root.
+# Default: not set (required)
+key /etc/openvpn/server/server.key
+
+# Diffie-Hellman parameters for key exchange (legacy; see note on ECDH below).
+# Default: not set  |  Recommended: dh none (use ECDH instead)
+# Use "dh none" with ecdh-curve to skip slow DH param generation entirely.
+# Only set a DH params file if you need compatibility with OpenVPN < 2.4 clients.
+dh none
+
+# Elliptic curve for ECDH key exchange. Used when dh is set to "none".
+# Default: prime256v1  |  Recommended: prime256v1 or secp384r1
+# Change when: your security policy mandates a specific curve (e.g. secp521r1).
+ecdh-curve prime256v1
+
+# Certificate Revocation List. OpenVPN checks every connecting client cert against
+# this list. If the CRL has expired, ALL clients are rejected.
+# Default: not set  |  Recommended: always set if you ever revoke certs
+# Renew with: easyrsa gen-crl && cp pki/crl.pem /etc/openvpn/server/crl.pem
+crl-verify /etc/openvpn/server/crl.pem
+
+# ---------------------------------------------------------------------------
+# TLS SECURITY
+# ---------------------------------------------------------------------------
+
+# TLS authentication / encryption pre-shared key.
+# "0" = server direction. Client must use direction "1".
+# tls-auth: HMAC authentication only (OpenVPN 2.3+).
+# tls-crypt: HMAC + encryption of the control channel (OpenVPN 2.4+, preferred).
+# Prevents unauthenticated clients from even initiating the TLS handshake.
+# Default: not set  |  Recommended: always set; prefer tls-crypt for new deployments
+# Change when: migrating from tls-auth to tls-crypt (requires all clients to update).
+tls-crypt /etc/openvpn/server/ta.key
+
+# Minimum TLS version accepted. Rejects older clients.
+# Default: 1.0  |  Recommended: 1.2
+# Change when: you explicitly need to support OpenVPN clients that cannot do TLS 1.2
+# (very old — pre-2.4 builds from ~2014). Virtually no reason to go below 1.2.
+tls-version-min 1.2
+
+# Ordered list of allowed data-channel ciphers (OpenVPN 2.5+ negotiation).
+# Default: AES-256-CBC (older); negotiated (2.5+)  |  Recommended: AES-256-GCM first
+# Change when: you need to support 2.4 clients that lack AES-256-GCM (add AES-256-CBC).
+data-ciphers AES-256-GCM:AES-128-GCM:AES-256-CBC
+
+# Fallback cipher for OpenVPN 2.4 clients that don't support cipher negotiation.
+# Default: BF-CBC (insecure)  |  Recommended: AES-256-CBC
+# Change when: all clients are 2.5+ (can then remove this line entirely).
+data-ciphers-fallback AES-256-CBC
+
+# HMAC digest algorithm for control channel packet authentication.
+# Default: SHA1  |  Recommended: SHA256
+# Change when: you need SHA512 for compliance; SHA256 is sufficient for most use cases.
+auth SHA256
+
+# ---------------------------------------------------------------------------
+# VPN SUBNET AND ROUTING
+# ---------------------------------------------------------------------------
+
+# VPN subnet — the IP range allocated to the tunnel.
+# Server takes the first address (.1); clients get subsequent addresses.
+# Default: not set (required)  |  Recommended: 10.8.0.0/24 (or any RFC 1918 range
+#   not already used on your network)
+# Change when: 10.8.0.0/24 conflicts with an existing LAN subnet.
+server 10.8.0.0 255.255.255.0
+
+# File that persists client-to-IP assignments across server restarts.
+# Ensures a given client gets the same VPN IP each time it connects.
+# Default: not set  |  Recommended: set to avoid client IP churn
+ifconfig-pool-persist /var/log/openvpn/ipp.txt
+
+# Routes pushed to clients at connect time.
+# "route-gateway dhcp" tells the client to use the VPN server as gateway for these routes.
+# Default: not set  |  Recommended: push your internal subnets here for split tunnel
+# Change when: you want full tunnel (redirect-gateway) or different internal subnets.
+push "route 192.168.1.0 255.255.255.0"
+
+# Full-tunnel: redirect all client traffic through the VPN, including internet traffic.
+# Default: not set  |  Recommended: set for privacy-focused or corporate VPNs
+# Change when: you only want split tunnel (remove this line and push specific routes).
+# push "redirect-gateway def1 bypass-dhcp"
+
+# DNS servers pushed to clients. Clients use these while connected.
+# Default: not set  |  Recommended: push your own resolver (Pi-hole, Unbound, etc.)
+#   or a trusted public resolver
+# Change when: you have an internal DNS server on the VPN network.
+push "dhcp-option DNS 10.8.0.1"
+push "dhcp-option DNS 1.1.1.1"
+
+# Allow connected clients to communicate with each other directly.
+# Default: off  |  Recommended: off unless you specifically need client-to-client traffic
+# Change when: building a site-to-site VPN or need clients to see each other.
+;client-to-client
+
+# Allow multiple connections with the same client certificate (useful for testing;
+# discouraged in production — one cert per device is better practice).
+# Default: off  |  Recommended: off
+;duplicate-cn
+
+# Maximum number of concurrently connected clients.
+# Default: unlimited  |  Recommended: set to match your expected capacity
+max-clients 100
+
+# ---------------------------------------------------------------------------
+# CONNECTION KEEPALIVE
+# ---------------------------------------------------------------------------
+
+# Sends a ping every 10 seconds; declares the peer dead after 120 seconds of no response.
+# Default: not set  |  Recommended: "keepalive 10 120"
+# Change when: you're on a flaky connection and want faster dead-peer detection (lower both values).
+keepalive 10 120
+
+# ---------------------------------------------------------------------------
+# COMPRESSION
+# ---------------------------------------------------------------------------
+
+# Compression — DISABLED intentionally.
+# OpenVPN's LZO compression (comp-lzo) and the newer compress directive are vulnerable
+# to VORACLE attack (compression oracle over VPN). Do not enable compression.
+# Default: off  |  Recommended: off
+# If a client config sends "comp-lzo" in its peer info, add: compress
+# to explicitly negotiate no compression (sends a NOP to acknowledge the option).
+;compress
+;comp-lzo
+
+# ---------------------------------------------------------------------------
+# PRIVILEGE DROPPING
+# ---------------------------------------------------------------------------
+
+# Drop root privileges after initialization. nobody/nogroup is a no-login account.
+# Debian/Ubuntu: user nobody, group nogroup
+# RHEL/Fedora:   user nobody, group nobody (or openvpn)
+# Default: root  |  Recommended: drop privileges
+# Change when: you need root for a specific plugin or script hook.
+user nobody
+group nogroup
+
+# Preserve the TUN/key file descriptors across restarts so re-authentication
+# works even after dropping privileges.
+# Default: off  |  Recommended: both on when using user/group
+persist-key
+persist-tun
+
+# ---------------------------------------------------------------------------
+# STATUS AND LOGGING
+# ---------------------------------------------------------------------------
+
+# Write a snapshot of connected clients to this file every minute.
+# Format: one CLIENT_LIST line per connected client with IP, bytes, and connect time.
+# Default: not set  |  Recommended: set for monitoring scripts and dashboards
+status /var/log/openvpn/openvpn-status.log
+
+# Append-mode log. If not set, OpenVPN logs to stdout (journald captures it).
+# Default: stdout  |  Recommended: omit here and let journald handle it (journalctl -u openvpn@server)
+# Change when: you need a persistent file log independent of systemd.
+;log-append /var/log/openvpn/openvpn.log
+
+# Verbosity level: 0 = silent, 3 = normal, 4–5 = debug, 9 = maximum.
+# Default: 1  |  Recommended: 3 for production; 4–5 when troubleshooting
+# Change when: debugging — raise temporarily, then lower. Level 9 logs all packets.
+verb 3
+
+# Suppress repeated messages of the same type. "mute 20" means: after 20 identical
+# messages, stop logging that message type until a different message appears.
+# Default: 0 (no suppression)  |  Recommended: 20
+mute 20
+
+# ---------------------------------------------------------------------------
+# MANAGEMENT INTERFACE (optional)
+# ---------------------------------------------------------------------------
+
+# Exposes a TCP management console for querying status and sending commands.
+# Bind to 127.0.0.1 only — never expose to 0.0.0.0.
+# Connect: telnet 127.0.0.1 1194 (then type "help")
+# Default: not set  |  Recommended: enable if you use monitoring scripts
+# Change when: you run multiple OpenVPN instances — each needs a different port.
+;management 127.0.0.1 1194
+
+# ---------------------------------------------------------------------------
+# EXPLICIT EXIT NOTIFY (UDP only)
+# ---------------------------------------------------------------------------
+
+# When a client disconnects, send an explicit disconnect notification so the server
+# can immediately free the slot instead of waiting for the keepalive timeout.
+# Default: 0  |  Recommended: 1
+# Change when: using proto tcp (not applicable; TCP handles connection state natively).
+explicit-exit-notify 1
