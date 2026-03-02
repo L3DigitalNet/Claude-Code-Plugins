@@ -1,0 +1,204 @@
+// Annotated Node-RED settings.js
+// Each key includes: what it controls, the default, and when to change it.
+// This file is a Node.js module — it must export an object via module.exports.
+// Location: ~/.node-red/settings.js (native) or /data/settings.js (Docker).
+// Node-RED merges these settings with its internal defaults at startup.
+
+module.exports = {
+
+    // -------------------------------------------------------------------------
+    // FLOW FILES
+    // -------------------------------------------------------------------------
+
+    // Filename for the active flows. Node-RED reads and writes this file on
+    // every deploy. Path is relative to userDir unless absolute.
+    // Default: "flows_<hostname>.json"  |  Recommended: "flows.json" (predictable name)
+    // Change when: you want a consistent name regardless of hostname (useful in Docker
+    //   or when migrating between machines).
+    flowFile: "flows.json",
+
+    // Secret used to encrypt and decrypt node credentials (stored in flows_cred.json).
+    // If not set, Node-RED generates a machine-specific key from the hardware ID —
+    //   this means credentials are NOT portable between machines without this key.
+    // Default: unset (auto-generated, non-portable)  |  Recommended: set explicitly
+    // Change when: migrating to a new machine, running in Docker, or backing up credentials.
+    // Generate: use any strong random string (e.g. openssl rand -hex 32).
+    // WARNING: changing this value on an existing install invalidates all stored credentials.
+    credentialSecret: "your-long-random-secret-here",
+
+    // -------------------------------------------------------------------------
+    // AUTHENTICATION
+    // -------------------------------------------------------------------------
+
+    // Controls access to the editor UI and admin API.
+    // Without this block, the UI is completely unauthenticated — anyone who can
+    //   reach port 1880 has full admin access.
+    // Default: not set (no auth)  |  Recommended: always set in production
+    // Change when: exposing Node-RED on a network or behind a reverse proxy.
+    //
+    // Generate a bcrypt hash for the password:
+    //   node-red-admin hash-pw
+    // The output is the value for the "password" field below.
+    adminAuth: {
+        type: "credentials",
+        users: [
+            {
+                username: "admin",
+                // bcrypt hash of the admin password — never store plaintext
+                password: "$2b$08$...",
+                permissions: "*"    // "*" = full access; "read" = view-only
+            }
+            // Additional users can be added here with restricted permissions
+        ]
+    },
+
+    // -------------------------------------------------------------------------
+    // NETWORK BINDING
+    // -------------------------------------------------------------------------
+
+    // TCP port the HTTP server listens on.
+    // Default: 1880  |  Recommended: 1880 (standard) or a non-standard port if needed
+    // Change when: port 1880 conflicts with another service, or you want to run
+    //   multiple Node-RED instances on the same host.
+    uiPort: process.env.PORT || 1880,
+
+    // Interface address to bind to.
+    // Default: "0.0.0.0" (all interfaces)  |  Recommended: "127.0.0.1" when behind a reverse proxy
+    // Change when: using nginx/Caddy/Traefik as a front end — binding to loopback prevents
+    //   direct external access and lets the proxy handle TLS and auth.
+    uiHost: "0.0.0.0",
+
+    // -------------------------------------------------------------------------
+    // LOGGING
+    // -------------------------------------------------------------------------
+
+    logging: {
+        console: {
+            // Logging level. Options: fatal, error, warn, info, debug, trace.
+            // Default: "info"  |  Recommended: "info" (production), "debug" (debugging)
+            // Change when: troubleshooting a specific node or flow — "debug" is verbose.
+            level: "info",
+
+            // Whether to include metric events (flow throughput stats) in log output.
+            // Default: false  |  Recommended: false unless you're performance-profiling flows
+            metrics: false,
+
+            // Whether to include audit events (deploy, login, etc.) in log output.
+            // Default: false  |  Recommended: true for security-conscious deployments
+            audit: false
+        }
+    },
+
+    // -------------------------------------------------------------------------
+    // URL PATHS
+    // -------------------------------------------------------------------------
+
+    // URL path prefix for HTTP-in nodes (flows that serve HTTP endpoints).
+    // Default: "/"  |  Recommended: "/" unless you need to namespace endpoints
+    // Change when: running behind a reverse proxy that strips a path prefix.
+    httpNodeRoot: "/",
+
+    // URL path for the editor UI and admin API.
+    // Default: "/"  |  Recommended: "/" (or a custom path to obscure the admin interface)
+    // Change when: you want the editor at a non-root path, e.g. "/admin/node-red".
+    //   Useful when proxying alongside other services on the same domain.
+    httpAdminRoot: "/",
+
+    // -------------------------------------------------------------------------
+    // DIRECTORIES
+    // -------------------------------------------------------------------------
+
+    // Root directory for all Node-RED user data: flows, settings, credentials,
+    //   installed nodes, and the node_modules directory.
+    // Default: "~/.node-red" (native), "/data" (Docker official image)
+    // Change when: you want flows and nodes in a custom location, or running
+    //   multiple Node-RED instances with separate data directories.
+    userDir: "/home/user/.node-red",
+
+    // Additional directory (or array of directories) to search for custom nodes
+    //   beyond the built-ins and those installed in userDir/node_modules.
+    // Default: not set  |  Recommended: set only if you maintain local node packages
+    // Change when: developing private custom nodes that are not published to npm.
+    // nodesDir: "/opt/custom-node-red-nodes",
+
+    // -------------------------------------------------------------------------
+    // EDITOR THEME
+    // -------------------------------------------------------------------------
+
+    // Controls editor appearance and feature visibility.
+    // Default: full editor with all features  |  Recommended: customize as needed
+    // Change when: embedding Node-RED in a product and you want a branded or
+    //   restricted interface (e.g. hiding the import/export menu).
+    editorTheme: {
+        projects: {
+            // Enable the Projects feature (git-backed flow version control).
+            // Default: false  |  Recommended: false unless you want git versioning
+            //   per-flow. Note: projects and a manually managed flows.json are mutually
+            //   exclusive workflows — choose one.
+            enabled: false
+        }
+    },
+
+    // -------------------------------------------------------------------------
+    // FUNCTION NODE GLOBALS
+    // -------------------------------------------------------------------------
+
+    // Variables exposed as `global.get('<key>')` inside Function nodes.
+    // Useful for sharing configuration values (URLs, thresholds) across flows
+    //   without hardcoding them in individual function nodes.
+    // Default: {}  |  Recommended: add only stable config values, not runtime state
+    // Change when: you have constants used in multiple function nodes and want to
+    //   centralize them here rather than duplicating across flows.
+    functionGlobalContext: {
+        // Example: global.get('mqttBroker') returns "mqtt://192.168.1.10"
+        // mqttBroker: "mqtt://192.168.1.10",
+        // sensorThreshold: 42
+    },
+
+    // -------------------------------------------------------------------------
+    // RECONNECT TIMERS
+    // -------------------------------------------------------------------------
+
+    // Time (ms) between reconnection attempts to an MQTT broker after a disconnect.
+    // Default: 15000 (15 seconds)  |  Recommended: 15000
+    // Change when: your broker is on an unreliable network and you want faster
+    //   reconnection, or you want slower retries to reduce log noise.
+    mqttReconnectTime: 15000,
+
+    // Time (ms) between reconnection attempts to a serial port after a disconnect.
+    // Default: 15000  |  Recommended: 15000
+    // Change when: serial device is hot-plugged and you want faster reattach.
+    serialReconnectTime: 15000,
+
+    // -------------------------------------------------------------------------
+    // TLS / SECURITY
+    // -------------------------------------------------------------------------
+
+    // When true, prevents loading TLS certificates from the local filesystem
+    //   via the TLS config node in the editor — only inline or env-var certs allowed.
+    // Default: false  |  Recommended: true in hardened/containerized deployments
+    //   where the process should not read arbitrary files from disk.
+    // Change when: running in a restricted environment where filesystem access
+    //   for certs should be prohibited.
+    tlsConfigDisableLocalFiles: false,
+
+    // -------------------------------------------------------------------------
+    // CONTEXT STORAGE
+    // -------------------------------------------------------------------------
+
+    // Defines named storage backends for flow/global context variables.
+    // The default "memory" store is lost on restart. The "localfilesystem" store
+    //   persists context values to disk between restarts.
+    // Default: memory only  |  Recommended: add "localfilesystem" for persistent context
+    // Change when: flows use context.set() to store state that must survive restarts.
+    contextStorage: {
+        default: {
+            module: "memory"
+        }
+        // Uncomment to add persistent storage:
+        // persistent: {
+        //     module: "localfilesystem"
+        // }
+    }
+
+};

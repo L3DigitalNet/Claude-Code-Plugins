@@ -1,0 +1,226 @@
+# /etc/mosquitto/mosquitto.conf — Annotated reference
+#
+# Mosquitto reads this file plus everything in conf.d/*.conf (included below).
+# After any change: sudo systemctl reload mosquitto
+# Validate by running in foreground: mosquitto -c /etc/mosquitto/mosquitto.conf
+#
+# Mosquitto 2.0+ change: no default listeners and no anonymous access unless
+# explicitly configured. On older distro packages (< 2.0) defaults differ —
+# check: mosquitto -v 2>&1 | head -1
+
+# ─── Persistence ─────────────────────────────────────────────────────────────
+
+# Store retained messages and persistent session state to disk.
+# Default: false. Enable in production so retained messages survive restarts.
+persistence true
+
+# Directory for the persistent database (.db file).
+# Default: /var/lib/mosquitto/ — must be writable by the mosquitto user.
+persistence_location /var/lib/mosquitto/
+
+# Autosave interval in seconds. 0 = only save on clean shutdown.
+# Default: 1800. Lower value reduces data loss on crash; higher reduces disk I/O.
+autosave_interval 1800
+
+
+# ─── Logging ─────────────────────────────────────────────────────────────────
+
+# Where to write logs. Can be: stdout, stderr, syslog, file <path>, topic.
+# "file" writes to the given path; pair with logrotate.
+# Default (Debian package): /var/log/mosquitto/mosquitto.log
+log_dest file /var/log/mosquitto/mosquitto.log
+
+# Which message types to log.
+# Options: debug, error, warning, notice, information, subscribe, unsubscribe, websockets, all, none.
+# Default: error, warning, notice, information. Add "subscribe" to audit subscriptions.
+log_type error
+log_type warning
+log_type notice
+log_type information
+# log_type subscribe    # uncomment to log every subscribe/unsubscribe
+
+# Timestamp format in log lines. Default: true (include timestamp).
+log_timestamp true
+
+
+# ─── Connection Limits ────────────────────────────────────────────────────────
+
+# Maximum simultaneous client connections. -1 = unlimited.
+# Default: -1. Set a sensible ceiling to prevent resource exhaustion.
+max_connections 1000
+
+# Maximum queued outgoing messages per client (QoS 1/2).
+# Default: 1000. Increase for slow consumers; decrease to drop backpressure early.
+max_queued_messages 1000
+
+# Maximum time (seconds) a client can be silent before being disconnected.
+# Client sends PINGREQ to reset this timer. 0 = disabled.
+# Default: 0. The client's CONNECT packet sets its own keepalive — this is a server-side cap.
+# max_keepalive 65535
+
+
+# ─── Listener: 1883 — MQTT plaintext ─────────────────────────────────────────
+#
+# Bind to all interfaces for network access.
+# Use "listener 1883 127.0.0.1" to restrict to localhost only (e.g. when TLS
+# is the only external-facing listener).
+
+listener 1883
+# bind_address 0.0.0.0    # implicit default; uncomment to be explicit
+
+
+# ─── Authentication ───────────────────────────────────────────────────────────
+#
+# These apply per-listener when placed after a listener directive, or globally
+# when placed at the top level (before any listener directive).
+
+# Deny unauthenticated clients. REQUIRED in production.
+# Default in Mosquitto 2.0+: false (anonymous blocked unless explicitly allowed).
+# Default in Mosquitto <2.0: true (anonymous allowed — change this immediately).
+allow_anonymous false
+
+# Path to the password file. Create/manage with mosquitto_passwd:
+#   Create new file:   mosquitto_passwd -c /etc/mosquitto/passwd myuser
+#   Add/update user:   mosquitto_passwd -b /etc/mosquitto/passwd myuser password
+#   Delete user:       mosquitto_passwd -D /etc/mosquitto/passwd myuser
+# After changes: reload mosquitto (no restart needed).
+password_file /etc/mosquitto/passwd
+
+# Path to the ACL (access control list) file.
+# Controls which users can publish/subscribe to which topics.
+# Format (see references/acl_file example below):
+#   user myuser
+#   topic readwrite sensors/#
+#   topic read $SYS/#
+# After changes: reload mosquitto.
+acl_file /etc/mosquitto/acl
+
+
+# ─── Listener: 8883 — MQTT over TLS ──────────────────────────────────────────
+#
+# Requires a CA cert, server cert, and server key.
+# Quickstart self-signed setup:
+#   # 1. Generate CA key + cert
+#   openssl genrsa -out ca.key 2048
+#   openssl req -new -x509 -days 3650 -key ca.key -out ca.crt -subj "/CN=MyMQTT-CA"
+#   # 2. Generate server key + CSR + sign with CA
+#   openssl genrsa -out server.key 2048
+#   openssl req -new -key server.key -out server.csr -subj "/CN=broker.example.com"
+#   openssl x509 -req -days 3650 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt
+#   # 3. Place files in /etc/mosquitto/certs/ (chown mosquitto)
+# For Let's Encrypt certs: certfile = fullchain.pem, keyfile = privkey.pem, no cafile needed for public CAs.
+
+listener 8883
+
+# CA certificate — used to verify client certificates if require_certificate is true.
+# For Let's Encrypt / public CAs where you don't issue client certs, omit cafile.
+cafile /etc/mosquitto/certs/ca.crt
+
+# Server certificate (PEM). Must match the hostname clients connect to.
+certfile /etc/mosquitto/certs/server.crt
+
+# Server private key (PEM). Keep permissions 600, owned by mosquitto.
+keyfile /etc/mosquitto/certs/server.key
+
+# Minimum TLS version. Options: tlsv1, tlsv1.1, tlsv1.2, tlsv1.3.
+# Default: no minimum (accepts all). tlsv1.2 is the sensible floor today.
+tls_version tlsv1.2
+
+# Require clients to present a certificate signed by cafile.
+# Default: false. Enable for mutual TLS (mTLS) — clients need their own cert+key.
+# require_certificate true
+
+# Allow anonymous connections on the TLS listener (overrides global setting).
+# Typically false when using certificates for authentication.
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+acl_file /etc/mosquitto/acl
+
+
+# ─── Listener: 9001 — MQTT over WebSocket ─────────────────────────────────────
+#
+# Used by browser-based clients (e.g. MQTT.js, Paho JavaScript).
+# If behind a reverse proxy (nginx/caddy), proxy WebSocket upgrades properly:
+#   proxy_set_header Upgrade $http_upgrade;
+#   proxy_set_header Connection "upgrade";
+
+listener 9001
+
+# Required to enable WebSocket framing instead of raw MQTT.
+protocol websockets
+
+# WebSocket HTTP header origin restriction. Empty = accept all origins.
+# Set to your app's domain in production to prevent cross-origin abuse.
+# http_header_websocket_origin https://app.example.com
+
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+acl_file /etc/mosquitto/acl
+
+
+# ─── Bridge Configuration ─────────────────────────────────────────────────────
+#
+# A bridge connects this broker to a remote MQTT broker, forwarding selected
+# topics in one or both directions. Useful for aggregating IoT data from edge
+# brokers to a central broker, or connecting to a cloud MQTT service.
+#
+# Bridges are defined in conf.d/ for cleanliness; example shown here.
+
+# connection <name>      — unique identifier for this bridge
+# address <host>:<port>  — remote broker address
+# topic <filter> <direction> <qos> [local-prefix] [remote-prefix]
+#   direction: in | out | both
+#   in  = subscribe on remote, publish locally
+#   out = subscribe locally, publish to remote
+#   both = bidirectional
+
+# connection bridge-to-central
+# address central-broker.example.com:8883
+# bridge_cafile /etc/mosquitto/certs/ca.crt
+# bridge_certfile /etc/mosquitto/certs/client.crt
+# bridge_keyfile /etc/mosquitto/certs/client.key
+# bridge_tls_version tlsv1.2
+# # Forward all local sensor data to the remote broker, under remote prefix "site1/"
+# topic sensors/# out 1 "" site1/
+# # Receive commands from central broker destined for this site
+# topic commands/# in 1 site1/ ""
+# # Reconnect interval in seconds (default 30)
+# restart_timeout 30
+# # Use a clean session on reconnect (default true). false = durable session
+# bridge_attempt_unsubscribe false
+# cleansession false
+# # Credentials for the remote broker
+# remote_username mybridge
+# remote_password bridgepassword
+
+
+# ─── Include additional config files ─────────────────────────────────────────
+#
+# Drop-in files in conf.d/ override or extend this config.
+# Typically used to split listeners, auth, and bridge configs into separate files.
+# Files are processed in alphabetical order.
+
+include_dir /etc/mosquitto/conf.d
+
+
+# ─── ACL File Reference ───────────────────────────────────────────────────────
+# /etc/mosquitto/acl — example content (not active here, for reference)
+#
+# # Global read-only for $SYS stats (for monitoring tools)
+# topic read $SYS/#
+#
+# # Per-user access — "user" line must match the username in the password file
+# user sensor_node_1
+# topic readwrite sensors/node1/#
+# topic read commands/node1/#
+#
+# user dashboard
+# topic read sensors/#
+# topic read $SYS/#
+#
+# user admin
+# topic readwrite #
+#
+# # Pattern rules — %u = username, %c = client ID (dynamic substitution)
+# pattern readwrite users/%u/#
+# pattern readwrite clients/%c/#
