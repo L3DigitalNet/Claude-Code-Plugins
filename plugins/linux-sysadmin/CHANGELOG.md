@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.0.0] - 2026-03-02
+
+### Added
+- Phase 19 — text, data, and misc CLI tool skills (8 tools)
+- Phase 18 — disk and process debug tool skills (9 tools)
+- Phase 17 — network diagnostic tool skills (6 tools)
+- Phase 16 — CLI monitoring tool skills (6 tools)
+- Phase 11 — network service skills (4 services)
+- Phase 15 — certificate management skills (2 tools)
+- Phase 14 — IoT and home automation skills (4 services)
+- Phase 13 — self-hosted app skills (5 apps)
+- Phase 12 — mail server skills (3 services)
+- Phase 10 — storage and backup skills (3 tools)
+- Phase 9 — filesystem skills (7 filesystems)
+- Phase 8 — monitoring skills (5 services)
+- Phase 7 — container and virtualization skills (3 platforms)
+- Phase 6 — system service skills (5 services)
+- Phase 5 — database skills (4 services)
+- Phase 4 — web/proxy and DNS skills (7 services)
+- Phase 3 — security and VPN skills (5 services)
+- Phase 2 — core service skills (8 services)
+- replace MCP server with skills-based plugin
+
+### Changed
+- update all documentation for v1.0.0
+- v1.0.0 — 94 skills complete
+
+### Fixed
+- commit lingering openvpn reference file changes
+
+
 ## [1.0.0] - 2026-03-01
 
 ### Added
