@@ -56,6 +56,35 @@ gh-manager repo labels create --repo owner/name --name "maintenance" --color "0E
 
 ## Assessment Flow
 
+### Step 0: Org Inheritance Resolution (org repos only)
+
+Before checking any individual files, determine whether inherited community health files exist at the org level. This is only relevant when `owner_type` is `"Organization"`.
+
+**1. Check for org `.github` repo:**
+
+```bash
+gh-manager repos list --org {orgname}
+```
+
+Scan the result for a repo named `.github`. If absent, skip the rest of Step 0 — no inherited files.
+
+**2. Enumerate community health files in the org `.github` repo:**
+
+```bash
+gh-manager files exists --repo {orgname}/.github --path SECURITY.md
+gh-manager files exists --repo {orgname}/.github --path CODE_OF_CONDUCT.md
+gh-manager files exists --repo {orgname}/.github --path CONTRIBUTING.md
+gh-manager files exists --repo {orgname}/.github --path SUPPORT.md
+gh-manager files exists --repo {orgname}/.github --path .github/ISSUE_TEMPLATE
+gh-manager files exists --repo {orgname}/.github --path .github/PULL_REQUEST_TEMPLATE.md
+```
+
+**3. Build `inherited_files`:** Store a list of file paths that are confirmed present at the org level. This list is reused throughout Step 2 — any file present in `inherited_files` counts as covered for all repos in the org.
+
+**For user repos (`owner_type` is `"User"`):** Skip Step 0 entirely. There is no org-level inheritance to check.
+
+---
+
 ### Step 1: Community Profile Quick Check
 
 Start with the community profile API for a fast overview:
@@ -66,9 +95,24 @@ gh-manager repo community --repo owner/name
 
 This returns `health_percentage` (0-100) and which standard files exist/are missing. Use this as a starting point — it covers README, CODE_OF_CONDUCT, CONTRIBUTING, LICENSE, SECURITY, issue templates, PR template. It does NOT cover: SUPPORT.md, FUNDING.yml, CODEOWNERS, discussion templates.
 
+**API score reliability differs by owner type:**
+
+- **User repos:** The score accurately reflects the repo's actual coverage. Present it as-is.
+- **Org repos:** The API does not check files inherited from the org's `.github` repository. The score will underreport coverage for repos that intentionally rely on org-level files. Do not present the raw percentage as a health score for org repos — present it with a caveat:
+
+  > GitHub API reported: N% — this figure doesn't count org-inherited files. Actual coverage is determined by the per-file breakdown below.
+
+  The per-file breakdown (Step 2), which resolves org inheritance, is the authoritative view for org repos.
+
 ### Step 2: Detailed File Checks
 
-For files the community profile API doesn't cover, and for accuracy checks beyond existence, check individually:
+For files the community profile API doesn't cover, and for accuracy checks beyond existence, check individually.
+
+**File resolution order (apply for every file):**
+
+1. **Repo directly** — check repo root and `.github/`. If found in either location, the file is ✅ Present.
+2. **Org inherited** (org repos only) — if the file is in `inherited_files` from Step 0, it is ✅ Inherited (org .github). Do not propose adding it to the repo.
+3. **Neither** — only flag the file as ❌ Missing if both steps above come up empty.
 
 **Check order (by priority):**
 
@@ -83,7 +127,7 @@ For files the community profile API doesn't cover, and for accuracy checks beyon
 9. **PR template** — Check `.github/PULL_REQUEST_TEMPLATE.md`.
 10. **Discussion templates** — Check `.github/DISCUSSION_TEMPLATE/` (only if discussions enabled).
 
-**File location resolution:** Some files can live in root OR `.github/`. Check root first, then `.github/`. If found in either location, it counts as present.
+When a file is inherited, present it as: `✅ Inherited from org .github` in the findings summary. This is a valid configuration — not a gap. Only suggest adding the file directly to the repo if the owner asks for per-repo copies.
 
 ### Step 3: Content Accuracy Checks
 
@@ -99,6 +143,9 @@ For files that exist, do quick accuracy checks:
 
 **CODEOWNERS:**
 - Do referenced team/user handles look valid? (Simple pattern check — no API validation of teams)
+- **Owner type matters for team patterns:**
+  - **Org repos:** `@org/team-name` patterns are valid — GitHub supports team ownership in org repos. Do not flag these.
+  - **User repos:** `@org/team-name` patterns are not valid — personal accounts have no teams. If found, flag as likely invalid and suggest replacing with individual `@username` references.
 
 **These are heuristic checks, not definitive.** Present findings as observations, not errors:
 > Your CONTRIBUTING.md references the "master" branch, but your default branch is "main". Want me to update it?
@@ -227,9 +274,9 @@ When assessing a repo that belongs to an org:
 
 Present as a summary with action items:
 
-> 🌱 Community Health — ha-light-controller (Tier 4)
+> 🌱 Community Health — ha-light-controller (Tier 4, User)
 >
-> GitHub Community Score: 57%
+> GitHub API Score: 57% (accurate — user repo)
 >
 > ✅ Present: README.md, LICENSE (MIT)
 > ❌ Missing: SECURITY.md, CODE_OF_CONDUCT.md
@@ -237,6 +284,19 @@ Present as a summary with action items:
 > ⚠️ Stale: CONTRIBUTING.md references "master" branch (default is "main")
 >
 > SECURITY.md is the highest priority — it tells security researchers how to report vulnerabilities responsibly. Want me to create one?
+
+**Org repo example (with inherited files):**
+
+> 🌱 Community Health — markdown-keeper (Tier 4, Org)
+>
+> GitHub API Score: 87% — excludes org-inherited files. See per-file breakdown for actual coverage.
+>
+> ✅ Present: README.md, LICENSE (MIT), CONTRIBUTING.md
+> ✅ Inherited (org .github): SECURITY.md, CODE_OF_CONDUCT.md
+> ❌ Missing: Issue templates, PR template
+> ⚠️ Stale: CONTRIBUTING.md references "master" branch (default is "main")
+>
+> All security and conduct files are covered via org-level defaults. Missing: issue templates and PR template.
 
 ### Cross-Repo Report
 

@@ -97,6 +97,8 @@ Check the response:
 - If `skip_reason` is "archived": note it's archived (read-only) and offer assessment-only
 - Otherwise: present the `suggested_tier` with reasoning based on the signals
 
+**Extract owner_type from the classify response.** The response includes the full GitHub repo object — check `owner.type` to determine whether the repo belongs to a personal account (`"User"`) or an organization (`"Organization"`). Store this as session context (`owner_type`). This is auto-detected and requires no owner input.
+
 **Present the tier proposal and confirm with AskUserQuestion:**
 
 Summarize your reasoning briefly (1-2 sentences). Use `AskUserQuestion` with all four tier options — mark the auto-detected tier as recommended. Always show the full set so the owner can override if they disagree with the classification:
@@ -148,16 +150,17 @@ This is a one-time setup per repo. Once labels exist, skip this in future sessio
 
 All checks passed — proceed to the requested work.
 
-**Collapse on success:** If PAT is valid, tier is already known (from config), and labels exist — emit a single confirmation line and start immediately:
+**Collapse on success:** If PAT is valid, tier is already known (from config), and labels exist — emit a single confirmation line and start immediately. Include `owner_type` (User or Org) so it's visible in the session header:
 
 ```
-✓ owner/repo-name — Tier 4 · labels OK · running assessment...
+✓ owner/repo-name — Org · Tier 4 · labels OK · running assessment...
+✓ owner/repo-name — User · Tier 3 · labels OK · running assessment...
 ```
 
 If any step needed interaction (tier was confirmed, labels were created), summarize what was set up in the same format:
 
 ```
-✓ owner/repo-name — Tier 4 confirmed · 4 labels created · running assessment...
+✓ owner/repo-name — Org · Tier 4 confirmed · 4 labels created · running assessment...
 ```
 
 A fully configured repo should produce zero multi-line onboarding output.

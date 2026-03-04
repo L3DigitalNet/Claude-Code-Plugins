@@ -12,15 +12,21 @@ description: Full assessment orchestration for GitHub Repo Manager. Use when run
 #
 # Architectural constraint: modules MUST run in the declared order (Security first) because
 # later modules defer duplicates to earlier ones. Reordering breaks deduplication silently.
+#
+# Session context (established during onboarding, carried through all modules):
+#   - tier (1-4): controls ceremony level, mutation strategy, staleness thresholds
+#   - owner_type ("User" | "Organization"): controls which org-specific checks run
+#     Org repos get: org inheritance resolution (community health), org ruleset audit (security)
+#     User repos: org-specific steps are skipped; no behavior change for existing checks
 
 ## Module Execution Order
 
 When running a full assessment, execute modules in this order (required for cross-module deduplication):
 
 ```
-1. Security
+1. Security              [org repos: includes org ruleset audit (Step 6)]
 2. Release Health
-3. Community Health
+3. Community Health      [org repos: includes org inheritance resolution (Step 0)]
 4. PR Management
 5. Issue Triage
 6. Dependency Audit
@@ -76,9 +82,11 @@ Prevent the owner from seeing the same finding repeated across multiple modules.
 This order is required for deduplication to work:
 
 ```
-1. Security          — owns Dependabot alerts, secret scanning, security posture
+1. Security          — owns Dependabot alerts, secret scanning, security posture,
+                       org rulesets (org repos only)
 2. Release Health    — owns CHANGELOG drift, unreleased commits, release cadence
-3. Community Health  — owns community files (defers CHANGELOG to Release Health on Tier 4)
+3. Community Health  — owns community files (defers CHANGELOG to Release Health on Tier 4);
+                       org repos resolve inherited files before flagging gaps
 4. PR Management     — owns open PRs (defers Dependabot PRs to Security)
 5. Issue Triage      — owns open issues (cross-references merged PRs from step 4)
 6. Dependency Audit  — owns dependency graph (defers Dependabot alerts to Security)
