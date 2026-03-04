@@ -2,6 +2,17 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.4] - 2026-03-04
+
+### Changed
+- update remaining L3Digital-Net references
+- update org references from L3Digital-Net to L3DigitalNet
+
+### Fixed
+- apply audit findings — plugin.json, CHANGELOG
+- bump hono to 4.12.4 (CVE-2026-27700)
+
+
 ## [Unreleased]
 
 ## [2.2.3] - 2026-03-02
