@@ -140,7 +140,7 @@ keepass-cred-mgr/
 {
   "name": "keepass-cred-mgr",
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"
