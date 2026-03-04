@@ -8,7 +8,7 @@ allowed-tools:
   - Glob
 ---
 
-# /qt:coverage — Coverage Analysis
+# /qt-suite:coverage — Coverage Analysis
 
 Run coverage instrumentation, generate an HTML report, and identify untested code paths. Optionally triggers the `test-generator` agent when gaps are found.
 
@@ -57,19 +57,24 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-prerequisites.sh"
 
 Build with coverage instrumentation:
 ```bash
+echo "Configuring with coverage instrumentation..."
 cmake -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
+echo "Building..."
 cmake --build build-coverage --parallel 4
 ```
 
 Collect coverage:
 ```bash
 cd build-coverage
+echo "Running tests (pass 1 — zeroing counters)..."
 ctest --output-on-failure
 
 lcov --zerocounters --directory .
-# (re-run tests to get fresh counters)
+# (re-run tests to collect fresh counters)
+echo "Running tests (pass 2 — collecting coverage data)..."
 ctest --output-on-failure
 
+echo "Generating coverage report..."
 lcov --capture \
      --directory . \
      --output-file ../coverage_raw.info \
@@ -112,12 +117,20 @@ If below: report "❌ Coverage ${N}% — ${DELTA}% below target (${THRESHOLD}%)"
 
 ## Step 6: Offer to Fill Gaps
 
-When files below threshold exist, ask:
+When files below threshold exist, use `AskUserQuestion` with bounded options:
 
-> "Coverage is X%. These files have gaps: [list]. Would you like me to generate tests targeting the uncovered lines?"
+```
+Question: "Coverage is X%. N files are below threshold. Generate tests to fill the gaps?"
+Options:
+  - "Yes, generate tests for all gaps"
+  - "Yes, but only for specific files" (follow up: which files?)
+  - "No, show report only"
+```
 
-If the user confirms (or the command was invoked with `--generate`), describe the gaps to the `test-generator` agent and invoke it.
+If the user selects "Yes" (or the command was invoked with `--generate`), hand off to the `test-generator` agent.
 
+<!-- cross-file contract: the handoff format below is consumed by agents/test-generator.md Step 1.
+     Changing field names or structure here requires matching changes in test-generator.md. -->
 Format the handoff:
 ```
 Files below threshold:

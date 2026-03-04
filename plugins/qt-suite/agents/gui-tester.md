@@ -46,6 +46,11 @@ color: cyan
 tools: ["Read", "Write", "Bash", "Glob"]
 ---
 
+<!-- cross-file contract: this agent is invoked by commands/visual.md (/qt-suite:visual).
+     The report format below (Test Steps table, Failures, Widget Inventory, Screenshots) must
+     stay consistent with the template in visual.md Step 9 — changes here require matching
+     changes there. -->
+
 You are a Qt GUI testing specialist who uses the Qt Pilot MCP server to visually interact with and test PySide6 Qt applications. You launch applications headlessly via Xvfb, explore their UI, execute test scenarios, and write detailed test reports.
 
 **Core Responsibilities:**
@@ -194,10 +199,13 @@ Unnamed widgets: <count from list_all_widgets>
 - Potential crash risk: [any get_app_status warnings]
 ```
 
-**Quality Standards:**
-- Every test step must have a clear expected outcome defined before executing it
-- Never skip `wait_for_idle` between actions — race conditions cause false failures
-- Always capture at least 2 screenshots (initial + final)
-- Report ALL failures including partial failures — do not silently skip them
-- If the app crashes, include the full stderr from `get_app_status` in the report
-- Widget naming recommendations should be specific: name the exact widgets that need `setObjectName()`
+### 9. Return Summary to Caller
+
+After writing the report, return a compact in-context summary — do not reproduce the full report in context:
+
+```
+Visual test complete: <N>/<M> interactions passed  (<PASS|PARTIAL|FAIL>)
+Report: tests/reports/gui-<timestamp>.md
+```
+
+If the test failed, add the failure count and the first failure's one-line description. The full details are in the report file.

@@ -5,30 +5,32 @@ All notable changes to the qt-suite plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ## [0.2.0] - 2026-03-01
 
 ### Added
-- merge qt-dev-suite and qt-test-suite into unified qt-suite plugin
+- Merge qt-dev-suite and qt-test-suite into unified qt-suite plugin
 
 ### Changed
-- remove unused pytest-mock dep; simplify conftest.py
-- add pytest config and dev dependencies
-- extract magic numbers to named constants
-- replace _app_state dict with AppState dataclass
-- add Binding column to skills table (Python/Both)
-- fix structural README issues and docs path
+- Remove unused pytest-mock dep; simplify conftest.py
+- Add pytest config and dev dependencies
+- Extract magic numbers to named constants
+- Replace _app_state dict with AppState dataclass
+- Add Binding column to skills table (Python/Both)
+- Fix structural README issues and docs path
 
 ### Fixed
-- hoist late imports in tests; use rmtree for robust temp dir cleanup
-- use local vars for Pyright narrowing in _cleanup_app; fix remaining str|None annotations
-- cleanup on launch_app failure paths; remove unused imports in tests
-- cleanup on launch_app failure paths; strengthen socket test assertion
-- replace mktemp with mkdtemp; use socket context manager
-- remove unused import types from test_annotations.py
-- add missing type annotations — Optional params and return types
-- fix inverted assertion in test_main_no_unused_stdlib_imports
-- remove unused imports; move late imports to module level
-- fix path injection in validate-agent-frontmatter.sh; fix CHANGELOG em dashes
+- Hoist late imports in tests; use rmtree for robust temp dir cleanup
+- Use local vars for Pyright narrowing in _cleanup_app; fix remaining str|None annotations
+- Cleanup on launch_app failure paths; remove unused imports in tests
+- Cleanup on launch_app failure paths; strengthen socket test assertion
+- Replace mktemp with mkdtemp; use socket context manager
+- Remove unused import types from test_annotations.py
+- Add missing type annotations for Optional params and return types
+- Fix inverted assertion in test_main_no_unused_stdlib_imports
+- Remove unused imports; move late imports to module level
+- Fix path injection in validate-agent-frontmatter.sh; fix CHANGELOG em dashes
 
 ## [0.1.0] - 2026-03-01
 

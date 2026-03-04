@@ -8,7 +8,7 @@ allowed-tools:
   - Glob
 ---
 
-# /qt:run — Run Test Suite
+# /qt-suite:run — Run Test Suite
 
 Run the project's Qt test suite and report results. Auto-detect whether this is a Python/PySide6 or C++ project based on project files.
 
@@ -30,7 +30,7 @@ When project type is `python` or `both`:
 QT_QPA_PLATFORM=offscreen pytest tests/ -v --tb=short
 ```
 
-If an argument was provided (e.g., `/qt:run test_calculator`):
+If an argument was provided (e.g., `/qt-suite:run test_calculator`):
 ```bash
 QT_QPA_PLATFORM=offscreen pytest tests/ -v --tb=short -k "test_calculator"
 ```
@@ -54,7 +54,7 @@ cmake --build build --parallel 4
 cd build && ctest --output-on-failure --parallel 4
 ```
 
-If an argument was provided (e.g., `/qt:run TestCalculator`):
+If an argument was provided (e.g., `/qt-suite:run TestCalculator`):
 ```bash
 cd build && ctest -R "TestCalculator" --output-on-failure
 ```

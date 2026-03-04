@@ -1,5 +1,5 @@
 ---
-name: Qt Pilot Usage
+name: qt-pilot-usage
 description: >
   This skill should be used when the user asks to "visual test", "test the GUI", "headless test",
   "test a running app", "interact with the UI", "take a screenshot of the app", "click a widget",

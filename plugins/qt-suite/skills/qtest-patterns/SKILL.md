@@ -1,5 +1,5 @@
 ---
-name: Qt Test Patterns
+name: qtest-patterns
 description: >
   This skill should be used when the user asks to "write a test", "add tests to", "create a QTest",
   "how do I test a widget", "unit test for Qt", "pytest-qt", "test a PySide6 class",

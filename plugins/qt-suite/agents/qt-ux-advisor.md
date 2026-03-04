@@ -84,9 +84,29 @@ Check for:
 
 ## Response Format
 
-Report findings as a prioritized list grouped by dimension. For each finding:
-- **Widget**: which widget or code location
-- **Issue**: what's missing or wrong
-- **Fix**: the exact code change needed (single line preferred)
+Group findings by dimension. For each finding use this structure:
 
-End with a summary count per dimension. Do not report items you cannot confirm from the code.
+```
+## Widget Naming (Testability)    ← dimension header
+🔴 save_btn — missing setObjectName()
+   Fix: self.save_btn.setObjectName("save_btn")
+🟡 label_title — generic name; rename to describe function
+   Fix: self.label_title.setObjectName("document_title_label")
+
+## Keyboard Navigation
+🔴 form_submit — no focus policy set
+   Fix: self.form_submit.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+## Layout and Visual Hierarchy
+(none)
+
+## Accessibility
+🟡 icon_only_btn — missing tooltip and accessible name
+   Fix: self.icon_only_btn.setToolTip("Save file"); self.icon_only_btn.setAccessibleName("Save")
+
+Summary: 2 critical, 2 important across 3 dimensions.
+```
+
+Severity: 🔴 critical (testability or accessibility blocker) | 🟡 important (usability gap) | 🟢 advisory (polish)
+
+Do not report items you cannot confirm from the code.

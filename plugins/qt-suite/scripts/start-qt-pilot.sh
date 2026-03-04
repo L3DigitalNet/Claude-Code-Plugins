@@ -12,6 +12,7 @@ SERVER="${PLUGIN_ROOT}/mcp/qt-pilot/main.py"
 if [ ! -d "${VENV_DIR}" ]; then
     echo "qt-pilot: creating virtual environment (first run)..." >&2
     python3 -m venv "${VENV_DIR}" >&2
+    echo "qt-pilot: installing dependencies (this may take ~30s on first run)..." >&2
     "${VENV_DIR}/bin/pip" install --quiet -r "${REQUIREMENTS}" >&2
     echo "qt-pilot: dependencies installed" >&2
 fi

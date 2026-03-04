@@ -1,5 +1,5 @@
 ---
-name: Qt Coverage Workflow
+name: qt-coverage-workflow
 description: >
   This skill should be used when the user asks about "coverage", "test coverage", "coverage gaps",
   "untested code", "gcov", "lcov", "coverage report", "improve coverage", "missing tests",

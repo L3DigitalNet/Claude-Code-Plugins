@@ -6,7 +6,7 @@ Complete Qt development and testing toolkit: proactive specialist agents, 16 dom
 
 Qt GUI development involves many interacting systems — signals and slots, layout managers, Model/View architecture, threading constraints, and platform packaging — each with non-obvious pitfalls. On the testing side, Qt applications present unique challenges: C++ templates make unit test scaffolding awkward, coverage tools differ between Python and C++ builds, and GUI components require a live display server or headless substitute.
 
-`qt-suite` handles both sides. Domain skills load at the right moment; specialist agents activate proactively during development and after code changes; four commands drive the full test pipeline from initial generation through coverage-gap closure to headless visual verification.
+`qt-suite` handles both sides. Domain skills load at the right moment; specialist agents activate proactively during development and after code changes. Six commands cover project scaffolding, component generation, test generation, test execution, coverage analysis, and headless visual verification.
 
 ## Principles
 
@@ -54,6 +54,7 @@ claude --plugin-dir ./plugins/qt-suite
 ```mermaid
 flowchart TD
     User([User]) -->|"New project"| Scaffold["/qt-suite:scaffold"]
+    User -->|"Add component"| NewComp["/qt-suite:new-component"]
     User -->|"Implementing feature"| DevAgent["qt-app-dev agent"]
     User -->|"Error or crash"| DebugAgent["qt-debugger agent"]
     User -->|"Code written"| ReviewAgent["qt-app-reviewer agent"]
@@ -129,7 +130,7 @@ Create `.qt-test.json` in your project root (copy from `templates/qt-test.json`)
 }
 ```
 
-For personal overrides (gitignored), create `.claude/qt-test.local.md`:
+For personal overrides, create `.claude/qt-test.local.md` (Claude Code loads `.local.md` files from `.claude/` as additional context; add this path to your `.gitignore`):
 
 ```markdown
 # Qt Suite local overrides
@@ -149,10 +150,11 @@ bash skills/qt-coverage-workflow/templates/run-coverage.sh --python --threshold 
 
 ## Planned Features
 
-None currently documented in the changelog as unreleased.
+No planned features at this time.
 
 ## Known Issues
 
+- `/qt-suite:scaffold` and `/qt-suite:new-component` generate Python/PySide6 code only; no C++ template support yet.
 - C++/Qt skill coverage is partial; primary focus is Python bindings.
 - `qt-packaging` covers PyInstaller and Briefcase; Nuitka not yet covered.
 - C++/Qt coverage requires a CMake-configured build directory; set `build_dir` in `.qt-test.json` manually for custom build systems.

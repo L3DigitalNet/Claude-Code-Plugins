@@ -145,5 +145,5 @@ class <ClassName>(QMainWindow):
 
 After writing the file:
 - Show the full path created
-- Show the class skeleton (first 20 lines)
+- Show the class header (first 10 lines — enough to confirm class name and constructor signature)
 - Remind: run `pyside6-rcc` if adding icons, and set `setObjectName()` on all interactive child widgets

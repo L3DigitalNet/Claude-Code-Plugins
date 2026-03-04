@@ -10,13 +10,13 @@ allowed-tools:
   - Bash
 ---
 
-# /qt:generate — AI Test Generation
+# /qt-suite:generate — AI Test Generation
 
 Generate unit tests for this Qt project. When an argument is provided, generate tests for that specific file or class. When no argument is provided, scan the project to identify the files most in need of tests.
 
 ## Step 1: Identify Targets
 
-**If an argument was provided** (e.g., `/qt:generate src/calculator.py`):
+**If an argument was provided** (e.g., `/qt-suite:generate src/calculator.py`):
 - Use the argument as the target file or class name
 - Find the file with Glob if only a filename was given
 

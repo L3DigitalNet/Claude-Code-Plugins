@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# check-prerequisites.sh — Verifies all runtime dependencies for the qt-test-suite plugin.
-# Called by /qt:visual and /qt:run before they execute; exits 0 if all OK, 1 with human-
-# readable instructions if anything is missing. Detects distro automatically.
+# check-prerequisites.sh — Verifies all runtime dependencies for the qt-suite plugin.
+# Called by /qt-suite:visual and /qt-suite:coverage before they execute; exits 0 if all OK,
+# exits 1 with human-readable instructions if anything is missing. Detects distro automatically.
 set -euo pipefail
 
 ERRORS=()
 WARNINGS=()
 
-# ── Python ──────────────────────────────────────────────────────────────────
+# Python — required; 3.10+ for match-statement compatibility
 if ! command -v python3 &>/dev/null; then
     ERRORS+=("python3 not found — install Python 3.10+")
 else
@@ -19,7 +19,7 @@ else
     fi
 fi
 
-# ── Xvfb (virtual display for headless GUI testing) ─────────────────────────
+# Xvfb — required for headless GUI testing
 if ! command -v Xvfb &>/dev/null; then
     # Detect distro and give the right install command
     if command -v apt-get &>/dev/null; then
@@ -36,33 +36,32 @@ if ! command -v Xvfb &>/dev/null; then
     ERRORS+=("Xvfb not found — headless GUI testing requires it: ${INSTALL_CMD}")
 fi
 
-# ── CMake (for C++ projects) ─────────────────────────────────────────────────
+# CMake — optional; required for C++ Qt projects
 if ! command -v cmake &>/dev/null; then
-    WARNINGS+=("cmake not found — required for C++ Qt projects (/qt:run, /qt:coverage)")
+    WARNINGS+=("cmake not found — required for C++ Qt projects (/qt-suite:run, /qt-suite:coverage)")
 fi
 
-# ── lcov / gcov (for C++ coverage) ───────────────────────────────────────────
+# lcov / gcov — optional; required for C++ coverage reports
 if ! command -v lcov &>/dev/null; then
-    WARNINGS+=("lcov not found — required for C++ coverage reports (/qt:coverage). Install: apt install lcov / dnf install lcov")
+    WARNINGS+=("lcov not found — required for C++ coverage reports (/qt-suite:coverage). Install: apt install lcov / dnf install lcov")
 fi
 
-# ── Report ───────────────────────────────────────────────────────────────────
 if [ ${#ERRORS[@]} -gt 0 ]; then
-    echo "qt-test-suite: MISSING REQUIRED DEPENDENCIES" >&2
+    echo "qt-suite: MISSING REQUIRED DEPENDENCIES" >&2
     for err in "${ERRORS[@]}"; do
         echo "  ✗ ${err}" >&2
     done
 fi
 
 if [ ${#WARNINGS[@]} -gt 0 ]; then
-    echo "qt-test-suite: optional dependencies not found:" >&2
+    echo "qt-suite: optional dependencies not found:" >&2
     for warn in "${WARNINGS[@]}"; do
         echo "  ⚠ ${warn}" >&2
     done
 fi
 
 if [ ${#ERRORS[@]} -eq 0 ] && [ ${#WARNINGS[@]} -eq 0 ]; then
-    echo "qt-test-suite: all prerequisites satisfied" >&2
+    echo "qt-suite: all prerequisites satisfied"
 fi
 
 # Exit non-zero only for required dependencies

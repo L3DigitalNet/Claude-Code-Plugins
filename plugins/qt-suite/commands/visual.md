@@ -9,7 +9,7 @@ allowed-tools:
   - Glob
 ---
 
-# /qt:visual — Headless GUI Testing
+# /qt-suite:visual — Headless GUI Testing
 
 Launch the application headlessly and run visual tests using the Qt Pilot MCP server. Claude interacts with the live UI, verifies behavior, and writes a test report.
 
@@ -26,7 +26,7 @@ If Xvfb is missing, stop and report the install instructions — do not proceed.
 
 Determine the application entry point:
 
-1. If an argument was provided that looks like a file path (e.g., `/qt:visual src/main.py`), use it.
+1. If an argument was provided that looks like a file path (e.g., `/qt-suite:visual src/main.py`), use it.
 2. Read `.qt-test.json` — use `app_entry` field if set.
 3. If no config, search for common entry points:
    - Glob for `main.py`, `app.py`, `__main__.py` in project root and `src/`
@@ -63,7 +63,7 @@ If the argument provided describes a specific UI scenario (e.g., "test the file 
 
 ## Step 6: Execute the Test Scenario
 
-**If a scenario was provided in the argument**, execute it. For example, if the user says `/qt:visual test the save workflow`:
+**If a scenario was provided in the argument**, execute it. For example, if the user says `/qt-suite:visual test the save workflow`:
 1. Click the "Save" button or trigger the `action_save` action
 2. Verify the save dialog appears
 3. Interact with the dialog

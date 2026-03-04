@@ -194,7 +194,13 @@ cd <app-name> && python -m venv .venv && .venv/bin/pip install -e . PySide6 pyte
 
 ## Step 5: Report
 
-Confirm what was created:
+Lead with the outcome, then show the tree:
+
+```
+Initialized <app-name>/ — <N> files across <M> directories.
+```
+
+Then:
 - List the directory tree (1 level deep)
 - Show how to run: `python -m <package_name>` or `uv run <app-name>`
 - Show how to run tests: `QT_QPA_PLATFORM=offscreen pytest tests/`
