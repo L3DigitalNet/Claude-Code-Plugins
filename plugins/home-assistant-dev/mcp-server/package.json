@@ -27,7 +27,7 @@
     "anthropic",
     "development"
   ],
-  "author": "L3Digital-Net",
+  "author": "L3DigitalNet",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

@@ -2,8 +2,8 @@
   "name": "l3digitalnet-plugins",
   "description": "Curated collection of Claude Code plugins for enhanced development workflows",
   "owner": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
   "plugins": [
     {
@@ -11,11 +11,11 @@
       "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks",
       "version": "1.0.4",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "development",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
       "source": "./plugins/agent-orchestrator"
     },
     {
@@ -23,11 +23,11 @@
       "description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
       "version": "2.2.3",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "development",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
       "source": "./plugins/home-assistant-dev"
     },
     {
@@ -35,11 +35,11 @@
       "description": "Conversational GitHub repository maintenance \u2014 health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
       "version": "0.2.3",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "productivity",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/github-repo-manager",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/github-repo-manager",
       "source": "./plugins/github-repo-manager"
     },
     {
@@ -47,11 +47,11 @@
       "description": "Interactive release pipeline \u2014 context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
       "version": "2.1.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "productivity",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
       "source": "./plugins/release-pipeline"
     },
     {
@@ -59,11 +59,11 @@
       "description": "Linux system administration skills: 97 per-service guides covering daemons, CLI tools, and filesystems with annotated configs, cheatsheets, and a guided /sysadmin stack design workflow",
       "version": "1.1.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "infrastructure",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/linux-sysadmin",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/linux-sysadmin",
       "source": "./plugins/linux-sysadmin"
     },
     {
@@ -71,11 +71,11 @@
       "description": "Principled design document authoring and enforcement. /design-draft guides principles discovery and document generation. /design-review enforces principles across passes with auto-fix. Warm handoff transfers full context between commands.",
       "version": "0.3.2",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "development",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/design-assistant",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/design-assistant",
       "source": "./plugins/design-assistant"
     },
     {
@@ -83,35 +83,35 @@
       "description": "Iterative live testing framework for Claude Code plugins and MCP servers. Run a session branch, generate tests, record results, apply fixes, and iterate until convergence.",
       "version": "0.7.1",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "source": "./plugins/plugin-test-harness",
       "category": "development",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/plugin-test-harness"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-test-harness"
     },
     {
       "name": "plugin-review",
       "description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
       "version": "0.5.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "source": "./plugins/plugin-review",
       "category": "development",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/plugin-review"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-review"
     },
     {
       "name": "docs-manager",
       "description": "Documentation lifecycle management \u2014 detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
       "version": "0.2.1",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "documentation",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/docs-manager",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
       "source": "./plugins/docs-manager"
     },
     {
@@ -119,34 +119,34 @@
       "description": "Autonomous maintenance sweep for any git repository — validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests and README freshness.",
       "version": "1.2.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "source": "./plugins/repo-hygiene",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
     },
     {
       "name": "autonomous-refactor",
       "description": "Test-driven autonomous refactoring against project design principles. Snapshots a green test baseline, audits code against README.md principles, applies changes in git worktree isolation, and reverts on test failure \u2014 entirely without human input in the loop.",
       "version": "0.2.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "development",
       "source": "./plugins/autonomous-refactor",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
     },
     {
       "name": "keepass-cred-mgr",
       "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication. Exposes 10 tools for vault unlock, listing, searching, reading, writing, and bulk-importing KeePass entries with audit logging.",
       "version": "0.3.2",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "security",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr",
       "source": "./plugins/keepass-cred-mgr"
     },
     {
@@ -154,24 +154,24 @@
       "description": "Qt development and testing toolkit: proactive specialist agents, 16 domain skills, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
       "version": "0.2.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "development",
       "source": "./plugins/qt-suite",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/qt-suite"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
     },
     {
       "name": "python-dev",
       "description": "11 Python development skills covering async patterns, anti-patterns, type safety, testing, resilience, observability, configuration, design patterns, resource management, code style, and background jobs. Includes /python-code-review for comprehensive code audits across all domains.",
       "version": "1.0.0",
       "author": {
-        "name": "L3Digital-Net",
-        "url": "https://github.com/L3Digital-Net"
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
       },
       "category": "development",
       "source": "./plugins/python-dev",
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/python-dev"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
     }
   ]
 }

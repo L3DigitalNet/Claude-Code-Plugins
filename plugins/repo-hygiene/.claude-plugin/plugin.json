@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "description": "Autonomous maintenance sweep for any git repository — validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests and README freshness.",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   }
 }

@@ -87,5 +87,5 @@ None.
 
 ## Links
 
-- [Plugin source](https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/python-dev)
-- [Plugin development docs](https://github.com/L3Digital-Net/Claude-Code-Plugins/blob/main/docs/plugins.md)
+- [Plugin source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev)
+- [Plugin development docs](https://github.com/L3DigitalNet/Claude-Code-Plugins/blob/main/docs/plugins.md)

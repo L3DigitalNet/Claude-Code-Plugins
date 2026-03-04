@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "11 Python development skills covering async patterns, anti-patterns, type safety, testing, resilience, observability, configuration, design patterns, resource management, code style, and background jobs. Includes /python-code-review for comprehensive code audits across all domains.",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/python-dev"
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
 }

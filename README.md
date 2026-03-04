@@ -7,13 +7,13 @@ A Claude Code plugin marketplace. Plugins cover the full development lifecycle: 
 Add this marketplace to your Claude Code installation:
 
 ```bash
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 ```
 
 Or using the full URL:
 
 ```bash
-/plugin marketplace add https://github.com/L3Digital-Net/Claude-Code-Plugins.git
+/plugin marketplace add https://github.com/L3DigitalNet/Claude-Code-Plugins.git
 ```
 
 Then install individual plugins:

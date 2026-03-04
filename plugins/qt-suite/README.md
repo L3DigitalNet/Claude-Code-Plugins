@@ -39,7 +39,7 @@ Run `bash <plugin-root>/scripts/check-prerequisites.sh` to verify your setup.
 ## Installation
 
 ```bash
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install qt-suite@l3digitalnet-plugins
 ```
 

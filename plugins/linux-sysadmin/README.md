@@ -31,7 +31,7 @@ Design decisions in this plugin are evaluated against these principles.
 ## Installation
 
 ```bash
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install linux-sysadmin@l3digitalnet-plugins
 ```
 
@@ -109,7 +109,7 @@ See the [design document](../../docs/plans/2026-03-01-linux-sysadmin-design.md) 
 
 ## Links
 
-- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
+- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
-- Issues and feedback: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)
+- Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
 - Design document: [`docs/plans/2026-03-01-linux-sysadmin-design.md`](../../docs/plans/2026-03-01-linux-sysadmin-design.md)

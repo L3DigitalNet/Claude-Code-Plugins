@@ -40,7 +40,7 @@ Unlocking the vault starts a persistent `keepassxc-cli open` REPL process; one Y
 ## Installation
 
 ```
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install keepass-cred-mgr@l3digitalnet-plugins
 ```
 
@@ -221,8 +221,8 @@ This plugin is designed for trusted local machines with full disk encryption. It
 
 ## Links
 
-- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
+- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 - Setup Guide: [`docs/keepass-cred-mgr-setup.md`](docs/keepass-cred-mgr-setup.md)
 - Design Document: [`docs/keepass-cred-mgr-design.md`](docs/keepass-cred-mgr-design.md)
-- Issues and feedback: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)
+- Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)

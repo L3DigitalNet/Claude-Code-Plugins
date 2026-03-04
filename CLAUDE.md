@@ -168,9 +168,9 @@ Canonical entry template:
   "name": "plugin-name",
   "description": "One or two sentences.",
   "version": "1.0.0",
-  "author": { "name": "L3Digital-Net", "url": "https://github.com/L3Digital-Net" },
+  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
   "source": "./plugins/plugin-name",
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/plugin-name"
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name"
 }
 ```
 

@@ -32,7 +32,7 @@ docs-manager is a Claude Code plugin that manages the full lifecycle of personal
 ## Installation
 
 ```
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install docs-manager@l3digitalnet-plugins
 ```
 
@@ -223,7 +223,7 @@ template: homelab-service-runbook
 
 ## Links
 
-- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
+- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Design document: [docs/design.md](docs/design.md)
-- Issues: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)
+- Issues: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
