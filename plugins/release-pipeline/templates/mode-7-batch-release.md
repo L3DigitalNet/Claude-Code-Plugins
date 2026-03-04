@@ -82,6 +82,8 @@ Repeat the following block for each plugin in `unreleased_plugins` in order.
 
 ### Phase 1 — Scoped Pre-flight
 
+**IMPORTANT:** Before making any tool calls for pre-flight, output: `"Launching pre-flight checks for <plugin-name> v<proposed-version> in parallel..."`
+
 Launch THREE Task agents simultaneously (same as Mode 3 Phase 1):
 
 **Agent A — Test Runner (scoped):**

@@ -30,6 +30,8 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` f
 Before launching pre-flight checks, apply automatic recovery for the two most common failure
 modes. Set `auto_stash_pending=false` before starting.
 
+**IMPORTANT:** Before any script calls, output: `"Applying auto-heal checks..."`
+
 **Step 1 — Auto-stash dirty working tree:**
 
 ```bash
@@ -183,7 +185,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "v<version>"
 
 Capture the first line of stdout as `tag_status`. Branch based on value:
 - `MISSING`: proceed to `git tag -a` step normally
-- `LOCAL_ONLY`, `BOTH`, or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists locally or remotely; proceed directly to `git push origin main --tags`
+- `LOCAL_ONLY`, `BOTH`, or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists; note: `"⚡ Tag v<version> already found (<tag_status>) — skipping local tag creation"`; proceed directly to `git push origin main --tags`
 
 ```bash
 git tag -a "v<version>" -m "Release v<version>"

@@ -3,7 +3,41 @@ name: test-runner
 description: Run full test suite and report pass/fail count with coverage. Used by release pipeline Phase 1.
 tools: Bash, Read, Glob, Grep
 model: sonnet
+# sonnet chosen over haiku: test output requires language-specific heuristics and failure interpretation.
+whenToUse: |
+  Spawned automatically by the release-pipeline command during Phase 1 pre-flight checks.
+  Not intended for direct user invocation — the release command dispatches this agent as part
+  of the Full Release, Plugin Release, or Batch Release flows.
+
+  <example>
+  Context: User selects "Full Release" from the /release menu
+  user: "/release"
+  assistant: "Launching pre-flight checks for v2.0.0 in parallel..."
+  <commentary>
+  The release command spawns test-runner in parallel with docs-auditor and git-preflight
+  during Phase 1 to verify the test suite passes before committing, tagging, and pushing.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User selects "Plugin Release" from the /release menu
+  user: "/release"
+  assistant: "Launching pre-flight checks for my-plugin v1.0.0 in parallel..."
+  <commentary>
+  The release command spawns test-runner during plugin-scoped Phase 1, with scope restricted
+  to the selected plugin's test directory.
+  </commentary>
+  </example>
 ---
+
+<!--
+  Role: test suite runner for the release-pipeline orchestrator.
+  Called by: release command → mode-2-full-release.md, mode-3-plugin-release.md,
+             mode-7-batch-release.md (via Mode 3 Phase 1 reference) — all in Phase 1.
+  Output contract: fixed-width TEST RESULTS block parsed by the mode templates.
+  Cross-file: detect-test-runner.sh handles framework detection; check-waivers.sh provides missing_tests waiver.
+  Model choice: sonnet — test output requires language-specific heuristics and failure interpretation.
+-->
 
 You are the test runner agent for a release pipeline pre-flight check.
 

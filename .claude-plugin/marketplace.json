@@ -14,7 +14,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
       "source": "./plugins/agent-orchestrator"
     },
@@ -26,7 +25,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
       "source": "./plugins/home-assistant-dev"
     },
@@ -38,19 +36,17 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "productivity",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/github-repo-manager",
       "source": "./plugins/github-repo-manager"
     },
     {
       "name": "release-pipeline",
-      "description": "Interactive release pipeline \u2014 context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
+      "description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
       "version": "2.1.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "productivity",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
       "source": "./plugins/release-pipeline"
     },
@@ -62,7 +58,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "infrastructure",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/linux-sysadmin",
       "source": "./plugins/linux-sysadmin"
     },
@@ -74,7 +69,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/design-assistant",
       "source": "./plugins/design-assistant"
     },
@@ -87,7 +81,6 @@
         "url": "https://github.com/L3DigitalNet"
       },
       "source": "./plugins/plugin-test-harness",
-      "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-test-harness"
     },
     {
@@ -99,7 +92,6 @@
         "url": "https://github.com/L3DigitalNet"
       },
       "source": "./plugins/plugin-review",
-      "category": "development",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-review"
     },
     {
@@ -110,7 +102,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "documentation",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
       "source": "./plugins/docs-manager"
     },
@@ -133,7 +124,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "development",
       "source": "./plugins/autonomous-refactor",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/autonomous-refactor"
     },
@@ -145,7 +135,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "security",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr",
       "source": "./plugins/keepass-cred-mgr"
     },
@@ -157,7 +146,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "development",
       "source": "./plugins/qt-suite",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
     },
@@ -169,7 +157,6 @@
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
       },
-      "category": "development",
       "source": "./plugins/python-dev",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
     }

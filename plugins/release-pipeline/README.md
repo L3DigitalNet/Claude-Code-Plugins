@@ -135,7 +135,7 @@ If no runner is detected, the `missing_tests` waiver is checked before reporting
 
 Before pre-flight runs in Full Release, Plugin Release, and Batch Release modes, two common blockers are resolved automatically.
 
-A dirty working tree is auto-stashed via `auto-stash.sh stash` before pre-flight and restored after all git operations complete (before the GitHub API call) via `auto-stash.sh pop`. A non-noreply git email is corrected by `fix-git-email.sh`, which parses the remote URL (HTTPS or SSH) to derive the correct `@users.noreply.github.com` address and applies it with `git config --local --auto-fix`.
+A dirty working tree is auto-stashed via `auto-stash.sh stash` before pre-flight and restored after all git operations complete (before the GitHub API call) via `auto-stash.sh pop`. A non-noreply git email is corrected by `fix-git-email.sh`, which parses the remote URL (HTTPS or SSH) to derive the correct `@users.noreply.github.com` address and sets it with `git config --local user.email <address>`.
 
 Both recoveries are noted inline. If either cannot be resolved, the pipeline stops immediately.
 
@@ -158,7 +158,7 @@ GitHub CLI calls in Phase 3.5 (release create) and Phase 4 (verify) are wrapped 
 
 ## Planned Features
 
-None currently documented in the changelog as unreleased.
+No planned features at this time.
 
 ## Known Issues
 

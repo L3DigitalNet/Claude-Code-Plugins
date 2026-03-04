@@ -3,7 +3,40 @@ name: docs-auditor
 description: Audit documentation for stale versions, broken links, and tone. Used by release pipeline Phase 1.
 tools: Read, Glob, Grep
 model: sonnet
+whenToUse: |
+  Spawned automatically by the release-pipeline command during Phase 1 pre-flight checks.
+  Not intended for direct user invocation — the release command dispatches this agent as part
+  of the Full Release, Plugin Release, or Batch Release flows.
+
+  <example>
+  Context: User selects "Full Release" from the /release menu
+  user: "/release"
+  assistant: "Launching pre-flight checks for v1.5.0 in parallel..."
+  <commentary>
+  The release command spawns docs-auditor in parallel with test-runner and git-preflight
+  during Phase 1 to check version consistency, broken links, and tone before releasing.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User selects "Plugin Release" from the /release menu
+  user: "/release"
+  assistant: "Launching pre-flight checks for my-plugin v0.3.0 in parallel..."
+  <commentary>
+  The release command spawns docs-auditor during plugin-scoped Phase 1, with scope restricted
+  to the selected plugin's README and docs directory.
+  </commentary>
+  </example>
 ---
+
+<!--
+  Role: documentation auditor for the release-pipeline orchestrator.
+  Called by: release command → mode-2-full-release.md, mode-3-plugin-release.md,
+             mode-7-batch-release.md (via Mode 3 Phase 1 reference) — all in Phase 1.
+  Output contract: fixed-width DOCS AUDIT block parsed by the mode templates.
+  Cross-file: check-waivers.sh provides stale_docs waiver; broken links are never waivable.
+  Model choice: sonnet — tone detection and version consistency require language understanding.
+-->
 
 You are the documentation auditor for a release pipeline pre-flight check.
 
@@ -57,7 +90,7 @@ Version refs: X checked, Y stale
 Broken links: X found
 Tone flags: X found
 Missing files: [list or "none"]
-Details: [specific issues, one per line]
+Details: [specific issues, one per line, truncated to 10 lines max]
 ```
 
 ## Rules

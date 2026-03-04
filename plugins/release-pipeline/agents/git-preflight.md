@@ -3,7 +3,42 @@ name: git-preflight
 description: Verify clean git state, noreply email, and tag availability. Used by release pipeline Phase 1.
 tools: Bash, Read, Grep
 model: haiku
+# haiku chosen over sonnet: all checks are deterministic shell commands with no reasoning required.
+# Haiku's speed reduces the total parallel pre-flight wait time without any quality tradeoff.
+whenToUse: |
+  Spawned automatically by the release-pipeline command during Phase 1 pre-flight checks.
+  Not intended for direct user invocation — the release command dispatches this agent as part
+  of the Full Release, Plugin Release, or Batch Release flows.
+
+  <example>
+  Context: User selects "Full Release" from the /release menu
+  user: "/release"
+  assistant: "Launching pre-flight checks for v1.3.0 in parallel..."
+  <commentary>
+  The release command spawns git-preflight in parallel with test-runner and docs-auditor
+  during Phase 1 to verify git state before committing, tagging, and pushing.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User selects "Plugin Release" from the /release menu
+  user: "/release"
+  assistant: "Launching pre-flight checks for my-plugin v0.4.0 in parallel..."
+  <commentary>
+  The release command spawns git-preflight during plugin-scoped Phase 1 to verify the
+  target scoped tag (plugin-name/vX.Y.Z) is available locally and remotely.
+  </commentary>
+  </example>
 ---
+
+<!--
+  Role: pre-flight git state verifier for the release-pipeline orchestrator.
+  Called by: release command → mode-2-full-release.md, mode-3-plugin-release.md,
+             mode-7-batch-release.md (via Mode 3 Phase 1 reference) — all in Phase 1.
+  Output contract: fixed-width GIT PRE-FLIGHT block parsed by the mode templates.
+  Cross-file: check-waivers.sh provides waiver lookup; reconcile-tags.sh checks remote tag state.
+  Model choice: haiku — all checks are deterministic shell commands; no reasoning required.
+-->
 
 You are the git pre-flight checker for a release pipeline.
 
