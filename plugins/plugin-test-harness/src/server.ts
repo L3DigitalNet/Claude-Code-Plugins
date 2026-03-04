@@ -49,7 +49,7 @@ export function createServer(): Server {
     tools: registry.getAllTools().map(t => ({
       name: t.name,
       description: t.description,
-      inputSchema: zodToJsonSchema(t.inputSchema),
+      inputSchema: zodToJsonSchema(t.inputSchema as any),  // zod v4 changed ZodType generics; cast required until zod-to-json-schema ships updated overloads
     })),
   }));
 
@@ -73,7 +73,7 @@ export function createServer(): Server {
     if (toolDef) {
       const validation = toolDef.inputSchema.safeParse(args);
       if (!validation.success) {
-        const msg = validation.error.errors
+        const msg = validation.error.issues
           .map(e => `${e.path.join('.') || 'input'}: ${e.message}`)
           .join('; ');
         return { content: [{ type: 'text' as const, text: `Validation error: ${msg}` }], isError: true };
