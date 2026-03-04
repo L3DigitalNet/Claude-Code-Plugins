@@ -109,7 +109,7 @@ See the [design document](../../docs/plans/2026-03-01-linux-sysadmin-design.md) 
 
 ## Planned Features
 
-See [`skill-inventory-and-gaps.md`](skills/skill-inventory-and-gaps.md) for the full prioritized backlog. Top-tier candidates include: `logwatch`, `auditd`, `nftables`, `keepalived`, `gluster`, `ceph`, `vault` (HashiCorp), `k3s`, and `podman-compose`.
+See [`skill-inventory-and-gaps.md`](docs/skill-inventory-and-gaps.md) for the full prioritized backlog. Top-tier candidates include: `logwatch`, `auditd`, `nftables`, `keepalived`, `gluster`, `ceph`, `vault` (HashiCorp), `k3s`, and `podman-compose`.
 
 ## Known Issues
 

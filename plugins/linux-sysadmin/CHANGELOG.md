@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-03-04
+
+### Added
+- add ansible and restic skills (v1.1.0)
+
+### Changed
+- update org references from L3Digital-Net to L3DigitalNet
+- add skill gap analysis and ansible+restic design doc
+
+### Fixed
+- apply audit findings — CHANGELOG, README, sysadmin command
+
+
 ## [Unreleased]
 
 ## [1.1.0] - 2026-03-02
