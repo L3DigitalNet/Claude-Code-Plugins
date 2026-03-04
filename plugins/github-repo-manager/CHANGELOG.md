@@ -2,6 +2,12 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [0.3.1] - 2026-03-04
+
+### Fixed
+- apply audit findings — plugin.json, CHANGELOG, skills
+
+
 ## [Unreleased]
 
 ## [0.3.0] - 2026-03-04
