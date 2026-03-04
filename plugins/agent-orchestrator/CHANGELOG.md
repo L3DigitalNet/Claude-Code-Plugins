@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.0.5] - 2026-03-04
+
+### Changed
+- update remaining L3Digital-Net references
+- update org references from L3Digital-Net to L3DigitalNet
+
+### Fixed
+- apply audit findings — docs, scripts, context efficiency
+
+
 ## [1.0.4] - 2026-03-02
 
 ### Changed
