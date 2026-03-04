@@ -4,7 +4,7 @@
 
 ## Summary
 
-Python projects accumulate quality debt in specific, well-known patterns: no retry on external calls, hardcoded config, missing type annotations, untested error paths. Rather than relying on a developer to remember which domain applies to what they're building, this plugin loads the right guidance automatically — the async skill appears when you write async code, the resilience skill appears when you call external APIs, and so on.
+Python projects accumulate quality debt in specific, well-known patterns: no retry on external calls, hardcoded config, missing type annotations, untested error paths. Rather than relying on a developer to remember which domain applies to what they're building, this plugin loads the right guidance automatically: the async skill appears when you write async code, the resilience skill appears when you call external APIs, and so on.
 
 `/python-code-review` brings all 11 domains together into a single structured audit that identifies critical issues, prioritizes what to fix first, and highlights what the code already does well.
 
@@ -14,7 +14,7 @@ Design decisions in this plugin are evaluated against these principles.
 
 **[P1] Context-triggered, not explicitly invoked**: Skills load when the AI determines they are relevant to the current task. No user action required for routine coding sessions.
 
-**[P2] Audit without false positives**: The review command checks only for concrete, demonstrable issues — not opinions. Each finding maps to a specific anti-pattern or missing practice with an identifiable location.
+**[P2] Audit without false positives**: The review command checks only for concrete, demonstrable issues, not opinions. Each finding maps to a specific anti-pattern or missing practice with an identifiable location.
 
 **[P3] Domain isolation**: Each skill covers exactly one concern. Overlap between skills is intentional cross-reference, not duplication.
 
@@ -49,7 +49,7 @@ graph TD
 
 ## Usage
 
-Skills load automatically during coding sessions — no explicit invocation needed. When you write async code, the `async-python-patterns` skill loads. When you add retries, `python-resilience` loads. The mermaid diagram above shows the general flow.
+Skills load automatically during coding sessions, with no explicit invocation needed. When you write async code, the `async-python-patterns` skill loads. When you add retries, `python-resilience` loads. The mermaid diagram above shows the general flow.
 
 For a one-pass audit of existing code, run `/python-code-review` with an optional path:
 
@@ -65,7 +65,7 @@ The review works through all 11 domains and emits a prioritized summary at the e
 
 | Command | Description |
 |---------|-------------|
-| `/python-code-review [path]` | Run a comprehensive quality audit across all 11 Python domains. Path is optional — defaults to current directory. Accepts a file, directory, or glob pattern. |
+| `/python-code-review [path]` | Run a comprehensive quality audit across all 11 Python domains. Path is optional (defaults to current directory). Accepts a file, directory, or glob pattern. |
 
 ## Skills
 

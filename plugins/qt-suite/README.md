@@ -4,7 +4,7 @@ Complete Qt development and testing toolkit: proactive specialist agents, 16 dom
 
 ## Summary
 
-Qt GUI development involves many interacting systems — signals and slots, layout managers, Model/View architecture, threading constraints, and platform packaging — each with non-obvious pitfalls. On the testing side, Qt applications present unique challenges: C++ templates make unit test scaffolding awkward, coverage tools differ between Python and C++ builds, and GUI components require a live display server or headless substitute.
+Qt GUI development involves many interacting systems (signals and slots, layout managers, Model/View architecture, threading constraints, and platform packaging), each with non-obvious pitfalls. On the testing side, Qt applications present unique challenges: C++ templates make unit test scaffolding awkward, coverage tools differ between Python and C++ builds, and GUI components require a live display server or headless substitute.
 
 `qt-suite` handles both sides. Domain skills load at the right moment; specialist agents activate proactively during development and after code changes. Six commands cover project scaffolding, component generation, test generation, test execution, coverage analysis, and headless visual verification.
 
@@ -70,7 +70,7 @@ flowchart TD
 
 ## Usage
 
-Run `/qt-suite:scaffold <app-name>` to initialize a new project with the standard layout and test config. Use the commands below as development progresses. The four specialist agents (`qt-app-dev`, `qt-debugger`, `qt-app-reviewer`, `qt-ux-advisor`) activate proactively — no explicit invocation needed.
+Run `/qt-suite:scaffold <app-name>` to initialize a new project with the standard layout and test config. Use the commands below as development progresses. The four specialist agents (`qt-app-dev`, `qt-debugger`, `qt-app-reviewer`, `qt-ux-advisor`) activate proactively with no explicit invocation needed.
 
 ## Commands
 
