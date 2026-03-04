@@ -96,23 +96,23 @@ Use an object with `source` and `url` keys:
 
 ## Complete Marketplace Example
 
-This is the canonical format used by L3Digital-Net:
+This is the canonical format used by L3DigitalNet:
 
 ```json
 {
   "name": "l3digitalnet-plugins",
-  "description": "Claude Code plugins by L3Digital-Net",
+  "description": "Claude Code plugins by L3DigitalNet",
   "owner": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
   "plugins": [
     {
       "name": "agent-orchestrator",
       "description": "Spawn and coordinate teams of specialized Claude agents to parallelize complex, multi-step tasks.",
       "version": "2.1.0",
-      "author": { "name": "L3Digital-Net", "url": "https://github.com/L3Digital-Net" },
-      "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
+      "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
       "source": "./plugins/agent-orchestrator"
     },
     {

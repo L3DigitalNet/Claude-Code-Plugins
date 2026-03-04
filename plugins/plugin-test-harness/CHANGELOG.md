@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 - em dash cleanup, root README sync
 - fix structural README issues and docs path
-- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Update GitHub org references from L3DigitalNet to L3DigitalNet
 - reduce AI writing signals across all plugin READMEs
 
 ### Fixed

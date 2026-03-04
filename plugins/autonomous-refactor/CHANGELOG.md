@@ -9,7 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - add --dry-run flag for opportunity preview
 
 ### Changed
-- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Update GitHub org references from L3DigitalNet to L3DigitalNet
 - reduce AI writing signals across all plugin READMEs
 - Enhance documentation and structure for multiple plugins
 

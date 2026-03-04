@@ -18,7 +18,7 @@
 ### Changed
 - update P9 and hooks table to say 'blocks' not 'warns'
 - em dash cleanup, root README sync
-- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Update GitHub org references from L3DigitalNet to L3DigitalNet
 - reduce AI writing signals across all plugin READMEs
 - Enhance Release Pipeline and Repo Hygiene Plugins
 - update plugin docs, PTH README for v0.6.0, and repo template

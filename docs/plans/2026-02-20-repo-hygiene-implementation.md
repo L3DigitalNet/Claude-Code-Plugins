@@ -35,8 +35,8 @@ mkdir -p plugins/repo-hygiene/scripts
   "version": "1.0.0",
   "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   }
 }
 ```
@@ -863,11 +863,11 @@ Open `.claude-plugin/marketplace.json`. Append to the `plugins` array:
   "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
   "version": "1.0.0",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
   "source": "./plugins/repo-hygiene",
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
 }
 ```
 

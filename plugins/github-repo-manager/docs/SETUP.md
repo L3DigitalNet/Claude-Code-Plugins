@@ -11,7 +11,7 @@
 Install via the Claude Code plugin marketplace:
 
 ```bash
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install github-repo-manager@l3digitalnet-plugins
 ```
 

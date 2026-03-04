@@ -10,7 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - fix structural README issues and docs path
-- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Update GitHub org references from L3DigitalNet to L3DigitalNet
 - strengthen triggers and extract long content to references
 - Enhance documentation and structure for multiple plugins
 

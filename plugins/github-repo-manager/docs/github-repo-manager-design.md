@@ -463,7 +463,7 @@ When a cross-repo community health check reveals the same file missing from mult
 ```
 Claude: SECURITY.md is missing from all 5 of your public repos.
         Instead of adding it to each one, you could create a
-        .github repository for your L3Digital-Net organization.
+        .github repository for your L3DigitalNet organization.
         Files in that repo automatically apply to all your repos
         that don't have their own version.
 
@@ -1105,7 +1105,7 @@ Every `gh-manager` command returns structured errors to stderr with a non-zero e
 {
   "error": "Resource not accessible by integration",
   "status": 403,
-  "endpoint": "GET /repos/L3Digital-Net/ha-light-controller/dependabot/alerts",
+  "endpoint": "GET /repos/L3DigitalNet/ha-light-controller/dependabot/alerts",
   "context": "PAT lacks 'security_events' permission or Dependabot is not enabled"
 }
 ```
@@ -2120,7 +2120,7 @@ The plugin follows the Claude Code plugin pattern established in the `Claude-Cod
   "description": "Conversational GitHub repository maintenance — health auditing, wiki sync, PR triage, security posture, and community file management via PAT.",
   "version": "0.2.2",
   "author": {
-    "name": "L3Digital-Net"
+    "name": "L3DigitalNet"
   },
   "keywords": [
     "github",
@@ -2268,7 +2268,7 @@ The setup script is run once after cloning. The SKILL.md references `${CLAUDE_PL
 | 0.3 | 2026-02-17 | Resolved: Branch/mutation strategy → Tier-based (Section 7). Four-tier repo classification system with auto-detection and manual override. Tier-specific mutation policies, staleness thresholds, and PR batching strategy. Updated config schema with `tier` field and tier-aware defaults. |
 | 0.4 | 2026-02-17 | Resolved: Wiki access method → One-way git publish, repo is source of truth (Section 5.1). Rewrote wiki sync module as publish pipeline with page mapping, auto-generation from code analysis, orphan handling, and wiki scaffolding management. Scoped to Tiers 3-4 only. Updated helper CLI, config schema, and non-goals. Also resolved wiki content generation (Q6). |
 | 0.5 | 2026-02-17 | Resolved: State persistence → No persistence, stateless and conversational (Q3, Q9). Rewrote problem statement, goals, non-goals, tier behaviors, invocation interface, and report structure to reflect conversational model. Owner is always in the loop. Removed automation flags from config. Added example session flow, mid-conversation directives, and deferred items tracking in reports. |
-| 0.6 | 2026-02-17 | Resolved: Multi-repo support (Q4). Two interaction modes: single-repo sessions (primary) and cross-repo targeted checks (secondary). Report → Recommend → Act flow for cross-repo. Auto-discover repos from PAT, optional portfolio.yml for overrides. Fork detection and skip-by-default. Scope inference for cross-repo checks. Added repos discovery commands to helper CLI. Updated executive summary, non-goals, auto-detection with fork handling. Grounded examples in actual L3Digital-Net repo data. |
+| 0.6 | 2026-02-17 | Resolved: Multi-repo support (Q4). Two interaction modes: single-repo sessions (primary) and cross-repo targeted checks (secondary). Report → Recommend → Act flow for cross-repo. Auto-discover repos from PAT, optional portfolio.yml for overrides. Fork detection and skip-by-default. Scope inference for cross-repo checks. Added repos discovery commands to helper CLI. Updated executive summary, non-goals, auto-detection with fork handling. Grounded examples in actual L3DigitalNet repo data. |
 | 0.7 | 2026-02-17 | Added Section 7.6: Communication Style & Educational Approach. Seven principles: explanatory context, implication warnings, irreversibility flags, jargon translation, tier-aware sensitivity, teaching moments, and progressive depth. All examples grounded in real repo scenarios. This is a skill-layer concern defined in SKILL.md, not in the helper. |
 | 0.8 | 2026-02-17 | Added configurable owner expertise level (beginner/intermediate/advanced) to Section 7.6. Modulates all seven communication principles. Added to portfolio.yml config. Supports mid-session adjustment. |
 | 0.9 | 2026-02-17 | Resolved: Error recovery (Q8). Added Section 7.7: Conversational error handling. Structured error contract for helper, six error categories, inline and accumulated error reporting, cross-repo error tolerance, partial report generation. No hardcoded recovery logic — owner decides how to proceed. |
@@ -2287,4 +2287,4 @@ The setup script is run once after cloning. The SKILL.md references `${CLAUDE_PL
 
 ---
 
-*This document is a complete design spec (v2.0). All open questions have been resolved through collaborative discussion. Eight review passes confirmed internal consistency across all sections. The design is grounded in actual repository data from the L3Digital-Net GitHub account (19 repos, 4 tiers). Ready for Phase 0 implementation.*
+*This document is a complete design spec (v2.0). All open questions have been resolved through collaborative discussion. Eight review passes confirmed internal consistency across all sections. The design is grounded in actual repository data from the L3DigitalNet GitHub account (19 repos, 4 tiers). Ready for Phase 0 implementation.*

@@ -82,7 +82,7 @@ jq . plugins/agent-orchestrator/.claude-plugin/plugin.json
 Once pushed to GitHub, users can install with:
 
 ```bash
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install agent-orchestrator@claude-code-plugins
 ```
 

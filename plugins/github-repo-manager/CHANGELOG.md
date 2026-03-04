@@ -5,7 +5,7 @@ All notable changes to the github-repo-manager plugin are documented here.
 ## [0.2.3] - 2026-03-02
 
 ### Changed
-- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Update GitHub org references from L3DigitalNet to L3DigitalNet
 - reduce AI writing signals across all plugin READMEs
 - Enhance documentation and structure for multiple plugins
 

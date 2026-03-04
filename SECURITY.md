@@ -15,7 +15,7 @@ Older plugin versions are not patched — please update to the latest release.
 **Please do not report security vulnerabilities via public GitHub issues.**
 
 To report a vulnerability, use GitHub's private vulnerability reporting:
-1. Go to the [Security tab](https://github.com/L3Digital-Net/Claude-Code-Plugins/security)
+1. Go to the [Security tab](https://github.com/L3DigitalNet/Claude-Code-Plugins/security)
 2. Click **"Report a vulnerability"**
 3. Fill in the details
 

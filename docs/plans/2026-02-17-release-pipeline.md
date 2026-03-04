@@ -35,8 +35,8 @@ Create `plugins/release-pipeline/.claude-plugin/plugin.json`:
   "description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
   "version": "1.0.0",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
   "keywords": [
     "release",
@@ -1041,7 +1041,7 @@ Auto-detected from project files:
 ## Installation
 
 ```
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install release-pipeline@l3digitalnet-plugins
 ```
 ```
@@ -1070,12 +1070,12 @@ Add this object to the `plugins` array in `.claude-plugin/marketplace.json`:
   "description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
   "version": "1.0.0",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
   "license": "MIT",
   "keywords": ["release", "versioning", "changelog", "deployment"],
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
   "source": "./plugins/release-pipeline"
 }
 ```

@@ -1149,7 +1149,7 @@ Auto-detected from project files:
 ## Installation
 
 ```
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install release-pipeline@l3digitalnet-plugins
 ```
 ```

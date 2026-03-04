@@ -842,8 +842,8 @@ git commit -m "feat(plugin-review): add Assertions Coverage section to final rep
   "description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
   "version": "0.3.0",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   }
 }
 ```

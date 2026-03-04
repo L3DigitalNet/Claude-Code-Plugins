@@ -78,9 +78,9 @@ New entry added to `.claude-plugin/marketplace.json`:
   "name": "python-dev",
   "description": "11 Python development skills covering async patterns, anti-patterns, type safety, testing, resilience, observability, and more. Includes /python-code-review for comprehensive code audits.",
   "version": "1.0.0",
-  "author": { "name": "L3Digital-Net", "url": "https://github.com/L3Digital-Net" },
+  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
   "source": "./plugins/python-dev",
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/python-dev"
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
 }
 ```
 

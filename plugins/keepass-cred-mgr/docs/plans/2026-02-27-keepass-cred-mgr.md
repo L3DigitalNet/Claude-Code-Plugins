@@ -2476,11 +2476,11 @@ Modify: `.claude-plugin/marketplace.json` — append to the `plugins` array:
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication. Exposes 8 tools for listing, searching, reading, and writing KeePass entries with audit logging.",
   "version": "1.0.0",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
   "category": "security",
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr",
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr",
   "source": "./plugins/keepass-cred-mgr"
 }
 ```

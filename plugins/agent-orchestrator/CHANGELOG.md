@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.0.4] - 2026-03-02
 
 ### Changed
-- Update GitHub org references from L3DigitalNet to L3Digital-Net
+- Update GitHub org references from L3DigitalNet to L3DigitalNet
 - reduce AI writing signals across all plugin READMEs
 - Enhance documentation and structure for multiple plugins
 

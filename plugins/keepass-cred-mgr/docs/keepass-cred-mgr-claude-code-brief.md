@@ -357,10 +357,10 @@ Each tool registration must include a description string accurate to the tool's 
   "description": "MCP server for secure KeePass vault access from Claude Code via YubiKey authentication",
   "version": "0.3.2",
   "author": {
-    "name": "L3Digital-Net",
-    "url": "https://github.com/L3Digital-Net"
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
   },
-  "homepage": "https://github.com/L3Digital-Net/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr"
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/keepass-cred-mgr"
 }
 ```
 

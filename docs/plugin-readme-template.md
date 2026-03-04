@@ -71,7 +71,7 @@ Design decisions in this plugin are evaluated against these principles.
 ## Installation
 
 ```bash
-/plugin marketplace add L3Digital-Net/Claude-Code-Plugins
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install plugin-name@l3digitalnet-plugins
 ```
 
@@ -225,7 +225,7 @@ other_setting: true          # Why the default is what it is
 
 ## Links
 
-- Repository: [L3Digital-Net/Claude-Code-Plugins](https://github.com/L3Digital-Net/Claude-Code-Plugins)
+- Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
-- Issues and feedback: [GitHub Issues](https://github.com/L3Digital-Net/Claude-Code-Plugins/issues)
+- Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
 - Design document: [`docs/DESIGN.md`](docs/DESIGN.md) *(if one exists)*

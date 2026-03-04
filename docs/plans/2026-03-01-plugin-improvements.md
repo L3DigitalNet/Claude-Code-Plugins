@@ -178,7 +178,7 @@ implementation file changes.
 
 ### Task 3: Fix agent-orchestrator plugin.json author
 
-**Context:** `plugins/agent-orchestrator/.claude-plugin/plugin.json` has `"author": {"name": "Agent Orchestrator"}` — it's missing the `url` field and uses a generic descriptive name instead of the publisher identity. All other plugins use `"L3Digital-Net"` with the GitHub URL. The marketplace.json already has the correct author; only plugin.json needs fixing.
+**Context:** `plugins/agent-orchestrator/.claude-plugin/plugin.json` has `"author": {"name": "Agent Orchestrator"}` — it's missing the `url` field and uses a generic descriptive name instead of the publisher identity. All other plugins use `"L3DigitalNet"` with the GitHub URL. The marketplace.json already has the correct author; only plugin.json needs fixing.
 
 **Files:**
 - Modify: `plugins/agent-orchestrator/.claude-plugin/plugin.json`
@@ -197,8 +197,8 @@ With:
 
 ```json
 "author": {
-  "name": "L3Digital-Net",
-  "url": "https://github.com/L3Digital-Net"
+  "name": "L3DigitalNet",
+  "url": "https://github.com/L3DigitalNet"
 }
 ```
 
@@ -206,14 +206,14 @@ With:
 
 ```bash
 python3 -c "import json; d=json.load(open('plugins/agent-orchestrator/.claude-plugin/plugin.json')); print(d['author'])"
-# Expected: {'name': 'L3Digital-Net', 'url': 'https://github.com/L3Digital-Net'}
+# Expected: {'name': 'L3DigitalNet', 'url': 'https://github.com/L3DigitalNet'}
 ```
 
 **Step 3: Commit**
 
 ```bash
 git add plugins/agent-orchestrator/.claude-plugin/plugin.json
-git commit -m "fix(agent-orchestrator): standardize plugin.json author to L3Digital-Net"
+git commit -m "fix(agent-orchestrator): standardize plugin.json author to L3DigitalNet"
 ```
 
 ---
