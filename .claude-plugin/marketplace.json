@@ -97,7 +97,7 @@
     {
       "name": "docs-manager",
       "description": "Documentation lifecycle management \u2014 detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
