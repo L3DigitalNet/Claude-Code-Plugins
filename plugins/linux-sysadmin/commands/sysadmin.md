@@ -118,8 +118,10 @@ Guidelines for recommendations:
 
 ## Phase 6 — Deep Dive
 
-After presenting the recommendation:
+After presenting the recommendation, use `AskUserQuestion` with options built from the Phase 5 stack:
 
-> "Want to set up any of these? Pick a component and I'll walk you through it."
+**"Want to set up any of these? Pick a component to start with."**
+- One option per tool recommended in Phase 5 (e.g., "nginx", "WireGuard", "PostgreSQL")
+- "No, I'm done — just wanted the recommendation"
 
 When the user picks a component, the relevant per-service skill loads naturally. Proceed with hands-on setup guidance using Bash commands informed by the skill's knowledge.

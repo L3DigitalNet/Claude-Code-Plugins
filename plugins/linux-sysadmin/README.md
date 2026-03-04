@@ -94,7 +94,7 @@ The `/sysadmin` command walks through:
 | Skill | Loaded when |
 |-------|-------------|
 | `linux-overview` | Broad queries: "web server", "database", "what should I use for..." |
-| Per-service skills (94) | Mentioned by name: "nginx", "ZFS", "nmap", "fail2ban", "tmux", etc. |
+| Per-service skills (96) | Mentioned by name: "nginx", "ZFS", "nmap", "fail2ban", "tmux", etc. |
 
 **Service categories covered:**
 
@@ -106,6 +106,16 @@ See the [design document](../../docs/plans/2026-03-01-linux-sysadmin-design.md) 
 
 - **Skills over MCP**: The predecessor plugin (`linux-sysadmin-mcp`) was a TypeScript MCP server with 18 tools. It was replaced because Claude's Bash tool plus skill-provided knowledge achieves the same outcomes without the build step, runtime process, or MCP overhead.
 - **Full annotated configs over curated subsets**: larger files, but Claude can find any option without needing to search upstream docs. Context is only loaded when the skill triggers.
+
+## Planned Features
+
+See [`skill-inventory-and-gaps.md`](skills/skill-inventory-and-gaps.md) for the full prioritized backlog. Top-tier candidates include: `logwatch`, `auditd`, `nftables`, `keepalived`, `gluster`, `ceph`, `vault` (HashiCorp), `k3s`, and `podman-compose`.
+
+## Known Issues
+
+- **[P2] tension**: `awk-sed` and `curl-wget` bundle two tools each. These pairs are always used interchangeably in practice, so splitting would reduce usability. The principle is aspirational for single-binary tools; paired-tool skills are an accepted exception.
+- **`linux-overview` trigger breadth**: The discovery skill triggers on generic vocabulary ("web server", "recommend") that appears in many sysadmin queries. When it fires, its full 200-line category index loads into context. This is a known trade-off of the skill-routing architecture — the skill system has no partial-load mechanism.
+- **`## Health Checks` coverage**: CLI tool skills (awk, sed, curl, tmux, jq, etc.) lack a Health Checks section — the concept doesn't translate well to stateless tools with no daemon to verify. Daemon skills all include Health Checks.
 
 ## Links
 
