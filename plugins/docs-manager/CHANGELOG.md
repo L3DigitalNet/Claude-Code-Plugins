@@ -4,6 +4,16 @@ All notable changes to the docs-manager plugin will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.2] - 2026-03-04
+
+### Changed
+- update remaining L3Digital-Net references
+- update org references from L3Digital-Net to L3DigitalNet
+
+### Fixed
+- apply audit findings — plugin.json, CHANGELOG
+
+
 ## [Unreleased]
 
 ## [0.2.1] - 2026-03-02
