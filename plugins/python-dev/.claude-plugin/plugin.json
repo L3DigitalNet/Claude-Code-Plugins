@@ -1,6 +1,6 @@
 {
   "name": "python-dev",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "11 Python development skills covering async patterns, anti-patterns, type safety, testing, resilience, observability, configuration, design patterns, resource management, code style, and background jobs. Includes /python-code-review for comprehensive code audits across all domains.",
   "author": {
     "name": "L3DigitalNet",
