@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0] - 2026-03-04
+
+### Added
+- universalize plugin to any git repository (v1.2.0)
+
+### Changed
+- update org references from L3Digital-Net to L3DigitalNet
+
+### Fixed
+- apply audit findings — em dashes, model name, deploy gate, error handling
+
+
 ## [1.2.0] - 2026-03-02
 
 ### Changed
