@@ -97,23 +97,52 @@ gh-manager security branch-rules --repo owner/name
 
 Evaluate the rules against best practices:
 
-| Rule | Recommended | Why |
-|------|------------|-----|
-| Require PR reviews | Yes (≥1 reviewer) | Prevents unreviewed changes |
-| Require status checks | Yes | Ensures CI passes |
-| Enforce admins | Yes (for Tier 4) | Admins follow same rules |
-| Require linear history | Optional | Cleaner git history |
-| Allow force pushes | No | Prevents history rewriting |
-| Require signed commits | Optional | Verifies commit authorship |
-| Require conversation resolution | Optional | Ensures review comments addressed |
+| Rule | Recommended | Applicability |
+|------|-------------|---------------|
+| Require PR reviews | Yes (≥1 reviewer) | All repos |
+| Require status checks | Yes | All repos |
+| Enforce admins | Yes (for Tier 4) | All repos |
+| Require linear history | Optional | All repos |
+| Allow force pushes | No | All repos |
+| Require signed commits | Optional | All repos |
+| Team reviewers in required reviewers | Recommended | Org repos only |
+| Require conversation resolution | Optional | All repos |
 
 **Important:** Branch protection is **recommend-only**. The helper cannot modify protection rules. If changes are needed, direct the owner to Settings → Branches.
+
+For user repos, do not flag the absence of team reviewers as a gap — individual reviewer requirements are the applicable standard on personal accounts.
 
 If the branch is unprotected:
 
 > ⚠️ Your default branch (main) has no protection rules. For a public repo with releases, I'd recommend at minimum requiring PR reviews and status checks. You can configure this in Settings → Branches → Add branch protection rule.
 
-### Step 6: SECURITY.md Cross-Reference
+### Step 6: Org Ruleset Audit (org repos only)
+
+GitHub organizations can apply branch protection via "Rulesets" — a newer, org-level API that can target all repos or specific patterns (e.g., all `main` branches). These operate independently of per-repo branch protection rules and can coexist with or supersede them.
+
+**Skip this step for user repos (`owner_type` is `"User"`).**
+
+For org repos:
+
+```bash
+gh api /orgs/{orgname}/rulesets
+```
+
+Evaluate the response:
+
+- **Rulesets exist and target the default branch:** Present them alongside the per-repo branch protection findings. Note that org rulesets take precedence over per-repo rules. If org rulesets are comprehensive, the per-repo "unprotected branch" finding from Step 5 is not a gap — suppress it or note it as covered by the org ruleset.
+- **Rulesets exist but don't target this branch:** Note them for context but don't count them as coverage for the default branch.
+- **No rulesets and no per-repo branch protection:** For an org repo, this is a more significant gap than for a user repo. Flag it clearly:
+  > ⚠️ Neither branch rulesets (org level) nor per-repo branch protection are configured for `main`. For an org repo with public releases, this is a higher-risk gap — any org member with write access can push directly to the default branch.
+
+**Error handling:**
+
+| Error | Response |
+|-------|----------|
+| 403 on rulesets | "I can't read org rulesets — this typically requires `admin:org` scope or org admin access. Check your PAT at github.com/settings/tokens. I'll assess only per-repo branch protection for now." |
+| 404 on rulesets | "This org doesn't appear to have any rulesets configured." |
+
+### Step 7: SECURITY.md Cross-Reference
 
 Check if SECURITY.md exists (this information comes from the Community Health module if it ran first, or check directly):
 

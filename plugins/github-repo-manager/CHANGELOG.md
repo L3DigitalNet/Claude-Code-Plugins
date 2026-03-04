@@ -2,6 +2,16 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [0.3.0] - 2026-03-04
+
+### Added
+- **Org-aware assessments**: `owner_type` (User | Organization) is now established as session context during onboarding. All subsequent modules apply org-specific rules only where relevant.
+- **Community health: org inheritance resolution** (new Step 0): For org repos, checks the org's `.github` repository before any per-file checks. Files inherited at the org level are reported as `✅ Inherited (org .github)` rather than flagged as missing.
+- **Community health: API score caveat**: The GitHub community profile API excludes inherited files from its percentage. Org repo assessments now present this score with an explicit caveat and use the per-file breakdown as the authoritative view.
+- **Community health: CODEOWNERS team pattern validation**: `@org/team-name` patterns are accepted as valid for org repos; flagged as likely invalid for user repos (personal accounts have no teams).
+- **Security: org ruleset audit** (new Step 6): For org repos, checks `GET /orgs/{org}/rulesets` for org-level branch rulesets. Rulesets that cover the default branch suppress or contextualize per-repo "unprotected branch" findings.
+- **Security: branch protection Applicability column**: The branch protection recommendation table now shows which rules apply to all repos vs. org repos only (e.g., team reviewers are only recommended for org repos).
+
 ## [0.2.3] - 2026-03-02
 
 ### Changed
