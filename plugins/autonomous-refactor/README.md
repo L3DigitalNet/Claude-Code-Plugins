@@ -134,7 +134,7 @@ Use `--dry-run` to preview what the session would do without applying any change
 
 ## Planned Features
 
-No unreleased section exists in the changelog. Gaps identified from the implementation:
+Gaps identified from the implementation:
 
 - Language support beyond TypeScript and Python (the test runner, complexity tool, and file discovery are all language-gated)
 - Resumable sessions: session state is cleaned up at the end of Phase 4; a mid-session crash cannot be resumed without manual recovery

@@ -3,27 +3,16 @@
 All notable changes to the autonomous-refactor plugin will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
 ## [0.2.0] - 2026-03-02
 
 ### Added
-- add --dry-run flag for opportunity preview
-
-### Changed
-- Update GitHub org references from L3DigitalNet to L3DigitalNet
-- reduce AI writing signals across all plugin READMEs
-- Enhance documentation and structure for multiple plugins
+- `--dry-run` flag: runs Phases 1 and 2 (baseline snapshot + opportunity analysis) and displays ranked opportunities without creating worktrees or applying any changes
 
 ### Fixed
-- fix dry-run output style and exit scope
-- remove em dashes from all READMEs; add hygiene check
-- replace \n with <br/> in mermaid node labels across all plugin READMEs
+- Fix dry-run output style and exit scope
 
-
-## [Unreleased]
-
-### Added
-
-- `--dry-run` flag: runs Phases 1 and 2 (baseline snapshot + opportunity analysis) and displays ranked opportunities without creating worktrees or applying any changes
 
 ## [0.1.0] - 2026-02-21
 

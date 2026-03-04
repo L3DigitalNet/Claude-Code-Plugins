@@ -28,6 +28,8 @@ mkdir -p .claude/state/refactor-tests .claude/worktrees
 
 MAX_CHANGES=10  # replace with --max-changes=N value if provided
 DRY_RUN=false   # set to true if --dry-run was provided
+# Convert bash booleans to Python-compatible values before passing to python3
+PY_DRY_RUN=$( [[ "$DRY_RUN" == "true" ]] && echo "True" || echo "False" )
 
 python3 -c "
 import json
@@ -43,7 +45,7 @@ state = {
     'skipped_changes': [],
     'convergence_reason': '',
     'max_changes': $MAX_CHANGES,
-    'dry_run': $DRY_RUN,
+    'dry_run': $PY_DRY_RUN,
     'current_worktree': None
 }
 json.dump(state, open('.claude/state/refactor-session.json', 'w'), indent=2)
