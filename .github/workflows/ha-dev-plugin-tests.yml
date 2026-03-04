@@ -234,19 +234,31 @@ jobs:
           HA_BASE="http://localhost:8123"
           TOKEN=$(python3 -c "import json,os; c=json.load(open(os.path.expanduser('~/.config/ha-dev-mcp/config.json'))); print(c['homeAssistant']['token'])")
 
-          # Set up demo integration via config flow
-          curl -sf -X POST "$HA_BASE/api/config/config_entries/flow" \
+          # Initiate demo config flow — capture response body and HTTP status for diagnostics
+          HTTP_STATUS=$(curl -s -o /tmp/demo_flow.json -w "%{http_code}" \
+            -X POST "$HA_BASE/api/config/config_entries/flow" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"handler":"demo","show_advanced_options":false}' > /tmp/demo_flow.json
+            -d '{"handler":"demo"}')
+          echo "Config flow HTTP $HTTP_STATUS:"
+          cat /tmp/demo_flow.json && echo ""
+
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "ERROR: Failed to initiate demo config flow (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
 
           FLOW_ID=$(python3 -c "import json; print(json.load(open('/tmp/demo_flow.json'))['flow_id'])")
+          echo "Flow ID: $FLOW_ID"
 
-          # Complete the flow (demo requires no additional config)
-          curl -sf -X POST "$HA_BASE/api/config/config_entries/flow/$FLOW_ID" \
+          # Complete the flow (demo requires no user input)
+          HTTP_STATUS2=$(curl -s -o /tmp/demo_result.json -w "%{http_code}" \
+            -X POST "$HA_BASE/api/config/config_entries/flow/$FLOW_ID" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{}' > /tmp/demo_result.json
+            -d '{}')
+          echo "Flow completion HTTP $HTTP_STATUS2:"
+          cat /tmp/demo_result.json && echo ""
 
           python3 -c "import json; r=json.load(open('/tmp/demo_result.json')); print(f'Demo setup result: {r.get(\"type\", \"unknown\")}')"
 
