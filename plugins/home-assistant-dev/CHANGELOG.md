@@ -2,21 +2,17 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [Unreleased]
+
 ## [2.2.3] - 2026-03-02
 
 ### Changed
-- fix structural README issues and docs path
-- Update GitHub org references from L3DigitalNet to L3DigitalNet
-- reduce AI writing signals across all plugin READMEs
-- revert(ha-dev): restore original HA skill files, remove extracted references
-- strengthen triggers and extract long content to references
-- Enhance Release Pipeline and Repo Hygiene Plugins
+- Fix structural README issues and docs path
+- Revert: restore original HA skill files, remove extracted references
+- Strengthen skill triggers and extract long content to references
 
 ### Fixed
-- standardize agent-orchestrator author; fix ha-dev skill count
-- remove em dashes from all READMEs; add hygiene check
-- cross-cutting standards sweep across marketplace
-- remove invalid plugin.json fields and refactor mutation guards
+- Fix ha-dev skill count in README
 
 
 ## [2.2.2] - 2026-02-22
@@ -24,29 +20,24 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ### Fixed
 - `validate_manifest` MCP tool now throws (returns `isError:true`) when `path` argument is missing, consistent with `validate_strings` and `check_patterns` behavior
 
+
 ## [2.2.1] - 2026-02-20
 
 ### Changed
-- update version numbers in design and testing documents to v2.2.1 and v1.0.5
-- release: 6 plugin releases — agent-orchestrator 1.0.2, home-assistant-dev 2.2.0, release-pipeline 1.4.0, linux-sysadmin-mcp 1.0.2, design-assistant 0.3.0, plugin-test-harness 0.1.1
+- Update version numbers in design and testing documents to v2.2.1 and v1.0.5
 
 ### Fixed
-- update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
+- Update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
 
 
 ## [2.2.0] - 2026-02-19
 
 ### Added
-- audit and split wide-scope skills across all plugins
-
-### Changed
-- release: 5 plugin releases — design-assistant 0.3.0, linux-sysadmin-mcp 1.0.2, agent-orchestrator 1.0.2, release-pipeline 1.4.0, home-assistant-dev 2.2.0
-- add Principles section to all 7 plugin READMEs
-- standardise all plugin READMEs with consistent sections
+- Audit and split wide-scope skills
 
 ### Fixed
-- update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
-- fix HA Dev Plugin Tests failures on testing and main
+- Update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
+- Fix HA Dev Plugin Tests failures on testing and main
 
 
 ## [2.1.0] - 2026-02-18
