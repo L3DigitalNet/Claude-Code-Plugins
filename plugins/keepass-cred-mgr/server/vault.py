@@ -24,6 +24,7 @@ from datetime import UTC, datetime
 import structlog
 
 from server.config import Config
+from server.diagnostics import diagnose_unlock_failure
 from server.yubikey import YubiKeyInterface
 
 log: structlog.stdlib.BoundLogger = structlog.get_logger("keepass-cred-mgr.vault")
@@ -36,13 +37,6 @@ INACTIVE_PREFIX = "[INACTIVE] "
 _REPL_INITIAL_PROMPT = b"> "
 _REPL_PROMPT = b"\n> "
 _REPL_TIMEOUT = 30
-
-# Appended to YubiKey timeout errors. pcscd holds the HID interface on some
-# systems, silently preventing HMAC-SHA1 challenge-response from completing.
-_PCSCD_HINT = (
-    " — if the YubiKey blinked but timed out, "
-    "run: sudo systemctl stop pcscd pcscd.socket"
-)
 
 # Characters that require double-quoting in the keepassxc-cli REPL.
 # The REPL uses Qt's QProcess::splitCommand (double-quote style),
@@ -144,7 +138,7 @@ class Vault:
         # all run_cli() calls reuse the open session without re-authenticating.
         proc = await asyncio.create_subprocess_exec(
             "keepassxc-cli", "open",
-            "--yubikey", str(self._yubikey.slot()),
+            "--yubikey", self._yubikey.slot(),
             "--no-password",
             self._config.database_path,
             stdin=asyncio.subprocess.PIPE,
@@ -169,13 +163,21 @@ class Vault:
         except asyncio.TimeoutError:
             proc.kill()
             await proc.wait()
-            raise KeePassCLIError("keepassxc-cli open timed out" + _PCSCD_HINT)
+            diag = diagnose_unlock_failure(self._config)
+            msg = "keepassxc-cli open timed out"
+            if diag:
+                msg += " — " + diag
+            raise KeePassCLIError(msg)
         except asyncio.IncompleteReadError:
             await proc.wait()
-            raise KeePassCLIError(
+            diag = diagnose_unlock_failure(self._config)
+            msg = (
                 "keepassxc-cli open exited before showing prompt"
                 " — check database_path in config and YubiKey slot"
             )
+            if diag:
+                msg += ". " + diag
+            raise KeePassCLIError(msg)
 
         self._repl_prompt_bytes = prompt_data  # e.g., b"test.kdbx> " or b"> "
         self._repl_proc = proc
@@ -261,7 +263,7 @@ class Vault:
                 )
             except asyncio.TimeoutError:
                 raise KeePassCLIError(
-                    f"keepassxc-cli {args[0]} timed out" + _PCSCD_HINT
+                    f"keepassxc-cli {args[0]} timed out"
                 )
             except asyncio.IncompleteReadError:
                 # REPL died mid-command — mark vault locked so callers get clear errors.
@@ -302,7 +304,7 @@ class Vault:
         cmd = [
             "keepassxc-cli",
             args[0],
-            "--yubikey", str(self._yubikey.slot()),
+            "--yubikey", self._yubikey.slot(),
             "--no-password",
             *args[1:],
         ]
