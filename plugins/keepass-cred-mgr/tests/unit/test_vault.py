@@ -115,17 +115,47 @@ class TestVaultState:
             await vault.unlock()
 
 
+    @patch("server.vault.diagnose_unlock_failure", return_value="diag: test message")
     @patch("asyncio.create_subprocess_exec")
-    async def test_unlock_pcscd_hint_in_timeout_error(
-        self, mock_exec, test_config, mock_yubikey
+    async def test_unlock_timeout_calls_diagnostics(
+        self, mock_exec, mock_diag, test_config, mock_yubikey
     ):
-        """Timeout during unlock includes the pcscd stop hint in the error message."""
+        """Timeout during unlock calls diagnose_unlock_failure and appends result."""
         mock_exec.return_value = _mock_unlock_proc(fail=asyncio.TimeoutError)
         from server.vault import KeePassCLIError, Vault
 
         vault = Vault(test_config, mock_yubikey)
-        with pytest.raises(KeePassCLIError, match="pcscd"):
+        with pytest.raises(KeePassCLIError, match="diag: test message"):
             await vault.unlock()
+        mock_diag.assert_called_once_with(test_config)
+
+    @patch("server.vault.diagnose_unlock_failure", return_value="")
+    @patch("asyncio.create_subprocess_exec")
+    async def test_unlock_timeout_no_diag_plain_message(
+        self, mock_exec, mock_diag, test_config, mock_yubikey
+    ):
+        """When diagnostics returns empty, error is just the timeout text."""
+        mock_exec.return_value = _mock_unlock_proc(fail=asyncio.TimeoutError)
+        from server.vault import KeePassCLIError, Vault
+
+        vault = Vault(test_config, mock_yubikey)
+        with pytest.raises(KeePassCLIError, match="timed out") as exc_info:
+            await vault.unlock()
+        assert "\u2014" not in str(exc_info.value)
+
+    @patch("server.vault.diagnose_unlock_failure", return_value="diag: incomplete")
+    @patch("asyncio.create_subprocess_exec")
+    async def test_unlock_incomplete_read_calls_diagnostics(
+        self, mock_exec, mock_diag, test_config, mock_yubikey
+    ):
+        """IncompleteReadError during unlock calls diagnostics."""
+        mock_exec.return_value = _mock_unlock_proc(fail=asyncio.IncompleteReadError)
+        from server.vault import KeePassCLIError, Vault
+
+        vault = Vault(test_config, mock_yubikey)
+        with pytest.raises(KeePassCLIError, match="diag: incomplete"):
+            await vault.unlock()
+        mock_diag.assert_called_once_with(test_config)
 
 
     async def test_run_cli_raises_when_locked(self, test_config, mock_yubikey):
@@ -222,14 +252,15 @@ class TestVaultRunCli:
 
 
     async def test_run_cli_raises_on_timeout(self, test_config, mock_yubikey):
-        """TimeoutError from readuntil wraps to KeePassCLIError with pcscd hint."""
+        """TimeoutError from readuntil wraps to KeePassCLIError (no pcscd hint)."""
         from server.vault import KeePassCLIError, Vault
 
         vault = Vault(test_config, mock_yubikey)
         vault._unlocked = True
         vault._repl_proc = _mock_repl_proc([asyncio.TimeoutError()])
-        with pytest.raises(KeePassCLIError, match="pcscd"):
+        with pytest.raises(KeePassCLIError, match="timed out") as exc_info:
             await vault.run_cli("show", test_config.database_path, "Servers/Entry")
+        assert "pcscd" not in str(exc_info.value)
 
 
     async def test_run_cli_empty_args_raises(self, test_config, mock_yubikey):

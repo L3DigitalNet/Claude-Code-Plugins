@@ -2,7 +2,7 @@
 # Copy to ~/.config/keepass-cred-mgr/config.yaml and edit paths
 
 database_path: ~/keepass/keepass_yubi.kdbx
-yubikey_slot: 2
+yubikey_slot: "2"              # slot only, or "2:SERIAL" (e.g., "2:36834370") if auto-detect fails
 grace_period_seconds: 10
 yubikey_poll_interval_seconds: 5
 write_lock_timeout_seconds: 10

@@ -19,7 +19,7 @@ import yaml
 class Config:
     database_path: str
     audit_log_path: str
-    yubikey_slot: int
+    yubikey_slot: str
     grace_period_seconds: int
     yubikey_poll_interval_seconds: int
     write_lock_timeout_seconds: int
@@ -31,7 +31,7 @@ _REQUIRED_FIELDS = ("database_path", "audit_log_path")
 
 # Defaults for optional fields — applied by load_config() before constructing Config.
 _DEFAULTS: dict[str, int | str] = {
-    "yubikey_slot": 2,
+    "yubikey_slot": "2",
     "grace_period_seconds": 10,
     "yubikey_poll_interval_seconds": 5,
     "write_lock_timeout_seconds": 10,
@@ -49,7 +49,19 @@ def _validate_config(raw: dict[str, Any]) -> None:
             actual = type(raw[key]).__name__
             raise ValueError(f"Config field '{key}' must be a string, got {actual}")
 
-    for key in ("yubikey_slot", "grace_period_seconds", "yubikey_poll_interval_seconds",
+    # yubikey_slot accepts "slot" or "slot:serial" (e.g., "2" or "2:36834370").
+    # Integer values from YAML are coerced to str for backward compatibility.
+    yk_slot = raw.get("yubikey_slot")
+    if yk_slot is not None:
+        raw["yubikey_slot"] = str(yk_slot)
+        slot_str = raw["yubikey_slot"]
+        parts = slot_str.split(":", 1)
+        if not parts[0].isdigit() or int(parts[0]) < 1:
+            raise ValueError(
+                f"Config field 'yubikey_slot' must be 'slot' or 'slot:serial', got '{slot_str}'"
+            )
+
+    for key in ("grace_period_seconds", "yubikey_poll_interval_seconds",
                 "write_lock_timeout_seconds", "page_size"):
         val = raw.get(key)
         if val is not None:

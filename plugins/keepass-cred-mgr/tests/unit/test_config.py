@@ -46,13 +46,13 @@ class TestConfigLoading:
 
         config = load_config(valid_config)
         assert config.database_path == str(tmp_path / "test.kdbx")
-        assert config.yubikey_slot == 2
+        assert config.yubikey_slot == "2"
 
     def test_defaults_applied_for_optional_fields(self, minimal_config):
         from server.config import load_config
 
         config = load_config(minimal_config)
-        assert config.yubikey_slot == 2
+        assert config.yubikey_slot == "2"
         assert config.grace_period_seconds == 10
         assert config.yubikey_poll_interval_seconds == 5
         assert config.write_lock_timeout_seconds == 10
@@ -135,7 +135,7 @@ class TestConfigLoading:
         from server.config import load_config
 
         config = load_config()
-        assert config.yubikey_slot == 2
+        assert config.yubikey_slot == "2"
 
     def test_raises_on_missing_config_file(self):
         from server.config import load_config
@@ -213,8 +213,40 @@ class TestConfigLoading:
         }
         config_file = tmp_path / "config.yaml"
         config_file.write_text(yaml.dump(cfg))
-        with pytest.raises(ValueError, match="yubikey_slot.*>= 1"):
+        with pytest.raises(ValueError, match="yubikey_slot"):
             load_config(str(config_file))
+
+    def test_yubikey_slot_with_serial(self, tmp_path):
+        """yubikey_slot accepts 'slot:serial' format."""
+        from server.config import load_config
+
+        db_path = tmp_path / "test.kdbx"
+        db_path.touch()
+        cfg = {
+            "database_path": str(db_path),
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "yubikey_slot": "2:36834370",
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        config = load_config(str(config_file))
+        assert config.yubikey_slot == "2:36834370"
+
+    def test_yubikey_slot_int_coerced_to_str(self, tmp_path):
+        """Integer yubikey_slot from YAML is coerced to string."""
+        from server.config import load_config
+
+        db_path = tmp_path / "test.kdbx"
+        db_path.touch()
+        cfg = {
+            "database_path": str(db_path),
+            "audit_log_path": str(tmp_path / "audit.jsonl"),
+            "yubikey_slot": 2,
+        }
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml.dump(cfg))
+        config = load_config(str(config_file))
+        assert config.yubikey_slot == "2"
 
     def test_negative_timeout_rejected(self, tmp_path):
         """Negative timeout values are rejected."""

@@ -406,7 +406,7 @@ async def import_entries(
             subprocess.run,
             [
                 "keepassxc-cli", "merge",
-                "--yubikey", str(slot),
+                "--yubikey", slot,
                 "--no-password",
                 db, tmp_db,
             ],

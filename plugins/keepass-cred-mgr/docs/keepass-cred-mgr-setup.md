@@ -49,6 +49,63 @@ keepassxc-cli --version
 
 ---
 
+## Step 1a — YubiKey Access Prerequisites
+
+### Disable pcscd (required on Linux)
+
+The PC/SC Smart Card Daemon (`pcscd`) holds an exclusive lock on the YubiKey's CCID interface, which blocks the HID interface that `keepassxc-cli` uses for HMAC-SHA1 challenge-response. Mask the socket to prevent it from (re)activating:
+
+```bash
+sudo systemctl stop pcscd pcscd.socket
+sudo systemctl mask pcscd.socket
+```
+
+Verify it's masked:
+
+```bash
+systemctl status pcscd.socket
+# Should show "Loaded: masked"
+```
+
+`mask` is stronger than `disable`: it blocks all activation paths (manual, socket, dependency) and survives package updates. To undo: `sudo systemctl unmask pcscd.socket && sudo systemctl enable pcscd.socket`
+
+### Verify YubiKey HID access
+
+After disabling pcscd, confirm the YubiKey's OTP HID interface is visible:
+
+```bash
+for dev in /dev/hidraw*; do
+  udevadm info --name="$dev" 2>/dev/null | grep -q 'ID_VENDOR=Yubico' && echo "$dev: YubiKey"
+done
+```
+
+If no YubiKey device appears, reset the USB connection:
+
+```bash
+# Find the bus ID
+lsusb -d 1050:
+# Output example: Bus 003 Device 002: ...
+# The sysfs bus ID is typically "3-2" — check /sys/bus/usb/devices/
+
+echo "3-2" | sudo tee /sys/bus/usb/drivers/usb/unbind
+sleep 1
+echo "3-2" | sudo tee /sys/bus/usb/drivers/usb/bind
+```
+
+### Configure slot:serial (if needed)
+
+If `keepassxc-cli` fails with "could not find interface for hardware key with serial number 0" even after disabling pcscd, your system cannot auto-detect the YubiKey serial. Add the serial explicitly:
+
+```bash
+# Find your serial
+ykman list --serials
+
+# Update config.yaml — change yubikey_slot from "2" to "2:YOUR_SERIAL"
+# Example: yubikey_slot: "2:36834370"
+```
+
+---
+
 ## Step 2 — Configure YubiKey HMAC-SHA1 (Both Keys)
 
 > ⚠️ **Do both keys before moving on.** Once you build a workflow dependency on the primary key, losing it without a configured backup means losing access to the primary database.
@@ -170,7 +227,7 @@ Then create `~/.config/keepass-cred-mgr/config.yaml` with the following content,
 
 ```yaml
 database_path: ~/keepass/keepass_yubi.kdbx
-yubikey_slot: 2
+yubikey_slot: "2"              # or "2:SERIAL" if auto-detect fails (see Step 1a)
 grace_period_seconds: 10
 yubikey_poll_interval_seconds: 5
 write_lock_timeout_seconds: 10

@@ -152,7 +152,7 @@ The server reads `~/.config/keepass-cred-mgr/config.yaml` (override via `KEEPASS
 
 ```yaml
 database_path: ~/keepass/keepass_yubi.kdbx
-yubikey_slot: 2
+yubikey_slot: "2"              # or "2:SERIAL" if auto-detect fails
 grace_period_seconds: 10
 yubikey_poll_interval_seconds: 5
 write_lock_timeout_seconds: 10
@@ -165,7 +165,7 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `database_path` | str | required | Absolute path to the `.kdbx` file |
-| `yubikey_slot` | int | `2` | HMAC-SHA1 challenge-response slot |
+| `yubikey_slot` | str | `"2"` | HMAC-SHA1 slot, or `"slot:serial"` (e.g., `"2:36834370"`) when auto-detect fails |
 | `grace_period_seconds` | int | `10` | Seconds after YubiKey removal before auto-lock |
 | `yubikey_poll_interval_seconds` | int | `5` | How often to check YubiKey presence via `ykman list` |
 | `write_lock_timeout_seconds` | int | `10` | Max seconds to wait for the database file lock |

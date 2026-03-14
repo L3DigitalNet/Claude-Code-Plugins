@@ -14,11 +14,11 @@ from typing import Protocol, runtime_checkable
 class YubiKeyInterface(Protocol):
     def is_present(self) -> bool: ...
 
-    def slot(self) -> int: ...
+    def slot(self) -> str: ...
 
 
 class RealYubiKey(YubiKeyInterface):
-    def __init__(self, slot: int = 2) -> None:
+    def __init__(self, slot: str = "2") -> None:
         self._slot = slot
 
     def is_present(self) -> bool:
@@ -30,17 +30,17 @@ class RealYubiKey(YubiKeyInterface):
         except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError):
             return False
 
-    def slot(self) -> int:
+    def slot(self) -> str:
         return self._slot
 
 
 class MockYubiKey(YubiKeyInterface):
-    def __init__(self, present: bool = True, slot: int = 2) -> None:
+    def __init__(self, present: bool = True, slot: str = "2") -> None:
         self.present = present
         self._slot = slot
 
     def is_present(self) -> bool:
         return self.present
 
-    def slot(self) -> int:
+    def slot(self) -> str:
         return self._slot

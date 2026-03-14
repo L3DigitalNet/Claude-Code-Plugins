@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.2] - 2026-03-14
+
+### Added
+
+- `server/diagnostics.py`: YubiKey unlock failure diagnostics module; checks pcscd status, hidraw device presence, and slot:serial config on any unlock failure
+- `yubikey_slot` config field now accepts `"slot:serial"` format (e.g., `"2:36834370"`) for systems where keepassxc-cli cannot auto-detect the YubiKey serial
+- "YubiKey Access Prerequisites" section in setup guide covering pcscd conflicts, hidraw recovery, and serial configuration
+
+### Changed
+
+- `yubikey_slot` config type changed from `int` to `str`; integer values from YAML are auto-coerced for backward compatibility
+- `vault.unlock()` error messages now include specific diagnostics (pcscd blocking, missing hidraw node, missing serial) instead of a generic pcscd hint
+- `run_cli()` timeout error no longer includes the pcscd hint (command-level timeouts are unrelated to YubiKey access)
+
+### Removed
+
+- `_PCSCD_HINT` constant from `vault.py` (replaced by diagnostics module)
+
+
 ## [0.4.1] - 2026-03-04
 
 ### Fixed

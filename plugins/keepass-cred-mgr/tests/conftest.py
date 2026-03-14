@@ -17,7 +17,7 @@ def test_config(tmp_path):
     audit_path = tmp_path / "audit.jsonl"
     cfg = {
         "database_path": str(db_path),
-        "yubikey_slot": 2,
+        "yubikey_slot": "2",
         "grace_period_seconds": 2,
         "yubikey_poll_interval_seconds": 1,
         "write_lock_timeout_seconds": 2,
