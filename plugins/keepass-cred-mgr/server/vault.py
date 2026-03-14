@@ -2,7 +2,7 @@
 
 State machine: locked <-> unlocked via YubiKey touch.
 Background polling of ykman with grace period before auto-lock.
-Group allowlist enforced on all operations.
+Tag-based access control: AI RESTRICTED blocks all access, READ ONLY blocks writes.
 
 REPL mode: unlock() starts a persistent `keepassxc-cli open` process (one YubiKey
 touch per session). run_cli() dispatches all subsequent commands through that

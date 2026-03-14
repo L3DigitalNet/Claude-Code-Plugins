@@ -99,11 +99,11 @@ async def create_entry(
     with _write_lock(vault):
         path = vault.entry_path(title, group)
         cmd = ["add", db, path]
-        if username:
+        if username is not None:
             cmd.extend(["--username", username])
-        if url:
+        if url is not None:
             cmd.extend(["--url", url])
-        if notes:
+        if notes is not None:
             cmd.extend(["--notes", notes])
         if password:
             # keepassxc-cli add has no --password flag; -p prompts stdin.
@@ -352,6 +352,9 @@ async def import_entries(
 
     Each entry dict requires 'group' and 'title'. Optional: 'username',
     'password', 'url', 'notes'.
+
+    Tag-based access control (AI RESTRICTED, READ ONLY) does not apply to
+    imported entries since they are new entries without tags.
     """
     if not entries:
         return "No entries provided"

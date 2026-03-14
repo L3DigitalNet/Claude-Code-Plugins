@@ -243,7 +243,7 @@ class TestListEntriesHandler:
             result = await list_entries(ctx, group="Servers", include_inactive=False)
             assert result == entries
             mock_le.assert_called_once_with(
-                app.vault, app.audit, group="Servers", include_inactive=False,
+                app.vault, group="Servers", include_inactive=False,
             )
 
     @pytest.mark.asyncio

@@ -91,7 +91,6 @@ async def list_groups(vault: Vault) -> list[str]:
 
 async def list_entries(
     vault: Vault,
-    audit: AuditLogger,
     *,
     group: str | None = None,
     include_inactive: bool = False,
@@ -133,7 +132,6 @@ async def list_entries(
 
 async def search_entries(
     vault: Vault,
-    audit: AuditLogger,
     *,
     query: str,
     group: str | None = None,
