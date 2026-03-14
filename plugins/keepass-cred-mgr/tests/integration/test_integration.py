@@ -45,7 +45,7 @@ async def integration_setup(tmp_path):
     audit_path = tmp_path / "audit.jsonl"
     cfg = {
         "database_path": str(db_copy),
-        "yubikey_slot": 2,
+        "yubikey_slot": "2",
         "grace_period_seconds": 2,
         "yubikey_poll_interval_seconds": 1,
         "write_lock_timeout_seconds": 5,
@@ -85,7 +85,7 @@ class TestIntegrationWriteCycle:
         await create_entry(
             vault, audit, title="New Test Entry", group="Servers", username="testuser",
         )
-        entries = await list_entries(vault, audit, group="Servers")
+        entries = await list_entries(vault, group="Servers")
         titles = [e["title"] for e in entries]
         assert "New Test Entry" in titles
 
@@ -99,7 +99,7 @@ class TestIntegrationRotation:
         vault, audit, config, db = integration_setup
         await create_entry(vault, audit, title="Rotate Me", group="API Keys", username="u")
         await deactivate_entry(vault, audit, title="Rotate Me", group="API Keys")
-        entries = await list_entries(vault, audit, group="API Keys", include_inactive=True)
+        entries = await list_entries(vault, group="API Keys", include_inactive=True)
         titles = [e["title"] for e in entries]
         assert "[INACTIVE] Rotate Me" in titles
         # Should be able to create a new entry with the same title
@@ -123,11 +123,11 @@ class TestIntegrationInactiveFiltering:
         from server.tools.read import list_entries
 
         vault, audit, config, db = integration_setup
-        visible = await list_entries(vault, audit, group="Servers")
+        visible = await list_entries(vault, group="Servers")
         visible_titles = [e["title"] for e in visible]
         assert "[INACTIVE] Old Server" not in visible_titles
 
-        all_entries = await list_entries(vault, audit, group="Servers", include_inactive=True)
+        all_entries = await list_entries(vault, group="Servers", include_inactive=True)
         all_titles = [e["title"] for e in all_entries]
         assert "[INACTIVE] Old Server" in all_titles
 
@@ -139,6 +139,6 @@ class TestIntegrationGroupAccess:
 
         vault, audit, config, db = integration_setup
         # "Servers" group exists in test.kdbx — no GroupNotAllowed exception
-        result = await list_entries(vault, audit, group="Servers")
+        result = await list_entries(vault, group="Servers")
         titles = [e["title"] for e in result]
         assert any("Server" in t or "DB" in t for t in titles)

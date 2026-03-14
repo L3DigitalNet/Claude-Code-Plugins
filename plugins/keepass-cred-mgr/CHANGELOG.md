@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-03-14
+
+### Added
+- support slot:serial format for yubikey_slot config
+- integrate diagnostics into vault.unlock() error paths
+- add YubiKey unlock failure diagnostics module
+
+### Changed
+- add audit findings fix plan
+- add YubiKey access hardening design and plan
+- add YubiKey access prerequisites and v0.4.2 changelog
+
+### Fixed
+- update integration tests for list_entries signature change
+- sync version metadata to 0.4.2
+- falsy field check, unused audit param, stale docs
+- multi-line notes parsing and allow_inactive for audit
+
+
 ## [0.4.2] - 2026-03-14
 
 ### Added
