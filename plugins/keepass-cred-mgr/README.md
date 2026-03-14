@@ -205,7 +205,7 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 The primary threat this plugin defends against is **prompt injection** triggering unintended credential retrieval. The physical YubiKey touch requirement is the core defense: even if malicious content in a file or webpage instructs Claude to call `get_entry`, the vault won't open without the user physically touching the key.
 
 Secondary defenses:
-- **Group allowlist** limits which entries are visible, regardless of what Claude requests
+- **Tag-based access control** restricts entries: `AI RESTRICTED` blocks all AI access, `READ ONLY` blocks writes
 - **`[INACTIVE]` blocking** prevents deactivated credentials from being used
 - **Audit log** provides a forensic trail of every secret-returning operation
 - **No delete/overwrite** prevents credential destruction via injection

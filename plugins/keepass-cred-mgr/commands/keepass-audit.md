@@ -14,7 +14,7 @@ Filter to entries whose title starts with `[INACTIVE]`.
 
 ## 2. Retrieve Deactivation Details
 
-For each inactive entry, call `get_entry` to retrieve the notes field.
+For each inactive entry, call `get_entry` with `allow_inactive=true` to retrieve the notes field.
 Parse the deactivation timestamp from the notes (look for `[DEACTIVATED: <ISO timestamp>]`).
 
 **IMPORTANT**: Do NOT display the password field. Only use get_entry to extract the notes.

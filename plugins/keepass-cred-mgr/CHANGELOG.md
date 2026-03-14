@@ -18,6 +18,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `vault.unlock()` error messages now include specific diagnostics (pcscd blocking, missing hidraw node, missing serial) instead of a generic pcscd hint
 - `run_cli()` timeout error no longer includes the pcscd hint (command-level timeouts are unrelated to YubiKey access)
 
+### Fixed
+
+- `/keepass-audit` command: `get_entry` now accepts `allow_inactive=True` to read `[INACTIVE]` entries without raising `EntryInactive`
+- `_parse_show_output` now captures multi-line notes (continuation lines after `Notes:` field)
+- `create_entry` uses `is not None` instead of truthy check for optional fields; empty string values are no longer silently dropped
+- Stale "Group allowlist" references removed from `vault.py` docstring and README Security Model section
+- Unreachable `TimeoutError` removed from `unlock_vault` exception handler
+- Unused `audit` parameter removed from `list_entries` and `search_entries` signatures
+- `pyproject.toml` version synced to 0.4.2 (was stale at 0.3.0)
+- `marketplace.json` version synced to 0.4.2 (was stale at 0.4.1)
+
 ### Removed
 
 - `_PCSCD_HINT` constant from `vault.py` (replaced by diagnostics module)

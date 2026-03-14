@@ -60,6 +60,39 @@ class TestParseShowOutput:
         assert result["username"] == "admin"
         assert result["password"] == "s3cret"
 
+    def test_multiline_notes(self):
+        from server.tools.read import _parse_show_output
+        output = (
+            "Title: Web Server\n"
+            "UserName: admin\n"
+            "Password: s3cret\n"
+            "URL: https://example.com\n"
+            "Notes: Line one\n"
+            "Line two\n"
+            "Line three\n"
+        )
+        result = _parse_show_output(output)
+        assert result["notes"] == "Line one\nLine two\nLine three"
+
+    def test_multiline_notes_followed_by_field(self):
+        """Notes continuation stops when another known field appears."""
+        from server.tools.read import _parse_show_output
+        output = (
+            "Title: Entry\n"
+            "Notes: First line\n"
+            "Second line\n"
+            "Tags: some-tag\n"
+        )
+        result = _parse_show_output(output)
+        assert result["notes"] == "First line\nSecond line"
+
+    def test_single_line_notes_unchanged(self):
+        """Existing single-line notes behavior preserved."""
+        from server.tools.read import _parse_show_output
+        output = "Title: Entry\nNotes: Single line\nUserName: admin\n"
+        result = _parse_show_output(output)
+        assert result["notes"] == "Single line"
+
 
 # ---------------------------------------------------------------------------
 # _parse_tags
@@ -109,7 +142,7 @@ class TestReadTools:
             _repl_resp(b"Title: Web Server\nUserName: admin\nURL: https://web.example.com\n"),
             _repl_resp(b"Title: DB Server\nUserName: dba\nURL: https://db.example.com\n"),
         ]
-        result = await list_entries(vault, audit, group="Servers")
+        result = await list_entries(vault, group="Servers")
         assert len(result) == 2
         titles = [e["title"] for e in result]
         assert "Web Server" in titles
@@ -125,7 +158,7 @@ class TestReadTools:
             _repl_resp(b"Title: Web Server\nUserName: admin\nURL: https://web.example.com\n"),
             _repl_resp(b"Title: [INACTIVE] Old Server\nUserName: old\nURL: https://old.example.com\n"),
         ]
-        result = await list_entries(vault, audit, group="Servers", include_inactive=True)
+        result = await list_entries(vault, group="Servers", include_inactive=True)
         assert len(result) == 2
 
 
@@ -151,6 +184,38 @@ class TestReadTools:
 
 
     async def test_get_entry_raises_on_inactive(self, unlocked_vault):
+        from server.tools.read import get_entry
+        from server.vault import EntryInactive
+
+        vault, audit = unlocked_vault
+        with pytest.raises(EntryInactive):
+            await get_entry(vault, audit, title="[INACTIVE] Old Server", group="Servers")
+
+    async def test_get_entry_allows_inactive_when_flag_set(self, unlocked_vault):
+        """get_entry with allow_inactive=True returns the entry without raising."""
+        from server.tools.read import get_entry
+
+        vault, audit = unlocked_vault
+        vault._repl_proc.stdout.readuntil.side_effect = [
+            _repl_resp(
+                b"Title: [INACTIVE] Old Server\n"
+                b"UserName: admin\n"
+                b"Password: oldpass\n"
+                b"URL: https://old.example.com\n"
+                b"Notes: Some notes\n[DEACTIVATED: 2026-03-01T00:00:00+00:00]\n"
+            )
+        ]
+        result = await get_entry(
+            vault, audit,
+            title="[INACTIVE] Old Server", group="Servers",
+            allow_inactive=True,
+        )
+        assert result["title"] == "[INACTIVE] Old Server"
+        assert result["password"] == "oldpass"
+        assert "DEACTIVATED" in result["notes"]
+
+    async def test_get_entry_still_blocks_inactive_by_default(self, unlocked_vault):
+        """Default behavior unchanged — inactive entries raise EntryInactive."""
         from server.tools.read import get_entry
         from server.vault import EntryInactive
 
@@ -187,7 +252,7 @@ class TestReadTools:
             _repl_resp(b"Title: My Bank\nUserName: user\nURL: https://bank.example.com\n"),
             _repl_resp(b"Title: Anthropic\nUserName: key\nURL: https://api.anthropic.com\n"),
         ]
-        result = await search_entries(vault, audit, query="server")
+        result = await search_entries(vault, query="server")
         assert len(result) == 3
         groups = [e["group"] for e in result]
         assert "Banking" in groups
@@ -254,7 +319,7 @@ class TestReadTools:
             _repl_resp(b"Title: Checking Account\nUserName: user\nURL: \n"),
             _repl_resp(b"Title: Savings\nUserName: user\nURL: \n"),
         ]
-        result = await list_entries(vault, audit, group="Banking")
+        result = await list_entries(vault, group="Banking")
         assert len(result) == 2
         assert all(e["group"] == "Banking" for e in result)
 
@@ -274,7 +339,7 @@ class TestReadTools:
             _repl_resp(b"Anthropic\n"),
             _repl_resp(b"Title: Anthropic\nUserName: key\nURL: https://api\n"),
         ]
-        result = await list_entries(vault, audit, group=None)
+        result = await list_entries(vault, group=None)
         assert len(result) == 3
         groups = {e["group"] for e in result}
         assert groups == {"Servers", "SSH Keys", "API Keys"}
@@ -313,7 +378,7 @@ class TestReadTools:
         ])
         small_audit = AuditLogger(small_config.audit_log_path)
 
-        result = await list_entries(small_vault, small_audit, group="Servers")
+        result = await list_entries(small_vault, group="Servers")
         assert len(result) == 2
 
 
@@ -523,6 +588,20 @@ class TestWriteTools:
         assert b"--notes" not in add_cmd
 
 
+    async def test_create_entry_empty_string_username_passed(self, unlocked_vault):
+        """Empty string username is passed to CLI, not silently dropped."""
+        from server.tools.write import create_entry
+
+        vault, audit = unlocked_vault
+        vault._repl_proc.stdout.readuntil.side_effect = [
+            _repl_resp(b""),  # ls: no existing entries
+            _repl_resp(b""),  # add success
+        ]
+        await create_entry(vault, audit, title="New", group="Servers", username="")
+        write_calls = vault._repl_proc.stdin.write.call_args_list
+        add_cmd = write_calls[1][0][0]
+        assert b"--username" in add_cmd
+
     async def test_create_entry_with_password_uses_stdin_lines(self, unlocked_vault):
         """create_entry with password uses -p flag and writes password to stdin.
 
@@ -612,7 +691,7 @@ class TestSearchEntries:
             _repl_resp(b"Servers/Web Server\nSSH Keys/SSH Key\nAPI Keys/Anthropic\n"),
             _repl_resp(b"Title: Web Server\nUserName: admin\nURL: https://web\n"),
         ]
-        result = await search_entries(vault, audit, query="Server", group="Servers")
+        result = await search_entries(vault, query="Server", group="Servers")
         assert len(result) == 1
         assert result[0]["title"] == "Web Server"
 
@@ -625,7 +704,7 @@ class TestSearchEntries:
             _repl_resp(b"Servers/Active Entry\nServers/[INACTIVE] Old Entry\n"),
             _repl_resp(b"Title: Active Entry\nUserName: u\nURL: \n"),
         ]
-        result = await search_entries(vault, audit, query="Entry")
+        result = await search_entries(vault, query="Entry")
         assert len(result) == 1
         assert result[0]["title"] == "Active Entry"
 
@@ -639,7 +718,7 @@ class TestSearchEntries:
             _repl_resp(b"Standalone Entry\n"),
             _repl_resp(b"Title: Standalone Entry\nUserName: u\nURL: \n"),
         ]
-        result = await search_entries(vault, audit, query="Standalone")
+        result = await search_entries(vault, query="Standalone")
         assert len(result) == 1
         assert result[0]["group"] is None
 
@@ -652,7 +731,7 @@ class TestSearchEntries:
             _repl_resp(b"SSH Keys/Personal/SSH - laptop\n"),
             _repl_resp(b"Title: SSH - laptop\nUserName: chris\nURL: \n"),
         ]
-        result = await search_entries(vault, audit, query="laptop")
+        result = await search_entries(vault, query="laptop")
         assert len(result) == 1
         assert result[0]["title"] == "SSH - laptop"
         assert result[0]["group"] == "SSH Keys/Personal"
@@ -676,7 +755,7 @@ class TestSearchEntriesTruncation:
             _repl_resp(paths.encode()),
             *show_responses,
         ]
-        result = await search_entries(vault, audit, query="Entry")
+        result = await search_entries(vault, query="Entry")
         assert len(result) == 50
 
 
@@ -976,7 +1055,7 @@ class TestAiRestrictedEnforcement:
             _repl_resp(b"Title: Anthropic\nUserName: key\nURL: https://api.anthropic.com\n"),
             _repl_resp(b"Title: Secret Project\nTags: AI RESTRICTED\n"),
         ]
-        result = await search_entries(vault, audit, query="api")
+        result = await search_entries(vault, query="api")
         assert len(result) == 1
         assert result[0]["title"] == "Anthropic"
 
@@ -989,7 +1068,7 @@ class TestAiRestrictedEnforcement:
             _repl_resp(b"Title: Anthropic API - main\nUserName: key\nURL: \n"),
             _repl_resp(b"Title: Secret Project\nTags: AI RESTRICTED\n"),
         ]
-        result = await list_entries(vault, audit, group="API Keys")
+        result = await list_entries(vault, group="API Keys")
         assert len(result) == 1
         assert result[0]["title"] == "Anthropic API - main"
 

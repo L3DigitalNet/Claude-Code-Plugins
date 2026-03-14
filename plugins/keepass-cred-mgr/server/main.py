@@ -114,7 +114,7 @@ async def unlock_vault(ctx: Context[Any, Any, Any]) -> str:
     try:
         await app.vault.unlock()
         return "Vault unlocked successfully"
-    except (YubiKeyNotPresent, KeePassCLIError, TimeoutError) as e:
+    except (YubiKeyNotPresent, KeePassCLIError) as e:
         raise ValueError(_error_text(e)) from e
 
 
@@ -143,7 +143,7 @@ async def list_entries(
     app = _get_ctx(ctx)
     try:
         return await read_tools.list_entries(
-            app.vault, app.audit, group=group, include_inactive=include_inactive
+            app.vault, group=group, include_inactive=include_inactive
         )
     except (VaultLocked, KeePassCLIError, TimeoutError) as e:
         raise ValueError(_error_text(e)) from e
@@ -161,7 +161,7 @@ async def search_entries(
     app = _get_ctx(ctx)
     try:
         return await read_tools.search_entries(
-            app.vault, app.audit,
+            app.vault,
             query=query, group=group, include_inactive=include_inactive,
         )
     except (VaultLocked, KeePassCLIError, TimeoutError) as e:
@@ -171,13 +171,16 @@ async def search_entries(
 @mcp.tool()
 async def get_entry(
     ctx: Context[Any, Any, Any], title: str, group: str | None = None,
+    allow_inactive: bool = False,
 ) -> dict[str, str]:
-    """Get full entry details including password. Logs to audit trail."""
+    """Get full entry details including password. Logs to audit trail.
+    Set allow_inactive=True to read [INACTIVE] entries (used by /keepass-audit)."""
     log.info("tool_invoked", tool="get_entry")
     app = _get_ctx(ctx)
     try:
         return await read_tools.get_entry(
             app.vault, app.audit, title=title, group=group,
+            allow_inactive=allow_inactive,
         )
     except (
         VaultLocked, EntryInactive, EntryRestricted,
