@@ -60,6 +60,39 @@ class TestParseShowOutput:
         assert result["username"] == "admin"
         assert result["password"] == "s3cret"
 
+    def test_multiline_notes(self):
+        from server.tools.read import _parse_show_output
+        output = (
+            "Title: Web Server\n"
+            "UserName: admin\n"
+            "Password: s3cret\n"
+            "URL: https://example.com\n"
+            "Notes: Line one\n"
+            "Line two\n"
+            "Line three\n"
+        )
+        result = _parse_show_output(output)
+        assert result["notes"] == "Line one\nLine two\nLine three"
+
+    def test_multiline_notes_followed_by_field(self):
+        """Notes continuation stops when another known field appears."""
+        from server.tools.read import _parse_show_output
+        output = (
+            "Title: Entry\n"
+            "Notes: First line\n"
+            "Second line\n"
+            "Tags: some-tag\n"
+        )
+        result = _parse_show_output(output)
+        assert result["notes"] == "First line\nSecond line"
+
+    def test_single_line_notes_unchanged(self):
+        """Existing single-line notes behavior preserved."""
+        from server.tools.read import _parse_show_output
+        output = "Title: Entry\nNotes: Single line\nUserName: admin\n"
+        result = _parse_show_output(output)
+        assert result["notes"] == "Single line"
+
 
 # ---------------------------------------------------------------------------
 # _parse_tags
@@ -151,6 +184,38 @@ class TestReadTools:
 
 
     async def test_get_entry_raises_on_inactive(self, unlocked_vault):
+        from server.tools.read import get_entry
+        from server.vault import EntryInactive
+
+        vault, audit = unlocked_vault
+        with pytest.raises(EntryInactive):
+            await get_entry(vault, audit, title="[INACTIVE] Old Server", group="Servers")
+
+    async def test_get_entry_allows_inactive_when_flag_set(self, unlocked_vault):
+        """get_entry with allow_inactive=True returns the entry without raising."""
+        from server.tools.read import get_entry
+
+        vault, audit = unlocked_vault
+        vault._repl_proc.stdout.readuntil.side_effect = [
+            _repl_resp(
+                b"Title: [INACTIVE] Old Server\n"
+                b"UserName: admin\n"
+                b"Password: oldpass\n"
+                b"URL: https://old.example.com\n"
+                b"Notes: Some notes\n[DEACTIVATED: 2026-03-01T00:00:00+00:00]\n"
+            )
+        ]
+        result = await get_entry(
+            vault, audit,
+            title="[INACTIVE] Old Server", group="Servers",
+            allow_inactive=True,
+        )
+        assert result["title"] == "[INACTIVE] Old Server"
+        assert result["password"] == "oldpass"
+        assert "DEACTIVATED" in result["notes"]
+
+    async def test_get_entry_still_blocks_inactive_by_default(self, unlocked_vault):
+        """Default behavior unchanged — inactive entries raise EntryInactive."""
         from server.tools.read import get_entry
         from server.vault import EntryInactive
 

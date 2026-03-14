@@ -171,13 +171,16 @@ async def search_entries(
 @mcp.tool()
 async def get_entry(
     ctx: Context[Any, Any, Any], title: str, group: str | None = None,
+    allow_inactive: bool = False,
 ) -> dict[str, str]:
-    """Get full entry details including password. Logs to audit trail."""
+    """Get full entry details including password. Logs to audit trail.
+    Set allow_inactive=True to read [INACTIVE] entries (used by /keepass-audit)."""
     log.info("tool_invoked", tool="get_entry")
     app = _get_ctx(ctx)
     try:
         return await read_tools.get_entry(
             app.vault, app.audit, title=title, group=group,
+            allow_inactive=allow_inactive,
         )
     except (
         VaultLocked, EntryInactive, EntryRestricted,

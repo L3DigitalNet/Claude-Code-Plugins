@@ -23,23 +23,46 @@ type EntrySummary = dict[str, str]
 type SearchResult = dict[str, str | None]
 
 
+# Known field prefixes that terminate a multi-line notes block.
+_KNOWN_FIELDS = {"username", "password", "url", "notes", "title", "tags"}
+
+
 def _parse_show_output(stdout: str) -> EntryFields:
-    """Parse keepassxc-cli show output into a string field dict."""
+    """Parse keepassxc-cli show output into a string field dict.
+
+    Notes can span multiple lines; continuation lines have no 'Key: ' prefix.
+    Continuation stops when a line starts with a known field key followed by ': '.
+    """
     fields: dict[str, str] = {}
+    in_notes = False
+    notes_lines: list[str] = []
+
     for line in stdout.strip().splitlines():
         if ": " in line:
             key, _, value = line.partition(": ")
             key_lower = key.strip().lower()
-            if key_lower == "username":
-                fields["username"] = value.strip()
-            elif key_lower == "password":
-                fields["password"] = value.strip()
-            elif key_lower == "url":
-                fields["url"] = value.strip()
-            elif key_lower == "notes":
-                fields["notes"] = value.strip()
-            elif key_lower == "title":
-                fields["title"] = value.strip()
+            if key_lower in _KNOWN_FIELDS:
+                if in_notes:
+                    fields["notes"] = "\n".join(notes_lines)
+                    in_notes = False
+                if key_lower == "notes":
+                    notes_lines = [value.strip()]
+                    in_notes = True
+                elif key_lower == "username":
+                    fields["username"] = value.strip()
+                elif key_lower == "password":
+                    fields["password"] = value.strip()
+                elif key_lower == "url":
+                    fields["url"] = value.strip()
+                elif key_lower == "title":
+                    fields["title"] = value.strip()
+                continue
+        if in_notes:
+            notes_lines.append(line)
+
+    if in_notes:
+        fields["notes"] = "\n".join(notes_lines)
+
     return fields
 
 
@@ -158,8 +181,9 @@ async def get_entry(
     *,
     title: str,
     group: str | None = None,
+    allow_inactive: bool = False,
 ) -> EntryFields:
-    if title.startswith(INACTIVE_PREFIX):
+    if not allow_inactive and title.startswith(INACTIVE_PREFIX):
         raise EntryInactive(f"Entry '{title}' is deactivated")
 
     db = vault.config.database_path
