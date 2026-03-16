@@ -159,6 +159,17 @@
       },
       "source": "./plugins/python-dev",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
+    },
+    {
+      "name": "opus-context",
+      "description": "Teaches Claude Code Opus 4.6 to aggressively leverage its 1M token context window through always-on behavioral rules and deep-context planning for complex tasks.",
+      "version": "1.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/opus-context",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/opus-context"
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "name": "opus-context",
+  "version": "1.0.0",
+  "description": "Teaches Claude Code Opus 4.6 to aggressively leverage its 1M token context window through always-on behavioral rules and deep-context planning for complex tasks.",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  }
+}

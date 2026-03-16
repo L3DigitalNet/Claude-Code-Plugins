@@ -84,6 +84,11 @@
       "check": "missing_tests",
       "plugin": "python-dev",
       "reason": "Markdown/skill-only plugin — 11 knowledge files and one command with no executable test suite by design"
+    },
+    {
+      "check": "missing_tests",
+      "plugin": "opus-context",
+      "reason": "Skill-only plugin — one behavioral skill file and one hook script with no executable test suite by design"
     }
   ]
 }
