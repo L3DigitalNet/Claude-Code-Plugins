@@ -170,6 +170,18 @@
       },
       "source": "./plugins/opus-context",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/opus-context"
+    },
+    {
+      "name": "test-driver",
+      "description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "testing",
+      "source": "./plugins/test-driver",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/test-driver"
     }
   ]
 }
