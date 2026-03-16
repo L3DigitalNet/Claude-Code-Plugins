@@ -1,0 +1,9 @@
+{
+  "name": "test-driver",
+  "version": "0.1.0",
+  "description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  }
+}
