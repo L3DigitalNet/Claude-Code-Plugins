@@ -60,6 +60,8 @@ The most important skill in the plugin. Broadly triggered so it loads into conte
 
 **Trigger words:** test, implement, feature, fix, bug, refactor, build, create, modify, change, add, update, debug, complete, finish, deploy, merge, PR, commit
 
+*Intentionally broad — this is effectively an always-on skill.* The trigger list ensures testing-mindset loads into context for any implementation task. The non-intrusive cadence rules (behavior #4 below) prevent this from becoming noisy.
+
 **Teaches Claude four behaviors:**
 
 1. **Recognize proactive testing moments.** After any of these, evaluate whether testing is needed:
@@ -106,6 +108,8 @@ Activated when Claude decides (or is asked via `/test-driver:analyze`) to perfor
 If the user agrees, Claude inspects the project's test toolchain, drafts a profile answering the five standard questions (see Stack Profiles section), writes it, and proceeds.
 
 **Partial match:** If a profile exists but doesn't cover something the project uses (e.g., `python-fastapi` loaded but the project also has Playwright browser tests), suggest updating the profile.
+
+**Multi-framework projects:** Load one primary profile based on the dominant framework. If the project combines stacks (e.g., Django backend + PySide6 management tool), the primary profile covers the main application; Claude can manually consult additional profiles for secondary components when running scoped analysis on those directories.
 
 **Step 2 — Determine applicable test categories** from the loaded stack profile.
 
@@ -154,14 +158,14 @@ REPORT ──── update TEST_STATUS.json, summarize to user
 
 **Guardrails:**
 - **Max iterations:** 10 generate-run-fix cycles before forced stop with status report.
-- **Oscillation detection (P5):** If fix A breaks test B, fixing B breaks test A, flag immediately and stop.
+- **Oscillation detection (P5):** If any test that was previously green turns red after a fix, that counts as a regression. Two regressions within the same convergence run = oscillation. Flag the pattern immediately, list the involved tests and fixes, and stop.
 - **Bug fix boundary:** Autonomous fixes for: typos, off-by-one, missing null checks, wrong return types, incorrect comparisons. Stop and report for: changed function signatures, altered business logic, modified API contracts, removed/added features.
 - **Batch size:** 3-5 tests per generate cycle. Smaller batches catch issues earlier.
 - **Source modification tracking:** Every autonomous source fix is recorded in the report with the file, what changed, and which test caught it.
 
 ### test-status (Persistent State)
 
-Governs reading and writing `docs/testing/TEST_STATUS.json`.
+Governs reading and writing `docs/testing/TEST_STATUS.json`. This path is a convention default; projects without a `docs/` directory get it created on first analysis.
 
 **Schema:**
 
@@ -318,7 +322,7 @@ Each profile is a lightweight skill answering five standard questions. Claude lo
 - **Execution:** `swift test` (SPM) or `xcodebuild test -scheme <scheme> -destination 'platform=iOS Simulator,name=iPhone 16'`
 - **Coverage:** `swift test --enable-code-coverage` with `llvm-cov` export, or Xcode coverage reports
 - **UI:** XCUITest for UI automation
-- **Delegates to:** none (self-contained; no existing Swift testing plugin)
+- **Delegates to:** none (self-contained; no existing Swift testing plugin). If a Swift testing plugin is added in the future, this profile should be updated to delegate framework specifics.
 - **Key tools:** XCTest, XCUITest, swift-testing (Swift 5.9+), Swift Package Manager
 
 ### Adding New Profiles
@@ -375,8 +379,8 @@ test-driver (drives WHEN and WHAT)
     ├── qt-suite:qtest-patterns
     ├── qt-suite:qt-pilot-usage
     ├── home-assistant-dev:ha-testing
-    ├── superpowers:test-driven-development
-    └── superpowers:verification-before-completion
+    ├── superpowers:test-driven-development  (coexistence: TDD = test-first, test-driver = test-after)
+    └── superpowers:verification-before-completion  (testing-mindset defers to this at commit/merge boundaries)
 ```
 
 ### Interaction Rules
