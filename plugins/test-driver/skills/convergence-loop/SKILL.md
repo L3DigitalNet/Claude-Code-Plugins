@@ -53,6 +53,30 @@ Write 3-5 tests per batch, targeting the highest-priority unfilled gaps.
 - Consult framework-specific plugins when available (e.g., `python-dev:python-testing-patterns`)
 - Place test files according to the profile's discovery conventions
 
+#### Category-Specific Generation
+
+When generating tests for non-unit gaps, adapt the test approach to match the category:
+
+| Category | Approach |
+|----------|----------|
+| **Unit** | Mock external dependencies. Test isolated function/class behavior. One function per test. |
+| **Integration** | Use real components (test database, actual HTTP client, real service instances). Assert on observable outcomes across component boundaries, not internal state. |
+| **E2E** | Full request lifecycle through the actual app stack with minimal mocking. Test critical user-facing workflows (e.g., authenticate, perform action, verify result). Accept slower execution. |
+| **Contract** | Validate API response schemas, status codes, required fields, content-type headers, and error response shapes. Use schema validation (jsonschema, pydantic model parsing) rather than value equality. Tests should pass regardless of data state. |
+| **Security** | Each test represents a specific attack vector: SQL injection in user inputs, auth token manipulation, accessing resources without credentials, accessing another user's resources. Assert the attack fails gracefully (proper error code, no data leakage in error messages). |
+| **UI** | Use the framework's UI testing tool (pytest-qt, XCUITest, Charlotte). Interact via accessibility identifiers. Assert on what the user sees (text content, visibility, enabled state), not internal widget state. |
+
+#### Category Ordering
+
+When the gap report contains gaps across multiple categories, generate tests in this order:
+
+1. **Unit** — fastest to write and run, catches the most bugs per iteration
+2. **Integration** — validates component interactions
+3. **Contract** / **Security** — validates API shape and attack resistance
+4. **E2E** / **UI** — slowest, run last
+
+Within each category, follow the gap report's priority ordering (high before medium before low).
+
 ### RUN
 
 Execute the test suite using the command from the stack profile:

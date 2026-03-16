@@ -174,3 +174,37 @@ assert len(users) == 3
 expected_user_count = 3  # admin + two test users created in arrange
 assert len(users) == expected_user_count
 ```
+
+## 8. Non-Unit Test Design
+
+Sections 1-7 apply universally, but some principles shift weight when writing non-unit tests.
+
+### Integration Tests
+
+Relax isolation (Section 1): the point of integration tests is verifying that components work together. Use real dependencies where feasible (test database, actual HTTP client, real service wiring). Keep test independence (each test sets up its own state), but don't mock the interactions you're trying to test.
+
+Assert on observable outcomes across boundaries: data persisted correctly, response includes data assembled from multiple components, side effects propagated through the real dependency chain. Avoid asserting on internal state of intermediate components.
+
+### Contract Tests
+
+Test the shape, not the content. Assert on response structure (required fields present, correct types, proper status codes, expected content-type headers, error response format). Use schema validation (jsonschema, pydantic model parsing) rather than value equality.
+
+Contract tests should pass regardless of what data is in the system. If a contract test breaks when test data changes, it's testing values, not shape.
+
+### Security Tests
+
+Each test represents one attack vector. Write the test as an attacker would attempt the attack: SQL injection in a user input field, manipulated auth tokens, requests without credentials, accessing another user's resources via ID enumeration.
+
+Assert that the attack fails gracefully: proper HTTP error code (401/403, not 500), no sensitive data leaked in error messages or response bodies, no state corruption from the malicious input.
+
+### E2E Tests
+
+Test user-facing workflows from entry point to final result. Minimize mocking: the value of E2E tests is proving the full stack works together. Accept slower execution as the cost of this confidence.
+
+Focus on critical paths (authenticate, perform primary action, verify result) rather than exhaustive feature coverage. A few high-quality E2E tests covering the main workflows are worth more than dozens covering edge cases.
+
+### UI Tests
+
+Test what the user sees and does, not implementation details. Click buttons, fill forms, navigate between screens, verify visible outcomes (text content, element visibility, enabled/disabled state).
+
+Use accessibility identifiers or object names for element lookup, not CSS selectors or internal widget hierarchy. If a test breaks because the widget tree changed but the user experience didn't, the test is too tightly coupled to implementation.
