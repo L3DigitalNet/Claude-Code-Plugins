@@ -54,13 +54,15 @@ installed plugins at the start of each session.
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [KeePass Cred Mgr](#keepass-cred-mgr) | MCP + Commands + Skills | varies | KeePass vault access via 10 MCP tools, YubiKey auth, credential rotation, and audit logging |
-| [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 94 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
+| [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 97 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
 | [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review`, `/review-efficiency`, `/tighten` | Multi-pass assertion-driven audit of plugin principles, UX, docs, and context efficiency |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Python Dev](#python-dev) | Commands + Skills | `/python-code-review` | Contextual Python domain guidance: 11 skills load automatically, plus a comprehensive multi-domain code audit |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
+| [Opus Context](#opus-context) | Skills + Hooks | always-on | Teaches Opus 4.6 to use its full 1M context window instead of conservative small-model defaults |
+| [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
 
 ## Principles
 
@@ -413,6 +415,54 @@ requiring explicit approval.
 
 ---
 
+### Opus Context
+
+**1M context window optimizer for Opus 4.6**: always-on behavioral rules that override
+conservative small-model defaults (partial reads, excessive delegation, re-reading).
+
+**Features:**
+
+- Whole-file reading by default (no offset/limit for files under 4000 lines)
+- Direct reading over subagent delegation
+- Dependency pre-loading before editing
+- Budget-aware context pressure management
+
+**Install:**
+
+```bash
+/plugin install opus-context@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/opus-context/README.md](plugins/opus-context/README.md)
+
+---
+
+### Test Driver
+
+**Proactive testing awareness and gap filling**: always-on testing mindset that suggests
+gap analysis at natural breakpoints, finds missing tests across six categories, and
+iterates through a convergence loop until everything passes.
+
+**Features:**
+
+- Always-on testing-mindset skill triggers at natural breakpoints
+- Six-category gap analysis (unit, integration, e2e, contract, security, UI)
+- Convergence loop with oscillation detection
+- Stack profiles for FastAPI, Django, PySide6, Home Assistant, and Swift
+- Persistent test status tracking across sessions
+
+**Install:**
+
+```bash
+/plugin install test-driver@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/test-driver/README.md](plugins/test-driver/README.md)
+
+---
+
 ## Plugin Development
 
 This repository also serves as a development workspace for creating new plugins. See
@@ -470,12 +520,15 @@ Claude-Code-Plugins/
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── keepass-cred-mgr/        # KeePass credential manager (10 MCP tools, YubiKey auth)
-│   ├── linux-sysadmin/          # Linux sysadmin skills (94 per-service guides)
+│   ├── linux-sysadmin/          # Linux sysadmin skills (97 per-service guides)
+│   ├── opus-context/            # 1M context window optimizer for Opus 4.6
 │   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
+│   ├── python-dev/              # Python development skills (11 domain skills)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
 │   ├── release-pipeline/        # Autonomous release pipeline
-│   └── repo-hygiene/            # Autonomous repo maintenance sweep
+│   ├── repo-hygiene/            # Autonomous repo maintenance sweep
+│   └── test-driver/             # Proactive testing via gap analysis and convergence
 ├── scripts/
 │   └── validate-marketplace.sh  # Marketplace validation
 ├── docs/                        # Comprehensive documentation
