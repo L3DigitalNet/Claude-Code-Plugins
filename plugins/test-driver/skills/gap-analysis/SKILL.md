@@ -62,7 +62,7 @@ Only analyze categories that the profile marks as applicable.
 Use Glob to find all test files based on the profile's discovery conventions:
 
 - Match test file patterns (e.g., `test_*.py`, `*Tests.swift`)
-- Categorize each test file by type based on directory structure (`tests/unit/`, `tests/integration/`) or pytest markers
+- Categorize each test file by type based on directory structure (`tests/unit/`, `tests/integration/`) or pytest markers. This classification feeds Step 5's per-category coverage mapping.
 - Count tests per category
 
 **Read test files in parallel batches** (opus-context alignment). For files under 4000 lines, read them fully.
@@ -78,15 +78,28 @@ Find all non-test source files. Exclude common non-source patterns:
 - Build artifacts (`build/`, `dist/`, `.build/`)
 - Virtual environments (`venv/`, `.venv/`, `env/`)
 
-## Step 5: Map Coverage
+## Step 5: Map Coverage Per Category
 
-For each source file, check which applicable test categories have corresponding tests:
+For each source file and each applicable category (from the profile), determine whether test coverage exists in that specific category.
 
-- **Structural mapping:** Does a test file exist that imports or references this source file?
-- **Naming convention:** Does `tests/test_<module>.py` exist for `src/<module>.py`?
-- **Content scan:** Grep test files for imports of the source module
+### Phase 1: Classify Existing Tests
 
-This is structural mapping (test file exists and references the source), not runtime coverage (line-level). Runtime coverage requires executing the test suite, which happens during the convergence loop.
+Use the categorization from Step 3. Classification priority:
+
+1. **Directory structure**: Test files under `tests/unit/`, `tests/integration/`, `tests/e2e/`, `tests/contract/`, `tests/security/`, `tests/ui/` are classified by their directory.
+2. **Pytest markers**: Test files using `@pytest.mark.unit`, `@pytest.mark.integration`, etc. are classified by their markers. A file can belong to multiple categories if it has multiple markers.
+3. **Conservative fallback**: Test files that have neither a category directory nor markers are classified as **unit**. This intentionally over-reports gaps for non-unit categories; under-reporting is the problem this methodology exists to solve.
+
+### Phase 2: Per-Source-File, Per-Category Mapping
+
+For each source file, for each applicable category:
+
+- Is there a test file **classified in that category** (from Phase 1) that imports or references this source file?
+- Use the same structural mapping techniques (import scanning, naming conventions, content grep) but scoped to the test files in that specific category.
+
+A source file that has unit tests but no integration tests still has an **integration gap**. A source file with no tests in any category has gaps in every applicable category.
+
+This is structural mapping (test file exists in the right category and references the source), not runtime coverage. Runtime coverage requires executing the test suite, which happens during the convergence loop.
 
 ## Step 6: Identify and Prioritize Gaps
 
