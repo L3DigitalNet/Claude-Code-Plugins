@@ -4,6 +4,7 @@ description: >
   DNS query and debugging tools (dig, nslookup, host) for looking up DNS records,
   tracing delegation chains, diagnosing resolver behavior, and validating mail
   authentication records (SPF, DKIM, DMARC).
+  MUST consult when running DNS queries or debugging DNS resolution.
 triggerPhrases:
   - "dig"
   - "nslookup"

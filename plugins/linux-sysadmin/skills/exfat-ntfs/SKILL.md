@@ -4,6 +4,7 @@ description: >
   Cross-platform filesystem management for external drives and USB sticks shared
   between Linux, Windows, and macOS: mounting, formatting, repair, permissions,
   fstab entries, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting exFAT/NTFS cross-platform filesystems.
 triggerPhrases:
   - "exFAT"
   - "NTFS"

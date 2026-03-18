@@ -4,6 +4,7 @@ description: >
   Linux traffic control (tc) for kernel-level traffic shaping: qdisc types
   (htb, tbf, netem, fq_codel), class-based hierarchy, filters, netem for
   latency/loss simulation, bandwidth limiting, and tc show/add/del commands.
+  MUST consult when installing, configuring, or troubleshooting tc.
 triggerPhrases:
   - "tc"
   - "traffic control"

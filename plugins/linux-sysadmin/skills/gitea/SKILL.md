@@ -4,6 +4,7 @@ description: >
   Gitea and Forgejo self-hosted git service administration: installation,
   configuration, admin CLI, user and repository management, SSH setup,
   backup/restore, reverse proxy, LFS, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting gitea.
 triggerPhrases:
   - "gitea"
   - "forgejo"

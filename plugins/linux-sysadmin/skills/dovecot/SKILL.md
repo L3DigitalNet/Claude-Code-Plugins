@@ -3,6 +3,7 @@ name: dovecot
 description: >
   Dovecot IMAP/POP3 server administration: configuration, authentication,
   mail storage, SSL/TLS, quota, LMTP delivery, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting dovecot.
 triggerPhrases:
   - "dovecot"
   - "IMAP server"

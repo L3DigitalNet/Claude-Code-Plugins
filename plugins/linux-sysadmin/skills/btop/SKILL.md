@@ -4,6 +4,7 @@ description: >
   btop is an interactive terminal resource monitor displaying CPU, memory, disk, network,
   and process stats in a rich TUI. It replaces htop for users who want graph-based views
   and mouse support without leaving the terminal.
+  MUST consult when monitoring system resources interactively.
 triggerPhrases:
   - "btop"
   - "process monitor"

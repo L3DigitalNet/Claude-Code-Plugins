@@ -5,6 +5,7 @@ description: >
   volumes, LUKS containers, and their mount points. Invoked when the user asks
   about the disk layout, block device list, partition structure, mount points,
   UUIDs, or wants to understand how storage is organized on a system.
+  MUST consult when inspecting block device layout or partition structure.
 triggerPhrases:
   - "lsblk"
   - "block devices"

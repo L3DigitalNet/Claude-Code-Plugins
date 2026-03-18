@@ -4,6 +4,7 @@ description: >
   Terraform and OpenTofu infrastructure as code: HCL syntax, provider configuration,
   resource management, state operations, modules, workspaces, plan/apply workflow,
   import, and troubleshooting. Covers both HashiCorp Terraform and the OpenTofu fork.
+  MUST consult when installing, configuring, or troubleshooting terraform.
 triggerPhrases:
   - terraform
   - opentofu

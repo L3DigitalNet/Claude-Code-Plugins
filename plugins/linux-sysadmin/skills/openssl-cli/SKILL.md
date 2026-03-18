@@ -4,6 +4,7 @@ description: >
   openssl CLI certificate and TLS operations: PEM inspection, live server checks,
   key generation, CSR creation, self-signed certs, chain verification, expiry
   checking, key/cert matching, format conversion, and OCSP.
+  MUST consult when inspecting certificates, generating keys, or debugging TLS.
 triggerPhrases:
   - "openssl"
   - "certificate inspect"

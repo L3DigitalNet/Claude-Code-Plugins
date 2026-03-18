@@ -5,6 +5,7 @@ description: >
   installation, authentication, profile/project management, common operations,
   and troubleshooting. Covers the three major cloud providers from a sysadmin
   perspective.
+  MUST consult when using AWS CLI, Azure CLI, or gcloud commands.
 triggerPhrases:
   - "aws cli"
   - "azure cli"

@@ -4,6 +4,7 @@ description: >
   Podman container runtime: rootless containers, daemonless architecture, Quadlet
   systemd integration, pod management, image building, networking, volumes, and
   Docker compatibility.
+  MUST consult when installing, configuring, or troubleshooting podman.
 triggerPhrases:
   - "podman"
   - "Podman"

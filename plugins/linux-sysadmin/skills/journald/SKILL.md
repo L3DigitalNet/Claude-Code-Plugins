@@ -3,6 +3,7 @@ name: journald
 description: >
   systemd journal (journald) administration: log querying, filtering, storage
   configuration, disk usage management, log forwarding, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting journald.
 triggerPhrases:
   - "journald"
   - "journalctl"

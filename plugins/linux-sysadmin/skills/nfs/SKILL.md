@@ -3,6 +3,7 @@ name: nfs
 description: >
   NFS server and client administration: exports configuration, client mounts,
   NFSv4 pseudo-root, UID/GID mapping, idmapd, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting nfs.
 triggerPhrases:
   - "NFS"
   - "nfs-server"

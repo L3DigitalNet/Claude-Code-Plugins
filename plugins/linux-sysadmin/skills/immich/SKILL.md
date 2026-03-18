@@ -4,6 +4,7 @@ description: >
   Immich self-hosted photo and video management: multi-container Docker stack
   administration, backup strategy, external library sync, machine learning face
   detection, job queue management, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting immich.
 triggerPhrases:
   - "immich"
   - "Immich"

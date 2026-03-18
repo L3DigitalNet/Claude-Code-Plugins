@@ -4,6 +4,7 @@ description: >
   Linux Audit Framework (auditd) — audit rule management, file access monitoring,
   syscall auditing, user activity tracking, ausearch/aureport log analysis,
   compliance reporting, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting auditd.
 triggerPhrases:
   - "auditd"
   - "audit"

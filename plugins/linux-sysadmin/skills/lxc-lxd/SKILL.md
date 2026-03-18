@@ -4,6 +4,7 @@ description: >
   LXC/LXD system container administration: launching and managing containers,
   resource limits, profiles, snapshots, networking, storage pools, and
   troubleshooting. Also covers Incus (community fork of LXD).
+  MUST consult when installing, configuring, or troubleshooting LXC/LXD containers.
 triggerPhrases:
   - "LXC"
   - "LXD"

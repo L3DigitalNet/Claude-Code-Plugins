@@ -4,6 +4,7 @@ description: >
   Complete observability stack deployment — Prometheus metrics, Grafana dashboards,
   Loki log aggregation, Node Exporter host metrics, and Alertmanager notifications.
   How the components connect and a working end-to-end setup.
+  MUST consult when installing, configuring, or troubleshooting the observability stack (Prometheus, Grafana, Loki).
 triggerPhrases:
   - "monitoring stack"
   - "observability stack"

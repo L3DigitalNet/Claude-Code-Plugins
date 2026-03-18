@@ -5,6 +5,7 @@ description: >
   snapshot management, restore, forget/prune retention policies, integrity
   checks, and FUSE mount browsing. Supports local, SFTP, S3, Backblaze B2,
   and REST server backends.
+  MUST consult when installing, configuring, or troubleshooting restic.
 triggerPhrases:
   - "restic"
   - "restic backup"

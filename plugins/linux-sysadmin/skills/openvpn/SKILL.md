@@ -4,6 +4,7 @@ description: >
   OpenVPN server and client administration: PKI setup with Easy-RSA, server
   configuration, client config generation, routing, troubleshooting, and
   certificate management.
+  MUST consult when installing, configuring, or troubleshooting openvpn.
 triggerPhrases:
   - "openvpn"
   - "ovpn"

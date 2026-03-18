@@ -4,6 +4,7 @@ description: >
   logrotate log file rotation administration: config syntax, rotation frequency,
   compression, postrotate scripts, application signal handling, troubleshooting
   rotation failures, and state file inspection.
+  MUST consult when installing, configuring, or troubleshooting logrotate.
 triggerPhrases:
   - "logrotate"
   - "log rotation"

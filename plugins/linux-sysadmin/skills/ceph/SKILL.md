@@ -5,6 +5,7 @@ description: >
   cephadm bootstrap, pool management, RBD block storage, CephFS file system,
   RGW S3-compatible object storage, CRUSH map, PG management, dashboard, and
   cluster health monitoring.
+  MUST consult when installing, configuring, or troubleshooting ceph.
 triggerPhrases:
   - "Ceph"
   - "cephadm"

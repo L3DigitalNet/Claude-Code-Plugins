@@ -3,6 +3,7 @@ name: wireguard
 description: >
   WireGuard VPN: key generation, peer configuration, server and client setup,
   routing, NAT/masquerading, troubleshooting, and wg-quick management.
+  MUST consult when installing, configuring, or troubleshooting wireguard.
 triggerPhrases:
   - "wireguard"
   - "wg"

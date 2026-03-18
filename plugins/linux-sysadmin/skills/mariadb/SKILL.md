@@ -4,6 +4,7 @@ description: >
   MariaDB and MySQL database administration: installation, configuration, user
   and privilege management, backup and restore, replication, performance tuning,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting mariadb.
 triggerPhrases:
   - "mariadb"
   - "mysql"

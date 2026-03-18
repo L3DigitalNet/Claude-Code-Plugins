@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.2.0] - 2026-03-18
+
+### Added
+- SessionStart hook that detects sysadmin working directories (`/home/chris`, `~/git-luminous3d/homelab`) and injects a context reminder to consult service-specific skills before running installation or configuration commands
+
+### Changed
+- All 137 skill descriptions now use assertive "MUST consult when..." trigger language instead of passive descriptions, matching the pattern used by python-dev and home-assistant-dev skills that get invoked reliably
+- Service skills: "MUST consult when installing, configuring, or troubleshooting {service}"
+- Tool/diagnostic skills: custom verb patterns (e.g., "MUST consult when writing jq expressions...")
+- Updated skill count from 97 to 137 in plugin.json and marketplace.json descriptions
+
 ## [1.1.0] - 2026-03-04
 
 ### Added

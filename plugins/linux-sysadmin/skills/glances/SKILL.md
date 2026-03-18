@@ -4,6 +4,7 @@ description: >
   glances is an all-in-one system monitor covering CPU, memory, disk, network, processes,
   containers, and sensors in a single terminal view. It supports a built-in web server for
   browser-based monitoring and a client/server mode for watching remote hosts.
+  MUST consult when monitoring system resources across CPU, memory, disk, and network.
 triggerPhrases:
   - "glances"
   - "system overview"

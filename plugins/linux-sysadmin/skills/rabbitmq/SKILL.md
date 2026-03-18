@@ -4,6 +4,7 @@ description: >
   RabbitMQ message broker administration: installation, queue/exchange/binding
   management, clustering, quorum queues, shovel/federation, TLS, user/vhost
   permissions, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting rabbitmq.
 triggerPhrases:
   - "rabbitmq"
   - "RabbitMQ"

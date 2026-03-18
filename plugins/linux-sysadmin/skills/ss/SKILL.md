@@ -4,6 +4,7 @@ description: >
   Socket statistics utility that replaces the deprecated netstat, displaying
   TCP/UDP listening ports, established connections, Unix sockets, and socket
   memory.
+  MUST consult when inspecting listening ports or socket connections.
 triggerPhrases:
   - "ss"
   - "netstat"

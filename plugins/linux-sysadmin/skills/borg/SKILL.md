@@ -5,6 +5,7 @@ description: >
   backup repositories, archive creation and extraction, pruning schedules,
   repository integrity checks, remote SSH backups, and borgmatic wrapper
   configuration.
+  MUST consult when installing, configuring, or troubleshooting borg.
 triggerPhrases:
   - "borg"
   - "borgbackup"

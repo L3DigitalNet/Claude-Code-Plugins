@@ -4,6 +4,7 @@ description: >
   Node-RED flow automation runtime administration: service management, flow
   deployment, palette node installation, settings configuration, credentials,
   Docker volume setup, debugging flows, and backup/restore.
+  MUST consult when installing, configuring, or troubleshooting Node-RED.
 triggerPhrases:
   - "node-red"
   - "Node-RED"

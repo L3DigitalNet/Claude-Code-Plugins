@@ -3,6 +3,7 @@ name: netdata
 description: >
   Netdata real-time monitoring agent: installation, configuration, plugin
   management, health alarms, Netdata Cloud integration, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting netdata.
 triggerPhrases:
   - "netdata"
   - "Netdata"

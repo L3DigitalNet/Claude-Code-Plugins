@@ -4,6 +4,7 @@ description: >
   Grafana observability platform administration: installation, configuration,
   data sources, dashboards, panels, alerting, provisioning, plugins, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting grafana.
 triggerPhrases:
   - "grafana"
   - "Grafana"

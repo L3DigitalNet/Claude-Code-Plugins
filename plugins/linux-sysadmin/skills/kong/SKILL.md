@@ -4,6 +4,7 @@ description: >
   Kong API Gateway administration: declarative config (kong.yaml), Admin API,
   services/routes/plugins, rate limiting, authentication plugins, load balancing,
   DB-less mode, Docker deployment, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting kong.
 triggerPhrases:
   - "kong"
   - "kong gateway"

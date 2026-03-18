@@ -5,6 +5,7 @@ description: >
   management, user and policy configuration, erasure coding, server pools,
   bucket replication, lifecycle rules (expiration and transition), versioning,
   TLS setup, Docker and bare-metal deployment, and monitoring.
+  MUST consult when installing, configuring, or troubleshooting minio.
 triggerPhrases:
   - "minio"
   - "MinIO"

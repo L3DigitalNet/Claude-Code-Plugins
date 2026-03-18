@@ -5,6 +5,7 @@ description: >
   fixed strings, file type filtering, glob patterns, context lines, match
   counting, multiline mode, replace output, JSON output, hidden file search,
   and .gitignore behavior.
+  MUST consult when writing complex ripgrep search patterns.
 triggerPhrases:
   - "ripgrep"
   - "rg"

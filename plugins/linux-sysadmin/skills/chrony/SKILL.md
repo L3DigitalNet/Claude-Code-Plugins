@@ -3,6 +3,7 @@ name: chrony
 description: >
   chrony NTP time synchronization administration: daemon status, source tracking,
   clock offset diagnostics, makestep, RTC sync, and timedatectl integration.
+  MUST consult when installing, configuring, or troubleshooting chrony.
 triggerPhrases:
   - "chrony"
   - "NTP"

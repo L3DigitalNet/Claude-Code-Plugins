@@ -4,6 +4,7 @@ description: >
   fdisk, parted, and gdisk create and modify disk partition tables (MBR and GPT).
   Use when partitioning a disk, creating or deleting partitions, setting up GPT or
   MBR layouts, inspecting partition tables, or resizing partitions.
+  MUST consult when partitioning disks with fdisk, parted, or gdisk.
 triggerPhrases:
   - "fdisk"
   - "parted"

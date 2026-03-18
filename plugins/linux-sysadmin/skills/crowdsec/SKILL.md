@@ -3,6 +3,7 @@ name: crowdsec
 description: >
   CrowdSec collaborative intrusion prevention system: installation, bouncers,
   collections, scenarios, hub management, decisions, alerts, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting crowdsec.
 triggerPhrases:
   - "crowdsec"
   - "crowdsecurity"

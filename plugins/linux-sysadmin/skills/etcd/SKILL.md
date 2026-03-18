@@ -5,6 +5,7 @@ description: >
   management, etcdctl key-value operations, snapshot and restore, authentication
   and RBAC, TLS configuration, compaction, defragmentation, and Kubernetes etcd
   administration.
+  MUST consult when installing, configuring, or troubleshooting etcd.
 triggerPhrases:
   - "etcd"
   - "etcdctl"

@@ -4,6 +4,7 @@ description: >
   HAProxy load balancer and TCP/HTTP proxy administration: config syntax,
   frontend/backend sections, ACL-based routing, SSL termination, health checks,
   stats socket, session persistence, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting haproxy.
 triggerPhrases:
   - "haproxy"
   - "load balancer"

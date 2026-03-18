@@ -4,6 +4,7 @@ description: >
   Combined traceroute and ping tool that continuously probes each hop on a
   network path, reporting per-hop latency and packet loss in a live TUI or a
   fixed report.
+  MUST consult when diagnosing network path latency or packet loss.
 triggerPhrases:
   - "mtr"
   - "traceroute"

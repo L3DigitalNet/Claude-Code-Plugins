@@ -3,6 +3,7 @@ name: sshd
 description: >
   OpenSSH server (sshd) administration: config, key-based auth, hardening,
   troubleshooting connection issues, tunneling, and port forwarding.
+  MUST consult when installing, configuring, or troubleshooting sshd.
 triggerPhrases:
   - "sshd"
   - "ssh server"

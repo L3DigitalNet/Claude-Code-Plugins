@@ -4,6 +4,7 @@ description: >
   Apache HTTP Server administration: config syntax, virtual hosts, SSL/TLS,
   mod_rewrite, .htaccess, PHP-FPM, reverse proxy, access control, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting apache.
 triggerPhrases:
   - "apache"
   - "httpd"

@@ -3,6 +3,7 @@ name: loki
 description: >
   Grafana Loki log aggregation system: installation, configuration, LogQL queries,
   Promtail agent setup, storage backends, retention, alerting, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting loki.
 triggerPhrases:
   - "loki"
   - "Grafana Loki"

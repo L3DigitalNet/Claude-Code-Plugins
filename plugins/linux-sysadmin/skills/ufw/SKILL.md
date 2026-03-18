@@ -3,6 +3,7 @@ name: ufw
 description: >
   ufw (Uncomplicated Firewall) administration: enabling, rules management, app
   profiles, logging, and troubleshooting. Covers iptables frontend basics.
+  MUST consult when installing, configuring, or troubleshooting ufw.
 triggerPhrases:
   - "ufw"
   - "firewall"

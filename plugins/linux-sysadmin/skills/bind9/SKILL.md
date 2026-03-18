@@ -4,6 +4,7 @@ description: >
   BIND9 (named) authoritative DNS server and recursive resolver administration:
   zone file syntax, named.conf configuration, rndc management, DNSSEC, split-horizon
   views, zone transfers, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting bind9.
 triggerPhrases:
   - "bind9"
   - "named"

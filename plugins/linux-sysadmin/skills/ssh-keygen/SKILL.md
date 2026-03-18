@@ -4,6 +4,7 @@ description: >
   ssh-keygen SSH key management: key generation, passphrase management, fingerprint
   display, public key extraction, known_hosts management, format conversion,
   OpenSSH certificate signing, and signature verification.
+  MUST consult when generating, managing, or converting SSH keys.
 triggerPhrases:
   - "ssh-keygen"
   - "SSH key"

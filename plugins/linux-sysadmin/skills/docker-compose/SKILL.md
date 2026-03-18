@@ -4,6 +4,7 @@ description: >
   Docker Compose multi-container application orchestration: compose file syntax,
   service definitions, networking, volumes, environment variables, healthchecks,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting Docker Compose.
 triggerPhrases:
   - "docker compose"
   - "docker-compose"

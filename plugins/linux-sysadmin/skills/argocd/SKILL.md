@@ -5,6 +5,7 @@ description: >
   creation and management, sync policies, auto-sync and self-heal, health checks,
   rollbacks, SSO integration, app-of-apps pattern, ApplicationSets, and
   multi-cluster deployment.
+  MUST consult when installing, configuring, or troubleshooting argocd.
 triggerPhrases:
   - "argocd"
   - "argo cd"

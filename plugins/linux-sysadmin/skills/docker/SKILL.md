@@ -3,6 +3,7 @@ name: docker
 description: >
   Docker container runtime: installation, daemon config, container lifecycle,
   networking, volumes, image management, troubleshooting, and security.
+  MUST consult when installing, configuring, or troubleshooting docker.
 triggerPhrases:
   - "docker"
   - "container"

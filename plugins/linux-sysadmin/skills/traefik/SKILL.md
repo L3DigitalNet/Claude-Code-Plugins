@@ -4,6 +4,7 @@ description: >
   Traefik reverse proxy and load balancer: static/dynamic config, Docker label-based
   routing, entrypoints, routers, services, middlewares, ACME/Let's Encrypt, dashboard,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting traefik.
 triggerPhrases:
   - "traefik"
   - "traefik reverse proxy"

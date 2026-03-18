@@ -4,6 +4,7 @@ description: >
   Vaultwarden self-hosted credential manager administration: Docker deployment,
   environment variable configuration, reverse proxy setup, admin panel, user
   management, backup and restore, email/SMTP, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting vaultwarden.
 triggerPhrases:
   - "vaultwarden"
   - "Vaultwarden"

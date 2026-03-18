@@ -3,6 +3,7 @@ name: fail2ban
 description: >
   fail2ban intrusion prevention: jail configuration, filter rules, ban/unban
   management, log monitoring, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting fail2ban.
 triggerPhrases:
   - "fail2ban"
   - "intrusion prevention"

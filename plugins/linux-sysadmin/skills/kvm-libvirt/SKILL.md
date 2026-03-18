@@ -5,6 +5,7 @@ description: >
   virt-install, and virt-manager. Covers CPU/memory/disk configuration, networking
   (bridge, NAT, macvtap), storage pools, snapshots, live migration, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting KVM/libvirt virtualization.
 triggerPhrases:
   - "KVM"
   - "libvirt"

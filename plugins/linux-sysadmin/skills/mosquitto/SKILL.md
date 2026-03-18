@@ -4,6 +4,7 @@ description: >
   Eclipse Mosquitto MQTT broker administration: installation, configuration,
   authentication, TLS setup, ACLs, bridging, WebSocket listeners, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting mosquitto.
 triggerPhrases:
   - "mosquitto"
   - "MQTT"

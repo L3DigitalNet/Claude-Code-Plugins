@@ -4,6 +4,7 @@ description: >
   LVM (Logical Volume Manager) administration: physical volumes, volume groups,
   logical volumes, thin provisioning, snapshots, resizing, pvmove, and disaster
   recovery.
+  MUST consult when installing, configuring, or troubleshooting lvm.
 triggerPhrases:
   - "LVM"
   - "logical volume"

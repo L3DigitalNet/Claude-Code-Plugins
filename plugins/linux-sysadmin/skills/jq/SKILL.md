@@ -5,6 +5,7 @@ description: >
   filtering with select, map transforms, string interpolation, raw output,
   compact output, reading from files, constructing new JSON, slurping
   multiple inputs, null-safe defaults, and built-in encoders.
+  MUST consult when writing jq expressions for JSON processing.
 triggerPhrases:
   - "jq"
   - "JSON"

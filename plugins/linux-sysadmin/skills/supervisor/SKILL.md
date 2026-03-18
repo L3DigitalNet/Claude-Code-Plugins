@@ -4,6 +4,7 @@ description: >
   Supervisor process manager: supervisord daemon, supervisorctl commands,
   program configuration, process groups, event listeners, log management,
   and web UI administration.
+  MUST consult when installing, configuring, or troubleshooting supervisor.
 triggerPhrases:
   - "supervisor"
   - "supervisord"

@@ -4,6 +4,7 @@ description: >
   Nextcloud self-hosted cloud file storage and collaboration platform:
   installation, occ CLI administration, background jobs, file scanning,
   app management, upgrades, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting nextcloud.
 triggerPhrases:
   - "nextcloud"
   - "Nextcloud"

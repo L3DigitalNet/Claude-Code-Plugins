@@ -3,6 +3,7 @@ name: ext4
 description: >
   ext4 filesystem administration: create, check, repair, tune, and resize ext4
   filesystems.
+  MUST consult when installing, configuring, or troubleshooting ext4.
 triggerPhrases:
   - "ext4"
   - "e2fsck"

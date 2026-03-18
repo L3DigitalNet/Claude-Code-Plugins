@@ -4,6 +4,7 @@ description: >
   Postfix MTA (mail transfer agent) administration: configuration, queue
   management, relay setup, TLS, SASL authentication, virtual domains, and
   deliverability troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting postfix.
 triggerPhrases:
   - "postfix"
   - "MTA"

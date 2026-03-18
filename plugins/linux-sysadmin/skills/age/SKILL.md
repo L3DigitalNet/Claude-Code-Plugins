@@ -4,6 +4,7 @@ description: >
   age file encryption tool: keypair generation, encryption to public key
   recipients, passphrase encryption, multiple recipients, ASCII armor,
   SSH key recipients, stdin/stdout pipelines, and batch file encryption patterns.
+  MUST consult when installing, configuring, or troubleshooting age.
 triggerPhrases:
   - "age"
   - "file encryption"

@@ -4,6 +4,7 @@ description: >
   Apache Kafka event streaming platform administration: KRaft-mode cluster setup,
   broker configuration, topic and partition management, producer/consumer CLI tools,
   consumer groups, replication, JMX monitoring, log retention, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting kafka.
 triggerPhrases:
   - "kafka"
   - "kafka broker"

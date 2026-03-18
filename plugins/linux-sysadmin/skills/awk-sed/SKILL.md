@@ -4,6 +4,7 @@ description: >
   awk and sed stream editors: sed substitution and in-place editing, line
   deletion and printing, address ranges, awk field and separator usage,
   conditional logic, column summing, pattern-action blocks, and BEGIN/END.
+  MUST consult when writing awk or sed commands for text processing.
 triggerPhrases:
   - "awk"
   - "sed"

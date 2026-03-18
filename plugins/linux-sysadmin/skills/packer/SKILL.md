@@ -4,6 +4,7 @@ description: >
   HashiCorp Packer machine image automation: HCL2 templates, sources (builders),
   provisioners, post-processors, plugin management, and the init/validate/build
   workflow for QEMU/KVM, Docker, and cloud images (AWS AMI).
+  MUST consult when installing, configuring, or troubleshooting packer.
 triggerPhrases:
   - packer
   - packer build

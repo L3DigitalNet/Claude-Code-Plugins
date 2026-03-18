@@ -4,6 +4,7 @@ description: >
   Samba file server administration: smb.conf configuration, user management,
   share access, Windows/macOS interoperability, SELinux/AppArmor integration,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting samba.
 triggerPhrases:
   - "samba"
   - "SMB"

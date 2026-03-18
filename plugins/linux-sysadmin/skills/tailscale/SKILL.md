@@ -3,6 +3,7 @@ name: tailscale
 description: >
   Tailscale zero-config mesh VPN: installation, authentication, exit nodes,
   subnet routing, MagicDNS, ACLs, Taildrop, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting tailscale.
 triggerPhrases:
   - "tailscale"
   - "tailnet"

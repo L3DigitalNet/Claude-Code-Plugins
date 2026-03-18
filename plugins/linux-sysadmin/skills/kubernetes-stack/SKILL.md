@@ -4,6 +4,7 @@ description: >
   Production Kubernetes platform — cluster deployment, Helm package management,
   ArgoCD GitOps delivery, private container registry, and etcd administration.
   How the components connect for a self-managed Kubernetes platform.
+  MUST consult when installing, configuring, or troubleshooting the Kubernetes platform stack.
 triggerPhrases:
   - "Kubernetes platform"
   - "Kubernetes stack"

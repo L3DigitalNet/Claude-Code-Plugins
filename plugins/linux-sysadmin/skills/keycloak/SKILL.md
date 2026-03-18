@@ -5,6 +5,7 @@ description: >
   realms, clients, users, roles, identity providers (OIDC, SAML, social login),
   admin CLI (kcadm.sh), reverse proxy headers, PostgreSQL database configuration,
   themes, Docker and bare-metal deployment.
+  MUST consult when installing, configuring, or troubleshooting keycloak.
 triggerPhrases:
   - "keycloak"
   - "Keycloak"

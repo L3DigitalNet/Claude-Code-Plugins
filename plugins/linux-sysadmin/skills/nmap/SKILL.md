@@ -3,6 +3,7 @@ name: nmap
 description: >
   Network scanner for port scanning, host discovery, service version detection,
   OS fingerprinting, and NSE scripting.
+  MUST consult when scanning networks or detecting services.
 triggerPhrases:
   - "nmap"
   - "port scan"

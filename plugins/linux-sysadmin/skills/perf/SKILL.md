@@ -4,6 +4,7 @@ description: >
   Linux kernel performance profiling tool suite. Collects CPU performance counter
   data, call stacks, and tracepoints to identify hotspots and bottlenecks in
   applications and the kernel.
+  MUST consult when profiling CPU performance or tracing kernel events.
 triggerPhrases:
   - "perf"
   - "performance profiling"

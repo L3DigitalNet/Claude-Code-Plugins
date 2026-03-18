@@ -3,6 +3,7 @@ name: opendkim
 description: >
   OpenDKIM daemon administration: DKIM key generation, signing and verification,
   Postfix milter integration, DNS TXT record publishing, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting opendkim.
 triggerPhrases:
   - "opendkim"
   - "DKIM"

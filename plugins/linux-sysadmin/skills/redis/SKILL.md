@@ -3,6 +3,7 @@ name: redis
 description: >
   Redis in-memory data store administration: configuration, key operations,
   memory management, persistence, replication, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting redis.
 triggerPhrases:
   - "redis"
   - "Redis cache"

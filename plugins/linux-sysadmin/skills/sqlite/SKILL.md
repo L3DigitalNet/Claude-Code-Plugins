@@ -4,6 +4,7 @@ description: >
   SQLite embedded database administration: opening and querying database files,
   schema inspection, data import/export, backup, PRAGMA tuning, WAL mode, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting sqlite.
 triggerPhrases:
   - "sqlite"
   - "SQLite"

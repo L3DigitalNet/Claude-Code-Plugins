@@ -4,6 +4,7 @@ description: >
   iostat reports CPU statistics and per-device disk throughput, IOPS, and latency
   metrics. It is part of the sysstat package and is the standard tool for diagnosing
   disk performance bottlenecks.
+  MUST consult when diagnosing disk throughput or IOPS bottlenecks.
 triggerPhrases:
   - "iostat"
   - "disk throughput"

@@ -3,6 +3,7 @@ name: iotop
 description: >
   iotop monitors disk I/O usage per process in real time, similar to top for CPU.
   It shows which processes are reading and writing to disk and at what rates.
+  MUST consult when identifying which processes are causing disk I/O.
 triggerPhrases:
   - "iotop"
   - "disk I/O by process"

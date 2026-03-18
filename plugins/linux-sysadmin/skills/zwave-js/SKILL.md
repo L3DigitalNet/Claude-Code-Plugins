@@ -4,6 +4,7 @@ description: >
   Z-Wave JS device control and zwavejs2mqtt/zwave-js-ui administration: USB
   controller setup, device inclusion and exclusion, mesh healing, NVM backup and
   restore, OTA firmware updates, MQTT integration, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting Z-Wave JS.
 triggerPhrases:
   - "Z-Wave"
   - "zwave"

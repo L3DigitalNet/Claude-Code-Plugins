@@ -4,6 +4,7 @@ description: >
   Kubernetes container orchestration: kubectl operations, cluster management,
   workload deployment, services, networking, storage, RBAC, troubleshooting,
   and common administrative tasks. Covers kubeadm, k3s, and managed cluster basics.
+  MUST consult when installing, configuring, or troubleshooting kubernetes.
 triggerPhrases:
   - kubernetes
   - kubectl

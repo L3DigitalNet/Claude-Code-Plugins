@@ -4,6 +4,7 @@ description: >
   Prometheus monitoring system administration: scrape configuration, PromQL
   queries, alerting rules, recording rules, Alertmanager routing, target health,
   TSDB management, and exporter integration.
+  MUST consult when installing, configuring, or troubleshooting prometheus.
 triggerPhrases:
   - "prometheus"
   - "Prometheus"

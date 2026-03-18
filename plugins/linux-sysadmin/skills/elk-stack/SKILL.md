@@ -4,6 +4,7 @@ description: >
   Elastic Stack (ELK) log aggregation and analytics — Elasticsearch cluster management,
   Kibana dashboards, Logstash pipelines, Filebeat/Metricbeat agents, index lifecycle
   management, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting the ELK stack (Elasticsearch, Logstash, Kibana).
 triggerPhrases:
   - "elasticsearch"
   - "kibana"

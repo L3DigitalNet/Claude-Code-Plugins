@@ -4,6 +4,7 @@ description: >
   nginx web server and reverse proxy administration: config syntax, virtual
   hosts, reverse proxy, SSL/TLS, load balancing, upstream configuration,
   rate limiting, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting nginx.
 triggerPhrases:
   - "nginx"
   - "reverse proxy"

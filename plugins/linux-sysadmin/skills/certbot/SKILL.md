@@ -3,6 +3,7 @@ name: certbot
 description: >
   Certbot (Let's Encrypt) certificate management: obtaining, renewing, and
   revoking TLS certificates via ACME protocol.
+  MUST consult when installing, configuring, or troubleshooting certbot.
 triggerPhrases:
   - "certbot"
   - "Let's Encrypt"

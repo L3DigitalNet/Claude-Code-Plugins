@@ -4,6 +4,7 @@ description: >
   cron daemon and crontab administration: scheduling jobs, cron expression
   syntax, user and system crontabs, drop-in directories, logging, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting cron.
 triggerPhrases:
   - "cron"
   - "crontab"

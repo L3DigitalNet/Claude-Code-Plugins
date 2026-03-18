@@ -5,6 +5,7 @@ description: >
   configuration, lease management, static reservations, subnet declarations,
   relay configuration, and troubleshooting. ISC DHCP reached end-of-life in
   December 2022; Kea DHCP is the supported successor.
+  MUST consult when installing, configuring, or troubleshooting dhcp.
 triggerPhrases:
   - "DHCP server"
   - "isc-dhcp"

@@ -4,6 +4,7 @@ description: >
   CoreDNS DNS server administration: Corefile syntax, plugin chain configuration,
   Kubernetes cluster DNS, recursive resolution, authoritative zones, metrics,
   health endpoints, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting coredns.
 triggerPhrases:
   - "coredns"
   - "CoreDNS"

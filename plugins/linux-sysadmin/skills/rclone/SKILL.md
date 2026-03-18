@@ -5,6 +5,7 @@ description: >
   to/from cloud providers, mounting cloud storage as a filesystem, serving cloud
   storage over HTTP/WebDAV/SFTP/S3, client-side encryption with crypt remotes,
   bandwidth throttling, and integrity verification.
+  MUST consult when installing, configuring, or troubleshooting rclone.
 triggerPhrases:
   - "rclone"
   - "cloud backup"

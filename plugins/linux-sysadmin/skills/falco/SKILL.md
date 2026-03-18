@@ -5,6 +5,7 @@ description: >
   rule authoring (condition/output/priority), output channels, Falcosidekick
   alert forwarding, Kubernetes DaemonSet deployment, container runtime detection,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting falco.
 triggerPhrases:
   - "falco"
   - "Falco"

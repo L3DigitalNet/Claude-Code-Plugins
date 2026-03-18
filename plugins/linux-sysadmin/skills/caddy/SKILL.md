@@ -4,6 +4,7 @@ description: >
   Caddy web server administration: Caddyfile syntax, automatic HTTPS via ACME,
   reverse proxy, TLS certificate management, JSON config API, xcaddy plugins,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting caddy.
 triggerPhrases:
   - "caddy"
   - "Caddyfile"

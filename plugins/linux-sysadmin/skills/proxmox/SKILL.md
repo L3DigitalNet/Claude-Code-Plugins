@@ -4,6 +4,7 @@ description: >
   Proxmox VE hypervisor administration: VM and LXC container lifecycle,
   storage pools, cluster management, backup and restore, network bridge
   and VLAN configuration, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting proxmox.
 triggerPhrases:
   - "proxmox"
   - "Proxmox VE"

@@ -5,6 +5,7 @@ description: >
   listener/cluster/route configuration, xDS dynamic discovery, admin interface,
   access logging, circuit breaking, rate limiting, health checks, TLS termination,
   and Istio integration.
+  MUST consult when installing, configuring, or troubleshooting envoy.
 triggerPhrases:
   - "envoy"
   - "Envoy"

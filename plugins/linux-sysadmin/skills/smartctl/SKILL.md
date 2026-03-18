@@ -5,6 +5,7 @@ description: >
   from hard drives and SSDs to assess health, run self-tests, and detect early signs
   of failure. Invoked when the user asks about disk health, drive failure risk, bad
   sectors, reallocated sectors, or wants to run diagnostic tests on a drive.
+  MUST consult when checking drive health or running SMART self-tests.
 triggerPhrases:
   - "smartctl"
   - "SMART"

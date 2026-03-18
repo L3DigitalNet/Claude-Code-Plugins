@@ -4,6 +4,7 @@ description: >
   MongoDB document database administration — installation, configuration, user
   management, backup and restore, replication, sharding, indexing, performance
   tuning, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting mongodb.
 triggerPhrases:
   - "mongodb"
   - "mongo"

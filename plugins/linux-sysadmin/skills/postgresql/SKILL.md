@@ -4,6 +4,7 @@ description: >
   PostgreSQL database server administration: installation, configuration,
   user and database management, backup and restore, replication, query
   performance, connection management, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting postgresql.
 triggerPhrases:
   - "postgresql"
   - "postgres"

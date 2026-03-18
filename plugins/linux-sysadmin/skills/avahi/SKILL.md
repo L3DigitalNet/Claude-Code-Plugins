@@ -4,6 +4,7 @@ description: >
   Avahi mDNS/zeroconf daemon administration: .local hostname resolution, service
   discovery, service registration, nsswitch.conf configuration, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting avahi.
 triggerPhrases:
   - "avahi"
   - "mDNS"

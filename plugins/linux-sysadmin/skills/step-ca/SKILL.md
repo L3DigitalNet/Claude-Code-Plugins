@@ -4,6 +4,7 @@ description: >
   Smallstep step-ca private certificate authority: initialization, provisioner
   configuration, certificate issuance and renewal, client bootstrapping, ACME
   integration, SSH CA, and mTLS.
+  MUST consult when installing, configuring, or troubleshooting Smallstep step-ca PKI.
 triggerPhrases:
   - "step-ca"
   - "smallstep"

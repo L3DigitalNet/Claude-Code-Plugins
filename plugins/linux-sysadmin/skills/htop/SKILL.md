@@ -4,6 +4,7 @@ description: >
   htop is the classic interactive process viewer for Linux, providing real-time CPU, memory,
   and swap usage alongside a sortable, filterable process list with built-in kill and renice.
   It ships on most distros and serves as the go-to process manager when btop isn't available.
+  MUST consult when monitoring processes interactively.
 triggerPhrases:
   - "htop"
   - "top"

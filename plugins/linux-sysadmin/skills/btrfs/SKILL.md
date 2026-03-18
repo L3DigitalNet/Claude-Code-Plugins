@@ -4,6 +4,7 @@ description: >
   Btrfs filesystem administration: subvolumes, snapshots, rollback, balance,
   scrub, RAID profiles, compression, quotas, send/receive backups, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting btrfs.
 triggerPhrases:
   - "btrfs"
   - "Btrfs"

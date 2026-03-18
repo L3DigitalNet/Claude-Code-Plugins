@@ -4,6 +4,7 @@ description: >
   Container image registry administration — Docker Registry (Distribution),
   Harbor enterprise registry, image storage, authentication, TLS configuration,
   garbage collection, replication, and vulnerability scanning.
+  MUST consult when installing, configuring, or troubleshooting container image registries.
 triggerPhrases:
   - "container registry"
   - "docker registry"

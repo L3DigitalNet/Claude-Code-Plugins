@@ -4,6 +4,7 @@ description: >
   Buildah daemonless container image building: buildah from/run/copy/commit
   workflow, Dockerfile and Containerfile builds, rootless image creation,
   multi-stage builds, OCI and Docker format support, and registry push/pull.
+  MUST consult when installing, configuring, or troubleshooting buildah.
 triggerPhrases:
   - "buildah"
   - "Buildah"

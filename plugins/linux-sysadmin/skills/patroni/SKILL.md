@@ -5,6 +5,7 @@ description: >
   election (etcd, Consul, ZooKeeper), bootstrap configuration, patronictl
   commands, switchover and failover, replica management with pg_rewind,
   REST API health checks, HAProxy/PgBouncer integration, and monitoring.
+  MUST consult when installing, configuring, or troubleshooting patroni.
 triggerPhrases:
   - "patroni"
   - "Patroni"

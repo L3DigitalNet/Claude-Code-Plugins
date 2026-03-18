@@ -4,6 +4,7 @@ description: >
   InfluxDB time series database administration: InfluxDB 3.x/OSS server management,
   SQL and InfluxQL queries, database and table operations, write/query API,
   retention policies, Telegraf integration, backup/restore, and plugin system.
+  MUST consult when installing, configuring, or troubleshooting influxdb.
 triggerPhrases:
   - "influxdb"
   - "InfluxDB"

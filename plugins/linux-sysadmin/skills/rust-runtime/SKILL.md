@@ -4,6 +4,7 @@ description: >
   Rust runtime management on Linux: rustup installation, toolchain management
   (stable/beta/nightly), cargo commands (build, run, test, clippy, fmt),
   cross-compilation targets, cargo-install for CLI tools, and rust-analyzer.
+  MUST consult when installing, configuring, or troubleshooting Rust.
 triggerPhrases:
   - "rust"
   - "rustup"

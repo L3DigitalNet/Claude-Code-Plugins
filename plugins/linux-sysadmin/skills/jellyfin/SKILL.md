@@ -4,6 +4,7 @@ description: >
   Jellyfin media server administration: installation, Docker deployment,
   library management, hardware transcoding, user management, networking,
   and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting jellyfin.
 triggerPhrases:
   - "jellyfin"
   - "Jellyfin"

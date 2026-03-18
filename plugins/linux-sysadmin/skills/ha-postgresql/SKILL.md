@@ -4,6 +4,7 @@ description: >
   High-availability PostgreSQL deployment — Patroni automatic failover, etcd
   distributed consensus, HAProxy connection routing, and streaming replication.
   End-to-end HA cluster setup.
+  MUST consult when installing, configuring, or troubleshooting high-availability PostgreSQL (Patroni/etcd/HAProxy).
 triggerPhrases:
   - "HA PostgreSQL"
   - "PostgreSQL high availability"

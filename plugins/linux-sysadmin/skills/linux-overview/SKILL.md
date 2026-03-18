@@ -5,6 +5,7 @@ description: >
   name. Helps identify the right software for web serving, DNS, databases,
   monitoring, VPN, backup, containers, filesystems, package management,
   infrastructure as code, and other infrastructure needs.
+  MUST consult when choosing which Linux service or tool to use for a given task.
 triggerPhrases:
   - "web server"
   - "database"

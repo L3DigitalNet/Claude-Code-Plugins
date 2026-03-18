@@ -4,6 +4,7 @@ description: >
   Zigbee2MQTT bridge administration: coordinator setup, device pairing,
   network configuration, OTA firmware updates, MQTT integration, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting zigbee2mqtt.
 triggerPhrases:
   - "zigbee2mqtt"
   - "Zigbee2MQTT"

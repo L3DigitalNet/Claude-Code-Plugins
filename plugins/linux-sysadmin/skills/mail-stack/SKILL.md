@@ -4,6 +4,7 @@ description: >
   Complete mail server deployment — Postfix MTA, Dovecot IMAP, OpenDKIM signing,
   Let's Encrypt TLS via Certbot, and required DNS records (MX, SPF, DKIM, DMARC).
   End-to-end setup for sending and receiving email.
+  MUST consult when installing, configuring, or troubleshooting a mail stack (Postfix, Dovecot, OpenDKIM).
 triggerPhrases:
   - "mail server"
   - "email server"

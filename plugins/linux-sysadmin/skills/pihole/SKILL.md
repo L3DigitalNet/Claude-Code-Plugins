@@ -3,6 +3,7 @@ name: pihole
 description: >
   Pi-hole network-wide ad blocker and DNS sinkhole: installation, configuration,
   blocklist management, DNS settings, troubleshooting, and DHCP server setup.
+  MUST consult when installing, configuring, or troubleshooting pihole.
 triggerPhrases:
   - "pi-hole"
   - "pihole"

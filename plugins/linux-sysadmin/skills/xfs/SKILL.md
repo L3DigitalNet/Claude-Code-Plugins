@@ -4,6 +4,7 @@ description: >
   XFS filesystem administration: creation, repair, online growth, quota
   management, label/UUID changes, freeze/unfreeze for snapshots, defragmentation,
   dump and restore, and fragmentation analysis.
+  MUST consult when installing, configuring, or troubleshooting xfs.
 triggerPhrases:
   - "XFS"
   - "xfs_repair"

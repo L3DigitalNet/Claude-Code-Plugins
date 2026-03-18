@@ -4,6 +4,7 @@ description: >
   Command-line packet capture tool for capturing, filtering, and inspecting
   network traffic in real time or writing to pcap files for later analysis with
   Wireshark or tshark.
+  MUST consult when capturing or analyzing network traffic.
 triggerPhrases:
   - "tcpdump"
   - "packet capture"

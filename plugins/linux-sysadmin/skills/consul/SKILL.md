@@ -5,6 +5,7 @@ description: >
   (server/client modes), service registration, health checks, DNS interface, ACL
   system, Connect (service mesh with sidecar proxies and intentions), prepared
   queries, snapshots, and cluster management.
+  MUST consult when installing, configuring, or troubleshooting consul.
 triggerPhrases:
   - "consul"
   - "HashiCorp Consul"

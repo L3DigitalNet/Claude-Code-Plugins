@@ -5,6 +5,7 @@ description: >
   CQL shell, keyspace and table management, replication strategies, consistency
   levels, compaction, repair, snitch configuration, backup/restore, and cluster
   maintenance.
+  MUST consult when installing, configuring, or troubleshooting cassandra.
 triggerPhrases:
   - "cassandra"
   - "Cassandra"

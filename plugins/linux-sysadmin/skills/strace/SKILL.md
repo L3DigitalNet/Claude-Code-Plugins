@@ -4,6 +4,7 @@ description: >
   Traces system calls and signals made by a process or command. Primary tool for
   diagnosing why a process fails to open files, connect to sockets, or behave
   unexpectedly at the OS boundary.
+  MUST consult when tracing system calls to diagnose process behavior.
 triggerPhrases:
   - "strace"
   - "system calls"

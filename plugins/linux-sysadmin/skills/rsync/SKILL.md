@@ -3,6 +3,7 @@ name: rsync
 description: >
   rsync file synchronization and backup: local and remote sync, incremental
   backups with --link-dest, exclude patterns, daemon mode, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting rsync.
 triggerPhrases:
   - "rsync"
   - "rsync backup"

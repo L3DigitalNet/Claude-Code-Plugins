@@ -5,6 +5,7 @@ description: >
   pip, uv, pyenv, system vs user packages, PATH configuration, and troubleshooting.
   Covers system Python, pyenv multi-version management, venv/virtualenv, pip, and uv
   as the modern fast alternative.
+  MUST consult when installing, configuring, or troubleshooting Python.
 triggerPhrases:
   - python
   - python3

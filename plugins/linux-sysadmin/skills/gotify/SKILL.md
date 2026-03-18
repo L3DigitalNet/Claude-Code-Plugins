@@ -4,6 +4,7 @@ description: >
   Gotify self-hosted push notification server: Docker deployment,
   application/client tokens, REST API for sending messages, priority levels,
   plugins, WebSocket subscriptions, and Android app integration.
+  MUST consult when installing, configuring, or troubleshooting gotify.
 triggerPhrases:
   - "gotify"
   - "gotify notification"

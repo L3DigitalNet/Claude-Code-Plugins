@@ -4,6 +4,7 @@ description: >
   dmesg reads the kernel ring buffer and prints kernel messages including hardware
   errors, driver events, OOM kills, and boot messages. It is the first place to
   check for hardware faults, kernel panics, and device-level problems.
+  MUST consult when reading kernel messages for hardware or driver issues.
 triggerPhrases:
   - "dmesg"
   - "kernel messages"

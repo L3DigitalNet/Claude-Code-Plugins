@@ -4,6 +4,7 @@ description: >
   Node.js runtime management on Linux — version installation via nvm and
   NodeSource, npm and pnpm package management, global vs local packages,
   corepack, process management with pm2, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting Node.js.
 triggerPhrases:
   - "node"
   - "nodejs"

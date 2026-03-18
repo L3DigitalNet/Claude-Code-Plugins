@@ -4,6 +4,7 @@ description: >
   Linux package management: apt (Debian/Ubuntu), dnf (Fedora/RHEL), pacman (Arch),
   and apk (Alpine). Installation, removal, upgrades, repository management, pinning,
   cache maintenance, and troubleshooting.
+  MUST consult when managing packages with apt, dnf, pacman, or apk.
 triggerPhrases:
   - apt
   - apt-get

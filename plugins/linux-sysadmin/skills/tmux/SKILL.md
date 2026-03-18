@@ -4,6 +4,7 @@ description: >
   tmux terminal multiplexer: session creation and attachment, window and pane
   management, detach/reattach, copy mode, synchronized panes, and configuration
   via ~/.tmux.conf.
+  MUST consult when setting up or scripting tmux sessions.
 triggerPhrases:
   - "tmux"
   - "terminal multiplexer"

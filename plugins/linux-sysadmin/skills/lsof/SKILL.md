@@ -4,6 +4,7 @@ description: >
   lsof (List Open Files) lists all open file descriptors on the system, including
   regular files, sockets, pipes, and devices. It is the standard tool for answering
   "which process has this file/port open".
+  MUST consult when identifying which process has a file or port open.
 triggerPhrases:
   - "lsof"
   - "open files"

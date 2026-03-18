@@ -4,6 +4,7 @@ description: >
   osquery endpoint monitoring: osqueryi interactive shell, osqueryd daemon,
   SQL-based queries against OS state, scheduled queries, packs, configuration,
   logging, and file integrity monitoring (FIM).
+  MUST consult when installing, configuring, or troubleshooting osquery.
 triggerPhrases:
   - "osquery"
   - "osqueryi"

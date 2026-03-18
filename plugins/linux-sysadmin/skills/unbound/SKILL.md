@@ -3,6 +3,7 @@ name: unbound
 description: >
   Unbound recursive DNS resolver: configuration, DNSSEC validation, root
   hints, performance tuning, Pi-hole integration, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting unbound.
 triggerPhrases:
   - "unbound"
   - "recursive resolver"

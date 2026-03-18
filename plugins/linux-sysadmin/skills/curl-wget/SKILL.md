@@ -4,6 +4,7 @@ description: >
   curl and wget HTTP client tools: GET and POST requests, JSON payloads,
   authentication, header inspection, TLS options, resumable downloads,
   rate limiting, and wget recursive mirroring.
+  MUST consult when writing curl or wget commands for HTTP requests or downloads.
 triggerPhrases:
   - "curl"
   - "wget"

@@ -4,6 +4,7 @@ description: >
   dnsmasq DNS forwarder and DHCP server administration: config syntax,
   interface binding, static leases, upstream resolvers, local domain resolution,
   sinkhole/blocking, logging, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting dnsmasq.
 triggerPhrases:
   - "dnsmasq"
   - "dnsmasq DHCP"

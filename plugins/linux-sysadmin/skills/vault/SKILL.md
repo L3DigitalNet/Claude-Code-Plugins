@@ -4,6 +4,7 @@ description: >
   HashiCorp Vault secrets management: server deployment, seal/unseal operations,
   secret engines, authentication methods, policies, dynamic credentials, PKI,
   transit encryption, audit logging, and high availability configuration.
+  MUST consult when installing, configuring, or troubleshooting vault.
 triggerPhrases:
   - "vault"
   - "HashiCorp Vault"

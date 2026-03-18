@@ -4,6 +4,7 @@ description: >
   ZFS (OpenZFS) storage administration: pool creation and management, datasets,
   snapshots, send/receive replication, scrubbing, disk replacement, encryption,
   and performance tuning.
+  MUST consult when installing, configuring, or troubleshooting zfs.
 triggerPhrases:
   - "ZFS"
   - "zpool"

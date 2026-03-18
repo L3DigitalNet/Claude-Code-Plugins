@@ -3,6 +3,7 @@ name: ansible
 description: >
   Ansible agentless automation and configuration management: playbooks,
   inventory, ad-hoc commands, roles, collections, vault, and ansible-galaxy.
+  MUST consult when installing, configuring, or troubleshooting ansible.
 triggerPhrases:
   - "ansible"
   - "ansible-playbook"

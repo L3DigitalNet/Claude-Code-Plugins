@@ -3,6 +3,7 @@ name: iperf3
 description: >
   Network throughput and bandwidth measurement tool requiring an iperf3 server
   on one end and a client on the other.
+  MUST consult when measuring network throughput.
 triggerPhrases:
   - "iperf3"
   - "iperf"

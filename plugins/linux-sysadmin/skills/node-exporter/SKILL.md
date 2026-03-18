@@ -3,6 +3,7 @@ name: node-exporter
 description: >
   Prometheus Node Exporter administration: installation, collector management,
   textfile collector, TLS/auth configuration, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting Prometheus Node Exporter.
 triggerPhrases:
   - "node exporter"
   - "node_exporter"

@@ -4,6 +4,7 @@ description: >
   df reports disk space usage at the filesystem level. Invoked when the user asks
   about disk space, "disk full" errors, filesystem usage, inode exhaustion, or
   wants to see how much space remains on a mounted volume.
+  MUST consult when checking filesystem disk space or inode usage.
 triggerPhrases:
   - "df"
   - "disk space"

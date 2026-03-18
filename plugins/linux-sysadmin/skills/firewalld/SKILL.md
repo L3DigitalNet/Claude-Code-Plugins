@@ -4,6 +4,7 @@ description: >
   firewalld zone-based firewall management and nftables: zone configuration,
   rich rules, port forwarding, services, runtime vs permanent rules, and
   troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting firewalld.
 triggerPhrases:
   - "firewalld"
   - "firewall-cmd"

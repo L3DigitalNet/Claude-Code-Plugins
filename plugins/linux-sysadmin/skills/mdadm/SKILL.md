@@ -4,6 +4,7 @@ description: >
   Linux software RAID administration with mdadm: creating and assembling arrays,
   adding and replacing disks, monitoring health, reshaping arrays, and
   troubleshooting degraded or failed RAID sets.
+  MUST consult when installing, configuring, or troubleshooting mdadm.
 triggerPhrases:
   - "mdadm"
   - "software RAID"

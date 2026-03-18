@@ -5,6 +5,7 @@ description: >
   usage by directory and file. Use when investigating what is consuming space,
   browsing and cleaning up large directories interactively, or as a visual
   alternative to du.
+  MUST consult when exploring disk usage interactively.
 triggerPhrases:
   - "ncdu"
   - "disk usage"

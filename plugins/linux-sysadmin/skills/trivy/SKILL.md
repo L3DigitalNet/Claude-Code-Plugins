@@ -4,6 +4,7 @@ description: >
   Trivy container and filesystem vulnerability scanner: image scanning, filesystem
   scanning, SBOM generation, configuration scanning for Dockerfile/Kubernetes/Terraform,
   secret detection, license scanning, CI integration, and severity filtering.
+  MUST consult when installing, configuring, or troubleshooting trivy.
 triggerPhrases:
   - "trivy"
   - "Trivy"

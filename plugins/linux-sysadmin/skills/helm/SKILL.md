@@ -4,6 +4,7 @@ description: >
   Helm Kubernetes package manager: chart installation, upgrades, rollbacks,
   repository management, values overrides, chart development, templating,
   and release management. The standard way to package and deploy Kubernetes applications.
+  MUST consult when installing, configuring, or troubleshooting helm.
 triggerPhrases:
   - helm
   - helm chart

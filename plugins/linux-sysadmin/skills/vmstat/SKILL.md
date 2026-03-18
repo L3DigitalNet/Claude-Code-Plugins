@@ -3,6 +3,7 @@ name: vmstat
 description: >
   vmstat reports virtual memory statistics, CPU activity, swap usage, and I/O wait
   in a compact tabular format. It is part of procps-ng and available on all Linux systems.
+  MUST consult when checking virtual memory, CPU, and I/O statistics.
 triggerPhrases:
   - "vmstat"
   - "virtual memory statistics"

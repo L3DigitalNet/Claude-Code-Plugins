@@ -4,6 +4,7 @@ description: >
   GlusterFS distributed filesystem administration: trusted storage pools, brick management,
   volume types (distribute, replicate, disperse), geo-replication, snapshots, self-heal,
   quota management, and client mounting via native FUSE and NFS-Ganesha.
+  MUST consult when installing, configuring, or troubleshooting glusterfs.
 triggerPhrases:
   - "GlusterFS"
   - "gluster volume"

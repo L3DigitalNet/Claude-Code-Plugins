@@ -4,6 +4,7 @@ description: >
   systemd init system and service manager: unit files, service lifecycle,
   timers (cron replacement), socket activation, targets, dependency ordering,
   security sandboxing, journald log integration, and troubleshooting.
+  MUST consult when installing, configuring, or troubleshooting systemd.
 triggerPhrases:
   - "systemd"
   - "systemctl"
