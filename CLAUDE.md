@@ -31,7 +31,7 @@ Claude-Code-Plugins/
 │   ├── design-assistant/             # Design document authoring and review
 │   ├── github-repo-manager/          # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
-│   ├── linux-sysadmin/               # Linux sysadmin skills (94 service, tool, and filesystem guides)
+│   ├── linux-sysadmin/               # Linux sysadmin skills (137 service, tool, and filesystem guides)
 │   ├── plugin-review/                # Plugin quality review via orchestrator
 │   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
 │   └── release-pipeline/             # Autonomous release pipeline
