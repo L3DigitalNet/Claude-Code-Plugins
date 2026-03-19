@@ -54,7 +54,7 @@ installed plugins at the start of each session.
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [KeePass Cred Mgr](#keepass-cred-mgr) | MCP + Commands + Skills | varies | KeePass vault access via 10 MCP tools, YubiKey auth, credential rotation, and audit logging |
-| [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 97 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
+| [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 137 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
 | [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review`, `/review-efficiency`, `/tighten` | Multi-pass assertion-driven audit of plugin principles, UX, docs, and context efficiency |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Python Dev](#python-dev) | Commands + Skills | `/python-code-review` | Contextual Python domain guidance: 11 skills load automatically, plus a comprehensive multi-domain code audit |
@@ -216,11 +216,11 @@ HA connections, automated validation, example integrations, and project template
 
 ### Linux SysAdmin
 
-**Linux system administration knowledge base**: 94 per-service skills covering daemons, CLI tools, and filesystems. Skills load automatically when you mention a service by name; no commands required for most usage.
+**Linux system administration knowledge base**: 137 skills covering daemons, CLI tools, and filesystems. Skills load automatically when you mention a service by name; no commands required for most usage.
 
 **Features:**
 
-- Per-service skills for 94 services across web/proxy, DNS, databases, security/VPN, containers, monitoring, filesystems, storage, mail, self-hosted apps, IoT, and 30+ CLI tools
+- 136 per-service skills across web/proxy, DNS, databases, security/VPN, containers, monitoring, filesystems, storage, mail, self-hosted apps, IoT, and 30+ CLI tools
 - Annotated configs for daemons (nginx, sshd, samba, postfix, mosquitto, and more) with every directive documented
 - Task-organized cheatsheets for CLI tools (nmap, tcpdump, jq, rsync, borg, tmux, and more)
 - `/sysadmin` command: guided interview to design a complete server stack with rationale and setup order
@@ -520,7 +520,7 @@ Claude-Code-Plugins/
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── keepass-cred-mgr/        # KeePass credential manager (10 MCP tools, YubiKey auth)
-│   ├── linux-sysadmin/          # Linux sysadmin skills (97 per-service guides)
+│   ├── linux-sysadmin/          # Linux sysadmin skills (137 per-service guides)
 │   ├── opus-context/            # 1M context window optimizer for Opus 4.6
 │   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
