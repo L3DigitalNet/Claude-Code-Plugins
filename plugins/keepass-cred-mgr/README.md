@@ -188,6 +188,24 @@ audit_log_path: ~/.local/share/keepass-cred-mgr/audit.jsonl
 
 - **Two-database architecture**: A primary database (YubiKey-only, used by the MCP server) and a backup database (password-only, never used by the server) kept in sync via KeePassXC's merge function. If the YubiKey is lost, the backup provides recovery without compromising the primary's auth model.
 
+## Testing
+
+241 tests across unit, integration, and security categories at 99% line coverage.
+
+```bash
+# Unit tests (no external dependencies)
+cd plugins/keepass-cred-mgr
+.venv/bin/python -m pytest tests/unit/ -m unit
+
+# Integration tests (requires keepassxc-cli + test.kdbx fixture)
+.venv/bin/python -m pytest tests/integration/ -m integration
+
+# Full suite with coverage
+.venv/bin/python -m pytest tests/ --cov=server --cov-report=term-missing
+```
+
+Security-specific tests cover audit log redaction of sensitive keys, CLI notes injection prevention, temp file shredding verification, XML special character escaping, and tag-based access control enforcement (AI RESTRICTED and READ ONLY).
+
 ## Planned Features
 
 - **Credential provisioning agent**: A purpose-built subagent for setting up new project environments; audits existing vault entries, generates missing credentials, and stores them with consistent naming.

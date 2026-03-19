@@ -1140,3 +1140,157 @@ class TestReadOnlyEnforcement:
         result = await get_entry(vault, audit, title="Production DB", group="Servers")
         assert result["username"] == "dba"
         assert result["password"] == "prodpass"
+
+
+# ---------------------------------------------------------------------------
+# Security: _escape_notes_for_cli injection prevention
+# ---------------------------------------------------------------------------
+
+class TestEscapeNotesForCli:
+    """_escape_notes_for_cli prevents \\n injection into keepassxc-cli --notes args.
+
+    keepassxc-cli's Add.cpp/Edit.cpp replaces literal '\\n' (two chars) with a
+    real newline before storing. Without escaping, user notes containing '\\n'
+    get silently mangled into multiline text.
+    """
+
+    def test_plain_text_unchanged(self):
+        from server.tools.write import _escape_notes_for_cli
+        assert _escape_notes_for_cli("simple notes") == "simple notes"
+
+    def test_backslash_n_escaped(self):
+        from server.tools.write import _escape_notes_for_cli
+        assert _escape_notes_for_cli("line1\\nline2") == "line1\\\\nline2"
+
+    def test_multiple_backslash_n_all_escaped(self):
+        from server.tools.write import _escape_notes_for_cli
+        result = _escape_notes_for_cli("a\\nb\\nc")
+        assert result == "a\\\\nb\\\\nc"
+
+    def test_real_newline_not_double_escaped(self):
+        from server.tools.write import _escape_notes_for_cli
+        # A real newline character (\n) should pass through unchanged —
+        # only the two-character sequence backslash+n gets escaped.
+        assert _escape_notes_for_cli("line1\nline2") == "line1\nline2"
+
+    def test_empty_string(self):
+        from server.tools.write import _escape_notes_for_cli
+        assert _escape_notes_for_cli("") == ""
+
+
+# ---------------------------------------------------------------------------
+# Security: _shred_file content overwrite verification
+# ---------------------------------------------------------------------------
+
+class TestShredFileContentOverwrite:
+    """Verify _shred_file actually overwrites file content with zeros before unlinking.
+
+    A regression that skips the overwrite leaves secrets recoverable from disk
+    (deleted files can be read from raw block devices until overwritten).
+    """
+
+    def test_content_overwritten_with_zeros(self, tmp_path):
+        """After shredding, the file content on disk is all zeros (before unlink)."""
+        import os
+        from server.tools.write import _shred_file
+
+        secret_file = tmp_path / "secret.txt"
+        secret_data = b"super-secret-password-12345"
+        secret_file.write_bytes(secret_data)
+        file_path = str(secret_file)
+        file_size = os.path.getsize(file_path)
+
+        # Patch os.unlink to prevent deletion, so we can verify content
+        with patch("os.unlink"):
+            _shred_file(file_path)
+
+        # File should still exist (unlink was patched) and be all zeros
+        shredded_content = secret_file.read_bytes()
+        assert shredded_content == b"\x00" * file_size
+        assert secret_data not in shredded_content
+
+    def test_file_unlinked_after_overwrite(self, tmp_path):
+        """File is deleted after being overwritten."""
+        from server.tools.write import _shred_file
+
+        secret_file = tmp_path / "secret.txt"
+        secret_file.write_bytes(b"secret")
+        _shred_file(str(secret_file))
+        assert not secret_file.exists()
+
+    def test_fsync_called(self, tmp_path):
+        """fsync is called to flush zeros to disk (not just OS buffer)."""
+        import os
+        from server.tools.write import _shred_file
+
+        secret_file = tmp_path / "secret.txt"
+        secret_file.write_bytes(b"secret-data")
+
+        with patch("os.fsync") as mock_fsync, patch("os.unlink"):
+            _shred_file(str(secret_file))
+        mock_fsync.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Security: XML special character handling in import
+# ---------------------------------------------------------------------------
+
+class TestBuildImportXmlEscaping:
+    """_build_import_xml must properly escape XML special characters.
+
+    Entry titles, usernames, passwords, and notes can contain <, >, &, ", '
+    which would produce malformed XML if not escaped by ElementTree.
+    """
+
+    def test_xml_special_chars_in_title(self):
+        import xml.etree.ElementTree as ET
+        from server.tools.write import _build_import_xml
+
+        xml_str = _build_import_xml({
+            "Servers": [{"title": 'Entry <with> "special" & chars', "username": "u"}],
+        })
+        # Must parse without error — proves escaping is correct
+        root = ET.fromstring(xml_str)
+        # Find the Title value and verify round-trip
+        for string_el in root.iter("String"):
+            key = string_el.find("Key")
+            val = string_el.find("Value")
+            if key is not None and key.text == "Title":
+                assert val is not None
+                assert val.text == 'Entry <with> "special" & chars'
+                return
+        pytest.fail("Title String element not found in XML")
+
+    def test_xml_special_chars_in_password(self):
+        import xml.etree.ElementTree as ET
+        from server.tools.write import _build_import_xml
+
+        xml_str = _build_import_xml({
+            "Servers": [{"title": "Test", "password": "p@ss<>&\"'word"}],
+        })
+        root = ET.fromstring(xml_str)
+        for string_el in root.iter("String"):
+            key = string_el.find("Key")
+            val = string_el.find("Value")
+            if key is not None and key.text == "Password":
+                assert val is not None
+                assert val.text == "p@ss<>&\"'word"
+                return
+        pytest.fail("Password String element not found in XML")
+
+    def test_xml_special_chars_in_notes(self):
+        import xml.etree.ElementTree as ET
+        from server.tools.write import _build_import_xml
+
+        xml_str = _build_import_xml({
+            "Servers": [{"title": "Test", "notes": "Line 1\n<script>alert('xss')</script>"}],
+        })
+        root = ET.fromstring(xml_str)
+        for string_el in root.iter("String"):
+            key = string_el.find("Key")
+            val = string_el.find("Value")
+            if key is not None and key.text == "Notes":
+                assert val is not None
+                assert "<script>" in val.text
+                return
+        pytest.fail("Notes String element not found in XML")

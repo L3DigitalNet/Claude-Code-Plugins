@@ -597,6 +597,27 @@ class TestReplQuoting:
         result = _repl_join(["add", "Servers/New Test Entry", "--username", "u"])
         assert result == 'add "Servers/New Test Entry" --username u'
 
+    def test_newline_replaced_with_space(self):
+        from server.vault import _repl_quote
+        result = _repl_quote("line1\nline2")
+        # Newline replaced with space; result contains a space so it gets quoted
+        assert "\n" not in result
+        assert "line1 line2" in result
+
+    def test_carriage_return_replaced_with_space(self):
+        from server.vault import _repl_quote
+        result = _repl_quote("line1\rline2")
+        assert "\r" not in result
+        assert "line1 line2" in result
+
+    def test_crlf_replaced_with_single_space(self):
+        from server.vault import _repl_quote
+        result = _repl_quote("line1\r\nline2")
+        # \r\n is replaced as a unit (one space), not two spaces
+        assert "\r" not in result
+        assert "\n" not in result
+        assert "line1 line2" in result
+
 
 # ---------------------------------------------------------------------------
 # run_cli: stdin_lines for interactive prompts
@@ -639,6 +660,35 @@ class TestRunCliStdinLines:
 
         assert written_calls[1] == b"line1\n"
         assert written_calls[2] == b"line2\n"
+
+
+    async def test_stdin_lines_with_embedded_newline_raises(self, test_config, mock_yubikey):
+        """stdin_lines containing newlines are rejected to prevent REPL stream corruption."""
+        from server.vault import KeePassCLIError, Vault
+
+        vault = Vault(test_config, mock_yubikey)
+        vault._unlocked = True
+        vault._repl_proc = _mock_repl_proc([_repl_resp(b"Done.\n")])
+
+        with pytest.raises(KeePassCLIError, match="embedded newlines"):
+            await vault.run_cli(
+                "add", test_config.database_path, "Servers/X", "-p",
+                stdin_lines=["pass\nword"],
+            )
+
+    async def test_stdin_lines_with_carriage_return_raises(self, test_config, mock_yubikey):
+        """stdin_lines containing \\r are also rejected."""
+        from server.vault import KeePassCLIError, Vault
+
+        vault = Vault(test_config, mock_yubikey)
+        vault._unlocked = True
+        vault._repl_proc = _mock_repl_proc([_repl_resp(b"Done.\n")])
+
+        with pytest.raises(KeePassCLIError, match="embedded newlines"):
+            await vault.run_cli(
+                "edit", test_config.database_path, "Servers/X",
+                stdin_lines=["line\rone"],
+            )
 
 
 # ---------------------------------------------------------------------------

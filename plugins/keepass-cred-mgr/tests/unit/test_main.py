@@ -9,6 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from server.vault import (
     DuplicateEntry,
     EntryInactive,
@@ -360,3 +362,35 @@ class TestImportEntriesHandler:
         with patch("server.tools.write.import_entries", mock_ie), \
              pytest.raises(ValueError, match="missing title"):
             await import_entries(ctx, entries=[{"group": "Servers"}])
+
+
+class TestConfigureLogging:
+    def test_configure_logging_does_not_raise(self):
+        """_configure_logging sets up structlog + stdlib without error."""
+        from server.main import _configure_logging
+        _configure_logging("DEBUG")
+
+    def test_configure_logging_sets_level(self):
+        """Log level is applied to the root logger."""
+        import logging
+        from server.main import _configure_logging
+        _configure_logging("WARNING")
+        assert logging.getLogger().level == logging.WARNING
+
+
+class TestListEntriesErrorHandler:
+    @pytest.mark.asyncio
+    async def test_cli_error_maps_to_value_error(self):
+        from server.main import list_entries
+        ctx, app = _app()
+        mock_le = AsyncMock(side_effect=KeePassCLIError("cli error"))
+        with patch("server.tools.read.list_entries", mock_le), \
+             pytest.raises(ValueError, match="KeePassCLIError"):
+            await list_entries(ctx, group="Servers")
+
+
+class TestMainEntry:
+    def test_main_is_callable(self):
+        """main() exists and is callable (don't actually run — it blocks on stdio)."""
+        from server.main import main
+        assert callable(main)

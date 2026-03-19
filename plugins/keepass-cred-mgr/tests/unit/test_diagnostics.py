@@ -128,3 +128,29 @@ class TestDiagnoseUnlockFailure:
         ]
         result = diagnose_unlock_failure(_make_config())
         assert "hidraw" in result.lower() or "unbind" in result.lower()
+
+    @patch("os.access", return_value=True)
+    @patch("glob.glob", return_value=["/dev/hidraw0"])
+    @patch("subprocess.run")
+    def test_udevadm_nonzero_returncode_skips_device(self, mock_run, mock_glob, mock_access):
+        """When udevadm returns non-zero for a hidraw device, the loop continues past it."""
+        from server.diagnostics import diagnose_unlock_failure
+
+        mock_run.side_effect = [
+            MagicMock(returncode=3),  # pcscd inactive
+            MagicMock(returncode=1, stdout=""),  # udevadm fails for hidraw0
+        ]
+        # No YubiKey OTP interface found → falls through to USB reset message
+        result = diagnose_unlock_failure(_make_config())
+        assert "hidraw" in result.lower() or "unbind" in result.lower()
+
+    def test_check_raising_generic_exception_falls_through(self):
+        """A diagnostic check raising a non-subprocess Exception is caught and skipped."""
+        from server.diagnostics import diagnose_unlock_failure
+
+        with patch("server.diagnostics._check_pcscd", side_effect=RuntimeError("unexpected")), \
+             patch("server.diagnostics._check_hidraw", return_value=None), \
+             patch("server.diagnostics._check_serial", return_value=None):
+            result = diagnose_unlock_failure(_make_config())
+        # All checks either raised or returned None → empty string
+        assert result == ""

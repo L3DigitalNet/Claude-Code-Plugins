@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestAuditLogger:
     def test_log_creates_file(self, test_config):
@@ -116,3 +118,69 @@ class TestAuditLogger:
             logger.log(tool="test", title="Test")
         finally:
             os.chmod(audit_path, 0o644)
+
+
+class TestSanitizeExtra:
+    """_sanitize_extra redacts values for keys containing sensitive fragments.
+
+    This is a security-critical function: a regression silently leaks
+    passwords, tokens, or API keys to the audit log file on disk.
+    """
+
+    def test_password_key_redacted(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({"database_password": "s3cret"})
+        assert result["database_password"] == "**REDACTED**"
+
+    def test_token_key_redacted(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({"refresh_token": "abc123"})
+        assert result["refresh_token"] == "**REDACTED**"
+
+    def test_api_key_redacted(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({"api_key": "key-xyz"})
+        assert result["api_key"] == "**REDACTED**"
+
+    def test_auth_key_redacted(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({"auth_header": "Bearer xyz"})
+        assert result["auth_header"] == "**REDACTED**"
+
+    def test_case_insensitive_matching(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({"API_KEY": "val", "Secret_Value": "val2"})
+        assert result["API_KEY"] == "**REDACTED**"
+        assert result["Secret_Value"] == "**REDACTED**"
+
+    def test_non_sensitive_key_passes_through(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({"group": "Servers", "title": "Test"})
+        assert result["group"] == "Servers"
+        assert result["title"] == "Test"
+
+    def test_mixed_sensitive_and_safe(self):
+        from server.audit import _sanitize_extra
+        result = _sanitize_extra({
+            "title": "My Entry",
+            "password_hash": "abc",
+            "count": 5,
+        })
+        assert result["title"] == "My Entry"
+        assert result["password_hash"] == "**REDACTED**"
+        assert result["count"] == 5
+
+    def test_empty_dict_returns_empty(self):
+        from server.audit import _sanitize_extra
+        assert _sanitize_extra({}) == {}
+
+    def test_redaction_used_in_audit_log(self, tmp_path):
+        """End-to-end: extra kwargs with sensitive keys are redacted in the log file."""
+        import json
+        from server.audit import AuditLogger
+
+        audit_path = tmp_path / "audit.jsonl"
+        logger = AuditLogger(str(audit_path))
+        logger.log(tool="test", title="Test", credential="should-be-redacted")
+        record = json.loads(audit_path.read_text().strip())
+        assert record["credential"] == "**REDACTED**"

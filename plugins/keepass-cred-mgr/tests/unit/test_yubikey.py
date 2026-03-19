@@ -1,6 +1,10 @@
 import subprocess
 from unittest.mock import patch
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 class TestMockYubiKey:
     def test_default_present(self):
