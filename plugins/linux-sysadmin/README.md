@@ -94,7 +94,7 @@ The `/sysadmin` command walks through:
 | Skill | Loaded when |
 |-------|-------------|
 | `linux-overview` | Broad queries: "web server", "database", "what should I use for..." |
-| Per-service skills (96) | Mentioned by name: "nginx", "ZFS", "nmap", "fail2ban", "tmux", etc. |
+| Per-service skills (136) | Mentioned by name: "nginx", "ZFS", "nmap", "fail2ban", "tmux", etc. |
 
 **Service categories covered:**
 

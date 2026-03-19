@@ -203,7 +203,7 @@ Reference the agent in `manifest.json`:
 }
 ```
 
-Agents in `.claude-plugin/agents/` are automatically discovered.
+Agents in `agents/` (at the plugin root) are automatically discovered.
 
 ### 3. Invoke the agent
 
@@ -624,7 +624,7 @@ Usage: `/test-gen Create tests for auth module`
 
 Check:
 
-1. Agent file in `.claude-plugin/agents/`
+1. Agent file in `agents/` (at the plugin root)
 2. Valid YAML frontmatter
 3. Plugin installed and enabled
 
