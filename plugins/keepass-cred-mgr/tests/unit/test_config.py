@@ -4,6 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def valid_config(tmp_path):

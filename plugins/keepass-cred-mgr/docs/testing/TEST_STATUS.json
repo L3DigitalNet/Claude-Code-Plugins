@@ -1,0 +1,80 @@
+{
+  "project": "keepass-cred-mgr",
+  "last_analysis": "2026-03-18T20:10:00Z",
+  "profile": "generic-python",
+  "coverage": {
+    "total_pct": 99,
+    "tool": "pytest-cov",
+    "by_file": {
+      "server/audit.py": 100,
+      "server/config.py": 100,
+      "server/diagnostics.py": 100,
+      "server/main.py": 99,
+      "server/tools/read.py": 100,
+      "server/tools/write.py": 100,
+      "server/vault.py": 100,
+      "server/yubikey.py": 100
+    }
+  },
+  "categories": {
+    "unit": {
+      "applicable": true,
+      "test_count": 230,
+      "status": "pass",
+      "files": [
+        "tests/unit/test_audit.py",
+        "tests/unit/test_config.py",
+        "tests/unit/test_diagnostics.py",
+        "tests/unit/test_main.py",
+        "tests/unit/test_tools.py",
+        "tests/unit/test_vault.py",
+        "tests/unit/test_yubikey.py"
+      ]
+    },
+    "integration": {
+      "applicable": true,
+      "test_count": 11,
+      "status": "pass",
+      "notes": "Requires keepassxc-cli + test.kdbx fixture; skips cleanly when unavailable",
+      "files": [
+        "tests/integration/test_integration.py"
+      ]
+    },
+    "e2e": { "applicable": false },
+    "contract": { "applicable": false },
+    "security": {
+      "applicable": true,
+      "test_count": 27,
+      "status": "pass",
+      "notes": "Tag enforcement (AI RESTRICTED, READ ONLY), audit redaction (_sanitize_extra), notes CLI injection prevention, file shredding verification, XML special character escaping",
+      "files": [
+        "tests/unit/test_audit.py (TestSanitizeExtra)",
+        "tests/unit/test_tools.py (TestAiRestrictedEnforcement, TestReadOnlyEnforcement, TestEscapeNotesForCli, TestShredFileContentOverwrite, TestBuildImportXmlEscaping)"
+      ]
+    },
+    "ui": { "applicable": false }
+  },
+  "known_gaps": [
+    {
+      "file": "server/main.py",
+      "lines": "312, 316",
+      "category": "unit",
+      "priority": "low",
+      "description": "main() and __main__ guard — entry point boilerplate",
+      "reason_deferred": "Not unit-testable; exercised by running the server"
+    }
+  ],
+  "source_bugs_fixed": [],
+  "history": [
+    {
+      "date": "2026-03-18",
+      "action": "convergence_loop",
+      "summary": "Gap analysis + convergence: added 7 tests (3 vault newline guards, 2 diagnostics edge cases, 2 stdin_lines guards). Fixed missing pytestmark=pytest.mark.unit on 4 test files. Coverage: 80% → 99% (with -m unit filter). 206 tests, all passing. 3 low-priority gaps deferred (main.py entry-point boilerplate)."
+    },
+    {
+      "date": "2026-03-18",
+      "action": "convergence_loop",
+      "summary": "Full multi-category gap analysis. Added 35 tests: 9 security (audit redaction, notes escaping, shred verification, XML escaping), 4 unit (configure_logging, list_entries error, main callable), 6 integration (get_entry, search, get/add attachment, import with password-auth merge adapter), 2 diagnostics. Coverage: 99% → 99.8%. Total: 241 tests (230 unit + 11 integration), all passing. 1 gap deferred (main.py entry point)."
+    }
+  ]
+}

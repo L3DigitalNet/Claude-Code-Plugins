@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.3] - 2026-03-18
+
+### Added
+- Security tests: audit log redaction (`_sanitize_extra`), CLI notes injection prevention (`_escape_notes_for_cli`), temp file shredding content verification, XML special character escaping in bulk import
+- Integration tests: `get_entry`, `search_entries`, `get_attachment`, `add_attachment`, and `import_entries` against real keepassxc-cli
+- Unit tests: REPL newline sanitization, stdin_lines embedded newline guard, diagnostics edge cases, `_configure_logging`, `list_entries` error handler
+- Testing section in README with run commands
+- `docs/testing/TEST_STATUS.json` for persistent test posture tracking
+
+### Fixed
+- Four test files (`test_audit.py`, `test_config.py`, `test_main.py`, `test_yubikey.py`) were missing `pytestmark = pytest.mark.unit`, causing `pytest -m unit` to silently drop 74 tests and report 80% coverage instead of 99%
+
 ## [0.5.2] - 2026-03-18
 
 ### Fixed
