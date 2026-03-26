@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A Claude Code plugin marketplace. Plugins cover the full development lifecycle: agent orchestration, release automation, design review, Home Assistant integration dev, Linux system administration, GitHub repo health, and plugin testing.
+A Claude Code plugin marketplace. Plugins cover the full development lifecycle: agent orchestration, release automation, design review, infrastructure verification, Home Assistant integration dev, Linux system administration, GitHub repo health, and plugin testing.
 
 ## Installation
 
@@ -55,6 +55,7 @@ installed plugins at the start of each session.
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [KeePass Cred Mgr](#keepass-cred-mgr) | MCP + Commands + Skills | varies | KeePass vault access via 10 MCP tools, YubiKey auth, credential rotation, and audit logging |
 | [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 137 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
+| [Nominal](#nominal) | Commands | `/preflight`, `/postflight`, `/abort` | Infrastructure verification session contract: 11 systems check security, reachability, backups, monitoring, and more |
 | [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review`, `/review-efficiency`, `/tighten` | Multi-pass assertion-driven audit of plugin principles, UX, docs, and context efficiency |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Python Dev](#python-dev) | Commands + Skills | `/python-code-review` | Contextual Python domain guidance: 11 skills load automatically, plus a comprehensive multi-domain code audit |
@@ -237,6 +238,38 @@ HA connections, automated validation, example integrations, and project template
 
 ---
 
+### Nominal
+
+**Structured verification routine for infrastructure changes**: three slash commands
+enforce a session contract ensuring every change begins with a validated environment
+and ends with a fully verified outcome.
+
+**Features:**
+
+- `/preflight`: automated environment discovery (Mission Survey), go/no-go poll,
+  rollback readiness confirmation
+- `/postflight`: runs all 11 verification systems covering operational scripts, backup
+  integrity, secrets hygiene, reachability, security posture, performance baselines,
+  boot ordering, observability, DNS/certs, network routing, and documentation state
+- `/abort`: confirmed rollback execution with step-by-step verification and
+  post-abort go/no-go poll
+- Multi-environment support in a single profile
+- Append-only flight log based on the OpenTelemetry Log Data Model
+- Fix-forward flow with regression sweep to catch side effects
+- Grounded in ITIL, CIS Controls v8, NIST SP 800-190, Google SRE PRR, and
+  HashiCorp/OWASP secrets management
+
+**Install:**
+
+```bash
+/plugin install nominal@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/nominal/README.md](plugins/nominal/README.md)
+
+---
+
 ### Plugin Test Harness
 
 **Iterative plugin testing framework**: generates tests, records pass/fail results,
@@ -362,6 +395,34 @@ efficiency, then the orchestrator auto-implements all fixes and re-audits to con
 
 **Learn more:**
 [plugins/plugin-review/README.md](plugins/plugin-review/README.md)
+
+---
+
+### Python Dev
+
+**Contextual Python domain guidance**: 11 skills load automatically when you work on
+Python code, covering async patterns, anti-patterns, type safety, testing, resilience,
+observability, configuration, design patterns, resource management, code style, and
+background jobs.
+
+**Features:**
+
+- 11 always-on skills that activate based on what you are working on
+- `/python-code-review`: comprehensive multi-domain code audit across all 11 quality
+  domains with severity-sorted findings
+- Covers async/await, type hints, pytest fixtures, retry/backoff, logging/tracing,
+  pydantic-settings, context managers, Celery/RQ, ruff/black, composition vs.
+  inheritance, and common Python traps
+- No build step, no MCP server, no dependencies
+
+**Install:**
+
+```bash
+/plugin install python-dev@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/python-dev/README.md](plugins/python-dev/README.md)
 
 ---
 
@@ -521,6 +582,7 @@ Claude-Code-Plugins/
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── keepass-cred-mgr/        # KeePass credential manager (10 MCP tools, YubiKey auth)
 │   ├── linux-sysadmin/          # Linux sysadmin skills (137 per-service guides)
+│   ├── nominal/                 # Infrastructure verification (preflight/postflight/abort)
 │   ├── opus-context/            # 1M context window optimizer for Opus 4.6
 │   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
