@@ -6,6 +6,21 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+## [0.4.0] - 2026-03-27
+
+### Changed
+- Extracted shared infrastructure into 7 reference files following the nominal plugin's architecture pattern
+- Rewrote both commands as thinner orchestrators that read `references/` on demand instead of embedding all content inline
+- design-draft.md reduced from 1,538 to 990 lines; design-review.md from 1,099 to 686 lines
+- Created centralized ux-templates.md with 37 output templates from both commands
+- Deduplicated interaction conventions, operational commands, and pause/resume protocols
+
+### Removed
+- Deleted both stub skills (commands are the sole entry points)
+- The `skills/` directory no longer exists
+
 ## [0.3.3] - 2026-03-04
 
 ### Changed
@@ -14,9 +29,6 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - apply audit findings — plugin.json, CHANGELOG, script
-
-
-## [Unreleased]
 
 ## [0.3.2] - 2026-03-02
 

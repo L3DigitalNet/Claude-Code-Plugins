@@ -88,12 +88,19 @@ Sessions can be suspended with `pause` and resumed by pasting the snapshot into 
 | `/design-draft [project-name-or-file]` | Guided design document authoring: interviews the user, discovers and locks design principles, scaffolds and generates a full draft |
 | `/design-review [path/to/design-doc.md]` | Iterative review loop with principle enforcement, gap analysis, and optional auto-fix; reads the document from the filesystem |
 
-## Skills
+## References
 
-| Skill | Loaded when |
-|---|---|
-| `design-draft` | User starts a new design from scratch or a project lacks formal design documentation |
-| `design-review` | User asks to review, audit, or improve a design document, architecture spec, API contract, or technical plan |
+Domain knowledge loaded on demand by the commands. These files are never auto-loaded into context; they enter the conversation only when a command explicitly reads them.
+
+| Reference | Purpose |
+|-----------|---------|
+| `interaction-conventions.md` | AskUserQuestion conversion rules (shared by both commands) |
+| `session-state.md` | State models and invariants for both design-draft and design-review |
+| `ux-templates.md` | All formatted output templates (37 templates across both commands) |
+| `pause-resume.md` | Pause snapshot, continue/resume, and early exit protocols |
+| `operational-commands.md` | Available session commands for both commands |
+| `handoff-contract.md` | Warm handoff protocol from /design-draft to /design-review |
+| `interview-rules.md` | 7 interview conduct rules for /design-draft |
 
 ## Hooks
 
