@@ -54,12 +54,12 @@ Supporting elements: UX templates in references ensure consistent, polished outp
 **Problem:** 16 domain skills (qt-threading, qt-packaging, etc.) occupy the skill menu. Commands could load matching references directly.
 
 **Plan:**
-- [ ] Convert 16 skills to `references/` files
-- [ ] Update each command to read the relevant reference(s)
-- [ ] Keep agents (they load independently)
-- [ ] Delete the `skills/` directory
-- [ ] Update README.md
-- [ ] Bump version
+- [x] Convert 16 skills to `references/` files (with sub-files preserved)
+- [x] Update 4 agents to use Read pointers instead of `skills:` frontmatter
+- [x] Commands unchanged (self-contained, don't need references)
+- [x] Delete the `skills/` directory
+- [x] Update README.md
+- [x] Bump version
 
 ---
 
@@ -129,3 +129,4 @@ Supporting elements: UX templates in references ensure consistent, polished outp
 | 2026-03-27 | — | Planning | Initial analysis and plan created |
 | 2026-03-27 | github-repo-manager | Complete | 15 skills → 14 references, self-test deleted, command rewritten as thin orchestrator, v0.4.0 |
 | 2026-03-27 | design-assistant | Complete | 7 shared references + 37 UX templates extracted, both commands slimmed ~36%, stubs deleted, v0.4.0 |
+| 2026-03-27 | qt-suite | Complete | 16 skills → 16 references, 4 agents updated from skills: to Read pointers, sub-files preserved, v0.3.0 |
