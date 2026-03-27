@@ -148,7 +148,7 @@ PreToolUse blocking (exit 2): `echo '{"hookSpecificOutput":{"hookEventName":"Pre
 
 PostToolUse warnings: write to stdout — injected into agent context.
 
-Prefer one hook per event type with a dispatcher script routing by file path. Reference: `plugins/agent-orchestrator/hooks/hooks.json`
+Prefer one hook per event type with a dispatcher script routing by file path. Reference: `plugins/github-repo-manager/hooks/hooks.json`
 
 ## Marketplace Schema
 

@@ -108,12 +108,12 @@ This is the canonical format used by L3DigitalNet:
   },
   "plugins": [
     {
-      "name": "agent-orchestrator",
-      "description": "Spawn and coordinate teams of specialized Claude agents to parallelize complex, multi-step tasks.",
-      "version": "2.1.0",
+      "name": "design-assistant",
+      "description": "Principled design document authoring and enforcement.",
+      "version": "0.4.0",
       "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/agent-orchestrator",
-      "source": "./plugins/agent-orchestrator"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/design-assistant",
+      "source": "./plugins/design-assistant"
     },
     {
       "name": "external-tool",

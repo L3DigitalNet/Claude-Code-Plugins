@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A Claude Code plugin marketplace. Plugins cover the full development lifecycle: agent orchestration, release automation, design review, infrastructure verification, Home Assistant integration dev, Linux system administration, GitHub repo health, and plugin testing.
+A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, design review, infrastructure verification, Home Assistant integration dev, Linux system administration, GitHub repo health, and plugin testing.
 
 ## Installation
 
@@ -19,7 +19,7 @@ Or using the full URL:
 Then install individual plugins:
 
 ```bash
-/plugin install agent-orchestrator@l3digitalnet-plugins
+/plugin install design-assistant@l3digitalnet-plugins
 ```
 
 ### Staying Up to Date
@@ -47,16 +47,12 @@ installed plugins at the start of each session.
 
 | Plugin | Type | Command | Description |
 |--------|------|---------|-------------|
-| [Agent Orchestrator](#agent-orchestrator) | Commands + Hooks | `/orchestrate` | Delegates complex tasks to agent teams with context management |
-| [Autonomous Refactor](#autonomous-refactor) | Commands + Agents | `/refactor` | Test-driven autonomous refactoring against project design principles |
 | [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
 | [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
-| [KeePass Cred Mgr](#keepass-cred-mgr) | MCP + Commands + Skills | varies | KeePass vault access via 10 MCP tools, YubiKey auth, credential rotation, and audit logging |
 | [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 137 skills | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
 | [Nominal](#nominal) | Commands | `/preflight`, `/postflight`, `/abort` | Infrastructure verification session contract: 11 systems check security, reachability, backups, monitoring, and more |
-| [Plugin Review](#plugin-review) | Commands + Agents + Hooks | `/review`, `/review-efficiency`, `/tighten` | Multi-pass assertion-driven audit of plugin principles, UX, docs, and context efficiency |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [Python Dev](#python-dev) | Commands + Skills | `/python-code-review` | Contextual Python domain guidance: 11 skills load automatically, plus a comprehensive multi-domain code audit |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
@@ -80,30 +76,6 @@ These principles apply across all plugins in this collection. Individual plugins
 **[P5] Convergence is the Contract**: Iterative work defines completion as a measurable criterion (set by the plugin, the user, or collaboratively) and drives toward it without check-ins. Proceed quietly when converging normally. Surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating (making and undoing the same changes repeatedly), flag the pattern and stop rather than continuing. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
 
 **[P6] Composable, Focused Units**: Every plugin component (command, skill, hook) does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
-
----
-
-### Agent Orchestrator
-
-**General-purpose agent team orchestration** with automatic context management, file
-isolation via git worktrees, and mechanical enforcement hooks.
-
-**Features:**
-
-- Triage gate for simple vs complex tasks
-- Parallel execution via agent teams (or sequential fallback)
-- Git worktree isolation for concurrent work
-- Context degradation prevention via hooks
-- Quality gate with integration checking
-
-**Install:**
-
-```bash
-/plugin install agent-orchestrator@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/agent-orchestrator/README.md](plugins/agent-orchestrator/README.md)
 
 ---
 
@@ -188,30 +160,6 @@ HA connections, automated validation, example integrations, and project template
 
 **Learn more:**
 [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
-
----
-
-### KeePass Cred Mgr
-
-**KeePass credential manager for Claude Code**: 10 MCP tools for vault read/write, YubiKey HMAC-SHA1 authentication, credential rotation workflows, and structured audit logging.
-
-**Features:**
-
-- `unlock_vault` opens a persistent `keepassxc-cli` REPL; one YubiKey touch covers all subsequent tool calls
-- 9 additional tools: list groups/entries, search, get entry/attachment, create, deactivate, add attachment, bulk import
-- Background YubiKey poller auto-locks vault on removal with configurable grace period
-- Per-credential-type skills for cPanel, FTP/SFTP, SSH, Brave Search API, and Anthropic API
-- `/keepass-rotate`: guided create-then-deactivate rotation with safety checks
-- Structured JSONL audit log for all secret-returning operations
-
-**Install:**
-
-```bash
-/plugin install keepass-cred-mgr@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/keepass-cred-mgr/README.md](plugins/keepass-cred-mgr/README.md)
 
 ---
 
@@ -321,31 +269,6 @@ pre-flight checks, changelog generation, and GitHub release creation.
 
 ---
 
-### Autonomous Refactor
-
-**Test-driven autonomous refactoring**: reads your project's design principles,
-generates a behavioural test baseline, applies each refactoring opportunity in an
-isolated git worktree, and commits only changes that keep tests green.
-
-**Features:**
-
-- Derives refactoring opportunities from principles declared in `README.md`
-- Generates a green test baseline before touching any source file
-- Applies each change in an isolated git worktree, reverting automatically on red tests
-- Detects oscillation (repeated make/undo of the same change) and stops
-- Produces a before/after report with LOC, cyclomatic complexity, and alignment score
-
-**Install:**
-
-```bash
-/plugin install autonomous-refactor@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/autonomous-refactor/README.md](plugins/autonomous-refactor/README.md)
-
----
-
 ### Docs Manager
 
 **Documentation lifecycle management**: monitors file changes via hooks, accumulates
@@ -369,32 +292,6 @@ surfaces the queue for batch review at session end.
 
 **Learn more:**
 [plugins/docs-manager/README.md](plugins/docs-manager/README.md)
-
----
-
-### Plugin Review
-
-**Multi-pass assertion-driven plugin audit**: four parallel analyst subagents cover
-principles alignment, terminal UX quality, documentation freshness, and context
-efficiency, then the orchestrator auto-implements all fixes and re-audits to convergence.
-
-**Features:**
-
-- Four parallel read-only analyst tracks: principles (A), UX (B), docs (C), efficiency (D)
-- Assertion-based confidence scoring: loop continues until 100% or budget exhausted
-- `/review-efficiency`: standalone 5-stage context efficiency audit against 12 structural principles
-- `/tighten`: prose-level rewriting pass to eliminate token waste without changing meaning
-- All fixes auto-implemented by the orchestrator, no manual copy/paste
-- Findings severity-sorted: critical → high → medium → low
-
-**Install:**
-
-```bash
-/plugin install plugin-review@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/plugin-review/README.md](plugins/plugin-review/README.md)
 
 ---
 
@@ -574,17 +471,13 @@ Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
 ├── plugins/                     # All plugin implementations
-│   ├── agent-orchestrator/      # Agent team orchestration
-│   ├── autonomous-refactor/     # Test-driven autonomous refactoring
 │   ├── design-assistant/        # Design document lifecycle
 │   ├── docs-manager/            # Documentation lifecycle management
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
-│   ├── keepass-cred-mgr/        # KeePass credential manager (10 MCP tools, YubiKey auth)
 │   ├── linux-sysadmin/          # Linux sysadmin skills (137 per-service guides)
 │   ├── nominal/                 # Infrastructure verification (preflight/postflight/abort)
 │   ├── opus-context/            # 1M context window optimizer for Opus 4.6
-│   ├── plugin-review/           # Multi-pass plugin quality audit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
 │   ├── python-dev/              # Python development skills (11 domain skills)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
