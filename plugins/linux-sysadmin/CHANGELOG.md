@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.0] - 2026-03-27
+
+### Added
+- add 26 new guides, version tracking on all 163
+
+
 ## [2.0.0] - 2026-03-26
 
 ### Changed
