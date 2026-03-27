@@ -21,15 +21,13 @@ Supporting elements: UX templates in references ensure consistent, polished outp
 **Problem:** Commands embed all criteria, output templates, and frameworks inline. Every invocation loads the full 1,500+ line command even when only one phase is needed.
 
 **Plan:**
-- [ ] Extract review criteria per pass into `references/review-criteria.md`
-- [ ] Extract output templates into `references/ux-templates.md`
-- [ ] Extract principles framework into `references/principles-framework.md`
-- [ ] Extract warm-handoff schema into `references/warm-handoff.md`
-- [ ] Rewrite design-draft.md as a thin orchestrator (~150-200 lines)
-- [ ] Rewrite design-review.md as a thin orchestrator (~150-200 lines)
-- [ ] Delete the 2 stub skills
-- [ ] Update README.md
-- [ ] Bump version
+- [x] Extract shared infrastructure into 7 reference files
+- [x] Extract output templates into `references/ux-templates.md` (37 templates)
+- [x] Rewrite design-draft.md (1,538 → 990 lines)
+- [x] Rewrite design-review.md (1,099 → 686 lines)
+- [x] Delete the 2 stub skills
+- [x] Update README.md
+- [x] Bump version
 
 ---
 
@@ -130,3 +128,4 @@ Supporting elements: UX templates in references ensure consistent, polished outp
 |------|--------|--------|-------|
 | 2026-03-27 | — | Planning | Initial analysis and plan created |
 | 2026-03-27 | github-repo-manager | Complete | 15 skills → 14 references, self-test deleted, command rewritten as thin orchestrator, v0.4.0 |
+| 2026-03-27 | design-assistant | Complete | 7 shared references + 37 UX templates extracted, both commands slimmed ~36%, stubs deleted, v0.4.0 |
