@@ -44,14 +44,15 @@ description: >
 model: sonnet
 color: blue
 tools: Read, Write, Edit, Bash, Grep, Glob
-skills:
-  - qt-architecture
-  - qt-signals-slots
-  - qt-layouts
-  - qt-model-view
-  - qt-dialogs
-  - qt-settings
 ---
+
+Read these references at the start of the session for domain knowledge:
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-architecture.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-signals-slots.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-layouts.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-model-view.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-dialogs.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-settings.md`
 
 You are a specialized Qt GUI application development expert for PySide6, PyQt6, and C++/Qt.
 

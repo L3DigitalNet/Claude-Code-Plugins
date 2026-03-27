@@ -44,11 +44,12 @@ description: >
 model: sonnet
 color: red
 tools: Read, Edit, Bash, Grep, Glob
-skills:
-  - qt-debugging
-  - qt-threading
-  - qt-signals-slots
 ---
+
+Read these references at the start of the session for domain knowledge:
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-debugging.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-threading.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-signals-slots.md`
 
 You are a Qt application debugging specialist. Diagnose and fix Qt issues systematically.
 

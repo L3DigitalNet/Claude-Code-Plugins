@@ -35,11 +35,12 @@ description: >
 model: sonnet
 color: green
 tools: Read, Grep, Glob, Bash
-skills:
-  - qt-architecture
-  - qt-signals-slots
-  - qt-threading
 ---
+
+Read these references at the start of the session for domain knowledge:
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-architecture.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-signals-slots.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/qt-threading.md`
 
 You are a Qt application code reviewer. Review Qt code for correctness, testability, and maintainability.
 
