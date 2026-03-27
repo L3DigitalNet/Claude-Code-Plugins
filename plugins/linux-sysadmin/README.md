@@ -4,7 +4,7 @@ Linux system administration knowledge base: per-service skills with annotated co
 
 ## Summary
 
-When debugging nginx, setting up WireGuard, or tuning ZFS, the hard part isn't running commands; it's knowing *which* commands, *what the output means*, and *what the gotchas are*. This plugin gives Claude that domain knowledge through a single dispatcher skill backed by 137 per-service guide files.
+When debugging nginx, setting up WireGuard, or tuning ZFS, the hard part isn't running commands; it's knowing *which* commands, *what the output means*, and *what the gotchas are*. This plugin gives Claude that domain knowledge through a single dispatcher skill backed by 163 per-service guide files.
 
 A single `sysadmin` skill triggers on service-related queries and contains a topic index. When a topic matches, Claude reads the corresponding guide file, which contains config paths, expected ports, health checks, common failure modes, and pain points. Reference files provide full annotated configs (every directive commented), invocation cheatsheets, and upstream doc links.
 
@@ -92,7 +92,7 @@ The `/sysadmin` command walks through:
 
 | Skill | Loaded when |
 |-------|-------------|
-| `sysadmin` | Any Linux service, tool, or filesystem query. Contains a topic index of 137 guides covering web/proxy, containers, DNS, security, databases, monitoring, system services, storage, filesystems, backup, mail, self-hosted apps, IoT, certificates, CLI tools, and more. |
+| `sysadmin` | Any Linux service, tool, or filesystem query. Contains a topic index of 163 guides covering web/proxy, containers, DNS, security, databases, monitoring, system services, storage, filesystems, backup, mail, self-hosted apps, IoT, certificates, CLI tools, networking, and more. |
 
 Each guide lives in `guides/{topic}/guide.md` with an optional `references/` subdirectory for annotated configs, cheatsheets, and documentation links.
 
@@ -103,7 +103,7 @@ Each guide lives in `guides/{topic}/guide.md` with an optional `references/` sub
 
 ## Planned Features
 
-See [`skill-inventory-and-gaps.md`](docs/skill-inventory-and-gaps.md) for the full prioritized backlog. Top-tier candidates include: `logwatch`, `auditd`, `nftables`, `keepalived`, `gluster`, `ceph`, `vault` (HashiCorp), `k3s`, and `podman-compose`.
+See [`skill-inventory-and-gaps.md`](docs/skill-inventory-and-gaps.md) for the full prioritized backlog.
 
 ## Known Issues
 

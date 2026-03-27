@@ -25,6 +25,6 @@ fi
 if [[ "$is_sysadmin_dir" == "true" ]]; then
   # Emit context that gets injected into the AI's conversation
   cat <<'CONTEXT'
-[linux-sysadmin] Sysadmin working directory detected. Before installing, configuring, or troubleshooting any Linux service, invoke Skill("linux-sysadmin:sysadmin"). It contains a topic index of 137 service guides and will load the right one.
+[linux-sysadmin] Sysadmin working directory detected. Before installing, configuring, or troubleshooting any Linux service, invoke Skill("linux-sysadmin:sysadmin"). It contains a topic index of 163 service guides and will load the right one.
 CONTEXT
 fi
