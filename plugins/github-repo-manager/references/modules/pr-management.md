@@ -36,7 +36,7 @@ gh-manager prs close --repo owner/name --pr 42 --body "Closing: superseded by #5
 
 ---
 
-> **Full assessment mode:** Do not output the 🔀 PR Management banner during a full assessment. Collect findings and feed them into the unified 📊 view. Use the per-module banner format only for narrow PR checks.
+> **Full assessment mode:** Do not output the per-module banner during a full assessment. Collect findings and feed them into the unified findings view (Template 3 in `ux-templates.md`). Use the per-module banner format (Template 4) only for narrow PR checks.
 
 ## Assessment Flow
 
@@ -89,21 +89,7 @@ Sort PRs into categories:
 
 ### Step 4: Present Findings
 
-Present by category, most actionable first. After presenting findings with ≥2 action-relevant details, apply the progressive depth offer once per findings block (Communication Principle #7 in the core skill; skip for advanced owners).
-
-> 🔀 PR Management — ha-light-controller
->
-> **Ready to merge (1):**
-> • PR #42 "Add dark mode support" — approved by @reviewer, CI passing, 3 files changed (S)
->
-> **Needs attention (2):**
-> • PR #57 "Refactor config" — merge conflicts, CI failing, idle 14 days
-> • PR #31 "Update deps" — changes requested by @reviewer, idle 7 days
->
-> **Waiting (1):**
-> • PR #63 "WIP: New feature" — draft, 2 days old
->
-> PR #42 looks ready to go.
+Present by category, most actionable first using Template 4 (Narrow Check Findings) from `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md`. After presenting findings with ≥2 action-relevant details, apply the progressive depth offer once per findings block (Communication Principle #7 in session.md; skip for advanced owners).
 
 Use `AskUserQuestion`:
 - **"Merge PR #42"** — proceed to merge method selection

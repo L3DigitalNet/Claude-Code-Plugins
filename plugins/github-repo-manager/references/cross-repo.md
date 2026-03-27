@@ -65,24 +65,7 @@ Infer which repos and modules to check from the owner's request:
 
 ### Cross-Repo Report Format
 
-```
-📋 Community Health — Cross-Repo Report
-
-Missing SECURITY.md (5 repos):
-  ha-light-controller (Tier 4)
-  DFBU-Dotfiles-Backup-Utility (Tier 4)
-  Markdown-Keeper (Tier 3)
-  ...
-
-Skipped: 2 forks, 1 archived
-  (forks: integration_blueprint, brands · archived: old-project)
-
-Recommendation: SECURITY.md is highest priority. I can generate
-a template and apply it to all 5 repos — PRs for Tier 4, direct
-commits for Tier 3.
-
-Want me to fix them all, or work through one at a time?
-```
+Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 5 (Cross-Repo Report). Group findings by concern (not by repo), list skipped forks/archived repos, and end with a recommendation and `AskUserQuestion`.
 
 ---
 
@@ -121,7 +104,7 @@ Only after approval:
    ```bash
    echo "CONTENT" | gh-manager files put --repo owner/name --path SECURITY.md --message "Add SECURITY.md"
    ```
-   Then emit: `  ✓ owner/repo-name — committed to main`
+   Then emit progress per Template 6 from `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md`.
 
    Tier 4 (PR):
    ```bash
@@ -129,17 +112,9 @@ Only after approval:
    echo "CONTENT" | gh-manager files put --repo owner/name --path SECURITY.md --branch maintenance/add-security-md --message "Add SECURITY.md"
    gh-manager prs create --repo owner/name --head maintenance/add-security-md --base main --title "[Maintenance] Add SECURITY.md" --label maintenance
    ```
-   Then emit: `  ✓ owner/repo-name — PR #N created`
+   Then emit progress per Template 6.
 
-3. **Report results** grouped by mutation method:
-   ```
-   Done. Here's what I did:
-     Tier 4 (PRs created):
-       ha-light-controller — PR #6
-       DFBU — PR #12
-     Tier 3 (committed directly):
-       Markdown-Keeper — committed to main
-   ```
+3. **Report results** grouped by mutation method using Template 6 summary format.
 
 ### Implication Warnings
 

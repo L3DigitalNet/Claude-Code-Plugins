@@ -133,18 +133,7 @@ This is a one-time setup per repo. Once labels exist, skip this in future sessio
 
 All checks passed — proceed to the requested work.
 
-**Collapse on success:** If PAT is valid, tier is already known (from config), and labels exist — emit a single confirmation line and start immediately. Include `owner_type` (User or Org) so it's visible in the session header:
-
-```
-✓ owner/repo-name — Org · Tier 4 · labels OK · running assessment...
-✓ owner/repo-name — User · Tier 3 · labels OK · running assessment...
-```
-
-If any step needed interaction (tier was confirmed, labels were created), summarize what was set up in the same format:
-
-```
-✓ owner/repo-name — Org · Tier 4 confirmed · 4 labels created · running assessment...
-```
+**Collapse on success:** If PAT is valid, tier is already known (from config), and labels exist — emit a single confirmation line and start immediately. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 1 (Session Header) and use the appropriate variant.
 
 A fully configured repo should produce zero multi-line onboarding output.
 
@@ -259,17 +248,13 @@ During multi-module assessment, collect errors as you go and summarize them toge
 
 ## Session Wrap-Up
 
-When the owner indicates they're done:
+Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 7 (Session Wrap-Up) and follow its format:
 
-1. **Check for deferred items.** Note anything assessed but not acted on, as a short bulleted list (max 5 items; if more, note the count: "and N more"). Example:
-   - ⏭ PR #42 merge — deferred by owner
-   - ⏭ Branch protection update — skipped (403 on branch-rules)
-   - ⏭ 3 stale issues — owner will triage manually
-2. **Summarize actions** in one sentence: "I created 2 PRs, labeled 1 issue, and pushed wiki updates."
-3. **Offer a report** if the session had significant findings or actions — use `AskUserQuestion`:
-   - "Show report inline" — present the markdown report in conversation
-   - "Save to file" — write to `~/github-repo-manager-reports/`
-   - "Skip the report" — done
+1. **Check for deferred items.** Short bulleted list (max 5; note count if more).
+2. **Summarize actions** in one sentence.
+3. **Offer a report** if the session had significant findings or actions — use `AskUserQuestion`.
 4. **Exit cleanly.** Return to normal operation.
 
 **Match depth to scope:** Full assessment → summary + report offer. Quick narrow check → one-liner, no report offer.
+
+For report formatting, read Templates 8 and 9 from the ux-templates reference.

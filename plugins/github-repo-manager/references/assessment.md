@@ -23,13 +23,7 @@ When running a full assessment, execute modules in this order (required for cros
 - Critical Dependabot vulnerability with no fix PR
 - An error that would prevent the rest of the assessment from running (e.g., rate limit hit)
 
-**Progress indicator:** As each module completes, emit one line so the owner knows the assessment is progressing:
-```
-✓ Security (1/9)
-✓ Release Health (2/9)
-✓ Community Health (3/9)
-...
-```
+**Progress indicator:** As each module completes, emit one line so the owner knows the assessment is progressing. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 2 (Assessment Progress).
 
 ### Narrow Check Mode
 
@@ -88,42 +82,7 @@ This order is required for deduplication to work:
 
 ### Unified Findings Presentation
 
-**This is the required output format for full assessments.** After all modules complete, present a single consolidated view — do not use per-module banners during full assessment mode. Those formats are for narrow checks only.
-
-```
-📊 Repository Health — repo-name (Tier N)
-
-🔴 Critical (N)
-• [finding] — [source module] [action available?]
-• ...
-
-⚠️ Needs Attention (N)
-• [finding] — [source module]
-• ...
-
-✅ Healthy
-• Security posture: no alerts
-• [other passing items]
-
-Errors / Skipped
-• Code scanning: not enabled (404)
-• ...
-
-[1-2 sentence recommendation for where to start]
-```
-
-**Rules:**
-- Group by severity, not by module. A finding from Security and one from PR Management can both appear under 🔴 Critical.
-- Include source module attribution (e.g., "Security", "PR #42") so the owner can ask for details.
-- ✅ Healthy items are listed briefly — don't expand them unless the owner asks.
-- Keep the full view to 20 bullet points or fewer. If more than 20 findings exist, show the top 20 by severity, then use `AskUserQuestion`:
-
-  > N more findings below this threshold. What would you like to do?
-
-  Options:
-  - **"Show me all findings"** — present the full list before moving to action proposals
-  - **"Continue to action proposals"** — work with the top 20 and defer the rest to the report
-  - **"Generate the full report"** — produce the detailed report now
+**This is the required output format for full assessments.** Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 3 (Unified Findings View). Do not use per-module banners during full assessment mode; those are for narrow checks only (Template 4).
 
 ---
 
@@ -137,59 +96,9 @@ Errors / Skipped
 
 ### Report Format
 
+Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 8 (Single-Repo Report) and Template 9 (Cross-Repo Report).
+
 Reports are presented inline in conversation. Owner can ask to save as a local markdown file.
-
-**Single-repo report template:**
-
-```markdown
-# Repository Maintenance Report
-**Repo:** owner/repo-name
-**Tier:** N — Description
-**Date:** YYYY-MM-DDTHH:MM:SSZ
-**Session Type:** Full Assessment | Narrow Check | Module Name
-
-## Summary
-| Module | Status | Findings | Actions Taken |
-|--------|--------|----------|---------------|
-| Community Health | ✅/⚠️/🔴 | N issues | Description |
-| ... | ... | ... | ... |
-
-## Deferred Items
-- Item: reason for deferral
-
-## API Usage
-- REST calls: N / 5,000
-- GraphQL points: N / 5,000
-
-## Detailed Findings
-[Per-module details as needed]
-```
-
-**Cross-repo report template:**
-
-```markdown
-# Cross-Repo Report: Module Name
-**Date:** YYYY-MM-DDTHH:MM:SSZ
-**Scope:** N repos scanned (N forks skipped, N archived skipped)
-
-## Findings by Concern
-| Concern | Repos Affected | Severity |
-|---------|---------------|----------|
-| Description | N repos | High/Medium/Low |
-
-## Actions Taken
-| Action | Repo | Method | Result |
-|--------|------|--------|--------|
-| Description | repo-name | PR #N / Direct commit | Created/Done |
-
-## Skipped
-- forks: name1, name2
-- archived: name3
-
-## API Usage
-- REST calls: N / 5,000
-- GraphQL points: N / 5,000
-```
 
 ### Saving Reports
 
