@@ -1,8 +1,3 @@
----
-name: qt-packaging
-description: >
-  Packaging and distributing Qt Python applications — PyInstaller, Briefcase, and platform-specific build configurations. Use when distributing a PySide6 or PyQt6 app as a standalone executable, creating installers, configuring macOS bundles, Windows executables, or Linux AppImages.
-
   Trigger phrases: "package app", "PyInstaller", "distribute", "deploy", "standalone executable", "installer", "bundle app", "briefcase", "Windows build", "macOS build", "AppImage", "one-file"
 version: 1.0.0
 ---

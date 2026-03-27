@@ -1,8 +1,3 @@
----
-name: qt-qml
-description: >
-  QML and Qt Quick — declarative UI language for modern Qt applications. Use when building a QML-based UI, embedding QML in a Python/C++ app, exposing Python/C++ objects to QML, creating QML components, or choosing between QML and widgets.
-
   Trigger phrases: "QML", "Qt Quick", "declarative UI", "QQmlApplicationEngine", "expose to QML", "QML component", "QML signal", "pyqtProperty", "QML vs widgets", "QtQuick.Controls", "Item", "Rectangle"
 version: 1.0.0
 ---

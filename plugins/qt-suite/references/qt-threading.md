@@ -1,8 +1,3 @@
----
-name: qt-threading
-description: >
-  Qt threading patterns — QThread, QRunnable, QThreadPool, and thread safety for GUI applications. Use when running background tasks, keeping the UI responsive during long operations, managing worker threads, using thread pools, or debugging race conditions and deadlocks.
-
   Trigger phrases: "QThread", "worker", "background task", "thread safety", "UI freezing", "long operation", "QRunnable", "QThreadPool", "thread pool", "concurrent", "responsive UI", "blocking the event loop"
 version: 1.0.0
 ---

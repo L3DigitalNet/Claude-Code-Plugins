@@ -1,8 +1,3 @@
----
-name: qt-bindings
-description: >
-  Python Qt binding differences and migration guides — PySide6 vs PyQt6 API differences, and migration paths from PyQt5 to both modern bindings. Use when choosing between PySide6 and PyQt6, porting a PyQt5 codebase, handling binding-specific API differences, or writing code that must work with both bindings.
-
   Trigger phrases: "PySide6 vs PyQt6", "PyQt5 migration", "binding difference", "migrate from PyQt5", "PyQt6 migration", "PySide6 or PyQt6", "binding compatibility", "porting Qt Python", "LGPL vs GPL"
 version: 1.0.0
 ---

@@ -1,8 +1,3 @@
----
-name: qt-architecture
-description: >
-  Qt application architecture, project structure, and entry-point patterns for PySide6, PyQt6, and C++/Qt. Use when structuring a Qt app, setting up QApplication, designing the main window, choosing between MVC/MVP patterns, organizing a src layout, or deciding how to separate concerns in a GUI application.
-
   Trigger phrases: "structure my Qt app", "QApplication setup", "app entry point", "Qt project layout", "organize Qt code", "Qt MVC", "Qt MVP", "main window architecture", "new Qt project"
 version: "1.0.0"
 ---

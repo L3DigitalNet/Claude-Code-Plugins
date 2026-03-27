@@ -1,8 +1,3 @@
----
-name: qt-coverage-workflow
-description: >
-  This skill should be used when the user asks about "coverage", "test coverage", "coverage gaps",
-  "untested code", "gcov", "lcov", "coverage report", "improve coverage", "missing tests",
   "coverage threshold", "coverage-driven test generation", or "what code isn't tested".
   Covers the full coverage feedback loop for both Python/PySide6 (coverage.py) and C++/Qt (gcov + lcov).
   Also activates for "pytest-cov", "run coverage on my Qt project", or "CI coverage report".

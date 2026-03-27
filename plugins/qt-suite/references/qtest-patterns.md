@@ -1,8 +1,3 @@
----
-name: qtest-patterns
-description: >
-  This skill should be used when the user asks to "write a test", "add tests to", "create a QTest",
-  "how do I test a widget", "unit test for Qt", "pytest-qt", "test a PySide6 class",
   "QML test", "QtQuickTest", "write a test case", "test this class", or "generate a test file".
   Covers C++ QTest, Python pytest-qt, and QML TestCase patterns with CMake integration.
   Also activates for "write a C++ Qt test", "add a CMake test target", or "set up testlib".

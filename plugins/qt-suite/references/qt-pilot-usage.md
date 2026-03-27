@@ -1,8 +1,3 @@
----
-name: qt-pilot-usage
-description: >
-  This skill should be used when the user asks to "visual test", "test the GUI", "headless test",
-  "test a running app", "interact with the UI", "take a screenshot of the app", "click a widget",
   "find a widget", "test UI behavior", "Qt Pilot", "launch app headlessly", or "test what the user sees".
   Covers the Qt Pilot MCP server's 15 tools for AI-driven headless GUI testing of Qt/PySide6 applications.
   Also activates for "Xvfb", "automate UI", "visual regression", "capture screenshot of app".

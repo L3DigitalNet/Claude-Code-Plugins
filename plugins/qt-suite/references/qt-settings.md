@@ -1,8 +1,3 @@
----
-name: qt-settings
-description: >
-  Persistent application settings using QSettings — storing and restoring user preferences, window geometry, recent files, and application state. Use when saving user preferences, persisting window size/position, storing recent file lists, or managing application configuration.
-
   Trigger phrases: "QSettings", "persistent settings", "save preferences", "restore window", "user preferences", "remember state", "save window geometry", "recent files", "app configuration", "settings persistence"
 version: 1.0.0
 ---

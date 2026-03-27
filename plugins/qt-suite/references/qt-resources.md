@@ -1,8 +1,3 @@
----
-name: qt-resources
-description: >
-  Qt resource system — .qrc files, embedding icons and assets, loading resources at runtime, and using pyrcc6 or PySide6-rcc. Use when bundling icons, images, or other files into the application, loading resources via ":/" paths, or migrating from a file-system asset approach.
-
   Trigger phrases: ".qrc file", "embed icon", "pyrcc6", "PySide6-rcc", "bundled assets", "resource path", ":/icons/", "QIcon", "QPixmap from resources", "bundle image"
 version: 1.0.0
 ---

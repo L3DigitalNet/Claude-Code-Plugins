@@ -1,8 +1,3 @@
----
-name: qt-debugging
-description: >
-  Diagnosing and fixing Qt application issues — crashes, event loop problems, widget rendering failures, segfaults, and common runtime errors. Use when Qt crashes, a widget doesn't appear, the event loop freezes, signals aren't connecting, or the app exits unexpectedly.
-
   Trigger phrases: "Qt error", "crash", "segfault", "widget not showing", "event loop", "app exits unexpectedly", "Qt warning", "QPainter error", "assertion failed", "QObject destroyed", "application not responding"
 version: 1.0.0
 ---

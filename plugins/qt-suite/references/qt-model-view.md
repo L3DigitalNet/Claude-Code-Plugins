@@ -1,8 +1,3 @@
----
-name: qt-model-view
-description: >
-  Qt Model/View architecture — QAbstractItemModel, table/list/tree views, item delegates, and proxy models. Use when displaying tabular data, building a list with custom items, implementing a tree, creating a sortable/filterable table, or writing a custom item delegate.
-
   Trigger phrases: "QAbstractItemModel", "table view", "list model", "QTableView", "QListView", "tree view", "item delegate", "sort table", "filter model", "QSortFilterProxyModel", "custom model", "model data"
 version: 1.0.0
 ---

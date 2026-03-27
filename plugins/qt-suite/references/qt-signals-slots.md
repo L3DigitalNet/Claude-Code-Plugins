@@ -1,8 +1,3 @@
----
-name: qt-signals-slots
-description: >
-  Qt signals and slots — the core inter-object communication mechanism. Use when connecting signals to slots, defining custom signals, debugging disconnected signals, passing data between objects, or handling cross-thread communication safely.
-
   Trigger phrases: "connect signal", "custom signal", "slot not firing", "disconnect signal", "cross-thread signal", "signal not working", "emit signal", "define signal", "QObject signal"
 version: 1.0.0
 ---

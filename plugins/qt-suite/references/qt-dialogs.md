@@ -1,8 +1,3 @@
----
-name: qt-dialogs
-description: >
-  Qt dialog patterns — QDialog, QMessageBox, QFileDialog, QInputDialog, and custom modal/modeless dialogs. Use when creating confirmation prompts, file pickers, settings dialogs, custom data entry dialogs, or wizard-style multi-step dialogs.
-
   Trigger phrases: "dialog", "QMessageBox", "QFileDialog", "QInputDialog", "modal", "modeless", "settings dialog", "confirm dialog", "custom dialog", "file picker", "wizard", "popup"
 version: 1.0.0
 ---

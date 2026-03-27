@@ -1,8 +1,3 @@
----
-name: qt-styling
-description: >
-  Qt stylesheets (QSS) and theming — custom widget appearance, dark/light mode, color palettes, and platform-consistent styling. Use when applying custom styles, implementing dark mode, theming an application, styling specific widget states, or overriding platform defaults.
-
   Trigger phrases: "stylesheet", "QSS", "theme", "dark mode", "custom widget appearance", "style widget", "QPalette", "widget color", "hover style", "disabled style", "app theme", "visual style"
 version: 1.0.0
 ---

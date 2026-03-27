@@ -1,8 +1,3 @@
----
-name: qt-layouts
-description: >
-  Qt layout managers — arranging and sizing widgets within containers. Use when placing widgets, controlling resize behavior, building form layouts, creating splitters, nesting containers, or debugging widgets that don't appear where expected.
-
   Trigger phrases: "arrange widgets", "layout", "resize behavior", "QSplitter", "center widget", "widget not visible", "expand to fill", "fixed size", "stretch factor", "form layout", "grid layout", "spacing", "margins"
 version: 1.0.0
 ---
