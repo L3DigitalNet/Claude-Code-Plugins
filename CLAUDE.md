@@ -28,11 +28,20 @@ Claude-Code-Plugins/
 ├── .github/workflows/                # CI: codeql, ha-dev-plugin-tests, plugin-test-harness-ci
 ├── plugins/
 │   ├── design-assistant/             # Design document authoring and review
+│   ├── docs-manager/                 # Documentation lifecycle management (legacy)
 │   ├── github-repo-manager/          # Conversational GitHub repo maintenance
+│   ├── handoff/                      # Cross-machine task continuity (save/load)
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
 │   ├── linux-sysadmin/               # Linux sysadmin skills (163 service, tool, and filesystem guides)
+│   ├── nominal/                      # Infrastructure verification (preflight/postflight/abort)
+│   ├── opus-context/                 # 1M context window optimizer for Opus 4.6
 │   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
-│   └── release-pipeline/             # Autonomous release pipeline
+│   ├── python-dev/                   # Python development skills (11 domain skills)
+│   ├── qt-suite/                     # Qt development and testing toolkit
+│   ├── release-pipeline/             # Autonomous release pipeline
+│   ├── repo-hygiene/                 # Autonomous repo maintenance sweep
+│   ├── test-driver/                  # Proactive testing via gap analysis and convergence
+│   └── up-docs/                      # Three-layer documentation updater + drift analysis
 ├── scripts/validate-marketplace.sh   # Zod-schema marketplace validation
 └── docs/                             # Plugin development documentation
 ```
