@@ -149,6 +149,17 @@
       },
       "source": "./plugins/nominal",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/nominal"
+    },
+    {
+      "name": "up-docs",
+      "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context. Four slash commands infer what changed and apply updates at the right detail level for each layer.",
+      "version": "0.1.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/up-docs",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
     }
   ]
 }

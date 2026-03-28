@@ -1,0 +1,10 @@
+{
+  "name": "up-docs",
+  "version": "0.1.0",
+  "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context.",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  },
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
+}
