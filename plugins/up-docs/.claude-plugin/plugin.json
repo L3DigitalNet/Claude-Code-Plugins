@@ -1,7 +1,7 @@
 {
   "name": "up-docs",
-  "version": "0.1.0",
-  "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context.",
+  "version": "0.2.0",
+  "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context, plus comprehensive drift analysis for infrastructure documentation.",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"

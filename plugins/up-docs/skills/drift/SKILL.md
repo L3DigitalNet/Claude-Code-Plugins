@@ -73,7 +73,7 @@ Track per iteration: `pages_checked`, `discrepancies_found`, `pages_updated`.
 
 ### Batch Reading
 
-Leverage the 1M context window. Read 10-20 related wiki pages before beginning SSH inspection, grouping by host. This allows cross-referencing during inspection and reduces re-reads.
+Use the full 1M context window. Read 10-20 related wiki pages before beginning SSH inspection, grouping by host. This allows cross-referencing during inspection and reduces re-reads.
 
 ## Phase 2: Wiki Internal Consistency
 

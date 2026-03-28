@@ -152,8 +152,8 @@
     },
     {
       "name": "up-docs",
-      "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context. Four slash commands infer what changed and apply updates at the right detail level for each layer.",
-      "version": "0.1.0",
+      "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context. Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
+      "version": "0.2.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
