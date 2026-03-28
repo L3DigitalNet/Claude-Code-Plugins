@@ -60,7 +60,7 @@ installed plugins at the start of each session.
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
 | [Opus Context](#opus-context) | Skills + Hooks | always-on | Teaches Opus 4.6 to use its full 1M context window instead of conservative small-model defaults |
 | [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
-| [Up Docs](#up-docs) | Skills | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all` | Update documentation across three layers (repo, Outline wiki, Notion) from session context |
+| [Up Docs](#up-docs) | Skills | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers from session context, plus full infrastructure drift analysis |
 
 ## Principles
 
@@ -425,16 +425,14 @@ iterates through a convergence loop until everything passes.
 ### Up Docs
 
 **Three-layer documentation updater**: infers what changed during a session and updates
-repo docs, Outline wiki, and Notion at the right level of detail for each layer.
+repo docs, Outline wiki, and Notion at the right level of detail for each layer. Also
+provides comprehensive drift analysis that SSHes into live infrastructure.
 
 **Features:**
 
-- `/up-docs:repo`: updates README.md, docs/, and other repo-local documentation
-- `/up-docs:wiki`: updates Outline wiki with implementation-level details
-- `/up-docs:notion`: updates Notion with strategic and organizational context
-- `/up-docs:all`: runs all three layers sequentially with a combined summary
-- Infers session changes from git history and conversation context
-- Summary report with a table of every page touched and changes made
+- `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`: targeted updates from session context
+- `/up-docs:drift`: four-phase convergence loop that gathers live server state via SSH, syncs the Outline wiki, resolves internal contradictions, verifies and enriches links, then updates Notion
+- Designed for Opus 4.6 with 1M context for large-scale wiki analysis
 
 **Install:**
 

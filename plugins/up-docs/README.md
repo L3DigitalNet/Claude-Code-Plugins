@@ -1,10 +1,10 @@
 # up-docs
 
-Update documentation across three layers (repo, Outline wiki, Notion) based on what changed during a session.
+Update documentation across three layers (repo, Outline wiki, Notion) based on what changed during a session, plus comprehensive drift analysis for infrastructure documentation.
 
 ## Summary
 
-Documentation lives in three places with different purposes: repo-local files capture project-specific details, the Outline wiki holds implementation-level reference material, and Notion maintains strategic context and organizational knowledge. Keeping all three in sync after a work session means explaining the same layering rules every time. up-docs encodes those rules into four slash commands that infer what changed from git history and conversation context, then apply updates at the right level of detail for each layer.
+Documentation lives in three places with different purposes: repo-local files capture project-specific details, the Outline wiki holds implementation-level reference material, and Notion maintains strategic context and organizational knowledge. Keeping all three in sync after a work session means explaining the same layering rules every time. up-docs encodes those rules into five slash commands: four for targeted updates that infer changes from session context, and one for comprehensive drift analysis that SSHes into live infrastructure, syncs the wiki, resolves contradictions, and verifies links before updating Notion.
 
 ## Principles
 
@@ -21,6 +21,7 @@ Documentation lives in three places with different purposes: repo-local files ca
 - Claude Code (any recent version)
 - Outline wiki accessible via MCP (mcp-outline server configured)
 - Notion accessible via MCP (Notion MCP server configured)
+- SSH access to infrastructure hosts (for `/up-docs:drift`)
 
 ## Installation
 
@@ -36,6 +37,8 @@ claude --plugin-dir ./plugins/up-docs
 ```
 
 ## How It Works
+
+### Session Update Commands
 
 ```mermaid
 flowchart TD
@@ -53,15 +56,27 @@ flowchart TD
     NotionUpdate --> Summary
 ```
 
+### Drift Analysis
+
+```mermaid
+flowchart TD
+    User([User]) -->|"/up-docs:drift [collection]"| P1[Phase 1: Infrastructure → Wiki<br/>SSH inspect, compare, update]
+    P1 -->|converged| P2[Phase 2: Wiki Consistency<br/>Cross-reference, resolve contradictions]
+    P2 -->|converged| P3[Phase 3: Link Integrity<br/>Verify links, fix broken, enrich]
+    P3 -->|converged| P4[Phase 4: Notion Sync<br/>Update strategic layer]
+    P4 --> Report((Drift Analysis Report))
+```
+
 ## Usage
 
 Run a command at a natural pausing point or end of session:
 
 ```
-/up-docs:repo       Update repo documentation only
-/up-docs:wiki       Update Outline wiki only
-/up-docs:notion     Update Notion only
-/up-docs:all        Update all three layers sequentially
+/up-docs:repo                Update repo documentation only
+/up-docs:wiki                Update Outline wiki only
+/up-docs:notion              Update Notion only
+/up-docs:all                 Update all three layers sequentially
+/up-docs:drift [collection]  Full drift analysis (infrastructure → wiki → links → Notion)
 ```
 
 Each command produces a summary table listing every page or file examined, the action taken, and a one-line description of changes.
@@ -88,17 +103,19 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 | `up-wiki` | `/up-docs:wiki` or `/up-docs:all` |
 | `up-notion` | `/up-docs:notion` or `/up-docs:all` |
 | `up-all` | `/up-docs:all` |
+| `up-drift` | `/up-docs:drift` |
 
 ## Planned Features
 
 - Per-layer dry-run mode that previews changes without pushing to Outline or Notion
-- Cross-layer link insertion (Notion pages linking to relevant Outline articles automatically)
 
 ## Known Issues
 
 - Requires both Outline and Notion MCP servers to be configured and running. If only one external system is available, use the individual commands for the layers you have.
 - The session context inference relies on git history; in a fresh repo with no commits, the commands have less signal to work from.
 - Notion and Outline MCP servers must be accessible from the current environment. Air-gapped systems can only use `/up-docs:repo`.
+- `/up-docs:drift` requires SSH access to all documented hosts. Unreachable hosts are logged and skipped, not fatal.
+- Drift analysis is designed for Opus 4.6 with 1M context. Running on smaller context models may cause truncation on large wiki collections.
 
 ## Links
 
