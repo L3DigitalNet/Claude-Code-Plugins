@@ -50,6 +50,7 @@ installed plugins at the start of each session.
 | [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
 | [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
+| [Handoff](#handoff) | Skills | `/handoff:save`, `/handoff:load` | Save and load task context across machines via shared network drive |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 163 guides | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
 | [Nominal](#nominal) | Commands | `/preflight`, `/postflight`, `/abort` | Infrastructure verification session contract: 11 systems check security, reachability, backups, monitoring, and more |
@@ -134,6 +135,28 @@ interactively, with owner approval at every step.
 
 **Learn more:**
 [plugins/github-repo-manager/README.md](plugins/github-repo-manager/README.md)
+
+---
+
+### Handoff
+
+**Cross-machine task continuity**: save task context to a shared network drive when
+work requires physically moving between machines, then load it on the other side.
+
+**Features:**
+
+- `/handoff:save`: writes a structured handoff file with task summary, current state, and next steps
+- `/handoff:load`: reads the most recent handoff file and presents actionable next steps
+- Files stored on shared network path for access from any machine
+
+**Install:**
+
+```bash
+/plugin install handoff@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/handoff/README.md](plugins/handoff/README.md)
 
 ---
 
@@ -498,6 +521,7 @@ Claude-Code-Plugins/
 │   ├── design-assistant/        # Design document lifecycle
 │   ├── docs-manager/            # Documentation lifecycle management
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
+│   ├── handoff/                 # Cross-machine task continuity (save/load)
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── linux-sysadmin/          # Linux sysadmin skills (163 per-service guides)
 │   ├── nominal/                 # Infrastructure verification (preflight/postflight/abort)

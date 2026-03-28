@@ -99,11 +99,11 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 
 | Skill | Invoked by |
 |-------|------------|
-| `up-repo` | `/up-docs:repo` or `/up-docs:all` |
-| `up-wiki` | `/up-docs:wiki` or `/up-docs:all` |
-| `up-notion` | `/up-docs:notion` or `/up-docs:all` |
-| `up-all` | `/up-docs:all` |
-| `up-drift` | `/up-docs:drift` |
+| `repo` | `/up-docs:repo` or `/up-docs:all` |
+| `wiki` | `/up-docs:wiki` or `/up-docs:all` |
+| `notion` | `/up-docs:notion` or `/up-docs:all` |
+| `all` | `/up-docs:all` |
+| `drift` | `/up-docs:drift` |
 
 ## Planned Features
 
