@@ -14,11 +14,11 @@
     "typecheck": "tsc -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "execa": "^9.5.0",
     "yaml": "^2.8.3",
     "zod": "^4.3.6",
-    "zod-to-json-schema": "^3.25.1"
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -29,6 +29,6 @@
     "ts-jest": "^29.2.0",
     "tsx": "^4.19.0",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.58.0"
   }
 }
