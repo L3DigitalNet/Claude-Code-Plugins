@@ -47,6 +47,7 @@ installed plugins at the start of each session.
 
 | Plugin | Type | Command | Description |
 |--------|------|---------|-------------|
+| [Claude Sync](#claude-sync) | Commands | `/claude-sync:sync-export`, `/claude-sync:sync-import` | Synchronize the Claude Code environment across multiple machines via a shared filesystem |
 | [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
 | [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
@@ -78,6 +79,31 @@ These principles apply across all plugins in this collection. Individual plugins
 **[P5] Convergence is the Contract**: Iterative work defines completion as a measurable criterion (set by the plugin, the user, or collaboratively) and drives toward it without check-ins. Proceed quietly when converging normally. Surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating (making and undoing the same changes repeatedly), flag the pattern and stop rather than continuing. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
 
 **[P6] Composable, Focused Units**: Every plugin component (command, skill, hook) does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
+
+---
+
+### Claude Sync
+
+**Synchronize the Claude Code environment across machines**: captures settings, MCP
+servers, plugins, and CLAUDE.md into a `.tar.gz` snapshot and applies it on the
+receiving machine with conflict resolution and git sync.
+
+**Features:**
+
+- `/sync-export`: commits and pushes all git repos, captures `~/.claude/` and MCP configs, writes snapshot to shared path
+- `/sync-import`: previews snapshot, backs up local state, applies with mtime-based merge, installs missing MCP servers, syncs git repos
+- Wholesale directory capture picks up new Claude Code files automatically
+- Secrets (credentials, OAuth tokens) are always excluded from snapshots
+- First-run prompts for sync path, secret store path, and repos root; saves to global CLAUDE.md
+
+**Install:**
+
+```bash
+/plugin install claude-sync@l3digitalnet-plugins
+```
+
+**Learn more:**
+[plugins/claude-sync/README.md](plugins/claude-sync/README.md)
 
 ---
 
@@ -518,6 +544,7 @@ Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
 ├── plugins/                     # All plugin implementations
+│   ├── claude-sync/             # Claude Code environment sync across machines
 │   ├── design-assistant/        # Design document lifecycle
 │   ├── docs-manager/            # Documentation lifecycle management
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
