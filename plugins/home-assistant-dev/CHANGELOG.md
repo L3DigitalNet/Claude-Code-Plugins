@@ -2,6 +2,21 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.5] - 2026-04-07
+
+### Changed
+- Bump handlebars
+- Bump hono in /plugins/home-assistant-dev/mcp-server
+- Bump picomatch
+- Bump the all-dependencies group across 1 directory with 7 updates
+- Bump flatted in /plugins/home-assistant-dev/mcp-server
+- bump express-rate-limit
+- bump @hono/node-server
+
+### Fixed
+- bump ts-jest to 29.4.9 in both plugin lock files
+
+
 ## [2.2.4] - 2026-03-04
 
 ### Changed
