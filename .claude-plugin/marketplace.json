@@ -171,6 +171,17 @@
       },
       "source": "./plugins/handoff",
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/handoff"
+    },
+    {
+      "name": "claude-sync",
+      "description": "Synchronizes the Claude Code environment across multiple workstations. Two slash commands: /sync-export captures settings, MCP servers, plugins, and CLAUDE.md into a portable snapshot after syncing git repos. /sync-import applies the snapshot and syncs repos on the receiving machine.",
+      "version": "1.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/claude-sync",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/claude-sync"
     }
   ]
 }
