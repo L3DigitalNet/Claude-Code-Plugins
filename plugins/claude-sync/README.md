@@ -26,8 +26,8 @@ Design decisions in this plugin are evaluated against these principles.
 
 - Claude Code (any recent version)
 - Linux (Debian/Ubuntu, RHEL/Fedora, or similar)
-- `jq` — JSON processor (used by the sync scripts)
-- `git` — for repository sync operations
+- `jq`: JSON processor (used by the sync scripts)
+- `git`: for repository sync operations
 - A shared filesystem path accessible from all machines (NFS mount, Syncthing, shared network drive)
 - Git repositories already cloned on both machines
 
@@ -71,9 +71,9 @@ flowchart TD
 ### First run
 
 On the first invocation of either command, Claude Sync prompts for three values and saves them to the global CLAUDE.md:
-1. **Sync path** — shared filesystem location for snapshots
-2. **Secret store path** — where credentials are managed
-3. **Repos root path** — root directory scanned for git repos
+1. **Sync path**: shared filesystem location for snapshots
+2. **Secret store path**: where credentials are managed
+3. **Repos root path**: root directory scanned for git repos
 
 ### Typical workflow
 

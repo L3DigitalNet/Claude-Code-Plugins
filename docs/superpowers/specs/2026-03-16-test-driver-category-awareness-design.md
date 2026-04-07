@@ -58,9 +58,11 @@ Add a new section (Section 8) covering what changes when writing non-unit tests:
 
 | File | Type of Change |
 |------|---------------|
-| `plugins/test-driver/skills/gap-analysis/SKILL.md` | Rewrite Step 5, minor adjustment to Step 6 |
-| `plugins/test-driver/skills/convergence-loop/SKILL.md` | Add subsection under GENERATE |
-| `plugins/test-driver/skills/test-design/SKILL.md` | Add Section 8 |
+| `plugins/test-driver/references/gap-analysis.md` | Rewrite Step 5, minor adjustment to Step 6 |
+| `plugins/test-driver/references/convergence-loop.md` | Add subsection under GENERATE |
+| `plugins/test-driver/references/test-design.md` | Add Section 8 |
+
+> **Note:** The final implementation placed these files in `references/` rather than `skills/` as originally planned.
 
 ## What Does NOT Change
 
