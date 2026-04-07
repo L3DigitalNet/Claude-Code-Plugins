@@ -1,0 +1,59 @@
+{
+  "project": "claude-sync",
+  "stack_profile": "bash-plugin",
+  "last_analysis": {
+    "date": "2026-04-07T18:45:00Z",
+    "source_files_analyzed": 3,
+    "gaps_found": 19,
+    "gaps_filled": 19,
+    "gaps_deferred": 0
+  },
+  "categories": {
+    "unit": {
+      "applicable": true,
+      "test_count": 48,
+      "passing": 48,
+      "failing": 0
+    },
+    "integration": {
+      "applicable": true,
+      "test_count": 17,
+      "passing": 17,
+      "failing": 0
+    },
+    "security": {
+      "applicable": true,
+      "test_count": 5,
+      "passing": 5,
+      "failing": 0
+    },
+    "e2e": {
+      "applicable": false
+    },
+    "ui": {
+      "applicable": false
+    },
+    "contract": {
+      "applicable": false
+    }
+  },
+  "coverage": {
+    "target_percent": 80,
+    "current_percent": null,
+    "tool": "structural (bash scripts — no runtime coverage tool)"
+  },
+  "known_gaps": [],
+  "source_bugs_fixed": [],
+  "history": [
+    {
+      "date": "2026-04-07T18:45:00Z",
+      "action": "gap_analysis",
+      "summary": "19 gaps found across unit, integration, and security categories"
+    },
+    {
+      "date": "2026-04-07T18:45:00Z",
+      "action": "convergence_loop",
+      "summary": "19/19 gaps filled. 65 assertions across 3 test scripts, all passing. 0 source bugs found."
+    }
+  ]
+}
