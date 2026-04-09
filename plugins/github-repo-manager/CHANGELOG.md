@@ -5,6 +5,17 @@ All notable changes to the github-repo-manager plugin are documented here.
 ## [0.5.0] - 2026-04-09
 
 ### Added
+- add onboarding, config resolution, and batch execution scripts
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+
+## [0.5.0] - 2026-04-09
+
+### Added
 - `scripts/onboarding.sh` — single-pass environment validation (deps, PAT, tier detection, portfolio config, label check) with JSON output
 - `scripts/config-resolve.sh` — multi-source config resolution with stdlib-only YAML parser and precedence tracking (portfolio per-repo > repo-level > portfolio defaults > tier defaults)
 - `scripts/batch-executor.sh` — sequential mutation executor with rate limit awareness, dry-run mode, and audit logging
