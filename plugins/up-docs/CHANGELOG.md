@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.3.0] - 2026-04-09
 
 ### Added
+- add 4 scripts for context gathering, server inspection, link auditing, convergence tracking
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+### Fixed
+- add handoff to root README, fix up-docs skill names
+
+
+## [0.3.0] - 2026-04-09
+
+### Added
 - `scripts/context-gather.sh` consolidating git context assessment for all 5 skills
 - `scripts/server-inspect.sh` batching 5-15 SSH commands per host into a single session
 - `scripts/link-audit.sh` for markdown link extraction and verification
