@@ -75,15 +75,13 @@ Execute steps in order. For each step:
 
 ### Step 4 — Post-abort verification
 
-After all steps complete successfully, run a post-abort go/no-go poll:
+After all steps complete successfully, run the post-abort go/no-go poll:
 
-- Core hosts reachable
-- Primary services running
-- Reverse proxy responding
-- Monitoring platform active
-- Firewall active
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/go-nogo-poll.sh .claude/nominal/environment.json
+```
 
-This is the same spot-check as preflight's go/no-go poll. It verifies the environment was restored to a functional state.
+This is the same spot-check as preflight's go/no-go poll. Parse the JSON output to verify the environment was restored to a functional state.
 
 ### Step 5 — Final output
 
@@ -104,7 +102,11 @@ Construct the abort record:
 - `restoration_verified`: boolean from the post-abort poll
 - `irreversible_steps_confirmed`: boolean, true if any irreversible steps were confirmed
 
-Append the record to `.claude/nominal/runs.jsonl`.
+Pipe the constructed JSON to the flight log script:
+
+```bash
+echo '<constructed-json>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/flight-log.sh append
+```
 
 ### Step 7 — Terminate session contract
 

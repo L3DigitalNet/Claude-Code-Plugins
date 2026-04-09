@@ -142,7 +142,7 @@
     {
       "name": "nominal",
       "description": "Structured verification routine for infrastructure changes. Three slash commands enforce a session contract: /preflight validates the environment, /postflight runs 11 verification systems, /abort executes a confirmed rollback.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
