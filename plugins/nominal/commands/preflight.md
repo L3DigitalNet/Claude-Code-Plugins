@@ -29,7 +29,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/environment-discover.sh
 
 Parse the JSON output. Read `${CLAUDE_PLUGIN_ROOT}/references/environment-profile.md` for the schema reference. Review and enrich the discovered profile (fill in roles, access tiers, dependencies, health endpoints for services). Present the Post-Discovery Confirmation (Template 0 from the environment-profile reference) via AskUserQuestion. Write the profile only after user confirmation.
 
-**If it DOES exist:** Read the profile. Check `_schema_version` against the current plugin version (1.0.0). If they differ, apply migrations as described in the environment-profile reference.
+**If it DOES exist:** Read the profile. Check `_schema_version` against the current plugin version (1.1.0). If they differ, apply migrations as described in the environment-profile reference.
 
 ### Step 2 — Handle the `refresh` argument
 
