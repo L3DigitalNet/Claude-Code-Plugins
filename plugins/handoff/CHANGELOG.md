@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.2.0] - 2026-04-09
 
 ### Added
+- add scripts for context gathering, config management, and status dashboards
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+
+## [0.2.0] - 2026-04-09
+
+### Added
 - `scripts/gather-context.sh` consolidating machine and git context gathering for save
 - `scripts/find-latest-handoff.sh` for discovering and parsing most recent handoff file
 
