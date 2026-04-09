@@ -3,6 +3,17 @@
 ## [1.3.0] - 2026-04-09
 
 ### Added
+- add 3 README validation scripts
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+
+## [1.3.0] - 2026-04-09
+
+### Added
 - `check-readme-structure.sh`: validates plugin READMEs against the canonical template headings, with synonym groups and component-based conditional headings
 - `check-readme-placeholders.sh`: detects unmodified template placeholder strings in plugin READMEs
 - `check-readme-refs.sh`: verifies backtick paths, relative markdown links, and /plugin:command references resolve to existing files
