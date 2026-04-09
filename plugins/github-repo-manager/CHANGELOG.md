@@ -2,6 +2,15 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [0.5.0] - 2026-04-09
+
+### Added
+- `scripts/onboarding.sh` — single-pass environment validation (deps, PAT, tier detection, portfolio config, label check) with JSON output
+- `scripts/config-resolve.sh` — multi-source config resolution with stdlib-only YAML parser and precedence tracking (portfolio per-repo > repo-level > portfolio defaults > tier defaults)
+- `scripts/batch-executor.sh` — sequential mutation executor with rate limit awareness, dry-run mode, and audit logging
+- Session setup in `/repo-manager` now references `onboarding.sh` and `config-resolve.sh` for automated pre-flight
+
+
 ## [0.4.1] - 2026-04-07
 
 ### Changed

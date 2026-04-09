@@ -7,13 +7,21 @@ allowed-tools: Bash, Read, Glob, Write, AskUserQuestion
 
 You are now in GitHub Repo Manager mode. This mode was explicitly requested via `/repo-manager`. Do NOT apply any repo management logic outside of this explicit invocation. When the owner indicates they are done or changes topic, exit this mode cleanly.
 
-## Step 0: Ensure dependencies
+## Step 0: Session setup
+
+**Onboarding check** — run the onboarding script to validate the full environment (deps, PAT, tier, config, labels) in one pass:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/ensure-deps.sh
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/onboarding.sh ${CLAUDE_PLUGIN_ROOT}
 ```
 
-If this exits with an error, report the output and stop.
+If `ready` is false in the output, report the errors and stop. Otherwise proceed silently.
+
+**Config resolution** — when you need the effective config for a specific repo, use the config resolver which merges portfolio defaults, repo-level config, and per-repo overrides with proper precedence:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/config-resolve.sh owner/repo --plugin-root ${CLAUDE_PLUGIN_ROOT}
+```
 
 ## Step 1: Load session behavior
 
