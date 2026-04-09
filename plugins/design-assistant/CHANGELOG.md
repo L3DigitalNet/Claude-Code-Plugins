@@ -9,6 +9,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [0.5.0] - 2026-04-09
 
 ### Added
+- add 4 scripts for state management, invariant checking, and coverage sweeps
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+
+## [0.5.0] - 2026-04-09
+
+### Added
 - `scripts/state-manager.sh` for persistent review session state (findings, sections, streaks, deferred log)
 - `scripts/invariant-check.sh` validating 7 review and 7 draft state invariants
 - `scripts/coverage-sweep.sh` for pre-Phase-5 constraint/risk/governance coverage checking
