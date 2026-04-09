@@ -51,14 +51,17 @@ If unexpected changes are found, present options via AskUserQuestion before proc
 
 ### Step 3 — Execute domains 1 through 11
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/verification-domains.md` for the full domain check specifications.
+Read `${CLAUDE_PLUGIN_ROOT}/references/verification-domains.md` for the severity classification criteria.
 
-Execute each domain in numerical order (1, 2, 3, ..., 11). For each domain:
+Execute each domain in numerical order (1, 2, 3, ..., 11). For each domain, run the domain checker script:
 
-1. Read the domain's specification from the verification-domains reference.
-2. Execute the checks described, adapting commands to the tools and platform present.
-3. Classify results as nominal, anomaly, minor anomaly, or skipped.
-4. Print the result immediately using Template 3 from the ux-templates reference.
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/domain-checker.sh <N> .claude/nominal/environment.json [--host <ssh-target>] [--since-time <session-start-iso>]
+```
+
+Parse the JSON output. Apply severity classification per the verification-domains reference:
+- Map each check's raw `status` (pass/fail/skip) to nominal/anomaly/minor-anomaly using domain-specific criteria
+- Print the result immediately using Template 3 from the ux-templates reference
 
 **On anomaly:** Present three options via AskUserQuestion (Template 3 anomaly format):
 - **Fix forward: {specific suggested step}** — attempt the fix, then re-run only the failed check.
@@ -74,13 +77,17 @@ Execute each domain in numerical order (1, 2, 3, ..., 11). For each domain:
 
 If any fix-forwards were executed during Step 3, run a regression sweep after Domain 11 completes.
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/verification-domains.md` for the Regression Sweep specification. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 4b.
+Run the regression sweep script with the domains that completed before the first fix-forward:
 
-- Re-run core pass/fail checks from domains that completed before the first fix-forward.
-- Fast mode: lightweight verification, not full evidence gathering.
-- No AskUserQuestion prompts. No fix-forward options. Read-only.
-- If regressions found, update affected domain outcomes and attribute them to the fix-forward.
-- Print Template 4b result.
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/regression-sweep.sh .claude/nominal/environment.json "1,2,3,4,5"
+```
+
+(List domains that completed before the first fix-forward as a comma-separated string.)
+
+Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 4b.
+
+Parse the JSON output. If `regressions` array is non-empty, update affected domain outcomes and attribute them to the fix-forward. Print Template 4b result.
 
 If no fix-forwards occurred, skip this step entirely.
 
@@ -100,6 +107,10 @@ Print the appropriate Template 4 variant.
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/flight-log.md` for the `runs.jsonl` schema.
 
-Construct the postflight record with all common and postflight-specific fields. Append it as a single JSON line to `.claude/nominal/runs.jsonl`. Create the file and directory if they do not exist.
+Construct the postflight record with all common and postflight-specific fields. Pipe the constructed JSON to the flight log script:
+
+```bash
+echo '<constructed-json>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/flight-log.sh append
+```
 
 Confirm the flight log was written in the final output line.

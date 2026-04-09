@@ -31,7 +31,7 @@ Store the output as `IS_CLAUDE_PLUGIN_REPO`. When `true`, the repo is a Claude C
 
 ## Step 1: Run Mechanical Scans (parallel)
 
-Run all four scripts using the Bash tool. Execute them in parallel (make all four Bash tool calls in a single response turn):
+Run all seven scripts using the Bash tool. Execute them in parallel (make all seven Bash tool calls in a single response turn):
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-gitignore.sh
@@ -45,12 +45,21 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-orphans.sh
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-stale-commits.sh
 ```
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-readme-structure.sh
+```
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-readme-placeholders.sh
+```
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-readme-refs.sh
+```
 
 Parse each result as JSON. If any script exits non-zero, surface the error immediately and stop — do not attempt to continue with partial results.
 
 Collect all `findings` arrays. Tag each finding with its `check` field value.
 
-After collecting, emit: `Step 1 complete: N finding(s) from 4 scripts.` (where N is the total count across all four scripts)
+After collecting, emit: `Step 1 complete: N finding(s) from 7 scripts.` (where N is the total count across all seven scripts)
 
 ## Step 2: Semantic README and Docs Scan (Check 3 — inline)
 

@@ -63,6 +63,29 @@ principle-aligned solutions without requiring individual approval.
 ## SESSION STATE MODEL
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/session-state.md` for the complete design-review state model and invariants.
+
+Before beginning the first pass, initialize the state manager:
+```bash
+SESSION_ID=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/state-manager.sh init "<document-path>")
+```
+Use this session ID for all subsequent state-manager calls.
+
+Record findings during review:
+```bash
+echo '<finding-json>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/state-manager.sh record-finding "$SESSION_ID"
+```
+
+Before starting each new pass, run invariant validation:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/invariant-check.sh review "$SESSION_ID"
+```
+If violations are found, resolve them before proceeding.
+
+After resolving findings, check section churn:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/state-manager.sh get-section-status "$SESSION_ID"
+```
+Flag sections with modification_count >= 3 in consecutive passes as "High Churn".
 ---
 
 ## INITIALIZATION
@@ -664,6 +687,12 @@ DEFERRED FINDINGS LOG
 ## PAUSE, RESUME & EARLY EXIT
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/pause-resume.md` for the design-review pause snapshot format, continue/resume protocol, and early exit (finalize) protocol.
+
+On `pause` command, generate a snapshot:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/pause-snapshot.sh review "$SESSION_ID"
+```
+Present the snapshot output to the user.
 
 ---
 

@@ -13,21 +13,13 @@ Write a handoff file to `/mnt/share/instructions/` so work can be resumed on a d
 
 ### 1. Gather Context
 
-Collect the following from the current session:
-- The working directory (`pwd`)
-- The hostname (`hostname`)
-- Recent git state if in a repo (`git log --oneline -5`, `git status --short`, `git branch --show-current`)
-- The conversation context: what task was being worked on, what has been completed, what remains
-
-### 2. Generate Filename
-
-Format: `handoff-YYYY-MM-DD-HHMMSS.md`
+Run the context gathering script:
 
 ```bash
-date +"%Y-%m-%d-%H%M%S"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/gather-context.sh [--description "<user-provided-slug>"]
 ```
 
-If the user provided a description argument, slugify it and prepend: `description-YYYY-MM-DD-HHMMSS.md`
+Parse the JSON output. Use the git state and working directory as the machine context. The `filename` field provides the generated filename. Also use the conversation context: what task was being worked on, what has been completed, what remains.
 
 ### 3. Write the Handoff File
 

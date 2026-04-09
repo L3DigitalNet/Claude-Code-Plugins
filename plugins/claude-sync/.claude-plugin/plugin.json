@@ -1,6 +1,6 @@
 {
   "name": "claude-sync",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Synchronizes the Claude Code environment across multiple workstations. Two slash commands: /sync-export runs a full git sync on all repos, then captures settings, MCP servers, plugins, and CLAUDE.md files into a portable snapshot. /sync-import applies that snapshot on another machine and runs a full git sync, ensuring both machines are in parity.",
   "author": {
     "name": "L3 Digital",

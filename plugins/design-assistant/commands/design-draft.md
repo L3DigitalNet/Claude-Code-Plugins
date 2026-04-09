@@ -774,7 +774,13 @@ In both cases, record the stub marker as:
 **Pre-Phase-5 Coverage Sweep (mandatory — runs before Phase 4 completion
 check)**
 
-Before advancing to Phase 5, Claude sweeps all constraints, risks, and
+Before advancing to Phase 5, run the coverage sweep script to identify unmapped items:
+```bash
+echo '<combined-json>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/coverage-sweep.sh
+```
+The combined JSON should include `context` (constraints, risks, governance arrays), `sections` (with content_summary), and `open_questions`. If `ready_for_phase_5` is false, present blocking items.
+
+Claude then sweeps all constraints, risks, and
 governance requirements collected in answers[] and maps each to one of:
   (a) A confirmed section that will address it
   (b) An open question entry (OQ[N])

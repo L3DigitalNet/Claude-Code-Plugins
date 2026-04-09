@@ -4,6 +4,14 @@ All notable changes to the docs-manager plugin will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.3] - 2026-04-09
+
+### Added
+- `scripts/status-dashboard.sh` consolidating 5-6 individual health checks into a single script call
+
+### Changed
+- `commands/docs.md` status subcommand now uses status-dashboard.sh
+
 ## [0.2.2] - 2026-03-04
 
 ### Changed

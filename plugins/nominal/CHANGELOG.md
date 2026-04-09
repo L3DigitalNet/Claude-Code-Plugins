@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-04-09
+
+### Added
+- `scripts/_common.sh` shared utility library (Python detection, profile loading, SSH wrapping, tool detection, JSON output helpers)
+- `scripts/environment-discover.sh` replacing 10-15 individual system commands with a single script that outputs the full environment profile as JSON
+- `scripts/go-nogo-poll.sh` replacing 6-10 individual preflight checks with a single parameterized script
+- `scripts/domain-checker.sh` replacing 44-66 individual tool calls (4-6 per domain x 11 domains) with one call per domain
+- `scripts/flight-log.sh` for managing runs.jsonl (append, read, query) without manual JSON construction
+- `scripts/regression-sweep.sh` for lightweight post-fix-forward verification of key signals
+
+### Changed
+- `commands/preflight.md` Steps 1 and 5 now reference environment-discover.sh and go-nogo-poll.sh
+- `commands/postflight.md` Steps 3, 4, and 6 now reference domain-checker.sh, regression-sweep.sh, and flight-log.sh
+- `commands/abort.md` Steps 4 and 6 now reference go-nogo-poll.sh and flight-log.sh
+
 ## [1.0.0] - 2026-03-26
 
 ### Added

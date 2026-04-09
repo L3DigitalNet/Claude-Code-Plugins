@@ -29,8 +29,7 @@ Key principles:
 Gather what changed:
 
 ```bash
-git diff --stat HEAD~5 HEAD 2>/dev/null || git diff --stat
-git log --oneline -10
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh
 ```
 
 Combine with conversation history. Focus on the *strategic* impact: what was accomplished, what decisions were made, what changed in the project's landscape. Filter out implementation details.

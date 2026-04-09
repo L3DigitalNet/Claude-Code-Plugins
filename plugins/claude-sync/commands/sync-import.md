@@ -22,12 +22,15 @@ You are running the Claude Sync import. Your job is to read a snapshot from the 
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/config.md` for the configuration model.
 
-Read `~/.claude/CLAUDE.md` and look for the Claude Sync configuration block (between `<!-- claude-sync-config-start -->` and `<!-- claude-sync-config-end -->` markers).
+Load the Claude Sync configuration:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/config-block.sh read
+```
 
-**If no configuration block exists:** This is a first run. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 0 (first-run setup). Follow the first-run setup procedure in the config reference. Once configuration is saved, continue to Step 2.
+**If `block_found` is false:** This is a first run. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 0 (first-run setup). Follow the first-run setup procedure in the config reference. Once configuration is saved, continue to Step 2.
 
-**If configuration exists:** Parse the sync path, secret store path, repos root path, and exclude list. Store them for use in script calls:
-- `$sync_path`, `$repos_root`, `$exclude_list` (newline-separated string)
+**If `block_found` is true:** Use the parsed fields from the JSON output. Store them for use in script calls:
+- `$sync_path`, `$repos_root`, `$exclude_list` (from the exclude array)
 
 ### Step 2 — Parse snapshot and present preview
 

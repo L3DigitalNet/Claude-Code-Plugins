@@ -6,7 +6,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.5.0] - 2026-04-09
+
+### Added
+- `scripts/state-manager.sh` for persistent review session state (findings, sections, streaks, deferred log)
+- `scripts/invariant-check.sh` validating 7 review and 7 draft state invariants
+- `scripts/coverage-sweep.sh` for pre-Phase-5 constraint/risk/governance coverage checking
+- `scripts/pause-snapshot.sh` for serializing session state to markdown snapshots
+
+### Changed
+- `commands/design-review.md` now initializes state manager, records findings via scripts, and runs invariant checks at pass boundaries
+- `commands/design-draft.md` now runs coverage sweep script before Phase 5
 
 ## [0.4.0] - 2026-03-27
 

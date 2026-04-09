@@ -21,7 +21,13 @@ You are running the Nominal preflight sequence. Your job is to validate the envi
 
 Check if `.claude/nominal/environment.json` exists.
 
-**If it does NOT exist:** This is a first run. Print the Mission Survey header from the ux-templates reference (Template 1, first-run variant). Then read `${CLAUDE_PLUGIN_ROOT}/references/environment-profile.md` for the full discovery instructions and schema. Execute the full discovery pass described there. When discovery completes, present the Post-Discovery Confirmation (Template 0 from the environment-profile reference) via AskUserQuestion. Write the profile only after user confirmation.
+**If it does NOT exist:** This is a first run. Print the Mission Survey header from the ux-templates reference (Template 1, first-run variant). Run the environment discovery script:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/environment-discover.sh
+```
+
+Parse the JSON output. Read `${CLAUDE_PLUGIN_ROOT}/references/environment-profile.md` for the schema reference. Review and enrich the discovered profile (fill in roles, access tiers, dependencies, health endpoints for services). Present the Post-Discovery Confirmation (Template 0 from the environment-profile reference) via AskUserQuestion. Write the profile only after user confirmation.
 
 **If it DOES exist:** Read the profile. Check `_schema_version` against the current plugin version (1.0.0). If they differ, apply migrations as described in the environment-profile reference.
 
@@ -29,7 +35,13 @@ Check if `.claude/nominal/environment.json` exists.
 
 If the user invoked `/nominal:preflight refresh`:
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/environment-profile.md` for the discovery instructions. Execute a full re-discovery pass on the active environment. When complete, present the Refresh Confirmation (Template 0b from the environment-profile reference) showing a diff of what changed vs. the existing profile. Write the updated profile only after confirmation.
+Run the environment discovery script to perform a full re-discovery:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/environment-discover.sh
+```
+
+Read `${CLAUDE_PLUGIN_ROOT}/references/environment-profile.md` for the schema reference. Diff the fresh discovery output against the existing profile. Present the Refresh Confirmation (Template 0b from the environment-profile reference) showing what changed. Write the updated profile only after confirmation.
 
 If the refresh is confirmed, record a `preflight_refresh` entry in the flight log. Read `${CLAUDE_PLUGIN_ROOT}/references/flight-log.md` for the schema.
 
@@ -53,20 +65,17 @@ Domain 0 always resolves before preflight completes. If no rollback path can be 
 
 ### Step 5 — Run the go/no-go poll
 
-Perform a streamlined spot-check validation of the active environment:
+Run the go/no-go poll script:
 
-- Core hosts reachable (ping or equivalent)
-- Primary services running (check a sample from the services inventory)
-- Reverse proxy responding (if configured in profile)
-- Monitoring platform active (if configured)
-- Backup tooling present and last run within expected window (if configured)
-- Firewall active (if configured)
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/go-nogo-poll.sh .claude/nominal/environment.json
+```
 
-This is not a full systems check. It is a quick validation that the environment is in the expected state before work begins.
+Parse the JSON output. The script checks: hosts reachable, services running, reverse proxy responding, monitoring active, backup recent, firewall active. This is not a full systems check — it validates the environment is in the expected state before work begins.
 
-**If all checks pass:** Proceed to produce the Mission Brief.
+**If `all_passed` is true:** Proceed to produce the Mission Brief.
 
-**If a structural anomaly is detected:** Produce a HOLD signal. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for the HOLD variant of Template 1. Present options via AskUserQuestion: update parameters, investigate first, or override.
+**If any check has `status: "fail"`:** Produce a HOLD signal. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for the HOLD variant of Template 1. Present options via AskUserQuestion: update parameters, investigate first, or override.
 
 ### Step 6 — Produce the Mission Brief
 

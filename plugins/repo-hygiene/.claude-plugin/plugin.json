@@ -1,6 +1,6 @@
 {
   "name": "repo-hygiene",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Autonomous maintenance sweep for any git repository: validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests and README freshness.",
   "author": {
     "name": "L3DigitalNet",

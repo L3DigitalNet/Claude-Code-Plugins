@@ -16,8 +16,7 @@ Update all three documentation layers in sequence: Repo, then Wiki, then Notion.
 Gather the session's changes up front, since all three layers draw from the same context:
 
 ```bash
-git diff --stat HEAD~5 HEAD 2>/dev/null || git diff --stat
-git log --oneline -10
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh
 ```
 
 Combine with conversation history. Build a complete picture of what the session accomplished.

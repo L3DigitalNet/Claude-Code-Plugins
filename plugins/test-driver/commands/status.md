@@ -13,9 +13,13 @@ Display the current testing posture from the persistent status file without runn
 
 ## Step 1: Read Status File
 
-Read `docs/testing/TEST_STATUS.json`.
+Read the status file via script:
 
-If the file does not exist:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/test-status-update.sh read
+```
+
+If the output shows `last_analysis: null` or the file does not exist:
 > "No test status file found. Run `/test-driver:analyze` to create one."
 
 Stop here.

@@ -20,11 +20,14 @@ You are running the Claude Sync export. Your job is to sync all git repos with t
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/config.md` for the configuration model.
 
-Read `~/.claude/CLAUDE.md` and look for the Claude Sync configuration block (between `<!-- claude-sync-config-start -->` and `<!-- claude-sync-config-end -->` markers).
+Load the Claude Sync configuration:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/config-block.sh read
+```
 
-**If no configuration block exists:** This is a first run. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 0 (first-run setup). Follow the first-run setup procedure in the config reference. Once configuration is saved, continue to Step 2.
+**If `block_found` is false:** This is a first run. Read `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md` for Template 0 (first-run setup). Follow the first-run setup procedure in the config reference. Once configuration is saved, continue to Step 2.
 
-**If configuration exists:** Parse the sync path, secret store path, repos root path, and exclude list. Validate that the sync path exists and is writable. Validate that the repos root path exists. If validation fails, report the error and exit.
+**If `block_found` is true:** Use the parsed fields from the JSON output. Validate that the sync path exists and is writable. Validate that the repos root path exists. If validation fails, report the error and exit.
 
 Store the parsed values for use in script calls:
 - `$sync_path` — the sync path

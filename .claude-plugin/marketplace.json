@@ -20,7 +20,7 @@
     {
       "name": "github-repo-manager",
       "description": "Conversational GitHub repository maintenance \u2014 health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -53,7 +53,7 @@
     {
       "name": "design-assistant",
       "description": "Principled design document authoring and enforcement. /design-draft guides principles discovery and document generation. /design-review enforces principles across passes with auto-fix. Warm handoff transfers full context between commands.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -75,7 +75,7 @@
     {
       "name": "docs-manager",
       "description": "Documentation lifecycle management \u2014 detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -85,8 +85,8 @@
     },
     {
       "name": "repo-hygiene",
-      "description": "Autonomous maintenance sweep for any git repository: validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests and README freshness.",
-      "version": "1.2.0",
+      "description": "Autonomous maintenance sweep for any git repository: validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests, README structure, placeholder detection, and reference integrity.",
+      "version": "1.3.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -130,7 +130,7 @@
     {
       "name": "test-driver",
       "description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -142,7 +142,7 @@
     {
       "name": "nominal",
       "description": "Structured verification routine for infrastructure changes. Three slash commands enforce a session contract: /preflight validates the environment, /postflight runs 11 verification systems, /abort executes a confirmed rollback.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -153,7 +153,7 @@
     {
       "name": "up-docs",
       "description": "Update documentation across three layers (repo, Outline wiki, Notion) from session context. Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -164,7 +164,7 @@
     {
       "name": "handoff",
       "description": "Save and load task context across machines via a shared network drive. Two commands for cross-machine continuity during infrastructure work.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
@@ -175,7 +175,7 @@
     {
       "name": "claude-sync",
       "description": "Synchronizes the Claude Code environment across multiple workstations. Two slash commands: /sync-export captures settings, MCP servers, plugins, and CLAUDE.md into a portable snapshot after syncing git repos. /sync-import applies the snapshot and syncs repos on the receiving machine.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"

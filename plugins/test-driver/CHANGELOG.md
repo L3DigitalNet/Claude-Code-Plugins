@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.0] - 2026-04-09
+
+### Added
+- `scripts/detect-project.sh` for project type detection with marker file scanning and sub-classification
+- `scripts/inventory-sources.sh` for source file discovery with approximate function counting
+- `scripts/inventory-tests.sh` for test file discovery with category classification and test counting
+- `scripts/git-function-changes.sh` for extracting changed function signatures from git history
+- `scripts/test-status-update.sh` for atomic read-merge-write of TEST_STATUS.json
+
+### Changed
+- `commands/analyze.md` Steps 1-3 and 5 now reference scripts for detection, inventory, and status updates
+- `commands/status.md` Step 1 now reads status via script
+
 ## [0.5.0] - 2026-04-08
 
 ### Added

@@ -22,6 +22,14 @@ Four sequential phases, each running in a convergence loop:
 
 Each phase converges independently before the next begins. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/convergence-tracking.md` for the iteration mechanics.
 
+## Setup
+
+Before starting any phase, gather session context and initialize convergence tracking:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh init
+```
+
 ## Phase 1: Infrastructure → Wiki Sync
 
 ### Discovery
@@ -52,13 +60,11 @@ For each documented service/server page in the inventory:
    - Dependencies (upstream/downstream)
    - Documented procedures and commands
 
-2. **SSH into the relevant server** and gather actual state. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/server-inspection.md` for inspection patterns by service type. The general pattern:
-
+2. **Inspect the server** using the batched inspection script:
    ```bash
-   ssh <hostname> "<inspection-command>"
+   bash ${CLAUDE_PLUGIN_ROOT}/scripts/server-inspect.sh <hostname> <service-type> --config-paths <paths>
    ```
-
-   Match inspection commands to what the page documents. If the page describes nginx configuration, inspect nginx. If it describes Docker containers, inspect Docker.
+   Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/server-inspection.md` for service type selection guidance. The script batches all SSH commands into a single session, returning structured JSON with system info, service status, config files, and listening ports.
 
 3. **Compare** documented state against actual state. Categorize each discrepancy:
    - **Factual drift**: version numbers, ports, paths, config values that have changed
@@ -67,7 +73,13 @@ For each documented service/server page in the inventory:
 
 4. **Update the wiki page** with corrections. Preserve existing structure and tone. For missing documentation, add new sections following the page's existing conventions. For stale content, remove or mark as deprecated.
 
-Track per iteration: `pages_checked`, `discrepancies_found`, `pages_updated`.
+After each iteration, record findings and check convergence:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh start-phase 1
+echo '<findings-json>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh record-iteration 1
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh check-convergence 1
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh check-oscillation 1
+```
 
 **Convergence**: A pass with zero discrepancies across all pages. If a pass finds discrepancies, apply fixes and re-check only the affected pages on the next pass.
 
@@ -119,10 +131,11 @@ For each wiki page in scope:
    - Inter-wiki links (links to other Outline pages)
    - Internal anchors
 
-2. **Verify external URLs** using WebFetch. Classify each as:
-   - Live (2xx, 3xx)
-   - Dead (4xx, 5xx, timeout, DNS failure)
-   - Redirected (note new URL)
+2. **Verify external URLs** using the link audit script:
+   ```bash
+   echo '<page-markdown>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/link-audit.sh - --timeout 10
+   ```
+   The script classifies each link as live, dead, redirected, timed out, or rate-limited. For internal links marked `needs_verification`, check via MCP.
 
 3. **Verify inter-wiki links** using `get_document_id_from_title` or `read_document`. Check each linked page exists and the link target is correct.
 

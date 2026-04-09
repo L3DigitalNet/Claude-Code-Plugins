@@ -18,10 +18,10 @@ If a filename argument was provided, read that file directly from `/mnt/share/in
 If no argument was provided, find the most recent handoff file:
 
 ```bash
-ls -t /mnt/share/instructions/*.md 2>/dev/null | head -1
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/find-latest-handoff.sh
 ```
 
-If the directory is empty or doesn't exist, report that no handoff files were found and stop.
+If `found` is false, report that no handoff files were found and stop. If `found` is true, use the `path` field to read the full file.
 
 ### 2. Read and Present
 

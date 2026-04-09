@@ -56,35 +56,30 @@ If the user provides `/docs queue clear` without a reason, ask for one via `AskU
 
 Operational and library health dashboard.
 
-**Operational Health** — gather:
-- Config: check `~/.docs-manager/config.yaml` exists and is valid YAML
-- Hooks: read timestamps from `~/.docs-manager/hooks/*.last-fired`, report age
-- Queue: validate `queue.json` is parseable, report item count
-- Lock: check if `~/.docs-manager/index.lock` exists (stale lock warning)
-- Fallback: check if `queue.fallback.json` exists (pending merge warning)
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/status-dashboard.sh
+```
 
-**Library Health** — gather from `docs-index.json` if it exists:
-- Count total registered documents
-- Count documents missing recommended fields (source-files, upstream-url)
-- Count overdue verification items (last-verified > 90 days ago)
-- Count pending queue items
-
-Format output:
+Format the JSON output:
 ```
 Operational Health
-  Config:    ✓ loaded
-  Hooks:     PostToolUse (2m ago) | Stop (last session)
-  Queue:     3 pending items
-  Lock:      none
-  Fallback:  none
+  Config:    ✓ loaded ({index_type})
+  Hooks:     PostToolUse ({age} ago) | Stop ({age} ago)
+  Queue:     {item_count} pending items
+  Lock:      {none | stale (age) | active}
+  Fallback:  {none | pending merge}
 
 Library Health
-  Documents: 12 registered (3 libraries)
-  Missing:   2 without upstream-url, 1 without source-files
-  Overdue:   1 verification overdue (>90 days)
+  Documents: {total} registered ({library_count} libraries)
+  Missing:   {n} without upstream-url, {n} without source-files
+  Overdue:   {n} verification overdue (>90 days)
 ```
 
-With `--test` flag: run all operational checks and report pass/fail for each.
+With `--test` flag:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/status-dashboard.sh --test
+```
+Report each test as pass/fail from the `tests` array in the JSON output.
 
 ## hook status
 

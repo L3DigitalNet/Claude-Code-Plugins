@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-04-09
+
+### Added
+- `scripts/config-block.sh` for reading, writing, and validating the claude-sync config block in CLAUDE.md
+- `scripts/apply-snapshot.sh` for applying snapshot files by category with mtime-based conflict resolution
+
+### Changed
+- `commands/sync-import.md` Steps 1 and 5 now use config-block.sh and apply-snapshot.sh
+- `commands/sync-export.md` Step 1 now uses config-block.sh
+
 ## [1.0.0] - 2026-04-07
 
 ### Added

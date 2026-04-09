@@ -33,8 +33,7 @@ Do not write in the wiki:
 Gather what changed:
 
 ```bash
-git diff --stat HEAD~5 HEAD 2>/dev/null || git diff --stat
-git log --oneline -10
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh
 ```
 
 Combine with conversation history to build a picture of what the session accomplished: services configured, code written, bugs fixed, infrastructure changed.

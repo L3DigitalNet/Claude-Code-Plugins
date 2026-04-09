@@ -16,8 +16,7 @@ Update the active repository's documentation files to reflect work done in the c
 Gather what changed during the session:
 
 ```bash
-git diff --stat HEAD~5 HEAD 2>/dev/null || git diff --stat
-git log --oneline -10
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh
 ```
 
 Also consider the conversation history: files discussed, features implemented, bugs fixed, configuration changes made. Build a mental model of what the session accomplished.

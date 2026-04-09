@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] - 2026-04-09
+
+### Added
+- `scripts/context-gather.sh` consolidating git context assessment for all 5 skills
+- `scripts/server-inspect.sh` batching 5-15 SSH commands per host into a single session
+- `scripts/link-audit.sh` for markdown link extraction and verification
+- `scripts/convergence-tracker.sh` for managing iteration state across drift analysis phases
+
+### Changed
+- All 5 skill files (repo, wiki, notion, all, drift) now use context-gather.sh for session context
+- `skills/drift/SKILL.md` Phase 1 uses server-inspect.sh and convergence-tracker.sh
+- `skills/drift/SKILL.md` Phase 3 uses link-audit.sh for external link verification
+
 ## [0.2.0] - 2026-03-28
 
 ### Added

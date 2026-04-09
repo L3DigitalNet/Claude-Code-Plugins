@@ -21,27 +21,45 @@ Run a full test gap analysis on the current project. Optionally enter a converge
 Read `${CLAUDE_PLUGIN_ROOT}/references/gap-analysis.md` for the full detection methodology.
 
 1. If an argument was provided (e.g., `/test-driver:analyze src/api/`), scope the analysis to that directory.
-2. Scan for marker files to detect the project type.
-3. Load the matching stack profile from `${CLAUDE_PLUGIN_ROOT}/references/profiles/`.
-4. If no profile matches, offer to create one (see gap-analysis reference, "No Profile Match" section).
+2. Detect the project type:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-project.sh [scope-arg]
+```
+3. Parse the JSON. Load the matching profile from `${CLAUDE_PLUGIN_ROOT}/references/profiles/<profile>`.
+4. If confidence is "low" or profile is null, offer to create one (see gap-analysis reference, "No Profile Match" section).
 
 ## Step 2: Read Prior State
 
-Check if `docs/testing/TEST_STATUS.json` exists:
-- If present: read it. Note last analysis date, known gaps, current coverage. Read `${CLAUDE_PLUGIN_ROOT}/references/test-status.md` for schema details.
-- If missing: this is the first analysis. The file will be created at the end.
+Read prior state:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/test-status-update.sh read
+```
+If output shows `last_analysis: null`, this is the first analysis. Read `${CLAUDE_PLUGIN_ROOT}/references/test-status.md` for schema details.
 
 ## Step 3: Run Gap Analysis
 
 Follow the full gap-analysis methodology (from the gap-analysis reference):
 
-1. Determine applicable test categories from the stack profile
-2. Inventory existing tests (Glob for test files, categorize by type)
-3. Inventory source files, then **read each one** to enumerate functions and behaviors
-4. Map coverage (behavioral: which functions and code paths have corresponding tests)
-5. Identify and prioritize gaps — one gap per untested function/behavior, not per file
+1. Inventory source files:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/inventory-sources.sh <project-type> [scope]
+```
 
-**opus-context alignment:** Read source files fully (no offset/limit for files under 4000 lines). Read test files in parallel batches. The function-level enumeration in step 3 is the foundation of accurate gap detection — skipping it collapses the analysis to file-level mapping, which dramatically under-reports gaps.
+2. Inventory test files:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/inventory-tests.sh <project-type> [scope]
+```
+
+3. Check for recent changes (if prior state exists):
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/git-function-changes.sh <last-analysis-date> [scope]
+```
+
+4. **Read each source file** to enumerate functions and behaviors (this step stays with Claude — function-level behavioral enumeration requires reading code and understanding intent).
+
+5. Map coverage by comparing source inventory functions against test inventory. Priority-boost functions from git-function-changes output. Identify and prioritize gaps — one gap per untested function/behavior, not per file.
+
+**opus-context alignment:** Read source files fully (no offset/limit for files under 4000 lines). The function-level enumeration in step 4 is the foundation of accurate gap detection — skipping it collapses the analysis to file-level mapping, which dramatically under-reports gaps.
 
 ## Step 4: Present Results and Offer Convergence
 
@@ -51,5 +69,8 @@ If gaps were found, present results using Template 1 (Gap Analysis Report) from 
 
 After the convergence loop completes (or if the user chose "Record gaps only"):
 
-1. Update `docs/testing/TEST_STATUS.json` per the test-status reference's update rules.
+1. Pipe the updated status JSON to the update script:
+```bash
+echo '<merged-json>' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/test-status-update.sh update
+```
 2. Present a compact summary: gaps found, gaps filled, gaps deferred, coverage status, any source bugs fixed.
