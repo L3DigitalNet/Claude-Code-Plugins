@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.1.0] - 2026-04-09
 
 ### Added
+- add script-backed verification (6 scripts, 2031 lines)
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+
+## [1.1.0] - 2026-04-09
+
+### Added
 - `scripts/_common.sh` shared utility library (Python detection, profile loading, SSH wrapping, tool detection, JSON output helpers)
 - `scripts/environment-discover.sh` replacing 10-15 individual system commands with a single script that outputs the full environment profile as JSON
 - `scripts/go-nogo-poll.sh` replacing 6-10 individual preflight checks with a single parameterized script
