@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.1.0] - 2026-04-09
 
 ### Added
+- add scripts for context gathering, config management, and status dashboards
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+### Fixed
+- apply auto-fixes from /hygiene sweep
+
+
+## [1.1.0] - 2026-04-09
+
+### Added
 - `scripts/config-block.sh` for reading, writing, and validating the claude-sync config block in CLAUDE.md
 - `scripts/apply-snapshot.sh` for applying snapshot files by category with mtime-based conflict resolution
 
