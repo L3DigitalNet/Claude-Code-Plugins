@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.6.0] - 2026-04-09
 
 ### Added
+- add 5 scripts for project detection, file inventory, and status management
+
+### Changed
+- pass 3 — close remaining gaps, 293 total tests across 9 plugins
+- close gap analysis findings, 247 total tests across 9 plugins
+- add 166 bats tests across 9 plugins for new scripts
+
+
+## [0.6.0] - 2026-04-09
+
+### Added
 - `scripts/detect-project.sh` for project type detection with marker file scanning and sub-classification
 - `scripts/inventory-sources.sh` for source file discovery with approximate function counting
 - `scripts/inventory-tests.sh` for test file discovery with category classification and test counting
