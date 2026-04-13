@@ -1,7 +1,7 @@
 {
   "name": "qdev",
-  "version": "1.0.0",
-  "description": "Quality review and spec sync for the development lifecycle. /quality-review audits spec, plan, and code artifacts against current best practices and fixes issues to convergence. /spec-update brings a spec file in sync with the current implementation.",
+  "version": "1.1.0",
+  "description": "Development quality toolkit: /research sweeps docs, practices, and footguns before you build; /quality-review audits artifacts and iterates to convergence; /spec-update keeps your spec in sync with the current implementation.",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"
