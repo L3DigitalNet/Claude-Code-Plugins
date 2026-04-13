@@ -4,7 +4,7 @@ Quality review and spec sync for every stage of the development lifecycle.
 
 ## Summary
 
-Writing a spec, planning an implementation, or reviewing code all have different quality criteria but the same enemy: making decisions with stale or incorrect knowledge. `qdev` addresses this by running comprehensive web research before any analysis, so findings are grounded in current official docs, known CVEs, and live community standards rather than training data. The `/quality-review` command iterates until it finds nothing left to fix. `/spec-update` handles the other direction: keeping your spec in sync with what you actually built.
+Writing a spec, planning an implementation, or reviewing code all have different quality criteria but the same enemy: making decisions with stale or incorrect knowledge. `qdev` addresses this by running dual-source web research before any analysis, so findings are grounded in current official docs, known CVEs, and live community standards rather than training data. The `/quality-review` command iterates until it finds nothing left to fix. `/spec-update` handles the other direction: keeping your spec in sync with what you actually built.
 
 ## Principles
 
@@ -53,6 +53,24 @@ flowchart TD
     J -->|Yes| K["Convergence declaration"]
 ```
 
+## Usage
+
+Invoke at any stage of a development project. Pass a path to target a specific file, or run without arguments to let the command detect the most relevant artifact in the working directory.
+
+```bash
+# Review a spec file
+/qdev:quality-review docs/superpowers/specs/my-feature-design.md
+
+# Review an implementation plan
+/qdev:quality-review docs/superpowers/plans/my-feature-plan.md
+
+# Review source code (auto-detects from working directory)
+/qdev:quality-review
+
+# Sync a spec with the current implementation
+/qdev:spec-update docs/superpowers/specs/my-feature-design.md
+```
+
 ## Commands
 
 | Command | Description |
@@ -85,5 +103,5 @@ None.
 
 ## Links
 
-- [Design spec](../../docs/superpowers/specs/2026-04-13-qdev-design.md)
+- [Design spec](https://github.com/L3DigitalNet/Claude-Code-Plugins/blob/main/docs/superpowers/specs/2026-04-13-qdev-design.md)
 - [Source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev)
