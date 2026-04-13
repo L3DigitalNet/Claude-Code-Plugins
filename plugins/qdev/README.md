@@ -4,7 +4,7 @@ Quality review and spec sync for every stage of the development lifecycle.
 
 ## Summary
 
-Writing a spec, planning an implementation, or reviewing code all have different quality criteria but the same enemy: making decisions with stale or incorrect knowledge. `qdev` addresses this at every stage. `/research` runs a structured dual-source sweep before you design or build, grounding your decisions in current official docs, live community standards, and known CVEs. `/quality-review` iterates until it finds nothing left to fix. `/spec-update` keeps your spec in sync with what you actually built.
+Writing a spec, planning an implementation, or reviewing code all have different quality criteria but the same enemy: making decisions with stale or incorrect knowledge. `qdev` addresses this at every stage. `/research` runs a structured dual-source sweep before you design or build. `/quality-review` iterates until it finds nothing left to fix. `/deps-audit` checks every package manifest against current CVE databases and version registries. `/doc-sync` keeps inline documentation aligned with actual function signatures. `/spec-update` keeps your design spec in sync with what you actually built.
 
 ## Principles
 
@@ -81,6 +81,18 @@ Invoke at any stage of a development project. Pass a path to target a specific f
 # Review source code (auto-detects from working directory)
 /qdev:quality-review
 
+# Audit all dependencies for CVEs and version lag
+/qdev:deps-audit
+
+# Audit dependencies in a specific subdirectory
+/qdev:deps-audit services/api
+
+# Sync inline docs for a single file
+/qdev:doc-sync src/auth/tokens.py
+
+# Sync inline docs across the whole project
+/qdev:doc-sync
+
 # Sync a spec with the current implementation
 /qdev:spec-update docs/superpowers/specs/my-feature-design.md
 ```
@@ -91,6 +103,8 @@ Invoke at any stage of a development project. Pass a path to target a specific f
 |---------|-------------|
 | `/qdev:research` | Dual-source research sweep covering docs, practices, footguns, and existing tools |
 | `/qdev:quality-review` | Research-first iterative quality review until convergence |
+| `/qdev:deps-audit` | Dependency security and freshness audit across all package manifests |
+| `/qdev:doc-sync` | Sync inline documentation with current function signatures and behavior |
 | `/qdev:spec-update` | One-shot sync of a spec file to match current implementation |
 
 ### `/qdev:research [topic]`
@@ -116,6 +130,14 @@ Runs a research-first quality review on a spec, implementation plan, or source c
 - **Code**: anti-patterns, naming consistency, dead code, cross-file inconsistencies, error handling at boundaries
 
 **Loop:** Each pass auto-fixes low-risk issues and surfaces structural or ecosystem findings for approval. Runs until a full pass produces zero new findings.
+
+### `/qdev:deps-audit [directory]`
+
+Reads every package manifest in the project (`package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`, `Cargo.toml`, and others), researches each dependency for CVEs, abandonment, and version lag using both search tools, and returns a prioritized report grouped by severity (Critical, High, Medium, Info). For Critical and High findings, optionally generates the exact upgrade commands for each affected package.
+
+### `/qdev:doc-sync [path]`
+
+Finds public functions, methods, and classes with no doc comment and documented ones whose signatures have drifted, generates complete documentation in the style already used by the codebase (Google-style Python docstrings, JSDoc, Go doc comments, etc.), and proposes all changes before writing anything. Handles `ADD` and `UPDATE` operations; never rewrites the function body.
 
 ### `/qdev:spec-update [spec-path]`
 
