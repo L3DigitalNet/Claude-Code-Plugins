@@ -4,7 +4,6 @@ description: One-shot sync that brings a spec or design document up to date with
 argument-hint: "[optional: path to spec/design file]"
 allowed-tools:
   - Read
-  - Write
   - Edit
   - Glob
   - Grep
@@ -25,7 +24,7 @@ Otherwise, search for spec candidates:
 find . -maxdepth 3 -name "*.md" -not -path "*/.git/*" | xargs grep -l "" 2>/dev/null | sort
 ```
 
-Filter to files whose name contains `spec`, `design`, or `architecture`. If multiple candidates exist, use `AskUserQuestion` to present them as bounded choices (up to 4). If no candidates are found, report:
+Filter to files whose **filename** (not directory path) contains `spec`, `design`, or `architecture`. For example, `docs/superpowers/specs/my-spec.md` qualifies; `spec-output/notes.md` does not (the keyword is in the directory name, not the filename). If multiple candidates exist, use `AskUserQuestion` to present them as bounded choices (up to 4). If no candidates are found, report:
 
 ```
 No spec file found. Provide the path explicitly:
@@ -45,7 +44,7 @@ find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" -
   -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/__pycache__/*" | sort
 ```
 
-Also read any `CHANGELOG.md` and files under `docs/` if present.
+Read `CHANGELOG.md` if it exists at the project root. Read all files under `docs/` if the directory exists.
 
 Compare the spec against the full implementation. Identify:
 
@@ -80,6 +79,8 @@ Otherwise, use `AskUserQuestion`:
   2. label: `"Review each one"`, description: `"Approve or skip each change individually"`
   3. label: `"Cancel"`, description: `"Make no changes"`
 
+If `"Cancel"` is chosen, emit `No changes made.` and stop.
+
 For `"Review each one"`, present each proposed change with `AskUserQuestion`:
 - header: `"Change [N/Total]"`
 - question: `"[ADD | UPDATE | REMOVE] <section>\n\n<what changes and why>"`
@@ -89,10 +90,12 @@ For `"Review each one"`, present each proposed change with `AskUserQuestion`:
 
 ## Step 4: Apply and Summarize
 
-Apply all approved changes using the `Edit` tool. Use targeted edits: change only the specific section identified in Step 3. Never rewrite the entire file.
+Apply all approved changes using the `Edit` tool. "Approved" means the user selected `Apply` for that change in the per-item review, or all changes when `Approve all` was chosen. Changes where the user selected `Skip` are not applied. Use targeted edits: change only the specific section identified in Step 3. Never rewrite the entire file.
 
 After all edits are applied, emit:
 
 ```
 Spec updated: N additions, N modifications, N removals.
 ```
+
+If no changes were approved (all were skipped or the session produced zero approvals), emit `No changes applied.` instead of the summary and stop.
