@@ -26,7 +26,7 @@ If `$ARGUMENTS` is provided, use it as the target path.
 Otherwise, scan the working directory:
 
 ```bash
-find . -maxdepth 3 \( -name "*.md" -o -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" -o -name "*.rs" -o -name "*.sh" \) -not -path "*/.git/*" -not -path "*/node_modules/*" | sort
+find . -maxdepth 3 \( -name "*.md" -o -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" -o -name "*.rs" -o -name "*.sh" -o -name "*.rb" -o -name "*.java" -o -name "*.cpp" \) -not -path "*/.git/*" -not -path "*/node_modules/*" | sort
 ```
 
 Apply this priority order to identify mode:
@@ -47,14 +47,16 @@ Mode:   <spec | plan | code>
 
 Extract every dependency, library, API, framework, protocol, and external tool referenced in the target artifact. For source code, also extract version pins from any lock files, `requirements.txt`, `package.json`, `go.mod`, `pyproject.toml`, or equivalent present in the project.
 
-For each identified dependency or technology, query **both** `mcp__brave-search__brave_web_search` and `mcp__serper-search__google_search` with 10+ results each. Cover:
+If no dependencies or external technologies are identified (e.g., a pure prose spec with no tool references), skip the per-dependency search queries and proceed directly to Step 3 with an empty research context.
+
+For each identified dependency or technology, query **both** `mcp__brave-search__brave_web_search` and `mcp__serper-search__google_search` with 10+ results each. If a dependency has no pinned version (e.g., listed without a version constraint), research the latest stable release as the version likely in use. Cover:
 
 - **Current official docs**: latest API signatures, configuration options, behavioral changes, deprecations since the version in use
 - **Known bugs and CVEs**: open issues, security advisories, version-specific defects relevant to this codebase
 - **Community best practices**: patterns the ecosystem currently recommends or has deprecated
 - **Common pitfalls**: known footguns, gotchas, version compatibility issues
 
-Compile a **research context** — a structured list of findings grouped by dependency — that will inform all analysis in Step 3.
+Compile a **research context**: a structured list of findings grouped by dependency that will inform all analysis in Step 3.
 
 After compiling, scan the research context for critical findings:
 - Known CVE in a dependency version currently in use
@@ -90,15 +92,15 @@ Read the target artifact(s) in full. Analyze against the research context from S
 **Spec mode checks:**
 - **Completeness**: every feature or behavior mentioned anywhere in the spec has its own section with sufficient detail to implement
 - **Internal consistency**: no two sections describe the same behavior differently
-- **Unambiguous requirements**: flag every "should", "might", "could", "may" — these are weak requirements that cause implementation drift; replace with "must" or remove
+- **Unambiguous requirements**: flag every "should", "might", "could", "may" (these are weak requirements that cause implementation drift); replace with "must" or remove
 - **Scope gaps**: behaviors implied by the spec but not explicitly specified (e.g., error states mentioned but not described, edge cases acknowledged but not handled)
-- **Term consistency**: defined terms used consistently throughout — no synonyms for the same concept
+- **Term consistency**: defined terms used consistently throughout (no synonyms for the same concept)
 
 **Plan mode checks:**
 - **Spec coverage**: every requirement in the referenced spec has at least one plan step that implements it
 - **Sequencing**: no step depends on an output that a later step produces; no circular dependencies
 - **Missing dependencies**: a step uses a function, file, type, or schema that is defined in a step not listed as a prerequisite
-- **Estimability**: each step describes a concrete action — "implement X" without showing how is a gap
+- **Estimability**: each step describes a concrete action; "implement X" without showing how is a gap
 
 **Code mode checks:**
 - **Anti-patterns**: patterns the research context flags as deprecated or problematic for this language/framework
@@ -131,7 +133,7 @@ Classify all findings into two buckets:
 - Resolving an ambiguity that requires making a design choice
 - Dependency upgrade, patch, or removal decisions
 - All research-originated findings: `[OUTDATED]`, `[VULNERABLE]`, `[BEST-PRACTICE]`, `[DOCS-MISMATCH]`
-- Removing code — confirm before deleting even dead code
+- Removing code: confirm before deleting even dead code
 
 ### 3d. Apply Auto-fixes
 
@@ -149,26 +151,28 @@ For each needs-approval finding, use `AskUserQuestion`:
   3. label: `"Defer"`, description: `"Skip for now, reconsider on the next pass"`
   4. label: `"Skip permanently"`, description: `"Do not raise this finding again"`
 
-For `"Apply with modifications"`: ask a follow-up open-ended question for the modification, then apply.
+For `"Apply with modifications"`: ask a follow-up open-ended question for the modification, then apply the modified version and close the finding. If the user's modification changes the scope significantly enough that it introduces a new design decision, surface that as a separate finding on the next pass rather than resolving it inline.
 
 ### 3f. Pass Summary
 
 After all findings in the pass are resolved, emit:
 
 ```
-Pass N complete: N found / N auto-fixed / N approved / N deferred / N skipped
+Pass N complete: N found / N auto-fixed / N approved / N deferred / N skipped-permanently
 ```
 
 ### 3g. Convergence Check
 
-If this pass produced **zero new findings** (deferred items are excluded from this count): proceed to the Convergence Declaration.
+If this pass produced **zero new findings** (deferred items and permanently-skipped finding types are excluded from this count): proceed to the Convergence Declaration.
+
+When re-running 3a on subsequent passes, do not re-raise findings whose type and location match a previously "Skip permanently" decision.
 
 Otherwise, begin Pass N+1. Deferred items from prior passes are re-evaluated in 3a of every subsequent pass. They are never silently dropped.
 
 ## Convergence Declaration
 
 ```
-✓ Quality review complete — N passes, N total fixes applied.
+✓ Quality review complete. N passes, N total fixes applied.
 Deferred: N items
 ```
 
