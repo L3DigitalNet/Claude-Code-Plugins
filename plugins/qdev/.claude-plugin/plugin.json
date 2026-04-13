@@ -1,0 +1,10 @@
+{
+  "name": "qdev",
+  "version": "1.0.0",
+  "description": "Quality review and spec sync for the development lifecycle. /quality-review audits spec, plan, and code artifacts against current best practices and fixes issues to convergence. /spec-update brings a spec file in sync with the current implementation.",
+  "author": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  },
+  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
+}
