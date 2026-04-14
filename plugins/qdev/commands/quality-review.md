@@ -120,20 +120,26 @@ Do not propose fixes based on training knowledge alone when a live source can be
 
 ### 3c. Finding Classification
 
-Classify all findings into two buckets:
+Classify each finding using a single test:
 
-**Auto-fixable** (apply silently, count in pass summary):
-- Formatting issues (whitespace, punctuation)
-- Broken internal cross-references (a section referenced by name that was renamed)
-- Minor phrasing gaps where only one correct answer exists and no design decision is required
-- Missing punctuation or structural whitespace in documents
+> **"Could a competent developer apply this fix confidently, without asking the author, and be correct every time?"**
 
-**Needs-approval** (present to user one at a time):
-- Anything that changes the intent of a requirement or step
-- Resolving an ambiguity that requires making a design choice
-- Dependency upgrade, patch, or removal decisions
+**Auto-fixable** (apply silently, count in pass summary) — the fix satisfies ALL of the following:
+1. Exactly one correct fix exists — no design decision is required to choose it
+2. Does not change the intent of a requirement, step, or algorithm
+3. Does not involve an external dependency action (upgrade, patch, removal)
+4. Does not remove non-trivial logic or functionality
+
+This covers: formatting, punctuation, structural whitespace; broken internal cross-references; weak requirement words ("should", "might", "could", "may") → "must" when the intended behavior is unambiguous from context; term inconsistency where the defined term is established elsewhere in the artifact; naming convention violations where the established convention is unambiguous from surrounding code; dead imports or variables that have no effect on behavior; GAP findings where the correct behavior is fully derivable from other parts of the artifact; missing error handling where an identical handling pattern already exists in the same file and can be directly applied.
+
+**Needs-approval** (non-obvious — surface to user one at a time) — the fix fails any of the above criteria. Specifically:
+- Resolving an ambiguity where multiple valid interpretations exist
+- Any change that alters the intent or semantics of a requirement or step
+- GAP findings where the correct behavior cannot be inferred from existing content
 - All research-originated findings: `[OUTDATED]`, `[VULNERABLE]`, `[BEST-PRACTICE]`, `[DOCS-MISMATCH]`
-- Removing code: confirm before deleting even dead code
+- Removing non-trivial logic or functionality (not just dead imports/variables)
+- Dependency actions (upgrade, patch, replace, remove)
+- Structural changes to functions or modules requiring architectural judgment
 
 ### 3d. Apply Auto-fixes
 
