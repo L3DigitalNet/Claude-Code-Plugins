@@ -129,7 +129,7 @@ Runs a research-first quality review on a spec, implementation plan, or source c
 - **Plan**: spec coverage, sequencing, missing dependencies, estimability
 - **Code**: anti-patterns, naming consistency, dead code, cross-file inconsistencies, error handling at boundaries
 
-**Loop:** Each pass auto-fixes low-risk issues and surfaces structural or ecosystem findings for approval. Runs until a full pass produces zero new findings.
+**Loop:** Each pass auto-fixes findings where exactly one correct solution exists (derivable gaps, naming violations, weak requirement words, dead imports). Non-obvious findings — where multiple valid interpretations exist, or a design decision is required — surface for approval. Runs until a full pass produces zero new findings.
 
 ### `/qdev:deps-audit [directory]`
 

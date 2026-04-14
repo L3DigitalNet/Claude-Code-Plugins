@@ -1,6 +1,6 @@
 {
   "name": "qdev",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Development quality toolkit: /research sweeps before you build; /quality-review iterates to convergence; /deps-audit checks manifests for CVEs; /doc-sync keeps inline docs aligned; /spec-update syncs spec to code.",
   "author": {
     "name": "L3DigitalNet",
