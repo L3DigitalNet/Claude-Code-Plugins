@@ -1,5 +1,12 @@
 # Codex Instructions
 
+**Session handoff:** [`docs/handoff.md`](docs/handoff.md) — read this first. Current deployed state, remaining work, bugs log,
+architecture, credentials, and gotchas.
+
+**Full conventions reference:** [`docs/conventions.md`](docs/conventions.md) — LLM-targeted pattern library. Every convention follows
+the six-field schema (Applies-when / Rule / Code / Why / Sources / Related) with a Quick Reference table at the top for O(1) lookup. Do
+not introduce new patterns without checking conventions first.
+
 ## Codex Code Review
 
 - For comprehensive repo reviews, save reports to `docs/code-reviews/` as new timestamped Markdown files.

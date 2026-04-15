@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+**Session handoff:** [`docs/handoff.md`](docs/handoff.md) — read this first. Current deployed state, remaining work, bugs log, architecture, credentials, and gotchas.
+
+**Full conventions reference:** [`docs/conventions.md`](docs/conventions.md) — LLM-targeted pattern library. Every convention follows the six-field schema (Applies-when / Rule / Code / Why / Sources / Related) with a Quick Reference table at the top for O(1) lookup. Do not introduce new patterns without checking conventions first.
+
 ## Repository Purpose
 
 Claude Code plugin marketplace and development workspace. `main` distributes to users; `testing` is where all development happens. GitHub blocks direct pushes to `main`.
