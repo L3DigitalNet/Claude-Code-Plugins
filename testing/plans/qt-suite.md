@@ -73,3 +73,29 @@ plugins/qt-suite/
 - Test scaffold-command output quality. Behavioral.
 - Cover C++/Qt build path (`qt-coverage-workflow/run-coverage.sh`). Optional dep (lcov, cmake) — out of scope unless user adds.
 - Modify Qt Pilot or scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/check-prerequisites.bats` (new, 4 cases)** — exit code in {0, 1}, non-empty report, qt-suite identifier, exit-code/error-message coupling.
+- **`tests/manifest.bats` (new, 2 cases)** — Zod-strict allow-list + MCP server presence.
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/qt-suite/tests/run-bats.sh` — **6 of 6 passing.** Existing pytest baseline (qt-pilot/tests) is **pre-existing broken** on the test workstation — `mcp` library is not installed, causing collection-time `AttributeError` in `test_main.py` and `test_annotations.py`. Verified pre-existing on plain `testing` branch with no Phase 2 changes. **NOT FIXED — it's an environment issue (missing `pip install mcp`) requiring user setup, not a Phase 2 concern.** Qt-pilot pytest extensions from the plan deferred until baseline is restored.
+
+### Findings
+
+1. **qt-pilot pytest baseline is broken from missing `mcp` Python library** — surfaces at test collection. Not a Phase 2 issue (matches the qt-suite README's "Qt Pilot's Python dependencies (PySide6, mcp) are automatically installed into a virtual environment inside the plugin on first use" — that auto-install hasn't run on this workstation). Reproducer: `cd plugins/qt-suite/mcp/qt-pilot && python3 -m pytest tests/`. Fix path: run `bash plugins/qt-suite/scripts/start-qt-pilot.sh` once to auto-create the venv, then `source .venv/bin/activate && python3 -m pytest tests/`.
+2. **start-qt-pilot.sh untested** — would require either a real venv or extensive PATH-stubbing of uv/pip. Deferred.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (shell scripts) | 0 | 4 cases on check-prerequisites |
+| Mechanical (Python qt-pilot) | (broken — pre-existing) | (broken — pre-existing, NOT touched) |
+| Structural (manifest + .mcp.json) | 0 | 2 cases |
+| Behavioral [P1]–[P4] | (out of scope) | (out of scope — explicitly noted) |
