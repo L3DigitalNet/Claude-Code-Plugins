@@ -77,3 +77,29 @@ plugins/home-assistant-dev/
 - Test the 27 skills' auto-activation. Behavioral.
 - Extend e2e suite. Out of scope (CI changes).
 - Modify scripts or MCP server source.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/scripts/test_post_write_hook.py` (new, 8 cases)** — exhaustive routing matrix for the PostToolUse hook dispatcher: empty payload silent, missing file_path silent, npm `manifest.json` (outside `custom_components/`) NOT routed to HA validator, `*.py` outside `custom_components/` NOT validated, `strings.json` and `config_flow.py` route to validate-strings, `*.py` inside `custom_components/` route to check-patterns, unknown extension exits cleanly.
+- **`tests/test_manifest_zod_strict.py` (new, 3 cases)** — Zod-strict allow-list, required fields, hooks.json record-keyed.
+
+### Suite
+
+`cd plugins/home-assistant-dev && python3 -m pytest tests/scripts/ tests/test_plugin_structure.py tests/test_manifest_zod_strict.py` — **207 passed, 1 skipped** (196 baseline + 11 added; the 1 skip is pre-existing in the baseline IQS validation suite).
+
+### Findings
+
+1. **Jest baseline (`mcp-server/__tests__/`) is pre-existing broken.** All 3 Jest test suites fail at compile/run-time. Verified pre-existing on plain `testing` branch with no Phase 2 changes. Plan's Jest extensions (`ha-connect.test.ts`, `docs-search.test.ts`, `safety.test.ts` extension) deferred. **NOT FIXED — environment / TypeScript-version issue, not Phase 2 scope.**
+2. **Pytest baseline was very strong** (196 cases). Net-new value: full hook routing matrix + structural guard. Plan's IQS-rule spot-check turned out unnecessary — `tests/validation/test_iqs_accuracy.py` already covers the rule space comprehensively.
+3. **A formatter touched `test_post_write_hook.py` after my Write** (per system reminder); content was preserved. Tests still pass.
+4. **`pytest.skip` and `.skip` markers in new pytest files trigger the deletion-blocker hook.** First Write attempt was rejected — restructured the hooks.json test to use `assert hooks_path.exists()` instead of `pytest.skip("no hooks.json")`. ha-dev does always have a hooks.json so the skip path was never going to be exercised; converting to assertion is strictly better.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (pytest) | 196 cases | +11 cases (8 hook routing + 3 manifest) |
+| Mechanical (Jest mcp-server) | (broken — pre-existing) | (broken — pre-existing, NOT touched) |
+| Behavioral [P1]/[P4] | (out of scope) | (out of scope — explicitly noted) |
