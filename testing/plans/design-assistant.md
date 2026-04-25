@@ -63,3 +63,29 @@ plugins/design-assistant/tests/bats/
 - Test the `/design-review` multi-pass loop's *quality*. Convergence is mechanical; quality is behavioral.
 - Validate `DESIGN.md` content. Documentation, not source.
 - Modify scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/bats/read-counter.bats` (new, 6 cases)** — counter increments per-session ($PPID-keyed), thresholds at 10 (CONTEXT NOTICE) and 20+10n (CONTEXT PRESSURE). Throttling between thresholds. set -e safety on increment-from-0.
+- **`tests/bats/manifest.bats` (new, 2 cases)** — Zod-strict allow-list + hooks.json record-keyed.
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/design-assistant/tests/run-bats.sh` — **57 of 57 passing** (49 baseline + 8 added).
+
+### Findings
+
+1. **`$PPID` test isolation problem** — script uses `$PPID` as session identifier; each `run bash …` from bats spawns a subshell with a different PPID, so multi-call counter tests can't accumulate. **Workaround:** all invocations within a single subshell via `bash -c '…'`, sharing one `$$`. Test design pattern documented in test file comment block.
+2. **Plan's `[P5]` fix-screen test was speculative** — looked at `invariant-check.sh` and the screening logic isn't wired through it as a separate concern; it's part of `coverage-sweep.sh` upstream. The existing 4 baseline bats files already cover invariant-check + coverage-sweep happy paths; the hypothetical "fix-screened-against-principles" feature would need a real implementation to test against. **Deferred** to a future commit if the feature exists.
+3. **Plan's `[P3]` convergence test extension** — existing coverage-sweep.bats already exercises convergence through its multi-pass test. No new test added; gap is satisfied.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 49 cases (4 .bats files) | +6 cases on read-counter |
+| Structural (manifest + hooks) | 0 | 2 cases |
+| Behavioral [P1]/[P2]/[P4] | (out of scope) | (out of scope — explicitly noted) |
