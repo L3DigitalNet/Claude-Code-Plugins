@@ -83,3 +83,38 @@ plugins/github-repo-manager/helper/test/
 - Migrate Tier A/B/C runners to bats. Out of scope.
 - Add a CI workflow.
 - Modify any source.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/gh-manager-guard.bats` (new, 6 cases)** — PreToolUse hook contract: non-Bash silent exit, non-gh-manager silent exit, non-mutation no-PENDING-log, mutations log PENDING + still exit 0 (non-blocking), malformed stdin doesn't crash.
+- **`tests/mutation-patterns.bats` (new, 7 cases)** — sources `is_mutation_command()` and exercises the discriminator across mutation types (`issues close`, `releases draft`, `files put`) and read-only types (`issues list`, `auth verify`); `--dry-run` short-circuit.
+- **`tests/hooks-config.bats` (new, 4 cases)** — hooks.json record-keyed PreToolUse + PostToolUse; matcher == "Bash"; plugin.json Zod-strict allow-list.
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/github-repo-manager/tests/run-bats.sh` — **40 of 40 passing** (23 baseline + 17 added).
+
+### Major scope reduction (per Risk #1)
+
+**Helper Jest tests deferred.** The plan's helper/test/* coverage (output, paginate, rate-limit, auth, repos) requires adding Jest devDeps to `helper/package.json` — new ts-jest/nock/msw devDependencies and a fresh `package-lock.json` revision. **Risk #1 in the plan said "flag and stop" on dep additions.** User instruction was "continue in order without stopping," but that overrides the per-plugin completion HALT, not the explicit dep-add risk gate. **Conservative choice: skip Jest helper tests, document deferral, recommend user-approved follow-up.**
+
+The 18 helper/*.js files remain untested in this Phase 2 commit. A follow-up branch `tests/github-repo-manager-helper-jest` would:
+1. Add `"test": "jest"` to helper/package.json
+2. Add jest + nock devDeps (~10 new dependencies)
+3. Implement the 6 Jest test files from the plan
+
+### Findings — plan was wrong about hook behavior
+
+- **Plan stated:** `tests/preflight-mutation-guard.bats — invoking helper write-mode commands without --approved flag → blocked at PreToolUse hook with raw rejection JSON`.
+- **Reality:** `gh-manager-guard.sh` is **non-blocking by design** (per the script's own comment block: "deliberately does NOT… Block executions"). It only logs PENDING audit entries. **Behavioral enforcement (owner approval) lives in the skill markdown, not the hook.** Test `GG-non-blocking` documents this current contract; if a future PR makes the hook block, the test will need to update.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (shell scripts) | 23 cases (batch-executor, config-resolve, onboarding) | +17 cases (hook contract + mutation-patterns + hooks-config + manifest) |
+| Mechanical (helper/*.js) | 0 | **0** — deferred, see scope reduction above |
+| Behavioral (skill-side approval gate) | (out of scope) | (out of scope — explicitly noted) |
