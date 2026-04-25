@@ -11,6 +11,13 @@ export default {
       'ts-jest',
       {
         useESM: true,
+        tsconfig: 'tsconfig.test.json',
+        diagnostics: {
+          // ts-jest emits TS151002 (hybrid module kind) in NodeNext+useESM setup.
+          // Cannot enable isolatedModules to silence — it breaks ESM imports
+          // ("exports is not defined") under ts-jest 29 + module:NodeNext.
+          ignoreCodes: [151002],
+        },
       },
     ],
   },
