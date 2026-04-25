@@ -55,3 +55,30 @@ plugins/handoff/tests/
 - Test handoff *file content* quality. That's behavioral.
 - Test the `/handoff:save` or `/handoff:load` command markdown. Behavioral.
 - Modify the scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **Existing baseline was much stronger than the plan assumed.** The handoff suite already had 17 cases covering happy + most edge paths. Most plan-proposed extensions duplicated existing tests.
+- **Added** (5 new cases):
+  - `tests/manifest.bats` — Zod-strict allow-list + required fields (M1, M2)
+  - `tests/find-latest-handoff.bats` — explicit assertion that **mtime is the script's default** when mtime and filename ordering disagree (FH-mtime-default)
+  - `tests/gather-context.bats` — shell-injection sanitization (GC-injection: `; rm -rf /` → safe slug, no metacharacters survive); non-git-dir no-stderr-warning (GC-no-git)
+- `tests/run-bats.sh` — bats-wrapper workaround.
+
+### Suite
+
+`bash plugins/handoff/tests/run-bats.sh` — **22 of 22 passing** (17 baseline + 5 added).
+
+### Findings — plan was wrong about default sort behavior
+
+- **The plan stated `[P2] Actionable Next Steps` would be tested by "returns latest by *timestamp in filename*, not mtime"** — but the actual script defaults to `mtime`. Filename-timestamp is opt-in via `--sort-by filename`. **Documented as a passing test (`FH-mtime-default`) asserting the *current* behavior, not the plan's incorrect prescription.** If the project decides filename-timestamp should be the default for cross-machine fileshare resilience (mtime can differ between source/dest filesystems), that's a *design change* for a future PR, not a Phase 2 test fix.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 16 cases | 21 cases (+1 mtime-precedence + 1 injection-safety + 1 no-git no-stderr + 2 manifest) |
+| Structural (plugin.json) | 0 | 2 cases |
+| Behavioral [P1]/[P2] | (out of scope) | (out of scope — explicitly noted) |

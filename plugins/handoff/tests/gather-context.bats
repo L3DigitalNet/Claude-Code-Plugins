@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+bats_require_minimum_version 1.5.0
 load helpers
 
 setup() { setup_test_env; }
@@ -66,6 +67,34 @@ teardown() { teardown_test_env; }
     local filename
     filename=$(echo "$output" | jq -r '.filename')
     [[ "$filename" == foo-bar-baz-handoff-* ]]
+}
+
+@test "shell-injection in description is sanitized to safe filename (GC-injection)" {
+    # Description is user-controlled; if it leaked into shell context it could
+    # trivially run arbitrary commands. Slug pipeline must collapse all metas to '-'.
+    run bash "$SCRIPTS_DIR/gather-context.sh" --description '; rm -rf /'
+    [ "$status" -eq 0 ]
+    echo "$output" | jq -e . >/dev/null 2>&1
+    local filename
+    filename=$(echo "$output" | jq -r '.filename')
+    # Result must NOT contain ';', '/', spaces, or 'rm' as a separable word.
+    [[ "$filename" != *";"* ]]
+    [[ "$filename" != *" "* ]]
+    [[ "$filename" != *"/"* ]]
+    # Must still match the standard slug shape.
+    [[ "$filename" =~ -handoff-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}\.md$ ]]
+}
+
+@test "non-git directory: gather-context script does not error on git absence (GC-no-git)" {
+    # Symmetry test: confirms that the absence of a git context does not
+    # produce error output to stderr. P3 quiet success on the negative path.
+    local nogit="$TEST_TMPDIR/no-git-explicit"
+    mkdir -p "$nogit"
+    cd "$nogit"
+    run --separate-stderr bash "$SCRIPTS_DIR/gather-context.sh"
+    [ "$status" -eq 0 ]
+    # Stderr should be empty — no warnings, no `fatal:` from git.
+    [ -z "$stderr" ]
 }
 
 @test "dirty git repo shows uncommitted files" {

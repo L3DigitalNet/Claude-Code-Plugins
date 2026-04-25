@@ -147,6 +147,33 @@ EOF
     [[ "$ts" == "2026-04-09T15:30:45" ]]
 }
 
+@test "default mtime mode picks newer-mtime over older-mtime when filenames disagree (FH-mtime-default)" {
+    # Documents that mtime is the script default — filename-timestamp ordering
+    # is OPT-IN via --sort-by filename. Reverses the previous test's assumption.
+    mkdir -p "$TEST_TMPDIR/handoffs"
+
+    cat > "$TEST_TMPDIR/handoffs/handoff-2026-04-10-120000.md" << 'EOF'
+# Should-be-latest-by-filename-but-not-by-mtime
+
+## Task Summary
+Older mtime.
+EOF
+    touch -t 202604011000 "$TEST_TMPDIR/handoffs/handoff-2026-04-10-120000.md"
+
+    cat > "$TEST_TMPDIR/handoffs/handoff-2026-04-08-120000.md" << 'EOF'
+# Older-by-filename-but-newer-mtime
+
+## Task Summary
+Newer mtime.
+EOF
+    touch -t 202604201000 "$TEST_TMPDIR/handoffs/handoff-2026-04-08-120000.md"
+
+    run bash "$SCRIPTS_DIR/find-latest-handoff.sh" --directory "$TEST_TMPDIR/handoffs"
+    [ "$status" -eq 0 ]
+    # Default mode is mtime — newer-mtime file wins, even though its filename is older.
+    [ "$(echo "$output" | jq -r '.filename')" = "handoff-2026-04-08-120000.md" ]
+}
+
 @test "--sort-by filename mode works" {
     mkdir -p "$TEST_TMPDIR/handoffs"
 
