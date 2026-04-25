@@ -63,3 +63,29 @@ plugins/test-driver/tests/
 - Test convergence-loop *quality* (does it actually fix tests?). Behavioral / PTH-coverage.
 - Cross-plugin tests with `python-dev` / `qt-suite` / `home-assistant-dev` enhancements. Out of scope.
 - Modify scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/profile-shape.bats` (new, 3 cases)** — encodes [P4] Profile-Driven Stack Knowledge: every profile has the description-line + `---`-separator + `# Stack Profile` heading shape; filenames match `[a-z0-9](-[a-z0-9])+\.md` for stable detection.
+- **`tests/manifest.bats` (new, 1 case)** — Zod-strict allow-list.
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/test-driver/tests/run-bats.sh` — **57 of 57 passing** (53 baseline + 4 added).
+
+### Findings
+
+1. **Profile shape is NOT YAML frontmatter** — initial test assumption was wrong. Actual shape: a one-line description on line 1, blank, `---` separator, then `# Stack Profile: Name` heading. Test PS1 now asserts that actual shape. The profile loader code likely parses the description line specially; this test locks the convention.
+2. **Existing 53-case baseline already covered** detect-project (multi-language hints), git-function-changes, inventory-sources, inventory-tests, test-status-update. Plan extensions about multi-stack detection and rename-tracking turned out already-present in baseline. Net new value: profile-shape contract.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 53 cases | (no extension — baseline already strong) |
+| Structural (profile shape) | 0 | 3 cases — locks the [P4] one-file-per-stack contract |
+| Structural (manifest) | 0 | 1 case |
+| Behavioral [P1]/[P2] | (out of scope) | (out of scope — explicitly noted) |
