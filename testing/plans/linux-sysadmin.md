@@ -58,3 +58,30 @@ plugins/linux-sysadmin/tests/
 - Validate the *content* of any guide. Content correctness is behavioral.
 - Test the `/sysadmin` interactive command flow. Behavioral.
 - Modify the script or any guide file.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built
+
+- `tests/sysadmin-context.bats` (7 cases) — exact-match cwd dispatch, prefix-match cwd dispatch, exact-list-not-prefix semantics for `/home/chris`, malformed-stdin fail-open, missing-cwd silent path.
+- `tests/guides-shape.bats` (4 cases) — every `guides/<topic>/` has `guide.md`, no case-fold dupes, count matches README's "163 guides" claim, no empty guides.
+- `tests/manifest.bats` (3 cases) — Zod-strict allow-list + required fields + hooks.json record-keyed.
+- `tests/run-bats.sh` — reuses bats-wrapper workaround.
+
+### Suite
+
+`bash plugins/linux-sysadmin/tests/run-bats.sh` — **14 of 14 passing.**
+
+### Deviations + findings
+
+1. **Hard-coded user-specific paths in `sysadmin-context.sh`** — the script embeds `/home/chris` (exact) and `/home/chris/git-luminous3d/homelab` (prefix) as the dispatch list. **For any other user this hook silently no-ops.** This is the most concrete "flag, do not fix" finding for this plugin: the script ships with personal config baked in rather than reading a user-configurable list. Tests assert the *current* behavior; if the script is later refactored to be configurable, tests must update with it. Surfaced here, not fixed.
+2. **Risk #1 (no real script contract worth asserting beyond exit code) was wrong** — the cwd-matching dispatch IS a real, testable contract. 7 cases fit comfortably.
+3. **Risk #3 (undocumented hook scripts in `hooks/`)** — investigated; only the documented `sysadmin-context.sh` is wired up. No gap.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script-level) | 0 | 7 cases — full cwd dispatch matrix + robustness paths |
+| Structural (guides + manifests) | 0 | 7 cases — content tree integrity + Zod-strict guard |
+| Behavioral [P1]/[P4] | (out of scope) | (out of scope — explicitly noted) |
