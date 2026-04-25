@@ -25,7 +25,7 @@ This is the largest test-debt plugin in the marketplace by code surface — 18 J
 
 | Principle | Layer | Proposed test | Rationale |
 |---|---|---|---|
-| [P1] No action without approval | Mechanical | `tests/preflight-mutation-guard.bats` (new) — invoking helper write-mode commands without `--approved` flag → blocked at PreToolUse hook with raw rejection JSON; with `--approved` → passes. | Hook is the mechanical enforcement layer; principle = test it directly. |
+| [P1] No action without approval | Mechanical | `tests/gh-manager-guard.bats` (new) — invoking mutation commands triggers the PreToolUse hook to log a PENDING audit entry; the hook is **non-blocking by design** per `gh-manager-guard.sh`'s own contract ("deliberately does NOT block executions"). The `--approved` flag suppresses the PENDING entry. | Hook is the audit/log seam, not a mechanical gate. Behavioral enforcement of approval lives in the skill markdown. (Plan originally prescribed a blocking hook — corrected per Phase 2 execution log on `tests/github-repo-manager` branch.) |
 | [P1] No action without approval | Structural | `tests/hooks-config.bats` (new) — `hooks/hooks.json` keys `PreToolUse` event in record form; matcher pattern includes write-tool selectors. | Schema-shape sibling check. |
 | [P2] Fail transparently, succeed quietly | Mechanical (helper) | `helper/test/util/output.test.js` (new) — `success()` emits single line; `error()` emits raw error + recovery hint; both write deterministic shape. | The helper's output util is the single seam for both halves of the principle. |
 | [P2] Fail transparently, succeed quietly | Mechanical (helper) | `helper/test/rate-limit.test.js` (new) — rate-limited 403 response → retry with backoff (no user message); persistent 403 → loud failure. | Quiet-on-transient, loud-on-persistent. |
@@ -39,7 +39,8 @@ This is the largest test-debt plugin in the marketplace by code surface — 18 J
 
 ```
 plugins/github-repo-manager/tests/
-├── preflight-mutation-guard.bats   (new)
+├── gh-manager-guard.bats           (new — hook contract, non-blocking)
+├── mutation-patterns.bats          (new — is_mutation_command discriminator)
 ├── hooks-config.bats               (new)
 ├── batch-executor.bats             (existing)
 ├── config-resolve.bats             (extend if gaps)

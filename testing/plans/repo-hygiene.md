@@ -15,7 +15,7 @@
 
 Principles: `[P1] Act on Intent`, `[P2] Succeed Quietly, Fail Transparently`, `[P3] Scope Fidelity`, `[P4] Safety by Construction`.
 
-`[P4] Safety by Construction` is the highest-stakes claim — the orphan-deletion safety net (3 independent path checks: prefix, no `..`, basename) currently has no explicit test.
+`[P4] Safety by Construction` is the highest-stakes claim. The 3-check rm safety guard (path-prefix / no-`..` / basename) is enforced in the **`/hygiene` command markdown**, *not* at the script seam — `check-orphans.sh` only emits findings, never proposes a destructive `fix_cmd`. The mechanical-testable contract at the script level is therefore: every finding has `fix_cmd: null` and `auto_fix: false`. (Risk #1 below correctly anticipated this; the gap-table rows below have been updated per Phase 2 execution log on `tests/repo-hygiene` branch to match the actual script seam.)
 
 ## Gap table
 
@@ -25,8 +25,7 @@ Principles: `[P1] Act on Intent`, `[P2] Succeed Quietly, Fail Transparently`, `[
 | [P2] Succeed Quietly, Fail Transparently | Mechanical | `tests/check-gitignore.bats` (new) — clean tree → empty findings JSON; problem present → structured JSON, no prose, no logs to stdout. | Quiet-success contract enforced at the scan-script level. |
 | [P2] Succeed Quietly, Fail Transparently | Mechanical | `tests/check-stale-commits.bats` (new) — same shape; non-zero exit on script error surfaces raw error, not parsed JSON. | Loud-failure contract. |
 | [P3] Scope Fidelity | Mechanical | `tests/check-manifests.bats` (new) — non-marketplace repo (no `.claude-plugin/marketplace.json`) → script exits 0 with empty findings; marketplace repo with mismatch → flagged. | Mechanical encoding of "scope-aware skip". |
-| [P4] Safety by Construction (highest-priority) | Mechanical | `tests/check-orphans.bats` (new) — `temp_*` orphan in plugin dir → flagged; orphan with prefix `..temp_` → **rejected by safety check** (no flag, no rm proposed); orphan with `..` in path → rejected; orphan with non-`temp_` basename → rejected. **Three negative cases** covering each of the three safety checks individually. | The plugin's stated 3-check guard must be tested individually so a regression in any single check is caught. |
-| [P4] Safety by Construction | Mechanical | `tests/check-orphans.bats` — even when all 3 path checks pass, the script *proposes* deletion via JSON output, **never** runs `rm` itself. (Verify by inspecting output, ensuring no FS mutations occur during the script run.) | The README explicitly states the script does not rm; encoding this as a test prevents future regressions where someone "helpfully" adds an rm. |
+| [P4] Safety by Construction | Mechanical | `tests/check-orphans.bats` (new) — `temp_*` orphan flagged with `fix_cmd: null` and `auto_fix: false` (script proposes nothing destructive); non-`temp_` items ignored; malformed enabledPlugins JSON does not crash; stale enabledPlugins → warn; installed-but-not-enabled → info. | The 3-check rm guard lives in `/hygiene` command markdown (Behavioral, out of unit scope). The script-level Mechanical contract is "never propose destruction" — locks against future regressions where someone adds `rm` to `check-orphans.sh`. |
 | Cross-cutting (extending) | Mechanical | Extend existing 3 README bats files with negative cases the README highlights but the tests likely don't cover (e.g., placeholder strings inside code fences should not flag; case-sensitive plugin name comparison). | Improve principle traceability of existing tests. |
 
 ## Files to create / modify
