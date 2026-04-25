@@ -72,3 +72,30 @@ plugins/docs-manager/tests/
 - Test command markdown. Behavioral.
 - Test against real Outline/Notion (no integrations here, but for symmetry with up-docs).
 - Modify scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/post-tool-use.bats` (new, 6 cases)** — PostToolUse hook routing: empty-stdin silent, missing-file_path silent, node_modules + .git noise filters, deleted-file silent, non-md non-tracked file silent.
+- **`tests/is-survival-context.bats` (new, 8 cases)** — full [P5] classification matrix: sysadmin/dev/personal × human/both/ai, including the explicit `audience=ai` exception that overrides doc-type, plus default-safe paths (missing doc-type, missing file).
+- **`tests/manifest.bats` (new, 3 cases)** — Zod-strict allow-list + hooks.json record-keyed PostToolUse + Stop + matcher scope (Write|Edit|MultiEdit).
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/docs-manager/tests/run-bats.sh` — **91 of 91 passing** (74 baseline + 17 added).
+
+### Findings
+
+1. **Existing baseline coverage was extremely strong** (74 cases across detection, index, queue, status-dashboard, utilities). Only the hook-side and survival-context classifier had no explicit principle-traceable coverage.
+2. **`is-survival-context.sh` is the single source of truth for the [P5] rule** — exactly as the script's own comment claims. Lock the classification matrix to prevent silent drift if doc-type/audience values change.
+3. **Plan items deferred** — bootstrap-script test (writes to `~/.docs-manager/`; complex setup) and template-register/index-source-lookup/queue-merge-fallback. Those scripts are smaller and lower-stakes than the dispatcher hook + survival classifier covered here. Acceptable scope for Phase 2.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 74 cases (5 .bats files) | +14 cases across post-tool-use + is-survival-context |
+| Structural (manifest + hooks) | 0 | 3 cases |
+| Behavioral [P1]/[P4]/[P6] | (out of scope) | (out of scope — explicitly noted) |
