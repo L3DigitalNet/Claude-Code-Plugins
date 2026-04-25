@@ -64,3 +64,29 @@ plugins/claude-sync/tests/
 - Migrate the legacy `test-*.sh` files. They stay as integration smoke.
 - Test that the `/sync-export` and `/sync-import` command markdown leads Claude to the correct prompts. Behavioral.
 - Test the actual interactive confirmation flow. Behavioral.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/capture-env.bats` (new, 7 cases)** — covers [P1] wholesale capture of unknown files, [P2] repos-not-in-tarball, [P3] secrets exclusion (`.credentials.json`, `statsig/`, `projects/`, mcpServers-only extraction), [P5] CLAUDE.md config-block stripping. **`[P3]` is the highest-stakes assertion in the plugin** — verified against the actual produced tarball, not just the staging directory.
+- **`tests/parse-snapshot.bats` (new, 3 cases)** — symmetric `[P3]` no-leak assertion on the import side; no_snapshot error path; addition-diff detection.
+- **`tests/run-bats.sh`** — bats-wrapper workaround.
+
+### Suite
+
+`bash plugins/claude-sync/tests/run-bats.sh` — **29 of 29 passing** (19 baseline + 10 added).
+
+### Findings
+
+1. **Secrets-exclusion is implemented correctly** at the `rm -rf` step in `capture-env.sh` (lines 77–79) for the three named paths, and the `mcpServers` extraction uses `jq` filtering rather than full-file inclusion. Both layers verified on the produced tarball.
+2. **CLAUDE.md config-block stripping uses sed range matching**. Edge case: if the start/end markers ever drift in casing or spacing, the strip silently no-ops. Regression-locked by test CE-P5.
+3. **No source modifications.** All risks in the plan resolved by test design without script changes.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 19 (apply-snapshot, config-block) | +10 across capture-env + parse-snapshot |
+| [P3] secrets-exclusion | (no test) | 4 explicit cases — credentials, statsig, projects, mcp-only-extraction |
+| Behavioral [P4] | (out of scope) | (out of scope — explicitly noted) |
