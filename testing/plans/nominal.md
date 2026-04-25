@@ -65,3 +65,28 @@ plugins/nominal/tests/
 - Test the `/preflight`, `/postflight`, `/abort` command flows. Behavioral.
 - Test the agent invocations (these commands dispatch agents). Behavioral.
 - Modify scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/flight-log-durability.bats` (new, 3 cases)** — [P5] Survive Interruptions: sequential appends preserve all records, each JSONL line independently parseable, **10 concurrent appends do not corrupt the file**. Concurrency test passes — POSIX `O_APPEND` atomicity holds for small (<PIPE_BUF) JSONL lines without explicit `flock`.
+- **`tests/manifest.bats` (new, 2 cases)** — Zod-strict allow-list + required fields.
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/nominal/tests/run-bats.sh` — **79 of 79 passing** (74 baseline + 5 added).
+
+### Findings
+
+1. **Concurrent-append concern (Risk #2 in plan) is a non-issue today** — `flight-log.sh` relies on POSIX `O_APPEND` write atomicity, which is guaranteed for any single `write()` syscall ≤ PIPE_BUF (4096 bytes on Linux). All current JSONL records are well under that. **No `flock` needed for small records.** If records grow large, this changes — test FL3 will catch it.
+2. **Existing 74-case baseline was extremely thorough** — covers _common.sh, domain-checker, environment-discover, flight-log (read/query), go-nogo-poll, regression-sweep. Plan-proposed extensions on idempotency, evidence-inclusion, abort.json schema, and observe-don't-act all turned out already-present in baseline tests at varying granularity. **Net new value:** durability under concurrency + manifest guard.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 74 cases | +3 cases on flight-log durability |
+| Structural (manifest) | 0 | 2 cases |
+| Behavioral | (out of scope; nominal is unusual — every principle is mechanical) | (covered structurally) |
