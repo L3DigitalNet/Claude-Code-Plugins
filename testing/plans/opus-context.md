@@ -53,3 +53,29 @@ No fixtures directory — bats `setup()` writes a temporary fake `SKILL.md` and 
 - Test that the rules in `SKILL.md` actually change Claude's behavior. That's a behavioral evaluation problem, not a unit test.
 - Add a CI workflow.
 - Modify the hook script.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built
+
+- `tests/session-start.bats` (6 cases) — happy-path JSON shape, frontmatter strip, missing-SKILL.md quiet-fail, no-frontmatter pass-through, valid-JSON contract, stderr confirmation.
+- `tests/hooks-config.bats` (4 cases) — hooks.json validity + record-keyed event + `${CLAUDE_PLUGIN_ROOT}` reference + plugin.json Zod-strict allow-list.
+- `tests/test_helper.bash` — `make_fake_plugin` / `make_fake_plugin_no_skill` build a copy of `session-start.sh` in `BATS_TEST_TMPDIR` so the script's `dirname "$BASH_SOURCE"`-based path resolution produces a controllable PLUGIN_ROOT (workaround for risk #1 in the original plan).
+- `tests/run-bats.sh` — reuses the bats-wrapper workaround established in release-pipeline.
+
+### Suite
+
+`bash plugins/opus-context/tests/run-bats.sh` — **10 of 10 passing.**
+
+### Deviations
+
+1. **`run` flag warnings on bats default minimum version (BW02)** — `--separate-stderr` requires `bats_require_minimum_version 1.5.0`. Added the directive at the top of session-start.bats. No code change.
+2. **Risk #1 from the plan was real:** `session-start.sh` derives PLUGIN_ROOT from `BASH_SOURCE[0]` with no env override. **Workaround chosen:** copy the script into a fake plugin tree under `BATS_TEST_TMPDIR/fake-plugin/` and let the script naturally resolve PLUGIN_ROOT to that tmpdir. **The script was not modified.**
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (hook contract) | 0 | 6 cases — JSON shape, frontmatter strip, missing-file path, stderr-confirmation |
+| Structural (hooks.json + plugin.json) | 0 | 4 cases |
+| Behavioral [P1]–[P4] | (out of scope) | (out of scope — explicitly noted) |
