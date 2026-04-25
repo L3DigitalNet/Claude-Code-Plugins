@@ -65,3 +65,29 @@ plugins/repo-hygiene/tests/
 - Test the `/hygiene` command markdown's classification logic. Behavioral.
 - Add CI workflow.
 - Modify scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/check-orphans.bats` (new, 7 cases)** — locks the [P4] Mechanical contract: **the script never proposes destructive `fix_cmd`** (every finding has `fix_cmd: null` and `auto_fix: false`). temp_* dir flagged with warn severity, non-temp_ ignored, stale enabledPlugins → warn, installed-but-not-enabled → info, malformed JSON → warn finding (no crash), all-files-absent → empty findings.
+- **`tests/check-gitignore.bats` (new, 6 cases)** — package.json without node_modules → flagged with auto_fix=true; with pattern → no false-positive; Python files without __pycache__ → flagged; auto-generated `*` gitignore skipped; root .gitignore skipped (documented behavior).
+- **`tests/check-manifests.bats` (new, 3 cases)** — non-marketplace repo skipped (scope-aware); matching versions → empty findings; version mismatch → flagged.
+- **`tests/check-stale-commits.bats` (new, 2 cases)** — clean tree quiet success; output is structured JSON with `findings` array.
+- **`tests/run-bats.sh`** — bats wrapper.
+
+### Suite
+
+`bash plugins/repo-hygiene/tests/run-bats.sh` — **40 of 40 passing** (23 baseline + 17 added).
+
+### Findings — Risk #1 confirmed
+
+**The 3-check rm safety guard is NOT in the script.** Per the README and per inspection of `check-orphans.sh`, the script only emits findings; the path-prefix / no-`..` / basename guard is enforced in the **`/hygiene` command markdown**, not at the script seam. **The Mechanical contract that IS testable:** the script never proposes a destructive `fix_cmd`, so a regression where someone "helpfully" adds `rm` to the script would fail test `CO-P4-fix-null`. The command-side guard is Behavioral and remains out of scope per plan. **Surfaced, not changed.**
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 23 cases (3 README scripts) | +17 cases across orphans, gitignore, stale-commits, manifests |
+| [P4] Safety by Construction (Mechanical half) | 0 | 1 explicit case locking fix_cmd=null contract |
+| Behavioral [P1]/[P4]-command-side | (out of scope) | (out of scope — explicitly noted) |
