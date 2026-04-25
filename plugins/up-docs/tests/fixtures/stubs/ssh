@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# PATH-prepended stub for ssh, controlled by SSH_STUB_MODE.
+#   reachable    — `ssh host "echo ok"` returns "ok"; subsequent multi-cmd shell
+#                  reads stdin and emits canned delimited sections (default)
+#   unreachable  — first probe `ssh host "echo ok"` exits 1
+case "${SSH_STUB_MODE:-reachable}" in
+  unreachable)
+    exit 1 ;;
+  reachable)
+    # The script does two ssh invocations:
+    #   1) ssh ... HOST "echo ok"   (probe)
+    #   2) ssh ... HOST bash << REMOTE_EOF (heredoc body on stdin)
+    # Detect the probe by the trailing "echo ok" arg.
+    last_arg="${@: -1}"
+    if [[ "$last_arg" == "echo ok" ]]; then
+      echo "ok"
+      exit 0
+    fi
+    # The second invocation passes a bash heredoc on stdin. We discard it and
+    # emit canned sections matching server-inspect.sh's parse logic.
+    cat > /dev/null   # consume heredoc
+    cat <<'OUT'
+###DELIM:hostname###
+fakehost.local
+###DELIM:kernel###
+6.0.0-test
+###DELIM:uptime###
+up 1 day
+###DELIM:memory###
+total used free
+fake 100 50 50
+###DELIM:disk###
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/fake        10G   5G    5G  50% /
+###DELIM:ports###
+State Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+LISTEN 0 128 *:22 *:* users:(("sshd",pid=1))
+LISTEN 0 128 *:80 *:* users:(("nginx",pid=2))
+###DELIM:service_status###
+active (running)
+###DELIM:service_journal###
+log line 1
+log line 2
+OUT
+    exit 0 ;;
+  *) echo "ssh-stub: unknown mode '${SSH_STUB_MODE}'" >&2; exit 1 ;;
+esac

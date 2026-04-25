@@ -60,3 +60,29 @@ plugins/up-docs/tests/
 - Test the drift-auditor agent. Behavioral.
 - Test the Outline / Notion MCP integrations. Out of scope; integration testing requires real wikis.
 - Modify scripts.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`tests/server-inspect.bats` (new, 5 cases)** — covers [P4] Ground Truth Wins via PATH-stubbed `ssh`. Two-phase stub: probe (`echo ok`) and heredoc-driven inspection. Verifies `unreachable` short-circuits the JSON, `reachable` parses delimited sections (hostname, kernel, ports), and **the script reflects stub state on each invocation (no caching)**.
+- **`tests/manifest.bats` (new, 2 cases)** — Zod-strict allow-list + required fields.
+- **`tests/fixtures/stubs/ssh`** — controllable mock with `SSH_STUB_MODE=reachable|unreachable`.
+
+### Suite
+
+`bash plugins/up-docs/tests/run-bats.sh` — **34 of 34 passing** (27 baseline + 7 added).
+
+### Findings
+
+1. **Risk #1 (`ssh` binary not overridable)** — false alarm. The script invokes `ssh` via PATH lookup, so PATH-stubbing works cleanly. No source change needed.
+2. **`ss` output format sensitivity** — script parses `parts[3]` of each line. My initial stub had a `Netid` prefix column that pushed `Local Address:Port` to `parts[4]`, breaking the test. Fixed by aligning stub output with real `ss -tlnp` schema. Documents the parser's column-index assumption.
+3. **Plan said "convergence math edge case ≥3 snapshots needed"** — existing convergence-tracker.bats already handles this; no extension needed.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (script) | 27 cases (context-gather, convergence-tracker, link-audit) | +5 server-inspect cases |
+| Structural (manifest) | 0 | 2 cases |
+| Behavioral [P1]/[P3] | (out of scope) | (out of scope — explicitly noted) |
