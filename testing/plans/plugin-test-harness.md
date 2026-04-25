@@ -67,3 +67,29 @@ plugins/plugin-test-harness/test/unit/
 - Test PTH against real plugins. That's PTH's *purpose*, not its unit-test surface.
 - Modify PTH source.
 - Change CI workflow.
+
+## Phase 2 execution log (2026-04-25)
+
+### Built / extended
+
+- **`test/unit/results/convergence.test.ts` (new, 8 cases)** — explicit branch coverage for trend math: `unknown` (<2 snapshots), `improving`, `declining`, `plateaued` (3 equal + 2 equal variants), `oscillating` (2+ sign changes), 4-snapshot window cap, 2-snapshot improving/declining pair. **Highest-stakes algorithm in PTH** — agents make iteration decisions from this.
+- **`test/unit/persistence/gap-analyzer.test.ts` (new, 5 cases)** — plugin-mode 4-axis diff: identical → unchanged, new component → newComponents, removed component → removedComponents + staleTestIds, skill-track parity.
+- **`test/unit/tool-registry-shape.test.ts` (new, 5 cases)** — [P6] composability invariants: every tool has non-empty name + description + inputSchema, no name collisions, all tools share `pth_` prefix.
+
+### Suite
+
+`cd plugins/plugin-test-harness && npm test` — **68 of 68 passing** across 18 suites (50 baseline + 18 added).
+
+### Findings
+
+1. **Convergence math has subtle window semantics** — uses last 4 snapshots, which means older oscillations are correctly ignored once 4 newer monotonic ones accumulate. Test `CV-window` locks this behavior.
+2. **PTH already has CI** (`.github/workflows/plugin-test-harness-ci.yml`) — only PTH and ha-dev have dedicated CI workflows in the marketplace. New tests will run automatically in CI on push.
+3. **LSP diagnostic warnings on `describe`/`it`/`expect`** are tooling-only — `tsconfig.test.json` pulls `@types/jest` from devDependencies at Jest run time. Tests pass at runtime; the editor warnings reflect a Jest-vs-IDE config gap, not a real type error. **No fix needed.**
+4. **`CurrentScan` interface field naming differs from initial assumption** — first draft used legacy field names (`pluginName`, `hasMcp`, `hookScripts`, `sourceFiles`, `newestSourceMtime`); real interface has `toolNames`, `changedSourceFiles`, `scannedAt`. Corrected on second pass; tests pass with correct fields.
+
+### Coverage delta
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (Jest) | 50 cases (15 suites) | +18 cases (3 new suites: convergence, gap-analyzer, tool-registry-shape) |
+| Behavioral [P1]/[P4] | (out of scope) | (out of scope — explicitly noted) |
