@@ -22,6 +22,10 @@ setup_repo() {
   git init "$dir" >/dev/null 2>&1
   git -C "$dir" config user.email "test@example.com"
   git -C "$dir" config user.name "Test"
+  # User's global tag.gpgsign=true forces signed-annotated tags; override to
+  # plain lightweight tags so `git tag v1.0.0` succeeds without a message.
+  git -C "$dir" config tag.gpgsign false
+  git -C "$dir" config tag.forceSignAnnotated false
   echo "init" > "$dir/file.txt"
   git -C "$dir" add .
   git -C "$dir" commit -m "initial" >/dev/null 2>&1

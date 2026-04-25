@@ -56,6 +56,10 @@ mkdir -p "$REPO/.claude-plugin"
 git init "$REPO" >/dev/null 2>&1
 git -C "$REPO" config user.email "test@example.com"
 git -C "$REPO" config user.name "Test"
+# User's global tag.gpgsign=true forces signed-annotated tags; override to
+# plain lightweight tags so `git tag plugin-a/v1.0.0` succeeds without a message.
+git -C "$REPO" config tag.gpgsign false
+git -C "$REPO" config tag.forceSignAnnotated false
 
 cat > "$REPO/.claude-plugin/marketplace.json" <<'JSON'
 {
@@ -114,6 +118,8 @@ cat > "$REPO2/.claude-plugin/marketplace.json" <<'JSON'
 }
 JSON
 git init "$REPO2" >/dev/null 2>&1
+git -C "$REPO2" config tag.gpgsign false
+git -C "$REPO2" config tag.forceSignAnnotated false
 assert_exit 1 "single-plugin marketplace → exit 1 (not monorepo)" bash "$SCRIPT" "$REPO2"
 
 echo ""

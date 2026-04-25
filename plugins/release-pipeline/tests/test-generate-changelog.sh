@@ -49,6 +49,10 @@ REPO="$TMPDIR_TEST/repo"
 git init "$REPO" >/dev/null 2>&1
 git -C "$REPO" config user.email "test@example.com"
 git -C "$REPO" config user.name "Test"
+# User's global tag.gpgsign=true forces signed-annotated tags; override to
+# plain lightweight tags so `git tag v1.0.0` succeeds without a message.
+git -C "$REPO" config tag.gpgsign false
+git -C "$REPO" config tag.forceSignAnnotated false
 echo "init" > "$REPO/file.txt"
 git -C "$REPO" add .
 git -C "$REPO" commit -m "initial" >/dev/null 2>&1
@@ -104,6 +108,8 @@ mkdir -p "$REPO2/plugins/myplugin"
 git init "$REPO2" >/dev/null 2>&1
 git -C "$REPO2" config user.email "test@example.com"
 git -C "$REPO2" config user.name "Test"
+git -C "$REPO2" config tag.gpgsign false
+git -C "$REPO2" config tag.forceSignAnnotated false
 echo "initial" > "$REPO2/plugins/myplugin/file.txt"
 git -C "$REPO2" add .
 git -C "$REPO2" commit -m "initial" >/dev/null 2>&1
