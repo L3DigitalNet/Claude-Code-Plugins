@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [1.4.0] - 2026-05-07
 
+### Changed
+- qdev v1.4.0 — add Tavily MCP support across all commands and agents
+
+
+## [1.4.0] - 2026-05-07
+
 ### Added
 
 - All `/qdev` commands and agents now support the `tavily` MCP server. New tools available to relevant agents/commands: `mcp__tavily__tavily_search` (content-heavy queries that previously required search→scrape) and `mcp__tavily__tavily_extract` (JS-rendered page extraction; replaces `WebFetch` as the preferred fetch tool for documentation, advisory, and issue pages). `brave-search` + `serper-search` remain the primary parallel search pair.
