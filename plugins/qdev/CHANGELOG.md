@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.5.0] - 2026-05-08
 
 ### Changed
+- qdev: bump to v1.5.0 — qdev-researcher subagent
+- qdev(README): fix mermaid label, prune-cmd safety, prose polish
+- qdev: README — document qdev-researcher and handoff protocol
+- qdev(research): fix callout ordering, summary early-exit, hint shape
+- qdev: rewrite /qdev:research as thin orchestrator
+- qdev(researcher): drop dead Glob/Grep permissions; fix Step 8 ordering
+- qdev: add qdev-researcher subagent (Sonnet)
+
+
+## [1.5.0] - 2026-05-08
+
+### Changed
 
 - `/qdev:research` is now a thin orchestrator that dispatches the new `qdev-researcher` Sonnet subagent. Estimated ~25K tokens saved per invocation when called from Opus. Matches the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-sync`.
 - `/qdev:research` topic prompt collapsed from a two-step `AskUserQuestion` (Describe it now / Cancel → follow-up open question) to a single bounded question with up to 3 inferred candidates plus the implicit Other entry.
