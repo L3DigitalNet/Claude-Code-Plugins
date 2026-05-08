@@ -11,6 +11,10 @@ describe('getFixHistory', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pth-tracker-test-'));
     const { execa } = await import('execa');
     await execa('git', ['init'], { cwd: tmpDir });
+    // Disable hooks for the tmpdir test repo so workstation-level pre-commit
+    // hooks (e.g. noreply-email enforcement) don't reject test commits that
+    // intentionally use a fake author email. Hook-bypass is contributor-agnostic.
+    await execa('git', ['config', 'core.hooksPath', '/dev/null'], { cwd: tmpDir });
     await execa('git', ['config', 'user.email', 'test@pth.test'], { cwd: tmpDir });
     await execa('git', ['config', 'user.name', 'PTH Test'], { cwd: tmpDir });
     await fs.writeFile(path.join(tmpDir, 'init.ts'), 'const x = 0;\n');
