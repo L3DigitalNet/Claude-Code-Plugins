@@ -622,30 +622,22 @@ Claude-Code-Plugins/
 
 To add a plugin to this marketplace:
 
-1. **Work on the `testing` branch** (all development happens here)
-2. Create plugin in `plugins/` directory
-3. Add entry to `.claude-plugin/marketplace.json`
-4. Validate with `./scripts/validate-marketplace.sh`
-5. Commit and push to `testing` branch
-6. When ready to deploy, merge `testing` → `main`
+1. Create plugin in `plugins/` directory
+2. Add entry to `.claude-plugin/marketplace.json` (version must match the plugin's own `plugin.json`)
+3. Validate with `./scripts/validate-marketplace.sh`
+4. Commit directly to `main` and push
+5. To publish a tagged release with GitHub release notes, run `/release-pipeline:release` and pick the appropriate mode
 
-**Branch workflow:**
-
-- **`main`** - Protected production branch (GitHub blocks direct pushes)
-- **`testing`** - Development branch (direct commits allowed)
-
-**Deployment:**
+**Branch workflow:** Direct commit to `main`. There is no `testing` branch. Local pre-commit hooks (noreply email enforcement, marketplace validation) provide guardrails. See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for full rules.
 
 ```bash
-git checkout testing
+git pull origin main
+# (make edits)
 ./scripts/validate-marketplace.sh
-git checkout main
-git merge testing --no-ff -m "Deploy: <description>"
+git add <specific files>
+git commit -m "..."
 git push origin main
-git checkout testing
 ```
-
-See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for detailed workflow documentation.
 
 ## License
 

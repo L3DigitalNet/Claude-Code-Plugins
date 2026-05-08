@@ -12,45 +12,30 @@ This is a **dual-purpose repository**:
 
 ### Branch Strategy
 
-```
-main     ← Protected production branch (marketplace distribution)
-testing  ← Development branch (all work happens here)
-```
+Direct commit to `main`. There is no `testing` branch — that convention was retired 2026-05-07.
 
-**IMPORTANT**: Always work on the `testing` branch. The `main` branch is protected and requires manual merge (GitHub blocks direct pushes).
+**Local guardrails** (replace what server-side branch protection used to provide):
+- Noreply email pre-commit hook (rejects non-noreply commit authors)
+- `./scripts/validate-marketplace.sh` (manifest + marketplace consistency)
+- `/release-pipeline:release` pre-flight (3 parallel agents check tests/docs/git before any tag)
 
 ### Directory Structure
 
 ```
 ├── .claude-plugin/marketplace.json  # Marketplace catalog (source of truth)
-├── plugins/                         # All plugins (development + production)
-│   └── agent-orchestrator/          # Reference implementation
+├── plugins/                         # All plugins
+│   ├── release-pipeline/            # Tagged-release orchestrator
+│   └── ...                          # Other plugins
 ├── scripts/
 │   └── validate-marketplace.sh      # Marketplace validation
-└── BRANCH_PROTECTION.md             # Workflow documentation
-```
-
-### Branch Protection
-
-**`main` branch protection**:
-- Direct pushes blocked by GitHub
-- Requires manual merge from `testing`
-- Prevents accidental production changes
-
-**Development workflow**:
-1. Work on `testing` branch with direct commits
-2. Validate with `./scripts/validate-marketplace.sh`
-3. Merge `testing` → `main` when ready to deploy
-4. GitHub enforces protection (blocks accidental pushes)
+└── BRANCH_PROTECTION.md             # Branch workflow doc
 
 ## Development Workflow
 
 ### Creating New Plugins
 
 ```bash
-# Ensure on testing branch
-git checkout testing
-git pull origin testing
+git pull origin main
 
 # Create plugin structure
 mkdir -p plugins/my-plugin/.claude-plugin
@@ -68,57 +53,41 @@ EOF
 # Test locally
 claude --plugin-dir ./plugins/my-plugin
 
-# Add to marketplace catalog
+# Add to marketplace catalog (version must match plugin.json)
 vim .claude-plugin/marketplace.json
-# Add entry with version 1.0.0
 
 # Validate
 ./scripts/validate-marketplace.sh
 
-# Commit to testing
+# Commit + push directly to main
 git add plugins/my-plugin .claude-plugin/marketplace.json
 git commit -m "Add my-plugin v1.0.0"
-git push origin testing
-
-# When ready to deploy
-git checkout main
-git pull origin main
-git merge testing --no-ff -m "Deploy my-plugin v1.0.0"
 git push origin main
-git checkout testing
+
+# To publish a tagged release with GitHub release notes:
+# /release-pipeline:release  → pick "Plugin Release"
 ```
 
 ### Updating Existing Plugins
 
 ```bash
-# Work on testing branch
-git checkout testing
+git pull origin main
 
 # Make changes
 vim plugins/agent-orchestrator/commands/orchestrate.md
 
-# Bump version in manifest
-vim plugins/agent-orchestrator/.claude-plugin/plugin.json
-# "version": "1.0.0" → "1.0.1"
+# Either bump versions manually...
+vim plugins/agent-orchestrator/.claude-plugin/plugin.json    # 1.0.0 → 1.0.1
+vim .claude-plugin/marketplace.json                          # match it
 
-# Update marketplace catalog
-vim .claude-plugin/marketplace.json
-# Update matching entry version
-
-# Validate
+# ...or let the release pipeline bump them in Phase 2
+# Then commit + push:
 ./scripts/validate-marketplace.sh
-
-# Commit and push
 git add plugins/agent-orchestrator .claude-plugin/marketplace.json
 git commit -m "Update agent-orchestrator to v1.0.1"
-git push origin testing
-
-# When ready to deploy
-git checkout main
-git pull origin main
-git merge testing --no-ff -m "Deploy agent-orchestrator v1.0.1"
 git push origin main
-git checkout testing
+
+# To tag + publish: /release-pipeline:release  → pick "Plugin Release"
 ```
 
 ## Key Architectural Patterns
@@ -263,28 +232,22 @@ claude --plugin-dir ./plugins/plugin-name
 ./scripts/validate-marketplace.sh
 ```
 
-### Deploy to Production
+### Tagged Release
 
 ```bash
-# From testing branch
-git checkout testing
-./scripts/validate-marketplace.sh
-
-# Deploy to main
-git checkout main
-git pull origin main
-git merge testing --no-ff -m "Deploy: <description>"
-git push origin main
-git checkout testing
+# Run the release pipeline; it handles version bump + changelog + tag + GitHub release
+/release-pipeline:release
+# Pick mode based on scope:
+#   "Plugin Release" — release a single plugin
+#   "Batch Release"  — release every plugin with unreleased commits
 ```
 
 ## Important Rules
 
-1. **Never push directly to `main`** - GitHub branch protection prevents this
-2. **Always work on `testing` branch** - This is your development workspace
-3. **Validate before deploy** - Run `./scripts/validate-marketplace.sh` before merging to main
-4. **Version synchronization** - Update both plugin manifest and marketplace.json together
-5. **Test locally first** - Use `claude --plugin-dir` before pushing
-6. **Deploy via merge** - Use `git merge testing --no-ff` when moving to production
+1. **Direct commit to `main`** — no `testing` branch (retired 2026-05-07)
+2. **Validate marketplace consistency** — `./scripts/validate-marketplace.sh` before pushing changes that touch any plugin manifest
+3. **Version synchronization** — `plugins/<name>/.claude-plugin/plugin.json` and the matching entry in `.claude-plugin/marketplace.json` must always agree
+4. **Test locally first** — `claude --plugin-dir ./plugins/<name>` before pushing
+5. **Use the release pipeline for tagged releases** — `/release-pipeline:release` handles bump + changelog + tag + GitHub release together
 
 See [BRANCH_PROTECTION.md](../BRANCH_PROTECTION.md) for complete workflow documentation.

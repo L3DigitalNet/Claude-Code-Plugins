@@ -16,3 +16,4 @@ Plugin authoring and release workspace for Claude Code / Codex plugins.
 - Keep `.codex-plugin/plugin.json`, plugin folders, command wiring, and marketplace metadata in sync.
 - Validate substantive plugin changes with the plugin test harness before wrapping up.
 - Preserve documented enforcement layers, hooks, and release-pipeline expectations when refactoring.
+- **Branch workflow:** direct commit to `main`. No `testing` branch — that convention was retired 2026-05-07. For plugin releases, use the release-pipeline plugin (Codex equivalent of `/release-pipeline:release`). See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md).

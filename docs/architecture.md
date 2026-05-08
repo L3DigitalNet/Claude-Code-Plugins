@@ -12,7 +12,7 @@
 
 ## Handoff Gotchas
 
-- **Branch protection:** `main` branch is protected; direct pushes rejected. All development on `testing` branch; merge via `git merge testing --no-ff` when ready for release.
+- **Branch workflow:** Direct commit to `main`. No `testing` branch — that convention was retired 2026-05-07. Local pre-commit hooks (noreply email, marketplace validation) provide the guardrails branch protection used to provide. For tagged plugin releases, use `/release-pipeline:release`.
 - **Marketplace cache:** `~/.claude/plugins/marketplaces/l3digitalnet-plugins/` is a git clone. Editing source repo `.claude-plugin/marketplace.json` does NOT auto-update cache — manually `git fetch && git reset --hard origin/main` or re-add the marketplace.
 - **Plugin removal requires three updates:** `settings.json` (enabledPlugins), `installed_plugins.json` (load source of truth), and plugin cache directory. Editing settings.json alone leaves the plugin loaded.
 - **MCP server .mcp.json is flat format, not wrapped:** `{"server-name": {"command": "..."}}` not `{"mcpServers": {"server-name": ...}}`. Incorrect format causes "invalid mcp" errors.
@@ -30,7 +30,7 @@ Marketplace-wide principle-traceable test coverage initiative. Phase 1 establish
 - In scope: 15 plugins (all except python-dev, qdev — pure-markdown only)
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
-- Merge strategy: 15 `tests/<plugin>` sibling branches off `testing`. Merge release-pipeline first (freshest cherry-pick + 77 cases), then others in any order (cherry-picks deduplicate on first merge).
+- Merge strategy (historical, pre-2026-05-07): 15 `tests/<plugin>` sibling branches off `testing` were used during initial test rollout; testing branch retired. Any remaining `tests/*` branches are integrated by direct cherry-pick to `main`.
 
 ---
 
@@ -42,7 +42,7 @@ with the rest of this repo's Phase 5 for batch-dispatch reasons.
 
 ## Repository Purpose
 
-Claude Code plugin marketplace and development workspace. `main` distributes to users; `testing` is where all development happens. GitHub blocks direct pushes to `main`.
+Claude Code plugin marketplace and development workspace. `main` is the only branch — direct commits, no `testing` intermediate. Local pre-commit hooks (noreply email enforcement, marketplace validation) provide the guardrails that server-side branch protection used to provide.
 
 ## Plugin Design Principles
 
@@ -121,7 +121,7 @@ npm ci && npm run build && npm test
 claude --plugin-dir ./plugins/plugin-name
 ```
 
-CI runs the full matrix automatically on push to `testing` or `main`.
+CI runs the full matrix automatically on push to `main`.
 
 ## Plugin Test Harness (PTH)
 
@@ -137,7 +137,7 @@ CI runs the full matrix automatically on push to `testing` or `main`.
 3. Add `CHANGELOG.md` (Keep a Changelog format: Added, Changed, Fixed, Removed, Security)
 4. Create `README.md` from `docs/plugin-readme-template.md` — fill in all required sections; delete optional sections that don't apply
 5. Run `./scripts/validate-marketplace.sh`
-6. Commit to `testing`, push, merge to `main` when ready
+6. Commit + push directly to `main`. For tagged releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`.
 
 **Updating a plugin — both files must change together:**
 1. Bump version in `plugins/<name>/.claude-plugin/plugin.json`
@@ -145,12 +145,12 @@ CI runs the full matrix automatically on push to `testing` or `main`.
 3. Update `CHANGELOG.md`
 4. Run `./scripts/validate-marketplace.sh`
 
-**Deploy to main:**
+**Commit + push to main:**
 ```bash
-git checkout main && git merge testing --no-ff -m "Deploy: <description>" && git push origin main && git checkout testing
+git add <specific files> && git commit -m "..." && git push origin main
 ```
 
-See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for emergency hotfix workflow.
+For tagged plugin releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`. See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md).
 
 ## Release Pipeline
 
