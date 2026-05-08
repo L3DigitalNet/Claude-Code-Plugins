@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, design review, infrastructure verification, Home Assistant integration dev, Linux system administration, GitHub repo health, and plugin testing.
+A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, infrastructure verification, Home Assistant integration dev, Qt UI development, GitHub repo health, plugin testing, and three-layer documentation propagation.
 
 ## Installation
 
@@ -19,7 +19,7 @@ Or using the full URL:
 Then install individual plugins:
 
 ```bash
-/plugin install design-assistant@l3digitalnet-plugins
+/plugin install release-pipeline@l3digitalnet-plugins
 ```
 
 ### Staying Up to Date
@@ -47,21 +47,16 @@ installed plugins at the start of each session.
 
 | Plugin | Type | Command | Description |
 |--------|------|---------|-------------|
-| [Claude Sync](#claude-sync) | Commands | `/claude-sync:sync-export`, `/claude-sync:sync-import` | Synchronize the Claude Code environment across multiple machines via a shared filesystem |
-| [Design Assistant](#design-assistant) | Commands + Skills | `/design-draft`, `/design-review` | Guided design document authoring and principle-enforced review |
-| [Docs Manager](#docs-manager) | Commands + Agents + Hooks | `/docs` | Documentation lifecycle management with drift detection |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Handoff](#handoff) | Skills | `/handoff:save`, `/handoff:load` | Save and load task context across machines via shared network drive |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
-| [Linux SysAdmin](#linux-sysadmin) | Skills + Commands | 163 guides | Per-service knowledge for daemons, CLI tools, and filesystems; guided `/sysadmin` stack interview |
 | [Nominal](#nominal) | Commands | `/preflight`, `/postflight`, `/abort` | Infrastructure verification session contract: 11 systems check security, reachability, backups, monitoring, and more |
+| [Opus Context](#opus-context) | Skills + Hooks | always-on | Teaches Opus 4.6 to use its full 1M context window instead of conservative small-model defaults |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
-| [Python Dev](#python-dev) | Commands + Skills | `/python-code-review` | Contextual Python domain guidance: 11 skills load automatically, plus a comprehensive multi-domain code audit |
+| [qdev](#qdev) | Skills | `/research`, `/quality-review`, `/deps-audit`, `/doc-sync`, `/spec-update` | Development quality toolkit: pre-build research sweeps, convergence-loop quality reviews, CVE dependency audits, and inline doc sync |
+| [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
-| [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
-| [qdev](#qdev) | Skills | `/research`, `/quality-review`, `/deps-audit`, `/doc-sync`, `/spec-update` | Development quality toolkit: pre-build research sweeps, convergence-loop quality reviews, CVE dependency audits, and inline doc sync |
-| [Opus Context](#opus-context) | Skills + Hooks | always-on | Teaches Opus 4.6 to use its full 1M context window instead of conservative small-model defaults |
 | [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
 | [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (Haiku propagators + Sonnet drift auditor) from session context, plus full infrastructure drift analysis |
 
@@ -80,58 +75,6 @@ These principles apply across all plugins in this collection. Individual plugins
 **[P5] Convergence is the Contract**: Iterative work defines completion as a measurable criterion (set by the plugin, the user, or collaboratively) and drives toward it without check-ins. Proceed quietly when converging normally. Surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating (making and undoing the same changes repeatedly), flag the pattern and stop rather than continuing. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
 
 **[P6] Composable, Focused Units**: Every plugin component (command, skill, hook) does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
-
----
-
-### Claude Sync
-
-**Synchronize the Claude Code environment across machines**: captures settings, MCP
-servers, plugins, and CLAUDE.md into a `.tar.gz` snapshot and applies it on the
-receiving machine with conflict resolution and git sync.
-
-**Features:**
-
-- `/sync-export`: commits and pushes all git repos, captures `~/.claude/` and MCP configs, writes snapshot to shared path
-- `/sync-import`: previews snapshot, backs up local state, applies with mtime-based merge, installs missing MCP servers, syncs git repos
-- Wholesale directory capture picks up new Claude Code files automatically
-- Secrets (credentials, OAuth tokens) are always excluded from snapshots
-- First-run prompts for sync path, secret store path, and repos root; saves to global CLAUDE.md
-
-**Install:**
-
-```bash
-/plugin install claude-sync@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/claude-sync/README.md](plugins/claude-sync/README.md)
-
----
-
-### Design Assistant
-
-**Full design document lifecycle in two commands**: guided authoring from blank page through
-principle-enforced iterative review.
-
-**Features:**
-
-- `/design-draft`: 5-phase interview: context deep dive, principles discovery, scope
-  confirmation, gap-filling, and draft generation
-- Principle stress-testing and tension resolution before any architecture is committed
-- `/design-review`: multi-pass principle enforcement, gap analysis, and optional auto-fix
-- Principle Conflict Screening: all proposed fixes checked against established principles
-  before presentation
-- Automatic warm handoff from draft to review (principles registry transferred)
-- Runs until the document converges to zero findings across all review tracks
-
-**Install:**
-
-```bash
-/plugin install design-assistant@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/design-assistant/README.md](plugins/design-assistant/README.md)
 
 ---
 
@@ -211,29 +154,6 @@ HA connections, automated validation, example integrations, and project template
 
 **Learn more:**
 [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
-
----
-
-### Linux SysAdmin
-
-**Linux system administration knowledge base**: 163 per-service guides covering daemons, CLI tools, and filesystems. Guides load automatically when you mention a service by name; no commands required for most usage.
-
-**Features:**
-
-- 163 per-service guides across web/proxy, DNS, databases, security/VPN, containers, monitoring, networking, filesystems, storage, backup, mail, self-hosted apps, IoT, and 30+ CLI tools
-- Annotated configs for daemons (nginx, sshd, samba, postfix, mosquitto, and more) with every directive documented
-- Task-organized cheatsheets for CLI tools (nmap, tcpdump, jq, rsync, borg, tmux, and more)
-- `/sysadmin` command: guided interview to design a complete server stack with rationale and setup order
-- No build step, no MCP server, no dependencies
-
-**Install:**
-
-```bash
-/plugin install linux-sysadmin@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/linux-sysadmin/README.md](plugins/linux-sysadmin/README.md)
 
 ---
 
@@ -317,60 +237,6 @@ pre-flight checks, changelog generation, and GitHub release creation.
 ```
 
 **Learn more:** [plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
-
----
-
-### Docs Manager
-
-**Documentation lifecycle management**: monitors file changes via hooks, accumulates
-documentation tasks into a persistent queue without interrupting active work, and
-surfaces the queue for batch review at session end.
-
-**Features:**
-
-- Hook-driven change detection: queues documentation tasks as files are written
-- Persistent queue across sessions with no item loss between restarts
-- Central library index with per-document freshness tracking
-- Third-party doc verification against upstream authoritative sources
-- Batch review at session end rather than interrupting active work
-- `/docs` command for manual queue management and auditing
-
-**Install:**
-
-```bash
-/plugin install docs-manager@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/docs-manager/README.md](plugins/docs-manager/README.md)
-
----
-
-### Python Dev
-
-**Contextual Python domain guidance**: 11 skills load automatically when you work on
-Python code, covering async patterns, anti-patterns, type safety, testing, resilience,
-observability, configuration, design patterns, resource management, code style, and
-background jobs.
-
-**Features:**
-
-- 11 always-on skills that activate based on what you are working on
-- `/python-code-review`: comprehensive multi-domain code audit across all 11 quality
-  domains with severity-sorted findings
-- Covers async/await, type hints, pytest fixtures, retry/backoff, logging/tracing,
-  pydantic-settings, context managers, Celery/RQ, ruff/black, composition vs.
-  inheritance, and common Python traps
-- No build step, no MCP server, no dependencies
-
-**Install:**
-
-```bash
-/plugin install python-dev@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/python-dev/README.md](plugins/python-dev/README.md)
 
 ---
 
@@ -592,20 +458,15 @@ reference.
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
-├── plugins/                     # All plugin implementations
-│   ├── claude-sync/             # Claude Code environment sync across machines
-│   ├── design-assistant/        # Design document lifecycle
-│   ├── docs-manager/            # Documentation lifecycle management
+├── plugins/                     # All plugin implementations (12 plugins)
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── handoff/                 # Cross-machine task continuity (save/load)
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
-│   ├── linux-sysadmin/          # Linux sysadmin skills (163 per-service guides)
 │   ├── nominal/                 # Infrastructure verification (preflight/postflight/abort)
 │   ├── opus-context/            # 1M context window optimizer for Opus 4.6
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
-│   ├── python-dev/              # Python development skills (11 domain skills)
+│   ├── qdev/                    # Development quality toolkit (research, reviews, dep audits, doc-sync, spec-update)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
-│   ├── qdev/                    # Development quality toolkit (research, reviews, dep audits)
 │   ├── release-pipeline/        # Autonomous release pipeline
 │   ├── repo-hygiene/            # Autonomous repo maintenance sweep
 │   ├── test-driver/             # Proactive testing via gap analysis and convergence

@@ -60,15 +60,13 @@ LLM-facing (terse, scannable, tables > prose, no narrative framing):
 - Model set explicitly per workload (haiku = mechanical, sonnet = reasoning)
 ```
 
-**Why:** Commands that held research results, file contents, and iteration state in Opus context burned 15-22K tokens per invocation. Splitting separates concerns: commands handle user interaction (trivial) while agents handle work (and can run cheaper). Agents are stateless (no persistent context pressure); iteration state flows as JSON between Agent returns. For convergence-loop work, agents need the model tier for consistency/reasoning — sonnet over haiku for multi-pass quality audits. Mechanical work (manifest parsing, CVE lookups, docstring generation) downgrades to haiku. Pattern established across qdev, repo-hygiene, python-dev, and generalizes to any research-heavy or iterative plugin command.
+**Why:** Commands that held research results, file contents, and iteration state in Opus context burned 15-22K tokens per invocation. Splitting separates concerns: commands handle user interaction (trivial) while agents handle work (and can run cheaper). Agents are stateless (no persistent context pressure); iteration state flows as JSON between Agent returns. For convergence-loop work, agents need the model tier for consistency/reasoning — sonnet over haiku for multi-pass quality audits. Mechanical work (manifest parsing, CVE lookups, docstring generation) downgrades to haiku. Pattern established across qdev and repo-hygiene (and previously python-dev before its 2026-05-08 removal); generalizes to any research-heavy or iterative plugin command.
 
 **Sources:**
 - `plugins/qdev/commands/deps-audit.md` (thin orchestrator, 40 lines)
 - `plugins/qdev/agents/qdev-deps-auditor.md` (haiku agent, 180 lines)
 - `plugins/repo-hygiene/commands/hygiene.md` (Step 1 inline; Step 2 dispatches agent)
-- `plugins/python-dev/commands/python-code-review.md` (thin dispatcher, 45 lines)
-- `plugins/python-dev/agents/python-code-reviewer.md` (sonnet agent, 200+ lines)
-- Session summary: plugin delegation migration (2026-04-23)
+- Session summary: plugin delegation migration (2026-04-23). The `plugins/python-dev/` exemplars referenced in earlier revisions were deleted 2026-05-08 along with the plugin.
 
 **Related:** PLUGIN-001, DOC-001
 
@@ -137,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
-- Existing test coverage: claude-sync 2 bats, design-assistant 4 bats, docs-manager 5 bats, github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, linux-sysadmin 1 bats, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 77 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 34 bats.
+- Existing test coverage (post-2026-05-08 cleanup, 11 in-scope plugins): github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 77 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 34 bats.
 
 **Related:** TEST-002, DOC-001
 
@@ -162,7 +160,7 @@ exec bash "$BATS_ROOT/libexec/bats-core/bats" "$@"
 **Sources:**
 - Issue: reproducer `bats /tmp/minimal.bats > out.txt 2>&1; ls -la out.txt` shows 0 bytes via wrapper, populated via direct call
 - Discovered during release-pipeline Phase 2 (2026-04-25)
-- Affects 13 plugins: release-pipeline, opus-context, linux-sysadmin, handoff, claude-sync, up-docs, repo-hygiene, github-repo-manager, docs-manager, design-assistant, nominal, test-driver, qt-suite
+- Affects 9 plugins (post-2026-05-08 cleanup): release-pipeline, opus-context, handoff, up-docs, repo-hygiene, github-repo-manager, nominal, test-driver, qt-suite
 
 **Related:** TEST-001, DOC-001
 

@@ -108,12 +108,12 @@ This is the canonical format used by L3DigitalNet:
   },
   "plugins": [
     {
-      "name": "design-assistant",
-      "description": "Principled design document authoring and enforcement.",
-      "version": "0.4.0",
+      "name": "release-pipeline",
+      "description": "Interactive release pipeline: quick merge, full semver release, plugin release, status checks, dry runs.",
+      "version": "2.2.0",
       "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/design-assistant",
-      "source": "./plugins/design-assistant"
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+      "source": "./plugins/release-pipeline"
     },
     {
       "name": "external-tool",
