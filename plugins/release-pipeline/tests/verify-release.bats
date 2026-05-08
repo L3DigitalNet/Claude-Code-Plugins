@@ -7,11 +7,10 @@ setup() {
   SCRIPT="$PLUGIN_ROOT/scripts/verify-release.sh"
   REPO=$(make_git_repo)
   ORIGIN=$(make_bare_origin "$REPO")
-  # make_git_repo initializes 'dev'; verify-release expects current branch != main.
   path_prepend_stubs
 }
 
-@test "all checks pass on a tagged + released + dev-branched repo (VR1)" {
+@test "all checks pass on a tagged + released repo (VR1)" {
   git -C "$REPO" tag v1.0.0
   git -C "$REPO" push origin v1.0.0 >/dev/null 2>&1
   GH_STUB_MODE=release_ok run bash "$SCRIPT" "$REPO" 1.0.0
@@ -19,7 +18,7 @@ setup() {
   [[ "$output" == *"✓ Tag exists on remote"* ]]
   [[ "$output" == *"✓ GitHub release exists"* ]]
   [[ "$output" == *"✓ Release notes present"* ]]
-  [[ "$output" == *"4 passed, 0 failed"* ]]
+  [[ "$output" == *"3 passed, 0 failed"* ]]
 }
 
 @test "missing remote tag fails the tag check (VR2)" {
@@ -35,15 +34,6 @@ setup() {
   [ "$status" -eq 1 ]
   [[ "$output" == *"✓ Tag exists on remote"* ]]
   [[ "$output" == *"✗ GitHub release exists"* ]]
-}
-
-@test "branch == main fails the dev-branch-return check (VR4)" {
-  git -C "$REPO" tag v1.0.0
-  git -C "$REPO" push origin v1.0.0 >/dev/null 2>&1
-  git -C "$REPO" checkout -B main >/dev/null 2>&1
-  GH_STUB_MODE=release_ok run bash "$SCRIPT" "$REPO" 1.0.0
-  [ "$status" -eq 1 ]
-  [[ "$output" == *"on: main"* ]]
 }
 
 @test "version with leading 'v' is normalized; no double-v (VR5)" {

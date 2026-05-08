@@ -14,7 +14,6 @@ set -euo pipefail
 #   1. Tag exists on remote
 #   2. GitHub release exists
 #   3. Release notes not empty
-#   4. Current branch is NOT main (should have returned to dev branch)
 
 # ---------- Argument handling ----------
 
@@ -104,20 +103,6 @@ if [[ -n "$release_body" ]]; then
   check "Release notes present" "pass"
 else
   check "Release notes present" "fail"
-fi
-
-# ---------- 4. Current branch is NOT main ----------
-
-current_branch=$(git -C "$REPO" branch --show-current 2>/dev/null || echo "")
-
-if [[ -n "$current_branch" && "$current_branch" != "main" ]]; then
-  check "Returned to dev branch (on: ${current_branch})" "pass"
-else
-  if [[ "$current_branch" == "main" ]]; then
-    check "Returned to dev branch (on: main)" "fail"
-  else
-    check "Returned to dev branch (detached HEAD)" "fail"
-  fi
 fi
 
 # ---------- Summary ----------

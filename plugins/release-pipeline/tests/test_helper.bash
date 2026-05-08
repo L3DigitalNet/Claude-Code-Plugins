@@ -22,6 +22,11 @@ make_git_repo() {
   git -C "$dir" config user.email "test@example.com"
   git -C "$dir" config user.name "Test"
   git -C "$dir" config commit.gpgsign false
+  # Workstation's global pre-commit hook enforces an author-email regex (GH007 noreply
+  # filter) and rejects test@example.com — silent failure under `>/dev/null 2>&1` leaves
+  # HEAD unwritten, breaking every downstream `git tag` call. Same fix as
+  # plugin-test-harness v0.7.5 (TEST-003 / bug 005).
+  git -C "$dir" config core.hooksPath /dev/null
   # User's global config sets tag.gpgsign=true, which makes `git tag <name>` create
   # a signed annotated tag and fail without a message. Force lightweight-tag default
   # in test repos so `git tag v1.0.0` works as a plain ref creation.
