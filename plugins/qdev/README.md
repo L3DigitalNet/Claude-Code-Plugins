@@ -71,7 +71,7 @@ flowchart TD
     J -->|Yes| K["One follow-up pass"]
     J -->|No| L["Synthesize + grade sources"]
     K --> L
-    L --> M["Persist report<br/>docs/research/<date>-<slug>.md"]
+    L --> M["Persist report<br/>docs/research/[date]-[slug].md"]
     M --> N["Return structured report"]
 ```
 
@@ -137,7 +137,7 @@ Research a topic, technology, or problem space before designing or building, by 
 inferred from project context and conversation history.
 
 **Coverage:**
-- Official documentation (current API, recent changes) — routed through Context7 for libraries
+- Official documentation (current API, recent changes)
 - Community best practices (established patterns, what has replaced older approaches)
 - Footguns and gotchas (2+ source corroboration required; single-source items demoted)
 - Existing tools (alternatives and prior art; avoid building what already exists)
@@ -148,8 +148,7 @@ inferred from project context and conversation history.
 header includes the canonical path; downstream commands consume the artifact by reading that path
 rather than re-running the sweep.
 
-**Depth tiers:** quick (3-4 queries), standard (6-8, default), thorough (12-15). Set via the
-sub-agent prompt; the orchestrator defaults to standard.
+**Depth tiers:** quick (3-4 queries), standard (6-8, default), thorough (12-15). For library/framework topics, the agent routes documentation queries through Context7 before falling back to web search.
 
 #### When to use `/qdev:research` vs other research tools
 
@@ -169,13 +168,14 @@ persistence under `docs/research/`. The global `research` skill is broader and f
 `qdev-researcher` writes its report to `docs/research/<YYYY-MM-DD>-<slug>.md`. Downstream skills
 and commands consume the artifact by referencing that path:
 
-- `/qdev:quality-review <artifact>` — pass the research path in the prompt to ground the review
-  context
-- `superpowers:brainstorming` — feed the report's Open Questions into the design conversation
-- `feature-dev:feature-dev` — start architecture work with the report linked from the brief
+- `/qdev:quality-review <artifact>`: pass the research path in the prompt to ground the review
+  context.
+- `superpowers:brainstorming`: feed the report's Open Questions into the design conversation.
+- `feature-dev:feature-dev`: start architecture work with the report linked from the brief.
 
 Reports are not auto-cleaned; treat `docs/research/` as a session artifact log. Stale reports can
-be removed manually or pruned with `find docs/research -mtime +90 -delete`.
+be removed manually or pruned with `find docs/research -type f -name '*.md' -mtime +90 -delete`
+(restricts deletion to old report files; preserves `.gitkeep`).
 
 ### `/qdev:quality-review [path]`
 
