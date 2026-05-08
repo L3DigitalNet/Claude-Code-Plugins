@@ -65,7 +65,7 @@ EXPECTED_EXAMPLES = sorted([
 ])
 
 VALID_AGENT_TOOLS = {
-    "Read", "Write", "Edit", "Bash", "Grep", "Glob", "WebSearch", "WebFetch",
+    "Read", "Write", "Edit", "Bash", "Grep", "Glob", "WebFetch",
 }
 
 EXPECTED_MCP_SOURCES = [

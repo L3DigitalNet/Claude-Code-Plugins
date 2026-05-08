@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.0] - 2026-05-07
+
+### Added
+
+- All `/qdev` commands and agents now support the `tavily` MCP server. New tools available to relevant agents/commands: `mcp__tavily__tavily_search` (content-heavy queries that previously required search→scrape) and `mcp__tavily__tavily_extract` (JS-rendered page extraction; replaces `WebFetch` as the preferred fetch tool for documentation, advisory, and issue pages). `brave-search` + `serper-search` remain the primary parallel search pair.
+
+### Changed
+
+- `/qdev:research`: 3-5 deep-dive pages identified after dual-source search are now read via `mcp__tavily__tavily_extract` instead of `WebFetch`. Includes a `search_depth=basic` note to avoid the broken `fast` mode currently in Tavily's MCP.
+- `qdev-quality-reviewer` agent: docs/issue/advisory pages requiring JS rendering or full extraction now route through `tavily_extract`.
+- `qdev-deps-auditor` agent: CVE advisory pages (GHSA, NVD detail pages) are now read via `tavily_extract` with `WebFetch` as fallback.
+- `README.md`: prerequisites now list `tavily` MCP as recommended; mermaid diagrams updated to show the third research surface.
+
+### Notes
+
+- Existing `brave-search` and `serper-search` tool calls are unchanged in shape and parallelism. Tavily is additive, not a replacement for the dual-source primary pair.
+- This release follows the marketplace-wide swap from `garylab/serper-mcp-server` (Python, all-Google-verticals) to `marcopesani/serper-search-scrape-mcp-server` (Node, search + scrape only). All `mcp__serper-search__google_search` references continue to resolve correctly.
+
 ## [1.3.0] - 2026-04-23
 
 ### Changed

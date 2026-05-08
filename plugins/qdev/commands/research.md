@@ -11,6 +11,8 @@ allowed-tools:
   - WebFetch
   - mcp__brave-search__brave_web_search
   - mcp__serper-search__google_search
+  - mcp__tavily__tavily_search
+  - mcp__tavily__tavily_extract
 ---
 
 # /qdev:research
@@ -72,7 +74,9 @@ After collecting all search results, identify 3-5 pages that are most relevant a
 - Security advisories or CVE records
 - Well-maintained reference repositories or cookbooks
 
-Use `WebFetch` to read these pages in full. Deduplicate overlapping results across the two search tools.
+Use `mcp__tavily__tavily_extract` to read these pages in full — it handles JS-rendered content and returns clean Markdown in one call. Fall back to `WebFetch` only if Tavily fails. Deduplicate overlapping results across the two search tools.
+
+For content-heavy follow-up queries (where you'd otherwise search→scrape), prefer `mcp__tavily__tavily_search` with `include_raw_content=true` and `search_depth=basic` (note: `search_depth=fast` is currently broken and returns empty results).
 
 ## Step 4: Synthesize and Report
 

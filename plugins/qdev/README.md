@@ -23,6 +23,7 @@ Design decisions in this plugin are evaluated against these principles.
 - Claude Code (any recent version)
 - `brave-search` MCP server (required for `/qdev:quality-review` and `/qdev:research`)
 - `serper-search` MCP server (required for `/qdev:quality-review` and `/qdev:research`)
+- `tavily` MCP server (recommended; used for content-heavy queries and JS-rendered page extraction across `/qdev:research`, `/qdev:quality-review`, and `/qdev:deps-audit`)
 
 ## Installation
 
@@ -42,7 +43,7 @@ claude --plugin-dir ./plugins/qdev
 ```mermaid
 flowchart TD
     A["/qdev:quality-review [path]"] --> B["Detect mode<br/>(spec / plan / code)"]
-    B --> C["Research Phase<br/>brave-search + serper-search"]
+    B --> C["Research Phase<br/>brave-search + serper-search + tavily-extract"]
     C --> D{"Critical findings?"}
     D -->|Yes| E["Surface immediately<br/>Wait for response"]
     D -->|No| F["Analysis pass"]
@@ -57,7 +58,7 @@ flowchart TD
 flowchart LR
     A["/qdev:research [topic]"] --> B["Infer topic<br/>(args or context)"]
     B --> C["6-8 queries<br/>across 6 angles"]
-    C --> D["brave-search + serper-search<br/>+ WebFetch key pages"]
+    C --> D["brave-search + serper-search<br/>+ tavily-extract key pages"]
     D --> E["Synthesize report"]
 ```
 
