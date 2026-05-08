@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.2] - 2026-05-08
+
+### Fixed
+- README "Known Issues" no longer claims drift analysis is "designed for Opus 4.6" — auditor runs Sonnet by frontmatter; Opus is opt-in via the escalation block.
+- Stale Claude Code v2.1.92 MCP-loading mitigation note removed from Known Issues.
+- Duplicate `## [0.3.0]` CHANGELOG entry merged into one block.
+- `tests/link-audit.bats` no longer breaks on inputs containing single quotes; added a red-first regression test that exercises the `O'Reilly`-style failure case using the OLD pattern, then rewrites all 8 invocations to the safe `printf '%s\n' "$1"` form.
+
+### Added
+- README §Requirements now lists Python 3.x in `$PATH` as a hard prerequisite (used by all four helper scripts under `scripts/`).
+
 ## [0.7.1] - 2026-04-24
 
 ### Fixed
