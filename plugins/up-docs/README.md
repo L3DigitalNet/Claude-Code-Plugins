@@ -138,7 +138,6 @@ Per-agent `model:` frontmatter overrides the caller's model tier, so propagation
 - Notion and Outline MCP servers must be accessible from the current environment. Air-gapped systems can only use `/up-docs:repo`.
 - `/up-docs:drift` requires SSH access to all documented hosts. Unreachable hosts are logged and skipped, not fatal.
 - Drift analysis runs on Sonnet by default (`model: sonnet` in `up-docs-audit-drift` frontmatter). The auditor's `<output_format>` flags escalation when results would benefit from Opus reasoning — large affected docs (>1000 lines), >10 findings, or cross-layer contradictions — leaving the user to opt in.
-- **Claude Code version sensitivity (MCP + Haiku):** Claude Code v2.1.92 had a bug where Haiku's internal title-generation probe could block session-wide MCP tool loading ([anthropics/claude-code#44290](https://github.com/anthropics/claude-code/issues/44290), now closed). On affected versions, `up-docs-propagate-wiki`, `up-docs-propagate-notion`, and `up-docs-audit-drift` may show FAILED rows because their MCP tools never load. Mitigation: upgrade Claude Code past the fix, or fall back to `/up-docs:repo` which uses no MCP tools.
 
 ## Links
 
