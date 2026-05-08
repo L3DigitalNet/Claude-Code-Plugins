@@ -25,7 +25,10 @@ The phase mechanics (`scripts/convergence-tracker.sh`, `scripts/server-inspect.s
 
 ### 1. Gather Session Context
 
+First, verify Python 3 is available — all helper scripts depend on it:
+
 ```bash
+command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 not found in PATH — install python3 and retry."; exit 1; }
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh init
 ```
