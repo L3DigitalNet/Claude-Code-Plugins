@@ -5,6 +5,12 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ## [2.2.8] - 2026-05-07
 
 ### Changed
+- home-assistant-dev v2.2.8 — drop WebSearch from VALID_AGENT_TOOLS allowlist
+
+
+## [2.2.8] - 2026-05-07
+
+### Changed
 
 - `tests/test_plugin_structure.py`: removed `"WebSearch"` from the `VALID_AGENT_TOOLS` allowlist. The token was defensive; no HA agent declared it. Aligns with the marketplace-wide migration away from the built-in `WebSearch` tool toward MCP-based search backends (`brave-search`, `serper-search`, `tavily`).
 
