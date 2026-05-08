@@ -1,105 +1,88 @@
 ---
 name: research
-description: Dual-source internet research on a topic, task, or technology before designing or building. Covers official docs, community best practices, footguns, and existing tools.
-argument-hint: "<topic, task, or technology to research>"
+description: Dual-source web research via the qdev-researcher subagent (Sonnet). Covers docs, best practices, footguns, existing tools, security, and recent changes. Routes library questions through Context7. Persists a structured report under docs/research/.
+argument-hint: "<topic> | omit to infer from session context"
 allowed-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
+  - Agent
   - AskUserQuestion
-  - WebFetch
-  - mcp__brave-search__brave_web_search
-  - mcp__serper-search__google_search
-  - mcp__tavily__tavily_search
-  - mcp__tavily__tavily_extract
+  - Read
+  - Bash
 ---
 
 # /qdev:research
 
-Research a topic or technology space before designing, planning, or building.
+Research a topic, task, or technology before designing or building, by dispatching the
+`qdev-researcher` subagent.
 
-## Step 1: Establish Topic
+## Why this is a subagent
 
-If `$ARGUMENTS` is provided, use it as the research topic.
+The research workflow performs 6-8 queries × 2 search backends × 10 results, plus 3-5 full-page
+Tavily extracts, plus per-library Context7 round-trips. Running it in Opus context burns ~25K
+tokens per sweep on raw search results alone. The Sonnet subagent consolidates research +
+corroboration + synthesis into one dispatch and returns a compact structured report. This matches
+the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-sync`.
 
-Otherwise, gather context to infer the topic:
+## How to run it
 
-```bash
-git log --oneline -5 2>/dev/null || true
-```
+1. **Establish topic.**
 
-Scan for project-level docs that reveal the current focus:
+   - If `$ARGUMENTS` is provided, use it as the topic.
+   - Otherwise, gather context with one bash call:
 
-```bash
-find . -maxdepth 3 -name "*.md" -not -path "*/.git/*" | head -15
-```
+     ```bash
+     git log --oneline -5 2>/dev/null || true
+     ```
 
-Read `CLAUDE.md` at the project root if present. From git history, project files, and conversation context, infer the current focus area.
+     Read `CLAUDE.md` at the project root if present. From git history, project files, and
+     conversation context, infer the focus area with reasonable confidence.
 
-If the topic still cannot be determined with reasonable confidence, use `AskUserQuestion`:
-- header: `"Research topic"`
-- question: `"I could not determine the research topic from context. What should I research?"`
-- options:
-  1. label: `"Describe it now"`, description: `"I'll type the topic in the next message"`
-  2. label: `"Cancel"`, description: `"Stop"`
+   - If the topic still cannot be inferred, use `AskUserQuestion` with a single bounded question
+     (no two-step pattern):
+     - header: `"Research topic"`
+     - question: `"What should I research? (Pick a recent context or use Other to type a topic.)"`
+     - options: up to 3 inferred candidates from git/CLAUDE.md context. The implicit "Other" entry
+       lets the user type a free-text topic.
 
-If `"Describe it now"` is chosen: ask `"What should I research? Describe the topic, task, or technology."` as a follow-up open-ended question, then use the response as the topic before proceeding.
-If `"Cancel"` is chosen: emit `No topic provided.` and stop.
+     If no candidates can be inferred at all and the user does not provide one, emit
+     `No topic provided.` and stop.
 
-Announce: `Research topic: <topic>`
+   Announce: `Research topic: <topic>`
 
-## Step 2: Plan Research Queries
+2. **Dispatch `qdev-researcher`** with the topic.
 
-Based on the topic, generate 6-8 targeted search queries covering these angles:
+   Use the `Agent` tool with `subagent_type: qdev-researcher` and a prompt like:
 
-1. **Official docs**: primary documentation, API reference, getting-started guide
-2. **Best practices**: established patterns, current community recommendations
-3. **Footguns and gotchas**: common mistakes, version traps, known pain points
-4. **Existing tools**: alternatives and prior art; what already solves this problem
-5. **Security**: CVEs, known vulnerabilities, advisories relevant to the topic
-6. **Recent changes**: deprecations, breaking changes, ecosystem shifts
+   > Research `<topic>`. Default depth=standard. Run dual-source search, route library queries
+   > through Context7, corroborate footguns across 2+ sources, run at most one follow-up pass for
+   > thin angles, persist the report under `docs/research/`, and return the structured report per
+   > your output format.
 
-Use specific queries. Include the year (e.g., `"Redis pub/sub Python gotchas 2024"`) to surface current results over stale archived answers. Prefer the technology's own name plus a specific angle over a single broad query.
+   Do **not** run search tools, `find`, or read manifests in this session. The whole point of the
+   delegation is to keep raw search results out of the orchestrator context.
 
-## Step 3: Execute Research
+## After the agent returns
 
-For each query, run both search tools in the same response turn (parallel tool calls):
-- `mcp__brave-search__brave_web_search` with 10 results
-- `mcp__serper-search__google_search` with 10 results
+1. **Surface the existing-solution callout first if present.** If the report includes a
+   `## ⚠ Existing solution` block, repeat it as the first thing the user sees in your response,
+   before the rest of the report.
 
-After collecting all search results, identify 3-5 pages that are most relevant across all queries:
-- Official documentation pages or changelogs
-- Canonical "production guide" or "best practices" references
-- Security advisories or CVE records
-- Well-maintained reference repositories or cookbooks
+2. **Present the report verbatim** to the user. The `Saved:` path in the header is the canonical
+   handoff artifact.
 
-Use `mcp__tavily__tavily_extract` to read these pages in full — it handles JS-rendered content and returns clean Markdown in one call. Fall back to `WebFetch` only if Tavily fails. Deduplicate overlapping results across the two search tools.
+3. **Offer downstream chaining** if Open Questions is non-empty OR Footguns surfaced material
+   findings. Use `AskUserQuestion`:
 
-For content-heavy follow-up queries (where you'd otherwise search→scrape), prefer `mcp__tavily__tavily_search` with `include_raw_content=true` and `search_depth=basic` (note: `search_depth=fast` is currently broken and returns empty results).
+   - question: `"Research saved to <path>. What's next?"`
+   - options:
+     1. label: `"Brainstorm next"`, description: `"Feed Open Questions into superpowers:brainstorming"`
+     2. label: `"Quality-review related artifact"`, description: `"Run /qdev:quality-review with this research as context"`
+     3. label: `"Just save and exit"`, description: `"No follow-up"`
 
-## Step 4: Synthesize and Report
+   Apply the chosen option in this session: invoke the named skill/command and pass the persisted
+   research path as context.
 
-Synthesize all findings into a structured Markdown report. Include only sections where relevant findings exist.
+4. **Final summary** (always emit):
 
-Report header:
-
-```
-Research Report: <topic>
-Queries: N  |  Results: N  |  Full reads: N pages
-```
-
-Sections (as H3 headings in the response):
-
-- **Official Documentation**: current docs links, API surface, recent changes or version status
-- **Best Practices**: what official sources and the community recommend; patterns that have replaced older approaches
-- **Footguns and Gotchas**: known pitfalls, common mistakes, patterns that look correct but produce subtle failures
-- **Existing Tools**: tools already solving this or related problems, with links and maintenance status
-- **Security and Compatibility**: CVEs, deprecation notices, compatibility warnings
-- **Open Questions**: decisions or unknowns surfaced by research that need answering before proceeding
-
-If **Existing Tools** contains a tool that appears to cover the use case being researched, surface it as a callout before the report body:
-
-```
-⚠ Existing solution: <tool name> (<link>) — appears to cover this use case. Review before building.
-```
+   ```
+   ✓ Research complete. Report: <path>
+   ```
