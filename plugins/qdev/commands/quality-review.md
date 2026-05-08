@@ -13,7 +13,7 @@ Review a spec, plan, or codebase for gaps, inconsistencies, and staleness — wi
 
 ## Why this is a subagent
 
-The research phase runs dual-source web search (brave + serper) plus Context7 docs lookup over 5-10 dependencies — hundreds of search results in raw form. The convergence loop re-reads the artifact N times per pass. Running it in Opus costs ~22K tokens per review. Sonnet is the right tier for multi-step reasoning with convergence; the subagent consolidates research + analysis + auto-fix application into a single dispatch.
+The research phase runs dual-source web search (brave + serper) plus Context7 docs lookup over 5-10 dependencies — hundreds of search results in raw form, with tavily-extract pulling clean content from key pages. The convergence loop re-reads the artifact N times per pass. Running it in Opus costs ~22K tokens per review. Sonnet is the right tier for multi-step reasoning with convergence; the subagent consolidates research + analysis + auto-fix application into a single dispatch.
 
 ## How to run it
 

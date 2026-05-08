@@ -13,7 +13,7 @@ Audit this project's dependencies for CVEs, abandonment, and version lag by disp
 
 ## Why this is a subagent
 
-Manifest parsing + per-dep dual-source web research (brave + serper) for 30-50 dependencies is high-volume mechanical work. Running it in the main Opus context burns ~18K tokens per audit on search results alone. The Haiku subagent keeps all that traffic out of the Opus context and returns a compact findings table.
+Manifest parsing + per-dep dual-source web research (brave + serper, with tavily-extract for advisory page reads) for 30-50 dependencies is high-volume mechanical work. Running it in the main Opus context burns ~18K tokens per audit on search results alone. The Haiku subagent keeps all that traffic out of the Opus context and returns a compact findings table.
 
 ## How to run it
 
