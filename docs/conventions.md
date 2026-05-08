@@ -27,7 +27,7 @@ Human-facing (prose OK):
 
 LLM-facing (terse, scannable, tables > prose, no narrative framing):
 - CLAUDE.md, AGENTS.md
-- docs/handoff.md, docs/conventions.md
+- docs/state.md, docs/deployed.md, docs/architecture.md, docs/credentials.md, docs/conventions.md (V2 handoff layout — `docs/handoff.md` was renamed during the 2026-04-24 migration)
 - docs/specs/*.md, docs/plans/*.md
 - any other file under docs/
 ```
@@ -73,13 +73,13 @@ LLM-facing (terse, scannable, tables > prose, no narrative framing):
 ## DOC-002. Session start
 
 **Applies when:** starting any session in this repo.
-**Rule:** Read `docs/handoff.md` before making changes.
+**Rule:** Read `docs/state.md` before making changes (V2 handoff layout — the old `docs/handoff.md` was split into `state.md` + `deployed.md` + `architecture.md` + `credentials.md` during the 2026-04-24 migration).
 
 ```md
-Open `docs/handoff.md`, confirm current state, then proceed.
+Open `docs/state.md`, confirm current state + active incidents, then proceed.
 ```
 
-**Why:** The handoff doc is the continuity layer between sessions.
+**Why:** `state.md` is the continuity layer between sessions and is auto-injected by the SessionStart hook. Older docs may still reference `docs/handoff.md` — that file no longer exists.
 
 **Sources:**
 - `AGENTS.md`
@@ -135,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
-- Existing test coverage (post-2026-05-08 cleanup, 11 in-scope plugins): github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 77 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 34 bats.
+- Existing test coverage (post-2026-05-09 up-docs v0.8.0 release, 11 in-scope plugins): github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 77 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 61 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests, +26 pytest from validate_output and verify_evidence_grounded suites).
 
 **Related:** TEST-002, DOC-001
 
