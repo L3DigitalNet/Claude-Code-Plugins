@@ -135,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
-- Existing test coverage (post-2026-05-09 up-docs v0.8.0 release, 11 in-scope plugins): github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 77 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 61 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests, +26 pytest from validate_output and verify_evidence_grounded suites).
+- Existing test coverage (post-2026-05-08 up-docs v0.8.0 release, 11 in-scope plugins): github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 61 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests, +26 pytest from validate_output and verify_evidence_grounded suites).
 
 **Related:** TEST-002, DOC-001
 
