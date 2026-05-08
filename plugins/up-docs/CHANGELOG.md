@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.0] - 2026-05-08
+
+### Added
+- `hooks/hooks.json` — plugin-shipped hook component (PreToolUse + PostToolUse) at the supported plugin path; replaces v1's invalid `.claude/settings.json` packaging.
+- `scripts/deny-guard.sh` — PreToolUse forbidden-command validator. Parses pipes, redirects, `&&` chains, `$()`, backticks; mirrors the auditor's `<forbidden_commands>` table. Defense-in-depth, NOT an enforced security boundary. 13 bats tests.
+- `scripts/capture-transcript.sh` + `scripts/_capture-redactor.py` — opt-in PostToolUse capture hook. No-op unless `UP_DOCS_TRANSCRIPT_LOG` is set; uses `umask 077`; redacts Bearer/ghp/ghs/AKIA/BAO_TOKEN/password/token/sk-ant-/aws_secret patterns; truncates output at 4 KiB; Bash only (Read excluded — file contents leak per GH-44868). 10 bats tests.
+- `tests/pyproject.toml` — pinned test deps (pydantic ≥2.5, pytest ≥8.0, fastmcp optional, deepeval optional). Run from `plugins/up-docs/tests/.venv`.
+- `tests/validate_output.py` — Pydantic v2 discriminated-union validators for all four agent outputs. Layered reports use `Annotated[Union[RepoReport, WikiReport, NotionReport], Field(discriminator="layer")]`; structural mismatch produces `union_tag_invalid` naming the bad tag and the expected literals. NotionReport additionally rejects IPv4 leaks; totals are reconciled against row actions.
+- `tests/verify_evidence_grounded.py` — structured-evidence transcript verifier. Requires `expected_output_signature` to literally appear in `tool_response.output` of a transcript record matching `evidence.command`; closes the v1 audit's CR-003 gap (the command-but-output-contradicts case).
+- `tests/test_validate_output.py` and `tests/test_verify_evidence_grounded.py` — 26 self-tests including a CR-003-specific contradiction case and a Bug #4 no-record case.
+- `CLAUDE_CODE_SESSION_ID`-based default state file in `convergence-tracker.sh` — replaces v1 plan's broken `-$$.json` default. Persists state across the multiple separate invocations the drift skill makes per session. 3 new bats tests.
+- README §Security — documents the plugin's defense-in-depth `deny-guard.sh` and recommends a consumer-side `permissions.deny` block for projects that want a hard security boundary.
+
+### Changed
+- Auditor (`up-docs-audit-drift`) prompt: `evidence` is now a structured object `{command, expected_output_signature, source_tool_use_id?}` instead of a free-form string. New no-fabrication rule in `<verification_discipline>`: when `expected_output_signature` was not literally observed in tool output, the auditor MUST set `confidence: "unverifiable"` and `evidence: null` rather than inventing a signature. All 4 examples + the output_format JSON updated to the structured shape.
+- `tests/run-bats.sh` honors explicit path arguments (single files, directories, multiple files), falling back to the top-level glob when called bare. Closes CR-004's wrapper-side gap.
+- All five skill files now check for `python3` in PATH at Step 1 and exit with a clear ERROR message if missing.
+
+### Fixed
+- v1 plan's CR-001 through CR-008 audit findings — see [`docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md`](../../docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md) for the full list of structural defects this release closes.
+
+### Notes
+- Phase 2 hook-firing smoke test (Task 8) result: PASS (2026-05-08, claude 2.1.133). See `plugins/up-docs/docs/phase-2-smoke-result.txt`.
+
 ## [0.7.2] - 2026-05-08
 
 ### Fixed
