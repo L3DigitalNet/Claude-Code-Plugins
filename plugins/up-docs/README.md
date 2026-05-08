@@ -116,7 +116,7 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 | `notion` | Thin wrapper, dispatches `up-docs-propagate-notion` | `/up-docs:notion` |
 | `drift` | Thin wrapper, dispatches `up-docs-audit-drift` | `/up-docs:drift` |
 
-## Sub-agents
+## Agents
 
 | Agent | Model | Role |
 |-------|-------|------|
