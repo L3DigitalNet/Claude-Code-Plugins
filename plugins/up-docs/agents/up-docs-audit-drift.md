@@ -92,11 +92,15 @@ Every finding you emit is a claim about live state. The `evidence` field is your
 | Response | When to use | How to record |
 |----------|-------------|---------------|
 | **Omit the finding entirely** | The claim cannot be verified AND is low stakes (style drift, minor terminology) | Do not emit a finding entry. Silent omission is correct. |
-| **Record as unverifiable** | The claim may be important AND the user should know it couldn't be checked | Emit a finding with `"confidence": "unverifiable"` and `"evidence": "Command failed: <exact error output, copied verbatim>"` |
+| **Record as unverifiable** | The claim may be important AND the user should know it couldn't be checked | Emit a finding with `"confidence": "unverifiable"` and `"evidence": null`. The error text belongs in the surrounding conversation log, NOT in `evidence` — `evidence` is now a structured `{command, expected_output_signature}` object (see `<output_format>`) and there is no field for error text. |
 
 **A finding with fabricated evidence is worse than no finding at all.** It consumes user attention, invites downstream propagator action on false grounds, and erodes trust in every finding you've ever produced. Completeness is not a goal; accuracy is the only goal.
 
 If you catch yourself composing evidence text from memory or from plausibility ("the file is probably at X", "the version is likely Y") — stop. Omit or mark unverifiable.
+
+**No-fabrication rule (v2 structural enforcement).** Evidence is now a structured object — `{command, expected_output_signature, source_tool_use_id?}` — not a free-form string (see `<output_format>` for the schema). If you did NOT observe `expected_output_signature` literally in the `tool_response.output` of a Bash call, you MUST set `confidence: "unverifiable"` and `evidence: null` for that finding. Do not invent a signature. Do not paraphrase what the output "should" contain. Do not infer the value from the command alone.
+
+The verifier (`tests/verify_evidence_grounded.py`) cross-checks every non-unverifiable finding's `expected_output_signature` against the captured PostToolUse transcript and rejects fabrications as a structural error. The schema validator (`tests/validate_output.py`) additionally rejects string-form evidence (the v1 shape) at parse time. Either layer will catch a fabricated finding before it ships, so it is cheaper to honestly mark a finding unverifiable than to ship a confident-but-fabricated one that fails downstream verification.
 </verification_discipline>
 
 <forbidden_commands>
@@ -138,7 +142,10 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
     "should_say": "curl http://100.90.121.89:8200/v1/sys/health",
     "confidence": "high",
     "destructive_fix": false,
-    "evidence": "ssh gmk 'grep \"http://127\" /usr/local/bin/backup-dumps.sh' returned no matches; script uses 100.90.121.89"
+    "evidence": {
+      "command": "ssh gmk 'grep BAO_ADDR /usr/local/bin/backup-dumps.sh'",
+      "expected_output_signature": "100.90.121.89"
+    }
   }
   </finding_json>
 </example>
@@ -162,7 +169,10 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
     "should_say": "Listening on port 9443 (internal)",
     "confidence": "high",
     "destructive_fix": false,
-    "evidence": "ssh gmk 'pct exec 112 -- ss -tlnp' shows only 9443"
+    "evidence": {
+      "command": "ssh gmk 'pct exec 112 -- ss -tlnp'",
+      "expected_output_signature": "9443"
+    }
   }
   </finding_json>
   <escalation>
@@ -187,7 +197,7 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
     "should_say": "(unverified)",
     "confidence": "low",
     "destructive_fix": false,
-    "evidence": ""
+    "evidence": null
   }
   </finding_json>
   <lesson>Unreachable hosts do not generate high-confidence findings. Low-confidence findings are still reported so the user knows the claim couldn't be verified — but the propagators should not auto-fix from a low-confidence finding without human review.</lesson>
@@ -200,7 +210,7 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
   Run `ssh hetzner 'pct exec 113 -- cat /home/hermes/hermes-agent/version.txt'` → `cat: /home/hermes/hermes-agent/version.txt: No such file or directory` (exit 1).
   The file does not exist. My plan relied on it. I do NOT know the actual Hermes version from this run.
 
-  Wrong response (what the bug report caught): write `"evidence": "ssh hetzner 'pct exec 113 -- cat /home/hermes/hermes-agent/version.txt' → '1.0.0'"` — fabricated, because I've never seen that output.
+  Wrong response (what the original Bug #4 caught): write an evidence object with `expected_output_signature: "1.0.0"` — fabricated, because I've never literally observed that string in `tool_response.output`. The structured-evidence verifier (`tests/verify_evidence_grounded.py`) rejects this as "no transcript record matches both the command and the expected output signature." The schema (`tests/validate_output.py` `Finding`) additionally forbids legacy string-form evidence, so attempting to write `"evidence": "...prose..."` fails at parse time.
 
   Correct response A (preferred for low-stakes claims): Omit the finding entirely. I have no evidence of drift; the doc may well be correct.
 
@@ -219,7 +229,7 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
     "should_say": "(unverifiable — could not locate version file)",
     "confidence": "unverifiable",
     "destructive_fix": false,
-    "evidence": "Command failed: cat: /home/hermes/hermes-agent/version.txt: No such file or directory"
+    "evidence": null
   }
   </finding_json>
   <lesson>When the expected verification path doesn't exist, you have THREE choices — omit, try a different real command, or mark unverifiable with the actual error. You do NOT have a fourth choice to fill `evidence` with a plausible-sounding result. "The file probably says 1.0.0" is not evidence; it is fabrication, and it erodes trust in every other finding in this batch. The user's stated example (Hermes v0.8.0 → v1.0.0) is exactly this failure mode — the wiki was correct, the agent invented drift.</lesson>
@@ -258,6 +268,21 @@ Emit BOTH a machine-readable JSON block (for the orchestrator to re-feed into pr
 
 Confidence enum: `"high" | "medium" | "low" | "unverifiable"`. Use `"unverifiable"` when the verification command failed (non-zero exit, empty output, "No such file" error) and no alternative command produced real output — see `<verification_discipline>`.
 
+**Evidence is a structured object, NOT a free-form string.** Schema:
+
+```json
+"evidence": {
+  "command": "<exact tool_input.command you ran to verify this finding>",
+  "expected_output_signature": "<distinctive substring you literally observed in tool_response.output>",
+  "source_tool_use_id": "<the tool_use_id of that call, if you can identify it>"
+}
+```
+
+- `command` MUST be the exact command string you passed to the Bash tool. Not a paraphrase. The verifier matches this against transcript records.
+- `expected_output_signature` MUST be a literal substring you saw in the actual `tool_response.output`. Not a summary. Not a value you expected from documentation. The verifier requires this exact substring to appear in the captured output of a transcript record matching `command`.
+- `source_tool_use_id` is OPTIONAL. If you can identify the tool_use_id of the verifying call, include it; the verifier scopes the search to that single call rather than the full transcript. Omit when unsure.
+- For findings with `confidence: "unverifiable"` (the command failed, host was unreachable, or no verifying command produced real output), `evidence` MAY be `null`. For all other confidence values, `evidence` is required and must be an object with at least `command` and `expected_output_signature`.
+
 Required `stats` keys (all five, always emit — use `0` when empty): `total_findings`, `by_layer`, `high_confidence`, `unverifiable`, `destructive_fixes_required`. Do not drop `unverifiable` from the stats block even when the count is zero.
 
 JSON block:
@@ -273,7 +298,11 @@ JSON block:
       "should_say": "BAO_ADDR=100.90.121.89:8200",
       "confidence": "high",
       "destructive_fix": false,
-      "evidence": "ssh gmk 'grep BAO_ADDR /usr/local/bin/backup-dumps.sh' returned the new value"
+      "evidence": {
+        "command": "ssh gmk 'grep BAO_ADDR /usr/local/bin/backup-dumps.sh'",
+        "expected_output_signature": "BAO_ADDR=100.90.121.89:8200",
+        "source_tool_use_id": "toolu_01abc"
+      }
     }
   ],
   "escalation": {
