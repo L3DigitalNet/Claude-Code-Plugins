@@ -39,91 +39,32 @@ No `skills/`, `hooks/`, or `scripts/` directories. Four of the five commands (`r
 
 ## Command 1: `/qdev:quality-review [path]`
 
+Thin orchestrator that dispatches `qdev-quality-reviewer` (Sonnet). The agent owns mode detection, the dual-source research phase, the iterative analysis + auto-fix loop, oscillation detection, and convergence declaration. The command owns user-interaction (critical-finding gate, needs-approval per-finding `AskUserQuestion`, applying approved modifications via `Edit`).
+
 ### Allowed Tools
 
-`Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`, `AskUserQuestion`, `WebFetch`, `mcp__brave-search__brave_web_search`, `mcp__serper-search__google_search`
+`Agent`, `AskUserQuestion`
 
-### Step 1: Artifact Detection
+### Behavior
 
-If `path` is provided, use it directly. Otherwise scan the working directory for the most likely target using this priority order:
+1. Determine the target path. If `$ARGUMENTS` is provided, use it. Otherwise, present inferred candidates from the working directory (recent files in `docs/specs/`, `docs/plans/`, or `src/`) via `AskUserQuestion`.
 
-- `.md` file whose name contains `spec`, `design`, or `architecture` → **spec mode**
-- `.md` file whose name contains `plan`, `implementation`, or `roadmap` → **plan mode**
-- Source files (`.py`, `.ts`, `.js`, `.sh`, `.go`, `.rs`, etc.) → **code mode**
+2. Dispatch `qdev-quality-reviewer` with the target path. The agent auto-detects mode (spec / plan / code), runs research, applies auto-fixes, and returns the convergence report.
 
-If multiple candidates match or the type is ambiguous, use `AskUserQuestion` to present the candidates as bounded choices before proceeding.
+3. Post-dispatch, the agent's response takes one of three shapes:
+   - **Critical-finding gate**: surface the table verbatim and `AskUserQuestion` (Proceed / Stop and fix). On Proceed, re-dispatch with an explicit "continue past gate" instruction.
+   - **Oscillation**: surface the block verbatim and `AskUserQuestion` (Accept latest / Revert / Manual). Apply the chosen resolution.
+   - **Normal convergence**: present convergence log and auto-fixes summary; walk needs-approval findings one at a time via `AskUserQuestion` (Apply / Apply with modifications / Defer / Skip permanently). Apply approved changes via `Edit`. If any modifications were applied, re-dispatch the agent for a final convergence pass.
 
-### Step 2: Research Phase (upfront, runs once)
+4. Emit the final summary: `✓ Quality review complete. N passes, M auto-fixes applied, K approved modifications. Deferred: D items`.
 
-Extract all dependencies, libraries, APIs, and external frameworks referenced in the target artifact. Then query **both** `brave-search` and `serper-search` (10+ results each) for each identified dependency/API, covering:
+### Modes
 
-- **Current official docs**: API signatures, configuration options, behavioral changes, deprecations
-- **Known bugs and CVEs**: open issues, security advisories, version-specific defects that could affect the implementation
-- **Community best practices**: patterns the ecosystem currently recommends or has moved away from
-- **Common pitfalls**: known footguns, gotchas, or version compatibility issues
-
-Assemble a **research context** — a structured knowledge base of findings — before proceeding to any analysis. This ensures no gap is filled with stale or incorrect knowledge.
-
-If the research phase surfaces a critical finding (known CVE, severe deprecated API in use, breaking change in a dependency version), surface it immediately to the user before entering the loop. Do not defer critical research findings to the finding queue.
-
-### Step 3: Iterative Analysis + Fix Loop
-
-Each pass consists of:
-
-**3a. Static Analysis**
-
-Run analysis appropriate to the detected mode, grounded in the research context from Step 2:
-
-| Mode | Check dimensions |
-|------|-----------------|
-| **Spec** | Completeness (all features described), internal consistency (no contradictions between sections), unambiguous requirements (no "should" or "might"), scope gaps (behaviors implied but not specified), cross-section references (defined terms used consistently) |
-| **Plan** | Step coverage (every spec requirement has a corresponding plan step), sequencing logic (no circular dependencies, no steps that depend on steps that come later), missing dependencies between steps, estimability (steps are concrete enough to implement) |
-| **Code** | Anti-patterns, naming consistency across files, dead code, cross-file inconsistencies, missing error handling at system boundaries, structural issues |
-
-**3b. Targeted Follow-up Research**
-
-Before proposing a fix for any finding that involves an external dependency, API, or pattern not already covered by the Step 2 research context, run targeted searches to verify the proposed resolution against current official documentation and community standards. Do not propose fixes based on potentially outdated training knowledge alone.
-
-**3c. Finding Classification**
-
-Classify all findings:
-
-- **Auto-fixable** (low-risk): formatting, broken internal references, minor phrasing gaps, straightforward omissions with a clear correct answer
-- **Needs-approval** (structural/design): anything that changes intent, resolves an ambiguity by making a choice, or involves a dependency upgrade/patch decision
-
-Research-originated findings (`[OUTDATED]`, `[VULNERABLE]`, `[BEST-PRACTICE]`, `[DOCS-MISMATCH]`) are always `needs-approval` — they require a human judgment call.
-
-**3d. Apply Auto-fixes**
-
-Apply auto-fixes silently. Do not narrate each one — report the count in the pass summary.
-
-**3e. Surface Needs-Approval Findings**
-
-Present each needs-approval finding with:
-- What the issue is and why it matters
-- A specific proposed resolution
-- Bounded choices: `(A) Apply fix  (B) Apply with modifications  (C) Defer  (D) Skip`
-
-**3f. Pass Summary**
-
-After all findings in the pass are resolved:
-
-```
-Pass N complete: N found / N auto-fixed / N approved / N deferred / N skipped
-```
-
-**3g. Convergence Check**
-
-If the pass produced zero new findings (after deferred items are excluded): declare convergence and stop.
-
-Otherwise, begin the next pass. Deferred items are re-evaluated at the start of the next pass — they are not silently dropped.
-
-### Convergence Declaration
-
-```
-✓ Quality review complete — N passes, N total fixes applied.
-Deferred: N items (listed below if any)
-```
+| Mode | Detected from | Check dimensions |
+|------|---------------|------------------|
+| **Spec** | `docs/specs/*.md`, `*-design.md`, `*-architecture.md`, content with `## Requirements` + `## Acceptance Criteria` | Completeness, internal consistency, unambiguous requirements (no `should/might/could/may`), scope gaps, term consistency |
+| **Plan** | `docs/plans/*.md`, `*-plan.md`, `*-implementation.md`, `*-roadmap.md`, content with repeated `## Task N:` | Spec coverage, sequencing (no dependency on later step's output), missing dependencies, estimability |
+| **Code** | Source file or directory (default fallback) | Anti-patterns per research, naming consistency, dead code, cross-file inconsistencies, missing error handling at boundaries, structural issues |
 
 ---
 
@@ -197,7 +138,7 @@ The only remaining inline command — kept self-contained because it produces st
 
 ### Allowed Tools
 
-`Read`, `Write`, `Edit`, `Glob`, `Grep`, `AskUserQuestion`
+`Read`, `Edit`, `Glob`, `Grep`, `AskUserQuestion`
 
 ### Purpose
 
@@ -260,7 +201,7 @@ Four of the five commands dispatch a dedicated sub-agent under `agents/`. The or
 
 **No skills directory**: All commands are explicit-invocation only. Skills would be auto-loaded contextually — the opposite of the intended behavior. Logic lives in command files (orchestrators) and sub-agents (`agents/`); no skill ever fires without a slash command.
 
-**Sub-agent extraction (v1.3.0, v1.5.0)**: `research`, `quality-review`, `deps-audit`, and `doc-sync` were originally inline in the command file. They were extracted into dedicated sub-agents because their hot paths (search-result parsing, manifest enumeration, signature analysis, multi-pass convergence) burn Opus context on work that doesn't need Opus reasoning. Sonnet handles synthesis-heavy agents (`qdev-researcher`, `qdev-quality-reviewer`); Haiku handles mechanical agents (`qdev-deps-auditor`, `qdev-doc-syncer`). Cumulative measured savings: ~75K tokens per typical weekly cycle. The orchestrator command keeps the user-interaction and approval logic; the sub-agent never calls `AskUserQuestion`.
+**Sub-agent extraction (v1.3.0, v1.5.0)**: `research`, `quality-review`, `deps-audit`, and `doc-sync` were originally inline in the command file. They were extracted into dedicated sub-agents because their hot paths (search-result parsing, manifest enumeration, signature analysis, multi-pass convergence) burn Opus context on work that doesn't need Opus reasoning. Sonnet handles synthesis-heavy agents (`qdev-researcher`, `qdev-quality-reviewer`); Haiku handles mechanical agents (`qdev-deps-auditor`, `qdev-doc-syncer`). Measured savings: v1.3.0 saved ~50K tokens per typical weekly cycle (across deps-audit, quality-review, doc-sync); v1.5.0 added ~25K tokens per `/qdev:research` invocation. Cumulative impact depends on weekly research invocation count — units do not collapse into a single figure. The orchestrator command keeps the user-interaction and approval logic; the sub-agent never calls `AskUserQuestion`.
 
 **Context7 routing for library questions (v1.5.0)**: `qdev-researcher` detects library/framework topics via topic-kind classification and routes documentation queries through Context7 (`resolve-library-id` + `query-docs`) before falling back to web search. Library docs are first-class; pattern/topic queries skip Context7 entirely.
 
