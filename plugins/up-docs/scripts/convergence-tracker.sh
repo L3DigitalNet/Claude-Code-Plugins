@@ -17,7 +17,16 @@ set -euo pipefail
 PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
   || { echo '{"error":"python3 not found"}' >&2; exit 1; }
 
-STATE_FILE="/tmp/up-docs-drift-tracker.json"
+# State file resolution order (most specific first):
+#   1. UP_DOCS_TRACKER_STATE — explicit override (tests, edge cases)
+#   2. CLAUDE_CODE_SESSION_ID — May 2026 Claude Code env var, stable across
+#      hook subprocesses and tool calls within one session. The drift skill
+#      invokes this script 6+ times per session; all calls must share state.
+#   3. "default" — fallback when invoked outside Claude Code (manual debug).
+#
+# The PID ($$) is intentionally NOT used: it changes between separate
+# `bash convergence-tracker.sh ...` invocations and breaks state persistence.
+STATE_FILE="${UP_DOCS_TRACKER_STATE:-${TMPDIR:-/tmp}/up-docs-tracker-${CLAUDE_CODE_SESSION_ID:-default}.json}"
 TMP_FILE="${STATE_FILE}.tmp"
 
 TEMPLATE='{"phases":{},"overall":{"phases_completed":0,"phases_remaining":4}}'

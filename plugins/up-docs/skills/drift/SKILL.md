@@ -61,4 +61,5 @@ Do not auto-invoke any of the above.
 ## Notes
 
 - This skill no longer runs SSH/pct/curl directly — the sub-agent does.
-- Findings are advisory: the auditor has no write tools for Outline or Notion. Fixes go through the propagators on a follow-up pass.
+- Convergence + oscillation detection live in `scripts/convergence-tracker.sh`. The default state-file path is `${TMPDIR:-/tmp}/up-docs-tracker-${CLAUDE_CODE_SESSION_ID:-default}.json` so that the 6+ separate invocations in one drift session share state. Override with `UP_DOCS_TRACKER_STATE` for tests or for non-session usage.
+- Findings are advisory: the auditor has no write tools for Outline or Notion. Fixes go through the propagators on a follow-up pass with the user's explicit consent.

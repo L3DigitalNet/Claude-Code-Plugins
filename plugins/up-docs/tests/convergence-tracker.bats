@@ -3,14 +3,12 @@ load helpers
 
 setup() {
     setup_test_env
-    # Use a unique state file per test to avoid cross-contamination
-    export STATE_FILE="$TEST_TMPDIR/tracker-state.json"
-    # The script hardcodes /tmp/up-docs-drift-tracker.json — we clean it
-    rm -f /tmp/up-docs-drift-tracker.json
+    export UP_DOCS_TRACKER_STATE="$TEST_TMPDIR/tracker-state.json"
 }
 
 teardown() {
-    rm -f /tmp/up-docs-drift-tracker.json
+    unset UP_DOCS_TRACKER_STATE
+    unset CLAUDE_CODE_SESSION_ID
     teardown_test_env
 }
 
@@ -177,4 +175,49 @@ teardown() {
 @test "invalid subcommand exits 1" {
     run bash "$SCRIPTS_DIR/convergence-tracker.sh" bogus-command
     [ "$status" -eq 1 ]
+}
+
+@test "session-scoped default keeps state across separate process invocations" {
+    # Simulate three separate `bash convergence-tracker.sh ...` calls within one
+    # Claude Code session. The session-id env var is the same; the state file
+    # must be the same file across the three subprocesses.
+    export CLAUDE_CODE_SESSION_ID="test-session-abc"
+    unset UP_DOCS_TRACKER_STATE
+    export TMPDIR="$TEST_TMPDIR"
+
+    run bash "$SCRIPTS_DIR/convergence-tracker.sh" init
+    [ "$status" -eq 0 ]
+    run bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
+    [ "$status" -eq 0 ]
+    run bash "$SCRIPTS_DIR/convergence-tracker.sh" status
+    [ "$status" -eq 0 ]
+    [ "$(echo "$output" | jq '.phases | length')" = "1" ]
+}
+
+@test "concurrent sessions are isolated by CLAUDE_CODE_SESSION_ID" {
+    unset UP_DOCS_TRACKER_STATE
+    export TMPDIR="$TEST_TMPDIR"
+
+    CLAUDE_CODE_SESSION_ID="session-A" bash "$SCRIPTS_DIR/convergence-tracker.sh" init
+    CLAUDE_CODE_SESSION_ID="session-A" bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
+    CLAUDE_CODE_SESSION_ID="session-B" bash "$SCRIPTS_DIR/convergence-tracker.sh" init
+
+    # Session A should still have phase 1 started; session B should be fresh.
+    run bash -c 'CLAUDE_CODE_SESSION_ID="session-A" bash "$SCRIPTS_DIR/convergence-tracker.sh" status'
+    [ "$status" -eq 0 ]
+    [ "$(echo "$output" | jq '.phases | length')" = "1" ]
+
+    run bash -c 'CLAUDE_CODE_SESSION_ID="session-B" bash "$SCRIPTS_DIR/convergence-tracker.sh" status'
+    [ "$status" -eq 0 ]
+    [ "$(echo "$output" | jq '.phases | length')" = "0" ]
+}
+
+@test "explicit UP_DOCS_TRACKER_STATE wins over CLAUDE_CODE_SESSION_ID" {
+    local explicit="$TEST_TMPDIR/explicit-state.json"
+    export UP_DOCS_TRACKER_STATE="$explicit"
+    export CLAUDE_CODE_SESSION_ID="ignored-session"
+
+    run bash "$SCRIPTS_DIR/convergence-tracker.sh" init
+    [ "$status" -eq 0 ]
+    [ -f "$explicit" ]
 }
