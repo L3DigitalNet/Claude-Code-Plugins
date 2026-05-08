@@ -7,12 +7,14 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | ID | Title | Applies when |
 | --- | --- | --- |
 | ARCH-001 | Thin command + fat agent | a plugin command needs to invoke expensive operations (file I/O, web research, iterative loops) |
+| BRANCH-001 | Direct commit to `main` | committing or releasing in this repo |
 | DOC-001 | Doc audience split | editing any repo doc — determines prose style vs LLM-first style |
 | DOC-002 | Session start | starting work in this repo |
 | DOC-003 | Convention changes | adding or revising a repo convention |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
 | TEST-001 | Canonical test frameworks by language | implementing unit tests for a plugin |
 | TEST-002 | Bats wrapper for gnu env compatibility | running bats-core tests on Fedora 44+ with gnu env |
+| TEST-003 | Tmpdir test repos disable git hooks | a test creates a tmpdir git repo and runs `git commit` against it |
 
 ## DOC-001. Doc audience split
 
@@ -163,3 +165,60 @@ exec bash "$BATS_ROOT/libexec/bats-core/bats" "$@"
 - Affects 13 plugins: release-pipeline, opus-context, linux-sysadmin, handoff, claude-sync, up-docs, repo-hygiene, github-repo-manager, docs-manager, design-assistant, nominal, test-driver, qt-suite
 
 **Related:** TEST-001, DOC-001
+
+## BRANCH-001. Direct commit to `main`
+
+**Applies when:** committing or releasing in this repo.
+**Rule:** Direct commit to `main`. There is no `testing` branch and no merge step. Local pre-commit hooks (noreply email enforcement, `scripts/validate-marketplace.sh`) provide the guardrails server-side branch protection used to provide. For tagged plugin releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`.
+
+```bash
+# Routine commit
+git pull origin main
+# (edit)
+git add <specific files>
+git commit -m "..."
+git push origin main
+
+# Tagged release
+/release-pipeline:release   # → pick "Plugin Release" or "Batch Release"
+```
+
+**Why:** Single-developer repo. The previous `testing` → `main` merge convention was retired 2026-05-07 along with deletion of the `testing` branch (local + remote) and removal of GitHub `lock_branch` protection on `main`. The release pipeline orchestrates the version-bump / changelog / tag / GitHub-release ceremony when a plugin is ready to ship; routine edits don't need that ceremony.
+
+**Sources:**
+- `BRANCH_PROTECTION.md` (canonical statement of the new rule)
+- `CLAUDE.md` (Branch workflow line)
+- `AGENTS.md` (Codex parallel)
+- session 2026-05-07 (testing-branch retirement + release-pipeline v2.2.0 adaptation)
+
+**Related:** ARCH-001, DOC-002
+
+## TEST-003. Tmpdir test repos disable git hooks
+
+**Applies when:** a test creates a temporary git repo (e.g., via `os.tmpdir()` + `git init`) and runs real `git commit` against it.
+**Rule:** After `git init`, set `core.hooksPath` to `/dev/null` in the tmpdir repo's local config so workstation-level pre-commit/commit-msg hooks don't fire on test commits.
+
+```typescript
+// in beforeEach (TypeScript / Jest example)
+await execa('git', ['init'], { cwd: tmpDir });
+await execa('git', ['config', 'core.hooksPath', '/dev/null'], { cwd: tmpDir });
+await execa('git', ['config', 'user.email', 'test@example.com'], { cwd: tmpDir });
+await execa('git', ['config', 'user.name', 'Test'], { cwd: tmpDir });
+```
+
+```bash
+# in setUp (bash / bats equivalent)
+git init "$tmpdir"
+git -C "$tmpdir" config core.hooksPath /dev/null
+git -C "$tmpdir" config user.email 'test@example.com'
+git -C "$tmpdir" config user.name 'Test'
+```
+
+**Why:** Workstations may have global pre-commit hooks (e.g., noreply email enforcement) configured via global `core.hooksPath`. Tests using fake author emails for fixture commits will be rejected by those hooks before the test logic runs. Setting `core.hooksPath=/dev/null` in the tmpdir's local config overrides the global setting for that one repo, leaving workstation-wide hooks intact for real work. Contributor-agnostic — works regardless of which hooks the developer's machine has installed. Prefer this over `--no-verify` because it covers all subsequent git operations in the test (including ones added later) without needing to retrofit every command.
+
+**Sources:**
+- Bug 005 (workstation pre-commit hook + tmpdir test repos)
+- plugin-test-harness commit `cf9aa1b` (reference implementation in `test/unit/fix/{applicator,tracker}.test.ts`)
+- session 2026-05-07 (Phase 1 pre-flight failure + fix)
+
+**Related:** TEST-001, TEST-002
