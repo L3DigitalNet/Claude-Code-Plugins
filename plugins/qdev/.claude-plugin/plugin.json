@@ -1,7 +1,7 @@
 {
   "name": "qdev",
-  "version": "1.4.0",
-  "description": "Development quality toolkit: /research sweeps before you build; /quality-review iterates to convergence; /deps-audit checks manifests for CVEs; /doc-sync keeps inline docs aligned; /spec-update syncs spec to code.",
+  "version": "1.5.0",
+  "description": "Development quality toolkit: /research dispatches a Sonnet subagent for dual-source sweeps with Context7 routing and persisted reports; /quality-review iterates to convergence; /deps-audit checks manifests for CVEs; /doc-sync keeps inline docs aligned; /spec-update syncs spec to code.",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"

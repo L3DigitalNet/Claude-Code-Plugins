@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.0] - 2026-05-08
+
+### Changed
+
+- `/qdev:research` is now a thin orchestrator that dispatches the new `qdev-researcher` Sonnet subagent. Estimated ~25K tokens saved per invocation when called from Opus. Matches the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-sync`.
+- `/qdev:research` topic prompt collapsed from a two-step `AskUserQuestion` (Describe it now / Cancel → follow-up open question) to a single bounded question with up to 3 inferred candidates plus the implicit Other entry.
+- `/qdev:research` now offers downstream chaining (`superpowers:brainstorming`, `/qdev:quality-review`) after presenting the report, passing the persisted research path as context.
+
+### Added
+
+- `plugins/qdev/agents/qdev-researcher.md` — Sonnet agent with Context7 routing for libraries, footgun corroboration (2+ sources or official source required), source authority grading (`[official]` / `[community]` / `[blog]` / `[unverified]`), and a single-iteration follow-up pass for angles with thin coverage or open questions.
+- `docs/research/` — persistence directory for `qdev-researcher` reports. Filename shape: `<YYYY-MM-DD>-<slug>.md`. Downstream commands and skills consume the artifact by reading that path.
+- README: positioning section comparing `/qdev:research` to the global `research`, `search`, and `extract` skills, plus a Handoff Protocol section documenting consumer commands.
+- README: structured output contract for `/qdev:research` reports (Summary table, severity-tagged Footgun corroboration, Existing-solution callout placement).
+
+### Fixed
+
+- Stale `2024` literal in the `/qdev:research` example query. The agent now derives the current year via `date +%Y` at sweep time instead of hardcoding it.
+- `find` invocation in `/qdev:research` topic inference no longer scans `node_modules`, `__pycache__`, and `.venv` (matches `/qdev:spec-update`).
+- Design spec at `docs/superpowers/specs/2026-04-13-qdev-design.md` updated via `/qdev:spec-update` to reflect commands and agents added since 2026-04-13.
+
+
 ## [1.4.0] - 2026-05-07
 
 ### Changed
