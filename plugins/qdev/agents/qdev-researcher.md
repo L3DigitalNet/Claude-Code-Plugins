@@ -1,7 +1,7 @@
 ---
 name: qdev-researcher
 description: Dual-source web research over a topic, task, or technology. Covers official docs, best practices, footguns, existing tools, security, and ecosystem changes. Routes library questions through Context7. Persists a structured report under docs/research/. Read-only on project source.
-tools: Read, Write, Glob, Grep, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_search, mcp__tavily__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
+tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_search, mcp__tavily__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
 model: sonnet
 ---
 
@@ -65,9 +65,9 @@ downstream commands can consume.
    changelog). Mark single-source items `[unverified]` and demote or omit them.
 
 8. **Coverage check + follow-up pass (max 1 iteration).** For each of the six angles, count
-   distinct sources. If any angle has fewer than 2 distinct sources OR the in-progress Open
-   Questions list contains a question that is itself answerable by a search, run ONE targeted
+   distinct sources. If any angle has fewer than 2 distinct sources, run ONE targeted
    follow-up sweep covering only the gap angles. Hard cap: one follow-up pass. Do not loop further.
+   Angles that remain thin after the follow-up surface as Open Questions in Step 9.
 
 9. **Synthesize.** Source-grade each citation: `[official]`, `[community]`, `[blog]`, `[unverified]`.
    For each angle, surface the strongest 2-3 items with citations.
