@@ -9,7 +9,7 @@ teardown() { teardown_test_env; }
 
 See [the section](#hello-world) for details.
 '
-    run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     # The anchor #hello-world should match heading "Hello World"
@@ -26,7 +26,7 @@ See [the section](#hello-world) for details.
 }
 
 @test "empty input returns total_links=0" {
-    run bash -c "echo '' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ ""
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     [ "$(echo "$output" | jq '.total_links')" = "0" ]
@@ -34,7 +34,7 @@ See [the section](#hello-world) for details.
 
 @test "detects autolinks" {
     local md='Check out <https://example.com> for more info.'
-    run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     [ "$(echo "$output" | jq '.total_links')" -ge 1 ]
@@ -45,7 +45,7 @@ See [the section](#hello-world) for details.
 
 See [link](#nonexistent) for details.
 '
-    run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     [ "$(echo "$output" | jq '.internal.broken | length')" -ge 1 ]
@@ -54,7 +54,7 @@ See [link](#nonexistent) for details.
 
 @test "detects bare URLs" {
     local md='Visit https://example.com for details.'
-    run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     [ "$(echo "$output" | jq '.total_links')" -ge 1 ]
@@ -62,7 +62,7 @@ See [link](#nonexistent) for details.
 
 @test "deduplicates repeated URLs" {
     local md='Go to [Example](https://example.com) and also [Another](https://example.com) link.'
-    run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     # The seen set deduplicates, so total_links should be 1
@@ -71,8 +71,20 @@ See [link](#nonexistent) for details.
 
 @test "classifies internal relative links as needs_verification" {
     local md='See [link](./page) for details.'
-    run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
     [ "$status" -eq 0 ]
     echo "$output" | jq -e . >/dev/null 2>&1
     [ "$(echo "$output" | jq '.internal.needs_verification | length')" -ge 1 ]
+}
+
+@test "single-quote inputs do not break link extraction (regression)" {
+    local md="See [O'Reilly](https://oreilly.com) for more."
+    # Safe pattern: pass $md as positional arg "$1" and use printf to write it to stdin.
+    # The regression test was previously written using `bash -c "echo '$md' | ..."` which
+    # garbled single-quoted input — the embedded `'` in `O'Reilly` terminates the outer
+    # single-quoted shell string and the rest is parsed as separate tokens.
+    run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"
+    [ "$status" -eq 0 ]
+    echo "$output" | jq -e . >/dev/null 2>&1
+    [ "$(echo "$output" | jq '.total_links')" -ge 1 ]
 }
