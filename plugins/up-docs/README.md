@@ -24,6 +24,65 @@ Documentation lives in three places with different purposes: repo-local files ca
 - Notion accessible via MCP (Notion MCP server configured)
 - SSH access to infrastructure hosts (for `/up-docs:drift`)
 
+## Security
+
+up-docs ships with a defense-in-depth `PreToolUse` validator (`scripts/deny-guard.sh`) that blocks Bash commands matching the auditor's forbidden categories: filesystem destruction (rm, mv, cp -f, sed -i, redirect into /etc), container lifecycle (pct stop/destroy/restore/migrate, qm stop/destroy, docker stop/rm), service control (systemctl stop/restart/disable/mask, kill, killall, pkill), network/permissions (iptables, nft, ip route add/del, chmod, chown, chattr, setfacl), package edits (apt install/remove, dnf install/remove, pip install, npm install --save), git destructive (git rm, git push --force, git reset --hard), and SQL writes (INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE).
+
+The PreToolUse guard is grep-based and inherently incomplete — sufficiently crafted commands using Bash variable expansion, here-docs, or `eval` can evade pattern matching. For a definitively-enforced security boundary, add the following block to your **consuming project's** `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm *)",
+      "Bash(rmdir *)",
+      "Bash(shred *)",
+      "Bash(mv * *)",
+      "Bash(cp -f *)",
+      "Bash(sed -i *)",
+      "Bash(git rm *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(pct stop *)",
+      "Bash(pct shutdown *)",
+      "Bash(pct destroy *)",
+      "Bash(pct restore *)",
+      "Bash(pct migrate *)",
+      "Bash(qm stop *)",
+      "Bash(qm destroy *)",
+      "Bash(docker stop *)",
+      "Bash(docker rm *)",
+      "Bash(docker-compose down *)",
+      "Bash(systemctl stop *)",
+      "Bash(systemctl restart *)",
+      "Bash(systemctl disable *)",
+      "Bash(systemctl mask *)",
+      "Bash(kill *)",
+      "Bash(killall *)",
+      "Bash(pkill *)",
+      "Bash(iptables *)",
+      "Bash(nft *)",
+      "Bash(chmod *)",
+      "Bash(chown *)",
+      "Bash(chgrp *)",
+      "Bash(chattr *)",
+      "Bash(setfacl *)",
+      "Bash(apt install *)",
+      "Bash(apt remove *)",
+      "Bash(dnf install *)",
+      "Bash(dnf remove *)",
+      "Bash(pip install *)",
+      "Bash(npm install --save *)"
+    ]
+  }
+}
+```
+
+The consumer-side `permissions.deny` is enforced by Claude Code's permission engine regardless of which agent is running. See [Claude Code permission docs](https://code.claude.com/docs/en/settings) for the full deny-pattern syntax.
+
+> Why both layers? The PreToolUse guard parses the full command line (including pipes, redirects, and `&&` chains) so it catches patterns the consumer-side `Bash(* * *)` glob misses. The consumer-side `permissions.deny` is engine-enforced and catches what the guard misses. Defense-in-depth.
+
 ## Installation
 
 ```bash
