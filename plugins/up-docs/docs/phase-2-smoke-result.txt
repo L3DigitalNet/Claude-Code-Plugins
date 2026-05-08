@@ -1,0 +1,23 @@
+Phase 2 smoke test (Task 8) — date: 2026-05-08
+Result: PASS — plugin command hooks fire under --plugin-dir.
+
+Test invocation:
+  echo 'Run echo hello-from-smoke-test' \
+    | claude --plugin-dir "$(pwd)/plugins/up-docs" --debug "hooks" --print
+
+Claude Code version: 2.1.133
+Plugin path: plugins/up-docs/
+
+Hook log evidence (/tmp/up-docs-hook-smoke.log, transient):
+  fired 2026-05-08T10:03:40-04:00 tool=pre
+  fired 2026-05-08T10:03:40-04:00 tool=post
+
+Subprocess output: hello-from-smoke-test
+
+Implications:
+- GH-34573 (plugin command hooks silently dropped) is empirically INACTIVE in claude 2.1.133.
+- v2 plan Phase 2 + Phase 3 hook surface (Tasks 9, 10, 13, 14) may proceed as written.
+- v2 Open Question 1 → RESOLVED PASS.
+- The minimal hooks.json (this file's sibling at plugins/up-docs/hooks/hooks.json) and
+  scripts/hook-smoke.sh are transient — they will be replaced by Task 9's real
+  deny-guard.sh wiring and Task 13's capture-transcript.sh.
