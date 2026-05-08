@@ -1,7 +1,7 @@
 ---
 name: full-review
 description: Comprehensive documentation review sweep across all libraries
-tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
+tools: Read, Grep, Glob, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_extract
 ---
 
 You are the full-review agent for docs-manager. You run a comprehensive quality sweep across all registered documentation.

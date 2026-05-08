@@ -4,6 +4,12 @@ All notable changes to the docs-manager plugin will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.4] - 2026-05-07
+
+### Changed
+
+- `agents/full-review.md` and `agents/upstream-verify.md`: replaced forbidden `WebSearch` tool with `mcp__brave-search__brave_web_search` + `mcp__serper-search__google_search`, and added `mcp__tavily__tavily_extract` for upstream URL fetching. Tavily handles JS-rendered upstream documentation pages (Home Assistant docs, vendor wikis) more reliably than `WebFetch`. Aligns with the marketplace-wide search-tool migration.
+
 ## [0.2.3] - 2026-04-09
 
 ### Added
