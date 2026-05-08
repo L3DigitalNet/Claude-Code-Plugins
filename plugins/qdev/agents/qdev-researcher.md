@@ -101,6 +101,12 @@ Single markdown block. First line is `Mode: research · Topic: <topic> · Saved:
 ```markdown
 Mode: research  ·  Topic: <topic>  ·  Saved: <persisted path>
 
+## ⚠ Existing solution
+
+(Surface only when an Existing Tools entry appears to cover the queried use case. When no existing solution applies, omit this entire section — do not emit an empty placeholder.)
+
+> **<tool name>** (<link>) — appears to cover this use case. Review before building.
+
 ## Summary
 
 | Angle | Sources | Strongest finding |
@@ -113,12 +119,6 @@ Mode: research  ·  Topic: <topic>  ·  Saved: <persisted path>
 | Recent Changes | N | <one-line> |
 
 **Queries:** Q  ·  **Results parsed:** R  ·  **Deep reads:** D  ·  **Follow-up pass:** yes | no
-
-## ⚠ Existing solution
-
-(Surface only when an Existing Tools entry appears to cover the queried use case.)
-
-> **<tool name>** (<link>) — appears to cover this use case. Review before building.
 
 ## Official Documentation
 

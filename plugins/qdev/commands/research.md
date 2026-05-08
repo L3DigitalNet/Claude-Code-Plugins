@@ -1,7 +1,7 @@
 ---
 name: research
 description: Dual-source web research via the qdev-researcher subagent (Sonnet). Covers docs, best practices, footguns, existing tools, security, and recent changes. Routes library questions through Context7. Persists a structured report under docs/research/.
-argument-hint: "<topic> | omit to infer from session context"
+argument-hint: "[optional: <topic> — omit to infer from session context]"
 allowed-tools:
   - Agent
   - AskUserQuestion
@@ -62,14 +62,12 @@ the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-
 
 ## After the agent returns
 
-1. **Surface the existing-solution callout first if present.** If the report includes a
-   `## ⚠ Existing solution` block, repeat it as the first thing the user sees in your response,
-   before the rest of the report.
+1. **Present the report verbatim** to the user. The agent's output_format places the
+   `## ⚠ Existing solution` callout (when applicable) immediately after the header line, so
+   surfacing it correctly is just a matter of relaying the report unchanged. The `Saved:` path in
+   the header is the canonical handoff artifact.
 
-2. **Present the report verbatim** to the user. The `Saved:` path in the header is the canonical
-   handoff artifact.
-
-3. **Offer downstream chaining** if Open Questions is non-empty OR Footguns surfaced material
+2. **Offer downstream chaining** if Open Questions is non-empty OR Footguns surfaced material
    findings. Use `AskUserQuestion`:
 
    - question: `"Research saved to <path>. What's next?"`
@@ -81,7 +79,7 @@ the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-
    Apply the chosen option in this session: invoke the named skill/command and pass the persisted
    research path as context.
 
-4. **Final summary** (always emit):
+3. **Final summary** (emit when a report was produced — skip when Step 1 stopped at "No topic provided."):
 
    ```
    ✓ Research complete. Report: <path>
