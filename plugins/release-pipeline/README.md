@@ -45,7 +45,7 @@ claude --plugin-dir ./plugins/release-pipeline
 flowchart TD
     User([User invokes /release]) --> P0[Phase 0: Detect context<br/>monorepo · git state · version · tag]
     P0 --> Menu{Interactive menu<br/>AskUserQuestion}
-    Menu -->|Quick Merge| M1[Stage · commit if dirty<br/>Merge testing → main · push]
+    Menu -->|Quick Push| M1[Stage · commit if dirty<br/>Pull --rebase · push to main]
     Menu -->|Full Release| Vers[Version selection]
     Menu -->|Plugin Release| Pick[Plugin picker · version selection]
     Menu -->|Batch Release| Plan[Plan all unreleased plugins]
@@ -58,7 +58,7 @@ flowchart TD
     PF -->|All PASS/WARN| Prep[Phase 2: Preparation<br/>Version bump · changelog preview]
     Prep --> Gate{Approval gate}
     Gate -->|Abort| Revert((Revert version bumps))
-    Gate -->|Proceed| Rel[Phase 3: Release<br/>commit · tag reconcile · merge · push]
+    Gate -->|Proceed| Rel[Phase 3: Release<br/>commit · pull --rebase · tag reconcile · push]
     Rel --> GH[Phase 3.5: Stash restore<br/>GitHub release create]
     GH --> Ver[Phase 4: Verify release]
     Ver --> Report((Final summary report))
@@ -73,7 +73,7 @@ flowchart TD
 The command auto-detects context before showing the menu. The menu header shows a one-line summary:
 
 ```
-Branch: testing  |  Last tag: v1.2.0  |  14 commits since last tag  |  uncommitted changes
+Branch: main  |  Last tag: v1.2.0  |  14 commits since last tag  |  uncommitted changes
 ```
 
 Natural language triggers also route to the menu: "merge to main", "cut a release", "release the plugin".
@@ -88,7 +88,7 @@ Natural language triggers also route to the menu: "merge to main", "cut a releas
 
 | Option | When available | Description |
 |--------|---------------|-------------|
-| Quick Merge | Always | Stage uncommitted changes (if any), merge `testing` into `main`, and push. No version bump or tag. |
+| Quick Push | Always | Stage uncommitted changes (if any), commit, and push to `main`. No version bump or tag. |
 | Full Release | Always | Semver release with parallel pre-flight, version bump, changelog, annotated tag, and GitHub release. |
 | Plugin Release | Monorepos only | Scoped release for a single plugin. Uses `<plugin-name>/vX.Y.Z` tags, scoped changelog, and stages only that plugin's files. |
 | Batch Release | Monorepos only | Release all plugins with unreleased changes sequentially. Failures quarantined; batch continues. |
@@ -164,7 +164,7 @@ No planned features at this time.
 
 - `sync-local-plugins.sh` defaults to the `l3digitalnet-plugins` marketplace. Set `RELEASE_PIPELINE_MARKETPLACE=<name>` in your environment to override for differently named marketplaces.
 - Batch Release runs plugins sequentially, not in parallel. Large monorepos with many unreleased plugins will take proportionally longer.
-- Quick Merge always merges `testing` into `main`. Repos using different branch naming must adjust manually.
+- Direct-commit-to-`main` is assumed (no `testing` branch). Repos that need a different branch convention must fork the templates.
 - Changelog generation uses conventional commit prefixes. Repos without conventional commits produce a generic "other" section with no semver signal.
 - Dry Run simulates version bumps and changelog generation but cannot simulate the GitHub release API; actual release creation may still fail after a clean dry run.
 

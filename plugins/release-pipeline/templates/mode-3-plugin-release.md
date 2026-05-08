@@ -185,7 +185,7 @@ This writes the entry to `plugins/<plugin-name>/CHANGELOG.md`. No output needed 
 
 ## Phase 3 — Scoped Release (Sequential)
 
-Execute each command sequentially. If any command fails, STOP and report with rollback suggestion.
+Repo convention is **direct commit to `main`** — no `testing` branch, no merge step. Execute each command sequentially. If any command fails, STOP and report with rollback suggestion.
 
 ```bash
 git add plugins/<plugin-name>/ .claude-plugin/marketplace.json
@@ -193,9 +193,7 @@ git commit -m "Release <plugin-name> v<version>"
 ```
 
 ```bash
-git checkout main
-git pull origin main
-git merge testing --no-ff -m "Release <plugin-name> v<version>"
+git pull --rebase origin main
 ```
 
 **Tag reconciliation:**
@@ -216,10 +214,6 @@ git tag -a "<plugin-name>/v<version>" -m "Release <plugin-name> v<version>"
 
 ```bash
 git push origin main --tags
-```
-
-```bash
-git checkout testing
 ```
 
 ## Phase 3.5 — Stash Restore

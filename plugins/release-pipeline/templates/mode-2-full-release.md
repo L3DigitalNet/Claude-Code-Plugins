@@ -162,7 +162,7 @@ This writes the entry to CHANGELOG.md. No output needed — it was previewed in 
 
 ## Phase 3 — Release (Sequential)
 
-Execute each command sequentially. If any command fails, STOP and report with rollback suggestion.
+Repo convention is **direct commit to `main`** — no `testing` branch, no merge step. Execute each command sequentially. If any command fails, STOP and report with rollback suggestion.
 
 ```bash
 git add -A
@@ -170,9 +170,7 @@ git commit -m "Release v<version>"
 ```
 
 ```bash
-git checkout main
-git pull origin main
-git merge testing --no-ff -m "Release v<version>"
+git pull --rebase origin main
 ```
 
 **Tag reconciliation:**
@@ -193,10 +191,6 @@ git tag -a "v<version>" -m "Release v<version>"
 
 ```bash
 git push origin main --tags
-```
-
-```bash
-git checkout testing
 ```
 
 ## Phase 3.5 — Stash Restore

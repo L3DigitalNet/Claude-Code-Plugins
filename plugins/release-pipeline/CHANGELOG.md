@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.0] - 2026-05-07
+
+### Changed
+
+- **Direct-commit-to-`main` workflow.** Templates no longer assume a `testing` branch. The L3DigitalNet/Claude-Code-Plugins repo retired `testing` on 2026-05-07; pipeline templates updated to match. All Phase 3 flows replaced `git checkout main && git pull && git merge testing --no-ff` with a single `git pull --rebase origin main` step. The trailing `git checkout testing` step is removed throughout — releases stay on `main`.
+- **Mode 1 renamed: Quick Merge → Quick Push.** With no testing branch to merge, the mode now stages uncommitted changes (if any), commits, and pushes directly to `main`. Same auto-staging UX, simpler underlying git flow. Filename `mode-1-quick-merge.md` retained for router-table backward compatibility.
+- **Rollback suggestions** for Phase 3 (before push) no longer include `git checkout testing`. The `git tag -d ... && git reset --soft HEAD~1` rollback now runs in place on `main`.
+- **README mermaid diagram** updated to show the simpler Phase 3 flow (no merge step).
+
+### Notes
+
+- This release was bootstrapped manually (commit + tag + `gh release create`) because the v2.1.2 templates require the `testing` branch and would have failed if used to release v2.2.0. Subsequent releases use the new (working) pipeline.
+- No interface changes for users on the `main`-only convention. Repos that intentionally use a `testing` branch must fork the templates or pin to v2.1.x.
+
 ## [2.1.2] - 2026-04-20
 
 ### Changed

@@ -78,10 +78,10 @@ Use **AskUserQuestion** to present the release menu. Build the options dynamical
 
 **Always include these options:**
 
-1. **Quick Merge**
-   - label: `"Quick Merge"`
-   - description: If `is_dirty`: `"Stage, commit, and merge testing → main (⚠ uncommitted changes will be staged)"`
-   - description: If clean: `"Merge testing → main — <commit_count> commits since <last_tag>"`
+1. **Quick Push**
+   - label: `"Quick Push"`
+   - description: If `is_dirty`: `"Stage, commit, and push to main (⚠ uncommitted changes will be staged)"`
+   - description: If clean: `"Push to origin/main — <commit_count> unpushed commits"`
 
 2. **Full Release**
    - label: `"Full Release"`
@@ -126,7 +126,7 @@ After the user selects, load the corresponding mode template and follow it exact
 
 | Selection | Template to load |
 |-----------|-----------------|
-| Quick Merge | `${CLAUDE_PLUGIN_ROOT}/templates/mode-1-quick-merge.md` |
+| Quick Push | `${CLAUDE_PLUGIN_ROOT}/templates/mode-1-quick-merge.md` |
 | Full Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-2-full-release.md` |
 | Plugin Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-3-plugin-release.md` |
 | Batch Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-7-batch-release.md` |
