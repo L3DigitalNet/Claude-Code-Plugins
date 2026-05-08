@@ -16,3 +16,5 @@
 ## What Remains
 
 - Monitor plugin-test-harness CI stability after TypeScript config fixes (jest transform improvements may affect other test suites).
+- Merge 15 `tests/<plugin>` branches into `testing` after final verification (Phase 2 test implementations, per-branch Phase 2 execution logs in `testing/plans/<plugin>.md`). Recommend merge order: release-pipeline first, then others in any order (cherry-picks deduplicate on first merge).
+- Document bats-wrapper workaround in conventions or centralize to `scripts/run-plugin-bats.sh` for future bats consumers (currently 13 copies of `tests/run-bats.sh` due to bats v1.13.0 env stripping bug on Fedora).

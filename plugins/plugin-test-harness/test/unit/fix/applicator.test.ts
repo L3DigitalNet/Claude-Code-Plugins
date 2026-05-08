@@ -11,6 +11,10 @@ describe('applyFix', () => {
     // init git repo in tmp dir
     const { execa } = await import('execa');
     await execa('git', ['init'], { cwd: tmpDir });
+    // Disable hooks for the tmpdir test repo so workstation-level pre-commit
+    // hooks (e.g. noreply-email enforcement) don't reject test commits that
+    // intentionally use a fake author email. Hook-bypass is contributor-agnostic.
+    await execa('git', ['config', 'core.hooksPath', '/dev/null'], { cwd: tmpDir });
     await execa('git', ['config', 'user.email', 'test@pth.test'], { cwd: tmpDir });
     await execa('git', ['config', 'user.name', 'PTH Test'], { cwd: tmpDir });
     // create initial file

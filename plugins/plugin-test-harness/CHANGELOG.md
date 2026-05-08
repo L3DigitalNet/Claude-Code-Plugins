@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.5] - 2026-05-07
+
+### Changed
+- plugin-test-harness: bypass workstation pre-commit hook in fix/ tests
+- plugin-test-harness: Phase 2 — convergence + gap-analyzer + registry-shape (18 cases)
+
+
 ## [0.7.4] - 2026-04-20
 
 ### Changed

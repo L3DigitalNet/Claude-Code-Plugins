@@ -11,6 +11,8 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | DOC-002 | Session start | starting work in this repo |
 | DOC-003 | Convention changes | adding or revising a repo convention |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
+| TEST-001 | Canonical test frameworks by language | implementing unit tests for a plugin |
+| TEST-002 | Bats wrapper for gnu env compatibility | running bats-core tests on Fedora 44+ with gnu env |
 
 ## DOC-001. Doc audience split
 
@@ -117,3 +119,47 @@ NOT `subagent_type: "up-docs-propagate-repo"` — returns "Agent type not found"
 - Agent not-found error output lists available agents in the namespaced form.
 
 **Related:** DOC-003
+
+## TEST-001. Canonical test frameworks by language
+
+**Applies when:** implementing unit tests for a plugin.
+**Rule:** Use the canonical framework per language: bats-core for bash scripts, pytest for Python, Jest for TypeScript. See `testing/STRATEGY.md` §3 for rationale and per-language conventions.
+
+```md
+Bash:       bats (test files: tests/<script-name>.bats)
+Python:     pytest (test files: tests/test_<module>.py)
+TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
+```
+
+**Why:** Consistency across the marketplace reduces context-switching cost for sessions that work on multiple plugins. Each framework dominates its language (bats = 9 existing bash plugins; pytest = HA and Qt already use it; Jest = HA/MCP and PTH established it for TypeScript). Ad-hoc bash runners are preserved but not extended.
+
+**Sources:**
+- `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
+- Existing test coverage: claude-sync 2 bats, design-assistant 4 bats, docs-manager 5 bats, github-repo-manager 3 bats, handoff 2 bats, home-assistant-dev 207 pytest, linux-sysadmin 1 bats, nominal 6 bats, opus-context 0, plugin-test-harness 68 Jest, qt-suite 6 bats + 4 pytest, release-pipeline 77 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 34 bats.
+
+**Related:** TEST-002, DOC-001
+
+## TEST-002. Bats wrapper for gnu env compatibility
+
+**Applies when:** running bats-core tests on Fedora 44+ with gnu env.
+**Rule:** Provide a `tests/run-bats.sh` wrapper that re-exports `bats_readlinkf` and invokes `$BATS_ROOT/libexec/bats-core/bats` directly instead of relying on the npm-installed `~/.local/bin/bats` wrapper.
+
+```bash
+#!/usr/bin/env bash
+# Fedora 44 + bash 5.3.9 + gnu env workaround: env strips exported bash functions
+# causing BATS_LIBEXEC to be empty and bats_readlinkf undefined.
+set -euo pipefail
+
+export BATS_ROOT="${BATS_ROOT:-$(npx bats --version 2>&1 | grep -o '/.*' | head -c-9)}"
+export bats_readlinkf='...' # re-export the function
+exec bash "$BATS_ROOT/libexec/bats-core/bats" "$@"
+```
+
+**Why:** On this environment, the standard `bats` invocation silently drops all test output (file size 0 bytes) because `exec env BATS_ROOT=...` strips the bash function export. The workaround bypasses the wrapper and calls the executable directly with the function pre-loaded. Fallback to plain `bats` when `BATS_ROOT` is unavailable.
+
+**Sources:**
+- Issue: reproducer `bats /tmp/minimal.bats > out.txt 2>&1; ls -la out.txt` shows 0 bytes via wrapper, populated via direct call
+- Discovered during release-pipeline Phase 2 (2026-04-25)
+- Affects 13 plugins: release-pipeline, opus-context, linux-sysadmin, handoff, claude-sync, up-docs, repo-hygiene, github-repo-manager, docs-manager, design-assistant, nominal, test-driver, qt-suite
+
+**Related:** TEST-001, DOC-001

@@ -517,6 +517,32 @@ iterates through a convergence loop until everything passes.
 
 ---
 
+## Testing & Validation
+
+The marketplace uses principle-traceable test coverage across all in-scope plugins. See
+[testing/STRATEGY.md](testing/STRATEGY.md) for the canonical frameworks per language (bats
+for bash, pytest for Python, Jest for TypeScript) and the principle → enforcement-layer
+mapping that guides test scope.
+
+**Quick reference:**
+
+```bash
+# Bash plugins
+cd plugins/release-pipeline && ./tests/run-bats.sh
+
+# Python plugins
+pytest plugins/home-assistant-dev/tests/ -m unit
+
+# TypeScript plugins
+cd plugins/plugin-test-harness && npm ci && npm run build && npm test
+
+# Marketplace schema validation (always run before merging to main)
+./scripts/validate-marketplace.sh
+```
+
+Each plugin's per-plugin plan lives in [`testing/plans/<plugin>.md`](testing/plans/) with
+coverage status and Phase 2 execution logs.
+
 ## Plugin Development
 
 This repository also serves as a development workspace for creating new plugins. See
