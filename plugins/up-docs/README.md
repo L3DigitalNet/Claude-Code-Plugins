@@ -18,6 +18,7 @@ Documentation lives in three places with different purposes: repo-local files ca
 
 ## Requirements
 
+- Python 3.x in `$PATH` (used by all four helper scripts under `scripts/`)
 - Claude Code (any recent version)
 - Outline wiki accessible via MCP (mcp-outline server configured)
 - Notion accessible via MCP (Notion MCP server configured)
