@@ -19,4 +19,4 @@ claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev — dele
 
 - Monitor Tavily `search_depth=fast` vendor bug (returns empty results for queries `basic` answers correctly). Inline-noted in routing rules; revisit if Tavily fixes upstream.
 - Centralize bats wrapper to `scripts/run-plugin-bats.sh` (now 9 copies of `tests/run-bats.sh` after plugin removals — was 13). TEST-002 in conventions covers the workaround pattern; centralization is optional cleanup.
-- Dependabot reports 4 moderate npm vulnerabilities on default branch. Separate concern from this session's work.
+- Canonicalize the `core.hooksPath=/dev/null` test-fixture pattern (TEST-003 / bug 005) across every plugin's `tests/test_helper.bash` — already applied in `plugin-test-harness` and `release-pipeline`; remaining tmpdir-using plugins are vulnerable to the same workstation pre-commit hook rejection. `find plugins -name test_helper.bash -exec grep -L core.hooksPath {} \;` lists the still-unprotected files.

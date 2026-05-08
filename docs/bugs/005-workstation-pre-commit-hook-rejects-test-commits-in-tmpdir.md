@@ -2,7 +2,7 @@
 bug_id: 5
 date: 2026-05-07
 title: "workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email"
-services: [claude-code-plugins, plugin-test-harness]
+services: [claude-code-plugins, plugin-test-harness, release-pipeline]
 tags: [test-infra, git-hooks]
 status: fixed
 supersedes: null
@@ -23,3 +23,9 @@ Add `git config core.hooksPath /dev/null` to the tmpdir repo's local config in `
 Contributor-agnostic — works on any developer's machine regardless of global git config. See convention TEST-003 for the durable pattern.
 
 Released in plugin-test-harness v0.7.5 (commit cf9aa1b). Test result delta: 16/18 suites + 64/68 tests → 18/18 suites + 68/68 tests.
+
+## Recurrence — release-pipeline (2026-05-08)
+
+Same root cause re-surfaced in `release-pipeline/tests/test_helper.bash::make_git_repo` during a post-migration audit: `git commit` for the seed `initial` commit was running under `>/dev/null 2>&1`, the workstation pre-commit hook silently rejected it, HEAD never pointed anywhere, and 13 downstream `git tag` test paths failed with "Failed to resolve 'HEAD' as a valid ref." Fixed by the same one-line `git -C "$dir" config core.hooksPath /dev/null` addition. Bats suite went 63/77 → 76/76 (commit `97365ab`).
+
+The recurrence confirms TEST-003 should be canonicalized into a shared helper or applied preemptively to every plugin's `test_helper.bash` rather than waiting for each plugin to hit the same wall.
