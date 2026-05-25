@@ -205,18 +205,28 @@ await execa('git', ['config', 'user.name', 'Test'], { cwd: tmpDir });
 ```
 
 ```bash
-# in setUp (bash / bats equivalent)
+# in setUp (bash / bats equivalent — per-tmpdir variant)
 git init "$tmpdir"
 git -C "$tmpdir" config core.hooksPath /dev/null
 git -C "$tmpdir" config user.email 'test@example.com'
 git -C "$tmpdir" config user.name 'Test'
 ```
 
-**Why:** Workstations may have global pre-commit hooks (e.g., noreply email enforcement) configured via global `core.hooksPath`. Tests using fake author emails for fixture commits will be rejected by those hooks before the test logic runs. Setting `core.hooksPath=/dev/null` in the tmpdir's local config overrides the global setting for that one repo, leaving workstation-wide hooks intact for real work. Contributor-agnostic — works regardless of which hooks the developer's machine has installed. Prefer this over `--no-verify` because it covers all subsequent git operations in the test (including ones added later) without needing to retrofit every command.
+```bash
+# Preferred for bats: file-level variant at top of helpers.bash / test_helper.bash.
+# Applied marketplace-wide on 2026-05-25 — covers all subsequent tmpdir repos
+# without per-test boilerplate, and also neutralizes commit.gpgsign + tag.gpgsign
+# which the per-repo core.hooksPath variant doesn't.
+export GIT_CONFIG_GLOBAL=/dev/null
+export GIT_CONFIG_NOSYSTEM=1
+```
+
+**Why:** Workstations may have global pre-commit hooks (e.g., noreply email enforcement) configured via global `core.hooksPath`, plus global `commit.gpgsign=true` and `tag.gpgsign=true` requiring signing keys. Tests using fake author emails for fixture commits will be rejected by those hooks before the test logic runs; tests creating tags will silently fail without a signing key. Setting `core.hooksPath=/dev/null` in the tmpdir's local config covers only the hook case; setting `GIT_CONFIG_GLOBAL=/dev/null` + `GIT_CONFIG_NOSYSTEM=1` as exports at the top of the bats helper covers all global-config interference (hooks, signing, default branch, anything else the workstation might inherit) for every test that loads the helper. Contributor-agnostic — works regardless of which workstation config the developer has. Prefer this over `--no-verify` because it covers all subsequent git operations in the test (including ones added later) without needing to retrofit every command.
 
 **Sources:**
-- Bug 005 (workstation pre-commit hook + tmpdir test repos)
-- plugin-test-harness commit `cf9aa1b` (reference implementation in `test/unit/fix/{applicator,tracker}.test.ts`)
-- session 2026-05-07 (Phase 1 pre-flight failure + fix)
+- Bug 005 (workstation pre-commit hook + tmpdir test repos) — includes the 2026-05-25 marketplace-wide canonicalization table
+- plugin-test-harness commit `cf9aa1b` (per-tmpdir TypeScript/Jest reference)
+- release-pipeline `tests/test_helper.bash::make_git_repo` (per-tmpdir bash reference at lines 19-34)
+- up-docs commit `bacf529` (file-level bash reference, helpers.bash lines 8-15)
 
 **Related:** TEST-001, TEST-002

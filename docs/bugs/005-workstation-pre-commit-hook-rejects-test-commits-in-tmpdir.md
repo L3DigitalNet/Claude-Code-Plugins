@@ -2,7 +2,7 @@
 bug_id: 5
 date: 2026-05-07
 title: "workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email"
-services: [claude-code-plugins, plugin-test-harness, release-pipeline]
+services: [claude-code-plugins, plugin-test-harness, release-pipeline, up-docs, handoff, repo-hygiene, test-driver, github-repo-manager, nominal, opus-context, qt-suite]
 tags: [test-infra, git-hooks]
 status: fixed
 supersedes: null
@@ -29,3 +29,25 @@ Released in plugin-test-harness v0.7.5 (commit cf9aa1b). Test result delta: 16/1
 Same root cause re-surfaced in `release-pipeline/tests/test_helper.bash::make_git_repo` during a post-migration audit: `git commit` for the seed `initial` commit was running under `>/dev/null 2>&1`, the workstation pre-commit hook silently rejected it, HEAD never pointed anywhere, and 13 downstream `git tag` test paths failed with "Failed to resolve 'HEAD' as a valid ref." Fixed by the same one-line `git -C "$dir" config core.hooksPath /dev/null` addition. Bats suite went 63/77 → 76/76 (commit `97365ab`).
 
 The recurrence confirms TEST-003 should be canonicalized into a shared helper or applied preemptively to every plugin's `test_helper.bash` rather than waiting for each plugin to hit the same wall.
+
+## Recurrence — up-docs (2026-05-25)
+
+Surfaced for the third time during `/release-pipeline:release` pre-flight for up-docs v0.8.1. Same root cause in `plugins/up-docs/tests/context-gather.bats` — 4 tests calling `git commit` with `test@test.com` as author. The original `find -name test_helper.bash` survey command missed it because up-docs uses `helpers.bash` (no underscore), not `test_helper.bash`. Fixed in commit `bacf529` with a stronger pattern: `export GIT_CONFIG_GLOBAL=/dev/null` + `export GIT_CONFIG_NOSYSTEM=1` at top of `helpers.bash` rather than the per-tmpdir-repo `git config core.hooksPath` form. The env-var approach also neutralizes `commit.gpgsign` and `tag.gpgsign` which could fire on test repos that try to make signed commits/tags.
+
+## Marketplace-wide canonicalization (2026-05-25)
+
+Immediately after the up-docs recurrence, swept the remaining 7 plugin helpers in one session. Broader survey: `grep -L GIT_CONFIG_GLOBAL plugins/*/tests/{helpers,test_helper}.bash`.
+
+| Plugin | Pre-fix | Post-fix | Status |
+|---|---|---|---|
+| handoff | 18/22 | 22/22 | actively broken — recovered 4 tests |
+| repo-hygiene | 29/40 | 40/40 | actively broken — recovered 11 tests |
+| test-driver | 53/57 | 57/57 | actively broken — recovered 4 tests |
+| github-repo-manager | 40/40 | 40/40 | prophylactic |
+| nominal | 79/79 | 79/79 | prophylactic |
+| opus-context | 10/10 | 10/10 | prophylactic |
+| qt-suite | 6/6 | 6/6 | prophylactic |
+
+Total: 19 silently-failing tests recovered, 7 helpers now uniformly protected. One commit per plugin: 37c97c3, b6597a9, 8341515, d12fd0c, 57b1f4a, e81232f, d1c7aa2.
+
+Pattern is now fully canonicalized — future regressions are caught by running the audit command above.
