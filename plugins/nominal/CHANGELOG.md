@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.1] - 2026-05-25
+
+### Changed
+- nominal: Phase 2 — flight-log durability + manifest guard (5 cases)
+
+### Fixed
+- canonicalize TEST-003 — bats helper bypass (prophylactic)
+
+
 ## [1.1.0] - 2026-04-09
 
 ### Added
