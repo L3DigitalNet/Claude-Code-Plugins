@@ -209,6 +209,47 @@ with open(sys.argv[1], 'w') as f:
       fi
     fi
   fi
+
+  # 6c. Bump plugins/<name>/package.json IF its "name" field matches the plugin name.
+  # Defensive name check: sub-component package.json files (e.g. helper/package.json
+  # for gh-manager, mcp-server/package.json for ha-dev-mcp-server) have independent
+  # version lifecycles and must not be bumped on plugin releases.
+  PKG_JSON="$REPO/plugins/$PLUGIN/package.json"
+  if [[ -f "$PKG_JSON" ]]; then
+    pkg_name=$(python3 -c "
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        print(json.load(f).get('name', ''))
+except Exception:
+    print('')
+" "$PKG_JSON" 2>/dev/null)
+    if [[ "$pkg_name" == "$PLUGIN" ]]; then
+      bump_file "$PKG_JSON" \
+        "s/(\"version\"[[:space:]]*:[[:space:]]*\").*(\")/\1${VERSION}\2/"
+    fi
+  fi
+
+  # 6d. Bump plugins/<name>/pyproject.toml IF its top-level name matches.
+  # Same scoping rule as 6c: sub-package pyprojects (e.g. mcp/qt-pilot/pyproject.toml
+  # for qt-pilot) have independent lifecycles.
+  PYPROJECT="$REPO/plugins/$PLUGIN/pyproject.toml"
+  if [[ -f "$PYPROJECT" ]]; then
+    # Read the project name from [project] or [tool.poetry] tables (any leading whitespace).
+    py_name=$(python3 -c "
+import re, sys
+try:
+    text = open(sys.argv[1]).read()
+    m = re.search(r'^\s*name\s*=\s*[\"\\']([^\"\\']+)[\"\\']', text, re.MULTILINE)
+    print(m.group(1) if m else '')
+except Exception:
+    print('')
+" "$PYPROJECT" 2>/dev/null)
+    if [[ "$py_name" == "$PLUGIN" ]]; then
+      bump_file "$PYPROJECT" \
+        "s/^(version[[:space:]]*=[[:space:]]*\").*(\")/\1${VERSION}\2/"
+    fi
+  fi
 fi
 
 # ---------- Summary ----------

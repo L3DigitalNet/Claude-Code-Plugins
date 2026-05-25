@@ -105,6 +105,62 @@ assert_contains "$out" "Would update:" "--plugin --dry-run: reports would-change
 pjson=$(< "$REPO/plugins/myplugin/.claude-plugin/plugin.json")
 assert_contains "$pjson" '"1.0.0"' "--plugin --dry-run: plugin.json not changed"
 
+# ---- Test 8: --plugin bumps plugin-level package.json when "name" matches ----
+REPO="$TMPDIR_TEST/repo8"
+mkdir -p "$REPO/plugins/my-plugin/.claude-plugin"
+mkdir -p "$REPO/.claude-plugin"
+printf '{"version": "0.1.0", "name": "my-plugin"}\n' \
+  > "$REPO/plugins/my-plugin/.claude-plugin/plugin.json"
+printf '{"name": "my-plugin", "version": "0.1.0"}\n' \
+  > "$REPO/plugins/my-plugin/package.json"
+printf '{"name":"test","plugins":[{"name":"my-plugin","version":"0.1.0","source":"./plugins/my-plugin","description":"D"}]}\n' \
+  > "$REPO/.claude-plugin/marketplace.json"
+bash "$SCRIPT" "$REPO" 0.2.0 --plugin my-plugin 2>/dev/null
+pkg=$(< "$REPO/plugins/my-plugin/package.json")
+assert_contains "$pkg" '"0.2.0"' "--plugin: package.json with matching name is bumped"
+
+# ---- Test 9: --plugin LEAVES plugin-level package.json alone when "name" differs ----
+REPO="$TMPDIR_TEST/repo9"
+mkdir -p "$REPO/plugins/my-plugin/.claude-plugin"
+mkdir -p "$REPO/.claude-plugin"
+printf '{"version": "0.1.0", "name": "my-plugin"}\n' \
+  > "$REPO/plugins/my-plugin/.claude-plugin/plugin.json"
+printf '{"name": "different-name", "version": "5.0.0"}\n' \
+  > "$REPO/plugins/my-plugin/package.json"
+printf '{"name":"test","plugins":[{"name":"my-plugin","version":"0.1.0","source":"./plugins/my-plugin","description":"D"}]}\n' \
+  > "$REPO/.claude-plugin/marketplace.json"
+bash "$SCRIPT" "$REPO" 0.2.0 --plugin my-plugin 2>/dev/null
+pkg=$(< "$REPO/plugins/my-plugin/package.json")
+assert_contains "$pkg" '"5.0.0"' "--plugin: package.json with non-matching name is left alone (sub-component lifecycle)"
+
+# ---- Test 10: --plugin bumps plugin-level pyproject.toml when name matches ----
+REPO="$TMPDIR_TEST/repo10"
+mkdir -p "$REPO/plugins/my-plugin/.claude-plugin"
+mkdir -p "$REPO/.claude-plugin"
+printf '{"version": "0.1.0", "name": "my-plugin"}\n' \
+  > "$REPO/plugins/my-plugin/.claude-plugin/plugin.json"
+printf '[project]\nname = "my-plugin"\nversion = "0.1.0"\n' \
+  > "$REPO/plugins/my-plugin/pyproject.toml"
+printf '{"name":"test","plugins":[{"name":"my-plugin","version":"0.1.0","source":"./plugins/my-plugin","description":"D"}]}\n' \
+  > "$REPO/.claude-plugin/marketplace.json"
+bash "$SCRIPT" "$REPO" 0.2.0 --plugin my-plugin 2>/dev/null
+py=$(< "$REPO/plugins/my-plugin/pyproject.toml")
+assert_contains "$py" '"0.2.0"' "--plugin: pyproject.toml with matching name is bumped"
+
+# ---- Test 11: --plugin LEAVES sub-package pyproject.toml alone when name differs ----
+REPO="$TMPDIR_TEST/repo11"
+mkdir -p "$REPO/plugins/my-plugin/.claude-plugin"
+mkdir -p "$REPO/.claude-plugin"
+printf '{"version": "0.1.0", "name": "my-plugin"}\n' \
+  > "$REPO/plugins/my-plugin/.claude-plugin/plugin.json"
+printf '[project]\nname = "subpackage"\nversion = "9.9.9"\n' \
+  > "$REPO/plugins/my-plugin/pyproject.toml"
+printf '{"name":"test","plugins":[{"name":"my-plugin","version":"0.1.0","source":"./plugins/my-plugin","description":"D"}]}\n' \
+  > "$REPO/.claude-plugin/marketplace.json"
+bash "$SCRIPT" "$REPO" 0.2.0 --plugin my-plugin 2>/dev/null
+py=$(< "$REPO/plugins/my-plugin/pyproject.toml")
+assert_contains "$py" '"9.9.9"' "--plugin: pyproject.toml with non-matching name is left alone"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
