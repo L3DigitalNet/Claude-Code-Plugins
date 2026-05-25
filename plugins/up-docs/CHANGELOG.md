@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.1] - 2026-05-25
+
+### Fixed
+- repair bats suite — neutralize global git hook + add deny-guard transcript fixture
+- scope deny-guard to up-docs subagents only
+
+
 ## [0.8.0] - 2026-05-08
 
 ### Added
