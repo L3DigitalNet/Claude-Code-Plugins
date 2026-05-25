@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.1] - 2026-05-25
+
+### Changed
+- release-pipeline: complete v2.2.0 testing-branch migration
+
+
 ## [2.2.0] - 2026-05-07
 
 ### Changed
