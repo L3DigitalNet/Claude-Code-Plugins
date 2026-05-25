@@ -120,7 +120,7 @@
     {
       "name": "handoff",
       "description": "Save and load task context across machines via a shared network drive. Two commands for cross-machine continuity during infrastructure work.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
