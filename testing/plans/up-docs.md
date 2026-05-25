@@ -73,6 +73,22 @@ plugins/up-docs/tests/
 
 `bash plugins/up-docs/tests/run-bats.sh` — **34 of 34 passing** (27 baseline + 7 added).
 
+### Post-2026-05-25 Regression Fix
+
+Test-harness drift: commit 8483991 added `deny-guard.sh` scope-gating to upstream transcripts (subagent security boundary) but did not update corresponding bats assertions. Pre-release pre-flight: 74/87 tests failed. Root causes: (a) workstation global `~/.gitconfig` core.hooksPath GH007 noreply-email hook rejected `test@test.com` author commits in `context-gather.bats` (environmental, same pattern as plugin-test-harness v0.7.5 / TEST-003); (b) all 9 "blocks" exit-code tests checked wrong expectation (got 0, expected 2 after scope-gating). Fixes: 
+1. Added `export GIT_CONFIG_GLOBAL=/dev/null` + `export GIT_CONFIG_NOSYSTEM=1` to `helpers.bash` `setup_test_env`.
+2. Created `tests/fixtures/up-docs-active-transcript.jsonl` (one JSONL line simulating an open agent block).
+3. Rewrote `deny-guard.bats` with `setup()` exporting `TRANSCRIPT=...fixture`, threaded `transcript_path` through 11 enforce-path tests, kept 2 fail-open tests unchanged, added 1 new regression test ("fails open when not inside an up-docs subagent (no transcript)").
+
+Suite: 62/62 bats now passing (was 74/87 pre-fix). Total: 88/88 tests (62 bats + 26 pytest).
+
+| Layer | Before | After |
+|---|---|---|
+| Mechanical (scripts) | 62 cases | 62 (unchanged) |
+| Structural (manifest) | 0 | 0 (unchanged) |
+| Environmental / scope-gating | 0 failing | 0 failing |
+| **Total** | **74/87 (failing pre-flight)** | **88/88 (released v0.8.1)** |
+
 ### Findings
 
 1. **Risk #1 (`ssh` binary not overridable)** — false alarm. The script invokes `ssh` via PATH lookup, so PATH-stubbing works cleanly. No source change needed.

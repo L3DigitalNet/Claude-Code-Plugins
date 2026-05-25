@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-05-08
+**Last updated:** 2026-05-25
 
 ## Session Instructions
 
@@ -12,7 +12,11 @@
 
 None.
 
-## Recently closed (this session, 2026-05-08)
+## Recently closed (this session, 2026-05-25)
+
+- **up-docs v0.8.1 released — patch bundle** — /release-pipeline:release invoked; pre-flight failed (74/87 bats). Two root-cause failures: (a) workstation global `~/.gitconfig` core.hooksPath GH007 noreply-regex hook rejected `test@test.com` author commits in up-docs/tests/context-gather.bats (same pattern as plugin-test-harness v0.7.5 / TEST-003); (b) commit 8483991 scope-gated deny-guard.sh to subagent transcripts but didn't update bats assertions, so all 9 "blocks" tests checked wrong exit code (got 0, expected 2). Fixed: added `export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1` to helpers.bash setup_test_env; created up-docs-active-transcript.jsonl fixture; rewrote deny-guard.bats with `setup()` exporting TRANSCRIPT, threaded `transcript_path` through 11 enforce-path tests, added 1 new regression test ("fails open when not inside an up-docs subagent"). Suite: 87 → 88 tests, 62/62 passing. Re-ran pipeline end-to-end: tagged up-docs/v0.8.1, created GitHub release. Commits: bacf529, cbb9c7b. Verifiable: `git tag --list up-docs/* | tail -1` → up-docs/v0.8.1; `gh release view up-docs/v0.8.1` → released; `verify-release.sh . 0.8.1 --plugin up-docs` → 3/3 passed.
+
+## Recently closed (previous session, 2026-05-08)
 
 - **release-pipeline v2.2.0 testing-branch migration completion** — review surfaced two residual issues missed in the 2026-05-07 v2.2.0 release. Bug A (real, testing-branch related): `scripts/verify-release.sh` Check #4 asserted `current branch != main`, the inverted assumption from the testing-branch era. Every successful release through Phase 4 was emitting a misleading `"✗ Returned to dev branch (on: main)"` line and exiting 1 (release still landed because callers ignore the exit code, but the verification report was permanently red). Fixed by deleting Check #4 entirely — there's no post-release branch state to verify under direct-to-main. Bug B (environmental, identical to plugin-test-harness v0.7.5 / TEST-003): `tests/test_helper.bash::make_git_repo` didn't set `core.hooksPath /dev/null`, so the workstation's global `pre-commit` hook (GH007 noreply-email regex) silently rejected `test@example.com` author commits, leaving HEAD unwritten and breaking 13 downstream `git tag` test paths. Fixed with same one-line config addition. `verify-release.bats` updated to match (VR4 deleted; VR1 expects `3 passed` not `4 passed`). Bats suite: 76/76 ✅ (was 63/77). Plugin version held at 2.2.0; user can release v2.2.1 if desired to publish the fix.
 - **simple-git RCE remediation** — alert #87 (HIGH severity, RCE in `simple-git < 3.36.0`) surfaced after the moderate alerts dropped off in the rescan. Direct dep in `plugins/github-repo-manager/helper/package.json` at `^3.33.0`; existing caret range already permitted the patched `3.36.0`. Bumped floor to `^3.36.0` for explicitness, refreshed lockfile (`3.33.0 → 3.36.0`). No automated test suite for the helper; smoke-tested via `node --check bin/gh-manager.js` and dynamic `import('./src/commands/wiki.js')` — both clean. `simple-git` is used only in `src/commands/wiki.js` for wiki-repo clone/push, so the RCE exposure surface was wiki sync against an attacker-controlled remote (low real-world risk for this single-developer use case but still warranted the fix).
