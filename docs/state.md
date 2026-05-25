@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-05-25
+**Last updated:** 2026-05-25 (final release batch + release-pipeline v2.2.2 fix + Dependabot remediation)
 
 ## Session Instructions
 
