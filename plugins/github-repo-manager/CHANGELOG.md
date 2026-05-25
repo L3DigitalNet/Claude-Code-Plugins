@@ -2,6 +2,16 @@
 
 All notable changes to the github-repo-manager plugin are documented here.
 
+## [0.5.1] - 2026-05-25
+
+### Changed
+- security: bump simple-git to >=3.36.0 (closes Dependabot #87, HIGH RCE)
+- github-repo-manager: Phase 2 — hook + mutation-patterns coverage (17 cases)
+
+### Fixed
+- canonicalize TEST-003 — bats helper bypass (prophylactic)
+
+
 ## [0.5.0] - 2026-04-09
 
 ### Added
