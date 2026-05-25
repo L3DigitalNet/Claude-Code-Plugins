@@ -1,6 +1,6 @@
 {
   "name": "plugin-test-harness",
-  "version": "0.7.2",
+  "version": "0.7.6",
   "description": "Iterative live testing harness for Claude Code plugins and MCP servers",
   "main": "dist/index.js",
   "type": "module",

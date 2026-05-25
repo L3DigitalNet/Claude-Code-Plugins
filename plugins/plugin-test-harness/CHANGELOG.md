@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.6] - 2026-05-25
+
+### Changed
+- docs+security: closeout for 2026-05-08 session
+
+
 ## [0.7.5] - 2026-05-07
 
 ### Changed
