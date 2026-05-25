@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.2] - 2026-05-25
+
+### Fixed
+- bump-version.sh plugin-mode bumps package.json + pyproject.toml when name matches
+
+
 ## [2.2.1] - 2026-05-25
 
 ### Changed
