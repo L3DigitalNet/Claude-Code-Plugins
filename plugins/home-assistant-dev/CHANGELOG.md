@@ -2,6 +2,12 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.10] - 2026-05-25
+
+### Changed
+- security: bump fast-uri >=3.1.2 + qs >=6.15.2 (closes Dependabot #88-95, 4 high + 2 medium)
+
+
 ## [2.2.9] - 2026-05-25
 
 ### Changed
