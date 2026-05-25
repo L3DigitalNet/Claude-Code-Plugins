@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.1] - 2026-05-25
+
+### Changed
+- repo-hygiene: Phase 2 — 4 new bats files (17 cases) covering 4 untested scripts
+
+### Fixed
+- canonicalize TEST-003 — bypass global git config in bats helper
+
+
 ## [1.4.0] - 2026-04-23
 
 ### Changed
