@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.1] - 2026-05-25
+
+### Changed
+- opus-context: Phase 2 — bats suite for SessionStart hook (10 cases)
+
+### Fixed
+- canonicalize TEST-003 — bats helper bypass (prophylactic)
+
+
 ## [1.1.0] - 2026-04-23
 
 ### Changed
