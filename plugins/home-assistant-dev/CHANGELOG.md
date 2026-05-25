@@ -2,6 +2,17 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [2.2.9] - 2026-05-25
+
+### Changed
+- docs+security: closeout for 2026-05-08 session
+- home-assistant-dev: fix Jest compile by adding tsconfig.test.json
+- home-assistant-dev: Phase 2 — hook dispatcher + manifest guard (11 cases)
+
+### Fixed
+- add 'types: [node]' to mcp-server tsconfig for TS 6 compatibility
+
+
 ## [2.2.8] - 2026-05-07
 
 ### Changed
