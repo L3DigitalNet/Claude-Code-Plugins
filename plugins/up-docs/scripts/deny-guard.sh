@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # deny-guard.sh — PreToolUse hook for up-docs plugin.
 #
+# Scoped: only enforces denies when invoked from inside an up-docs subagent
+# (up-docs:up-docs-audit-drift and its siblings). In the main session, or
+# when invoked from a non-up-docs subagent, exits 0 immediately.
+#
+# Scoping is determined by reading transcript_path from the hook JSON input
+# and walking the JSONL to find the innermost still-open Agent tool_use.
+# If that Agent's subagent_type starts with "up-docs:", enforcement runs.
+#
 # Blocks Bash commands matching the auditor's <forbidden_commands> categories:
 #   - Filesystem destruction: rm, rmdir, shred, truncate, mv, cp -f overwriting
 #   - Output redirection writes that overwrite system files
@@ -11,17 +19,8 @@
 #   - Git destructive: git rm, git push --force, git reset --hard
 #   - SQL writes: INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE
 #
-# The hook parses the full command line — including pipes, redirects, `&&` /
-# `;` chains, and inline subshell substitution — by tokenizing on shell
-# operators and checking each segment.
-#
-# Patterned on plugins/release-pipeline/scripts/force-push-guard.sh:
-#   - Reads PreToolUse JSON on stdin
-#   - exit 0 to allow, exit 2 to block
-#   - On block: emits hookSpecificOutput.permissionDecision="deny" JSON
-#
-# Failure mode: fail open. If the JSON parse fails or the command can't be
-# extracted, exit 0. The deny-guard is defense-in-depth, not a security
+# Failure mode: fail open. If JSON parse, transcript scan, or pattern match
+# fails, exit 0. The deny-guard is defense-in-depth, not a security
 # boundary — see README "Recommended consumer-side permissions.deny" for
 # the actually-enforced layer.
 
@@ -30,7 +29,7 @@ set -uo pipefail
 # Read PreToolUse JSON
 INPUT=$(cat)
 
-# Extract command (fail open if extraction fails)
+# Extract command + transcript path (fail open if extraction fails)
 COMMAND=$(printf '%s' "$INPUT" | python3 -c "
 import sys, json
 try:
@@ -42,13 +41,79 @@ except Exception:
 
 [ -z "$COMMAND" ] && exit 0
 
+TRANSCRIPT_PATH=$(printf '%s' "$INPUT" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('transcript_path', ''))
+except Exception:
+    print('')
+" 2>/dev/null)
+
+# --- Scope check: are we inside an up-docs subagent? -------------------------
+# Walk the transcript JSONL and track a stack of (tool_use_id, subagent_type)
+# entries for Agent tool_use blocks. Pop when a matching tool_result appears.
+# If the innermost still-open Agent at end-of-transcript is an up-docs agent,
+# enforcement applies. Otherwise exit 0.
+
+IN_UP_DOCS_SUBAGENT=$(TRANSCRIPT="$TRANSCRIPT_PATH" python3 <<'PY' 2>/dev/null || echo 0
+import json, os, sys
+
+path = os.environ.get("TRANSCRIPT", "")
+if not path or not os.path.exists(path):
+    print(0)
+    sys.exit(0)
+
+UP_DOCS_PREFIX = "up-docs:"
+active = []  # stack of (tool_use_id, subagent_type)
+
+try:
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except Exception:
+                continue
+            msg = entry.get("message")
+            if not isinstance(msg, dict):
+                continue
+            content = msg.get("content", [])
+            if not isinstance(content, list):
+                continue
+            for block in content:
+                if not isinstance(block, dict):
+                    continue
+                bt = block.get("type")
+                if bt == "tool_use" and block.get("name") == "Agent":
+                    tid = block.get("id") or ""
+                    sub = ((block.get("input") or {}).get("subagent_type")) or ""
+                    active.append((tid, sub))
+                elif bt == "tool_result":
+                    target = block.get("tool_use_id") or ""
+                    active = [a for a in active if a[0] != target]
+except Exception:
+    print(0)
+    sys.exit(0)
+
+if active and active[-1][1].startswith(UP_DOCS_PREFIX):
+    print(1)
+else:
+    print(0)
+PY
+)
+
+if [ "$IN_UP_DOCS_SUBAGENT" != "1" ]; then
+    exit 0
+fi
+
+# --- Enforcement (only reached when inside an up-docs subagent) -------------
 # Tokenize on shell operators: |, &&, ||, ;, $(, `
-# Anything inside one of those segments is a candidate command-line.
-# We also keep the whole command as one segment for catch-all matchers.
 SEGMENTS=$(printf '%s\n' "$COMMAND" | python3 -c "
 import sys, re
 text = sys.stdin.read()
-# Split on |, &&, ||, ;, and the body of \$(...) and \`...\`
 parts = [text]
 parts.extend(re.findall(r'\\\$\\(([^)]*)\\)', text))
 parts.extend(re.findall(r'\`([^\`]*)\`', text))
@@ -62,8 +127,6 @@ for line in out:
         print(line)
 ")
 
-# Patterns to deny. Each pattern is matched against each segment with grep -E.
-# Format: one anchored regex per line.
 DENY_PATTERNS=$(cat <<'PATTERNS'
 ^\s*rm(\s+-[a-zA-Z]+)*\s+
 ^\s*rmdir(\s+-[a-zA-Z]+)*\s+
@@ -103,7 +166,6 @@ DENY_PATTERNS=$(cat <<'PATTERNS'
 PATTERNS
 )
 
-# Iterate every segment against every pattern; first match blocks.
 MATCHED_SEG=""
 MATCHED_PAT=""
 while IFS= read -r SEG; do
