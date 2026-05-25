@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.7] - 2026-05-25
+
+### Changed
+- security: bump fast-uri >=3.1.2 + qs >=6.15.2 (closes Dependabot #88-95, 4 high + 2 medium)
+
+
 ## [0.7.6] - 2026-05-25
 
 ### Changed
