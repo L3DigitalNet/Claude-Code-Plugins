@@ -57,7 +57,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
    - **`docs/state.md`** — single-source of live state.
      - `**Last updated:** YYYY-MM-DD` line: update to today if the session made material state changes.
      - `## Session Instructions` block: update/add/remove `🔴/🟡/🟢` active-incident items based on session outcomes. Remove resolved incidents; add new ones with status + one-sentence context.
-     - Hard cap: **2 KB** (`wc -c docs/state.md` must be ≤2048). If edits push over, trim the oldest active-incident items first, then condense the Session Instructions preamble. Never drop a 🔴 incident to fit budget.
+     - Hard cap: **2 KB** (`wc -c docs/state.md` must be ≤2048). This cap is **state-conditioned, not transition-conditioned**: enforce it whenever the file is over 2048 bytes *after* your edit — even if a prior session left it bloated and your own edit didn't cross the threshold. To trim: the verbose "Recently closed" entries for PRIOR sessions are already captured as one-line rows in `docs/sessions/<YYYY-MM>.md`, so delete the oldest "Recently closed" sections first (keep only the current session's close), then condense the Session Instructions preamble if still over. Never drop a 🔴 active incident to fit budget. Re-check `wc -c` after trimming.
 
    - **`docs/deployed.md`** — deployment truth.
      - Update any row whose version / state / path changed.
