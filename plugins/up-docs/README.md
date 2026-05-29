@@ -26,9 +26,9 @@ Documentation lives in three places with different purposes: repo-local files ca
 
 ## Security
 
-up-docs ships with a defense-in-depth `PreToolUse` validator (`scripts/deny-guard.sh`) that blocks Bash commands matching the auditor's forbidden categories: filesystem destruction (rm, mv, cp -f, sed -i, redirect into /etc), container lifecycle (pct stop/destroy/restore/migrate, qm stop/destroy, docker stop/rm), service control (systemctl stop/restart/disable/mask, kill, killall, pkill), network/permissions (iptables, nft, ip route add/del, chmod, chown, chattr, setfacl), package edits (apt install/remove, dnf install/remove, pip install, npm install --save), git destructive (git rm, git push --force, git reset --hard), and SQL writes (INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE).
+The drift-audit agent (`up-docs-audit-drift`) is prompt-instructed to use Bash for read-only inspection only — its `<forbidden_commands>` table bans filesystem destruction, container lifecycle, service control, network/permission, package, git-destructive, and SQL-write verbs. Prompt instructions guide the model but are **not an enforced boundary**: a model can still emit a forbidden command, and nothing in the plugin stops it at the tool layer.
 
-The PreToolUse guard is grep-based and inherently incomplete — sufficiently crafted commands using Bash variable expansion, here-docs, or `eval` can evade pattern matching. For a definitively-enforced security boundary, add the following block to your **consuming project's** `.claude/settings.json`:
+For a definitively-enforced boundary that holds regardless of which agent is running, add the following block to your **consuming project's** `.claude/settings.json`. This is engine-enforced by Claude Code's permission system and is the recommended way to harden up-docs (or any agent) against destructive Bash:
 
 ```json
 {
@@ -79,9 +79,9 @@ The PreToolUse guard is grep-based and inherently incomplete — sufficiently cr
 }
 ```
 
-The consumer-side `permissions.deny` is enforced by Claude Code's permission engine regardless of which agent is running. See [Claude Code permission docs](https://code.claude.com/docs/en/settings) for the full deny-pattern syntax.
+The `permissions.deny` block is enforced by Claude Code's permission engine regardless of which agent is running. See [Claude Code permission docs](https://code.claude.com/docs/en/settings) for the full deny-pattern syntax.
 
-> Why both layers? The PreToolUse guard parses the full command line (including pipes, redirects, and `&&` chains) so it catches patterns the consumer-side `Bash(* * *)` glob misses. The consumer-side `permissions.deny` is engine-enforced and catches what the guard misses. Defense-in-depth.
+> **Why not a bundled `PreToolUse` guard?** Versions through 0.8.1 shipped a `scripts/deny-guard.sh` `PreToolUse` hook that tried to block these commands only while an up-docs subagent was running. It was removed afterward: it ran on *every* Bash call in *every* session (a per-command latency tax), and its scope detection was unsound — subagents run with their own isolated transcript, so the hook could never reliably tell whether it was inside an up-docs subagent. The engine-enforced `permissions.deny` above is both simpler and strictly more reliable.
 
 ## Installation
 

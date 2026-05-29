@@ -135,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
-- Existing test coverage (post-2026-05-25 batch release, 11 in-scope plugins): github-repo-manager 40 bats, handoff 22 bats, home-assistant-dev 207 pytest + 31 Jest, nominal 79 bats, opus-context 10 bats, plugin-test-harness 68 Jest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 62 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests; +1 bats from v0.8.1 deny-guard regression test; +26 pytest from validate_output and verify_evidence_grounded suites).
+- Existing test coverage (post-2026-05-25 batch release, 11 in-scope plugins): github-repo-manager 40 bats, handoff 22 bats, home-assistant-dev 207 pytest + 31 Jest, nominal 79 bats, opus-context 10 bats, plugin-test-harness 68 Jest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then −14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites).
 
 **Related:** TEST-002, DOC-001
 
