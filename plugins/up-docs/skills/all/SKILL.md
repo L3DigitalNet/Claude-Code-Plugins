@@ -82,51 +82,14 @@ Produce one combined report: a heading per layer, each with its own table and to
 
 Do not re-fetch pages or files. Do not make your own edits. Your job after dispatching is pure collation.
 
-### 6. Review Stale File Candidates (conditional)
+### 6. Post-Propagation Steps (stale-candidate review + handoff brief)
 
-If the repo propagator's report includes a `## Stale File Candidates` section, present the listed paths to the user via `AskUserQuestion` and execute deletions only on explicit approval:
+Read `${CLAUDE_PLUGIN_ROOT}/templates/post-propagation-steps.md` and follow both procedures after the combined report (Step 5):
 
-1. Parse the candidate rows from the repo propagator's output. Each row has a path, reason, and confidence.
-2. Build an `AskUserQuestion` with `multiSelect: true`, one option per candidate (up to 4 — if more, batch in subsequent questions).
-3. Each option label is the filename basename; description carries the reason + confidence verbatim.
-4. For every path the user selects, run `git rm <path>`. Report what was deleted.
-5. Paths the user does not select are left alone.
-6. If the user cancels, skip deletions and continue to Step 7.
+- **Stale File Candidate Review** — if the repo propagator's report has a `## Stale File Candidates` section, present it via `AskUserQuestion` (`multiSelect`) and `git rm` only user-approved paths. Skip silently if none.
+- **Handoff for Next Session** — emit a per-layer update confirmation, then the layout-detected (V2/V1/NONE) handoff brief.
 
-If the repo propagator emitted zero stale candidates, skip Step 6 silently.
-
-### 7. Confirm Updates + Emit Handoff Brief
-
-After the combined report is displayed (and after any Step 6 deletions), emit both of these as the final section of the skill's output:
-
-**(a) Explicit update confirmation.** One or two lines per layer summarizing what changed vs. what was audited-but-unchanged. Example: `"Repo: updated docs/state.md, docs/deployed.md, docs/bugs/016-*.md, docs/sessions/2026-04.md. Wiki: updated 2 pages (Authentik, Monitoring). Notion: no change."`
-
-**(b) Handoff for Next Session brief.** Detect the repo's handoff layout and source from the corresponding files:
-
-- **V2 (handoff-system-v2, post-2026-04-24):** `docs/state.md` exists. Read it + `docs/deployed.md` + `docs/bugs/INDEX.md`.
-- **V1 (legacy):** `docs/handoff.md` exists (and no `docs/state.md`). Read it.
-- **NONE:** neither file exists. Skip this subsection silently.
-
-Emit the brief using this structure (fields sourced per layout):
-
-```markdown
-## 📋 Handoff for Next Session
-
-**Last work:** <V2: top row of docs/sessions/<current-month>.md | V1: top Last Updated line>
-
-**Currently deployed:**
-- <V2: docs/deployed.md rows, one per row, name + version + state>
-- <V1: docs/handoff.md What Is Deployed bullets>
-
-**Open items — what remains:**
-- <V2: docs/deployed.md ## What Remains bullets | V1: docs/handoff.md What Remains bullets>
-
-**Active incidents:** <V2: docs/state.md Session Instructions 🔴/🟡/🟢 block | V1: skip>
-
-**Open bugs:** <V2: docs/bugs/INDEX.md rows with status != fixed | V1: docs/handoff.md Bugs table with unresolved items. "None" if all are fixed.>
-```
-
-Keep it scannable — no narrative prose, no full-file dump. If neither layout is present, skip this subsection silently. The brief is a READ-only excerpt of the already-updated state files; do not re-edit.
+The brief is READ-only over already-updated state files; do not re-edit.
 
 ## Layer Boundaries (reference)
 

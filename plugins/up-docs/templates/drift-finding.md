@@ -16,7 +16,11 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
       "should_say": "<what it should be, based on live state or session summary>",
       "confidence": "low | medium | high | unverifiable",
       "destructive_fix": false,
-      "evidence": "<command or reference that produced ground truth — NEVER fabricate>"
+      "evidence": {
+        "command": "<exact tool_input.command you ran to verify this finding>",
+        "expected_output_signature": "<distinctive substring literally observed in tool_response.output>",
+        "source_tool_use_id": "<tool_use_id of that call, if identifiable — optional>"
+      }
     }
   ],
   "escalation": {
@@ -42,10 +46,10 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 | `page` | Human-readable page title (Outline, Notion) or file path (repo). |
 | `page_id` | Machine ID for wiki/Notion; `null` for repo. Used by downstream propagators to target the right page. |
 | `stale_line` | Exact text currently in the doc. Do not paraphrase. This is what a propagator will match against. |
-| `should_say` | What the line should be. If unknown (low confidence), copy `stale_line` and note in `evidence`. |
+| `should_say` | What the line should be. If unknown, copy `stale_line` and lower `confidence` accordingly. |
 | `confidence` | `"high"` = verified against live state; `"medium"` = verified against another doc or the session summary; `"low"` = unverified but smells wrong; `"unverifiable"` = verification command was attempted and failed (use when you would otherwise have been tempted to fabricate). |
 | `destructive_fix` | `true` if the fix would require page deletion, collection reorg, or anything that can't be cleanly undone. |
-| `evidence` | Exact verbatim output of the verification command that produced ground truth — never summarized, never paraphrased, never inferred. If the command failed (non-zero exit, empty output, "No such file" error): set `confidence` to `"unverifiable"` and write `"Command failed: <exact error>"` here. Empty string is allowed only for `"low"` confidence findings where no command was attempted (e.g., host unreachable). **Never fabricate this field** — a finding with invented evidence is worse than no finding. See the agent prompt's `<verification_discipline>` block. |
+| `evidence` | **Structured object**, not a free-form string: `{command, expected_output_signature, source_tool_use_id?}`. `command` = the exact `tool_input.command` you ran; `expected_output_signature` = a distinctive substring you literally observed in that call's `tool_response.output` (never summarized, paraphrased, or inferred); `source_tool_use_id` is optional. May be `null` **only** when `confidence: "unverifiable"` (command failed / host unreachable / no verifying command produced real output); a non-null object is required for `low`, `medium`, and `high`. **Never fabricate** — `validate_output.py` rejects string-form evidence at parse time, and `verify_evidence_grounded.py` rejects any signature absent from the captured transcript. See the agent prompt's `<verification_discipline>` block. |
 
 ## Markdown Form (rendered for user)
 

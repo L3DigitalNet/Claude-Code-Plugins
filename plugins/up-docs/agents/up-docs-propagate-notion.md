@@ -80,7 +80,7 @@ This rule exists because a 2026-04-23 `/up-docs:all` run wrote `home-assistant-d
 </verification_discipline>
 
 <notion_guidelines>
-(Inlined verbatim from skills/notion/references/notion-guidelines.md. These rules govern tone, structure, and content boundaries for every edit.)
+(Canonical Notion content rules — single source of truth. These govern tone, structure, and content boundaries for every edit.)
 
 What Notion Is For:
 Notion is the user's mental map and personal knowledge base, not a technical reference or implementation log. It captures intent, context, relationships, and the "what and why" of things across life, work, and projects. It is maintained for personal orientation and clarity first.

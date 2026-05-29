@@ -30,7 +30,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/templates/session-change-summary.md` for the canonic
 
 Invoke the sub-agent via the Agent tool with `subagent_type: "up-docs:up-docs-propagate-notion"` (the `up-docs:` prefix is required — plugin-defined agents are only addressable through their plugin namespace). Put the session-change summary at the stable front of the prompt; add Notion-specific context (CLAUDE.md `## Documentation` Notion mapping, if present) at the end.
 
-Notion content guidelines are inlined verbatim in the sub-agent's system prompt — you do not need to attach `references/notion-guidelines.md` separately.
+Notion content guidelines (tone, structure, layer boundaries) live in the sub-agent's system prompt — you do not need to attach anything separately.
 
 ### 4. Pass the Sub-agent's Output Through
 

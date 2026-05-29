@@ -181,11 +181,11 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
 </example>
 
 <example>
-  <scenario>Low-confidence finding — host unreachable, doc claim can't be verified.</scenario>
+  <scenario>Unverifiable finding — verification command failed (host unreachable).</scenario>
   <audit_step>
   Wiki page "Netdata — CT 120" lists listening port 19999.
   Run `ssh gmk 'pct exec 120 -- ss -tlnp | grep 19999'` → SSH timeout; CT 120 unreachable.
-  Cannot verify claim. Record finding with confidence=low and empty evidence.
+  A command was attempted and failed, so this is `unverifiable` (not `low`). Record with confidence=unverifiable and evidence=null.
   </audit_step>
   <finding_json>
   {
@@ -194,13 +194,13 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
     "page": "Netdata — CT 120",
     "page_id": "ghi-789",
     "stale_line": "Listening on port 19999",
-    "should_say": "(unverified)",
-    "confidence": "low",
+    "should_say": "(unverifiable — host unreachable)",
+    "confidence": "unverifiable",
     "destructive_fix": false,
     "evidence": null
   }
   </finding_json>
-  <lesson>Unreachable hosts do not generate high-confidence findings. Low-confidence findings are still reported so the user knows the claim couldn't be verified — but the propagators should not auto-fix from a low-confidence finding without human review.</lesson>
+  <lesson>A command that was attempted but failed (timeout, unreachable host, "No such file") yields `confidence: "unverifiable"` with `evidence: null` — the validator permits null evidence only for `unverifiable`. `low` is for a claim that smells wrong when no command was run. Either way, propagators must not auto-fix without human review.</lesson>
 </example>
 
 <example>
