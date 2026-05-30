@@ -77,7 +77,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
      - Update `docs/sessions/INDEX.md`: bump row count for current month (or add new month entry newest-first).
 
    - **`docs/bugs/<NNN>-<slug>.md`** — per-file bug KB.
-     - For each bug the session fixed OR opened, create a new file with frontmatter:
+     - For each bug the session fixed OR opened, create a new file with frontmatter and a **Cause / Fix / Lesson** body:
        ```
        ---
        bug_id: <max existing + 1>
@@ -96,6 +96,9 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
 
        ## Fix
        <one paragraph — commit SHA if applicable>
+
+       ## Lesson
+       <one paragraph — the durable, reusable takeaway; what to check or do next time>
        ```
      - Determine `bug_id` via `ls docs/bugs/[0-9][0-9][0-9]-*.md | tail -1` and increment.
      - Slug rule: lowercase, `[^a-z0-9]+` → `-`, trim to 60 chars, no trailing `-`.
@@ -114,9 +117,15 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
 
    - **`CLAUDE.md`** — audit every run; usually "No change needed" (CLAUDE.md is a pure index after migration). Update ONLY if the session added a new `docs/<thing>.md` that deserves a pointer in the "Document layout" list.
 
-   - **`AGENTS.md`** (if exists) — Codex CLI equivalent of CLAUDE.md. Audit the top-of-file session-handoff pointer: it should reference `docs/state.md` (V2) or `docs/handoff.md` (V1), matching the detected layout. Common drift: the line still says `` [`docs/handoff.md`](docs/handoff.md) `` after migration to V2, leaving Codex sessions reading a deleted file. Fix to: `` **Session state:** detect layout first. V2: read `docs/state.md`, then this file, then conventions; V1: read `docs/handoff.md`, then this file, then conventions. `` (or the full V2 pointer list for more prominent repos).
+   - **`AGENTS.md`** (if exists) — Codex CLI equivalent of CLAUDE.md. Per handoff v3 §"Repo File Rules", AGENTS.md MUST carry these three lines near the top (verbatim shapes below); audit that all three are present and current, adding/repairing any that are missing:
 
-   - **`AGENTS.reviews.md`** (if exists) — Codex review-specific instructions. Audit the review-rules block for any `docs/handoff.md` reference. Fix to cite `docs/state.md` (or add V1/V2 detection guidance) when the layout is V2.
+       **Session state:** read `docs/state.md`, then this file, then `docs/conventions.md`.
+       **Full conventions reference:** [`docs/conventions.md`](docs/conventions.md) - LLM-targeted pattern library. Check it before adding persistent patterns.
+       **Detailed review workflows:** [AGENTS.reviews.md](AGENTS.reviews.md) - read this only for review-related tasks when present.
+
+     If `AGENTS.reviews.md` does not exist, the third line MUST instead read exactly: `**Detailed review workflows:** not configured for this repo.` Common drift: the `**Session state:**` line still points at the retired `docs/handoff.md`, or lines 2–3 are absent entirely (the layout validator fails its Codex block). On a legacy V1 repo (`docs/handoff.md` present, no `docs/state.md`) the `**Session state:**` line cites `docs/handoff.md` — flag the repo for migration per the V1 note below.
+
+   - **`AGENTS.reviews.md`** (if exists) — Codex review-specific instructions. Audit for any `docs/handoff.md` reference; on a v3 repo (`docs/state.md` present) it MUST cite `docs/state.md` instead. The "or add V1/V2 detection guidance" fallback is removed — v3 treats V1 as a migration target, not a maintained alternative.
 
    - **Post-split self-reference check (V2 repos only):** after Phase 1 has split `docs/handoff.md` into `docs/state.md`, grep `docs/state.md` for literal `docs/handoff.md` strings. The pre-migration Session Instructions text frequently contained self-references like "Check `docs/handoff.md` (this file)" that become stale after the split (the file is now state.md, not handoff.md). Repeat the grep for `docs/deployed.md`, `docs/architecture.md`, `docs/credentials.md` — any of these may have inherited handoff.md references from their source sections. Fix in-place.
 
