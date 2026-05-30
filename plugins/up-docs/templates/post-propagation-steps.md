@@ -31,7 +31,7 @@ audited-but-unchanged vs. deleted (if any). For `/up-docs:all`, one line per lay
 **(b) Handoff brief.** Detect the repo's handoff layout (probe-based, not flag-based) and source from
 the matching files:
 
-- **V2 (handoff-system-v2):** `docs/state.md` exists. Read it + `docs/deployed.md` + `docs/bugs/INDEX.md`.
+- **V2 (handoff v3 layout; `docs/state.md` present):** `docs/state.md` exists. Read it + `docs/deployed.md` + `docs/bugs/INDEX.md`.
 - **V1 (legacy):** `docs/handoff.md` exists (and no `docs/state.md`). Read it.
 - **NONE:** neither file exists. Skip this subsection silently.
 

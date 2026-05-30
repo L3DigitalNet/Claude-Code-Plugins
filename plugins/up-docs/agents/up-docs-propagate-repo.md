@@ -44,7 +44,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
 
 2. Read every candidate file in full before editing.
 
-3. **Mandatory audit — live-state files (handoff-system-v2 layout, post-2026-04-24).**
+3. **Mandatory audit — live-state files (handoff v3 layout; the "V2" probe-state below means `docs/state.md` is present).**
 
    First, detect which layout this repo uses by probing two files:
 
@@ -107,7 +107,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
 
    - **`docs/conventions.md`** — pattern library (audit every run).
      - If the session produced a durable new pattern: add a new numbered entry + Quick Reference row.
-     - If `.claude/rules/` exists in this repo, Phase 5 of the handoff migration has moved rule bodies out. `docs/conventions.md` may hold only pointer skeletons (`Moved to .claude/rules/<topic>.md`). In that case, write the full rule body into a rules file (new file or extending existing topic file) AND add a matching numbered pointer to `conventions.md`. Keep the numbered schema stable so existing `§N` cross-references still resolve.
+     - If `.claude/rules/` exists in this repo, rule bodies have been moved out of `docs/conventions.md`, which may hold only pointer skeletons (`Moved to .claude/rules/<topic>.md`). In that case, write the full rule body into a rules file (new file or extending existing topic file) AND add a matching numbered pointer to `conventions.md`. Keep the numbered schema stable so existing `§N` cross-references still resolve.
      - If the session produced no new pattern, record "No change needed".
 
    - **`docs/specs-plans.md`** — specs/plans pointer table (audit when the session added, moved, froze, or superseded a spec or plan). Add a row for any new artifact (Date | relative path | Status | ≤12-word summary); update the Status of an artifact the session advanced or froze. The actual spec/plan location is whatever this table records — default `docs/superpowers/{specs,plans}/`, but a repo may use `docs/{specs,plans}/` (read it here, don't assume). If the session touched no spec/plan, record "No change needed".
@@ -115,7 +115,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
    - **`.claude/rules/<topic>.md`** — path-scoped rules (only if this directory exists).
      - For path-scoped conventions (fire on Read of matching files): append to the appropriate topic file (e.g. `python.md`, `bash.md`, `reviews.md`) with preserved `globs:` frontmatter.
      - For always-applicable rules: append to `global.md` (no frontmatter, always loads).
-     - Keep each file ≤200 lines per the plan §9.2 adherence note. If a file would exceed 200 lines, create a new topic-scoped sibling.
+     - Keep each rules file focused; split by topic into a new sibling file when it sprawls (handoff v3 defines no hard line cap on `.claude/rules/` files).
 
    - **`CLAUDE.md`** — audit every run; usually "No change needed" (CLAUDE.md is a pure index after migration). Update ONLY if the session added a new `docs/<thing>.md` that deserves a pointer in the "Document layout" list. After any edit to CLAUDE.md, enforce the handoff v3 byte cap: `wc -c CLAUDE.md` must be ≤2048 (target ≤1024). If over, the fix is NOT to delete pointers — confirm the file is a pure index and move any non-index prose to the doc it points at — then re-check `wc -c`. Record the byte count in that file's output row.
 
@@ -131,7 +131,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
 
    - **Post-split self-reference check (V2 repos only):** after Phase 1 has split `docs/handoff.md` into `docs/state.md`, grep `docs/state.md` for literal `docs/handoff.md` strings. The pre-migration Session Instructions text frequently contained self-references like "Check `docs/handoff.md` (this file)" that become stale after the split (the file is now state.md, not handoff.md). Repeat the grep for `docs/deployed.md`, `docs/architecture.md`, `docs/credentials.md` — any of these may have inherited handoff.md references from their source sections. Fix in-place.
 
-   **If V1 (legacy `docs/handoff.md` still present):** the repo pre-dates the handoff-system-v2 migration. Fall back to the legacy audit:
+   **If V1 (legacy `docs/handoff.md` still present):** handoff v3 treats `docs/handoff.md` as retired — a migration target, not a maintained layout. Maintain it for back-compat AND flag migration. Legacy audit:
 
    - **`docs/handoff.md`** — walk each required section against the session-change summary:
      - **Last Updated:** prepend a one-line entry dated today; prune to the 5 most recent.
@@ -141,7 +141,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
      - **Architecture / Credentials / Gotchas:** update only if the session changed them.
    - **`docs/conventions.md`** — if the session produced a durable new pattern, add a new six-field convention + Quick Reference row.
    - **`AGENTS.md` / `AGENTS.reviews.md`** (if present) — audit the session-handoff pointer; in V1 it should read `docs/handoff.md`. No-change is the common outcome unless the session broke a pointer.
-   - Note in your output: *"Repo uses legacy v1 handoff layout — consider running handoff-system-v2 migration (plan in /mnt/share/ or equivalent)."*
+   - Note in your output: *"Repo uses legacy handoff.md layout (retired in handoff v3) — migrate per `~/projects/agent-configs/docs/handoff/agent-handoff-system.md` §Migration Trigger."*
 
    **If NONE (neither state.md nor handoff.md exists):** the repo has no session-continuity spine. Skip the mandatory audit. Note in your output: "No docs/state.md or docs/handoff.md present — repo has not adopted the handoff pattern."
 
@@ -303,7 +303,7 @@ Do NOT write in repo docs:
      - Verifiable against: docs/bugs/012-*.md (original incident)
   </session_item>
   <your_actions>
-  Probe: docs/state.md exists + .claude/rules/ exists → V2 layout with Phase 5 done.
+  Probe: docs/state.md exists + .claude/rules/ exists → current layout with .claude/rules/ present.
   Read docs/conventions.md → numbered skeleton, DOC-005 "Tracked paths are literal data" already present as pointer.
   Read .claude/rules/global.md → §5 "Tracked paths literal data" is the full rule; new rule is an extension of this.
   Choice: extend §5 in global.md with the "no xargs" sub-rule, leave conventions.md pointer unchanged (stable cross-ref).
@@ -314,7 +314,7 @@ Do NOT write in repo docs:
   | 2 | .claude/rules/global.md | Updated | Extended §5 with "no xargs for path trimming" sub-rule |
   | 3 | docs/sessions/2026-04.md | Updated | Appended today's row |
   </output_rows>
-  <lesson>When Phase 5 of the handoff migration has run, conventions.md is a stable numbered pointer surface and rule bodies live in .claude/rules/. Extend the rules file; keep conventions.md pointers.</lesson>
+  <lesson>When a repo has `.claude/rules/`, conventions.md is a stable numbered pointer surface and rule bodies live in .claude/rules/. Extend the rules file; keep conventions.md pointers.</lesson>
 </example>
 
 <example>
