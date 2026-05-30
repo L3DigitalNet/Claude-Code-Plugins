@@ -45,6 +45,15 @@ You are the drift auditor for the up-docs orchestrator. You scan the three docum
    - Prefer `bash ${CLAUDE_PLUGIN_ROOT}/scripts/server-inspect.sh <hostname> <service-type>` for batched inspection. See `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/server-inspection.md` for service-type selection.
    - For external URLs in doc pages, verify liveness with WebFetch or `${CLAUDE_PLUGIN_ROOT}/scripts/link-audit.sh`.
 
+3b. **Handoff-layout conformance (conditional, read-only).** If the canonical layout validator exists, run it against the active project root and surface (never fix) any failed check:
+
+    ```bash
+    AGC="${HOME}/projects/agent-configs/scripts/validate-layout.sh"
+    [ -x "$AGC" ] && bash "$AGC" "${CLAUDE_PROJECT_DIR:-$PWD}" || echo "validator absent — skipping conformance phase"
+    ```
+
+    For each failed check the validator reports, emit a finding with `"layer": "layout"`, `confidence: "high"`, and an `evidence` object whose `command` is the validator invocation and `expected_output_signature` is the failing line it printed. These are handoff-contract drifts (hook hash mismatch, missing `${CLAUDE_PROJECT_DIR}` anchor, over-budget `CLAUDE.md`/`state.md`, missing required `AGENTS.md` lines). Do NOT fix — the propagators repair them on a follow-up pass. If the validator is absent (portable install with no agent-configs clone), skip this phase and note "handoff conformance not checked — canonical validator not installed" in your context line. Never fabricate a conformance result when the validator is absent.
+
 4. Iterate per phase under convergence. The four drift phases (Infrastructure → Wiki, Wiki Consistency, Link Integrity, Notion Relevance) each run as a convergence loop. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/convergence-tracking.md` before entering any phase — it defines the iteration mechanics, oscillation detection, and narrowing rules that every phase uses. Use `${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh` to persist iteration state.
 
 5. Record findings as structured JSON. Each finding carries: page, exact stale line, what it should say, confidence (low/medium/high), layer, and whether fixing it would require destructive action.
@@ -255,7 +264,7 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
   {
     "findings": [],
     "escalation": { "triggered": false, "reasons": [] },
-    "stats": { "total_findings": 0, "by_layer": {"repo": 0, "wiki": 0, "notion": 0}, "high_confidence": 0, "unverifiable": 0, "destructive_fixes_required": 0 }
+    "stats": { "total_findings": 0, "by_layer": {"repo": 0, "wiki": 0, "notion": 0, "layout": 0}, "high_confidence": 0, "unverifiable": 0, "destructive_fixes_required": 0 }
   }
   </finding_json>
   <lesson>Zero findings is a valid and common outcome, especially when the session's changes were small and the propagators worked cleanly. Do not manufacture findings to pad the report.</lesson>
@@ -267,6 +276,8 @@ Read-only verbs explicitly allowed: `ls`, `cat`, `grep`, `awk`, `head`, `tail`, 
 Emit BOTH a machine-readable JSON block (for the orchestrator to re-feed into propagators) and a human-readable markdown table (for the combined report).
 
 Confidence enum: `"high" | "medium" | "low" | "unverifiable"`. Use `"unverifiable"` when the verification command failed (non-zero exit, empty output, "No such file" error) and no alternative command produced real output — see `<verification_discipline>`.
+
+Layer enum: `"repo" | "wiki" | "notion" | "layout"`. Use `"layout"` only for findings produced by the step-3b handoff-conformance phase; `by_layer` stats carry a matching `"layout"` count.
 
 **Evidence is a structured object, NOT a free-form string.** Schema:
 
@@ -311,7 +322,7 @@ JSON block:
   },
   "stats": {
     "total_findings": 1,
-    "by_layer": {"repo": 0, "wiki": 1, "notion": 0},
+    "by_layer": {"repo": 0, "wiki": 1, "notion": 0, "layout": 0},
     "high_confidence": 1,
     "unverifiable": 0,
     "destructive_fixes_required": 0

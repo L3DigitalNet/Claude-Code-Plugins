@@ -165,7 +165,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
    - Template files (`*-template.md`, files under `templates/`).
    - `docs/state.md`, `docs/deployed.md`, `docs/architecture.md`, `docs/credentials.md`, `docs/conventions.md`, `docs/specs-plans.md`, `docs/handoff.md` (legacy), `CLAUDE.md`, `README.md`, `AGENTS.md`, `AGENTS.reviews.md`.
    - Anything under `docs/sessions/` or `docs/bugs/` (persistent logs by contract).
-   - Anything under `.claude/` (hooks, rules, settings — lifecycle-managed by the plugin system).
+   - Anything under `.claude/` — the SessionStart hook is a hash-pinned copy owned by `agent-configs/install-globals.sh` (never hand-edit or delete it); rules/settings are lifecycle-managed. Never flag any `.claude/` file stale.
    - Files referenced by active documentation (grep the rest of `docs/` for the filename first).
    - Persistent logs (anything named `log.md`, `changelog.md`, `history.md`).
 

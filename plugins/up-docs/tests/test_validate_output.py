@@ -184,6 +184,32 @@ def test_auditor_allows_unverifiable_with_null_evidence():
     validate_auditor(payload)  # no raise
 
 
+def test_auditor_allows_layout_layer_finding():
+    """Step-3b handoff-conformance findings use layer='layout' with a layout count in by_layer."""
+    payload = copy.deepcopy(VALID_AUDITOR)
+    payload["findings"][0]["layer"] = "layout"
+    payload["findings"][0]["page"] = "CLAUDE.md"
+    payload["findings"][0]["evidence"] = {
+        "command": "bash ~/projects/agent-configs/scripts/validate-layout.sh .",
+        "expected_output_signature": "CLAUDE.md exceeds 2048 bytes",
+    }
+    payload["stats"]["by_layer"] = {"repo": 0, "wiki": 0, "notion": 0, "layout": 1}
+    validate_auditor(payload)  # no raise
+
+
+def test_auditor_by_layer_back_compat_without_layout_key():
+    """Existing 3-key by_layer payloads still validate (layout defaults to 0)."""
+    validate_auditor(VALID_AUDITOR)  # by_layer has no 'layout' key → must still pass
+
+
+def test_auditor_rejects_unknown_layer_value():
+    """layer is a closed enum; a typo like 'layouts' must fail."""
+    bad = copy.deepcopy(VALID_AUDITOR)
+    bad["findings"][0]["layer"] = "layouts"
+    with pytest.raises(ValidationError):
+        validate_auditor(bad)
+
+
 def test_validators_cover_all_four_agent_names():
     expected = {
         "up-docs-propagate-repo",

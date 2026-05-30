@@ -149,7 +149,7 @@ class Evidence(BaseModel):
 class Finding(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: int
-    layer: Literal["repo", "wiki", "notion"]
+    layer: Literal["repo", "wiki", "notion", "layout"]
     page: str
     page_id: str | None
     stale_line: str
@@ -182,6 +182,7 @@ class StatsByLayer(BaseModel):
     repo: int
     wiki: int
     notion: int
+    layout: int = 0
 
 
 class Stats(BaseModel):
