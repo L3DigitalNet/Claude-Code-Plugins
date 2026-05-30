@@ -14,7 +14,7 @@
 
 Principles: `[P1] Test at Breakpoints, Not Every Edit`, `[P2] Inline Over Delegated`, `[P3] Converge, Don't Repeat`, `[P4] Profile-Driven Stack Knowledge`.
 
-Like nominal, this plan is gap-fill against existing 1:1 coverage.
+This plan is gap-fill against existing 1:1 coverage.
 
 ## Gap table
 

@@ -8,7 +8,7 @@
 - Drift auditor (Sonnet) receives session-change summary after propagators complete; checks for contradictions in propagator output; emits convergence loop phases.
 - Parallel dispatch reduces wall time to `max(repo, wiki, notion)` + drift; sequential phases protect consistency.
 
-**All plugins:** follow plugin-marketplace canonical structure (plugin.json, CHANGELOG.md, README.md from template, optional agents/hooks/skills). 12 plugins total in marketplace as of 2026-05-08 (was 17; claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev removed in commit 3b8323e).
+**All plugins:** follow plugin-marketplace canonical structure (plugin.json, CHANGELOG.md, README.md from template, optional agents/hooks/skills). 9 plugins total in marketplace as of 2026-05-30 (was 12; opus-context, handoff, nominal removed as unused). Prior cut 2026-05-08: 17 → 12 (claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev removed in commit 3b8323e).
 
 ## Handoff Gotchas
 
@@ -27,7 +27,7 @@ Marketplace-wide principle-traceable test coverage initiative. Phase 1 establish
 **Quick reference:**
 - Strategic overview: `testing/STRATEGY.md` (enforcement layers: Mechanical / Structural / Behavioral)
 - Per-plugin execution: `testing/plans/<plugin>.md` (Phase 2 execution logs, per-plugin metrics)
-- In scope: 11 plugins (all except qdev — pure-markdown only). Was 15 before 2026-05-08 cleanup; claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs, and python-dev (already excluded as pure-markdown) was also deleted.
+- In scope: 8 plugins (all except qdev — pure-markdown only). Was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
 - Merge strategy (historical, pre-2026-05-07): 15 `tests/<plugin>` sibling branches off `testing` were used during initial test rollout; testing branch retired. Any remaining `tests/*` branches are integrated by direct cherry-pick to `main`.
@@ -68,10 +68,7 @@ Claude-Code-Plugins/
 ├── .github/workflows/                # CI: codeql, ha-dev-plugin-tests, plugin-test-harness-ci
 ├── plugins/
 │   ├── github-repo-manager/          # Conversational GitHub repo maintenance
-│   ├── handoff/                      # Cross-machine task continuity (save/load)
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
-│   ├── nominal/                      # Infrastructure verification (preflight/postflight/abort)
-│   ├── opus-context/                 # 1M context window optimizer for Opus 4.6
 │   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
 │   ├── qdev/                         # Development quality toolkit (research, review, deps-audit, doc-sync, spec-update)
 │   ├── qt-suite/                     # Qt development and testing toolkit

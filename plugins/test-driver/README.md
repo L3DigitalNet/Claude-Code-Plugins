@@ -10,7 +10,7 @@ Claude doesn't systematically think about testing unless asked. This plugin inst
 
 **[P1] Test at Breakpoints, Not Every Edit**: Surface testing at natural breakpoints (feature done, bug fixed, pre-merge), never after individual edits. Silent change tracking; noisy only when it matters.
 
-**[P2] Inline Over Delegated**: All analysis and test generation happens in the main context window for maximum code awareness. No agent delegation -- aligned with opus-context.
+**[P2] Inline Over Delegated**: All analysis and test generation happens in the main context window for maximum code awareness. No agent delegation -- a deliberate full-context design (read source files fully, keep reasoning in one window).
 
 **[P3] Converge, Don't Repeat**: The convergence loop drives toward all-green with oscillation detection. If the same fixes keep breaking each other, stop and surface the pattern rather than cycling forever.
 
@@ -105,7 +105,7 @@ Domain knowledge loaded on demand by the commands. These files are never auto-lo
 
 ## Design Decisions
 
-- **No agents:** Testing benefits from full project context in the main window. Delegating to subagents loses the nuance that makes test generation accurate. Aligned with opus-context philosophy.
+- **No agents:** Testing benefits from full project context in the main window. Delegating to subagents loses the nuance that makes test generation accurate. This is a deliberate full-context design choice.
 
 - **No hooks:** A behavioral skill (testing-mindset) handles proactive triggers more flexibly than a PostToolUse hook counting file edits. Hooks are mechanical; the mindset skill understands breakpoints.
 

@@ -59,7 +59,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/git-function-changes.sh <last-analysis-date> 
 
 5. Map coverage by comparing source inventory functions against test inventory. Priority-boost functions from git-function-changes output. Identify and prioritize gaps — one gap per untested function/behavior, not per file.
 
-**opus-context alignment:** Read source files fully (no offset/limit for files under 4000 lines). The function-level enumeration in step 4 is the foundation of accurate gap detection — skipping it collapses the analysis to file-level mapping, which dramatically under-reports gaps.
+**Full-context reading:** Read source files fully (no offset/limit for files under 4000 lines). The function-level enumeration in step 4 is the foundation of accurate gap detection — skipping it collapses the analysis to file-level mapping, which dramatically under-reports gaps.
 
 ## Step 4: Present Results and Offer Convergence
 

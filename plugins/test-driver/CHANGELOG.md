@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.2] - 2026-05-30
+
+### Changed
+- Removed references to the deleted `opus-context` plugin from README, `commands/analyze.md`, and `references/gap-analysis.md`. The full-context reading philosophy (read source files fully under 4000 lines, no agent delegation) is preserved verbatim — only the dead plugin name was dropped.
+
 ## [0.6.1] - 2026-05-25
 
 ### Changed

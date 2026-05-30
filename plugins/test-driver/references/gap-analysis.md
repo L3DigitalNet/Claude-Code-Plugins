@@ -60,7 +60,7 @@ Use Glob to find all test files based on the profile's discovery conventions:
 - Categorize each test file by type based on directory structure (`tests/unit/`, `tests/integration/`) or pytest markers. This classification feeds Step 5's per-category coverage mapping.
 - Count tests per category
 
-**Read test files in parallel batches** (opus-context alignment). For files under 4000 lines, read them fully.
+**Read test files in parallel batches** (full-context reading). For files under 4000 lines, read them fully.
 
 **conftest.py / test infrastructure:** If `conftest.py` or equivalent files contain complex fixture logic — database setup, API client mocking, authentication simulation, multi-step setup procedures — note them for Step 5. Fixtures over ~30 lines with conditional logic or multiple code paths are candidates for their own tests; bugs in fixtures silently corrupt every test that depends on them.
 
@@ -75,7 +75,7 @@ Find all non-test source files. Exclude common non-source patterns:
 - Build artifacts (`build/`, `dist/`, `.build/`)
 - Virtual environments (`venv/`, `.venv/`, `env/`)
 
-After identifying source files, **read each one** (full read for files under 4000 lines per opus-context rules) and enumerate:
+After identifying source files, **read each one** (full read for files under 4000 lines) and enumerate:
 
 - Public functions, class methods, and route handlers
 - Distinct behaviors per function: happy path, error/exception paths, conditional branches that produce materially different outcomes, loop edge cases where empty or boundary inputs change behavior

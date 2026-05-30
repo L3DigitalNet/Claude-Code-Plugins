@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, infrastructure verification, Home Assistant integration dev, Qt UI development, GitHub repo health, plugin testing, and three-layer documentation propagation.
+A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, Home Assistant integration dev, Qt UI development, GitHub repo health, plugin testing, and three-layer documentation propagation.
 
 ## Installation
 
@@ -48,10 +48,7 @@ installed plugins at the start of each session.
 | Plugin | Type | Command | Description |
 |--------|------|---------|-------------|
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
-| [Handoff](#handoff) | Skills | `/handoff:save`, `/handoff:load` | Save and load task context across machines via shared network drive |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
-| [Nominal](#nominal) | Commands | `/preflight`, `/postflight`, `/abort` | Infrastructure verification session contract: 11 systems check security, reachability, backups, monitoring, and more |
-| [Opus Context](#opus-context) | Skills + Hooks | always-on | Teaches Opus 4.6 to use its full 1M context window instead of conservative small-model defaults |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [qdev](#qdev) | Skills | `/research`, `/quality-review`, `/deps-audit`, `/doc-sync`, `/spec-update` | Development quality toolkit: pre-build research sweeps, convergence-loop quality reviews, CVE dependency audits, and inline doc sync |
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
@@ -108,28 +105,6 @@ interactively, with owner approval at every step.
 
 ---
 
-### Handoff
-
-**Cross-machine task continuity**: save task context to a shared network drive when
-work requires physically moving between machines, then load it on the other side.
-
-**Features:**
-
-- `/handoff:save`: writes a structured handoff file with task summary, current state, and next steps
-- `/handoff:load`: reads the most recent handoff file and presents actionable next steps
-- Files stored on shared network path for access from any machine
-
-**Install:**
-
-```bash
-/plugin install handoff@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/handoff/README.md](plugins/handoff/README.md)
-
----
-
 ### Home Assistant Dev
 
 **Home Assistant integration development toolkit**: 27 AI skills, an MCP server for live
@@ -154,38 +129,6 @@ HA connections, automated validation, example integrations, and project template
 
 **Learn more:**
 [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
-
----
-
-### Nominal
-
-**Structured verification routine for infrastructure changes**: three slash commands
-enforce a session contract ensuring every change begins with a validated environment
-and ends with a fully verified outcome.
-
-**Features:**
-
-- `/preflight`: automated environment discovery (Mission Survey), go/no-go poll,
-  rollback readiness confirmation
-- `/postflight`: runs all 11 verification systems covering operational scripts, backup
-  integrity, secrets hygiene, reachability, security posture, performance baselines,
-  boot ordering, observability, DNS/certs, network routing, and documentation state
-- `/abort`: confirmed rollback execution with step-by-step verification and
-  post-abort go/no-go poll
-- Multi-environment support in a single profile
-- Append-only flight log based on the OpenTelemetry Log Data Model
-- Fix-forward flow with regression sweep to catch side effects
-- Grounded in ITIL, CIS Controls v8, NIST SP 800-190, Google SRE PRR, and
-  HashiCorp/OWASP secrets management
-
-**Install:**
-
-```bash
-/plugin install nominal@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/nominal/README.md](plugins/nominal/README.md)
 
 ---
 
@@ -313,29 +256,6 @@ requiring explicit approval.
 
 ---
 
-### Opus Context
-
-**1M context window optimizer for Opus 4.6**: always-on behavioral rules that override
-conservative small-model defaults (partial reads, excessive delegation, re-reading).
-
-**Features:**
-
-- Whole-file reading by default (no offset/limit for files under 4000 lines)
-- Direct reading over subagent delegation
-- Dependency pre-loading before editing
-- Budget-aware context pressure management
-
-**Install:**
-
-```bash
-/plugin install opus-context@l3digitalnet-plugins
-```
-
-**Learn more:**
-[plugins/opus-context/README.md](plugins/opus-context/README.md)
-
----
-
 ### Test Driver
 
 **Proactive testing awareness and gap filling**: always-on testing mindset that suggests
@@ -458,12 +378,9 @@ reference.
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
-├── plugins/                     # All plugin implementations (12 plugins)
+├── plugins/                     # All plugin implementations (9 plugins)
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
-│   ├── handoff/                 # Cross-machine task continuity (save/load)
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
-│   ├── nominal/                 # Infrastructure verification (preflight/postflight/abort)
-│   ├── opus-context/            # 1M context window optimizer for Opus 4.6
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
 │   ├── qdev/                    # Development quality toolkit (research, reviews, dep audits, doc-sync, spec-update)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)

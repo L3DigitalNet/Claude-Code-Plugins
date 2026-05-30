@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2] - 2026-05-30
+
+### Changed
+- `hygiene-semantic-auditor`: §2c docs/ scan gains **handoff-v3 awareness** — never flags the existence of canonical handoff files (`docs/{state,deployed,architecture,credentials,conventions,specs-plans}.md`, `sessions/`, `bugs/`), treats their intentional pointers as correct, classifies a stray retired `docs/handoff.md` as `info` (migration target) not `warn`, and explicitly defers handoff-conformance checks (byte caps, hook hash, AGENTS.md three-line block) to `validate-layout.sh` / up-docs rather than duplicating them.
+
+### Fixed
+- `hygiene-semantic-auditor`: output-format example no longer uses the retired `docs/handoff.md` path (changed to `docs/deployed.md`), which previously modeled the retired file as a normal doc.
+
 ## [1.4.1] - 2026-05-25
 
 ### Changed

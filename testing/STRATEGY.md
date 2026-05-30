@@ -6,9 +6,11 @@ LLM-facing reference for the marketplace-wide testing initiative. Phase 1 produc
 
 ## 1. Scope
 
-> **2026-05-08 update.** Five plugins removed from the marketplace in commit `3b8323e`: claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev. Four were in-scope and one (python-dev) was excluded as pure-markdown. Updated counts below.
+> **2026-05-30 update.** Three more plugins removed as unused: opus-context, handoff, nominal (all three were in-scope). Marketplace 12 → 9; in-scope 11 → 8. Updated counts below.
+>
+> **2026-05-08 update.** Five plugins removed from the marketplace in commit `3b8323e`: claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev. Four were in-scope and one (python-dev) was excluded as pure-markdown.
 
-- **In scope (11):** github-repo-manager, handoff, home-assistant-dev, nominal, opus-context, plugin-test-harness, qt-suite, release-pipeline, repo-hygiene, test-driver, up-docs. PTH stays in scope per §2 (peer plugin **and** canonical live-loop runner). Total marketplace plugins = 12, minus 1 excluded = 11.
+- **In scope (8):** github-repo-manager, home-assistant-dev, plugin-test-harness, qt-suite, release-pipeline, repo-hygiene, test-driver, up-docs. PTH stays in scope per §2 (peer plugin **and** canonical live-loop runner). Total marketplace plugins = 9, minus 1 excluded = 8.
 - **Excluded (1):** qdev. Pure-markdown plugin (commands + agents + skills only). Zero non-vendored source files. There is no mechanical surface to unit-test — its behavior is validated by direct invocation through Claude Code, not by a test harness.
 - **Vendored trees ignored:** `node_modules/`, `.venv/`, `dist/`, `build/`, `__pycache__/`.
 
@@ -28,7 +30,7 @@ Implication for Phase 2: per-plugin unit suites use the per-language canonical f
 
 | Language | Framework | Rationale |
 |---|---|---|
-| Bash / shell | `bats-core` | Already used by 9 of 11 in-scope plugins (github-repo-manager, handoff, nominal, opus-context, qt-suite, release-pipeline, repo-hygiene, test-driver, up-docs). Idiomatic `@test`, `setup`/`teardown`, `bats-assert` ergonomics. |
+| Bash / shell | `bats-core` | Already used by 6 of 8 in-scope plugins (github-repo-manager, qt-suite, release-pipeline, repo-hygiene, test-driver, up-docs). Idiomatic `@test`, `setup`/`teardown`, `bats-assert` ergonomics. |
 | Python | `pytest` (+ `pytest-asyncio` where async) | Already used by home-assistant-dev and qt-suite. Fixtures, parametrize, markers established. |
 | TypeScript | `Jest` with `NODE_OPTIONS=--experimental-vm-modules` for ESM | Already used by home-assistant-dev/mcp-server and plugin-test-harness. ts-jest or esbuild-jest acceptable. |
 
@@ -89,13 +91,13 @@ Highest test-debt first (no tests / poor principle coverage / release-critical),
 | # | Plugin | Why this rank |
 |---|---|---|
 | 1 | **release-pipeline** | 14 src + 9 ad-hoc shell tests but **0 bats**, no coverage of waiver/tag-reconcile/auto-stash principle compliance. Release-critical surface — failures here ship broken plugins. |
-| 2 | **opus-context** | 1 src (SessionStart hook) + 0 tests. Whole plugin's mechanical layer is one shell script that emits `additionalContext` JSON. Tiny scope, high-value Mechanical coverage. |
-| 3 | **handoff** | 2 src + 2 bats (1:1 nominal) but bats files cover happy paths only — `[P1] Complete Context` and `[P2] Actionable Next Steps` are not asserted. Small surface; low effort to close gap. |
+| ~~2~~ | ~~opus-context~~ | Plugin removed 2026-05-30. |
+| ~~3~~ | ~~handoff~~ | Plugin removed 2026-05-30. |
 | 4 | **up-docs** | 3 bats + 4 src; convergence-tracker and link-audit have script-level coverage but `[P3] Update, don't rewrite` and `[P4] Ground Truth Wins` are unverified. |
 | 5 | **repo-hygiene** | 3 bats + 7 src. `[P4] Safety by Construction` (3-check orphan delete) is the highest-stakes guarantee in the plugin and only one of the three checks is tested today. |
 | 6 | **github-repo-manager** | 3 bats + ~20 src (8 shell + ~18 helper/*.js). Helper CLI is **entirely untested by Jest**; tier classification + PreToolUse guard are Mechanical claims that should have explicit assertions. |
-| 7 | **nominal** | 6 bats + 6 src (1:1). Best-covered shell plugin; gaps are subtle (flight-log append-only on race, abort.json schema). |
-| 8 | **test-driver** | 5 bats + 5 src (1:1). Similar shape to nominal. |
+| ~~7~~ | ~~nominal~~ | Plugin removed 2026-05-30. |
+| 8 | **test-driver** | 5 bats + 5 src (1:1). Small 1:1 shell-plugin shape. |
 | 9 | **qt-suite** | 4 pytest + 5 src. Qt Pilot MCP is the Mechanical surface; existing tests cover annotations + harness + main + imports. Gap-fill mostly. |
 | 10 | **home-assistant-dev** | 7 pytest + 3 Jest + 1 e2e + 12 mcp-server src + 5 scripts. Best-covered plugin in the marketplace; gap is targeted (specific tools, specific IQS rules). |
 | 11 | **plugin-test-harness** | 15 Jest unit + 35 src. Highest coverage already. Gap-fill opportunity is `convergence.ts` trend math and `gap-analyzer.ts` snapshot diff. |
@@ -114,11 +116,11 @@ These apply to every per-plugin plan and to any new tests introduced in Phase 2.
 4. **`set -euo pipefail` semantics.** Bats tests of bash scripts must reproduce the script's actual flag environment — the `((var++))` and `[[ test ]] && action` failure modes are real and have shipped bugs in this repo before.
 5. **JSON validation tests stay deterministic.** Compare with `jq -S` (sorted keys) or parsed Python dict equality, not raw string compare — key-order non-determinism between platforms breaks tests silently.
 6. **Marker discipline (pytest only).** `unit` / `integration` / `validation` markers carry over from ha-dev's existing convention. New pytest suites adopt the same names so CI matrix remains uniform if/when extended.
-7. **No multi-plugin tests in Phase 2.** Cross-plugin integration (e.g., test-driver → opus-context profile loading) is deferred. STRATEGY notes one candidate: validate-marketplace.sh as a marketplace-level Mechanical suite — proposed but **not in this Phase 2 batch** unless user confirms during review.
+7. **No multi-plugin tests in Phase 2.** Cross-plugin integration (e.g., release-pipeline → repo-hygiene chained sweep) is deferred. STRATEGY notes one candidate: validate-marketplace.sh as a marketplace-level Mechanical suite — proposed but **not in this Phase 2 batch** unless user confirms during review.
 
 ## 8. Out of scope for Phase 2 (will not write tests for these)
 
-- **CI/CD pipeline changes.** Existing `.github/workflows/ha-dev-plugin-tests.yml` and `plugin-test-harness-ci.yml` are the only test-running workflows. Adding bats CI for the other 9 in-scope plugins is a separate prompt.
+- **CI/CD pipeline changes.** Existing `.github/workflows/ha-dev-plugin-tests.yml` and `plugin-test-harness-ci.yml` are the only test-running workflows. Adding bats CI for the other 6 in-scope plugins is a separate prompt.
 - **Cross-plugin integration tests** (e.g., release-pipeline → repo-hygiene chained sweep). Listed as a candidate; gated on user approval.
 - **Refactoring source to add seams.** If a script has no testable seam (`source` of stdin-reading code without isolation, hardcoded `~/.claude/` paths, etc.), the per-plugin plan **flags it** with a `Risk:` note. No source change.
 - **PTH-driven behavioral coverage.** PTH is mentioned where relevant but not bundled into Phase 2 plans.
@@ -140,4 +142,4 @@ For each plugin, in priority order:
 | File | Purpose |
 |---|---|
 | `testing/STRATEGY.md` | This file |
-| `testing/plans/<plugin>.md` × 11 | Per-plugin Phase 2 work order (was 15; 4 plans deleted 2026-05-08 alongside their plugins) |
+| `testing/plans/<plugin>.md` × 8 | Per-plugin Phase 2 work order (was 11; 3 plans deleted 2026-05-30 — opus-context, handoff, nominal; before that 15, with 4 deleted 2026-05-08) |

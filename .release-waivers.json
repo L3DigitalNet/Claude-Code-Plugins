@@ -92,16 +92,6 @@
     },
     {
       "check": "missing_tests",
-      "plugin": "opus-context",
-      "reason": "Skill-only plugin — one behavioral skill file and one hook script with no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "nominal",
-      "reason": "Markdown-only plugin — 3 commands and 5 reference files with no executable code to test"
-    },
-    {
-      "check": "missing_tests",
       "plugin": "test-driver",
       "reason": "Markdown-only plugin — skills, references, and commands with no executable code to test"
     },
@@ -109,11 +99,6 @@
       "check": "missing_tests",
       "plugin": "up-docs",
       "reason": "Markdown-only plugin — 4 skill files and templates with no executable code to test"
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "handoff",
-      "reason": "Markdown-only plugin — 2 skill files with no executable code to test"
     },
     {
       "check": "missing_tests",
