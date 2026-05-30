@@ -9,3 +9,4 @@ Generated from frontmatter. Regenerate with `python3 docs/bugs/_regen_index.py`.
 | 3 | 2026-04-20 | up-docs orchestrator and five wrapper skills dispatched sub-agents with bare names (e | claude-code-plugins | fixed |
 | 4 | 2026-04-20 | `up-docs-audit-drift` agent fabricated verification evidence (reported Hermes v0 | claude-code-plugins | fixed |
 | 5 | 2026-05-07 | workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email | claude-code-plugins, plugin-test-harness, release-pipeline, up-docs, handoff, repo-hygiene, test-driver, github-repo-manager, nominal, opus-context, qt-suite | fixed |
+| 6 | 2026-05-30 | up-docs propagate-repo emits handoff-v3-nonconformant AGENTS.md pointer and Lesson-less bug bodies | up-docs, handoff | open |
