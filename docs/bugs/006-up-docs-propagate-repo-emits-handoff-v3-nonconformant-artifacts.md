@@ -4,7 +4,7 @@ date: 2026-05-30
 title: "up-docs propagate-repo emits handoff-v3-nonconformant AGENTS.md pointer and Lesson-less bug bodies"
 services: [up-docs, handoff]
 tags: [docs-propagation, handoff, conformance]
-status: open
+status: fixed
 supersedes: null
 superseded_by: null
 ---
@@ -21,7 +21,15 @@ Root pattern: an agent prompt that duplicates an external spec in prose silently
 
 ## Fix
 
-Planned, not yet applied (user elected capture-only on 2026-05-30, no code changes at audit time). Tracked in [`docs/plans/2026-05-30-up-docs-handoff-v3-alignment.md`](../plans/2026-05-30-up-docs-handoff-v3-alignment.md) Tasks 1–2 (🔴) for up-docs **v0.9.0**; the same plan closes the 🟡/🟢 gaps in Tasks 3–8. Flip this entry to `fixed` with the commit SHA when T1–T2 land.
+Fixed in up-docs **v0.9.0** (2026-05-30) by executing [`docs/plans/2026-05-30-up-docs-handoff-v3-alignment.md`](../plans/2026-05-30-up-docs-handoff-v3-alignment.md):
+
+- **T1+T2** (`1db1220`): AGENTS.md remediation emits the v3 three-line block (`Session state:` / `Full conventions reference:` / `Detailed review workflows:`); AGENTS.reviews.md drops the V1/V2 fallback; bug-body template gains `## Lesson`. New `tests/prompt-conformance.bats` guards both as grep assertions.
+- **T3–T6** (`a36efa4`): CLAUDE.md (≤2048) / AGENTS.md (≤4096) byte caps; `docs/specs-plans.md` audit; route-first state.md over-cap trim; bug-index regen verified with `git diff --exit-code`.
+- **T7** (`c5be8bb`): drift auditor runs `validate-layout.sh` as a read-only conformance phase; schema accepts `layer: "layout"` (3 new self-tests).
+- **T8** (`575a737`): relabeled v2→v3; removed stale `/mnt/share/` pointer and invented Phase-5/§9.2/200-line refs.
+- **T9** (`cee3983`): released v0.9.0.
+
+The two 🔴 regressions (T1, T2) are the load-bearing fixes; T3–T8 close the 🟡/🟢 gaps from the same audit. Final gate: 50 bats + 29 pytest green, and `validate-layout.sh` passes this repo.
 
 ## Lesson
 
