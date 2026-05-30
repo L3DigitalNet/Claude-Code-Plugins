@@ -27,7 +27,7 @@ Human-facing (prose OK):
 
 LLM-facing (terse, scannable, tables > prose, no narrative framing):
 - CLAUDE.md, AGENTS.md
-- docs/state.md, docs/deployed.md, docs/architecture.md, docs/credentials.md, docs/conventions.md (V2 handoff layout — `docs/handoff.md` was renamed during the 2026-04-24 migration)
+- docs/state.md, docs/deployed.md, docs/architecture.md, docs/credentials.md, docs/conventions.md (v3 handoff layout — `docs/handoff.md` was renamed during the 2026-04-24 migration)
 - docs/specs/*.md, docs/plans/*.md
 - any other file under docs/
 ```
@@ -73,7 +73,7 @@ LLM-facing (terse, scannable, tables > prose, no narrative framing):
 ## DOC-002. Session start
 
 **Applies when:** starting any session in this repo.
-**Rule:** Read `docs/state.md` before making changes (V2 handoff layout — the old `docs/handoff.md` was split into `state.md` + `deployed.md` + `architecture.md` + `credentials.md` during the 2026-04-24 migration).
+**Rule:** Read `docs/state.md` before making changes (v3 handoff layout — the old `docs/handoff.md` was split into `state.md` + `deployed.md` + `architecture.md` + `credentials.md` during the 2026-04-24 migration).
 
 ```md
 Open `docs/state.md`, confirm current state + active incidents, then proceed.

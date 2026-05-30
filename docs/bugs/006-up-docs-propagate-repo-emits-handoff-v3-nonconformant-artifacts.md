@@ -29,7 +29,7 @@ Fixed in up-docs **v0.9.0** (2026-05-30) by executing [`docs/plans/2026-05-30-up
 - **T8** (`575a737`): relabeled v2→v3; removed stale `/mnt/share/` pointer and invented Phase-5/§9.2/200-line refs.
 - **T9** (`cee3983`): released v0.9.0.
 
-The two 🔴 regressions (T1, T2) are the load-bearing fixes; T3–T8 close the 🟡/🟢 gaps from the same audit. Final gate: 50 bats + 29 pytest green, and `validate-layout.sh` passes this repo.
+The two 🔴 regressions (T1, T2) are the load-bearing fixes; T3–T8 close the 🟡/🟢 gaps from the same audit. Final gate: 51 bats + 29 pytest green, and `validate-layout.sh` passes this repo.
 
 ## Lesson
 
