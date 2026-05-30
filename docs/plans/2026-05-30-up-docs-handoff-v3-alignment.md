@@ -34,6 +34,8 @@
 | 9 | — | Version bump + CHANGELOG | T9 |
 | 10 | — | Run suites, flip bug 006 → fixed, update `specs-plans.md` status, session row | T10 |
 
+> **8 rows, 12 divergences:** rows 1–6 are one audit divergence each; **row 7 (T7)** bundles the two hook-related 🟡 items (no hash-pinned-hook awareness + no `validate-layout.sh` conformance phase); **row 8 (T8)** bundles the four 🟢 items (v2 labels, stale `/mnt/share/` pointer, superseded Phase-5/§9.2/200-line refs, V1-as-maintainable). 6 + 2 + 4 = 12.
+
 ---
 
 ## File Structure
@@ -92,7 +94,11 @@ Replace the `:117` bullet (`- **AGENTS.md** (if exists) …`) with:
      If `AGENTS.reviews.md` does not exist, the third line MUST instead read exactly: `**Detailed review workflows:** not configured for this repo.` Common drift: the `Session state:` line still points at the retired `docs/handoff.md`, or the other two lines are absent entirely (validator fails the Codex block). On a legacy V1 repo (docs/handoff.md present, no docs/state.md), the `Session state:` line points at `docs/handoff.md` instead — but flag the repo for migration per step 3's V1 note.
 ```
 
-Replace the `:119` `AGENTS.reviews.md` bullet to drop the V1/V2 detection language and simply audit for a stale `docs/handoff.md` reference, citing `docs/state.md` on a v3 repo.
+Then replace the `:119` `AGENTS.reviews.md` bullet with this exact text (the V1/V2 detection fallback is removed):
+
+```markdown
+   - **`AGENTS.reviews.md`** (if exists) — Codex review-specific instructions. Audit for any `docs/handoff.md` reference; on a v3 repo (`docs/state.md` present) it MUST cite `docs/state.md` instead. The "or add V1/V2 detection guidance" fallback is removed — v3 treats V1 as a migration target, not a maintained alternative.
+```
 
 - [ ] **Step 4: Run the assertion to verify it passes**
 
@@ -113,7 +119,7 @@ git commit -m "fix(up-docs): propagate-repo emits v3 three-line AGENTS.md block"
 **Files:**
 - Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md:93-99` (the `docs/bugs/<NNN>-<slug>.md` creation template)
 
-**Why:** v3 §"Repo File Rules" requires bug bodies to be **Cause / Fix / Lesson**. This repo's live KB (`001`–`002`) and commit `f627ad7` ("reformat Summary-style bodies to Cause/Fix/Lesson") set that standard, but the propagator template emits only `## Cause` + `## Fix`, so every new bug it creates regresses the standard.
+**Why:** v3 §"Repo File Rules" requires bug bodies to be **Cause / Fix / Lesson**. This repo's live KB (`001`–`004`, `006`) and commit `f627ad7` ("reformat Summary-style bodies to Cause/Fix/Lesson") set that standard (bug `005` was created before the standard was enforced and also lacks `## Lesson`), but the propagator template emits only `## Cause` + `## Fix`, so every new bug it creates regresses the standard.
 
 - [ ] **Step 1: Write the failing assertion**
 
@@ -202,7 +208,7 @@ git commit -m "feat(up-docs): propagate-repo enforces CLAUDE.md/AGENTS.md byte c
    - **`docs/specs-plans.md`** — specs/plans pointer table (audit when the session added, moved, froze, or superseded a spec or plan). Add a row for any new artifact (Date | relative path | Status | ≤12-word summary); update the Status of an artifact the session advanced or froze. The actual spec/plan location is whatever this table records — default `docs/superpowers/{specs,plans}/`, but a repo may use `docs/{specs,plans}/` (this is recorded here, not assumed). If the session touched no spec/plan, record "No change needed".
 ```
 
-- [ ] **Step 2: Add an output-table example row** in the `<examples>` block (e.g., extend the CLI-flag example with `| docs/specs-plans.md | No change needed | No spec/plan touched |`).
+- [ ] **Step 2: Add an output-table example row** in the `<examples>` block — the example tables are 4-column (`| # | File | Action | Summary of Changes |`). Extend the CLI-flag example (its rows end at 8) with: `| 9 | docs/specs-plans.md | No change needed | No spec/plan touched this session |`.
 
 - [ ] **Step 3: Verify**
 
@@ -297,7 +303,7 @@ Insert after the auditor's step 3 (live-state cross-reference):
 3b. **Handoff-layout conformance (conditional, read-only).** If `~/projects/agent-configs/scripts/validate-layout.sh` exists, run it against the active project root:
 
     ```bash
-    AGC=~/projects/agent-configs/scripts/validate-layout.sh
+    AGC="${HOME}/projects/agent-configs/scripts/validate-layout.sh"
     [ -x "$AGC" ] && bash "$AGC" "${CLAUDE_PROJECT_DIR:-$PWD}" || echo "validator absent — skipping conformance phase"
     ```
 
@@ -308,7 +314,9 @@ Insert after the auditor's step 3 (live-state cross-reference):
 
 In `propagate-repo.md:157`, change "Anything under `.claude/` (hooks, rules, settings — lifecycle-managed by the plugin system)." to "Anything under `.claude/` — the SessionStart hook is a hash-pinned copy owned by `agent-configs/install-globals.sh` (never hand-edit or delete it); rules/settings are lifecycle-managed. Never flag any `.claude/` file stale."
 
-- [ ] **Step 3: Add a `"layout"` value to the auditor's `by_layer` stats and confidence/layer enums** in `<output_format>`, and update `tests/validate_output.py` to accept `layer: "layout"`.
+- [ ] **Step 3: Add a `"layout"` value to the auditor's `by_layer` stats and confidence/layer enums** in `<output_format>`, and update `tests/validate_output.py` to accept `layer: "layout"`:
+  - In the `Finding.layer` enum (line 152), add `"layout"`.
+  - In `StatsByLayer` (line 180, which uses Pydantic `extra="forbid"`), add `layout: int = 0`. Without this, emitting `"layout": 0` in the `by_layer` stats block raises `ValidationError` at `AuditorReport` parse time — *before* the `Finding.layer` enum is ever checked.
 
 - [ ] **Step 4: Run the schema self-tests**
 
@@ -327,7 +335,7 @@ git commit -m "feat(up-docs): drift auditor runs validate-layout.sh when present
 ### Task 8: 🟢 Relabel v2→v3, fix stale pointers, drop superseded plan refs
 
 **Files:**
-- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md` (`:47`, `:107`, `:113`, `:123`, `:133`, `:294`, example scenarios)
+- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md` (`:47`, `:107`, `:113`, `:123`, `:133`, `:294`, and the `<example>` `<scenario>` labels carrying "V2 layout" at `:218`, `:253`, `:284`, `:345`)
 - Modify: `plugins/up-docs/templates/post-propagation-steps.md:34`
 
 **Why:** All handoff references say `handoff-system-v2 (post-2026-04-24)`. v3 (2026-05-29) is canonical; the layout is unchanged so probe detection still works, but the labels are a release behind. Three concrete stale items: (a) the V1 note points to *"plan in /mnt/share/ or equivalent"* — wrong; (b) `:113` and `:294` cite a superseded migration plan's "Phase 5" / "§9.2 / ≤200-line `.claude/rules/` cap" that v3 does not define (the 200-line cap is an up-docs invention, not canonical); (c) V1/`docs/handoff.md` is framed as a maintainable layout, but v3 **retires** it ("a migration target, not a pattern to preserve").

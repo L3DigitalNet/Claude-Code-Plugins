@@ -10,7 +10,7 @@ superseded_by: null
 ---
 # Bug 5: workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email
 
-## Summary
+## Cause
 
 `plugin-test-harness/test/unit/fix/{applicator,tracker}.test.ts` create temporary git repos in `os.tmpdir()` and run real `git commit` operations using a fake author email (`test@pth.test`). The workstation's global pre-commit hook (configured globally to enforce noreply email pattern `^168346341\+chrisdpurcell@users\.noreply\.github\.com$`) rejected those test commits before the test logic could run, causing 4 of 68 tests to fail at `beforeEach` setup.
 
@@ -23,6 +23,10 @@ Add `git config core.hooksPath /dev/null` to the tmpdir repo's local config in `
 Contributor-agnostic — works on any developer's machine regardless of global git config. See convention TEST-003 for the durable pattern.
 
 Released in plugin-test-harness v0.7.5 (commit cf9aa1b). Test result delta: 16/18 suites + 64/68 tests → 18/18 suites + 68/68 tests.
+
+## Lesson
+
+This is a contributor-environment coupling, not a product bug: a workstation-global pre-commit/GPG hook silently rejects the throwaway commits that tmpdir git tests create. Neutralize git's global + system config at the top of every plugin's test helper — `export GIT_CONFIG_GLOBAL=/dev/null` + `export GIT_CONFIG_NOSYSTEM=1` — rather than waiting for each suite to hit the wall (it recurred three times before canonicalization). The survey `grep -L GIT_CONFIG_GLOBAL plugins/*/tests/{helpers,test_helper}.bash` lists unprotected helpers; note the filename varies (`helpers.bash` vs `test_helper.bash`). See convention TEST-003.
 
 ## Recurrence — release-pipeline (2026-05-08)
 
