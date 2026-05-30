@@ -152,6 +152,15 @@ Run a command at a natural pausing point or end of session:
 
 Each command produces a summary table listing every page or file examined, the action taken, and a one-line description of changes.
 
+### Propagation vs. drift — run both
+
+The five commands split into two kinds, and the distinction matters:
+
+- **Propagators** (`/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`) push only *this session's* named changes into their layer. They do **not** run the drift auditor, so they will not catch pre-existing drift your current session didn't introduce — a stale version string, a doc that references a renamed file, an outdated label.
+- **Auditor** (`/up-docs:drift`) is the read-only Sonnet scan that finds that pre-existing drift. `/up-docs:all` runs the propagators **and** the auditor in a single pass.
+
+Use `/up-docs:repo` for a quick post-change sync, but run `/up-docs:drift` (or `/up-docs:all`) periodically — for example after a release — to catch drift that targeted propagation cannot see. A lone `/up-docs:repo` after a release is a sync, not a full consistency check.
+
 ### Project Setup
 
 Add a documentation mapping section to your project's CLAUDE.md so the commands know where to look:

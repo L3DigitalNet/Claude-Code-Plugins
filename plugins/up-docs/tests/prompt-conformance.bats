@@ -26,3 +26,14 @@ PROPAGATE_REPO="$PLUGIN_ROOT/agents/up-docs-propagate-repo.md"
   run grep -F '"layout"' "$PLUGIN_ROOT/templates/drift-finding.md"
   [ "$status" -eq 0 ]
 }
+
+@test "propagate-repo audits for retired V1/V2 layout-detection language" {
+  # v0.9.1: the propagator must EXPLICITLY scan AGENTS.md/AGENTS.reviews.md (prose
+  # conditionals) and conventions.md (version labels) for pre-v3 layout-detection
+  # language, so the relabel is reliable rather than luck-of-the-Haiku-draw — the
+  # /up-docs:repo run that shipped v0.9.0 missed exactly these stragglers.
+  run grep -iF 'retired V1/V2 layout-detection' "$PROPAGATE_REPO"
+  [ "$status" -eq 0 ]
+  run grep -iF 'retired handoff-version label' "$PROPAGATE_REPO"
+  [ "$status" -eq 0 ]
+}

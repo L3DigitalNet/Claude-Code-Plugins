@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.1] - 2026-05-30
+
+### Changed
+- propagate-repo: the `AGENTS.md` / `AGENTS.reviews.md` / `conventions.md` mandatory audit now explicitly scans for **retired V1/V2 layout-detection** language — pre-v3 `detect layout first. V2:… V1:…` Session-state conditionals, `V2 repos read… / V1 legacy…` review-input conditionals, and stale `(V2 handoff layout)` version labels — and relabels them to the v3 single-path form. The catch was previously non-deterministic: a `/up-docs:repo` run after v0.9.0 shipped left two `AGENTS.md` stragglers and a `conventions.md` label that only a later `/up-docs:all` drift audit caught. New `tests/prompt-conformance.bats` guard (52 bats total).
+
+### Added
+- README "Propagation vs. drift" section + `/up-docs:repo` skill note: the propagators (`/up-docs:repo|wiki|notion`) run no drift auditor and will not catch pre-existing drift the current session didn't introduce; run `/up-docs:drift` or `/up-docs:all` periodically (e.g. after a release).
+
 ## [0.9.0] - 2026-05-30
 
 ### Fixed
