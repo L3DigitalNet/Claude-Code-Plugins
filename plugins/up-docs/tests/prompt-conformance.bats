@@ -19,3 +19,10 @@ PROPAGATE_REPO="$PLUGIN_ROOT/agents/up-docs-propagate-repo.md"
     [ "$status" -eq 0 ]
   done
 }
+
+@test "drift-finding template layer enum stays in sync with the audit schema (layout)" {
+  # validate_output.py Finding.layer accepts 'layout'; the output-contract
+  # template the auditor cites must list it too, or the two specs drift (Bug #6).
+  run grep -F '"layout"' "$PLUGIN_ROOT/templates/drift-finding.md"
+  [ "$status" -eq 0 ]
+}

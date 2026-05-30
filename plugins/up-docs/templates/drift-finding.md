@@ -29,7 +29,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
   },
   "stats": {
     "total_findings": 0,
-    "by_layer": {"repo": 0, "wiki": 0, "notion": 0},
+    "by_layer": {"repo": 0, "wiki": 0, "notion": 0, "layout": 0},
     "high_confidence": 0,
     "unverifiable": 0,
     "destructive_fixes_required": 0
@@ -42,7 +42,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 | Field | Rule |
 |-------|------|
 | `id` | Sequential from 1. Stable across JSON + markdown so a user can cross-reference. |
-| `layer` | Exactly one of: `"repo"`, `"wiki"`, `"notion"`. |
+| `layer` | Exactly one of: `"repo"`, `"wiki"`, `"notion"`, `"layout"`. Use `"layout"` only for findings from the step-3b handoff-conformance phase (validator failures), never for content drift. |
 | `page` | Human-readable page title (Outline, Notion) or file path (repo). |
 | `page_id` | Machine ID for wiki/Notion; `null` for repo. Used by downstream propagators to target the right page. |
 | `stale_line` | Exact text currently in the doc. Do not paraphrase. This is what a propagator will match against. |
