@@ -10,6 +10,14 @@ superseded_by: null
 ---
 # Bug 2: plugin-test-harness TypeScript config missing @types/jest in tsconfig types array; jest transform po
 
-## Summary
+## Cause
 
-plugin-test-harness TypeScript config missing @types/jest in tsconfig types array; jest transform pointed at wrong config. Fixed and released in 0.7.4 (50 tests now pass, was 0).
+plugin-test-harness TypeScript config missing @types/jest in tsconfig types array; jest transform pointed at wrong config.
+
+## Fix
+
+Fixed and released in 0.7.4 (50 tests now pass, was 0).
+
+## Lesson
+
+When a TS test harness collects 0 tests, check that tsconfig `types` includes the test-framework types and the jest transform points at the right config.
