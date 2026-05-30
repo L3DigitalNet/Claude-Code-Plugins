@@ -12,11 +12,6 @@
     },
     {
       "check": "missing_tests",
-      "plugin": "agent-orchestrator",
-      "reason": "Markdown/script-only plugin — no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
       "plugin": "github-repo-manager",
       "reason": "Has a real test suite but requires gh-manager binary in PATH — tests auto-detect local binary via run-all.sh helper fallback"
     },
@@ -27,27 +22,7 @@
     },
     {
       "check": "missing_tests",
-      "plugin": "design-assistant",
-      "reason": "Markdown/script-only plugin — no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "plugin-review",
-      "reason": "Markdown/script-only plugin — no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "docs-manager",
-      "reason": "Markdown/script-only plugin — no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
       "plugin": "repo-hygiene",
-      "reason": "Markdown/script-only plugin — no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "autonomous-refactor",
       "reason": "Markdown/script-only plugin — no executable test suite by design"
     },
     {
@@ -72,23 +47,8 @@
     },
     {
       "check": "stale_docs",
-      "plugin": "design-assistant",
-      "reason": "Docs auditor false-positive: plugin.json and marketplace.json show pre-bump version at Phase 1 time — bump-version.sh updates them in Phase 2. No stale .md refs exist."
-    },
-    {
-      "check": "stale_docs",
       "plugin": "plugin-test-harness",
       "reason": "Docs auditor false-positive: plugin.json, marketplace.json, and CHANGELOG.md show pre-bump version at Phase 1 time — bump-version.sh and generate-changelog.sh update them in Phase 2. No stale .md refs exist."
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "linux-sysadmin",
-      "reason": "Skill-only plugin — 94 service knowledge files with no executable test suite by design"
-    },
-    {
-      "check": "missing_tests",
-      "plugin": "python-dev",
-      "reason": "Markdown/skill-only plugin — 11 knowledge files and one command with no executable test suite by design"
     },
     {
       "check": "missing_tests",
