@@ -135,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
-- Existing test coverage (post-2026-05-25 batch release, 11 in-scope plugins): github-repo-manager 40 bats, handoff 22 bats, home-assistant-dev 207 pytest + 31 Jest, nominal 79 bats, opus-context 10 bats, plugin-test-harness 68 Jest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then −14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites).
+- Existing test coverage (8 in-scope plugins, post-2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then −14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
 
 **Related:** TEST-002, DOC-001
 
@@ -160,7 +160,7 @@ exec bash "$BATS_ROOT/libexec/bats-core/bats" "$@"
 **Sources:**
 - Issue: reproducer `bats /tmp/minimal.bats > out.txt 2>&1; ls -la out.txt` shows 0 bytes via wrapper, populated via direct call
 - Discovered during release-pipeline Phase 2 (2026-04-25)
-- Affects 9 plugins (post-2026-05-08 cleanup): release-pipeline, opus-context, handoff, up-docs, repo-hygiene, github-repo-manager, nominal, test-driver, qt-suite
+- Affects 6 plugins (post-2026-05-30 cleanup): release-pipeline, up-docs, repo-hygiene, github-repo-manager, test-driver, qt-suite
 
 **Related:** TEST-001, DOC-001
 

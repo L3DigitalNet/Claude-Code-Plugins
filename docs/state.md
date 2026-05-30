@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-05-30 (up-docs v0.9.0: handoff v3 alignment)
+**Last updated:** 2026-05-30 (plugin marketplace cleanup + repo-hygiene v3 hardening)
 
 ## Session Instructions
 
@@ -14,6 +14,6 @@ None.
 
 ## Recently closed (this session, 2026-05-30)
 
-- **up-docs v0.9.0** — handoff v3 alignment. Audit identified 12 divergences (2🔴/6🟡/4🟢); captured as plan + Bug #6. Implementation executed in 6-commit cycle: (1) `propagate-repo` emits v3 three-line AGENTS.md block + bug-body `## Lesson` (T1/T2); (2) enforces CLAUDE.md ≤2048 / AGENTS.md ≤4096 caps, audits `docs/specs-plans.md`, route-first `state.md` trim, bug-index verify (T3–T6); (3) drift auditor runs `validate-layout.sh` conformance phase (T7); (4) relabel v2→v3, remove stale refs (T8). 51 bats + 29 pytest. Full detail in plan + Bug #6 + `docs/sessions/2026-05.md`.
+- **Plugin marketplace cleanup + repo-hygiene v3 hardening** — Removed 3 unused plugins (opus-context, handoff, nominal: 12 → 9) from both repo and live Claude Code state (marketplace.json, README, docs/, testing/, plus settings.json/installed_plugins.json/cache). repo-hygiene 1.4.2: semantic auditor gains handoff-v3 awareness (canonical files exempt, stray handoff.md is info not warn, validation deferred). test-driver 0.6.2: drop opus-context refs (philosophy intact). Swept 8 stale .release-waivers.json entries (22 → 14) + 5 orphan installed_plugins.json keys + 5 cache dirs from 2026-05-08 removal. No new bugs; all repo/live-plane layers (manifest/README/docs/testing/.waivers.json/installed_plugins.json/cache) synchronized.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/sessions/<YYYY-MM>.md. -->

@@ -23,4 +23,4 @@ claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev — dele
 ## What Remains
 
 - Monitor Tavily `search_depth=fast` vendor bug (returns empty results for queries `basic` answers correctly). Inline-noted in routing rules; revisit if Tavily fixes upstream.
-- Centralize bats wrapper to `scripts/run-plugin-bats.sh` (now 9 copies of `tests/run-bats.sh` after plugin removals — was 13). TEST-002 in conventions covers the workaround pattern; centralization is optional cleanup.
+- Centralize bats wrapper to `scripts/run-plugin-bats.sh` (now 6 copies of `tests/run-bats.sh` after plugin removals — was 13). TEST-002 in conventions covers the workaround pattern; centralization is optional cleanup.
