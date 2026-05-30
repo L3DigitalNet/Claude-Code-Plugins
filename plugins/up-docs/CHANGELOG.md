@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.0] - 2026-05-30
+
+### Fixed
+- propagate-repo: `AGENTS.md` remediation now emits the handoff v3 three-line block (`Session state:` / `Full conventions reference:` / `Detailed review workflows:`) — prior output failed `validate-layout.sh`'s Codex block. (Bug #6)
+- propagate-repo: new bug files include `## Lesson` (handoff v3 Cause/Fix/Lesson body). (Bug #6)
+- propagate-repo: state.md over-cap trim is route-first (route to sessions/deployed/architecture before deleting), per handoff v3.
+
+### Added
+- propagate-repo: enforces `CLAUDE.md` (≤2048) and `AGENTS.md` (≤4096) byte caps; audits `docs/specs-plans.md`; verifies bug-index regen with `git diff --exit-code`.
+- audit-drift: conditional handoff-layout conformance phase — runs `~/projects/agent-configs/scripts/validate-layout.sh` against the project root when present and surfaces failures as `layer: "layout"` findings (read-only; never fixes).
+
+### Changed
+- Relabeled handoff "v2" → "v3"; removed stale `/mnt/share/` migration pointer and superseded "Phase 5 / §9.2 / ≤200-line rules cap" references (not part of the v3 contract).
+
+
 ## [0.8.4] - 2026-05-29
 
 ### Fixed
