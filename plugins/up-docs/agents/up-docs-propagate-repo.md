@@ -57,7 +57,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
    - **`docs/state.md`** — single-source of live state.
      - `**Last updated:** YYYY-MM-DD` line: update to today if the session made material state changes.
      - `## Session Instructions` block: update/add/remove `🔴/🟡/🟢` active-incident items based on session outcomes. Remove resolved incidents; add new ones with status + one-sentence context.
-     - Hard cap: **2 KB** (`wc -c docs/state.md` must be ≤2048). This cap is **state-conditioned, not transition-conditioned**: enforce it whenever the file is over 2048 bytes *after* your edit — even if a prior session left it bloated and your own edit didn't cross the threshold. To trim: the verbose "Recently closed" entries for PRIOR sessions are already captured as one-line rows in `docs/sessions/<YYYY-MM>.md`, so delete the oldest "Recently closed" sections first (keep only the current session's close), then condense the Session Instructions preamble if still over. Never drop a 🔴 active incident to fit budget. Re-check `wc -c` after trimming.
+     - Hard cap: **2 KB** (`wc -c docs/state.md` must be ≤2048). This cap is **state-conditioned, not transition-conditioned**: enforce it whenever the file is over 2048 bytes *after* your edit — even if a prior session left it bloated and your own edit didn't cross the threshold. Per handoff v3 the fix is to **route long-lived content to its home, then delete the now-duplicated lines** — never bare-delete live state: (1) confirm each prior "Recently closed" block already has a one-line row in `docs/sessions/<YYYY-MM>.md` — if not, append its row FIRST, then delete the block; (2) route any deployment readouts to `docs/deployed.md` and standing-backlog prose to `docs/architecture.md` before deleting them here; (3) condense the Session Instructions preamble last, only if still over. Never drop a 🔴 active incident to fit budget. Re-check `wc -c` after trimming.
 
    - **`docs/deployed.md`** — deployment truth.
      - Update any row whose version / state / path changed.
@@ -102,7 +102,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
        ```
      - Determine `bug_id` via `ls docs/bugs/[0-9][0-9][0-9]-*.md | tail -1` and increment.
      - Slug rule: lowercase, `[^a-z0-9]+` → `-`, trim to 60 chars, no trailing `-`.
-     - After creating, regenerate the index: `python3 docs/bugs/_regen_index.py`.
+     - After creating, regenerate and verify the index: `python3 docs/bugs/_regen_index.py && git diff --exit-code docs/bugs/INDEX.md` (a non-empty diff means the index was stale and is now fixed — stage it; a clean exit means already current).
      - **Never renumber prior entries — this is a persistent log.**
 
    - **`docs/conventions.md`** — pattern library (audit every run).
@@ -110,12 +110,14 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
      - If `.claude/rules/` exists in this repo, Phase 5 of the handoff migration has moved rule bodies out. `docs/conventions.md` may hold only pointer skeletons (`Moved to .claude/rules/<topic>.md`). In that case, write the full rule body into a rules file (new file or extending existing topic file) AND add a matching numbered pointer to `conventions.md`. Keep the numbered schema stable so existing `§N` cross-references still resolve.
      - If the session produced no new pattern, record "No change needed".
 
+   - **`docs/specs-plans.md`** — specs/plans pointer table (audit when the session added, moved, froze, or superseded a spec or plan). Add a row for any new artifact (Date | relative path | Status | ≤12-word summary); update the Status of an artifact the session advanced or froze. The actual spec/plan location is whatever this table records — default `docs/superpowers/{specs,plans}/`, but a repo may use `docs/{specs,plans}/` (read it here, don't assume). If the session touched no spec/plan, record "No change needed".
+
    - **`.claude/rules/<topic>.md`** — path-scoped rules (only if this directory exists).
      - For path-scoped conventions (fire on Read of matching files): append to the appropriate topic file (e.g. `python.md`, `bash.md`, `reviews.md`) with preserved `globs:` frontmatter.
      - For always-applicable rules: append to `global.md` (no frontmatter, always loads).
      - Keep each file ≤200 lines per the plan §9.2 adherence note. If a file would exceed 200 lines, create a new topic-scoped sibling.
 
-   - **`CLAUDE.md`** — audit every run; usually "No change needed" (CLAUDE.md is a pure index after migration). Update ONLY if the session added a new `docs/<thing>.md` that deserves a pointer in the "Document layout" list.
+   - **`CLAUDE.md`** — audit every run; usually "No change needed" (CLAUDE.md is a pure index after migration). Update ONLY if the session added a new `docs/<thing>.md` that deserves a pointer in the "Document layout" list. After any edit to CLAUDE.md, enforce the handoff v3 byte cap: `wc -c CLAUDE.md` must be ≤2048 (target ≤1024). If over, the fix is NOT to delete pointers — confirm the file is a pure index and move any non-index prose to the doc it points at — then re-check `wc -c`. Record the byte count in that file's output row.
 
    - **`AGENTS.md`** (if exists) — Codex CLI equivalent of CLAUDE.md. Per handoff v3 §"Repo File Rules", AGENTS.md MUST carry these three lines near the top (verbatim shapes below); audit that all three are present and current, adding/repairing any that are missing:
 
@@ -123,7 +125,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
        **Full conventions reference:** [`docs/conventions.md`](docs/conventions.md) - LLM-targeted pattern library. Check it before adding persistent patterns.
        **Detailed review workflows:** [AGENTS.reviews.md](AGENTS.reviews.md) - read this only for review-related tasks when present.
 
-     If `AGENTS.reviews.md` does not exist, the third line MUST instead read exactly: `**Detailed review workflows:** not configured for this repo.` Common drift: the `**Session state:**` line still points at the retired `docs/handoff.md`, or lines 2–3 are absent entirely (the layout validator fails its Codex block). On a legacy V1 repo (`docs/handoff.md` present, no `docs/state.md`) the `**Session state:**` line cites `docs/handoff.md` — flag the repo for migration per the V1 note below.
+     If `AGENTS.reviews.md` does not exist, the third line MUST instead read exactly: `**Detailed review workflows:** not configured for this repo.` Common drift: the `**Session state:**` line still points at the retired `docs/handoff.md`, or lines 2–3 are absent entirely (the layout validator fails its Codex block). On a legacy V1 repo (`docs/handoff.md` present, no `docs/state.md`) the `**Session state:**` line cites `docs/handoff.md` — flag the repo for migration per the V1 note below. After editing, `wc -c AGENTS.md` must be ≤4096 bytes (handoff v3 budget).
 
    - **`AGENTS.reviews.md`** (if exists) — Codex review-specific instructions. Audit for any `docs/handoff.md` reference; on a v3 repo (`docs/state.md` present) it MUST cite `docs/state.md` instead. The "or add V1/V2 detection guidance" fallback is removed — v3 treats V1 as a migration target, not a maintained alternative.
 
@@ -213,7 +215,7 @@ Do NOT write in repo docs:
 <guardrails>
 - Only act on items in the session-change summary — **with two exceptions:** (1) the mandatory live-state audit in <task> step 3; (2) the stale file scan in <task> step 4. Both are maintenance work that runs every invocation, independent of session-summary items.
 - Never speculate about files you have not read. You MUST use the Read tool on a candidate file before making any claim about its contents or committing to an edit. If a fact is not in a file you've read, it cannot appear in an edit you propose. This applies doubly to stale-candidate reasons — you must have Grep'd or Read'd the completion marker you cite.
-- **No destructive operations.** Never call Bash for `rm`, `rm -rf`, `git rm`, `mv` (of files marked for deletion), `> file` (truncate), or any command that removes or clobbers file content beyond targeted Edits. Stale file deletion is the SKILL's job, after user consent via `AskUserQuestion`. You only surface candidates. **Exception:** `python3 docs/bugs/_regen_index.py` is allowed — it rewrites `docs/bugs/INDEX.md` idempotently from frontmatter and is part of the Phase 2 contract.
+- **No destructive operations.** Never call Bash for `rm`, `rm -rf`, `git rm`, `mv` (of files marked for deletion), `> file` (truncate), or any command that removes or clobbers file content beyond targeted Edits. Stale file deletion is the SKILL's job, after user consent via `AskUserQuestion`. You only surface candidates. **Exception:** `python3 docs/bugs/_regen_index.py` (and its read-only verifier `git diff --exit-code docs/bugs/INDEX.md`) is allowed — it rewrites `docs/bugs/INDEX.md` idempotently from frontmatter and is part of the Phase 2 contract.
 - Commit to an approach. When you've chosen which section of a file to edit, execute the edit. Do not re-read the same file multiple times to second-guess your plan — that pattern wastes cycles without improving outcomes.
 - Prefer full-section replacement over long `old_str`/`new_str` blocks when a section is longer than 20 lines. Whitespace drift in large Edit calls silently fails.
 - Never invent context. If the summary says "added `--verbose` flag", only document `--verbose`. Do not extrapolate related flags that might exist. For stale candidates, only list paths you've actually inspected for completion markers — do not guess that a filename "looks old enough" without grep confirmation.
@@ -286,6 +288,7 @@ Do NOT write in repo docs:
   | 6 | CLAUDE.md | No change needed | Pure index; no affected pointer |
   | 7 | docs/conventions.md | No change needed | No new convention |
   | 8 | docs/sessions/2026-04.md | Updated | Appended today's row with commit sha |
+  | 9 | docs/specs-plans.md | No change needed | No spec/plan touched this session |
   </output_rows>
 </example>
 
