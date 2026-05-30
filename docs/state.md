@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-05-29 (up-docs v0.8.2–v0.8.4: deny-guard removal, evidence-graded review, state.md cap fix)
+**Last updated:** 2026-05-30 (up-docs v0.9.0: handoff v3 alignment)
 
 ## Session Instructions
 
@@ -12,8 +12,8 @@
 
 None.
 
-## Recently closed (this session, 2026-05-29)
+## Recently closed (this session, 2026-05-30)
 
-- **up-docs v0.8.2 → v0.8.4** — v0.8.2: removed the unsound PreToolUse deny-guard hook (fired on every Bash call = latency tax; subagent-scope detection was architecturally broken; redundant with engine-enforced `permissions.deny`). v0.8.3: evidence-graded review — deleted orphaned `notion-guidelines.md` (A5), fixed `drift-finding.md` evidence schema → structured object (B1), extracted shared `templates/post-propagation-steps.md` (B2), retagged audit example #3 `low`→`unverifiable`. v0.8.4: state-conditioned the `docs/state.md` 2 KB cap rule in `propagate-repo` — it was transition-conditioned ("if edits push over"), so an already-over file never trimmed; caught dogfooding `/up-docs:repo` this run with state.md at 11 KB (5.5× cap). 48 bats + 26 pytest. Tags `up-docs/v0.8.2..v0.8.4`. Full detail in `docs/sessions/2026-05.md`.
+- **up-docs v0.9.0** — handoff v3 alignment. Audit identified 12 divergences (2🔴/6🟡/4🟢); captured as plan + Bug #6. Implementation executed in 6-commit cycle: (1) `propagate-repo` emits v3 three-line AGENTS.md block + bug-body `## Lesson` (T1/T2); (2) enforces CLAUDE.md ≤2048 / AGENTS.md ≤4096 caps, audits `docs/specs-plans.md`, route-first `state.md` trim, bug-index verify (T3–T6); (3) drift auditor runs `validate-layout.sh` conformance phase (T7); (4) relabel v2→v3, remove stale refs (T8). 51 bats + 29 pytest. Full detail in plan + Bug #6 + `docs/sessions/2026-05.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/sessions/<YYYY-MM>.md. -->
