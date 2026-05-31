@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.3] - 2026-05-30
+
+### Changed
+- `hygiene-semantic-auditor`: de-duplicated against the Step 1 scripts. The agent no longer re-emits template-placeholder or structural-heading findings (owned by `check-readme-placeholders.sh` / `check-readme-structure.sh`), and its implementation cross-reference is now scoped to the table-semantic resolution (Commands/Skills/Agents/Hooks/Tools + bare `/command`) that `check-readme-refs.sh` cannot do. Em-dash overuse stays in the agent (no Step 1 script counts em dashes yet). Known Issues staleness, Principles contradictions, root-README coverage (2b), and docs/ accuracy (2c) are unchanged.
+
+### Fixed
+- Docs drift: removed the stale "17 plugins" references (command Step 2 note + agent output examples → count-agnostic / 9). The root plugin README now describes Step 1 as seven parallel scripts (was "four"), attributes Check 3 to the three `check-readme-*.sh` scripts plus the subagent (was "inline AI (Step 2)"), and the Agents table no longer lists placeholder/structural checks as agent responsibilities.
+
 ## [1.4.2] - 2026-05-30
 
 ### Changed

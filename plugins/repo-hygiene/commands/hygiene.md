@@ -73,7 +73,7 @@ Use the `Agent` tool with `subagent_type: hygiene-semantic-auditor` and a prompt
 
 Parse the returned JSON. Extract the `findings` array and merge into the unified findings list from Step 1. If the agent returns an `error` field (e.g. marketplace.json missing), surface it and continue with Step 1 findings only.
 
-Why a subagent: step 2 reads every plugin README (~500 lines each × 17 plugins), the root README, and every docs/ file, plus the marketplace.json and template — a read-heavy pass that added ~15K tokens per run to the Opus context. Haiku handles the pattern-matching cleanly and returns only the structured findings.
+Why a subagent: step 2 reads every plugin README (~500 lines each), the root README, and every docs/ file, plus the marketplace.json and template — a read-heavy pass that added ~15K tokens per run to the Opus context. Haiku handles the pattern-matching cleanly and returns only the structured findings. The deterministic README checks (placeholders, structural headings, literal path/link/command refs) stay in the Step 1 scripts; the subagent only does what those scripts cannot.
 
 ## Step 3: Classify Findings
 

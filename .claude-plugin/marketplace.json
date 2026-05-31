@@ -53,7 +53,7 @@
     {
       "name": "repo-hygiene",
       "description": "Autonomous maintenance sweep for any git repository: validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests. Dispatches hygiene-semantic-auditor (Haiku) for README freshness and docs/ accuracy checks.",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
