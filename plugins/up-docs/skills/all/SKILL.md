@@ -28,6 +28,21 @@ This skill (orchestrator, inherits caller model)
 
 ## Workflow
 
+### 0. Pre-flight: Dirty-tree guard
+
+Before doing anything else, check for unstaged changes:
+
+```bash
+git status --porcelain
+```
+
+If the output is **non-empty**, STOP immediately:
+- Emit the list of dirty files to the user.
+- Refuse with: *"Unstaged changes detected — stash or commit them before running `/up-docs:all` to prevent data loss."*
+- Do NOT dispatch any sub-agents. Do NOT read session context. Do NOT proceed to Step 1.
+
+If the output is empty, continue.
+
 ### 1. Gather Session Context (once)
 
 First, verify Python 3 is available — all helper scripts depend on it:

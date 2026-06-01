@@ -11,6 +11,21 @@ Update the active repo's docs via the `up-docs-propagate-repo` sub-agent (Haiku)
 
 ## Workflow
 
+### 0. Pre-flight: Dirty-tree guard
+
+Before doing anything else, check for unstaged changes:
+
+```bash
+git status --porcelain
+```
+
+If the output is **non-empty**, STOP immediately:
+- Emit the list of dirty files to the user.
+- Refuse with: *"Unstaged changes detected — stash or commit them before running `/up-docs:repo` to prevent data loss."*
+- Do NOT dispatch the sub-agent. Do NOT read session context. Do NOT proceed to Step 1.
+
+If the output is empty, continue.
+
 ### 1. Gather Session Context
 
 First, verify Python 3 is available — all helper scripts depend on it:
