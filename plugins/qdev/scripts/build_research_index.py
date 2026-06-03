@@ -33,7 +33,13 @@ def collect_reports(research_dir: Path) -> list[dict]:
     for md in sorted(Path(research_dir).glob("*.md")):
         if md.name == INDEX_NAME:
             continue
-        fm = read_frontmatter(md)
+        # A single unparseable/unreadable report must not abort regeneration of
+        # the whole index (parity with the validator's per-file resilience).
+        try:
+            fm = read_frontmatter(md)
+        except (yaml.YAMLError, OSError) as exc:
+            print(f"warning: skipping {md.name}: {exc}", file=sys.stderr)
+            continue
         if fm is None or fm.get("doc_type") != "research":
             continue
         rows.append(fm)
@@ -43,8 +49,12 @@ def collect_reports(research_dir: Path) -> list[dict]:
 
 def _cell(value) -> str:
     if isinstance(value, list):
-        return " ".join(str(v) for v in value)
-    return "" if value is None else str(value)
+        text = " ".join(str(v) for v in value)
+    else:
+        text = "" if value is None else str(value)
+    # Escape table delimiters so a report field can't inject columns or rows
+    # into the generated index (`|` -> `\|`; newlines collapsed to spaces).
+    return text.replace("|", "\\|").replace("\r", " ").replace("\n", " ")
 
 
 def render_index(rows: list[dict]) -> str:

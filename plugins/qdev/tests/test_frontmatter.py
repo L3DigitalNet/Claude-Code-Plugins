@@ -1,4 +1,36 @@
+import pytest
+import yaml
+
 from _frontmatter import extract_frontmatter
+
+
+def test_crlf_line_endings_are_handled():
+    text = "---\r\nid: x\r\ntags:\r\n  - a\r\n---\r\n\r\n# Body\r\n"
+    assert extract_frontmatter(text) == {"id": "x", "tags": ["a"]}
+
+
+def test_empty_block_returns_none():
+    # `---\n\n---` has no mapping content; safe_load -> None -> not a mapping.
+    assert extract_frontmatter("---\n\n---\n") is None
+
+
+def test_malformed_yaml_raises():
+    # Documented contract: malformed YAML raises (validators catch it per-file).
+    with pytest.raises(yaml.YAMLError):
+        extract_frontmatter("---\nid: [unbalanced\n---\n")
+
+
+def test_datetime_timestamp_coerced_to_iso_date():
+    # A full YAML timestamp parses as datetime.datetime; coerced to an ISO date.
+    fm = extract_frontmatter("---\ncreated: 2026-06-03 10:30:00\n---\n")
+    assert fm == {"created": "2026-06-03"}
+    assert isinstance(fm["created"], str)
+
+
+def test_dates_coerced_recursively_in_lists_and_dicts():
+    text = "---\nrelated:\n  - 2026-06-03\nmeta:\n  d: 2026-06-03\n---\n"
+    assert extract_frontmatter(text) == {
+        "related": ["2026-06-03"], "meta": {"d": "2026-06-03"}}
 
 
 def test_extracts_leading_block():

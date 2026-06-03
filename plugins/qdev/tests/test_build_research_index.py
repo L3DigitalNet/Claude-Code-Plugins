@@ -1,3 +1,4 @@
+import re
 import textwrap
 from pathlib import Path
 
@@ -34,6 +35,16 @@ def test_collect_skips_index_and_non_research(tmp_path):
     assert ids == ["2026-01-01-alpha"]
 
 
+def test_collect_skips_report_with_malformed_frontmatter(tmp_path):
+    # One unparseable report must not crash regeneration of the whole index.
+    _report(tmp_path, "2026-01-01-alpha", "2026-01-01")
+    (tmp_path / "2026-02-01-bad.md").write_text(
+        "---\nid: [unbalanced\n---\n\n# Bad\n", encoding="utf-8"
+    )
+    rows = gen.collect_reports(tmp_path)  # must not raise
+    assert [r["id"] for r in rows] == ["2026-01-01-alpha"]
+
+
 def test_collect_sorts_by_created_desc(tmp_path):
     _report(tmp_path, "2026-01-01-alpha", "2026-01-01")
     _report(tmp_path, "2026-03-01-gamma", "2026-03-01")
@@ -49,6 +60,48 @@ def test_main_creates_index_when_absent(tmp_path):
     index = (tmp_path / "index.md").read_text(encoding="utf-8")
     assert "2026-01-01-alpha" in index
     assert "doc_type: index" in index
+
+
+def test_pipe_in_field_is_escaped_not_column_injection(tmp_path):
+    # A `|` in report content must not inject extra table columns into the index.
+    _report(tmp_path, "2026-01-01-alpha", "2026-01-01", title="Pipe | Inject")
+    gen.main(["build_research_index.py", str(tmp_path)])
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    row = next(
+        line for line in index.splitlines()
+        if line.startswith("|") and "2026-01-01-alpha" in line
+    )
+    # split only on UNescaped pipes; a well-formed row is leading "" + N cols + trailing ""
+    cells = re.split(r"(?<!\\)\|", row)
+    assert len(cells) == len(gen._COLUMNS) + 2
+    assert r"\|" in index  # the literal pipe survived as an escaped delimiter
+
+
+def test_empty_dir_writes_index_with_epoch_defaults(tmp_path):
+    rc = gen.main(["build_research_index.py", str(tmp_path)])
+    assert rc == 0
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    assert "doc_type: index" in index
+    assert "1970-01-01" in index  # min/max default when there are no reports
+
+
+def test_main_bad_arg_count_returns_2():
+    assert gen.main(["build_research_index.py"]) == 2
+    assert gen.main(["build_research_index.py", "a", "b"]) == 2
+
+
+def test_main_non_directory_returns_2(tmp_path):
+    missing = tmp_path / "nope"
+    assert gen.main(["build_research_index.py", str(missing)]) == 2
+
+
+def test_glob_is_non_recursive_skips_subdirectories(tmp_path):
+    _report(tmp_path, "2026-01-01-top", "2026-01-01")
+    sub = tmp_path / "nested"
+    sub.mkdir()
+    _report(sub, "2026-02-01-nested", "2026-02-01")
+    ids = [r["id"] for r in gen.collect_reports(tmp_path)]
+    assert ids == ["2026-01-01-top"]
 
 
 def test_regeneration_is_idempotent(tmp_path):

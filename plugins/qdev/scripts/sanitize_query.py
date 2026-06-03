@@ -40,12 +40,14 @@ _SENSITIVE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         ),
     ),
     (
+        # value capture is `.+` (to end of line, no DOTALL) — NOT `\S+`: a
+        # spaced passphrase must be redacted whole, never just its first token.
         "secret:assignment",
-        re.compile(r"(?i)(?:password|passwd|api[_-]?key|secret|token)\s*[=:]\s*\S+"),
+        re.compile(r"(?i)(?:password|passwd|api[_-]?key|secret|token)\s*[=:]\s*.+"),
     ),
     (
         "customer:identifier",
-        re.compile(r"(?i)(?:customer|account|client|acct|user)[ _-]?(?:id|no|number|uuid)\s*[=:]\s*\S+"),
+        re.compile(r"(?i)(?:customer|account|client|acct|user)[ _-]?(?:id|no|number|uuid)\s*[=:]\s*.+"),
     ),
 ]
 

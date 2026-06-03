@@ -1,4 +1,41 @@
-from dedup import decide
+import json
+
+from dedup import decide, main
+
+
+def test_matched_two_boundary_is_not_plain_new():
+    # The cutoff is matched < 2; exactly 2 (with recent overlap) updates in place.
+    assert decide(matched=2, months_old=1, fast_moving=False,
+                  different_angle=False, replaces=False)["action"] == "update"
+
+
+def test_months_old_at_recent_boundary_is_no_longer_recent():
+    # RECENT_MONTHS=6 uses a strict <; exactly 6 months old falls past "recent".
+    assert decide(matched=3, months_old=6, fast_moving=False,
+                  different_angle=False, replaces=False) == {
+        "action": "new", "related": True, "supersede": False}
+
+
+def test_under_two_matches_takes_precedence_over_different_angle():
+    # matched<2 is evaluated first, so it wins even when different_angle is set.
+    assert decide(matched=1, months_old=1, fast_moving=False,
+                  different_angle=True, replaces=False) == {
+        "action": "new", "related": False, "supersede": False}
+
+
+def test_cli_main_emits_decision_json(capsys):
+    rc = main(["dedup.py", "--matched", "3", "--months-old", "2"])
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "action": "update", "related": False, "supersede": False}
+
+
+def test_cli_main_store_true_flags_parse(capsys):
+    rc = main(["dedup.py", "--matched", "3", "--months-old", "9",
+               "--fast-moving", "--replaces"])
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "action": "new", "related": True, "supersede": True}
 
 
 def test_under_two_matches_is_plain_new():

@@ -1,6 +1,7 @@
 import json as _json
 import stat
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -61,6 +62,16 @@ def test_sensitive_redacted_flags_and_no_leak(name, secret, label):
     assert r["requires_human_approval"] is True
     assert raw not in _egress(r)
     assert label in r["dropped_fields"]
+
+
+def test_assignment_with_spaced_value_redacts_whole_value():
+    # Regression: the assignment value capture must not stop at the first
+    # whitespace token (a passphrase with spaces would otherwise leak its tail).
+    r = sanitize("password: correct horse battery staple")
+    assert r["requires_human_approval"] is True
+    assert "secret:assignment" in r["dropped_fields"]
+    assert "horse" not in r["safe_query"]
+    assert "battery staple" not in r["safe_query"]
 
 
 def test_pem_block_redacted_and_flags():
@@ -263,6 +274,89 @@ def test_dropped_fields_are_labels_only():
     for d in r["dropped_fields"]:
         assert ":" in d and "/" not in d and "@" not in d
     assert r["dropped_fields"].count("path:home-dir") == 1
+
+
+# --- contract invariants ---
+
+def test_empty_input_is_clean_no_approval():
+    r = sanitize("")
+    assert r == {
+        "safe_query": "",
+        "dropped_fields": [],
+        "provider_allowed": {"brave": True, "context7": True, "tavily": True, "serper": True},
+        "requires_human_approval": False,
+    }
+
+
+def test_whitespace_only_input_is_clean():
+    r = sanitize("   \n\t  ")
+    assert r["safe_query"] == ""
+    assert r["dropped_fields"] == []
+    assert r["requires_human_approval"] is False
+
+
+def test_sanitize_is_idempotent_on_its_own_safe_query():
+    # Re-sanitizing the output must be a fixed point: the [REDACTED]/<path>
+    # markers must not themselves match any pattern and re-flag.
+    once = sanitize("debug sk-abcdef0123456789ABCDEFGHIJ at /home/chris/x.py")
+    twice = sanitize(once["safe_query"])
+    assert twice["safe_query"] == once["safe_query"]
+    assert twice["requires_human_approval"] is False
+    assert twice["dropped_fields"] == []
+
+
+def test_two_secrets_same_family_both_redacted():
+    a, b = "sk-AAAAAAAAAAAAAAAAAAAA", "sk-BBBBBBBBBBBBBBBBBBBB"
+    r = sanitize(f"keys {a} and {b}")
+    assert a not in _egress(r)
+    assert b not in _egress(r)
+    assert r["dropped_fields"].count("secret:openai-key") == 1  # one label, both redacted
+
+
+def test_multiple_distinct_families_all_redacted_and_labeled():
+    aws = "AKIAIOSFODNN7EXAMPLE"
+    gh = "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    r = sanitize(f"creds {aws} and {gh} leaked")
+    assert aws not in _egress(r)
+    assert gh not in _egress(r)
+    assert "secret:aws-access-key" in r["dropped_fields"]
+    assert "secret:github-token" in r["dropped_fields"]
+    assert r["requires_human_approval"] is True
+
+
+def test_secret_hidden_in_traceback_frame_does_not_leak():
+    # A secret on a dropped frame line is removed by traceback collapse. The
+    # binding contract is no-leak; it is collapsed as a frame (not flagged as a
+    # secret), which is acceptable because it never reaches safe_query.
+    tb = (
+        "Traceback (most recent call last):\n"
+        '  File "/x.py", line 2, in f\n'
+        '    auth = "Bearer sk-abcdef0123456789ABCDEFGHIJ"\n'
+        "ValueError: boom"
+    )
+    r = sanitize(tb)
+    assert "sk-abcdef0123456789ABCDEFGHIJ" not in _egress(r)
+    assert r["safe_query"] == "ValueError: boom"
+
+
+def test_identifier_only_keeps_all_providers_allowed():
+    r = sanitize("ping /home/chris/app and chris@example.com")
+    assert r["requires_human_approval"] is False
+    assert all(r["provider_allowed"].values())
+
+
+def test_no_redos_on_pathological_input():
+    # Guards against a future regex edit reintroducing catastrophic backtracking.
+    # Probed baseline is well under 0.2s; the bound is deliberately generous.
+    payloads = [
+        "-----BEGIN PRIVATE KEY-----" + "A" * 200_000,   # unterminated PEM
+        "Bearer " + "a " * 100_000,                       # many bearer near-matches
+        "x = y;" * 100_000,                               # dense single line
+    ]
+    for payload in payloads:
+        start = time.perf_counter()
+        sanitize(payload)
+        assert time.perf_counter() - start < 2.0
 
 
 def test_cli_stdin_transport_redacts_no_leak(tmp_path):
