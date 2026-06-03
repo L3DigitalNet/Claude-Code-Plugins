@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- Corrected the Tavily MCP tool prefix in three agents (`qdev-researcher`, `qdev-quality-reviewer`, `qdev-deps-auditor`): `mcp__tavily__tavily_*` → `mcp__tavily-mcp__tavily_*`. The wrong server key meant the Tavily tools were never granted, so every deep-read/extract silently fell back to `WebFetch` — which returns sparse content on the JS-rendered docs/advisory/issue pages these agents target. The prefix now matches the canonical `tavily-mcp` server key (consistent with the sibling `brave-search` / `serper-search` keys).
+
 ## [1.5.0] - 2026-05-08
 
 ### Changed

@@ -1,7 +1,7 @@
 ---
 name: qdev-deps-auditor
 description: Dependency security and freshness audit. Reads package manifests (requirements.txt, pyproject.toml, package.json, Cargo.toml, go.mod, Gemfile, composer.json), researches each dependency for CVEs, abandonment, and major version lag via dual-source web search, and returns a prioritized findings report. Read-only.
-tools: Read, Glob, Grep, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_extract
+tools: Read, Glob, Grep, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_extract
 model: haiku
 ---
 
@@ -40,7 +40,7 @@ You are the dependency auditor for the qdev toolkit. You read every package mani
 
    For projects with more than 30 dependencies, prioritize direct dependencies over transitive and pinned-to-old-versions first. Research up to 50 dependencies; note any skipped in the report. Run searches in batched parallel calls — each pair of queries for a single dep is one batch, multiple deps can overlap.
 
-5. For any dep where search surfaces a CVE or security advisory, use `mcp__tavily__tavily_extract` to read the advisory page in full and extract: CVE ID, affected versions, fixed version, severity. Tavily handles JS-rendered advisory pages (GHSA, NVD detail pages) more reliably than `WebFetch`; fall back to `WebFetch` only if `tavily_extract` fails.
+5. For any dep where search surfaces a CVE or security advisory, use `mcp__tavily-mcp__tavily_extract` to read the advisory page in full and extract: CVE ID, affected versions, fixed version, severity. Tavily handles JS-rendered advisory pages (GHSA, NVD detail pages) more reliably than `WebFetch`; fall back to `WebFetch` only if `tavily_extract` fails.
 
 6. Deduplicate findings across the two search tools.
 

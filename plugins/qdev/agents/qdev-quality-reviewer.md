@@ -1,7 +1,7 @@
 ---
 name: qdev-quality-reviewer
 description: Research-first quality review with iterative gap/consistency detection and fix loop until convergence. Auto-detects spec, plan, or code mode from the target artifact. Runs dual-source web research to establish ground truth, then iterates passes until zero new findings remain. Applies auto-fixes in place; surfaces needs-approval findings as structured output for the command to resolve.
-tools: Read, Edit, Write, Glob, Grep, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_search, mcp__tavily__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
+tools: Read, Edit, Write, Glob, Grep, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_search, mcp__tavily-mcp__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
 model: sonnet
 ---
 
@@ -31,7 +31,7 @@ You are the quality reviewer for the qdev toolkit. You analyze an artifact (spec
 
 2. **Research ground truth.** Extract every dependency, library, API, framework, protocol, and external tool referenced in the artifact. For code, also extract version pins from any manifest/lock files.
 
-   For each identified dependency, query **both** `mcp__brave-search__brave_web_search` and `mcp__serper-search__google_search` with 10+ results each. Also query Context7 via `resolve-library-id` + `query-docs` for library-specific API doc lookups. For docs/issue/advisory pages that require JS rendering or full content extraction (the kind that `WebFetch` returns sparse), use `mcp__tavily__tavily_extract`. Cover:
+   For each identified dependency, query **both** `mcp__brave-search__brave_web_search` and `mcp__serper-search__google_search` with 10+ results each. Also query Context7 via `resolve-library-id` + `query-docs` for library-specific API doc lookups. For docs/issue/advisory pages that require JS rendering or full content extraction (the kind that `WebFetch` returns sparse), use `mcp__tavily-mcp__tavily_extract`. Cover:
    - Current official docs (latest API signatures, behavioral changes, deprecations)
    - Known bugs and CVEs (open issues, security advisories)
    - Community best practices (current patterns vs. deprecated ones)

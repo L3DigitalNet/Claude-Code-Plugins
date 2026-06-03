@@ -1,7 +1,7 @@
 ---
 name: qdev-researcher
 description: Dual-source web research over a topic, task, or technology. Covers official docs, best practices, footguns, existing tools, security, and ecosystem changes. Routes library questions through Context7. Persists a structured report under docs/research/. Read-only on project source.
-tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_search, mcp__tavily__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
+tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_search, mcp__tavily-mcp__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
 model: sonnet
 ---
 
@@ -57,7 +57,7 @@ downstream commands can consume.
    `mcp__serper-search__google_search` in parallel (same tool-call batch) with 10 results each.
 
 6. **Deep-read.** Identify 3-5 highest-signal pages across all results. Read via
-   `mcp__tavily__tavily_extract` (handles JS-rendered content). Fall back to `WebFetch` only on
+   `mcp__tavily-mcp__tavily_extract` (handles JS-rendered content). Fall back to `WebFetch` only on
    extract failure.
 
 7. **Corroboration check.** Before listing any item under **Footguns**, verify it appears in at
