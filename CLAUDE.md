@@ -5,6 +5,7 @@
 **Branch workflow:** Direct commit to `main`. No `testing` branch. Use `/release-pipeline:release` for plugin releases (version bump + tag + GitHub release). See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for full rules.
 
 **Document layout (read on demand):**
+
 - `docs/state.md` — live state + active incidents (auto-injected, do not read directly)
 - `docs/deployed.md` — deployment truth + what-remains
 - `docs/architecture.md` — repo structure + plugin design principles + full CLAUDE.md detail

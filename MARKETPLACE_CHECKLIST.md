@@ -11,12 +11,14 @@ This checklist ensures the repository adheres to Claude Code marketplace require
 ## Marketplace JSON Structure ✓
 
 Required fields in `.claude-plugin/marketplace.json`:
+
 - [x] `name` - Marketplace identifier
 - [x] `version` - Semantic versioning
 - [x] `description` - One-line summary
 - [x] `plugins` - Array of plugin entries
 
 Optional but recommended:
+
 - [x] `author` - Author information
 - [x] `homepage` - Repository URL
 - [x] `repository` - Git repository URL
@@ -25,6 +27,7 @@ Optional but recommended:
 ## Plugin Entries ✓
 
 Each plugin in the `plugins` array must have:
+
 - [x] `name` - Plugin identifier (matches plugin manifest)
 - [x] `displayName` - Human-readable name
 - [x] `description` - Brief description
@@ -33,6 +36,7 @@ Each plugin in the `plugins` array must have:
 - [x] `source` - Download location with type, owner, repo
 
 Optional:
+
 - [x] `keywords` - Search tags
 - [x] `homepage` - Plugin documentation URL
 - [x] `repository` - Repository URL
@@ -41,11 +45,13 @@ Optional:
 ## Plugin Structure
 
 Each plugin in `plugins/` directory must have:
+
 - [x] `.claude-plugin/manifest.json` (or `plugin.json`)
 - [x] `README.md` - Plugin documentation
 - [ ] At least one component (commands/, skills/, agents/, hooks/)
 
 Current plugins:
+
 - agent-orchestrator ✓
 
 ## Validation Commands

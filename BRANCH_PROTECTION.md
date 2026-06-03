@@ -5,7 +5,7 @@ This repository uses **direct commits to `main`**. There is no `testing` branch 
 ## The rule
 
 | Workflow | What to do |
-|---|---|
+| --- | --- |
 | Editing plugins, docs, scripts | Commit directly to `main`, push to `origin/main` |
 | Releasing a plugin (tag + GitHub release) | Run `/release-pipeline:release` and pick the appropriate mode |
 | Releasing multiple plugins at once | Run `/release-pipeline:release` and pick **Batch Release** |
@@ -24,7 +24,7 @@ Single-developer repo. Local pre-commit hooks (noreply email enforcement, market
 ## Versioning
 
 | Layer | Bump rule |
-|---|---|
+| --- | --- |
 | Plugin (`plugins/<name>/.claude-plugin/plugin.json`) | Semantic versioning. Major = breaking, Minor = feature, Patch = fix/docs/chore. |
 | Marketplace catalog (`.claude-plugin/marketplace.json` entry) | **Must match the plugin's own `plugin.json` version.** The release pipeline's `bump-version.sh` keeps these in sync; manual edits must touch both. |
 

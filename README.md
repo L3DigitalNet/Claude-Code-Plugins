@@ -31,8 +31,7 @@ Then install individual plugins:
 3. Select **l3digitalnet-plugins**
 4. Look for **Disable auto-update** (meaning it's already on)
 
-When auto-update is enabled, Claude Code refreshes the marketplace catalog and updates
-installed plugins at the start of each session.
+When auto-update is enabled, Claude Code refreshes the marketplace catalog and updates installed plugins at the start of each session.
 
 **Manual update** if you prefer to control when updates happen:
 
@@ -46,7 +45,7 @@ installed plugins at the start of each session.
 ## Available Plugins
 
 | Plugin | Type | Command | Description |
-|--------|------|---------|-------------|
+| --- | --- | --- | --- |
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
@@ -77,14 +76,12 @@ These principles apply across all plugins in this collection. Individual plugins
 
 ### GitHub Repo Manager
 
-**Conversational GitHub repository maintenance**: assess and fix repo health
-interactively, with owner approval at every step.
+**Conversational GitHub repository maintenance**: assess and fix repo health interactively, with owner approval at every step.
 
 **Features:**
 
 - Wiki sync: keeps wiki pages in sync with in-repo docs and code
-- Community health: audits and updates CONTRIBUTING, SECURITY, CODE_OF_CONDUCT,
-  issue/PR templates
+- Community health: audits and updates CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue/PR templates
 - PR triage: conflict detection, staleness checks, review summaries
 - Issue triage: labels, assignees, staleness, linked PRs
 - Release health: unreleased commits, changelog drift, draft releases
@@ -100,20 +97,17 @@ interactively, with owner approval at every step.
 /plugin install github-repo-manager@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/github-repo-manager/README.md](plugins/github-repo-manager/README.md)
+**Learn more:** [plugins/github-repo-manager/README.md](plugins/github-repo-manager/README.md)
 
 ---
 
 ### Home Assistant Dev
 
-**Home Assistant integration development toolkit**: 27 AI skills, an MCP server for live
-HA connections, automated validation, example integrations, and project templates.
+**Home Assistant integration development toolkit**: 27 AI skills, an MCP server for live HA connections, automated validation, example integrations, and project templates.
 
 **Features:**
 
-- 27 context-aware skills covering architecture, config flows, coordinators, entities,
-  testing, and more
+- 27 context-aware skills covering architecture, config flows, coordinators, entities, testing, and more
 - 3 specialized agents (development, review, debugging)
 - MCP server with 12 tools for live HA connection and documentation search
 - 5 validation scripts with PostToolUse hook enforcement
@@ -127,21 +121,18 @@ HA connections, automated validation, example integrations, and project template
 /plugin install home-assistant-dev@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
+**Learn more:** [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
 
 ---
 
 ### Plugin Test Harness
 
-**Iterative plugin testing framework**: generates tests, records pass/fail results,
-applies source fixes, reloads the target plugin, and retests until convergence.
+**Iterative plugin testing framework**: generates tests, records pass/fail results, applies source fixes, reloads the target plugin, and retests until convergence.
 
 **Features:**
 
 - Auto-generates tests from plugin source and schema introspection
-- Test/fix/reload loop with convergence tracking (improving, plateau, oscillating,
-  diverging)
+- Test/fix/reload loop with convergence tracking (improving, plateau, oscillating, diverging)
 - Dedicated git branch per session for a complete audit trail of fixes
 - Sessions persist to disk and can be resumed after interruption
 - Native MCP client for MCP-mode plugins; source analysis for hook/command plugins
@@ -153,15 +144,13 @@ applies source fixes, reloads the target plugin, and retests until convergence.
 /plugin install plugin-test-harness@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/plugin-test-harness/README.md](plugins/plugin-test-harness/README.md)
+**Learn more:** [plugins/plugin-test-harness/README.md](plugins/plugin-test-harness/README.md)
 
 ---
 
 ### Release Pipeline
 
-**Autonomous release pipeline**: quick merge or full semver release with parallel
-pre-flight checks, changelog generation, and GitHub release creation.
+**Autonomous release pipeline**: quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.
 
 **Features:**
 
@@ -185,9 +174,7 @@ pre-flight checks, changelog generation, and GitHub release creation.
 
 ### Repo Hygiene
 
-**Autonomous maintenance sweep**: five parallel mechanical checks plus a semantic
-README pass, with safe corrections applied automatically and destructive changes
-requiring explicit approval.
+**Autonomous maintenance sweep**: five parallel mechanical checks plus a semantic README pass, with safe corrections applied automatically and destructive changes requiring explicit approval.
 
 **Features:**
 
@@ -204,8 +191,7 @@ requiring explicit approval.
 /plugin install repo-hygiene@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/repo-hygiene/README.md](plugins/repo-hygiene/README.md)
+**Learn more:** [plugins/repo-hygiene/README.md](plugins/repo-hygiene/README.md)
 
 ---
 
@@ -228,8 +214,7 @@ requiring explicit approval.
 /plugin install qt-suite@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/qt-suite/README.md](plugins/qt-suite/README.md)
+**Learn more:** [plugins/qt-suite/README.md](plugins/qt-suite/README.md)
 
 ---
 
@@ -251,16 +236,13 @@ requiring explicit approval.
 /plugin install qdev@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/qdev/README.md](plugins/qdev/README.md)
+**Learn more:** [plugins/qdev/README.md](plugins/qdev/README.md)
 
 ---
 
 ### Test Driver
 
-**Proactive testing awareness and gap filling**: always-on testing mindset that suggests
-gap analysis at natural breakpoints, finds missing tests across six categories, and
-iterates through a convergence loop until everything passes.
+**Proactive testing awareness and gap filling**: always-on testing mindset that suggests gap analysis at natural breakpoints, finds missing tests across six categories, and iterates through a convergence loop until everything passes.
 
 **Features:**
 
@@ -276,8 +258,7 @@ iterates through a convergence loop until everything passes.
 /plugin install test-driver@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/test-driver/README.md](plugins/test-driver/README.md)
+**Learn more:** [plugins/test-driver/README.md](plugins/test-driver/README.md)
 
 ---
 
@@ -298,17 +279,13 @@ iterates through a convergence loop until everything passes.
 /plugin install up-docs@l3digitalnet-plugins
 ```
 
-**Learn more:**
-[plugins/up-docs/README.md](plugins/up-docs/README.md)
+**Learn more:** [plugins/up-docs/README.md](plugins/up-docs/README.md)
 
 ---
 
 ## Testing & Validation
 
-The marketplace uses principle-traceable test coverage across all in-scope plugins. See
-[testing/STRATEGY.md](testing/STRATEGY.md) for the canonical frameworks per language (bats
-for bash, pytest for Python, Jest for TypeScript) and the principle → enforcement-layer
-mapping that guides test scope.
+The marketplace uses principle-traceable test coverage across all in-scope plugins. See [testing/STRATEGY.md](testing/STRATEGY.md) for the canonical frameworks per language (bats for bash, pytest for Python, Jest for TypeScript) and the principle → enforcement-layer mapping that guides test scope.
 
 **Quick reference:**
 
@@ -326,14 +303,11 @@ cd plugins/plugin-test-harness && npm ci && npm run build && npm test
 ./scripts/validate-marketplace.sh
 ```
 
-Each plugin's per-plugin plan lives in [`testing/plans/<plugin>.md`](testing/plans/) with
-coverage status and Phase 2 execution logs.
+Each plugin's per-plugin plan lives in [`testing/plans/<plugin>.md`](testing/plans/) with coverage status and Phase 2 execution logs.
 
 ## Plugin Development
 
-This repository also serves as a development workspace for creating new plugins. See
-[CLAUDE.md](CLAUDE.md) for architectural guidance and [docs/](docs/) for the full
-reference.
+This repository also serves as a development workspace for creating new plugins. See [CLAUDE.md](CLAUDE.md) for architectural guidance and [docs/](docs/) for the full reference.
 
 ### Quick Start
 
@@ -347,11 +321,7 @@ reference.
 2. **Add manifest:**
 
    ```json
-   {
-     "name": "my-plugin",
-     "version": "0.1.0",
-     "description": "Plugin description"
-   }
+   { "name": "my-plugin", "version": "0.1.0", "description": "Plugin description" }
    ```
 
 3. **Test locally:**
