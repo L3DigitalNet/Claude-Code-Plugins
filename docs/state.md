@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-05-30 (repo-hygiene v1.4.3 + modernization program brainstorm — paused)
+**Last updated:** 2026-06-03 (qdev web-research D1 — spec + plan complete & audited; execution pending)
 
 ## Session Instructions
 
@@ -10,11 +10,13 @@
 
 ## Active Incidents
 
-- **repo-hygiene modernization — paused mid-brainstorm.** Resume from `docs/plans/2026-05-30-repo-hygiene-modernization-program.md` (§11 process state + §6 Phase 0 scope). Next: spec **Phase 0 (skills migration)**, then `superpowers:writing-plans`. 5-phase plan, locked decisions, research, and the verbatim deep-audit prompt are all in that doc. Indexed in `docs/specs-plans.md`.
+- **qdev web-research D1 — execution-ready (fresh session).** Execute `docs/plans/2026-06-03-qdev-research-reporting-plan.md` (10 TDD tasks: PEP 723 scripts + shared parser + dedup helper + pytest → legacy migration → `qdev-researcher` routing/reporting rewrite → command/doc updates → global `~/.claude/CLAUDE.md` routing reconciliation). Spec + plan each survived 3 Codex audit rounds. CR-001 (systemic bare `subagent_type`) already hotfixed (`68b9185`). D2 (escalating skill) is a later cycle. Indexed in `docs/specs-plans.md`.
+- **repo-hygiene modernization — paused mid-brainstorm.** Resume from `docs/plans/2026-05-30-repo-hygiene-modernization-program.md` (§11 + §6 Phase 0). Next: spec Phase 0 (skills migration), then `superpowers:writing-plans`.
 
-## Recently closed (this session, 2026-05-30)
+## Recently closed (this session, 2026-06-03)
 
-- **repo-hygiene v1.4.3** (`3ca0d10`) — semantic-auditor de-duplicated vs the Step 1 scripts: placeholder + structural-heading checks are now script-owned; cross-ref scoped to table-semantics; em-dash kept. Doc-drift fixed (stale "17 plugins", "4 scripts"→7, "inline AI"→subagent). Tests 40/40.
-- **Modernization program brief** (`7c38d39`) — full brainstorm handoff written to `docs/plans/2026-05-30-repo-hygiene-modernization-program.md` + indexed; see Active Incidents for the resume pointer.
+- **qdev D1 spec + plan** — D1 design (`1b1de91`) + TDD plan (`f4f9f65`), each audited clean over 3 Codex rounds (`92bac34`/`116075f`/`1433723`; `378634c`/`8d43f90`/`3f075d8`). Pass-2 research folded into the brief (`1225594`).
+- **CR-001 hotfix** (`68b9185`) — all four qdev command dispatches qualified to `qdev:qdev-<agent>` (PLUGIN-001; bare names silently no-op).
+- **testing/ drift** (`ee98471`) — dead `testing/STRATEGY.md` / `testing/plans` refs scrubbed from CLAUDE.md + README.md (tree removed in `66b02d4`); remaining refs in architecture.md/conventions.md folded into the D1 plan.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/sessions/<YYYY-MM>.md. -->
