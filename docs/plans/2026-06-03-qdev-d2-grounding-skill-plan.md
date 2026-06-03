@@ -842,6 +842,19 @@ Expected: pass.
   behavioral guardrail + human approval. Over-flagging is preferred to under-
   flagging (egress threat model).
 
+## Plan-review audit ledger
+
+Survived **4 adversarial plan-review rounds (Codex) — loop closed clean (r4: no significant findings)**. All findings verified against repo truth + current external docs, and the sanitizer code was re-run in scratch after each sanitizer change (final: 30 unit tests green).
+
+| Round | Findings | Resolution |
+| --- | --- | --- |
+| r1 | CR-001..005 (2 blocking) | Two-tier sanitizer (all design secret families + customer-id; proprietary code redacted from `safe_query`); dropped false-positive cleanup assertion; behavioral-gate rewording; description "both mention"; stray fence removed; `depth=quick` clarified. |
+| r2 | CR-NEW-001 (blocking) + CR-001/003 partials + CR-NEW-002/003 | `SCRIPTS=${CLAUDE_PLUGIN_ROOT}/scripts` assigned in the gate; current credential variants (`github_pat_`/`ASIA`/`xapp-`/`xwfp-`/presigned cred+token); broadened code/config detector + no-false-positive prose test; added `## Residual risk`; Task 7 artifact policy; shape-valid fake-token smoke. |
+| r3 | CR-001 (last partial) | Broadened GitHub regex to cover the 2026 stateless `ghs_<appid>_<jwt>` shape; added `github_stateless` test; boundary-probe confirmed no over-run. |
+| r4 | none | Clean — loop closed; plan is execution-ready. |
+
+**Carry-forward to implementation validation:** full pytest (55), `validate-marketplace.sh`, and the Task 7 manual suite (D1 prerequisite smoke, trigger matrix, fake-token egress smoke, persist-gate reject/approve, `allowed-tools` resolution).
+
 ## Notes for the executor
 
 - **Worktree:** if executing via subagents, create an isolated worktree first (`superpowers:using-git-worktrees`).

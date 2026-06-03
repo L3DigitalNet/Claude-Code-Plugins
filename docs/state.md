@@ -10,7 +10,7 @@
 
 ## Active Incidents
 
-- **qdev D2 (grounding skill) — execution-ready; not started.** Spec `docs/plans/2026-06-03-qdev-d2-grounding-skill-design.md` (audited clean r1–r3) + TDD plan `docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md` (commit `e6510c9`). Resume: execute the 7-task plan via `superpowers:subagent-driven-development`. Builds `sanitize_query.py` + the `research-grounding` skill; reuses D1 unchanged. **D1 manual smoke (below) is a prerequisite** (D2 medium path = that dispatch).
+- **qdev D2 (grounding skill) — execution-ready; not started.** Spec (design audit r1–r3 clean) + TDD plan `docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md` — **plan-audit r1–r4 clean** (latest `fa75815`; ledger in plan). Resume: execute the 7-task plan via `superpowers:subagent-driven-development`. Builds `sanitize_query.py` (31 pytest) + the `research-grounding` skill; reuses D1 unchanged. **D1 manual smoke (below) is a prerequisite** (D2 medium path = that dispatch).
 - **qdev web-research D1 — implemented; manual plugin smoke pending.** Commits `8635076`..`a50ca7b` delivered research-KB scripts/tests, migrated report/index, `qdev-researcher` routing/reporting cycle, command/docs, and global routing. Automated acceptance passed. Remaining: in plugin-loaded Claude, run `/qdev:research <topic>` and confirm dispatch + report/index/dedup behavior.
 - **repo-hygiene modernization — paused mid-brainstorm.** Resume from `docs/plans/2026-05-30-repo-hygiene-modernization-program.md` (§11 + §6 Phase 0). Next: spec Phase 0 (skills migration), then `superpowers:writing-plans`.
 
