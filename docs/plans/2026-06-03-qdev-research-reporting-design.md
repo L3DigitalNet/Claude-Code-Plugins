@@ -1,6 +1,6 @@
 # qdev Research Reporting Cycle + Routing Refinement (D1) — Design
 
-**Status:** Design approved; **revised after spec-review audit round 1** (findings SA-001…SA-004 verified + addressed — see §14) — ready for `superpowers:writing-plans`.
+**Status:** Design approved; **survived 3 adversarial audit rounds — loop closed clean** (SA-001…SA-004 all resolved; see §14) — ready for `superpowers:writing-plans`.
 **Created:** 2026-06-03
 **Owner harness:** Claude Code (Opus)
 **Scope:** Deliverable 1 only. Deliverable 2 (the escalating auto-trigger grounding skill) is a separate spec/plan cycle (§12).
@@ -298,3 +298,5 @@ End-to-end on `/qdev:research <topic>`:
 | SA-003 | Partial → resolved | §9 — the root `testing/` tree was removed in `66b02d4`; stop referencing it. Tests live at `plugins/qdev/tests/` (TEST-001); scope-doc updates target the real surfaces (`architecture.md`, `conventions.md`) and **scrub the dead `testing/STRATEGY.md` references** there. |
 
 **Discovered (pre-existing, beyond D1):** `66b02d4` deleted the entire root `testing/` tree but left dead `testing/STRATEGY.md` / `testing/plans/` references in `CLAUDE.md`, `README.md`, `docs/architecture.md`, and `docs/conventions.md`. D1 scrubs the two scope docs it already edits; the `CLAUDE.md` / `README.md` references are flagged for a separate cleanup (human-facing / global-pointer docs — confirm scope before editing).
+
+**Round 3 (2026-06-03):** clean — no significant findings, no new issues, no regressions; all four findings resolved. **Audit loop closed.** Carry-forward to implementation validation: migrated-frontmatter validity, `uv run` behavior in a clean plugin context, and Context7 tool-name exposure / no-op behavior.
