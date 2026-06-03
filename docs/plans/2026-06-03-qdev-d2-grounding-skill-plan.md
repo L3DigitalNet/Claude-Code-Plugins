@@ -43,7 +43,7 @@
 
 Design points (§5): pure, deterministic, no network. Pipeline order = collapse tracebacks → remove proprietary code → redact sensitive (secrets + customer data) → strip identifiers. **Two tiers (CR-001):**
 
-- **Sensitive** (every secret family from the design **with current variants** — OpenAI `sk-`, GitHub `ghp_/gho_/ghu_/ghs_/ghr_` **and `github_pat_`**, AWS **`AKIA` and `ASIA`**, Google `AIza`, Slack `xoxb/a/p/r/s-` **and `xapp-`/`xwfp-`**, bearer/JWT, `password=`-style assignments, PEM, presigned-URL params **`X-Amz-Signature`/`X-Amz-Credential`/`X-Amz-Security-Token`** — **plus customer/account identifiers and proprietary code/config excerpts**) → **removed from `safe_query` AND flags `requires_human_approval`**. Raw sensitive data is **never emitted, even on approval** (redact-always — matches the global rule "never send proprietary code/customer data to external services"; the skill must supply a generic description when it proceeds).
+- **Sensitive** (every secret family from the design **with current variants** — OpenAI `sk-`, GitHub `ghp_/gho_/ghu_/ghs_/ghr_` (incl. the 2026 stateless `ghs_<appid>_<jwt>` shape) **and `github_pat_`**, AWS **`AKIA` and `ASIA`**, Google `AIza`, Slack `xoxb/a/p/r/s-` **and `xapp-`/`xwfp-`**, bearer/JWT, `password=`-style assignments, PEM, presigned-URL params **`X-Amz-Signature`/`X-Amz-Credential`/`X-Amz-Security-Token`** — **plus customer/account identifiers and proprietary code/config excerpts**) → **removed from `safe_query` AND flags `requires_human_approval`**. Raw sensitive data is **never emitted, even on approval** (redact-always — matches the global rule "never send proprietary code/customer data to external services"; the skill must supply a generic description when it proceeds).
 - **Identifiers** (home/repo paths, internal hostnames, Tailscale IPs, emails) → stripped silently, do **not** flag.
 
 **Code-excerpt detector — documented limitation (CR-001):** it flags multi-line (≥6) blocks that are punctuation-dense OR lead with code keywords (`def`/`class`/`import`/`return`/…) OR look like `key: value` config. This catches typical pasted Python/YAML/config blocks; it does **not** claim to catch every disguised single-line or prose-shaped snippet — those rely on the behavioral guardrail + the human-approval gate. Erring toward over-flagging is intentional (egress threat model); a normal multi-line prose query is guarded by a no-false-positive test.
@@ -68,9 +68,10 @@ def _egress(r):
 # All values are FAKE / non-live, shape-valid so they match the production regexes.
 
 SECRET_CASES = [
-    ("openai",       "sk-abcdef0123456789ABCDEFGHIJ"),
-    ("github",       "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"),
-    ("github_pat",   "github_pat_11ABCDE0000aBcDeFgHiJ123456"),
+    ("openai",          "sk-abcdef0123456789ABCDEFGHIJ"),
+    ("github",          "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"),
+    ("github_stateless","ghs_123456_eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2QT"),
+    ("github_pat",      "github_pat_11ABCDE0000aBcDeFgHiJ123456"),
     ("aws_akia",     "AKIAIOSFODNN7EXAMPLE"),
     ("aws_asia",     "ASIAIOSFODNN7EXAMPLE"),
     ("google",       "AIza" + "B" * 35),
@@ -240,7 +241,9 @@ _SENSITIVE_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("secret:pem", re.compile(
         r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.DOTALL)),
     ("secret:openai-key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
-    ("secret:github-token", re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}")),   # ghp/gho/ghu/ghs/ghr
+    # ghp/gho/ghu/ghs/ghr — char class includes `_` and `.` so it also matches the
+    # 2026 stateless installation token shape `ghs_<appid>_<jwt.with.dots>` (CR-001)
+    ("secret:github-token", re.compile(r"gh[pousr]_[A-Za-z0-9_.\-]{20,}")),
     ("secret:github-pat", re.compile(r"github_pat_[A-Za-z0-9_]{20,}")),   # fine-grained PAT
     ("secret:aws-access-key", re.compile(r"A(?:KIA|SIA)[0-9A-Z]{16}")),   # AKIA + ASIA (temp)
     ("secret:google-key", re.compile(r"AIza[0-9A-Za-z_\-]{35}")),
@@ -360,7 +363,7 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_sanitize_query.py -v`
-Expected: PASS — 29 passed (16 secret-family params + PEM + 4 identifier params + traceback + 3 code/config-excerpt + clean + short-prose + flagged-no-provider + labels)
+Expected: PASS — 30 passed (17 secret-family params + PEM + 4 identifier params + traceback + 3 code/config-excerpt + clean + short-prose + flagged-no-provider + labels)
 
 - [ ] **Step 5: Commit**
 
@@ -421,7 +424,7 @@ Expected: PASS — 1 passed (exercises `uv run sanitize_query.py < tmpfile`)
 - [ ] **Step 3: Run the whole qdev suite**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q`
-Expected: PASS — 54 passed (24 D1 + 30 D2 sanitizer)
+Expected: PASS — 55 passed (24 D1 + 31 D2 sanitizer)
 
 - [ ] **Step 4: Commit**
 
@@ -749,7 +752,7 @@ Add under `[Unreleased]` in `plugins/qdev/CHANGELOG.md`:
 
 - [ ] **Step 2: conventions.md TEST-001 — bump qdev count**
 
-In `docs/conventions.md` TEST-001, update qdev's pytest count to include the sanitizer tests. Get the exact number: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q | tail -1` (expect 54), and write "qdev: 54 pytest".
+In `docs/conventions.md` TEST-001, update qdev's pytest count to include the sanitizer tests. Get the exact number: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q | tail -1` (expect 55), and write "qdev: 55 pytest".
 
 - [ ] **Step 3: architecture.md — qdev gains a skill + first auto-trigger**
 
@@ -760,7 +763,7 @@ In `docs/architecture.md`, update the qdev description to note it now ships a sk
 This row was added when the plan was committed; confirm it is present in `docs/specs-plans.md` (add it under the D2 design row only if missing):
 
 ```markdown
-| 2026-06-03 | [`docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md`](plans/2026-06-03-qdev-d2-grounding-skill-plan.md) | Active — execution-ready | D2 implementation plan: `sanitize_query.py` + 30 pytest, the `research-grounding` skill (SKILL.md + reference), README P2 reword + manifest/marketplace descriptions, repo-doc updates. |
+| 2026-06-03 | [`docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md`](plans/2026-06-03-qdev-d2-grounding-skill-plan.md) | Active — execution-ready | D2 implementation plan: `sanitize_query.py` + 31 pytest, the `research-grounding` skill (SKILL.md + reference), README P2 reword + manifest/marketplace descriptions, repo-doc updates. |
 ```
 
 - [ ] **Step 5: Verify no stale testing refs**
@@ -798,7 +801,7 @@ git commit -m "docs(qdev): record D2 grounding skill + sanitizer in repo docs"
 - [ ] **Full qdev test suite**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q`
-Expected: PASS — 54 passed (24 D1 + 30 D2).
+Expected: PASS — 55 passed (24 D1 + 31 D2).
 
 - [ ] **Sanitizer CLI transport (real path)**
 
