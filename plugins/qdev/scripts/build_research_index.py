@@ -1,0 +1,94 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6.0.2"]
+# ///
+"""Regenerate docs/research/index.md from report frontmatter.
+
+Scans the TOP-LEVEL <research-dir>/*.md reports (non-recursive), reads each
+report's project-standards `research` frontmatter, and rewrites index.md
+(doc_type: index) as a table sorted by `created` desc. Regenerate-only - it
+never appends, so the index cannot drift from the reports.
+
+The index's own created/updated derive from report content (min/max), so
+re-running with unchanged reports yields an identical file (idempotent).
+
+Usage: uv run build_research_index.py <research-dir>      # e.g. docs/research
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import yaml
+
+from _frontmatter import read_frontmatter
+
+INDEX_NAME = "index.md"
+_COLUMNS = ("id", "title", "created", "updated", "status", "confidence", "tags", "related")
+
+
+def collect_reports(research_dir: Path) -> list[dict]:
+    """Frontmatter of every top-level research report, sorted by created desc."""
+    rows: list[dict] = []
+    for md in sorted(Path(research_dir).glob("*.md")):
+        if md.name == INDEX_NAME:
+            continue
+        fm = read_frontmatter(md)
+        if fm is None or fm.get("doc_type") != "research":
+            continue
+        rows.append(fm)
+    rows.sort(key=lambda fm: str(fm.get("created", "")), reverse=True)
+    return rows
+
+
+def _cell(value) -> str:
+    if isinstance(value, list):
+        return " ".join(str(v) for v in value)
+    return "" if value is None else str(value)
+
+
+def render_index(rows: list[dict]) -> str:
+    created = min((str(r.get("created", "")) for r in rows), default="")
+    updated = max((str(r.get("updated", "")) for r in rows), default="")
+    fm = {
+        "schema_version": "1.0",
+        "id": "research-index",
+        "title": "Research Index",
+        "description": "Generated index of qdev research reports. Do not edit by hand.",
+        "doc_type": "index",
+        "status": "active",
+        "created": created or "1970-01-01",
+        "updated": updated or "1970-01-01",
+        "tags": ["research", "index"],
+        "aliases": [],
+        "related": [],
+    }
+    header = "---\n" + yaml.safe_dump(fm, sort_keys=False).strip() + "\n---\n"
+    lines = [
+        "",
+        "# Research Index",
+        "",
+        "| " + " | ".join(_COLUMNS) + " |",
+        "| " + " | ".join("---" for _ in _COLUMNS) + " |",
+    ]
+    for r in rows:
+        lines.append("| " + " | ".join(_cell(r.get(c)) for c in _COLUMNS) + " |")
+    return header + "\n".join(lines) + "\n"
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) != 2:
+        print("usage: build_research_index.py <research-dir>", file=sys.stderr)
+        return 2
+    research_dir = Path(argv[1])
+    if not research_dir.is_dir():
+        print(f"not a directory: {research_dir}", file=sys.stderr)
+        return 2
+    rows = collect_reports(research_dir)
+    (research_dir / INDEX_NAME).write_text(render_index(rows), encoding="utf-8")
+    print(f"index: {len(rows)} report(s) -> {research_dir / INDEX_NAME}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))
