@@ -50,7 +50,7 @@ the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-
 
 2. **Dispatch `qdev-researcher`** with the topic.
 
-   Use the `Agent` tool with `subagent_type: qdev-researcher` and a prompt like:
+   Use the `Agent` tool with `subagent_type: qdev:qdev-researcher` and a prompt like:
 
    > Research `<topic>`. Default depth=standard. Run dual-source search, route library queries
    > through Context7, corroborate footguns across 2+ sources, run at most one follow-up pass for
@@ -81,6 +81,6 @@ the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-
 
 3. **Final summary** (emit when a report was produced — skip when Step 1 stopped at "No topic provided."):
 
-   ```
+   ```text
    ✓ Research complete. Report: <path>
    ```

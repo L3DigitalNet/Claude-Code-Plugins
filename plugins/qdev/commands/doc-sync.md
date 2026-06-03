@@ -21,7 +21,7 @@ Enumerating public symbols + reading function bodies + generating docstrings acr
 
 2. Dispatch `qdev-doc-syncer` in **dry-run mode first** so the user can review proposals before any edits.
 
-   Use the `Agent` tool with `subagent_type: qdev-doc-syncer` and a prompt like:
+   Use the `Agent` tool with `subagent_type: qdev:qdev-doc-syncer` and a prompt like:
 
    > Sync inline docs in `<scope>`. Set dry_run=true. Inventory, classify (Missing / Stale / Current / manual-review-needed), and return the proposals table. Do not apply any edits in this run.
 

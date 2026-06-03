@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Fixed
 
 - Corrected the Tavily MCP tool prefix in three agents (`qdev-researcher`, `qdev-quality-reviewer`, `qdev-deps-auditor`): `mcp__tavily__tavily_*` → `mcp__tavily-mcp__tavily_*`. The wrong server key meant the Tavily tools were never granted, so every deep-read/extract silently fell back to `WebFetch` — which returns sparse content on the JS-rendered docs/advisory/issue pages these agents target. The prefix now matches the canonical `tavily-mcp` server key (consistent with the sibling `brave-search` / `serper-search` keys).
+- Qualified the `subagent_type` in all four qdev command dispatches (`/qdev:deps-audit`, `/qdev:doc-sync`, `/qdev:quality-review`, `/qdev:research`): bare `qdev-<agent>` → `qdev:qdev-<agent>`. Per repo convention PLUGIN-001, a bare plugin-agent name is not resolvable from outside the plugin namespace; it fails at runtime with "Agent type not found", and the failure silently no-ops rather than erroring — so each command could dispatch nothing. Same fix class as the earlier up-docs correction.
 
 ## [1.5.0] - 2026-05-08
 

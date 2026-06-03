@@ -21,7 +21,7 @@ The research phase runs dual-source web search (brave + serper) plus Context7 do
 
 2. Dispatch `qdev-quality-reviewer` with the target path.
 
-   Use the `Agent` tool with `subagent_type: qdev-quality-reviewer` and a prompt like:
+   Use the `Agent` tool with `subagent_type: qdev:qdev-quality-reviewer` and a prompt like:
 
    > Review `<target path>`. Auto-detect mode. Run research. Apply auto-fixes. Return the convergence report per your output format. Do not call AskUserQuestion — surface needs-approval findings in the structured output.
 

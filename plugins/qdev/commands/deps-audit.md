@@ -19,7 +19,7 @@ Manifest parsing + per-dep dual-source web research (brave + serper, with tavily
 
 Dispatch `qdev-deps-auditor` with the scope path (default: current working directory). Pass `$ARGUMENTS` as the scope if the user provided one.
 
-Use the `Agent` tool with `subagent_type: qdev-deps-auditor` and a prompt like:
+Use the `Agent` tool with `subagent_type: qdev:qdev-deps-auditor` and a prompt like:
 
 > Audit the dependencies in `<scope path>`. Return the prioritized findings table per your output format. Do not modify any manifest or lockfile.
 
