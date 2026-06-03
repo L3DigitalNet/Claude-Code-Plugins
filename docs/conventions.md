@@ -123,7 +123,7 @@ NOT `subagent_type: "up-docs-propagate-repo"` — returns "Agent type not found"
 ## TEST-001. Canonical test frameworks by language
 
 **Applies when:** implementing unit tests for a plugin.
-**Rule:** Use the canonical framework per language: bats-core for bash scripts, pytest for Python, Jest for TypeScript. See `testing/STRATEGY.md` §3 for rationale and per-language conventions.
+**Rule:** Use the canonical framework per language: bats-core for bash scripts, pytest for Python, Jest for TypeScript. Put tests under the plugin's own `tests/` tree using the naming convention below.
 
 ```md
 Bash:       bats (test files: tests/<script-name>.bats)
@@ -131,11 +131,11 @@ Python:     pytest (test files: tests/test_<module>.py)
 TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 ```
 
-**Why:** Consistency across the marketplace reduces context-switching cost for sessions that work on multiple plugins. Each framework dominates its language (bats = 9 existing bash plugins; pytest = HA and Qt already use it; Jest = HA/MCP and PTH established it for TypeScript). Ad-hoc bash runners are preserved but not extended.
+**Why:** Consistency across the marketplace reduces context-switching cost for sessions that work on multiple plugins. Each framework dominates its language (bats = 9 existing bash plugins; pytest = HA, Qt, up-docs Python, and qdev use it; Jest = HA/MCP and PTH established it for TypeScript). Ad-hoc bash runners are preserved but not extended.
 
 **Sources:**
-- `testing/STRATEGY.md` §3–4 (framework rationale + naming conventions)
-- Existing test coverage (8 in-scope plugins, post-2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then −14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
+- Rule table in this convention (canonical framework + naming conventions)
+- Existing test coverage (9 in-scope plugins, post-qdev research-KB scripts; was 8 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qdev 24 pytest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then −14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
 
 **Related:** TEST-002, DOC-001
 

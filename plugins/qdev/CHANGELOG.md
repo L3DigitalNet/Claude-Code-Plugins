@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- Research reporting cycle: `qdev-researcher` reports now carry project-standards `research` frontmatter; `docs/research/index.md` is regenerated from frontmatter by `scripts/build_research_index.py`; `scripts/validate_research_frontmatter.py` enforces the schema. Dedup updates/links/supersedes prior reports.
+
+### Changed
+
+- `qdev-researcher` routing: Tavily-first recall → Brave cross-check → Serper operators → Tavily extract, with a Context7 docs-vs-web gate (both `query-docs`/`get-library-docs` variants), enforced provider quirks (`gl/hl`, `topic=general`→Brave, `search_depth=basic`), and a fail-soft fallback chain.
+
 ### Fixed
 
 - Corrected the Tavily MCP tool prefix in three agents (`qdev-researcher`, `qdev-quality-reviewer`, `qdev-deps-auditor`): `mcp__tavily__tavily_*` → `mcp__tavily-mcp__tavily_*`. The wrong server key meant the Tavily tools were never granted, so every deep-read/extract silently fell back to `WebFetch` — which returns sparse content on the JS-rendered docs/advisory/issue pages these agents target. The prefix now matches the canonical `tavily-mcp` server key (consistent with the sibling `brave-search` / `serper-search` keys).

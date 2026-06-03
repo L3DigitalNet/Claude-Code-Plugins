@@ -18,16 +18,16 @@
 - **MCP server .mcp.json is flat format, not wrapped:** `{"server-name": {"command": "..."}}` not `{"mcpServers": {"server-name": ...}}`. Incorrect format causes "invalid mcp" errors.
 - **TypeScript plugins must `npm run build`** before testing — plugin install does not run npm/pip automatically.
 - **Release pipeline expects matching versions:** plugin.json version and marketplace.json version must match. Validation catches these mismatches.
-- **Test frameworks standardized:** bash plugins use bats-core, Python plugins use pytest, TypeScript plugins use Jest. See `testing/STRATEGY.md` §3 for canonical layout and rationale. Bats on Fedora 44+ requires `tests/run-bats.sh` wrapper due to gnu env stripping bash function exports (§ TEST-002 in conventions.md).
+- **Test frameworks standardized:** bash plugins use bats-core, Python plugins use pytest, TypeScript plugins use Jest. See `docs/conventions.md` TEST-001 for canonical layout and rationale. Bats on Fedora 44+ requires `tests/run-bats.sh` wrapper due to gnu env stripping bash function exports (TEST-002).
 
 ## Testing Strategy (2026-04-25)
 
 Marketplace-wide principle-traceable test coverage initiative. Phase 1 established canonical frameworks and 15 per-plugin test plans. Phase 2 delivered 232+ test cases across 15 in-scope plugins.
 
 **Quick reference:**
-- Strategic overview: `testing/STRATEGY.md` (enforcement layers: Mechanical / Structural / Behavioral)
-- Per-plugin execution: `testing/plans/<plugin>.md` (Phase 2 execution logs, per-plugin metrics)
-- In scope: 8 plugins (all except qdev — pure-markdown only). Was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
+- Strategic overview: `docs/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
+- Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/sessions/`
+- In scope: 9 plugins with qdev's research-KB scripts (qdev is no longer pure-markdown). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
 - Merge strategy (historical, pre-2026-05-07): 15 `tests/<plugin>` sibling branches off `testing` were used during initial test rollout; testing branch retired. Any remaining `tests/*` branches are integrated by direct cherry-pick to `main`.

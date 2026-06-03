@@ -125,7 +125,7 @@ Invoke at any stage of a development project. Pass a path to target a specific f
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| `qdev-researcher` | Sonnet | Dual-source web research with Context7 routing, footgun corroboration (2+ sources), and a single follow-up pass for thin angles. Persists a structured report under `docs/research/`. |
+| `qdev-researcher` | Sonnet | Tavily-first research with Brave/Serper cross-checks, Context7 docs gating, footgun corroboration (2+ sources), and a single follow-up pass for thin angles. Persists a structured report under `docs/research/`. |
 | `qdev-deps-auditor` | Haiku | Manifest discovery + per-dep CVE/version research via dual-source web search. Read-only. |
 | `qdev-quality-reviewer` | Sonnet | Research-first iterative review with pass loop + oscillation detection. Applies auto-fixes; surfaces needs-approval findings for the command to drive. |
 | `qdev-doc-syncer` | Haiku | Public-symbol inventory + docstring generation matching the codebase's convention. Dry-run and apply modes. |
@@ -145,10 +145,25 @@ inferred from project context and conversation history.
 - Recent changes (breaking changes, ecosystem shifts since the model's cutoff)
 
 **Output:** A structured Markdown report persisted to `docs/research/<YYYY-MM-DD>-<slug>.md`. The
-header includes the canonical path; downstream commands consume the artifact by reading that path
-rather than re-running the sweep.
+file starts with project-standards `research` frontmatter, and the returned header includes the
+canonical path; downstream commands consume the artifact by reading that path rather than re-running
+the sweep.
 
 **Depth tiers:** quick (3-4 queries), standard (6-8, default), thorough (12-15). For library/framework topics, the agent routes documentation queries through Context7 before falling back to web search.
+
+#### Research reporting cycle
+
+`qdev-researcher` treats `docs/research/` as a small knowledge base, not a loose artifact pile.
+Reports carry project-standards `research` frontmatter; `docs/research/index.md` is regenerated from
+that frontmatter by `scripts/build_research_index.py`; `scripts/validate_research_frontmatter.py`
+checks the scoped corpus. Before writing a new report, the agent preflights the index, uses
+`scripts/dedup.py` to choose update vs new-with-related vs supersede, writes/validates the report,
+and regenerates the index.
+
+Routing follows the per-path model: this disposable subagent is the recall engine, so it runs
+Tavily-first (`search_depth=basic`), cross-checks high-value claims with Brave, uses Serper for
+Google-specific operators, and gates library/API documentation through Context7 when freshness does
+not require changelog/CVE/issue search.
 
 #### When to use `/qdev:research` vs other research tools
 
@@ -161,7 +176,8 @@ rather than re-running the sweep.
 | Pull clean Markdown from a known URL | global `extract` skill |
 
 `/qdev:research` is opinionated for development decisions: six fixed angles, footgun corroboration,
-persistence under `docs/research/`. The global `research` skill is broader and free-form.
+frontmatter/index-backed persistence under `docs/research/`. The global `research` skill is broader
+and free-form.
 
 #### Handoff protocol
 
@@ -173,9 +189,8 @@ and commands consume the artifact by referencing that path:
 - `superpowers:brainstorming`: feed the report's Open Questions into the design conversation.
 - `feature-dev:feature-dev`: start architecture work with the report linked from the brief.
 
-Reports are not auto-cleaned; treat `docs/research/` as a session artifact log. Stale reports can
-be removed manually or pruned with `find docs/research -type f -name '*.md' -mtime +90 -delete`
-(restricts deletion to old report files; preserves `.gitkeep`).
+Reports are not auto-cleaned. The dedup cycle updates, relates, or supersedes overlapping research;
+stale reports can still be removed manually when they are no longer useful.
 
 ### `/qdev:quality-review [path]`
 
