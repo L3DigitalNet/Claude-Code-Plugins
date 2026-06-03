@@ -1,12 +1,6 @@
 # qdev Research Reporting Cycle + Routing Refinement (D1) — Design
 
-**Status:** Design approved; **survived 3 adversarial audit rounds — loop closed clean** (SA-001…SA-004 all resolved; see §14) — ready for `superpowers:writing-plans`.
-**Created:** 2026-06-03
-**Owner harness:** Claude Code (Opus)
-**Scope:** Deliverable 1 only. Deliverable 2 (the escalating auto-trigger grounding skill) is a separate spec/plan cycle (§12).
-**Source brief:** [`docs/research/qdev/qdev-expansion-brief.md`](../research/qdev/qdev-expansion-brief.md)
-**Backing research:** `docs/research/qdev/` — `llm-coding-agent-search-tools.md`, `search-mcp-routing-strategy{,-context7}.md`, `qdev-research-backlog-resolution{,-2}.md`.
-**Plugin baseline:** `qdev` v1.5.0; Tavily-prefix fix already on `[Unreleased]` (commit `e49e4de`).
+**Status:** Design approved; **survived 3 adversarial audit rounds — loop closed clean** (SA-001…SA-004 all resolved; see §14) — ready for `superpowers:writing-plans`. **Created:** 2026-06-03 **Owner harness:** Claude Code (Opus) **Scope:** Deliverable 1 only. Deliverable 2 (the escalating auto-trigger grounding skill) is a separate spec/plan cycle (§12). **Source brief:** [`docs/research/qdev/qdev-expansion-brief.md`](../research/qdev/qdev-expansion-brief.md) **Backing research:** `docs/research/qdev/` — `llm-coding-agent-search-tools.md`, `search-mcp-routing-strategy{,-context7}.md`, `qdev-research-backlog-resolution{,-2}.md`. **Plugin baseline:** `qdev` v1.5.0; Tavily-prefix fix already on `[Unreleased]` (commit `e49e4de`).
 
 ---
 
@@ -195,6 +189,7 @@ Context7 → Tavily → Brave → Serper. On a missing/erroring server, degrade 
 Additive change to the **Web search routing** section (keeps the existing table). Proposed insert:
 
 > **Route by where the result lands (context has a lifetime):**
+>
 > - **Result enters _this_ (main) context** → Brave-first (`brave_web_search`; `brave_llm_context` for token-bounded grounding); corroborate with a 2nd source before acting.
 > - **Research delegated to a disposable subagent** → Tavily-first for recall (`tavily_search` → `tavily_extract`), cross-check Brave, Serper for Google-only operators.
 > - **Named library/API/SDK/CLI docs** → Context7 first; bypass to search for latest-version/changelog/CVE/issue/maintainer-status.

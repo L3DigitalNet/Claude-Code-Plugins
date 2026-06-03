@@ -45,6 +45,7 @@
 ## Task 0: Scaffold tests dir + vendor the schema
 
 **Files:**
+
 - Create: `plugins/qdev/scripts/markdown-frontmatter.schema.json`
 - Create: `plugins/qdev/tests/requirements.txt`
 - Create: `plugins/qdev/tests/conftest.py`
@@ -66,11 +67,7 @@ Create `plugins/qdev/scripts/README.md`:
 ```markdown
 # qdev research-KB scripts
 
-`markdown-frontmatter.schema.json` is a **vendored copy** of the canonical
-schema at `L3DigitalNet/project-standards:schemas/markdown-frontmatter.schema.json`.
-It is a dated snapshot (copied 2026-06-03); re-sync from upstream when the
-standard changes. Vendored to avoid a cross-repo path dependency when qdev
-runs in arbitrary consuming projects.
+`markdown-frontmatter.schema.json` is a **vendored copy** of the canonical schema at `L3DigitalNet/project-standards:schemas/markdown-frontmatter.schema.json`. It is a dated snapshot (copied 2026-06-03); re-sync from upstream when the standard changes. Vendored to avoid a cross-repo path dependency when qdev runs in arbitrary consuming projects.
 
 Scripts are PEP 723 inline-metadata scripts; run them with `uv run <script>.py`.
 ```
@@ -101,8 +98,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 - [ ] **Step 5: Verify the vendored schema is valid JSON**
 
-Run: `python3 -c "import json; json.load(open('plugins/qdev/scripts/markdown-frontmatter.schema.json'))" && echo OK`
-Expected: `OK`
+Run: `python3 -c "import json; json.load(open('plugins/qdev/scripts/markdown-frontmatter.schema.json'))" && echo OK` Expected: `OK`
 
 - [ ] **Step 6: Commit**
 
@@ -116,6 +112,7 @@ git commit -m "test(qdev): scaffold research-KB tests dir + vendor frontmatter s
 ## Task 1: Shared frontmatter parser (`_frontmatter.py`)
 
 **Files:**
+
 - Create: `plugins/qdev/scripts/_frontmatter.py`
 - Test: `plugins/qdev/tests/test_frontmatter.py`
 
@@ -156,8 +153,7 @@ def test_unquoted_dates_coerced_to_iso_strings():
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_frontmatter.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named '_frontmatter'`
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_frontmatter.py -v` Expected: FAIL — `ModuleNotFoundError: No module named '_frontmatter'`
 
 - [ ] **Step 3: Implement the parser**
 
@@ -217,8 +213,7 @@ def read_frontmatter(path: Path) -> dict | None:
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_frontmatter.py -v`
-Expected: PASS — 5 passed
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_frontmatter.py -v` Expected: PASS — 5 passed
 
 - [ ] **Step 5: Commit**
 
@@ -232,6 +227,7 @@ git commit -m "feat(qdev): add shared frontmatter parser for research-KB scripts
 ## Task 2: Index generator (`build_research_index.py`)
 
 **Files:**
+
 - Create: `plugins/qdev/scripts/build_research_index.py`
 - Test: `plugins/qdev/tests/test_build_research_index.py`
 
@@ -306,8 +302,7 @@ def test_regeneration_is_idempotent(tmp_path):
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_build_research_index.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named 'build_research_index'`
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_build_research_index.py -v` Expected: FAIL — `ModuleNotFoundError: No module named 'build_research_index'`
 
 - [ ] **Step 3: Implement the generator**
 
@@ -408,8 +403,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_build_research_index.py -v`
-Expected: PASS — 4 passed
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_build_research_index.py -v` Expected: PASS — 4 passed
 
 - [ ] **Step 5: Commit**
 
@@ -423,6 +417,7 @@ git commit -m "feat(qdev): add regenerable research-index generator"
 ## Task 3: Frontmatter validator (`validate_research_frontmatter.py`)
 
 **Files:**
+
 - Create: `plugins/qdev/scripts/validate_research_frontmatter.py`
 - Test: `plugins/qdev/tests/test_validate_research_frontmatter.py`
 
@@ -516,8 +511,7 @@ def test_missing_file_reports_error(tmp_path):
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest test_validate_research_frontmatter.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named 'validate_research_frontmatter'`
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest test_validate_research_frontmatter.py -v` Expected: FAIL — `ModuleNotFoundError: No module named 'validate_research_frontmatter'`
 
 - [ ] **Step 3: Implement the validator**
 
@@ -598,13 +592,11 @@ if __name__ == "__main__":
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest test_validate_research_frontmatter.py -v`
-Expected: PASS — 9 passed
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest test_validate_research_frontmatter.py -v` Expected: PASS — 9 passed
 
 - [ ] **Step 5: Run the whole qdev suite so far**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v`
-Expected: PASS — 18 passed (5 parser + 4 generator + 9 validator; dedup added in Task 3b)
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v` Expected: PASS — 18 passed (5 parser + 4 generator + 9 validator; dedup added in Task 3b)
 
 - [ ] **Step 6: Commit**
 
@@ -618,6 +610,7 @@ git commit -m "feat(qdev): add scoped research-frontmatter validator"
 ## Task 3b: Deterministic dedup decision helper (CR-002)
 
 **Files:**
+
 - Create: `plugins/qdev/scripts/dedup.py`
 - Test: `plugins/qdev/tests/test_dedup.py`
 
@@ -669,8 +662,7 @@ def test_old_not_fast_not_different_falls_back_to_new_related():
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named 'dedup'`
+Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v` Expected: FAIL — `ModuleNotFoundError: No module named 'dedup'`
 
 - [ ] **Step 3: Implement the decision helper**
 
@@ -736,22 +728,17 @@ if __name__ == "__main__":
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v`
-Expected: PASS — 6 passed
+Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v` Expected: PASS — 6 passed
 
 - [ ] **Step 4b: Validate the CLI path (CR-NEW-001)**
 
-The agent invokes the helper via `uv run`, not the import path the tests use, so
-exercise the real entry point — this also confirms the PEP 723 metadata (with the
-required `dependencies = []`) is accepted:
+The agent invokes the helper via `uv run`, not the import path the tests use, so exercise the real entry point — this also confirms the PEP 723 metadata (with the required `dependencies = []`) is accepted:
 
-Run: `uv run plugins/qdev/scripts/dedup.py --matched 3 --months-old 9 --fast-moving --replaces`
-Expected: `{"action": "new", "related": true, "supersede": true}`
+Run: `uv run plugins/qdev/scripts/dedup.py --matched 3 --months-old 9 --fast-moving --replaces` Expected: `{"action": "new", "related": true, "supersede": true}`
 
 - [ ] **Step 5: Run the whole qdev suite**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v`
-Expected: PASS — 24 passed (5 parser + 4 generator + 9 validator + 6 dedup)
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v` Expected: PASS — 24 passed (5 parser + 4 generator + 9 validator + 6 dedup)
 
 - [ ] **Step 6: Commit**
 
@@ -765,12 +752,12 @@ git commit -m "feat(qdev): deterministic dedup decision helper with per-branch t
 ## Task 4: Migrate the legacy report (§4.4)
 
 **Files:**
+
 - Modify: `docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md:1`
 
 - [ ] **Step 1: Read the report's first heading + intro**
 
-Run: `head -5 docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md`
-Use the heading/intro to fill `title` and `description` below.
+Run: `head -5 docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md` Use the heading/intro to fill `title` and `description` below.
 
 - [ ] **Step 2: Prepend the `research` frontmatter block**
 
@@ -778,16 +765,16 @@ Insert at the very top of the file (before the existing `#` heading), filling `t
 
 ```yaml
 ---
-schema_version: "1.0"
-id: "2026-05-08-up-docs-plugin-security-eval-infrastructure"
-title: "Plugin-Shipped Security/Eval Infrastructure for Claude Code Plugins"
-description: "Research backing the up-docs hardening plan v2: plugin-shipped security and eval infrastructure primitives."
-doc_type: "research"
-status: "active"
-created: "2026-05-08"
-updated: "2026-06-03"
+schema_version: '1.0'
+id: '2026-05-08-up-docs-plugin-security-eval-infrastructure'
+title: 'Plugin-Shipped Security/Eval Infrastructure for Claude Code Plugins'
+description: 'Research backing the up-docs hardening plan v2: plugin-shipped security and eval infrastructure primitives.'
+doc_type: 'research'
+status: 'active'
+created: '2026-05-08'
+updated: '2026-06-03'
 reviewed: null
-owner: ""
+owner: ''
 tags:
   - claude-code
   - plugins
@@ -797,26 +784,23 @@ aliases:
   - up-docs-security-eval
 related: []
 source: []
-confidence: "high"
-visibility: "internal"
+confidence: 'high'
+visibility: 'internal'
 license: null
 ---
 ```
 
 - [ ] **Step 3: Validate the migrated report**
 
-Run: `uv run plugins/qdev/scripts/validate_research_frontmatter.py docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md`
-Expected: `ok: 1 file(s) valid`
+Run: `uv run plugins/qdev/scripts/validate_research_frontmatter.py docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md` Expected: `ok: 1 file(s) valid`
 
 - [ ] **Step 4: Generate the index and confirm the report appears**
 
-Run: `uv run plugins/qdev/scripts/build_research_index.py docs/research && grep -c "up-docs-plugin-security-eval-infrastructure" docs/research/index.md`
-Expected: `index: 1 report(s) -> docs/research/index.md` then `1`
+Run: `uv run plugins/qdev/scripts/build_research_index.py docs/research && grep -c "up-docs-plugin-security-eval-infrastructure" docs/research/index.md` Expected: `index: 1 report(s) -> docs/research/index.md` then `1`
 
 - [ ] **Step 5: Validate the generated index too**
 
-Run: `uv run plugins/qdev/scripts/validate_research_frontmatter.py docs/research/index.md`
-Expected: `ok: 1 file(s) valid`
+Run: `uv run plugins/qdev/scripts/validate_research_frontmatter.py docs/research/index.md` Expected: `ok: 1 file(s) valid`
 
 - [ ] **Step 6: Commit**
 
@@ -830,6 +814,7 @@ git commit -m "docs(qdev): migrate legacy research report to project-standards f
 ## Task 5: Refine `qdev-researcher` (routing + reporting + guardrails)
 
 **Files:**
+
 - Modify: `plugins/qdev/agents/qdev-researcher.md`
 
 This is a prose/agent-definition change; verification is structural (grep + validator), with end-to-end behavior deferred to the acceptance task.
@@ -853,13 +838,7 @@ tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__se
 Replace task step 5 (`**Execute search.** For each query, run BOTH ...`) with:
 
 ```markdown
-5. **Execute search (per-path: this agent is the recall engine).** Route Tavily-first:
-   `mcp__tavily-mcp__tavily_search` (the primary recall pass; `search_depth=basic`,
-   `advanced` for high-stakes — never `fast`, which returns empty) → cross-check the
-   top claims with `mcp__brave-search__brave_web_search` → use
-   `mcp__serper-search__google_search` only for Google-specific operators (`site:`,
-   `filetype:`), always passing `gl: us, hl: en`. `tavily_search`'s `topic` is
-   `general`-only in the MCP schema; route news/finance angles to Brave instead.
+5. **Execute search (per-path: this agent is the recall engine).** Route Tavily-first: `mcp__tavily-mcp__tavily_search` (the primary recall pass; `search_depth=basic`, `advanced` for high-stakes — never `fast`, which returns empty) → cross-check the top claims with `mcp__brave-search__brave_web_search` → use `mcp__serper-search__google_search` only for Google-specific operators (`site:`, `filetype:`), always passing `gl: us, hl: en`. `tavily_search`'s `topic` is `general`-only in the MCP schema; route news/finance angles to Brave instead.
 ```
 
 - [ ] **Step 3: Add the Context7 gate + scoring + version pinning (§6.2)**
@@ -867,22 +846,9 @@ Replace task step 5 (`**Execute search.** For each query, run BOTH ...`) with:
 Replace task step 3 (`**Library route (when applicable).** ...`) with:
 
 ```markdown
-3. **Library route — Context7 docs-vs-web gate (when applicable).** Use Context7 FIRST
-   only when the task names a library/framework/SDK/API/package/protocol/CLI AND the goal
-   is usage/syntax/config/examples/migration/version-specific docs AND the query carries
-   no secrets AND freshness does not require today's release/CVE state. **Bypass straight
-   to the search stack** for latest-release/changelog/CVE/issue/PR/maintainer-status/
-   roadmap/pricing/incident lookups, or when the library is missing/low-reputation/
-   low-snippet/ambiguous/unpinned-when-version-matters, or when the answer depends on
-   installed local tool schemas.
-   - Resolve with `mcp__plugin_context7_context7__resolve-library-id`. Context7 usually
-     returns SEVERAL candidates — **never take the first match**; score by exact-name ·
-     official-vs-community · reputation · snippet-count · benchmark-score · version-match ·
-     task-fit. When the project pins a version, prefer a version-pinned ID
-     (e.g. `/vercel/next.js/v15.1.8`) over "latest".
-   - Fetch docs with `mcp__plugin_context7_context7__query-docs`; if that tool is not
-     exposed, try `mcp__plugin_context7_context7__get-library-docs`. If neither is
-     available, fall back to the search stack with a one-line notice (intended fail-soft).
+3. **Library route — Context7 docs-vs-web gate (when applicable).** Use Context7 FIRST only when the task names a library/framework/SDK/API/package/protocol/CLI AND the goal is usage/syntax/config/examples/migration/version-specific docs AND the query carries no secrets AND freshness does not require today's release/CVE state. **Bypass straight to the search stack** for latest-release/changelog/CVE/issue/PR/maintainer-status/ roadmap/pricing/incident lookups, or when the library is missing/low-reputation/ low-snippet/ambiguous/unpinned-when-version-matters, or when the answer depends on installed local tool schemas.
+   - Resolve with `mcp__plugin_context7_context7__resolve-library-id`. Context7 usually returns SEVERAL candidates — **never take the first match**; score by exact-name · official-vs-community · reputation · snippet-count · benchmark-score · version-match · task-fit. When the project pins a version, prefer a version-pinned ID (e.g. `/vercel/next.js/v15.1.8`) over "latest".
+   - Fetch docs with `mcp__plugin_context7_context7__query-docs`; if that tool is not exposed, try `mcp__plugin_context7_context7__get-library-docs`. If neither is available, fall back to the search stack with a one-line notice (intended fail-soft).
 ```
 
 - [ ] **Step 4: Add the fail-soft fallback guardrail (§6.4) + egress/injection (§7)**
@@ -890,15 +856,9 @@ Replace task step 3 (`**Library route (when applicable).** ...`) with:
 In `<guardrails>`, add these bullets:
 
 ```markdown
-- **Fail-soft fallback chain.** Context7 → Tavily → Brave → Serper. On a missing/erroring
-  server, degrade to the next with a one-line notice — never fail silently.
-- **Query egress (sanitize before sending).** Every external/Context7 query leaves the
-  machine. Never send secrets, tokens, credentials, proprietary code, customer data, or
-  internal hostnames/paths — reduce to a generic task description. Per-provider risk: Brave
-  lowest (only with enterprise ZDR), Context7 medium, Tavily/Serper high.
-- **Source-graded confidence.** Set the report's frontmatter `confidence` from corroboration
-  strength: `high` = 2+ independent or official sources with few `[unverified]` items;
-  `medium` = mixed; `low` = single-source-heavy or several `[unverified]`/open items.
+- **Fail-soft fallback chain.** Context7 → Tavily → Brave → Serper. On a missing/erroring server, degrade to the next with a one-line notice — never fail silently.
+- **Query egress (sanitize before sending).** Every external/Context7 query leaves the machine. Never send secrets, tokens, credentials, proprietary code, customer data, or internal hostnames/paths — reduce to a generic task description. Per-provider risk: Brave lowest (only with enterprise ZDR), Context7 medium, Tavily/Serper high.
+- **Source-graded confidence.** Set the report's frontmatter `confidence` from corroboration strength: `high` = 2+ independent or official sources with few `[unverified]` items; `medium` = mixed; `low` = single-source-heavy or several `[unverified]`/open items.
 ```
 
 (The existing corroboration, source-grading, prompt-injection, and Tavily `fast` guardrails stay.)
@@ -908,46 +868,22 @@ In `<guardrails>`, add these bullets:
 `$SCRIPTS` below is the absolute scripts dir the orchestrator passes in (Task 6 Step 2); fall back to `${CLAUDE_PLUGIN_ROOT}/scripts` if unset. Replace task step 10 (`**Persist.** Write the report to ...`) with:
 
 ```markdown
-10. **Persist with the reporting cycle.**
-    a. **Preflight the index (ordering, §4.4):** if `docs/research/index.md` is absent or
-       stale, regenerate it first so existing reports are visible to dedup:
-       `uv run "$SCRIPTS/build_research_index.py" docs/research`
-    b. **Dedup (§4.2):** derive 3–5 keyword tags; match `index.md` rows by tags ∪ aliases ∪
-       title overlap to find the best-matching prior report. Compute its facts (matched-tag
-       count, age in months, fast-moving?, different angle?, fully-replaces?) and get the
-       deterministic action from the helper:
-       `uv run "$SCRIPTS/dedup.py" --matched <N> --months-old <M> [--fast-moving] [--different-angle] [--replaces]`
-       which prints exactly one of:
-       - `{"action":"update",...}` → bump the existing report's `updated`; append a
-         `## Update: <date>` section (never rewrite prior content).
-       - `{"action":"new","related":true,"supersede":true}` → new report; set
-         `supersedes: [<old-id>]` here and `superseded_by: <new-id>` + `status: superseded`
-         on the old report.
-       - `{"action":"new","related":true,"supersede":false}` → new report; `related: [<old-id>]`.
-       - `{"action":"new","related":false,...}` → new report, no link.
-    c. **Write** the report to `docs/research/<YYYY-MM-DD>-<slug>.md` (slug = kebab topic,
-       ≤60 chars; `id` = the filename stem). Lead the file with the project-standards
-       `research` frontmatter block (all 11 required fields + `source`, `confidence`,
-       `tags`, `aliases`, `related`), then the body, then the `## Sources` table.
-    d. **Self-validate (§5):**
-       `uv run "$SCRIPTS/validate_research_frontmatter.py" docs/research/<file>.md`
-       — fix the block until it passes before continuing.
-    e. **Regenerate the index:**
-       `uv run "$SCRIPTS/build_research_index.py" docs/research`
+10. **Persist with the reporting cycle.** a. **Preflight the index (ordering, §4.4):** if `docs/research/index.md` is absent or stale, regenerate it first so existing reports are visible to dedup: `uv run "$SCRIPTS/build_research_index.py" docs/research` b. **Dedup (§4.2):** derive 3–5 keyword tags; match `index.md` rows by tags ∪ aliases ∪ title overlap to find the best-matching prior report. Compute its facts (matched-tag count, age in months, fast-moving?, different angle?, fully-replaces?) and get the deterministic action from the helper: `uv run "$SCRIPTS/dedup.py" --matched <N> --months-old <M> [--fast-moving] [--different-angle] [--replaces]` which prints exactly one of:
+    - `{"action":"update",...}` → bump the existing report's `updated`; append a `## Update: <date>` section (never rewrite prior content).
+    - `{"action":"new","related":true,"supersede":true}` → new report; set `supersedes: [<old-id>]` here and `superseded_by: <new-id>` + `status: superseded` on the old report.
+    - `{"action":"new","related":true,"supersede":false}` → new report; `related: [<old-id>]`.
+    - `{"action":"new","related":false,...}` → new report, no link. c. **Write** the report to `docs/research/<YYYY-MM-DD>-<slug>.md` (slug = kebab topic, ≤60 chars; `id` = the filename stem). Lead the file with the project-standards `research` frontmatter block (all 11 required fields + `source`, `confidence`, `tags`, `aliases`, `related`), then the body, then the `## Sources` table. d. **Self-validate (§5):** `uv run "$SCRIPTS/validate_research_frontmatter.py" docs/research/<file>.md` — fix the block until it passes before continuing. e. **Regenerate the index:** `uv run "$SCRIPTS/build_research_index.py" docs/research`
 ```
 
 - [ ] **Step 6: Add the frontmatter contract + Sources table to `<output_format>` (§3.1–3.2)**
 
-At the top of the persisted-file format in `<output_format>`, document that the file leads
-with the `research` frontmatter block (the `Mode: research · …` line remains the **returned**
-handoff to the orchestrator, not the persisted first line — §3.4). Add a `## Sources`
-section after the existing sections:
+At the top of the persisted-file format in `<output_format>`, document that the file leads with the `research` frontmatter block (the `Mode: research · …` line remains the **returned** handoff to the orchestrator, not the persisted first line — §3.4). Add a `## Sources` section after the existing sections:
 
 ```markdown
 ## Sources
 
 | URL | Title | Date | Authority |
-|-----|-------|------|-----------|
+| --- | ----- | ---- | --------- |
 ```
 
 - [ ] **Step 7: Verify the edits structurally (one check per required topic)**
@@ -981,13 +917,12 @@ git commit -m "feat(qdev): per-path routing, Context7 gate, reporting cycle + gu
 ## Task 6: Update the `/qdev:research` command (incl. CR-001 dispatch fix)
 
 **Files:**
+
 - Modify: `plugins/qdev/commands/research.md:53`
 
 - [ ] **Step 1: Fix the subagent dispatch to the qualified name (CR-001, blocking)**
 
-Per repo convention PLUGIN-001, a bare `subagent_type` fails at runtime with
-"Agent type not found" and the skill silently no-ops. The shipped command uses
-the bare name. Change it:
+Per repo convention PLUGIN-001, a bare `subagent_type` fails at runtime with "Agent type not found" and the skill silently no-ops. The shipped command uses the bare name. Change it:
 
 ```diff
 - Use the `Agent` tool with `subagent_type: qdev-researcher` and a prompt like:
@@ -996,19 +931,13 @@ the bare name. Change it:
 
 - [ ] **Step 2: Pass an absolute scripts path to the agent**
 
-`${CLAUDE_PLUGIN_ROOT}` is reliably set in the command's context but is NOT
-guaranteed inside the spawned agent's Bash. Have the command resolve it and
-hand the agent an absolute scripts dir. Add to the dispatch prompt:
+`${CLAUDE_PLUGIN_ROOT}` is reliably set in the command's context but is NOT guaranteed inside the spawned agent's Bash. Have the command resolve it and hand the agent an absolute scripts dir. Add to the dispatch prompt:
 
-> The research-KB scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/`. Pass that
-> absolute path to the agent as `SCRIPTS` so it can invoke
-> `uv run "$SCRIPTS/build_research_index.py"`, `"$SCRIPTS/validate_research_frontmatter.py"`,
-> and `"$SCRIPTS/dedup.py"`.
+> The research-KB scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/`. Pass that absolute path to the agent as `SCRIPTS` so it can invoke `uv run "$SCRIPTS/build_research_index.py"`, `"$SCRIPTS/validate_research_frontmatter.py"`, and `"$SCRIPTS/dedup.py"`.
 
 - [ ] **Step 3: Mention the reporting cycle in the dispatch prompt**
 
-Append to the dispatch instruction list:
-`run the reporting cycle (preflight index → dedup → write report with frontmatter → self-validate → regenerate index) and return the structured report per your output format.`
+Append to the dispatch instruction list: `run the reporting cycle (preflight index → dedup → write report with frontmatter → self-validate → regenerate index) and return the structured report per your output format.`
 
 - [ ] **Step 4: Note the index in the final summary**
 
@@ -1042,6 +971,7 @@ git commit -m "fix(qdev): qualified subagent_type + pass scripts path; relay rep
 ## Task 7: Repo docs (architecture, conventions, README, CHANGELOG)
 
 **Files:**
+
 - Modify: `docs/architecture.md:21,28,29`
 - Modify: `docs/conventions.md:126,137`
 - Modify: `plugins/qdev/README.md`
@@ -1067,22 +997,17 @@ Add under `[Unreleased]`:
 
 ```markdown
 ### Added
-- Research reporting cycle: `qdev-researcher` reports now carry project-standards `research`
-  frontmatter; `docs/research/index.md` is regenerated from frontmatter by
-  `scripts/build_research_index.py`; `scripts/validate_research_frontmatter.py` enforces the
-  schema. Dedup updates/links/supersedes prior reports.
+
+- Research reporting cycle: `qdev-researcher` reports now carry project-standards `research` frontmatter; `docs/research/index.md` is regenerated from frontmatter by `scripts/build_research_index.py`; `scripts/validate_research_frontmatter.py` enforces the schema. Dedup updates/links/supersedes prior reports.
 
 ### Changed
-- `qdev-researcher` routing: Tavily-first recall → Brave cross-check → Serper operators →
-  Tavily extract, with a Context7 docs-vs-web gate (both `query-docs`/`get-library-docs`
-  variants), enforced provider quirks (`gl/hl`, `topic=general`→Brave, `search_depth=basic`),
-  and a fail-soft fallback chain.
+
+- `qdev-researcher` routing: Tavily-first recall → Brave cross-check → Serper operators → Tavily extract, with a Context7 docs-vs-web gate (both `query-docs`/`get-library-docs` variants), enforced provider quirks (`gl/hl`, `topic=general`→Brave, `search_depth=basic`), and a fail-soft fallback chain.
 ```
 
 - [ ] **Step 5: Verify no dead testing refs remain in the two edited docs**
 
-Run: `grep -n "testing/STRATEGY\|testing/plans" docs/architecture.md docs/conventions.md || echo "clean"`
-Expected: `clean`
+Run: `grep -n "testing/STRATEGY\|testing/plans" docs/architecture.md docs/conventions.md || echo "clean"` Expected: `clean`
 
 - [ ] **Step 6: Commit**
 
@@ -1096,6 +1021,7 @@ git commit -m "docs(qdev): document reporting cycle; bring qdev into test scope;
 ## Task 8: Global `~/.claude/CLAUDE.md` routing reconciliation (§8 — CONFIRM FIRST)
 
 **Files:**
+
 - Modify: `~/.claude/CLAUDE.md` (external — not in this repo; **not** a repo commit)
 
 - [ ] **Step 1: Show the user the exact proposed wording and get approval**
@@ -1108,8 +1034,7 @@ Add the approved "Route by where the result lands" block to the **Web search rou
 
 - [ ] **Step 3: Verify**
 
-Run: `grep -n "context has a lifetime\|Route by where the result lands" ~/.claude/CLAUDE.md`
-Expected: ≥ 1 match.
+Run: `grep -n "context has a lifetime\|Route by where the result lands" ~/.claude/CLAUDE.md` Expected: ≥ 1 match.
 
 (No repo commit — `~/.claude/CLAUDE.md` is outside this repository.)
 
@@ -1127,14 +1052,11 @@ Expected: ≥ 1 match.
 
 - [ ] **Full qdev test suite**
 
-Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v`
-Expected: PASS — 24 passed (5 parser + 4 generator + 9 validator + 6 dedup).
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v` Expected: PASS — 24 passed (5 parser + 4 generator + 9 validator + 6 dedup).
 
 - [ ] **Dispatch smoke test (CR-001)**
 
-In a plugin-loaded session run `/qdev:research <topic>` and confirm the
-`qdev:qdev-researcher` subagent actually starts — no "Agent type not found",
-no silent no-op.
+In a plugin-loaded session run `/qdev:research <topic>` and confirm the `qdev:qdev-researcher` subagent actually starts — no "Agent type not found", no silent no-op.
 
 - [ ] **Generator idempotency on the real corpus**
 
@@ -1149,8 +1071,7 @@ Expected: `idempotent` (after the first generation is committed).
 
 - [ ] **Validator over the real corpus**
 
-Run: `uv run plugins/qdev/scripts/validate_research_frontmatter.py docs/research/*.md`
-Expected: `ok: N file(s) valid`.
+Run: `uv run plugins/qdev/scripts/validate_research_frontmatter.py docs/research/*.md` Expected: `ok: N file(s) valid`.
 
 - [ ] **End-to-end (manual):** `/qdev:research <topic>` writes a report with valid frontmatter + `## Sources`, regenerates the index, and a repeat/overlapping query exercises a dedup branch (update / new-with-`related` / supersede). A changelog/CVE topic bypasses Context7; a library topic uses it with candidate scoring.
 
