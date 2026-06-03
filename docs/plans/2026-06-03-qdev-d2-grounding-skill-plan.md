@@ -43,8 +43,10 @@
 
 Design points (§5): pure, deterministic, no network. Pipeline order = collapse tracebacks → remove proprietary code → redact sensitive (secrets + customer data) → strip identifiers. **Two tiers (CR-001):**
 
-- **Sensitive** (every secret family from the design — OpenAI/GitHub/AWS/Google/Slack keys, bearer/JWT, `password=`-style assignments, PEM, signed URLs — **plus customer/account identifiers and proprietary code excerpts**) → **removed from `safe_query` AND flags `requires_human_approval`**. Raw sensitive data is **never emitted, even on approval** (redact-always — matches the global rule "never send proprietary code/customer data to external services"; the skill must supply a generic description when it proceeds).
+- **Sensitive** (every secret family from the design **with current variants** — OpenAI `sk-`, GitHub `ghp_/gho_/ghu_/ghs_/ghr_` **and `github_pat_`**, AWS **`AKIA` and `ASIA`**, Google `AIza`, Slack `xoxb/a/p/r/s-` **and `xapp-`/`xwfp-`**, bearer/JWT, `password=`-style assignments, PEM, presigned-URL params **`X-Amz-Signature`/`X-Amz-Credential`/`X-Amz-Security-Token`** — **plus customer/account identifiers and proprietary code/config excerpts**) → **removed from `safe_query` AND flags `requires_human_approval`**. Raw sensitive data is **never emitted, even on approval** (redact-always — matches the global rule "never send proprietary code/customer data to external services"; the skill must supply a generic description when it proceeds).
 - **Identifiers** (home/repo paths, internal hostnames, Tailscale IPs, emails) → stripped silently, do **not** flag.
+
+**Code-excerpt detector — documented limitation (CR-001):** it flags multi-line (≥6) blocks that are punctuation-dense OR lead with code keywords (`def`/`class`/`import`/`return`/…) OR look like `key: value` config. This catches typical pasted Python/YAML/config blocks; it does **not** claim to catch every disguised single-line or prose-shaped snippet — those rely on the behavioral guardrail + the human-approval gate. Erring toward over-flagging is intentional (egress threat model); a normal multi-line prose query is guarded by a no-false-positive test.
 
 `dropped_fields` carries **class labels only, never raw substrings** (SA-002). `provider_allowed` is fail-closed: all `false` when approval is required (D2-8).
 
@@ -62,19 +64,26 @@ def _egress(r):
     return r["safe_query"] + " | " + " | ".join(r["dropped_fields"])
 
 
-# --- sensitive families (every design family): redacted, flag, no leak (CR-001) ---
+# --- sensitive families incl. current variants: redacted, flag, no leak (CR-001) ---
+# All values are FAKE / non-live, shape-valid so they match the production regexes.
 
 SECRET_CASES = [
-    ("openai",      "sk-abcdef0123456789ABCDEFGHIJ"),
-    ("github",      "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"),
-    ("aws",         "AKIAIOSFODNN7EXAMPLE"),
-    ("google",      "AIza" + "B" * 35),
-    ("slack",       "xoxb-123456789012-ABCDEFabcdef"),
-    ("jwt",         "eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2QT4"),
-    ("bearer",      "Bearer s3cr3t.tok3n.v4lue99"),
-    ("assignment",  "password=hunter2swordfish"),
-    ("signed_url",  "https://x.example/o?X-Amz-Signature=SIGVALUEsecret123"),
-    ("customer_id", "customer_id=CUST-99887766"),
+    ("openai",       "sk-abcdef0123456789ABCDEFGHIJ"),
+    ("github",       "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"),
+    ("github_pat",   "github_pat_11ABCDE0000aBcDeFgHiJ123456"),
+    ("aws_akia",     "AKIAIOSFODNN7EXAMPLE"),
+    ("aws_asia",     "ASIAIOSFODNN7EXAMPLE"),
+    ("google",       "AIza" + "B" * 35),
+    ("slack_xoxb",   "xoxb-123456789012-ABCDEFabcdef"),
+    ("slack_xapp",   "xapp-1-A012345678-ABCDEFGHIJ"),
+    ("slack_xwfp",   "xwfp-ABCDEF0123456789abcdef"),
+    ("jwt",          "eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2QT4"),
+    ("bearer",       "Bearer s3cr3t.tok3n.v4lue99"),
+    ("assignment",   "password=hunter2swordfish"),
+    ("signed_sig",   "https://x.example/o?X-Amz-Signature=SIGVALUEsecret123"),
+    ("signed_cred",  "https://x.example/o?X-Amz-Credential=CREDSECRETvalue123"),
+    ("signed_token", "https://x.example/o?X-Amz-Security-Token=TOKENSECRETvalue123"),
+    ("customer_id",  "customer_id=CUST99887766"),
 ]
 
 
@@ -127,9 +136,9 @@ def test_traceback_collapses_to_exception_summary():
     assert "trace:frames" in r["dropped_fields"]
 
 
-# --- proprietary code excerpt: REMOVED from safe_query + flags (CR-001 redact-always) ---
+# --- proprietary code/config excerpts: REMOVED from safe_query + flag (redact-always) ---
 
-def test_code_excerpt_removed_from_safe_query_and_flags():
+def test_dense_code_excerpt_removed_and_flags():
     code = "\n".join(f"x{i} = foo(bar[{i}]);" for i in range(8))
     r = sanitize(f"why is this slow:\n{code}")
     assert r["requires_human_approval"] is True
@@ -137,13 +146,35 @@ def test_code_excerpt_removed_from_safe_query_and_flags():
     assert "foo(bar" not in r["safe_query"]   # raw code never sent, even on approval
 
 
-# --- provider fail-closed (D2-8) ---
+def test_python_keyword_excerpt_removed_and_flags():
+    code = "\n".join(["import os", "from x import y", "def run():", "return z",
+                      "for i in items:", "while True:"])
+    r = sanitize(f"help with this:\n{code}")
+    assert r["requires_human_approval"] is True
+    assert "proprietary:code-excerpt" in r["dropped_fields"]
+    assert "def run" not in r["safe_query"]
+
+
+def test_yaml_config_excerpt_removed_and_flags():
+    cfg = "\n".join(["name: app", "host: db", "port: 5432", "user: admin",
+                     "pool: ten", "mode: prod"])
+    r = sanitize(f"why won't this config load:\n{cfg}")
+    assert r["requires_human_approval"] is True
+    assert "proprietary:code-excerpt" in r["dropped_fields"]
+
+
+# --- provider fail-closed (D2-8) + no false-positive on prose ---
 
 def test_clean_query_all_providers_allowed():
     r = sanitize("current stable version of ruff")
     assert r["requires_human_approval"] is False
     assert r["provider_allowed"] == {"brave": True, "context7": True, "tavily": True, "serper": True}
     assert r["dropped_fields"] == []
+
+
+def test_short_prose_not_flagged_as_code():
+    r = sanitize("what is the latest version of the requests library and is it maintained")
+    assert r["requires_human_approval"] is False
 
 
 def test_flagged_query_no_provider_allowed():
@@ -209,15 +240,18 @@ _SENSITIVE_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("secret:pem", re.compile(
         r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.DOTALL)),
     ("secret:openai-key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
-    ("secret:github-token", re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}")),
-    ("secret:aws-access-key", re.compile(r"AKIA[0-9A-Z]{16}")),
+    ("secret:github-token", re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}")),   # ghp/gho/ghu/ghs/ghr
+    ("secret:github-pat", re.compile(r"github_pat_[A-Za-z0-9_]{20,}")),   # fine-grained PAT
+    ("secret:aws-access-key", re.compile(r"A(?:KIA|SIA)[0-9A-Z]{16}")),   # AKIA + ASIA (temp)
     ("secret:google-key", re.compile(r"AIza[0-9A-Za-z_\-]{35}")),
-    ("secret:slack-token", re.compile(r"xox[baprs]-[0-9A-Za-z-]{10,}")),
+    ("secret:slack-token", re.compile(r"(?:xox[baprs]|xapp|xwfp)-[0-9A-Za-z-]{10,}")),
     ("secret:jwt", re.compile(r"eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+")),
     ("secret:bearer", re.compile(r"(?i)bearer\s+[A-Za-z0-9._\-]{10,}")),
     ("secret:assignment", re.compile(
         r"(?i)(?:password|passwd|api[_-]?key|secret|token)\s*[=:]\s*\S+")),
-    ("secret:signed-url", re.compile(r"(?i)[?&](?:X-Amz-Signature|Signature|sig)=[^&\s]+")),
+    # presigned-URL credential params (signature + credential + session token)
+    ("secret:signed-url", re.compile(
+        r"(?i)[?&](?:X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|Signature|sig)=[^&\s]+")),
     ("customer:identifier", re.compile(
         r"(?i)(?:customer|account|client|acct|user)[_-]?(?:id|no|number|uuid)\s*[=:]\s*\S+")),
 ]
@@ -232,10 +266,18 @@ _IDENTIFIER_PATTERNS: list[tuple[str, re.Pattern]] = [
 ]
 
 _CODE_CHARS = set("{};()=<>")
+_CODE_KEYWORD = re.compile(
+    r"^\s*(?:def|class|import|from|return|if|elif|else|for|while|try|except|with|"
+    r"public|private|protected|func|const|let|var|async|await|package|#include)\b")
+_YAML_KEYISH = re.compile(r"^\s*[\w.\-]+:\s+\S")
 
 
 def _is_code_line(line: str) -> bool:
-    return sum(c in _CODE_CHARS for c in line) >= 2
+    """A line that looks like code/config: punctuation-dense, OR leads with a
+    code keyword, OR is a `key: value` config entry (CR-001 broadening)."""
+    return (sum(c in _CODE_CHARS for c in line) >= 2
+            or bool(_CODE_KEYWORD.search(line))
+            or bool(_YAML_KEYISH.match(line)))
 
 
 def _collapse_tracebacks(text: str) -> tuple[str, bool]:
@@ -318,7 +360,7 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_sanitize_query.py -v`
-Expected: PASS — 20 passed (10 secret-family params + PEM + 4 identifier params + traceback + code-excerpt + 2 provider + labels)
+Expected: PASS — 29 passed (16 secret-family params + PEM + 4 identifier params + traceback + 3 code/config-excerpt + clean + short-prose + flagged-no-provider + labels)
 
 - [ ] **Step 5: Commit**
 
@@ -379,7 +421,7 @@ Expected: PASS — 1 passed (exercises `uv run sanitize_query.py < tmpfile`)
 - [ ] **Step 3: Run the whole qdev suite**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q`
-Expected: PASS — 45 passed (24 D1 + 21 D2 sanitizer)
+Expected: PASS — 54 passed (24 D1 + 30 D2 sanitizer)
 
 - [ ] **Step 4: Commit**
 
@@ -419,7 +461,9 @@ egress verdicts, and the trigger matrix live in
 [`references/detection-and-egress.md`](references/detection-and-egress.md) — read
 it when you need the detail.
 
-`$SCRIPTS` = `${CLAUDE_PLUGIN_ROOT}/scripts`.
+`${CLAUDE_PLUGIN_ROOT}` is the only path variable the runtime guarantees; set
+`SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` in each Bash block that needs it (it is
+**not** auto-exported across separate tool calls).
 
 ## Entry routing
 
@@ -438,9 +482,10 @@ or the medium handoff). Use this cleanup-safe transport — `trap ... EXIT`
 guarantees the secret-bearing tmpfile is removed on success *and* on any failure:
 
 ```bash
+SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"   # the ONLY guaranteed path var (CR-NEW-001)
 tmpfile="$(mktemp)"; chmod 600 "$tmpfile"
 trap 'rm -f "$tmpfile"' EXIT
-printf '%s' "$payload" > "$tmpfile"     # raw payload to file, never to argv
+printf '%s' "$payload" > "$tmpfile"        # raw payload to file, never to argv
 uv run "$SCRIPTS/sanitize_query.py" < "$tmpfile"
 ```
 
@@ -491,7 +536,8 @@ Then read the JSON:
 3. **Dispatch** the `Agent` tool with `subagent_type: qdev:qdev-researcher`
    (qualified name — PLUGIN-001). State `depth=quick` **in the prompt text**
    (`qdev-researcher` reads depth from its instructions — it is not an Agent-tool
-   parameter), and pass the sanitized handoff and `SCRIPTS=$SCRIPTS`. It runs
+   parameter), and pass the sanitized handoff and `SCRIPTS=${CLAUDE_PLUGIN_ROOT}/scripts`
+   (literal, so the spawned agent's Bash gets a concrete path). It runs
    D1's full reporting cycle unchanged.
 4. **Announce** before firing (e.g. `Auto-research: <topic> (escalated after 2
    light rounds)`), return a compact result, hand control back.
@@ -703,7 +749,7 @@ Add under `[Unreleased]` in `plugins/qdev/CHANGELOG.md`:
 
 - [ ] **Step 2: conventions.md TEST-001 — bump qdev count**
 
-In `docs/conventions.md` TEST-001, update qdev's pytest count to include the sanitizer tests. Get the exact number: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q | tail -1` (expect 45), and write "qdev: 45 pytest".
+In `docs/conventions.md` TEST-001, update qdev's pytest count to include the sanitizer tests. Get the exact number: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q | tail -1` (expect 54), and write "qdev: 54 pytest".
 
 - [ ] **Step 3: architecture.md — qdev gains a skill + first auto-trigger**
 
@@ -714,7 +760,7 @@ In `docs/architecture.md`, update the qdev description to note it now ships a sk
 This row was added when the plan was committed; confirm it is present in `docs/specs-plans.md` (add it under the D2 design row only if missing):
 
 ```markdown
-| 2026-06-03 | [`docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md`](plans/2026-06-03-qdev-d2-grounding-skill-plan.md) | Active — execution-ready | D2 implementation plan: `sanitize_query.py` + 21 pytest, the `research-grounding` skill (SKILL.md + reference), README P2 reword + manifest/marketplace descriptions, repo-doc updates. |
+| 2026-06-03 | [`docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md`](plans/2026-06-03-qdev-d2-grounding-skill-plan.md) | Active — execution-ready | D2 implementation plan: `sanitize_query.py` + 30 pytest, the `research-grounding` skill (SKILL.md + reference), README P2 reword + manifest/marketplace descriptions, repo-doc updates. |
 ```
 
 - [ ] **Step 5: Verify no stale testing refs**
@@ -733,15 +779,15 @@ git commit -m "docs(qdev): record D2 grounding skill + sanitizer in repo docs"
 
 ## Task 7: Manual acceptance (run in a plugin-loaded session)
 
-**Files:** none — these are runtime checks (auto-trigger matching + dispatch cannot be unit-tested).
+**Files:** no *source* changes — these are runtime checks (auto-trigger matching + dispatch cannot be unit-tested). **Note (CR-NEW-002):** Step 4's *approve* branch makes `qdev-researcher` write a real report under `docs/research/` + regenerate the index. Decide the artifact policy up front (Step 4) and end the task with `git status --short` so the tree's expected state is explicit — an acceptance run must not silently leave a junk report committed-by-accident.
 
 - [ ] **Step 1: D1 prerequisite smoke** — `/qdev:research <topic>`; confirm the `qdev:qdev-researcher` subagent starts (no "Agent type not found"), writes a report, regenerates the index.
 
 - [ ] **Step 2: Trigger matrix** — run the 15 prompts from `references/detection-and-egress.md`; record fire/no-fire. Expected: A1–A5 fire→medium, C1–C5 fire→light, B1–B5 no fire. Tune the `description` if any row is wrong, then re-run.
 
-- [ ] **Step 3: Egress safety smoke** — a Category-A entry whose context contains a fake token (e.g. `sk-FAKE...`). Confirm the approval prompt appears **before** any `Agent` dispatch or MCP call; confirm the outbound MCP args + argv contain no fake token; confirm reject → no dispatch.
+- [ ] **Step 3: Egress safety smoke** — a Category-A entry whose context contains a **shape-valid fake (non-live)** token that actually matches the sanitizer regex — e.g. `sk-FAKEFAKEFAKEFAKEFAKE0123` (≥20 alnum, no dots), not `sk-FAKE...` which is too short to match and would pass for the wrong reason (CR-NEW-003). Confirm the approval prompt appears **before** any `Agent` dispatch or MCP call; confirm the outbound MCP args + argv contain no fake token; confirm reject → no dispatch.
 
-- [ ] **Step 4: Auto-fired medium persist gate** — trigger an auto medium run; **reject** at the before-dispatch prompt → `git status --short` stays clean (no `docs/research/` write); a second run, **approve** → report + index written.
+- [ ] **Step 4: Auto-fired medium persist gate + artifact policy (CR-NEW-002)** — trigger an auto medium run; **reject** at the before-dispatch prompt → `git status --short` stays clean (no `docs/research/` write). Then a second run, **approve** → report + index written. **Decide the artifact policy:** either (a) use a genuinely useful smoke topic and keep+commit the report (it becomes a real KB entry), or (b) delete the smoke report and regenerate the index (`uv run plugins/qdev/scripts/build_research_index.py docs/research`) to restore a clean tree. End with `git status --short` and record the expected state.
 
 - [ ] **Step 5: `allowed-tools` resolution** — confirm every tool named in `SKILL.md` frontmatter resolves in the plugin-loaded session (no missing-tool errors).
 
@@ -752,7 +798,7 @@ git commit -m "docs(qdev): record D2 grounding skill + sanitizer in repo docs"
 - [ ] **Full qdev test suite**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q`
-Expected: PASS — 45 passed (24 D1 + 21 D2).
+Expected: PASS — 54 passed (24 D1 + 30 D2).
 
 - [ ] **Sanitizer CLI transport (real path)**
 
@@ -775,6 +821,23 @@ Expected: pass.
 - [ ] **Release** (when ready): `/release-pipeline:release` for the qdev version bump + tag + GitHub release (do **not** hand-edit the `version` field).
 
 ---
+
+## Residual risk
+
+- **Egress gate is behavioral, not mechanical (CR-003).** The sanitizer is
+  deterministic, but *invoking* it before each MCP/`Agent` call is a skill
+  instruction — the skill holds those tools directly, so a model lapse could
+  call out without sanitizing. This is the weakest enforcement layer per
+  `docs/architecture.md`. Mitigations: explicit mandatory-gate wording in
+  `SKILL.md`; the fake-token egress smoke (Task 7 Step 3) inspects real outbound
+  args. Accepted for this cycle (matches the design's "skill + sanitizer" scope);
+  a `PreToolUse` hook that mechanically intercepts the skill's outbound calls is
+  the deferred hardening if the behavioral gate proves leaky in practice.
+- **Code/config detection is heuristic (CR-001).** The excerpt detector targets
+  multi-line dense/keyword/config blocks; a cleverly prose-shaped or single-line
+  proprietary snippet can slip past the *mechanical* check and falls back on the
+  behavioral guardrail + human approval. Over-flagging is preferred to under-
+  flagging (egress threat model).
 
 ## Notes for the executor
 
