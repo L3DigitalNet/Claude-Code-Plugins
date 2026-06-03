@@ -679,6 +679,7 @@ Create `plugins/qdev/scripts/dedup.py`:
 ```python
 # /// script
 # requires-python = ">=3.11"
+# dependencies = []
 # ///
 """Deterministic dedup decision for the qdev research KB.
 
@@ -737,6 +738,15 @@ if __name__ == "__main__":
 
 Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v`
 Expected: PASS — 6 passed
+
+- [ ] **Step 4b: Validate the CLI path (CR-NEW-001)**
+
+The agent invokes the helper via `uv run`, not the import path the tests use, so
+exercise the real entry point — this also confirms the PEP 723 metadata (with the
+required `dependencies = []`) is accepted:
+
+Run: `uv run plugins/qdev/scripts/dedup.py --matched 3 --months-old 9 --fast-moving --replaces`
+Expected: `{"action": "new", "related": true, "supersede": true}`
 
 - [ ] **Step 5: Run the whole qdev suite**
 
@@ -1167,4 +1177,10 @@ Expected: `ok: N file(s) valid`.
 
 **Also addressed (review "missing considerations"):** Task 5 Step 7 split into one grep per topic; Task 6 Step 2 passes an absolute `$SCRIPTS` path so the agent does not depend on `${CLAUDE_PLUGIN_ROOT}` in its Bash.
 
-**Carry-forward to verify at execution:** `${CLAUDE_PLUGIN_ROOT}` availability in the agent's Bash (mitigated by passing `$SCRIPTS`); the `get-library-docs` grant is a no-op when unavailable; whether qdev's _other_ commands also need qualified `subagent_type` (out of D1 scope — flag separately).
+**Carry-forward to verify at execution:** `${CLAUDE_PLUGIN_ROOT}` availability in the agent's Bash (mitigated by passing `$SCRIPTS`); the `get-library-docs` grant is a no-op when unavailable. (The "other qdev commands" carry-forward is now closed — all four were hotfixed in `68b9185`.)
+
+**Round 2 (2026-06-03, Codex):** CR-001 / CR-002 / CR-003 confirmed resolved. One new blocking finding, fixed:
+
+| ID | Severity | Resolution |
+| --- | --- | --- |
+| CR-NEW-001 | High | `dedup.py`'s PEP 723 block was missing `dependencies = []`. Verified against the canonical uv docs (`/astral-sh/uv`, `docs/guides/scripts.md`): _"The `dependencies` field must always be provided in the script metadata, even if it is empty."_ Added it (Task 3b Step 3) plus a CLI smoke test exercising `uv run dedup.py` (Task 3b Step 4b), since the pytest suite only imports `decide()` directly. |
