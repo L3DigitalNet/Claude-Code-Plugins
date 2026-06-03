@@ -1,5 +1,12 @@
+import json as _json
+import stat
+import subprocess
+from pathlib import Path
+
 import pytest
 from sanitize_query import sanitize
+
+SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "sanitize_query.py"
 
 
 def _egress(r):
@@ -256,3 +263,24 @@ def test_dropped_fields_are_labels_only():
     for d in r["dropped_fields"]:
         assert ":" in d and "/" not in d and "@" not in d
     assert r["dropped_fields"].count("path:home-dir") == 1
+
+
+def test_cli_stdin_transport_redacts_no_leak(tmp_path):
+    secret = "sk-abcdef0123456789ABCDEFGHIJ"
+    payload = tmp_path / "payload.txt"
+    payload.write_text(f"why does {secret} fail", encoding="utf-8")
+    payload.chmod(0o600)
+    assert stat.S_IMODE(payload.stat().st_mode) == 0o600
+
+    with payload.open("rb") as fh:
+        proc = subprocess.run(
+            ["uv", "run", str(SCRIPT)],
+            stdin=fh,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+    result = _json.loads(proc.stdout)
+    assert secret not in proc.stdout
+    assert result["requires_human_approval"] is True
