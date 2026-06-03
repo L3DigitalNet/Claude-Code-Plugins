@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-03 (qdev D2 — design + plan complete, execution-ready; paused before implementation)
+**Last updated:** 2026-06-03 (qdev D2 implemented; manual matrix pending)
 
 ## Session Instructions
 
@@ -10,13 +10,12 @@
 
 ## Active Incidents
 
-- **qdev D2 (grounding skill) — execution-ready; not started.** Spec (design audit r1–r3 clean) + TDD plan `docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md` — **plan-audit r1–r4 clean** (latest `fa75815`; ledger in plan). Resume: execute the 7-task plan via `superpowers:subagent-driven-development`. Builds `sanitize_query.py` (31 pytest) + the `research-grounding` skill; reuses D1 unchanged. **D1 manual smoke (below) is a prerequisite** (D2 medium path = that dispatch).
-- **qdev web-research D1 — implemented; manual plugin smoke pending.** Commits `8635076`..`a50ca7b` delivered research-KB scripts/tests, migrated report/index, `qdev-researcher` routing/reporting cycle, command/docs, and global routing. Automated acceptance passed. Remaining: in plugin-loaded Claude, run `/qdev:research <topic>` and confirm dispatch + report/index/dedup behavior.
+- **qdev D2 (grounding skill) — implemented; final manual matrix pending.** Commits `f24d690`..`6b9d0b6` added `sanitize_query.py`, 51 sanitizer tests / 75 qdev tests total, `qdev:research-grounding`, reference docs, README/manifest/marketplace docs. Automated acceptance passed: 75 pytest, marketplace, sanitizer CLI no-leak. Plugin smoke: `/qdev:research-grounding` loaded (`LOADED`/`TOOLS-LOADED`); escalated `claude mcp list` connected expected MCP servers. Remaining Task 7: interactive auto-trigger matrix, fake-token approval-before-egress/dispatch, reject/approve persist gate.
+- **qdev web-research D1 — plugin smoke functionally confirmed.** `/qdev:research "pytest parametrization docs plugin smoke 2026"` started `qdev:qdev-researcher`, deduped new, wrote+validated `docs/research/2026-06-03-pytest-parametrize-smoke-plugin-testing.md`, regenerated index; kept in `9550937`. Limitation: noninteractive run hit $1 budget after index regen; MCP permission denials caused WebFetch fallback.
 - **repo-hygiene modernization — paused mid-brainstorm.** Resume from `docs/plans/2026-05-30-repo-hygiene-modernization-program.md` (§11 + §6 Phase 0). Next: spec Phase 0 (skills migration), then `superpowers:writing-plans`.
 
 ## Recently closed (this session, 2026-06-03)
 
-- **qdev D2 design + plan** — spec `94dcaf0`, audited clean over 3 Codex rounds (`3274c31`/`2a06021`/`fd65109`; ledger in design §12); 7-task TDD plan `e6510c9`. Execution-ready (see Active Incidents).
-- **qdev D1** — shipped earlier this session (`8635076`..`a50ca7b`, 24 pytest); manual smoke pending. Detail in `docs/sessions/2026-06.md`.
+- **qdev D2 Tasks 1-6 + repo docs** — implemented; detail in `docs/sessions/2026-06.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/sessions/<YYYY-MM>.md. -->
