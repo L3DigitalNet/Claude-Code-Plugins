@@ -16,11 +16,12 @@ Research a topic, task, or technology before designing or building, by dispatchi
 
 ## Why this is a subagent
 
-The research workflow performs 6-8 queries × 2 search backends × 10 results, plus 3-5 full-page
-Tavily extracts, plus per-library Context7 round-trips. Running it in Opus context burns ~25K
-tokens per sweep on raw search results alone. The Sonnet subagent consolidates research +
-corroboration + synthesis into one dispatch and returns a compact structured report. This matches
-the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-sync`.
+The research workflow performs 6-8 queries through a Tavily-first recall path, Brave/Serper
+cross-checks, 3-5 full-page Tavily extracts, and per-library Context7 round-trips. Running it in
+Opus context burns ~25K tokens per sweep on raw search results alone. The Sonnet subagent
+consolidates research + corroboration + synthesis into one dispatch and returns a compact
+structured report. This matches the v1.3.0 extraction pattern used for `quality-review`,
+`deps-audit`, and `doc-sync`.
 
 ## How to run it
 
@@ -52,10 +53,14 @@ the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-
 
    Use the `Agent` tool with `subagent_type: qdev:qdev-researcher` and a prompt like:
 
-   > Research `<topic>`. Default depth=standard. Run dual-source search, route library queries
-   > through Context7, corroborate footguns across 2+ sources, run at most one follow-up pass for
-   > thin angles, persist the report under `docs/research/`, and return the structured report per
-   > your output format.
+   > Research `<topic>`. Default depth=standard. The research-KB scripts live in
+   > `${CLAUDE_PLUGIN_ROOT}/scripts/`; pass that absolute path to the agent as `SCRIPTS` so it can
+   > invoke `uv run "$SCRIPTS/build_research_index.py"`,
+   > `"$SCRIPTS/validate_research_frontmatter.py"`, and `"$SCRIPTS/dedup.py"`. Run the
+   > Tavily-first search path, route library docs through the Context7 gate, corroborate footguns
+   > across 2+ sources, run at most one follow-up pass for thin angles, run the reporting cycle
+   > (preflight index → dedup → write report with frontmatter → self-validate → regenerate index),
+   > and return the structured report per your output format.
 
    Do **not** run search tools, `find`, or read manifests in this session. The whole point of the
    delegation is to keep raw search results out of the orchestrator context.
@@ -82,5 +87,5 @@ the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-
 3. **Final summary** (emit when a report was produced — skip when Step 1 stopped at "No topic provided."):
 
    ```text
-   ✓ Research complete. Report: <path>
+	   ✓ Research complete. Report: <path>  ·  Index: docs/research/index.md
    ```
