@@ -179,7 +179,7 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 | Layer | What | How |
 | --- | --- | --- |
-| **Deterministic** | `sanitize_query.py` | pytest — one test per pipeline branch (each secret family, identifier strip, stack-trace collapse), both `requires_human_approval` branches, `provider_allowed` ranking, **no-leak assertions** (fake tokens / PEM / signed URLs / paths / hostnames / emails / customer-like ids never appear in `safe_query` *or* `dropped_fields`), stdin handling, malformed-output/fail-closed path, plus a CLI smoke (`printf … \| uv run sanitize_query.py`). Mirrors D1's `test_dedup.py` + CR-NEW-001 pattern. |
+| **Deterministic** | `sanitize_query.py` | pytest — one test per pipeline branch (each secret family, identifier strip, stack-trace collapse), both `requires_human_approval` branches, `provider_allowed` ranking, **no-leak assertions** (fake tokens / PEM / signed URLs / paths / hostnames / emails / customer-like ids never appear in `safe_query` *or* `dropped_fields`), stdin handling, malformed-output/fail-closed path, plus a **CLI smoke exercising the real §4.5 transport** (fake-token payload in a mode-`600` tmpfile → `uv run sanitize_query.py < tmpfile` → assert no secret in the JSON **and** the tmpfile is removed on both success and failure). Mirrors D1's `test_dedup.py` + CR-NEW-001 pattern. |
 | **Trigger (manual)** | Fires on A/C, not on B | A documented **trigger matrix** in `references/`: ~5 Category-A prompts, ~5 Category-C, ~5 Category-B negatives; run in a plugin-loaded session, record fire/no-fire. Auto-trigger matching is undocumented and not unit-testable outside a live session — this is honestly manual, not fake-automated. Also confirm every `allowed-tools` name resolves. |
 | **Safety (manual)** | The egress gate actually gates | A **Category-A entry carrying a fake token must pause at the approval prompt before any `Agent` dispatch or MCP call**; verify the **outbound payload sent to the provider** (the actual MCP-call args) and **argv** contain no fake token (egress-safety, not transcript-absence — §5.1 scope); verify reject → abort with no dispatch. |
 | **End-to-end (manual)** | Escalation + dispatch gate | Light path writes nothing, uses ≥2 recall sources, escalates after 2 rounds; an **auto-fired medium run pauses for approval *before dispatch*** — reject → nothing dispatched and `git status --short` stays clean; approve → `qdev-researcher` writes the report + index per the D1 cycle. Manual `/qdev:research` persists with no extra gate. |
@@ -259,5 +259,13 @@ Detection families are **required acceptance criteria**, not an open question (S
 | SA-NEW-001 | High | `qdev-researcher` persists internally before returning and lacks `AskUserQuestion`, so "approval before persist" was impossible without changing D1. Resolved by moving the gate to **approval-before-dispatch** on auto-fired runs (D2-7, §4.4): the skill confirms before dispatching; reject → never dispatched, nothing written. D1 stays unchanged; gates before token spend. |
 
 **Decisions taken (round 2, user):** SA-NEW-001 → approval-before-dispatch (over modifying `qdev-researcher` or a D2 persistence wrapper). SA-002 egress-scoping applied under the workstation security model (binding rule: don't upload secrets externally).
+
+**Round 3 (2026-06-03, external adversarial review):** verdict *no significant findings remain; the audit/fix loop can stop.* SA-001…007 + SA-NEW-001 all confirmed resolved, 0 regressions. One new low-severity polish, fixed:
+
+| ID | Severity | Resolution |
+| --- | --- | --- |
+| SA-NEW-002 | Low | §7's deterministic CLI-smoke row still named the old `printf \| uv run` form after the §5.1 transport changed to `< tmpfile`. Updated to smoke the real §4.5 transport (mode-`600` tmpfile → `uv run … < tmpfile` → assert no secret in JSON + tmpfile removed on success/failure). |
+
+**Audit loop closed (round 3 clean).** Spec is execution-ready.
 
 **Carry-forward to plan/implementation validation:** D1 plugin-loaded smoke (prerequisite, §10); live auto-trigger reliability via the trigger matrix; the fake-token **egress** safety smoke (§7 — outbound args + argv, not transcript); auto-fired medium reject→clean-tree / approve→writes (§7); `allowed-tools` name resolution in a plugin-loaded session.
