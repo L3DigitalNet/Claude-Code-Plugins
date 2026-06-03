@@ -111,10 +111,11 @@ The existing first line `Mode: research · Topic: <topic> · Saved: <path>` is t
 - Generator: `plugins/qdev/scripts/build-research-index.py` — a **PEP 723 inline-metadata script** (`dependencies = ["pyyaml"]`) run via `uv run` (no `pyproject`/`uv.lock` in qdev; uv resolves deps ephemerally; portable to any project with `uv`). Invocation: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/build-research-index.py" docs/research`. It **scans the top-level `docs/research/*.md` report set and rewrites the whole index** — regenerate, never append (idempotent: re-running yields no diff).
 - Index body: a table sorted by `created` desc — `| id | title | created | updated | status | confidence | tags | related |` — plus an `index` frontmatter block of its own.
 - **Membership = top-level `docs/research/*.md`** (non-recursive). Post-migration (§4.4) every such file carries frontmatter; the non-recursive scope already excludes the build-time `docs/research/qdev/` meta-docs (§12). `index.md` is regenerated, not indexed as a report.
-- **First-run bootstrap:** if `index.md` is absent, the generator creates it; dedup (§4.2) treats an absent index as an empty corpus.
+- **First-run bootstrap (resolves SA-001 round 2):** if `index.md` is absent, the generator builds it **from the existing top-level reports' frontmatter** — never an empty stub when reports exist. An absent index means an empty corpus **only** when no top-level `docs/research/*.md` reports exist.
 
 ### 4.2 Dedup (runs before persisting a new report)
 
+0. **Preflight — index currency (ordering, SA-001 round 2):** before any matching, ensure `index.md` reflects the current corpus. If it is absent or stale, regenerate it from existing top-level frontmatter (§4.1) **first**. This guarantees pre-existing reports — including the migrated legacy report — are visible to dedup on the very first run. Overall order: **migrate legacy report → generate index → dedup the new report**.
 1. Derive 3–5 keyword tags from the topic (same set used for `tags`).
 2. Read `index.md`; match rows by `tags` ∪ `aliases` ∪ `title` overlap (structured comparison, not prose grep).
 3. Apply the decision table, mapped to frontmatter operations:
@@ -217,10 +218,8 @@ This resolves the drift: the existing "general web search → brave + serper (bo
 | `plugins/qdev/tests/test_validate_research_frontmatter.py` | pytest: validator unit tests (TEST-001) | **new** |
 | `plugins/qdev/tests/` scaffold (`conftest.py` + `requirements.txt`) | pytest deps, per the up-docs precedent | **new** |
 | `docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md` | Migrate to `research` frontmatter (§4.4, SA-001) | edit |
-| `docs/architecture.md` | qdev no longer "pure-markdown only" — now in test scope (SA-003) | edit |
-| `docs/conventions.md` | TEST-001 plugin list/counts: qdev gains pytest (SA-003) | edit |
-| `testing/STRATEGY.md` | Add qdev to in-scope plugins (SA-003) | edit |
-| `testing/plans/qdev.md` | Minimal per-plugin test plan for the two scripts (SA-003) | **new** |
+| `docs/architecture.md` | qdev no longer "pure-markdown only" — gains pytest; **also scrub the dead `testing/STRATEGY.md` reference** (tree removed in `66b02d4`) (SA-003 r2) | edit |
+| `docs/conventions.md` | TEST-001: add qdev's pytest tests; **scrub the dead `testing/STRATEGY.md` §3 reference** (SA-003 r2) | edit |
 | `docs/specs-plans.md` | Fix the stale `testing-hardening…` link (§4.4) | edit |
 | `~/.claude/CLAUDE.md` | Routing reconciliation (§8 — confirm wording first) | edit (external) |
 
@@ -290,3 +289,12 @@ End-to-end on `/qdev:research <topic>`:
 | SA-004 | Medium | §6.2 — grant both Context7 tool-name variants; documented web fail-soft; acceptance for both names. |
 
 **Next audit focus:** confirm the migrated legacy frontmatter validates; confirm the PEP 723 invocations run in a clean plugin-only context; confirm the Context7 dual-grant assumption.
+
+**Round 2 (2026-06-03):** follow-up adversarial review (Codex). Closed SA-002 + SA-004; two partials addressed in this revision:
+
+| ID | Round-2 status | Resolution |
+| --- | --- | --- |
+| SA-001 | Partial → resolved | §4.1/§4.2 — first-run preflight **generates the index from existing frontmatter before dedup** (migrate → generate → dedup); absent index = empty corpus only when no reports exist. |
+| SA-003 | Partial → resolved | §9 — the root `testing/` tree was removed in `66b02d4`; stop referencing it. Tests live at `plugins/qdev/tests/` (TEST-001); scope-doc updates target the real surfaces (`architecture.md`, `conventions.md`) and **scrub the dead `testing/STRATEGY.md` references** there. |
+
+**Discovered (pre-existing, beyond D1):** `66b02d4` deleted the entire root `testing/` tree but left dead `testing/STRATEGY.md` / `testing/plans/` references in `CLAUDE.md`, `README.md`, `docs/architecture.md`, and `docs/conventions.md`. D1 scrubs the two scope docs it already edits; the `CLAUDE.md` / `README.md` references are flagged for a separate cleanup (human-facing / global-pointer docs — confirm scope before editing).
