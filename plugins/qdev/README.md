@@ -4,7 +4,7 @@ Quality review and spec sync for every stage of the development lifecycle.
 
 ## Summary
 
-Writing a spec, planning an implementation, or reviewing code all have different quality criteria but the same enemy: making decisions with stale or incorrect knowledge. `qdev` addresses this at every stage. `/research` runs a structured dual-source sweep before you design or build. `/quality-review` iterates until it finds nothing left to fix. `/deps-audit` checks every package manifest against current CVE databases and version registries. `/doc-sync` keeps inline documentation aligned with actual function signatures. `/spec-update` keeps your design spec in sync with what you actually built.
+Writing a spec, planning an implementation, or reviewing code all have different quality criteria but the same enemy: making decisions with stale or incorrect knowledge. `qdev` addresses this at every stage. `/research` runs a structured dual-source sweep before you design or build. `/quality-review` iterates until it finds nothing left to fix. `/deps-audit` checks every package manifest against current CVE databases and version registries. `/doc-sync` keeps inline documentation aligned with actual function signatures. `/spec-update` keeps your design spec in sync with what you actually built. The `qdev-grounding` skill auto-fires mid-task when you're stuck or missing current data, doing cheap inline lookups that escalate to a full sweep on failure.
 
 ## Principles
 
@@ -12,7 +12,7 @@ Design decisions in this plugin are evaluated against these principles.
 
 **[P1] Research Before Analysis**: Web research runs before any gap or consistency check, and is available as a first-class command before design work begins. No finding is proposed based on training data alone when a live source can be consulted.
 
-**[P2] Explicit Invocation Only**: No command loads contextually. All three fire only when explicitly called with a slash command.
+**[P2] Explicit Commands, One Controlled Auto-Trigger**: The plugin's commands never load contextually - each fires only when explicitly called with a slash command. The single exception is the `qdev-grounding` skill: the plugin's one deliberate auto-trigger, which fires when the agent is stuck or missing current data, starts with a cheap sanitizer-gated inline lookup, and asks for approval before any risky egress or auto-fired report write.
 
 **[P3] Propose Before Writing**: No spec, plan, or source file is modified without first presenting a specific proposed change and receiving approval for structural changes.
 
@@ -24,6 +24,7 @@ Design decisions in this plugin are evaluated against these principles.
 - `brave-search` MCP server (required for `/qdev:quality-review` and `/qdev:research`)
 - `serper-search` MCP server (required for `/qdev:quality-review` and `/qdev:research`)
 - `tavily` MCP server (recommended; used for content-heavy queries and JS-rendered page extraction across `/qdev:research`, `/qdev:quality-review`, and `/qdev:deps-audit`)
+- `qdev-grounding` uses the same `brave-search` / `serper-search` / `tavily` MCP servers for sanitizer-gated inline lookups.
 
 ## Installation
 
