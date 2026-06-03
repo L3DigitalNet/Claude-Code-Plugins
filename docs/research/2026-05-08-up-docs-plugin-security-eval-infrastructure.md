@@ -1,15 +1,13 @@
 # Plugin-Shipped Security/Eval Infrastructure for Claude Code Plugins
 
-**Topic:** Plugin-shipped security/eval infrastructure for Claude Code plugins — concrete patterns for up-docs v2 plan.
-**Date:** 2026-05-08
-**Queries:** 14 · Results parsed: 80+ · Deep reads: 7 (official docs) · Follow-up pass: no
+**Topic:** Plugin-shipped security/eval infrastructure for Claude Code plugins — concrete patterns for up-docs v2 plan. **Date:** 2026-05-08 **Queries:** 14 · Results parsed: 80+ · Deep reads: 7 (official docs) · Follow-up pass: no
 
 ---
 
 ## Summary
 
 | Angle | Sources | Strongest finding |
-|-------|---------|-------------------|
+| --- | --- | --- |
 | Plugin Hook Packaging | 5 (official + local) | `hooks/hooks.json` supports all 29 events; `${CLAUDE_PLUGIN_ROOT}` works; PreToolUse/PostToolUse command hooks confirmed working |
 | Plugin Security Mechanisms | 4 (official + community) | `plugins/<name>/settings.json` supports ONLY `agent` + `subagentStatusLine`; deny rules live in consuming project's `.claude/settings.json` |
 | Headless Mode / CLI Contract | 3 (official) | `--plugin-dir <path> -p --agent <name>` loads plugin from local FS; tool results NOT in stream-json; PostToolUse hook is the only result capture path |
@@ -45,11 +43,11 @@ Elicitation, ElicitationResult, SessionEnd
 
 Three modes, determined by characters in the string [official]:
 
-| Pattern type | Characters | Behavior |
-|---|---|---|
-| Match all | `"*"`, `""`, or absent | Fires on every occurrence |
-| Exact/pipe-list | Only `[A-Za-z0-9_|]` | Exact tool name, or `|`-separated OR list |
-| Regex | Any other character | Evaluated as JavaScript regex |
+| Pattern type    | Characters             | Behavior                      |
+| --------------- | ---------------------- | ----------------------------- | --------------------- | ------------------- |
+| Match all       | `"*"`, `""`, or absent | Fires on every occurrence     |
+| Exact/pipe-list | Only `[A-Za-z0-9\_     | ]`                            | Exact tool name, or ` | `-separated OR list |
+| Regex           | Any other character    | Evaluated as JavaScript regex |
 
 Matcher targets for PreToolUse/PostToolUse: **the tool name** (`Bash`, `Edit`, `Write`, `Read`, `mcp__server__tool`, etc.). MCP tools match as regular tool names.
 
@@ -68,37 +66,40 @@ Evidence from five sibling plugins in this repo: all use `bash ${CLAUDE_PLUGIN_R
 ### Hook Script stdin/stdout JSON Contract
 
 **PreToolUse stdin:**
+
 ```json
 {
-  "session_id": "...",
-  "transcript_path": "/path/to/transcript.jsonl",
-  "cwd": "/current/dir",
-  "permission_mode": "default|plan|acceptEdits|auto|dontAsk|bypassPermissions",
-  "hook_event_name": "PreToolUse",
-  "effort": { "level": "low|medium|high|xhigh|max" },
-  "tool_name": "Bash",
-  "tool_input": { "command": "npm test" },
-  "tool_use_id": "toolu_01abc...",
-  "agent_id": "optional-subagent-id",
-  "agent_type": "optional-agent-name"
+	"session_id": "...",
+	"transcript_path": "/path/to/transcript.jsonl",
+	"cwd": "/current/dir",
+	"permission_mode": "default|plan|acceptEdits|auto|dontAsk|bypassPermissions",
+	"hook_event_name": "PreToolUse",
+	"effort": { "level": "low|medium|high|xhigh|max" },
+	"tool_name": "Bash",
+	"tool_input": { "command": "npm test" },
+	"tool_use_id": "toolu_01abc...",
+	"agent_id": "optional-subagent-id",
+	"agent_type": "optional-agent-name"
 }
 ```
 
 **PostToolUse stdin:** Same plus `tool_response: { output: "...", isError: false }`. The `output` field contains full tool stdout/stderr. `tool_response` is the only way to capture Bash output from a plugin hook.
 
 **Exit code contract:**
+
 - `exit 0` — allow; parse stdout for JSON output
 - `exit 2` — **block** tool call; stderr passed to Claude as context
 - `exit 1` or other — non-blocking error (counterintuitive: NOT a block)
 
 **Block payload (PreToolUse):**
+
 ```json
 {
-  "hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "deny",
-    "permissionDecisionReason": "reason shown to Claude"
-  }
+	"hookSpecificOutput": {
+		"hookEventName": "PreToolUse",
+		"permissionDecision": "deny",
+		"permissionDecisionReason": "reason shown to Claude"
+	}
 }
 ```
 
@@ -107,6 +108,7 @@ Alternatively, exit 2 alone blocks without JSON output.
 **Context injection (any event):** stdout text is injected into Claude's context window (for PreToolUse/PostToolUse).
 
 Working example from this repo (`force-push-guard.sh`):
+
 ```bash
 COMMAND=$(cat | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))")
 if echo "$COMMAND" | grep -q 'git push' && echo "$COMMAND" | grep -qE '(--force|\s-f(\s|$))'; then
@@ -133,6 +135,7 @@ The official plugins-reference (File Locations Reference table, line 707) states
 > **Settings** `settings.json` — Default configuration applied when the plugin is enabled. **Only the `agent` and `subagentStatusLine` keys are currently supported.**
 
 This definitively invalidates the v1 plan's `plugins/up-docs/.claude/settings.json` approach. Two distinct problems:
+
 1. `.claude/settings.json` (subdirectory) is not a supported plugin component location at all.
 2. Even `settings.json` (at plugin root) only supports `agent` and `subagentStatusLine`, not `permissions.deny`.
 
@@ -142,15 +145,19 @@ Exit-code-2 blocking works from plugin hooks. The `permissionDecision: "deny"` J
 
 ```json
 {
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{
-        "type": "command",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/deny-guard.sh"
-      }]
-    }]
-  }
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/deny-guard.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -183,17 +190,9 @@ exit 0
 ### Option (b): Project-Level `permissions.deny` (the only enforced layer)
 
 The consuming project adds to its `.claude/settings.json`:
+
 ```json
-{
-  "permissions": {
-    "deny": [
-      "Bash(curl *)",
-      "Bash(wget *)",
-      "WebFetch",
-      "WebSearch"
-    ]
-  }
-}
+{ "permissions": { "deny": ["Bash(curl *)", "Bash(wget *)", "WebFetch", "WebSearch"] } }
 ```
 
 This is enforced by Claude Code's permission engine regardless of agent frontmatter. Known caveat: GH issue #27040 reports `permissions.deny` not enforced in some versions for file paths — the rule syntax using `//` for absolute paths differs from Linux convention. Tool-name-based deny patterns (`Bash(curl *)`) are more reliable than path-based ones. [official] (https://code.claude.com/docs/en/settings), [community] (https://github.com/anthropics/claude-code/issues/27040)
@@ -231,7 +230,7 @@ Failure mode surfaced in `system/init` stream event: `plugin_errors` array lists
 Events are newline-delimited JSON objects. Key events for testing:
 
 | Event type | Subtype | Key fields |
-|---|---|---|
+| --- | --- | --- |
 | `system` | `init` | `session_id`, `plugins`, `plugin_errors`, `model`, `tools`, `mcp_servers` |
 | `assistant` | (message) | `message.content[].type` = `text` or `tool_use`; tool_use has `name`, `input`, `id` |
 | `result` | — | `result` (final text), `session_id`, `total_cost_usd` |
@@ -255,15 +254,15 @@ Events are newline-delimited JSON objects. Key events for testing:
     -p "$(cat "$BATS_TEST_DIRNAME/fixtures/session-summary-config-rebind.md")" \
     --allowedTools "Read,Glob,Grep,Bash" \
     --max-turns 10)
-  
+
   # Check plugin loaded
   PLUGIN_ERRORS=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('plugin_errors',''))" 2>/dev/null || echo "")
   [ -z "$PLUGIN_ERRORS" ]
-  
+
   # Validate result is non-empty
   RESULT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',''))")
   [ -n "$RESULT" ]
-  
+
   # Schema validation against Pydantic model
   echo "$RESULT" | python3 "$BATS_TEST_DIRNAME/../validate_output.py" repo
 }
@@ -309,12 +308,12 @@ if __name__ == "__main__":
 ```json
 // tests/stubs/test-mcp.json
 {
-  "mcpServers": {
-    "mcp-outline": {
-      "command": "python3",
-      "args": ["/abs/path/to/tests/stubs/mcp_outline_stub.py"]
-    }
-  }
+	"mcpServers": {
+		"mcp-outline": {
+			"command": "python3",
+			"args": ["/abs/path/to/tests/stubs/mcp_outline_stub.py"]
+		}
+	}
 }
 ```
 
@@ -333,6 +332,7 @@ claude --plugin-dir ./plugins/up-docs \
 ### MCP Tool Name Mangling Convention
 
 From inspection of existing up-docs agent tool lists in this repo:
+
 - `mcp__plugin_mcp-outline_mcp-outline__search_documents` — plugin name `up-docs`, server key in `.mcp.json` is `mcp-outline`
 - `mcp__plugin_Notion_notion__notion-search` — server key `Notion` (note: case-sensitive from key)
 
@@ -424,6 +424,7 @@ exit 0
 ### Redaction Patterns
 
 Known secret patterns to cover for up-docs context:
+
 - Bearer tokens: `Bearer [A-Za-z0-9._-]{20,}`
 - BAO_TOKEN values: `bao_token=...` or env var assignment
 - GitHub PATs: `ghp_[a-z0-9]{36}`, `ghs_[a-z0-9]{36}`
@@ -435,6 +436,7 @@ Single-source reference for redaction regex: community gist at https://gist.gith
 ### Cleanup
 
 No official guidance on TTL/rotation. Recommended:
+
 - SessionEnd hook: if `${UP_DOCS_TRANSCRIPT_LOG}` is set and refers to a per-session temp file (`/tmp/up-docs-session-$SESSION_ID.jsonl`), delete it
 - Per-session: `UP_DOCS_TRANSCRIPT_LOG=/tmp/up-docs-$(date +%s).jsonl claude ...`
 - The `session_id` in the hook payload enables per-session log rotation
@@ -486,6 +488,7 @@ class PropagatorOutput(BaseModel):
 ```
 
 Validation error when discriminator value is wrong:
+
 ```
 1 validation error for PropagatorOutput
 report
@@ -494,6 +497,7 @@ report
 ```
 
 Wait — if all three are present and `notion` is passed, it will match `NotionReport`. The error fires when `layer` has a value that matches NONE of the expected literals. Example: if `layer: "drift"` is passed when the union has only `repo|wiki|notion`:
+
 ```
 Input tag 'drift' found using 'layer' does not match any of the
 expected tags: 'repo', 'wiki', 'notion'
@@ -528,6 +532,7 @@ Use `Tag` + `Discriminator` when the discriminator field name differs across mod
 ### DRY Shared Fields
 
 Use a base class (standard Python inheritance):
+
 ```python
 class PropagatorReport(BaseModel):
     session_id: str
@@ -691,7 +696,7 @@ def test_no_fabrication(session_summary, propagator_output):
 ## Existing Tools
 
 | Tool | Maintenance | Link | Fit for use case |
-|------|-------------|------|------------------|
+| --- | --- | --- | --- |
 | `release-pipeline/scripts/force-push-guard.sh` | Active (this repo) | local | Reference implementation of PreToolUse exit-2 blocking pattern |
 | `github-repo-manager/scripts/gh-manager-guard.sh` | Active (this repo) | local | Reference implementation of PostToolUse audit-log capture |
 | FastMCP | Active | https://gofastmcp.com | MCP stub server for headless test wiring |
@@ -726,7 +731,7 @@ def test_no_fabrication(session_summary, propagator_output):
 ## Open Questions
 
 | # | Question | Why unresolved |
-|---|----------|----------------|
+| --- | --- | --- |
 | 1 | Is GH issue 34573 (plugin PreToolUse/PostToolUse command hooks silently dropped) actually fixed in current Claude Code? The five sibling plugins appear to use command hooks successfully. | Issue is closed-not-planned but production usage contradicts it; needs live verification with `/hooks` menu on current version |
 | 2 | When `--strict-mcp-config` replaces plugin MCP servers, do the agent's `tools:` frontmatter entries for the real MCP tools become unavailable (causing the agent to error), or does it silently not find them? | Not explicitly documented; needs empirical test |
 | 3 | Does `--agent <plugin>:<agentname>` syntax work for `--plugin-dir`-loaded plugins, or is the agent name bare (without plugin prefix)? | CLI reference says `--agent` overrides agent setting; namespacing for plugin-dir-loaded plugins is not documented |
