@@ -14,5 +14,4 @@
 - `docs/sessions/` — monthly session logs (grep by date)
 - `docs/bugs/` — per-file bug KB (grep by service or tag)
 - `docs/specs-plans.md` — pointer into `docs/plans/`
-- `testing/STRATEGY.md` — marketplace-wide test strategy: canonical frameworks (bats/pytest/Jest), enforcement layers, and principle-traceable mapping (read before executing any per-plugin plan)
-- `testing/plans/<plugin>.md` — per-plugin test plans + Phase 2 execution logs (one per in-scope plugin; 8 total after 2026-05-30 cleanup)
+- per-plugin tests: `plugins/<plugin>/tests/` (frameworks by language per `docs/conventions.md` TEST-001)

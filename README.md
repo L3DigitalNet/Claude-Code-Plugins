@@ -285,7 +285,7 @@ These principles apply across all plugins in this collection. Individual plugins
 
 ## Testing & Validation
 
-The marketplace uses principle-traceable test coverage across all in-scope plugins. See [testing/STRATEGY.md](testing/STRATEGY.md) for the canonical frameworks per language (bats for bash, pytest for Python, Jest for TypeScript) and the principle → enforcement-layer mapping that guides test scope.
+The marketplace standardizes test frameworks per language — bats for bash, pytest for Python, Jest for TypeScript. See [docs/conventions.md](docs/conventions.md) (TEST-001) for the canonical frameworks and per-language naming conventions.
 
 **Quick reference:**
 
@@ -303,7 +303,7 @@ cd plugins/plugin-test-harness && npm ci && npm run build && npm test
 ./scripts/validate-marketplace.sh
 ```
 
-Each plugin's per-plugin plan lives in [`testing/plans/<plugin>.md`](testing/plans/) with coverage status and Phase 2 execution logs.
+Each plugin's tests live under its own [`plugins/<plugin>/tests/`](plugins/) directory.
 
 ## Plugin Development
 
