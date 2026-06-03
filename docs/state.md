@@ -16,8 +16,7 @@
 
 ## Recently closed (this session, 2026-06-03)
 
-- **qdev D2 design** — brainstormed (4 decisions) → spec `94dcaf0`; audited clean over 3 Codex rounds (`3274c31` r1 SA-001..007, `2a06021` r2 SA-002/SA-NEW-001, `fd65109` r3 SA-NEW-002). Full ledger in design §12.
-- **qdev D2 plan** (`e6510c9`) — 7-task TDD plan; self-review caught + fixed a test-count error (37 total, not 38). Indexed in `specs-plans.md`.
-- **qdev D1 spec + plan + implementation** — D1 shipped earlier this session (`8635076`..`a50ca7b`, 24 pytest); manual plugin smoke still pending (see Active Incidents). Detail in `docs/sessions/2026-06.md`.
+- **qdev D2 design + plan** — spec `94dcaf0`, audited clean over 3 Codex rounds (`3274c31`/`2a06021`/`fd65109`; ledger in design §12); 7-task TDD plan `e6510c9`. Execution-ready (see Active Incidents).
+- **qdev D1** — shipped earlier this session (`8635076`..`a50ca7b`, 24 pytest); manual smoke pending. Detail in `docs/sessions/2026-06.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/sessions/<YYYY-MM>.md. -->
