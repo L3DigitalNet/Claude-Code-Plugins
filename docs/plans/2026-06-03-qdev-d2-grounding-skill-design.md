@@ -1,6 +1,6 @@
 # qdev D2 — Escalating Grounding Skill + Programmatic Egress Sanitizer (Design)
 
-**Status:** Design approved (brainstorm 2026-06-03); **revised after spec audit round 1 (SA-001…SA-007 all resolved — see §12)**; ready for `superpowers:writing-plans`.
+**Status:** Design approved (brainstorm 2026-06-03); **revised after spec audit rounds 1–2 (SA-001…SA-007 + SA-NEW-001 all resolved — see §12)**; ready for `superpowers:writing-plans`.
 **Created:** 2026-06-03
 **Owner harness:** Claude Code (Opus)
 **Scope:** Deliverable 2 only — the auto-trigger grounding skill plus the programmatic egress sanitizer it depends on. Adjacent items remain deferred (see §8).
@@ -20,7 +20,7 @@ Claude Code often fails to search when it should — it loops on a broken approa
 - **G2.** The light path is genuinely cheap: no subagent, no report, output-capped, escalating to medium only on failure.
 - **G3.** Category-A "already stuck" enters the medium path directly (a full sweep + persisted report is warranted) — **after** the inline skill sanitizes the handoff.
 - **G4.** Every auto-fired outbound payload — light-path query **and** medium-path handoff — is sanitized deterministically by the skill before it leaves the machine; flagged payloads pause for human approval, and a rejected payload aborts the auto-research (never leaks, never silently proceeds).
-- **G5.** The medium path reuses D1's `qdev-researcher` + reporting cycle unchanged; the only D2-side gate is sanitization-before-dispatch and approval-before-persist on auto-fired runs.
+- **G5.** The medium path reuses D1's `qdev-researcher` + reporting cycle **unchanged**; the only D2-side gates are sanitization-before-dispatch and, on *auto-fired* runs, **approval-before-dispatch** (`qdev-researcher` persists internally before it returns, so the gate must precede dispatch — SA-NEW-001).
 
 ---
 
@@ -34,7 +34,7 @@ Claude Code often fails to search when it should — it loops on a broken approa
 | D2-4 | **Skill shape C — skill + reference (progressive disclosure).** Lean `SKILL.md` (frontmatter + entry routing + escalation tree + medium dispatch); a `references/` file holds the verbose Category catalog, Category-B note, per-provider egress verdicts, dedup pointer, and the trigger matrix. Keeps the invoked body small — the light path's whole point is context economy. | Q4 |
 | D2-5 | **One inline skill, escalating.** Not `context: fork` — a forked skill runs as a subagent and loses the `Agent` tool, so it could never dispatch `qdev-researcher` (and could not run the sanitizer gate or ask for approval). The single auto-trigger lives on the inline entry; the medium path never self-triggers. | Brief (locked) |
 | D2-6 | **Light primary = `brave_web_search` + targeted `tavily_extract`**, not `brave_llm_context`. The brief's decision rule (resolution-2 §3.6) adopts `brave_llm_context` only if it stays under ~5k serialized tokens; its 8,192-token default busts the <3,000-token light-path budget. Ship the conservative default; the benchmark that could flip this is deferred. | resolution-2 §3.6 |
-| D2-7 | **Auto-fired medium runs require approval before persisting.** When the medium path fires *automatically* (Category-A or escalation), the skill shows the report path + summary and confirms before the D1 cycle writes to `docs/research/` and regenerates the index — an unrequested auto-trigger must not silently dirty the working tree. (Manual `/qdev:research` is unaffected — it persists per the D1 cycle.) | audit |
+| D2-7 | **Auto-fired medium runs require approval *before dispatch*.** `qdev-researcher` persists the report (write + index regen) internally *before* it returns and has no `AskUserQuestion`, so the gate cannot sit "before persist" without modifying D1. Instead, on an *auto-fired* medium run (Category-A or escalation) the skill confirms first — "run a full research sweep and persist a report to `docs/research/` on `<topic>`?" — and only dispatches on approval; reject → never dispatched, nothing written. This keeps `qdev-researcher` unchanged, gates before token spend, and still prevents an unrequested auto-trigger from dirtying the tree. Trade-off: the prompt shows the topic, not the final report summary. (Manual `/qdev:research` is unaffected — no extra gate.) | audit r1 + r2 (SA-NEW-001) |
 | D2-8 | **Fail-closed egress; Brave ZDR assumed absent.** No provider is treated as "safe enough to auto-send a borderline-sensitive query." Brave's lowest-risk ranking applies only with enterprise Zero-Data-Retention, which this environment does not document — so ZDR is assumed absent and any payload that would be flagged requires approval regardless of provider. Sanitizer-unavailable / malformed-output / missing-`uv` all fail closed (no external call). | audit (SA-003) |
 | D2-9 | **Reword README [P2] to scope it to commands + carve out the grounding skill.** D2 is the plugin's first auto-trigger; [P2] "Explicit Invocation Only" is rewritten to state that the five *commands* never load contextually and that the single grounding skill is the deliberate, sole auto-trigger exception (sanitizer-gated, approval-on-risk). Stale "all three" → current command count. | audit (SA-007) |
 
@@ -112,15 +112,16 @@ For one-off, low-stakes lookups: a current version, an API signature, "is librar
 
 ### 4.4 Medium path (escalated, or Category-A direct)
 
-- **Sanitize the handoff first (§4.5)** — see §4.2/§4.5; nothing is dispatched until the handoff clears the gate.
-- Dispatch **`qdev:qdev-researcher`** (qualified name — repo convention PLUGIN-001; a bare name no-ops) via the `Agent` tool at `depth=quick`. **Cost model = `qdev-researcher`'s existing quick mode as shipped** (≈3–4 queries plus its own deep-read and single follow-up bounds — [qdev-researcher.md:60,75,83]); D2 does **not** assume a lighter variant and does **not** modify the agent (SA-005). "Medium" is search *breadth*, not skipping the report.
-- The handoff hands over what light found (queries tried, best links, why it stalled) so the subagent does not restart cold — already sanitized by the skill (D2-3), plus `qdev-researcher`'s own prose guardrail (defense in depth).
-- Runs D1's **full reporting cycle** (frontmatter + `## Sources` + dedup + index regen) — reused unchanged — **but on an auto-fired run, the skill confirms before persist (D2-7):** show the report path + summary via `AskUserQuestion`; on approval the cycle writes + regenerates the index; on decline the result is returned in-context only and nothing is written. Manual `/qdev:research` persists without this extra gate.
-- **Announce before firing:** e.g. `Auto-research: <topic> (escalated after 2 light rounds)`. Return a compact result and hand control back.
+Ordered gates — nothing external happens until each clears:
+
+1. **Approval-before-dispatch (auto-fired runs only — D2-7, SA-NEW-001).** Because `qdev-researcher` writes the report and regenerates the index *internally before it returns* ([qdev-researcher.md:91-116]) and has no `AskUserQuestion`, the persist gate must precede dispatch. On a Category-A / escalation (auto) run, the skill confirms via `AskUserQuestion` — "run a full research sweep and persist a report to `docs/research/` on `<topic>`?" — and dispatches only on approval; reject → not dispatched, nothing written. Manual `/qdev:research` skips this gate.
+2. **Sanitize the handoff (§4.5).** The stuck-context handoff clears the egress gate before any dispatch.
+3. **Dispatch** **`qdev:qdev-researcher`** (qualified name — repo convention PLUGIN-001; a bare name no-ops) via the `Agent` tool at `depth=quick`. **Cost model = `qdev-researcher`'s existing quick mode as shipped** (≈3–4 queries plus its own deep-read and single follow-up bounds — [qdev-researcher.md:60,75,83]); D2 does **not** assume a lighter variant and does **not** modify the agent (SA-005). The handoff hands over what light found (queries tried, best links, why it stalled) so the subagent does not restart cold — already sanitized (D2-3), plus `qdev-researcher`'s own prose guardrail (defense in depth). It runs D1's **full reporting cycle** unchanged (frontmatter + `## Sources` + dedup + index regen). "Medium" is search *breadth*, not skipping the report.
+4. **Announce before firing:** e.g. `Auto-research: <topic> (escalated after 2 light rounds)`. Return a compact result and hand control back.
 
 ### 4.5 The sanitize gate (shared by light + medium)
 
-A single procedure the skill applies to any outbound payload (a light-path query, or the medium-path handoff text). It pipes the raw payload to `sanitize_query.py` over **stdin** (never argv — SA-002) and acts on the JSON:
+A single procedure the skill applies to any outbound payload (a light-path query, or the medium-path handoff text). **Transport (SA-002):** the skill writes the raw payload to a mode-`600` tmpfile, runs `uv run sanitize_query.py < tmpfile` (stdin — never argv, so the raw text never appears in process listings), then deletes the tmpfile. It then acts on the JSON:
 
 - `requires_human_approval: true` → `AskUserQuestion` showing `safe_query` + `dropped_fields` (labels only). Approve → proceed with `safe_query`; reject → abort (light: proceed ungrounded; medium: do not dispatch, report the abort).
 - `requires_human_approval: false` → proceed with `safe_query`, choosing a provider allowed by `provider_allowed` under D2-8.
@@ -134,8 +135,9 @@ A pure, deterministic PEP 723 script — `# requires-python = ">=3.11"`, `depend
 
 ### 5.1 Input contract (SA-002)
 
-- **Reads the raw payload from stdin**, not from a command-line argument — raw text (tracebacks, logs, tokens) must not appear in argv / process listings / the Bash-tool transcript.
-- CLI: `printf '%s' "$payload" | uv run sanitize_query.py` (or `--stdin`); the function form `sanitize(text)` is used by tests.
+- **Reads the raw payload from stdin**, not from a command-line argument — raw text (tracebacks, logs, tokens) must not appear in argv or process listings.
+- CLI: `uv run sanitize_query.py < tmpfile` (the §4.5 transport); the function form `sanitize(text)` is used by tests.
+- **Threat model = egress, not local transcript (SA-002 scope).** Per the workstation security model, plaintext secrets may legitimately appear in local conversation/tool output (single-user, disk-encrypted) and the binding rule is "don't upload secrets to external services." The triggering error text already exists in local context, so the sanitizer's testable guarantee is **egress-safety**: `safe_query` is secret-free and is the only thing sent to a provider. It does not (and cannot) retroactively scrub the local transcript.
 
 ### 5.2 Pipeline (ordered — resolution-2 §2.3–2.4)
 
@@ -179,8 +181,8 @@ Detection families are **required acceptance criteria**, not an open question (S
 | --- | --- | --- |
 | **Deterministic** | `sanitize_query.py` | pytest — one test per pipeline branch (each secret family, identifier strip, stack-trace collapse), both `requires_human_approval` branches, `provider_allowed` ranking, **no-leak assertions** (fake tokens / PEM / signed URLs / paths / hostnames / emails / customer-like ids never appear in `safe_query` *or* `dropped_fields`), stdin handling, malformed-output/fail-closed path, plus a CLI smoke (`printf … \| uv run sanitize_query.py`). Mirrors D1's `test_dedup.py` + CR-NEW-001 pattern. |
 | **Trigger (manual)** | Fires on A/C, not on B | A documented **trigger matrix** in `references/`: ~5 Category-A prompts, ~5 Category-C, ~5 Category-B negatives; run in a plugin-loaded session, record fire/no-fire. Auto-trigger matching is undocumented and not unit-testable outside a live session — this is honestly manual, not fake-automated. Also confirm every `allowed-tools` name resolves. |
-| **Safety (manual)** | The egress gate actually gates | A **Category-A entry carrying a fake token must pause at the approval prompt before any `Agent` dispatch or MCP call**; verify no external payload and no transcript line contains the fake token; verify reject → abort with no dispatch. |
-| **End-to-end (manual)** | Escalation + gated persist | Light path writes nothing, uses ≥2 recall sources, escalates after 2 rounds; an auto-fired medium run **pauses for persist approval** before writing; a manual `/qdev:research` still persists per the D1 cycle. |
+| **Safety (manual)** | The egress gate actually gates | A **Category-A entry carrying a fake token must pause at the approval prompt before any `Agent` dispatch or MCP call**; verify the **outbound payload sent to the provider** (the actual MCP-call args) and **argv** contain no fake token (egress-safety, not transcript-absence — §5.1 scope); verify reject → abort with no dispatch. |
+| **End-to-end (manual)** | Escalation + dispatch gate | Light path writes nothing, uses ≥2 recall sources, escalates after 2 rounds; an **auto-fired medium run pauses for approval *before dispatch*** — reject → nothing dispatched and `git status --short` stays clean; approve → `qdev-researcher` writes the report + index per the D1 cycle. Manual `/qdev:research` persists with no extra gate. |
 
 **Testing philosophy (from D1):** deterministic logic gets pytest; judgment gets a documented manual matrix. We deliberately do **not** fake-automate the trigger with a `description`-substring assertion — that would test the static text, not the runtime matcher, and produce a green check that proves nothing.
 
@@ -218,7 +220,7 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 **Open questions (non-blocking):**
 
-- **Skill directory / `name`** — `research-grounding` dir + `qdev-grounding` name are provisional; confirm against any qdev skill-naming convention at plan time.
+- **Skill directory / `name`** — `research-grounding` dir + `qdev-grounding` name are provisional. Note (round-2 audit): for a plugin `skills/<dir>/SKILL.md`, the deliberate slash command derives from the **directory name** (→ `/qdev:research-grounding`), while `name:` is display metadata — so pick the directory name with the intended command in mind. Confirm against any qdev skill-naming convention at plan time.
 - **Trigger `description` final wording** — §4.1 is the proposed text; it is the make-or-break field and may be tuned during the manual trigger-matrix pass.
 
 *(Resolved in audit round 1 and no longer open: the secret/identifier pattern set — now required acceptance criteria, §5.2; sanitizer invocation safety — stdin, §5.1; provider/ZDR posture — fail-closed, D2-8.)*
@@ -249,4 +251,13 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 **Decisions taken during the round (user):** reject-flagged-query → abort & proceed ungrounded (D2-2); auto-fired medium → approval-before-persist (D2-7); P2 → reword to scope commands + carve out the grounding skill (D2-9).
 
-**Carry-forward to plan/implementation validation:** D1 plugin-loaded smoke (prerequisite, §10); live auto-trigger reliability via the trigger matrix; the fake-token safety smoke (§7); `allowed-tools` name resolution in a plugin-loaded session.
+**Round 2 (2026-06-03, external adversarial review):** verdict *needs major correction* — 6 of 7 resolved, SA-002 partial, 1 new blocking, 0 regressions. Verified against `qdev-researcher.md` (Write tool, no `AskUserQuestion`, internal persist at lines 91–116) and the workstation security model. Both resolved:
+
+| ID | Severity | Resolution |
+| --- | --- | --- |
+| SA-002 | High (partial → resolved) | Transport pinned: mode-`600` tmpfile + `uv run … < tmpfile` (stdin, no argv/process-listing leak), then deleted (§4.5, §5.1). The "no transcript line" acceptance claim was **over-scoped vs the workstation security model** (local plaintext is acceptable; egress is the boundary) — narrowed to **egress-safety**: `safe_query` is secret-free and is the only payload sent externally; tests assert no secret in the outbound MCP-call args or argv (§5.1, §7). |
+| SA-NEW-001 | High | `qdev-researcher` persists internally before returning and lacks `AskUserQuestion`, so "approval before persist" was impossible without changing D1. Resolved by moving the gate to **approval-before-dispatch** on auto-fired runs (D2-7, §4.4): the skill confirms before dispatching; reject → never dispatched, nothing written. D1 stays unchanged; gates before token spend. |
+
+**Decisions taken (round 2, user):** SA-NEW-001 → approval-before-dispatch (over modifying `qdev-researcher` or a D2 persistence wrapper). SA-002 egress-scoping applied under the workstation security model (binding rule: don't upload secrets externally).
+
+**Carry-forward to plan/implementation validation:** D1 plugin-loaded smoke (prerequisite, §10); live auto-trigger reliability via the trigger matrix; the fake-token **egress** safety smoke (§7 — outbound args + argv, not transcript); auto-fired medium reject→clean-tree / approve→writes (§7); `allowed-tools` name resolution in a plugin-loaded session.
