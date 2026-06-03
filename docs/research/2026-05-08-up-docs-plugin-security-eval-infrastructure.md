@@ -1,3 +1,28 @@
+---
+schema_version: '1.0'
+id: '2026-05-08-up-docs-plugin-security-eval-infrastructure'
+title: 'Plugin-Shipped Security/Eval Infrastructure for Claude Code Plugins'
+description: 'Research backing the up-docs hardening plan v2: plugin-shipped security and eval infrastructure primitives.'
+doc_type: 'research'
+status: 'active'
+created: '2026-05-08'
+updated: '2026-06-03'
+reviewed: null
+owner: ''
+tags:
+  - claude-code
+  - plugins
+  - security
+  - eval
+aliases:
+  - up-docs-security-eval
+related: []
+source: []
+confidence: 'high'
+visibility: 'internal'
+license: null
+---
+
 # Plugin-Shipped Security/Eval Infrastructure for Claude Code Plugins
 
 **Topic:** Plugin-shipped security/eval infrastructure for Claude Code plugins — concrete patterns for up-docs v2 plan. **Date:** 2026-05-08 **Queries:** 14 · Results parsed: 80+ · Deep reads: 7 (official docs) · Follow-up pass: no
