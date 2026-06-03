@@ -6,6 +6,18 @@ Topics to research before/while executing [`qdev-expansion-brief.md`](qdev-expan
 
 ---
 
+## Resolution status (updated 2026-06-03)
+
+[`qdev-research-backlog-resolution.md`](qdev-research-backlog-resolution.md) closed most web-answerable items. Status by topic number (this doc's numbering):
+
+- ✅ **Resolved (web/docs):** 1, 2, 3, 8, 9, 10, 12. Headline — **#2:** the escalating skill must run **inline, not forked** (a forked skill is a subagent, and subagents can't use `Agent`, so it could never dispatch `qdev-researcher`). Folded into the brief as a locked decision.
+- 📊 **Empirical — need a local harness (designs provided in the resolution doc):** 4, 5, 6.
+- 🔎 **Still open — targeted research:** 7 (Context7 coverage/freshness for our libraries) and 11 (per-provider data-handling/egress policies); touched but not closed by the resolution doc.
+
+Findings already folded into the brief: inline-not-forked constraint, softened "description-match" claim, `qdev doctor` + fail-soft schema guardrail, light-path token caps, OWASP external-content safety policy, and a new KB-structure open question.
+
+---
+
 ## 🔴 Foundational — verify the architecture's load-bearing assumptions
 
 These can _invalidate_ the design. Do them first; a wrong assumption here reshapes Deliverable 2.
