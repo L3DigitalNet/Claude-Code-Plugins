@@ -12,7 +12,7 @@
 
 **Naming note:** the design's §9 used hyphenated script names; this plan uses **underscores** (`build_research_index.py`, `validate_research_frontmatter.py`, `_frontmatter.py`) so the pytest suite can `import` them. `uv run <path>` is unaffected.
 
-**Revision:** revised after **plan-review audit round 1** (Codex) — CR-001 (qualified `subagent_type`), CR-002 (deterministic dedup helper + tests), CR-003 (date coercion + parser error handling) all addressed; see the Plan-review audit ledger at the end.
+**Revision:** survived **3 plan-review rounds (Codex) — loop closed clean** — CR-001 (qualified `subagent_type`; hotfixed across all four commands), CR-002 (deterministic dedup helper + tests), CR-003 (date coercion + parser error handling), and CR-NEW-001 (`dedup.py` `dependencies = []` + CLI smoke test) all resolved; see the Plan-review audit ledger at the end.
 
 ---
 
@@ -1184,3 +1184,5 @@ Expected: `ok: N file(s) valid`.
 | ID | Severity | Resolution |
 | --- | --- | --- |
 | CR-NEW-001 | High | `dedup.py`'s PEP 723 block was missing `dependencies = []`. Verified against the canonical uv docs (`/astral-sh/uv`, `docs/guides/scripts.md`): _"The `dependencies` field must always be provided in the script metadata, even if it is empty."_ Added it (Task 3b Step 3) plus a CLI smoke test exercising `uv run dedup.py` (Task 3b Step 4b), since the pytest suite only imports `decide()` directly. |
+
+**Round 3 (2026-06-03, Codex):** clean — CR-001 / CR-002 / CR-003 / CR-NEW-001 all resolved, no new issues, no regressions. **Audit loop closed; plan is execution-ready.** Run the implementation-validation commands after execution: full pytest suite (24), `uv run dedup.py` CLI, validator + idempotent generator over the real corpus, and the plugin-loaded `/qdev:research` dispatch smoke test.
