@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- `qdev-grounding` skill: the plugin's first auto-trigger. Cheap inline lookups (Category C) that escalate to the `qdev-researcher` medium sweep (Category A / after 2 failed rounds). Every outbound payload passes a deterministic egress sanitizer (`scripts/sanitize_query.py`) before leaving the machine; flagged payloads pause for approval, auto-fired medium runs confirm before dispatch.
+- `scripts/sanitize_query.py`: stdin-driven egress sanitizer (collapse tracebacks -> redact secret families -> strip private identifiers -> approval/provider decision), fail-closed.
 - Research reporting cycle: `qdev-researcher` reports now carry project-standards `research` frontmatter; `docs/research/index.md` is regenerated from frontmatter by `scripts/build_research_index.py`; `scripts/validate_research_frontmatter.py` enforces the schema. Dedup updates/links/supersedes prior reports.
 
 ### Changed

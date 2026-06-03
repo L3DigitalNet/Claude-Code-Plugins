@@ -20,17 +20,18 @@
 - **Release pipeline expects matching versions:** plugin.json version and marketplace.json version must match. Validation catches these mismatches.
 - **Test frameworks standardized:** bash plugins use bats-core, Python plugins use pytest, TypeScript plugins use Jest. See `docs/conventions.md` TEST-001 for canonical layout and rationale. Bats on Fedora 44+ requires `tests/run-bats.sh` wrapper due to gnu env stripping bash function exports (TEST-002).
 
-## Testing Strategy (2026-04-25)
+## Test Coverage Snapshot (2026-06-03)
 
-Marketplace-wide principle-traceable test coverage initiative. Phase 1 established canonical frameworks and 15 per-plugin test plans. Phase 2 delivered 232+ test cases across 15 in-scope plugins.
+Marketplace-wide tests use canonical frameworks and plugin-local suites. Keep
+counts in `docs/conventions.md` TEST-001 current when adding tests.
 
 **Quick reference:**
 - Strategic overview: `docs/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
 - Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/sessions/`
-- In scope: 9 plugins with qdev's research-KB scripts (qdev is no longer pure-markdown). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
+- In scope: 9 plugins with qdev's research-KB + grounding-sanitizer scripts (qdev is no longer pure-markdown). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
-- Merge strategy (historical, pre-2026-05-07): 15 `tests/<plugin>` sibling branches off `testing` were used during initial test rollout; testing branch retired. Any remaining `tests/*` branches are integrated by direct cherry-pick to `main`.
+- Branch workflow: direct commits to `main`.
 
 ---
 
@@ -70,7 +71,7 @@ Claude-Code-Plugins/
 │   ├── github-repo-manager/          # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
 │   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
-│   ├── qdev/                         # Development quality toolkit (research, review, deps-audit, doc-sync, spec-update)
+│   ├── qdev/                         # Development quality toolkit (commands + `skills/research-grounding`; research-KB scripts + `scripts/sanitize_query.py`)
 │   ├── qt-suite/                     # Qt development and testing toolkit
 │   ├── release-pipeline/             # Autonomous release pipeline
 │   ├── repo-hygiene/                 # Autonomous repo maintenance sweep

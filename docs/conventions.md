@@ -135,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - Rule table in this convention (canonical framework + naming conventions)
-- Existing test coverage (9 in-scope plugins, post-qdev research-KB scripts; was 8 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qdev 24 pytest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then −14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
+- Existing test coverage (9 in-scope plugins, post-qdev research-KB scripts; was 8 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qdev 75 pytest, qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then -14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
 
 **Related:** TEST-002, DOC-001
 
