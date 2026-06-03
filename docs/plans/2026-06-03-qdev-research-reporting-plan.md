@@ -1161,7 +1161,7 @@ Expected: `ok: N file(s) valid`.
 
 | ID | Severity | Resolution |
 | --- | --- | --- |
-| CR-001 | High (blocking) | Task 6 Step 1 changes `subagent_type: qdev-researcher` → `qdev:qdev-researcher` (PLUGIN-001); Step 5 asserts the bare name is gone. Pre-existing shipped bug in `research.md`. |
+| CR-001 | High (blocking) | **Hotfixed ahead of execution** (commit `68b9185`): the bug was _systemic_ — all four qdev commands dispatched bare names — so all were qualified to `qdev:qdev-<agent>` (PLUGIN-001). Task 6 Step 1's `research.md` change is therefore already applied; its Step 5 grep now just verifies. |
 | CR-002 | Medium | New Task 3b: deterministic `dedup.py` `decide()` with a per-branch pytest suite; Task 5 Step 5b calls it for the action. |
 | CR-003 | Medium | Task 1 adds `_coerce_dates` (unquoted YAML dates → ISO strings); Task 3 wraps read/parse in try/except (malformed YAML / missing file → per-file error, no crash); tests cover all three. |
 
