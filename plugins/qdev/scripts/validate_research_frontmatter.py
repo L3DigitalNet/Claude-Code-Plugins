@@ -40,6 +40,9 @@ def validate_file(path: Path, validator: Draft202012Validator) -> list[str]:
         text = Path(path).read_text(encoding="utf-8")
     except OSError as exc:
         return [f"cannot read file: {exc}"]
+    except UnicodeDecodeError as exc:
+        # not an OSError; a non-UTF-8 report must report per-file, not crash the run
+        return [f"cannot decode file as UTF-8: {exc}"]
     try:
         fm = extract_frontmatter(text)
     except yaml.YAMLError as exc:

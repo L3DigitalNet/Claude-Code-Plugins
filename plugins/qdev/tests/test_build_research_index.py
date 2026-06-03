@@ -45,6 +45,15 @@ def test_collect_skips_report_with_malformed_frontmatter(tmp_path):
     assert [r["id"] for r in rows] == ["2026-01-01-alpha"]
 
 
+def test_collect_skips_report_with_invalid_utf8(tmp_path):
+    # A non-UTF-8 byte (UnicodeDecodeError is a ValueError, not OSError) must
+    # not crash regeneration any more than malformed YAML does.
+    _report(tmp_path, "2026-01-01-alpha", "2026-01-01")
+    (tmp_path / "2026-02-01-bad.md").write_bytes(b"---\nid: \xff\xfe bad\n---\n# B\n")
+    rows = gen.collect_reports(tmp_path)  # must not raise
+    assert [r["id"] for r in rows] == ["2026-01-01-alpha"]
+
+
 def test_collect_sorts_by_created_desc(tmp_path):
     _report(tmp_path, "2026-01-01-alpha", "2026-01-01")
     _report(tmp_path, "2026-03-01-gamma", "2026-03-01")

@@ -7,6 +7,19 @@
 Pure, no network. The skill pipes any outbound payload (a light-path query or
 the medium-path handoff) to this script over stdin before any external call or
 Agent dispatch, then acts on the JSON contract printed here.
+
+Accepted heuristic limits (deliberate — do NOT "fix" by weakening redaction):
+  - Over-flag bias: a query with prose like "token: bucket" or "account id:"
+    is redacted + flagged even when benign. This is the safe direction — flagged
+    payloads are fail-closed (no provider allowed) and gated on human approval,
+    so the cost is a prompt, not a leak. Narrowing the value capture to avoid it
+    would reopen the spaced-passphrase leak it was added to close.
+  - Tier-2 identifiers are heuristic: host:internal matches only known internal
+    suffixes (.local/.lan/.internal/.tailnet); a public-looking FQDN cannot be
+    stripped without also stripping legitimate domains (react.dev) from queries.
+  - Unkeyed high-entropy secrets (a bare passphrase/codename with no recognized
+    key or token shape) are out of scope; the behavioral guardrail in SKILL.md
+    plus human approval are the backstop (see plan "Residual risk").
 """
 from __future__ import annotations
 
@@ -32,7 +45,9 @@ _SENSITIVE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("secret:google-key", re.compile(r"AIza[0-9A-Za-z_\-]{35}")),
     ("secret:slack-token", re.compile(r"(?:xox[baprs]|xapp|xwfp)-[0-9A-Za-z-]{10,}")),
     ("secret:jwt", re.compile(r"eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+")),
-    ("secret:bearer", re.compile(r"(?i)bearer\s+[A-Za-z0-9._\-]{10,}")),
+    # value is one whitespace-delimited token (\S+): OAuth bearer tokens contain
+    # base64 chars (/ + =), so a narrower class would leak the token's tail.
+    ("secret:bearer", re.compile(r"(?i)bearer\s+\S{10,}")),
     (
         "secret:signed-url",
         re.compile(
@@ -40,10 +55,13 @@ _SENSITIVE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         ),
     ),
     (
+        # `[\w-]*` after the keyword lets it sit as a SUFFIX of a longer env-var
+        # name (AWS_SECRET_ACCESS_KEY=, MY_API_KEY_PROD=) — without it the value
+        # leaked whenever the secret word was not immediately before the `=`/`:`.
         # value capture is `.+` (to end of line, no DOTALL) — NOT `\S+`: a
         # spaced passphrase must be redacted whole, never just its first token.
         "secret:assignment",
-        re.compile(r"(?i)(?:password|passwd|api[_-]?key|secret|token)\s*[=:]\s*.+"),
+        re.compile(r"(?i)(?:password|passwd|api[_-]?key|secret|token|credential)[\w-]*\s*[=:]\s*.+"),
     ),
     (
         "customer:identifier",
@@ -58,8 +76,13 @@ _IDENTIFIER_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         re.compile(r"\b100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}\b"),
     ),
     ("path:home-dir", re.compile(r"/home/[^/\s]+(?:/\S*)?")),
-    ("pii:email", re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b")),
-    ("host:internal", re.compile(r"\b(?:[a-z0-9\-]+\.)+(?:local|lan|internal|tailnet)\b", re.I)),
+    # lengths bounded to RFC limits (local ≤64, domain ≤255): an unbounded local
+    # part `[...]+@` backtracks O(n^2) on a long dotted string with no `@` (ReDoS).
+    ("pii:email", re.compile(r"\b[A-Za-z0-9._%+\-]{1,64}@[A-Za-z0-9.\-]{1,255}\.[A-Za-z]{2,}\b")),
+    # repetition is bounded {1,12} (no hostname has >12 labels): an unbounded
+    # `(?:...\.)+` before a failing suffix backtracks O(n^2) on a long dotted
+    # string — a real ReDoS (~16s on 60k chars). The bound makes it linear.
+    ("host:internal", re.compile(r"\b(?:[a-z0-9\-]+\.){1,12}(?:local|lan|internal|tailnet)\b", re.I)),
 ]
 
 _CODE_CHARS = set("{};()=<>")
@@ -175,10 +198,12 @@ def _collapse_tracebacks(text: str) -> tuple[str, bool]:
 
 def _strip_code_excerpt(text: str) -> tuple[str, bool]:
     lines = text.splitlines()
-    if sum(_is_code_line(line) for line in lines) < 6:
+    # classify each line once; _is_code_line runs up to 6 regexes + a char scan
+    is_code = [_is_code_line(line) for line in lines]
+    if sum(is_code) < 6:
         return text, False
 
-    stripped = ["[code removed]" if _is_code_line(line) else line for line in lines]
+    stripped = ["[code removed]" if code else line for code, line in zip(is_code, lines)]
     return "\n".join(stripped), True
 
 

@@ -74,6 +74,13 @@ def test_malformed_yaml_reports_error_without_crashing(tmp_path):
     assert errs and "yaml" in errs[0].lower()
 
 
+def test_invalid_utf8_reports_error_without_crashing(tmp_path):
+    f = tmp_path / "bad.md"
+    f.write_bytes(b"---\nid: \xff\xfe bad\n---\n# B\n")
+    errs = val.validate_file(f, val.build_validator())
+    assert errs and any(k in errs[0].lower() for k in ("utf-8", "decode", "read"))
+
+
 def test_missing_file_reports_error(tmp_path):
     errs = val.validate_file(tmp_path / "nope.md", val.build_validator())
     assert errs and "read" in errs[0].lower()

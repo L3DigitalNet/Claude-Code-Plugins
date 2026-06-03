@@ -71,20 +71,31 @@ def test_agents_and_skill_declare_at_least_one_tool(path):
     assert _tool_entries(_fm(path)), f"{_rel(path)}: declares no tools"
 
 
-def test_subagent_type_guard_is_not_vacuous():
-    # If no command/skill names a subagent_type, the qualification check above
-    # would pass for the wrong reason. Pin that the guard exercises real refs.
-    total = sum(
-        len(_SUBAGENT_REF.findall(p.read_text(encoding="utf-8"))) for p in DISPATCHERS
-    )
-    assert total >= len(COMMANDS) - 1  # every dispatching command + the skill
+# A file that describes using the Agent tool (or names a subagent_type) is a
+# dispatcher and MUST carry a qualified subagent_type. Keying off this marker —
+# not a global ref count — catches the real PLUGIN-001 regression: a command
+# that still says "use the Agent tool" but lost/garbled its subagent_type line.
+_DISPATCH_MARKER = re.compile(r"`Agent` tool|subagent_type")
 
 
 @pytest.mark.parametrize("path", DISPATCHERS, ids=_rel)
-def test_subagent_type_references_are_namespace_qualified(path):
-    refs = _SUBAGENT_REF.findall(path.read_text(encoding="utf-8"))
+def test_dispatching_file_has_qualified_subagent_type(path):
+    body = path.read_text(encoding="utf-8")
+    refs = _SUBAGENT_REF.findall(body)
+    if _DISPATCH_MARKER.search(body):
+        assert refs, (
+            f"{_rel(path)}: describes an Agent dispatch but declares no "
+            "subagent_type (PLUGIN-001: it would dispatch nothing at runtime)"
+        )
     for ref in refs:
         assert ref.startswith("qdev:"), (
             f"{_rel(path)}: bare subagent_type {ref!r} — must be qualified "
             "(PLUGIN-001: an unqualified plugin-agent name dispatches nothing)"
         )
+
+
+def test_dispatch_markers_present_so_guard_is_not_vacuous():
+    # Pin that the per-file guard actually runs against real dispatchers; the 4
+    # subagent-backed commands + the grounding skill each carry the marker.
+    marked = [p for p in DISPATCHERS if _DISPATCH_MARKER.search(p.read_text(encoding="utf-8"))]
+    assert len(marked) >= 5

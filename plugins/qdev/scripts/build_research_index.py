@@ -37,7 +37,7 @@ def collect_reports(research_dir: Path) -> list[dict]:
         # the whole index (parity with the validator's per-file resilience).
         try:
             fm = read_frontmatter(md)
-        except (yaml.YAMLError, OSError) as exc:
+        except (yaml.YAMLError, OSError, UnicodeDecodeError) as exc:
             print(f"warning: skipping {md.name}: {exc}", file=sys.stderr)
             continue
         if fm is None or fm.get("doc_type") != "research":

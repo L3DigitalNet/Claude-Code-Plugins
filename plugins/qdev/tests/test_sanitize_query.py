@@ -74,6 +74,25 @@ def test_assignment_with_spaced_value_redacts_whole_value():
     assert "battery staple" not in r["safe_query"]
 
 
+def test_env_style_secret_key_name_redacted_and_flags():
+    # The secret keyword may be a suffix of a longer env-var name; the value is
+    # the real credential (e.g. AWS_SECRET_ACCESS_KEY=...). It must not leak.
+    secret = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    r = sanitize(f"AWS_SECRET_ACCESS_KEY={secret}")
+    assert r["requires_human_approval"] is True
+    assert secret not in r["safe_query"]
+    assert "secret:assignment" in r["dropped_fields"]
+
+
+def test_bearer_token_with_base64_chars_fully_redacted():
+    # Real OAuth bearer tokens contain '/', '+', '='; the whole token must be
+    # redacted, not just the run before the first such char.
+    tok = "ya29.A0ARrdaM-longtokenpart/extrasecretpart="
+    r = sanitize(f"Authorization: Bearer {tok}")
+    assert r["requires_human_approval"] is True
+    assert "extrasecretpart" not in r["safe_query"]
+
+
 def test_pem_block_redacted_and_flags():
     pem = "-----BEGIN PRIVATE KEY-----\nMIIBVwIBADANBgSECRET\n-----END PRIVATE KEY-----"
     r = sanitize(f"key load error {pem}")
@@ -324,10 +343,11 @@ def test_multiple_distinct_families_all_redacted_and_labeled():
     assert r["requires_human_approval"] is True
 
 
-def test_secret_hidden_in_traceback_frame_does_not_leak():
-    # A secret on a dropped frame line is removed by traceback collapse. The
-    # binding contract is no-leak; it is collapsed as a frame (not flagged as a
-    # secret), which is acceptable because it never reaches safe_query.
+def test_secret_on_indented_traceback_frame_is_dropped_as_a_frame():
+    # A secret on an INDENTED frame line is removed by traceback collapse before
+    # the secret pass runs, so it is labeled trace:frames (not secret:*) and
+    # does NOT raise approval. The binding guarantee is still no-leak; this test
+    # pins the full contract of that path so a regression is visible.
     tb = (
         "Traceback (most recent call last):\n"
         '  File "/x.py", line 2, in f\n'
@@ -335,8 +355,27 @@ def test_secret_hidden_in_traceback_frame_does_not_leak():
         "ValueError: boom"
     )
     r = sanitize(tb)
-    assert "sk-abcdef0123456789ABCDEFGHIJ" not in _egress(r)
+    assert "sk-abcdef0123456789ABCDEFGHIJ" not in _egress(r)   # no leak (binding)
     assert r["safe_query"] == "ValueError: boom"
+    assert "trace:frames" in r["dropped_fields"]                # dropped as a frame
+    assert "secret:openai-key" not in r["dropped_fields"]       # NOT the secret path
+    assert r["requires_human_approval"] is False                # frame removal, no flag
+
+
+def test_secret_on_unindented_line_after_traceback_is_redacted_by_secret_pass():
+    # If a secret rides a NON-indented line (a traceback terminator), it is NOT
+    # dropped as a frame — so the secret pass must catch it. Pins that the
+    # no-leak guarantee does not depend on incidental frame indentation.
+    tb = (
+        "Traceback (most recent call last):\n"
+        '  File "/x.py", line 2, in f\n'
+        "    do()\n"
+        "ValueError: boom\n"
+        "token=sk-abcdef0123456789ABCDEFGHIJ"
+    )
+    r = sanitize(tb)
+    assert "sk-abcdef0123456789ABCDEFGHIJ" not in _egress(r)
+    assert r["requires_human_approval"] is True
 
 
 def test_identifier_only_keeps_all_providers_allowed():
@@ -345,18 +384,29 @@ def test_identifier_only_keeps_all_providers_allowed():
     assert all(r["provider_allowed"].values())
 
 
-def test_no_redos_on_pathological_input():
-    # Guards against a future regex edit reintroducing catastrophic backtracking.
-    # Probed baseline is well under 0.2s; the bound is deliberately generous.
-    payloads = [
-        "-----BEGIN PRIVATE KEY-----" + "A" * 200_000,   # unterminated PEM
-        "Bearer " + "a " * 100_000,                       # many bearer near-matches
-        "x = y;" * 100_000,                               # dense single line
-    ]
-    for payload in payloads:
-        start = time.perf_counter()
-        sanitize(payload)
-        assert time.perf_counter() - start < 2.0
+@pytest.mark.parametrize(
+    "name,payload",
+    [
+        # Each targets a quantifier that could backtrack: the DOTALL `.*?` PEM
+        # body, the `.+` assignment value, the `\S{10,}` bearer/slack runs, and
+        # the repeated-prefix case that forces many failed match attempts.
+        ("unterminated_pem", "-----BEGIN PRIVATE KEY-----\n" + "MIIB/+A=\n" * 8_000),
+        ("assignment_giant_value", "password=" + "a" * 60_000),
+        ("many_assignment_starts", "password=x\n" * 6_000),
+        ("bearer_long_run", "Bearer " + "aA0-._/" * 9_000),
+        ("repeated_bearer_prefix", "Bearer " * 12_000 + "x"),
+        ("near_jwt_segments", "eyJ" + "a.b.c" * 12_000),
+        ("dense_code_lines", "x = y(z);\n" * 6_000),
+    ],
+    ids=lambda v: v if isinstance(v, str) and " " not in v else "",
+)
+def test_no_redos_on_pathological_input(name, payload):
+    # Guards against a regex edit reintroducing catastrophic backtracking on
+    # adversarial input. Baselines are well under 0.2s; the bound has headroom
+    # for loaded CI but is tight enough to catch a genuine blow-up.
+    start = time.perf_counter()
+    sanitize(payload)
+    assert time.perf_counter() - start < 1.0, f"{name}: sanitize too slow (possible ReDoS)"
 
 
 def test_cli_stdin_transport_redacts_no_leak(tmp_path):
