@@ -12,13 +12,16 @@
 
 **Naming note:** the design's §9 used hyphenated script names; this plan uses **underscores** (`build_research_index.py`, `validate_research_frontmatter.py`, `_frontmatter.py`) so the pytest suite can `import` them. `uv run <path>` is unaffected.
 
+**Revision:** revised after **plan-review audit round 1** (Codex) — CR-001 (qualified `subagent_type`), CR-002 (deterministic dedup helper + tests), CR-003 (date coercion + parser error handling) all addressed; see the Plan-review audit ledger at the end.
+
 ---
 
 ## File structure
 
 | File | Responsibility | New? |
 | --- | --- | --- |
-| `plugins/qdev/scripts/_frontmatter.py` | Parse the leading YAML frontmatter block from a Markdown file (shared by both scripts) | new |
+| `plugins/qdev/scripts/_frontmatter.py` | Parse the leading YAML frontmatter block (shared); coerce YAML dates → ISO strings (CR-003) | new |
+| `plugins/qdev/scripts/dedup.py` | Deterministic dedup decision (update / new+related / supersede), owned by one testable function (CR-002) | new |
 | `plugins/qdev/scripts/build_research_index.py` | Regenerate `docs/research/index.md` from report frontmatter (regenerate-only) | new |
 | `plugins/qdev/scripts/validate_research_frontmatter.py` | Validate report frontmatter against the vendored schema | new |
 | `plugins/qdev/scripts/markdown-frontmatter.schema.json` | Vendored copy of the project-standards schema (no cross-repo dep) | new |
@@ -26,7 +29,8 @@
 | `plugins/qdev/tests/requirements.txt` | pytest + pyyaml + jsonschema | new |
 | `plugins/qdev/tests/test_frontmatter.py` | Unit tests for the parser | new |
 | `plugins/qdev/tests/test_build_research_index.py` | Unit tests for the generator | new |
-| `plugins/qdev/tests/test_validate_research_frontmatter.py` | Unit tests for the validator | new |
+| `plugins/qdev/tests/test_validate_research_frontmatter.py` | Unit tests for the validator (incl. unquoted dates, malformed YAML, missing file) | new |
+| `plugins/qdev/tests/test_dedup.py` | Unit tests for every dedup decision-table branch | new |
 | `plugins/qdev/agents/qdev-researcher.md` | Frontmatter emit, Sources table, per-path routing, Context7 gate + dual-grant, quirks, fallback, guardrails, self-validate, dedup/index calls | modify |
 | `plugins/qdev/commands/research.md` | Relay reconciled header; mention the index in the handoff | modify |
 | `docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md` | Migrate to `research` frontmatter | modify |
@@ -140,6 +144,14 @@ def test_block_not_at_top_is_not_frontmatter():
 def test_non_mapping_returns_none():
     # A YAML list at the top is not a frontmatter mapping.
     assert extract_frontmatter("---\n- a\n- b\n---\n") is None
+
+
+def test_unquoted_dates_coerced_to_iso_strings():
+    # YAML parses unquoted dates as datetime.date; the string-typed schema
+    # needs ISO strings. (CR-003)
+    fm = extract_frontmatter("---\ncreated: 2026-06-03\nupdated: 2026-06-03\n---\n")
+    assert fm == {"created": "2026-06-03", "updated": "2026-06-03"}
+    assert isinstance(fm["created"], str)
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -157,9 +169,15 @@ Create `plugins/qdev/scripts/_frontmatter.py`:
 Recognises a frontmatter block only at the very top of the file (the \\A
 anchor), matching the canonical project-standards validator: a `---` block
 appearing anywhere else is intentionally NOT treated as frontmatter.
+
+Unquoted YAML dates (`created: 2026-06-03`) parse as `datetime.date`, but the
+schema validates those fields as strings; `_coerce_dates` converts them to ISO
+strings so authors may write either form. (Parity with the canonical
+project-standards `_coerce_dates` — CR-003.)
 """
 from __future__ import annotations
 
+import datetime
 import re
 from pathlib import Path
 
@@ -168,13 +186,28 @@ import yaml
 _FM_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---(?:\r?\n|$)", re.DOTALL)
 
 
+def _coerce_dates(obj):
+    """Recursively convert datetime.date/datetime values to ISO strings."""
+    if isinstance(obj, datetime.datetime):
+        return obj.date().isoformat()
+    if isinstance(obj, datetime.date):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: _coerce_dates(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_coerce_dates(v) for v in obj]
+    return obj
+
+
 def extract_frontmatter(text: str) -> dict | None:
-    """Return the parsed frontmatter mapping, or None if absent or not a mapping."""
+    """Parsed frontmatter mapping (dates coerced to ISO strings), or None if
+    absent or not a mapping. Raises yaml.YAMLError on malformed YAML — callers
+    that validate files catch it and report a per-file error."""
     match = _FM_RE.match(text)
     if not match:
         return None
     data = yaml.safe_load(match.group(1))
-    return data if isinstance(data, dict) else None
+    return _coerce_dates(data) if isinstance(data, dict) else None
 
 
 def read_frontmatter(path: Path) -> dict | None:
@@ -185,7 +218,7 @@ def read_frontmatter(path: Path) -> dict | None:
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with pytest pytest test_frontmatter.py -v`
-Expected: PASS — 4 passed
+Expected: PASS — 5 passed
 
 - [ ] **Step 5: Commit**
 
@@ -461,6 +494,24 @@ def test_main_exit_codes(tmp_path):
     bad = _write(tmp_path / "bad.md", "# nope\n")
     assert val.main(["validate_research_frontmatter.py", str(bad)]) == 1
     assert val.main(["validate_research_frontmatter.py"]) == 2
+
+
+def test_unquoted_dates_validate_ok(tmp_path):
+    text = VALID.replace('created: "2026-01-01"', "created: 2026-01-01").replace(
+        'updated: "2026-01-01"', "updated: 2026-01-01")
+    f = _write(tmp_path / "a.md", text)
+    assert val.validate_file(f, val.build_validator()) == []
+
+
+def test_malformed_yaml_reports_error_without_crashing(tmp_path):
+    f = _write(tmp_path / "a.md", "---\nid: [unbalanced\n---\n\n# Body\n")
+    errs = val.validate_file(f, val.build_validator())
+    assert errs and "yaml" in errs[0].lower()
+
+
+def test_missing_file_reports_error(tmp_path):
+    errs = val.validate_file(tmp_path / "nope.md", val.build_validator())
+    assert errs and "read" in errs[0].lower()
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -493,6 +544,7 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
 from jsonschema import Draft202012Validator
 
 from _frontmatter import extract_frontmatter
@@ -506,8 +558,18 @@ def build_validator() -> Draft202012Validator:
 
 
 def validate_file(path: Path, validator: Draft202012Validator) -> list[str]:
-    """Return a list of human-readable error strings ([] means valid)."""
-    fm = extract_frontmatter(Path(path).read_text(encoding="utf-8"))
+    """Return a list of human-readable error strings ([] means valid).
+
+    Read/parse failures become a single per-file error rather than a crash, so
+    one bad file among many does not abort the run (CR-003)."""
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"cannot read file: {exc}"]
+    try:
+        fm = extract_frontmatter(text)
+    except yaml.YAMLError as exc:
+        return [f"invalid YAML frontmatter: {exc}"]
     if fm is None:
         return ["no frontmatter block found (required)"]
     errors = sorted(validator.iter_errors(fm), key=lambda e: list(e.path))
@@ -537,18 +599,155 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest test_validate_research_frontmatter.py -v`
-Expected: PASS — 6 passed
+Expected: PASS — 9 passed
 
-- [ ] **Step 5: Run the whole qdev suite**
+- [ ] **Step 5: Run the whole qdev suite so far**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v`
-Expected: PASS — 14 passed
+Expected: PASS — 18 passed (5 parser + 4 generator + 9 validator; dedup added in Task 3b)
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add plugins/qdev/scripts/validate_research_frontmatter.py plugins/qdev/tests/test_validate_research_frontmatter.py
 git commit -m "feat(qdev): add scoped research-frontmatter validator"
+```
+
+---
+
+## Task 3b: Deterministic dedup decision helper (CR-002)
+
+**Files:**
+- Create: `plugins/qdev/scripts/dedup.py`
+- Test: `plugins/qdev/tests/test_dedup.py`
+
+The design's dedup decision table (§4.2) is the KB's core behavior. Extract the _decision_ into one pure function so every branch is unit-tested; the agent supplies the judgment-based inputs (matched-tag count, age, fast-moving?, different-angle?, replaces?) and follows the returned action.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `plugins/qdev/tests/test_dedup.py`:
+
+```python
+from dedup import decide
+
+
+def test_under_two_matches_is_plain_new():
+    assert decide(matched=1, months_old=1, fast_moving=False,
+                  different_angle=False, replaces=False) == {
+        "action": "new", "related": False, "supersede": False}
+
+
+def test_recent_overlap_not_fast_moving_updates():
+    assert decide(matched=3, months_old=2, fast_moving=False,
+                  different_angle=False, replaces=False) == {
+        "action": "update", "related": False, "supersede": False}
+
+
+def test_old_fast_moving_new_related_and_supersedes_when_replacing():
+    assert decide(matched=3, months_old=9, fast_moving=True,
+                  different_angle=False, replaces=True) == {
+        "action": "new", "related": True, "supersede": True}
+
+
+def test_old_fast_moving_new_related_without_supersede():
+    assert decide(matched=3, months_old=9, fast_moving=True,
+                  different_angle=False, replaces=False) == {
+        "action": "new", "related": True, "supersede": False}
+
+
+def test_different_angle_new_related():
+    assert decide(matched=3, months_old=2, fast_moving=False,
+                  different_angle=True, replaces=False) == {
+        "action": "new", "related": True, "supersede": False}
+
+
+def test_old_not_fast_not_different_falls_back_to_new_related():
+    assert decide(matched=3, months_old=9, fast_moving=False,
+                  different_angle=False, replaces=False) == {
+        "action": "new", "related": True, "supersede": False}
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v`
+Expected: FAIL — `ModuleNotFoundError: No module named 'dedup'`
+
+- [ ] **Step 3: Implement the decision helper**
+
+Create `plugins/qdev/scripts/dedup.py`:
+
+```python
+# /// script
+# requires-python = ">=3.11"
+# ///
+"""Deterministic dedup decision for the qdev research KB.
+
+The agent computes the (judgment-based) facts about the best-matching existing
+report; this module owns the (deterministic) decision so each branch of the
+design's decision table (§4.2) is unit-testable. Precedence is explicit:
+
+1. <2 tags match            -> new (no link)
+2. different angle          -> new + related
+3. recent & not fast-moving -> update in place
+4. fast-moving              -> new + related (+ supersede if it replaces the old)
+5. otherwise (old, stable)  -> new + related
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+
+RECENT_MONTHS = 6
+
+
+def decide(*, matched: int, months_old: float, fast_moving: bool,
+           different_angle: bool, replaces: bool) -> dict:
+    if matched < 2:
+        return {"action": "new", "related": False, "supersede": False}
+    if different_angle:
+        return {"action": "new", "related": True, "supersede": False}
+    if months_old < RECENT_MONTHS and not fast_moving:
+        return {"action": "update", "related": False, "supersede": False}
+    if fast_moving:
+        return {"action": "new", "related": True, "supersede": bool(replaces)}
+    return {"action": "new", "related": True, "supersede": False}
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--matched", type=int, required=True)
+    parser.add_argument("--months-old", type=float, required=True)
+    parser.add_argument("--fast-moving", action="store_true")
+    parser.add_argument("--different-angle", action="store_true")
+    parser.add_argument("--replaces", action="store_true")
+    a = parser.parse_args(argv[1:])
+    print(json.dumps(decide(matched=a.matched, months_old=a.months_old,
+                            fast_moving=a.fast_moving,
+                            different_angle=a.different_angle,
+                            replaces=a.replaces)))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))
+```
+
+- [ ] **Step 4: Run the tests to verify they pass**
+
+Run: `cd plugins/qdev/tests && uv run --with pytest pytest test_dedup.py -v`
+Expected: PASS — 6 passed
+
+- [ ] **Step 5: Run the whole qdev suite**
+
+Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v`
+Expected: PASS — 24 passed (5 parser + 4 generator + 9 validator + 6 dedup)
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add plugins/qdev/scripts/dedup.py plugins/qdev/tests/test_dedup.py
+git commit -m "feat(qdev): deterministic dedup decision helper with per-branch tests"
 ```
 
 ---
@@ -565,7 +764,7 @@ Use the heading/intro to fill `title` and `description` below.
 
 - [ ] **Step 2: Prepend the `research` frontmatter block**
 
-Insert at the very top of the file (before the existing `# ` heading), filling `title`/`description`/`tags` from the content:
+Insert at the very top of the file (before the existing `#` heading), filling `title`/`description`/`tags` from the content:
 
 ```yaml
 ---
@@ -629,13 +828,13 @@ This is a prose/agent-definition change; verification is structural (grep + vali
 
 In the frontmatter `tools:` line, add the `get-library-docs` variant next to `query-docs`. Replace:
 
-```
+```yaml
 tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_search, mcp__tavily-mcp__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__resolve-library-id
 ```
 
 with:
 
-```
+```yaml
 tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_search, mcp__tavily-mcp__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__get-library-docs, mcp__plugin_context7_context7__resolve-library-id
 ```
 
@@ -696,33 +895,35 @@ In `<guardrails>`, add these bullets:
 
 - [ ] **Step 5: Rewrite the persist step to emit frontmatter, dedup, and regenerate the index (§3, §4)**
 
-Replace task step 10 (`**Persist.** Write the report to ...`) with:
+`$SCRIPTS` below is the absolute scripts dir the orchestrator passes in (Task 6 Step 2); fall back to `${CLAUDE_PLUGIN_ROOT}/scripts` if unset. Replace task step 10 (`**Persist.** Write the report to ...`) with:
 
 ```markdown
 10. **Persist with the reporting cycle.**
     a. **Preflight the index (ordering, §4.4):** if `docs/research/index.md` is absent or
        stale, regenerate it first so existing reports are visible to dedup:
-       `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/build_research_index.py" docs/research`
+       `uv run "$SCRIPTS/build_research_index.py" docs/research`
     b. **Dedup (§4.2):** derive 3–5 keyword tags; match `index.md` rows by tags ∪ aliases ∪
-       title overlap. Then:
-       - ≥2 tags match · existing <6 mo · scope overlaps · not fast-moving → **update**:
-         bump the existing report's `updated`, append a `## Update: <date>` section (never
-         rewrite prior content).
-       - ≥2 tags match · existing >6 mo · fast-moving (lib/API/CLI/version or security) →
-         **new report**; set `related: [<old-id>]`; if it fully replaces the old one, set
+       title overlap to find the best-matching prior report. Compute its facts (matched-tag
+       count, age in months, fast-moving?, different angle?, fully-replaces?) and get the
+       deterministic action from the helper:
+       `uv run "$SCRIPTS/dedup.py" --matched <N> --months-old <M> [--fast-moving] [--different-angle] [--replaces]`
+       which prints exactly one of:
+       - `{"action":"update",...}` → bump the existing report's `updated`; append a
+         `## Update: <date>` section (never rewrite prior content).
+       - `{"action":"new","related":true,"supersede":true}` → new report; set
          `supersedes: [<old-id>]` here and `superseded_by: <new-id>` + `status: superseded`
-         on the old.
-       - ≥2 tags match · different angle → **new report**; `related: [<old-id>]`.
-       - <2 tags match → **new report**.
+         on the old report.
+       - `{"action":"new","related":true,"supersede":false}` → new report; `related: [<old-id>]`.
+       - `{"action":"new","related":false,...}` → new report, no link.
     c. **Write** the report to `docs/research/<YYYY-MM-DD>-<slug>.md` (slug = kebab topic,
        ≤60 chars; `id` = the filename stem). Lead the file with the project-standards
        `research` frontmatter block (all 11 required fields + `source`, `confidence`,
        `tags`, `aliases`, `related`), then the body, then the `## Sources` table.
     d. **Self-validate (§5):**
-       `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_research_frontmatter.py" docs/research/<file>.md`
+       `uv run "$SCRIPTS/validate_research_frontmatter.py" docs/research/<file>.md`
        — fix the block until it passes before continuing.
     e. **Regenerate the index:**
-       `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/build_research_index.py" docs/research`
+       `uv run "$SCRIPTS/build_research_index.py" docs/research`
 ```
 
 - [ ] **Step 6: Add the frontmatter contract + Sources table to `<output_format>` (§3.1–3.2)**
@@ -739,16 +940,24 @@ section after the existing sections:
 |-----|-------|------|-----------|
 ```
 
-- [ ] **Step 7: Verify the edits structurally**
+- [ ] **Step 7: Verify the edits structurally (one check per required topic)**
 
-Run:
+Run each separately so a single topic can't mask a missing one:
+
 ```bash
-grep -c "get-library-docs" plugins/qdev/agents/qdev-researcher.md          # >=1
-grep -c "tavily_search" plugins/qdev/agents/qdev-researcher.md             # >=1
-grep -c "build_research_index.py\|validate_research_frontmatter.py" plugins/qdev/agents/qdev-researcher.md  # >=3
-grep -c "Context7 FIRST\|docs-vs-web\|fail-soft\|## Sources" plugins/qdev/agents/qdev-researcher.md         # >=1 each topic
+A=plugins/qdev/agents/qdev-researcher.md
+grep -c "get-library-docs" "$A"                  # >=1  Context7 dual grant (SA-004)
+grep -c "tavily_search" "$A"                     # >=1  Tavily-first recall
+grep -c "dedup.py" "$A"                          # >=1  deterministic dedup call
+grep -c "build_research_index.py" "$A"           # >=2  preflight + regenerate
+grep -c "validate_research_frontmatter.py" "$A"  # >=1  self-validate
+grep -cE "Context7 FIRST|Context7-first" "$A"    # >=1  docs-vs-web gate
+grep -cE "fail-soft|fallback chain" "$A"         # >=1  fail-soft fallback
+grep -c "## Sources" "$A"                        # >=1  Sources table
+grep -ciE "sanitize|egress" "$A"                 # >=1  query-egress guardrail
 ```
-Expected: each count ≥ its noted minimum.
+
+Expected: each count meets its noted minimum.
 
 - [ ] **Step 8: Commit**
 
@@ -759,34 +968,63 @@ git commit -m "feat(qdev): per-path routing, Context7 gate, reporting cycle + gu
 
 ---
 
-## Task 6: Update the `/qdev:research` command
+## Task 6: Update the `/qdev:research` command (incl. CR-001 dispatch fix)
 
 **Files:**
-- Modify: `plugins/qdev/commands/research.md`
+- Modify: `plugins/qdev/commands/research.md:53`
 
-- [ ] **Step 1: Mention the index in the dispatch prompt**
+- [ ] **Step 1: Fix the subagent dispatch to the qualified name (CR-001, blocking)**
 
-In the `Dispatch qdev-researcher` prompt block, append to the instruction list:
+Per repo convention PLUGIN-001, a bare `subagent_type` fails at runtime with
+"Agent type not found" and the skill silently no-ops. The shipped command uses
+the bare name. Change it:
+
+```diff
+- Use the `Agent` tool with `subagent_type: qdev-researcher` and a prompt like:
++ Use the `Agent` tool with `subagent_type: qdev:qdev-researcher` and a prompt like:
+```
+
+- [ ] **Step 2: Pass an absolute scripts path to the agent**
+
+`${CLAUDE_PLUGIN_ROOT}` is reliably set in the command's context but is NOT
+guaranteed inside the spawned agent's Bash. Have the command resolve it and
+hand the agent an absolute scripts dir. Add to the dispatch prompt:
+
+> The research-KB scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/`. Pass that
+> absolute path to the agent as `SCRIPTS` so it can invoke
+> `uv run "$SCRIPTS/build_research_index.py"`, `"$SCRIPTS/validate_research_frontmatter.py"`,
+> and `"$SCRIPTS/dedup.py"`.
+
+- [ ] **Step 3: Mention the reporting cycle in the dispatch prompt**
+
+Append to the dispatch instruction list:
 `run the reporting cycle (preflight index → dedup → write report with frontmatter → self-validate → regenerate index) and return the structured report per your output format.`
 
-- [ ] **Step 2: Note the index in the final summary**
+- [ ] **Step 4: Note the index in the final summary**
 
 Change the final summary block to:
 
-```
+```text
 ✓ Research complete. Report: <path>  ·  Index: docs/research/index.md
 ```
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 5: Verify (CR-001 closed)**
 
-Run: `grep -c "index" plugins/qdev/commands/research.md`
-Expected: ≥ 1
+```bash
+C=plugins/qdev/commands/research.md
+grep -c "subagent_type: qdev:qdev-researcher" "$C"   # ==1  qualified name present
+grep -c "subagent_type: qdev-researcher" "$C"        # ==0  bare name gone
+grep -c "SCRIPTS" "$C"                                # >=1  scripts path passed
+grep -c "index" "$C"                                  # >=1
+```
 
-- [ ] **Step 4: Commit**
+Expected: `1`, `0`, ≥1, ≥1.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add plugins/qdev/commands/research.md
-git commit -m "docs(qdev): /qdev:research relays the reporting-cycle + index"
+git commit -m "fix(qdev): qualified subagent_type + pass scripts path; relay reporting cycle"
 ```
 
 ---
@@ -875,20 +1113,28 @@ Expected: ≥ 1 match.
 
 ---
 
-## Final acceptance (run after Tasks 0–8)
+## Final acceptance (run after Tasks 0–9)
 
 - [ ] **Full qdev test suite**
 
 Run: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -v`
-Expected: PASS — 14 passed.
+Expected: PASS — 24 passed (5 parser + 4 generator + 9 validator + 6 dedup).
+
+- [ ] **Dispatch smoke test (CR-001)**
+
+In a plugin-loaded session run `/qdev:research <topic>` and confirm the
+`qdev:qdev-researcher` subagent actually starts — no "Agent type not found",
+no silent no-op.
 
 - [ ] **Generator idempotency on the real corpus**
 
 Run:
+
 ```bash
 uv run plugins/qdev/scripts/build_research_index.py docs/research
 git diff --quiet docs/research/index.md && echo "idempotent" || echo "DRIFT"
 ```
+
 Expected: `idempotent` (after the first generation is committed).
 
 - [ ] **Validator over the real corpus**
@@ -906,3 +1152,19 @@ Expected: `ok: N file(s) valid`.
 - **uv invocation in tests:** the `uv run --with ... pytest` form provides deps without a `pyproject.toml`; the scripts themselves declare deps via PEP 723 so `uv run <script>.py` works standalone.
 - **Do not** resurrect the `testing/` tree (removed deliberately in `66b02d4`).
 - **D2 is out of scope** (escalating auto-trigger skill) — see design §12.
+
+---
+
+## Plan-review audit ledger
+
+**Round 1 (2026-06-03, Codex):** verdict _needs major correction_ — 1 blocking + 2 non-blocking. All verified against repo truth and addressed:
+
+| ID | Severity | Resolution |
+| --- | --- | --- |
+| CR-001 | High (blocking) | Task 6 Step 1 changes `subagent_type: qdev-researcher` → `qdev:qdev-researcher` (PLUGIN-001); Step 5 asserts the bare name is gone. Pre-existing shipped bug in `research.md`. |
+| CR-002 | Medium | New Task 3b: deterministic `dedup.py` `decide()` with a per-branch pytest suite; Task 5 Step 5b calls it for the action. |
+| CR-003 | Medium | Task 1 adds `_coerce_dates` (unquoted YAML dates → ISO strings); Task 3 wraps read/parse in try/except (malformed YAML / missing file → per-file error, no crash); tests cover all three. |
+
+**Also addressed (review "missing considerations"):** Task 5 Step 7 split into one grep per topic; Task 6 Step 2 passes an absolute `$SCRIPTS` path so the agent does not depend on `${CLAUDE_PLUGIN_ROOT}` in its Bash.
+
+**Carry-forward to verify at execution:** `${CLAUDE_PLUGIN_ROOT}` availability in the agent's Bash (mitigated by passing `$SCRIPTS`); the `get-library-docs` grant is a no-op when unavailable; whether qdev's _other_ commands also need qualified `subagent_type` (out of D1 scope — flag separately).
