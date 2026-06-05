@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-05 (qdev v1.6.0 released; D2 incident advanced — release blocker cleared, Task 7 manual matrix unblocked)
+**Last updated:** 2026-06-05 (handoff v3.1 migration verified; deployed.md + 3 stale `docs/specs/` refs corrected)
 
 ## Session Instructions
 
@@ -16,6 +16,6 @@
 
 ## Recently closed (this session, 2026-06-05)
 
-- **qdev v1.6.0 release** — commit `efe90b8`, tag `qdev/v1.6.0`, release published. D2 feature (grounding skill + sanitizer) shipped in tagged release; prior 18 commits on `main` with unreleased feature now available to marketplace.
+- **Handoff v3.1 migration verified + doc drift corrected.** `validate-layout.sh` passes; hook hash matches canonical source. Fixed `deployed.md` version drift (up-docs 0.9.0→0.9.1 _released_; repo-hygiene **1.4.3** + test-driver **0.6.2** flagged marketplace-live-but-untagged, release pending) and 3 stale `docs/specs/` refs (`AGENTS.md`, `conventions.md`, `specs-plans.md` → real `docs/plans/` + `docs/research/` + `docs/superpowers/`).
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->

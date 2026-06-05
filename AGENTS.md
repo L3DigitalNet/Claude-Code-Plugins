@@ -12,7 +12,7 @@ Plugin authoring and release workspace for Claude Code / Codex plugins.
 
 ## Key Rules
 
-- Treat `docs/specs/` as the architectural source of truth for plugin behavior and marketplace schema.
+- Treat the design specs indexed in `docs/handoff/specs-plans.md` (stored under `docs/plans/`, `docs/research/`, and `docs/superpowers/{specs,plans}/`) as the architectural source of truth for plugin behavior; the marketplace schema lives in `docs/handoff/architecture.md`.
 - Keep `.codex-plugin/plugin.json`, plugin folders, command wiring, and marketplace metadata in sync.
 - Validate substantive plugin changes with the plugin test harness before wrapping up.
 - Preserve documented enforcement layers, hooks, and release-pipeline expectations when refactoring.

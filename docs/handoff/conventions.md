@@ -28,7 +28,7 @@ Human-facing (prose OK):
 LLM-facing (terse, scannable, tables > prose, no narrative framing):
 - CLAUDE.md, AGENTS.md
 - docs/handoff/state.md, docs/handoff/deployed.md, docs/handoff/architecture.md, docs/handoff/credentials.md, docs/handoff/conventions.md (v3 handoff layout — `docs/handoff.md` was renamed during the 2026-04-24 migration)
-- docs/specs/*.md, docs/plans/*.md
+- `docs/plans/`, `docs/research/`, `docs/superpowers/` (all `.md`)
 - any other file under docs/
 ```
 

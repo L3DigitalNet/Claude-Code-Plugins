@@ -1,6 +1,6 @@
 # Specs & Plans
 
-Index of design and implementation artifacts under `docs/specs/` and `docs/plans/`. ISO-8601-prefixed filenames.
+Index of design and implementation artifacts under `docs/plans/`, `docs/research/`, and `docs/superpowers/{specs,plans}/`. ISO-8601-prefixed filenames.
 
 | Date | Path | Status | Summary |
 | --- | --- | --- | --- |
