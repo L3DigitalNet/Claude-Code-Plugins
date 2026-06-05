@@ -11,7 +11,7 @@
 **Canonical references (read before starting):**
 - Spec: `~/projects/agent-configs/docs/handoff/agent-handoff-system.md` (v3.0, 2026-05-29)
 - Validator: `~/projects/agent-configs/scripts/validate-layout.sh`
-- Provenance of these findings: this repo `docs/bugs/006-up-docs-propagate-repo-emits-handoff-v3-nonconformant-artifacts.md`
+- Provenance of these findings: this repo `docs/handoff/bugs/006-up-docs-propagate-repo-emits-handoff-v3-nonconformant-artifacts.md`
 
 **Target release:** up-docs **v0.9.0** (current: v0.8.4).
 
@@ -26,7 +26,7 @@
 | 1 | 🔴 | `AGENTS.md` remediation writes only a `Session state:` line; omits the two other v3-mandated lines (validator fails) | T1 |
 | 2 | 🔴 | New bug files omit `## Lesson` (v3 mandates Cause/Fix/Lesson) | T2 |
 | 3 | 🟡 | No `CLAUDE.md`/`AGENTS.md` byte-cap enforcement (only `state.md`) | T3 |
-| 4 | 🟡 | `docs/specs-plans.md` not in the mandatory audit | T4 |
+| 4 | 🟡 | `docs/handoff/specs-plans.md` not in the mandatory audit | T4 |
 | 5 | 🟡 | state.md over-cap handling is delete-first, not route-first | T5 |
 | 6 | 🟡 | Bug-index regen lacks the `git diff --exit-code` verify step | T6 |
 | 7 | 🟡 | No awareness of the hash-pinned hook / no call to `validate-layout.sh` (drift auditor has no conformance phase) | T7 |
@@ -45,7 +45,7 @@
 - **Modify** `plugins/up-docs/templates/post-propagation-steps.md` — T8. Relabel V2→v3 in the handoff-brief layout detection.
 - **Modify** `plugins/up-docs/.claude-plugin/plugin.json` + `plugins/up-docs/CHANGELOG.md` — T9.
 - **Modify** `plugins/up-docs/tests/*` only if a grep-assertion test is added (T1/T2 verification); otherwise verification is grep + suite run.
-- **Modify** (this session, already created) `docs/bugs/006-*.md`, `docs/specs-plans.md`, `docs/bugs/INDEX.md` — T10 status flip.
+- **Modify** (this session, already created) `docs/handoff/bugs/006-*.md`, `docs/handoff/specs-plans.md`, `docs/handoff/bugs/INDEX.md` — T10 status flip.
 
 **Note on test design:** these divergences are agent-*prompt* instructions, not code paths, so most are verified by `grep` assertions against the prompt markdown plus the existing `tests/validate_output.py` schema checks — not by new unit tests of runtime behavior. Where a divergence touches a schema (T2 bug body), add a fixture assertion. Where it only changes prose guidance (T5, T8), the "test" is a grep that the new wording is present and the old wording is gone.
 
@@ -84,20 +84,20 @@ Replace the `:117` bullet (`- **AGENTS.md** (if exists) …`) with:
    - **`AGENTS.md`** (if exists) — Codex CLI equivalent of CLAUDE.md. Per handoff v3 §"Repo File Rules", AGENTS.md MUST carry these three lines near the top. Audit that all three are present and current; add/repair any that are missing:
 
      ```markdown
-     **Session state:** read `docs/state.md`, then this file, then `docs/conventions.md`.
+     **Session state:** read `docs/handoff/state.md`, then this file, then `docs/handoff/conventions.md`.
 
-     **Full conventions reference:** [`docs/conventions.md`](docs/conventions.md) - LLM-targeted pattern library. Check it before adding persistent patterns.
+     **Full conventions reference:** [`docs/handoff/conventions.md`](docs/handoff/conventions.md) - LLM-targeted pattern library. Check it before adding persistent patterns.
 
      **Detailed review workflows:** [AGENTS.reviews.md](AGENTS.reviews.md) - read this only for review-related tasks when present.
      ```
 
-     If `AGENTS.reviews.md` does not exist, the third line MUST instead read exactly: `**Detailed review workflows:** not configured for this repo.` Common drift: the `Session state:` line still points at the retired `docs/handoff.md`, or the other two lines are absent entirely (validator fails the Codex block). On a legacy V1 repo (docs/handoff.md present, no docs/state.md), the `Session state:` line points at `docs/handoff.md` instead — but flag the repo for migration per step 3's V1 note.
+     If `AGENTS.reviews.md` does not exist, the third line MUST instead read exactly: `**Detailed review workflows:** not configured for this repo.` Common drift: the `Session state:` line still points at the retired `docs/handoff.md`, or the other two lines are absent entirely (validator fails the Codex block). On a legacy V1 repo (docs/handoff.md present, no docs/handoff/state.md), the `Session state:` line points at `docs/handoff.md` instead — but flag the repo for migration per step 3's V1 note.
 ```
 
 Then replace the `:119` `AGENTS.reviews.md` bullet with this exact text (the V1/V2 detection fallback is removed):
 
 ```markdown
-   - **`AGENTS.reviews.md`** (if exists) — Codex review-specific instructions. Audit for any `docs/handoff.md` reference; on a v3 repo (`docs/state.md` present) it MUST cite `docs/state.md` instead. The "or add V1/V2 detection guidance" fallback is removed — v3 treats V1 as a migration target, not a maintained alternative.
+   - **`AGENTS.reviews.md`** (if exists) — Codex review-specific instructions. Audit for any `docs/handoff.md` reference; on a v3 repo (`docs/handoff/state.md` present) it MUST cite `docs/handoff/state.md` instead. The "or add V1/V2 detection guidance" fallback is removed — v3 treats V1 as a migration target, not a maintained alternative.
 ```
 
 - [ ] **Step 4: Run the assertion to verify it passes**
@@ -117,7 +117,7 @@ git commit -m "fix(up-docs): propagate-repo emits v3 three-line AGENTS.md block"
 ### Task 2: 🔴 Add `## Lesson` to the bug-file body template
 
 **Files:**
-- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md:93-99` (the `docs/bugs/<NNN>-<slug>.md` creation template)
+- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md:93-99` (the `docs/handoff/bugs/<NNN>-<slug>.md` creation template)
 
 **Why:** v3 §"Repo File Rules" requires bug bodies to be **Cause / Fix / Lesson**. This repo's live KB (`001`–`004`, `006`) and commit `f627ad7` ("reformat Summary-style bodies to Cause/Fix/Lesson") set that standard (bug `005` was created before the standard was enforced and also lacks `## Lesson`), but the propagator template emits only `## Cause` + `## Fix`, so every new bug it creates regresses the standard.
 
@@ -195,31 +195,31 @@ git commit -m "feat(up-docs): propagate-repo enforces CLAUDE.md/AGENTS.md byte c
 
 ---
 
-### Task 4: 🟡 Add `docs/specs-plans.md` to the mandatory audit
+### Task 4: 🟡 Add `docs/handoff/specs-plans.md` to the mandatory audit
 
 **Files:**
-- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md` — add a bullet to the step-3 mandatory-audit list (alongside `docs/conventions.md`)
+- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md` — add a bullet to the step-3 mandatory-audit list (alongside `docs/handoff/conventions.md`)
 
-**Why:** v3 §"Session End" item 8 requires updating `docs/specs-plans.md` when a spec/plan changes. The propagator's stale-scan globs the spec/plan dirs for *deletion candidates* only; it never maintains the pointer table, so a session that adds a spec/plan leaves `specs-plans.md` stale.
+**Why:** v3 §"Session End" item 8 requires updating `docs/handoff/specs-plans.md` when a spec/plan changes. The propagator's stale-scan globs the spec/plan dirs for *deletion candidates* only; it never maintains the pointer table, so a session that adds a spec/plan leaves `specs-plans.md` stale.
 
 - [ ] **Step 1: Add the audit bullet**
 
 ```markdown
-   - **`docs/specs-plans.md`** — specs/plans pointer table (audit when the session added, moved, froze, or superseded a spec or plan). Add a row for any new artifact (Date | relative path | Status | ≤12-word summary); update the Status of an artifact the session advanced or froze. The actual spec/plan location is whatever this table records — default `docs/superpowers/{specs,plans}/`, but a repo may use `docs/{specs,plans}/` (this is recorded here, not assumed). If the session touched no spec/plan, record "No change needed".
+   - **`docs/handoff/specs-plans.md`** — specs/plans pointer table (audit when the session added, moved, froze, or superseded a spec or plan). Add a row for any new artifact (Date | relative path | Status | ≤12-word summary); update the Status of an artifact the session advanced or froze. The actual spec/plan location is whatever this table records — default `docs/superpowers/{specs,plans}/`, but a repo may use `docs/{specs,plans}/` (this is recorded here, not assumed). If the session touched no spec/plan, record "No change needed".
 ```
 
-- [ ] **Step 2: Add an output-table example row** in the `<examples>` block — the example tables are 4-column (`| # | File | Action | Summary of Changes |`). Extend the CLI-flag example (its rows end at 8) with: `| 9 | docs/specs-plans.md | No change needed | No spec/plan touched this session |`.
+- [ ] **Step 2: Add an output-table example row** in the `<examples>` block — the example tables are 4-column (`| # | File | Action | Summary of Changes |`). Extend the CLI-flag example (its rows end at 8) with: `| 9 | docs/handoff/specs-plans.md | No change needed | No spec/plan touched this session |`.
 
 - [ ] **Step 3: Verify**
 
-Run: `grep -nF 'docs/specs-plans.md' plugins/up-docs/agents/up-docs-propagate-repo.md`
+Run: `grep -nF 'docs/handoff/specs-plans.md' plugins/up-docs/agents/up-docs-propagate-repo.md`
 Expected: ≥2 matches (audit bullet + example).
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add plugins/up-docs/agents/up-docs-propagate-repo.md
-git commit -m "feat(up-docs): propagate-repo audits docs/specs-plans.md (handoff v3 session-end item 8)"
+git commit -m "feat(up-docs): propagate-repo audits docs/handoff/specs-plans.md (handoff v3 session-end item 8)"
 ```
 
 ---
@@ -227,9 +227,9 @@ git commit -m "feat(up-docs): propagate-repo audits docs/specs-plans.md (handoff
 ### Task 5: 🟡 Reframe state.md over-cap handling as route-first
 
 **Files:**
-- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md:60` (the `docs/state.md` Hard-cap bullet)
+- Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md:60` (the `docs/handoff/state.md` Hard-cap bullet)
 
-**Why:** v3 §`docs/state.md` is explicit: an over-cap file is *"a symptom of longer-lifetime content leaking into live state,"* and the fix is to **route** content to its home (session narrative→`sessions/`, deployment readouts→`deployed.md`, standing backlog→`architecture.md`), *"not to delete it."* The current instruction deletes oldest "Recently closed" blocks (assuming they're already in `sessions/`) and routes nothing else — risking deletion of un-routed content.
+**Why:** v3 §`docs/handoff/state.md` is explicit: an over-cap file is *"a symptom of longer-lifetime content leaking into live state,"* and the fix is to **route** content to its home (session narrative→`sessions/`, deployment readouts→`deployed.md`, standing backlog→`architecture.md`), *"not to delete it."* The current instruction deletes oldest "Recently closed" blocks (assuming they're already in `sessions/`) and routes nothing else — risking deletion of un-routed content.
 
 - [ ] **Step 1: Replace the trim procedure**
 
@@ -237,8 +237,8 @@ Replace the "To trim: …" sentence with:
 
 ```markdown
 This cap is state-conditioned, not transition-conditioned: enforce it whenever the file is over 2048 bytes *after* your edit, even if a prior session left it bloated. Per handoff v3, the fix is to **route long-lived content to its home, then delete the now-duplicated lines** — never bare-delete:
-       1. Confirm each prior "Recently closed" block already has a one-line row in `docs/sessions/<YYYY-MM>.md`. If a block is NOT yet captured there, append its row first, THEN delete the block. (Append happens in the sessions sub-step above.)
-       2. Route any deployment readouts to `docs/deployed.md` and any standing-backlog prose to `docs/architecture.md` before deleting them from state.md.
+       1. Confirm each prior "Recently closed" block already has a one-line row in `docs/handoff/sessions/<YYYY-MM>.md`. If a block is NOT yet captured there, append its row first, THEN delete the block. (Append happens in the sessions sub-step above.)
+       2. Route any deployment readouts to `docs/handoff/deployed.md` and any standing-backlog prose to `docs/handoff/architecture.md` before deleting them from state.md.
        3. Condense the Session Instructions preamble last, only if still over.
        Never drop a 🔴 active incident to fit budget. Re-check `wc -c` after trimming.
 ```
@@ -262,21 +262,21 @@ git commit -m "fix(up-docs): state.md over-cap trim is route-first per handoff v
 **Files:**
 - Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md:102` (the `_regen_index.py` instruction) and the `<guardrails>` allowed-command note at `:207`
 
-**Why:** v3 pairs the regen with `&& git diff --exit-code docs/bugs/INDEX.md` to confirm the regenerator output is committed/idempotent.
+**Why:** v3 pairs the regen with `&& git diff --exit-code docs/handoff/bugs/INDEX.md` to confirm the regenerator output is committed/idempotent.
 
 - [ ] **Step 1: Edit the regen instruction**
 
-Change "After creating, regenerate the index: `python3 docs/bugs/_regen_index.py`." to:
+Change "After creating, regenerate the index: `python3 docs/handoff/bugs/_regen_index.py`." to:
 
 ```markdown
-     - After creating, regenerate and verify the index: `python3 docs/bugs/_regen_index.py && git diff --exit-code docs/bugs/INDEX.md` (a non-empty diff means the index was stale and is now fixed — stage it; a clean exit means already current).
+     - After creating, regenerate and verify the index: `python3 docs/handoff/bugs/_regen_index.py && git diff --exit-code docs/handoff/bugs/INDEX.md` (a non-empty diff means the index was stale and is now fixed — stage it; a clean exit means already current).
 ```
 
-- [ ] **Step 2: Extend the guardrails allowed-command exception** at `:207` to name `git diff --exit-code docs/bugs/INDEX.md` as read-only-verification (it does not modify content).
+- [ ] **Step 2: Extend the guardrails allowed-command exception** at `:207` to name `git diff --exit-code docs/handoff/bugs/INDEX.md` as read-only-verification (it does not modify content).
 
 - [ ] **Step 3: Verify**
 
-Run: `grep -nF 'git diff --exit-code docs/bugs/INDEX.md' plugins/up-docs/agents/up-docs-propagate-repo.md`
+Run: `grep -nF 'git diff --exit-code docs/handoff/bugs/INDEX.md' plugins/up-docs/agents/up-docs-propagate-repo.md`
 Expected: ≥1 match.
 
 - [ ] **Step 4: Commit**
@@ -381,7 +381,7 @@ git commit -m "docs(up-docs): relabel handoff v2→v3, drop stale /mnt/share + P
 - propagate-repo: state.md over-cap trim is route-first (route to sessions/deployed/architecture before deleting), per handoff v3.
 
 ### Added
-- propagate-repo: enforces `CLAUDE.md` (≤2048) and `AGENTS.md` (≤4096) byte caps; audits `docs/specs-plans.md`; verifies bug-index regen with `git diff --exit-code`.
+- propagate-repo: enforces `CLAUDE.md` (≤2048) and `AGENTS.md` (≤4096) byte caps; audits `docs/handoff/specs-plans.md`; verifies bug-index regen with `git diff --exit-code`.
 - audit-drift: conditional handoff-layout conformance phase — runs `~/projects/agent-configs/scripts/validate-layout.sh` against the project root when present and surfaces failures as `layer: "layout"` findings (read-only; never fixes).
 
 ### Changed
@@ -400,8 +400,8 @@ git commit -m "chore(up-docs): release v0.9.0 — handoff v3 alignment"
 ### Task 10: Run suites, flip bug 006 → fixed, update indexes, session row
 
 **Files:**
-- Modify: `docs/bugs/006-up-docs-propagate-repo-emits-handoff-v3-nonconformant-artifacts.md` (`status: open` → `fixed`; add commit SHA in Fix)
-- Modify: `docs/bugs/INDEX.md` (regen), `docs/specs-plans.md` (this plan's row Status → Done), `docs/sessions/2026-05.md` (session row)
+- Modify: `docs/handoff/bugs/006-up-docs-propagate-repo-emits-handoff-v3-nonconformant-artifacts.md` (`status: open` → `fixed`; add commit SHA in Fix)
+- Modify: `docs/handoff/bugs/INDEX.md` (regen), `docs/handoff/specs-plans.md` (this plan's row Status → Done), `docs/handoff/sessions/2026-05.md` (session row)
 
 - [ ] **Step 1: Run the full up-docs suite**
 
@@ -415,16 +415,16 @@ Expected: PASS (or only pre-existing unrelated findings).
 
 - [ ] **Step 3: Flip bug 006 to fixed**, set the Fix commit SHA(s), regen the index:
 
-Run: `python3 docs/bugs/_regen_index.py && git diff --exit-code docs/bugs/INDEX.md`
+Run: `python3 docs/handoff/bugs/_regen_index.py && git diff --exit-code docs/handoff/bugs/INDEX.md`
 
-- [ ] **Step 4: Update `docs/specs-plans.md`** — this plan's row Status `Planned` → `Done`.
+- [ ] **Step 4: Update `docs/handoff/specs-plans.md`** — this plan's row Status `Planned` → `Done`.
 
-- [ ] **Step 5: Append the session row** to `docs/sessions/2026-05.md`.
+- [ ] **Step 5: Append the session row** to `docs/handoff/sessions/2026-05.md`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add docs/bugs/006-*.md docs/bugs/INDEX.md docs/specs-plans.md docs/sessions/2026-05.md
+git add docs/handoff/bugs/006-*.md docs/handoff/bugs/INDEX.md docs/handoff/specs-plans.md docs/handoff/sessions/2026-05.md
 git commit -m "docs: close up-docs handoff-v3 alignment (Bug #6 fixed, plan Done)"
 ```
 

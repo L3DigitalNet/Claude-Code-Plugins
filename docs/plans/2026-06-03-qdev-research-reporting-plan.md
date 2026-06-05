@@ -34,8 +34,8 @@
 | `plugins/qdev/agents/qdev-researcher.md` | Frontmatter emit, Sources table, per-path routing, Context7 gate + dual-grant, quirks, fallback, guardrails, self-validate, dedup/index calls | modify |
 | `plugins/qdev/commands/research.md` | Relay reconciled header; mention the index in the handoff | modify |
 | `docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md` | Migrate to `research` frontmatter | modify |
-| `docs/architecture.md` | qdev gains Python/tests; scrub dead `testing/STRATEGY.md` refs | modify |
-| `docs/conventions.md` | TEST-001: add qdev pytest; scrub dead `testing/STRATEGY.md` refs | modify |
+| `docs/handoff/architecture.md` | qdev gains Python/tests; scrub dead `testing/STRATEGY.md` refs | modify |
+| `docs/handoff/conventions.md` | TEST-001: add qdev pytest; scrub dead `testing/STRATEGY.md` refs | modify |
 | `plugins/qdev/README.md` | Document the reporting cycle + per-path routing | modify |
 | `plugins/qdev/CHANGELOG.md` | `[Unreleased]` entries | modify |
 | `~/.claude/CLAUDE.md` | Routing reconciliation (§8 — **confirm wording first**) | modify (external) |
@@ -972,15 +972,15 @@ git commit -m "fix(qdev): qualified subagent_type + pass scripts path; relay rep
 
 **Files:**
 
-- Modify: `docs/architecture.md:21,28,29`
-- Modify: `docs/conventions.md:126,137`
+- Modify: `docs/handoff/architecture.md:21,28,29`
+- Modify: `docs/handoff/conventions.md:126,137`
 - Modify: `plugins/qdev/README.md`
 - Modify: `plugins/qdev/CHANGELOG.md`
 
 - [ ] **Step 1: architecture.md — qdev now has Python + scrub dead testing refs**
 
 - Update the "In scope: 8 plugins (all except qdev — pure-markdown only)" line: qdev now ships Python scripts + pytest, so it is no longer pure-markdown. State "9 with qdev's research-KB scripts."
-- Replace the two `testing/STRATEGY.md` / `testing/plans/<plugin>.md` references (lines ~28–29) and the line ~21 reference: point at `docs/conventions.md` TEST-001 instead of the deleted `testing/` tree (the tree was removed in `66b02d4`).
+- Replace the two `testing/STRATEGY.md` / `testing/plans/<plugin>.md` references (lines ~28–29) and the line ~21 reference: point at `docs/handoff/conventions.md` TEST-001 instead of the deleted `testing/` tree (the tree was removed in `66b02d4`).
 
 - [ ] **Step 2: conventions.md — TEST-001 add qdev + scrub dead refs**
 
@@ -1007,12 +1007,12 @@ Add under `[Unreleased]`:
 
 - [ ] **Step 5: Verify no dead testing refs remain in the two edited docs**
 
-Run: `grep -n "testing/STRATEGY\|testing/plans" docs/architecture.md docs/conventions.md || echo "clean"` Expected: `clean`
+Run: `grep -n "testing/STRATEGY\|testing/plans" docs/handoff/architecture.md docs/handoff/conventions.md || echo "clean"` Expected: `clean`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add docs/architecture.md docs/conventions.md plugins/qdev/README.md plugins/qdev/CHANGELOG.md
+git add docs/handoff/architecture.md docs/handoff/conventions.md plugins/qdev/README.md plugins/qdev/CHANGELOG.md
 git commit -m "docs(qdev): document reporting cycle; bring qdev into test scope; scrub dead testing/ refs"
 ```
 

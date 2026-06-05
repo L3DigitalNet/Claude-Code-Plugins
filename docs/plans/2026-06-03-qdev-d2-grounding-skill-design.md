@@ -204,10 +204,10 @@ Detection families are **required acceptance criteria**, not an open question (S
 - `plugins/qdev/.claude-plugin/plugin.json` — **version bump** (1.5.0 → next) + description mentions the grounding skill (SA-007).
 - `.claude-plugin/marketplace.json` — matching qdev `version` + `description` update (SA-007).
 - `plugins/qdev/CHANGELOG.md` — `[Unreleased]` Added entries (skill + sanitizer).
-- `docs/conventions.md` TEST-001 — bump qdev's pytest count to include `test_sanitize_query.py`.
-- `docs/architecture.md` — qdev now ships a skill + a second script family + its first auto-trigger.
+- `docs/handoff/conventions.md` TEST-001 — bump qdev's pytest count to include `test_sanitize_query.py`.
+- `docs/handoff/architecture.md` — qdev now ships a skill + a second script family + its first auto-trigger.
 - **No global `~/.claude/CLAUDE.md` change** — D1 already reconciled the per-path routing guidance (D1 Task 8).
-- `docs/specs-plans.md` — index this design + (later) its plan.
+- `docs/handoff/specs-plans.md` — index this design + (later) its plan.
 - **Post-implementation:** run `./scripts/validate-marketplace.sh`; grep README for stale explicit-only language.
 
 ---
@@ -216,7 +216,7 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 **Prerequisite (gate before D2 ships):**
 
-- **D1 plugin-loaded manual smoke** — `docs/state.md` records D1's `/qdev:research` dispatch smoke as still pending. D2's medium path *is* that dispatch, so run/confirm the D1 smoke before (or as the first step of) D2 acceptance (SA / missing-consideration).
+- **D1 plugin-loaded manual smoke** — `docs/handoff/state.md` records D1's `/qdev:research` dispatch smoke as still pending. D2's medium path *is* that dispatch, so run/confirm the D1 smoke before (or as the first step of) D2 acceptance (SA / missing-consideration).
 
 **Open questions (non-blocking):**
 

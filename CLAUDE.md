@@ -6,12 +6,12 @@
 
 **Document layout (read on demand):**
 
-- `docs/state.md` — live state + active incidents (auto-injected, do not read directly)
-- `docs/deployed.md` — deployment truth + what-remains
-- `docs/architecture.md` — repo structure + plugin design principles + full CLAUDE.md detail
-- `docs/credentials.md` — credential surfaces
-- `docs/conventions.md` — pattern library (Phase 5 deferred)
-- `docs/sessions/` — monthly session logs (grep by date)
-- `docs/bugs/` — per-file bug KB (grep by service or tag)
-- `docs/specs-plans.md` — pointer into `docs/plans/`
-- per-plugin tests: `plugins/<plugin>/tests/` (frameworks by language per `docs/conventions.md` TEST-001)
+- `docs/handoff/state.md` — live state + active incidents (auto-injected, do not read directly)
+- `docs/handoff/deployed.md` — deployment truth + what-remains
+- `docs/handoff/architecture.md` — repo structure + plugin design principles + full CLAUDE.md detail
+- `docs/handoff/credentials.md` — credential surfaces
+- `docs/handoff/conventions.md` — pattern library (Phase 5 deferred)
+- `docs/handoff/sessions/` — monthly session logs (grep by date)
+- `docs/handoff/bugs/` — per-file bug KB (grep by service or tag)
+- `docs/handoff/specs-plans.md` — pointer into `docs/plans/`
+- per-plugin tests: `plugins/<plugin>/tests/` (frameworks by language per `docs/handoff/conventions.md` TEST-001)

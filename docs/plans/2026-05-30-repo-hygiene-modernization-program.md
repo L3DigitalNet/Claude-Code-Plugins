@@ -14,7 +14,7 @@
 2. The immediate next action is **§6: write the Phase 0 spec** (skills migration), then run `superpowers:writing-plans`.
 3. §7 captures the Phase 1 detection design already explored — do **not** re-brainstorm it from scratch; refine from there when Phase 0 is done.
 4. §12 + Appendix A hold the verified source material (doc URLs, frontmatter facts, the verbatim deep-audit prompt that Phase 3 is built from).
-5. This file is the **living program record**. Update it at each phase boundary (decisions, status, new open questions). Keep `docs/specs-plans.md` pointing at it.
+5. This file is the **living program record**. Update it at each phase boundary (decisions, status, new open questions). Keep `docs/handoff/specs-plans.md` pointing at it.
 
 ---
 
@@ -77,8 +77,8 @@ Sources: `code.claude.com/docs/en/skills`, `/plugins`, `/plugins-reference`; `ag
 
 ### 3.5 v3 agent-handoff system (key facts + ownership boundary)
 - Canonical spec: `~/projects/agent-configs/docs/handoff/agent-handoff-system.md` (Schema 3.0, 2026-05-29).
-- Layout: `docs/{state,deployed,architecture,credentials,conventions,specs-plans}.md` + `docs/sessions/<YYYY-MM>.md` + `docs/bugs/<NNN>-<slug>.md` + `docs/superpowers/{specs,plans}/` (repos may record another location in `docs/specs-plans.md` — **this repo uses `docs/specs/` + `docs/plans/`**).
-- Byte caps: repo `CLAUDE.md` ≤2048 (target ≤1024); `docs/state.md` ≤2048; Claude hook output ≤4096; `AGENTS.md` ≤4096.
+- Layout: `docs/{state,deployed,architecture,credentials,conventions,specs-plans}.md` + `docs/handoff/sessions/<YYYY-MM>.md` + `docs/handoff/bugs/<NNN>-<slug>.md` + `docs/superpowers/{specs,plans}/` (repos may record another location in `docs/handoff/specs-plans.md` — **this repo uses `docs/specs/` + `docs/plans/`**).
+- Byte caps: repo `CLAUDE.md` ≤2048 (target ≤1024); `docs/handoff/state.md` ≤2048; Claude hook output ≤4096; `AGENTS.md` ≤4096.
 - `docs/handoff.md` is **retired** — its presence = migration target.
 - SessionStart hook is a tracked, hash-verified installed copy (`global/claude/hooks/session_start.py`); `${CLAUDE_PROJECT_DIR}`-anchored.
 - **Ownership boundary (critical):** conformance validation (byte caps, hook hash, AGENTS.md three-line block, required files) is owned by `scripts/validate-layout.sh` + the up-docs drift auditor. **repo-hygiene must NOT re-implement this** — it aligns, cleans up, and (deep tier) *calls* the canonical script. See §4.
@@ -318,9 +318,9 @@ Write to `[REPO_PATH]/CLEANUP-AUDIT.md`. Open with: (a) detected repo type + con
 
 <example>
 SUPERSEDED-DOC · `docs/old-deploy-guide.md` · delete · R1 · high · replaced by current guide, no keep-reason · git mod 2024-09; `docs/deploy.md` (2025-11) supersedes; no in-repo refs found
-SUPERSEDED-DOC · `docs/architecture-notes.md` · flag-for-decision · — · low · overlaps `docs/architecture.md` but not a clean duplicate; may be linked externally · no in-repo refs; check Outline wiki before removal
+SUPERSEDED-DOC · `docs/architecture-notes.md` · flag-for-decision · — · low · overlaps `docs/handoff/architecture.md` but not a clean duplicate; may be linked externally · no in-repo refs; check Outline wiki before removal
 PLAN · `plans/2025-03-add-auth.md` · keep (paired with `specs/auth.md`) · — · high · completed plan for an in-service spec; completed ≠ superseded · completion commit 2025-04; `specs/auth.md` live, referenced by `src/auth/`
-RESEARCH · `notes/latency-benchmarks.md` · move to `docs/research/` · R2 · high · reference material outside research dir (also non-standard name; rename to kebab-case on move) · linked from `docs/architecture.md` — update link
+RESEARCH · `notes/latency-benchmarks.md` · move to `docs/research/` · R2 · high · reference material outside research dir (also non-standard name; rename to kebab-case on move) · linked from `docs/handoff/architecture.md` — update link
 TRACKED-IGNORABLE · `app/__pycache__/` · untrack + add `__pycache__/` · R3 · high · build artifacts committed (directory-level) · matches standard Python ignore policy
 SECRET · `config/secrets.yaml` · rotate + purge from history · R4 · high · committed credentials · value redacted; rotate keys before any removal
 BLOAT · `assets/demo.mov` (history) · flag for LFS + history rewrite · R4 · medium · ~180 MB object in pack, absent from working tree · found via `git rev-list`; confirm before rewrite

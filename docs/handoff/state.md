@@ -5,7 +5,7 @@
 ## Session Instructions
 
 1. Read this file first.
-2. Check `docs/conventions.md` before introducing a new persistent pattern.
+2. Check `docs/handoff/conventions.md` before introducing a new persistent pattern.
 3. Branch workflow is direct commit to `main` — see `BRANCH_PROTECTION.md` (no `testing` branch since 2026-05-07).
 
 ## Active Incidents
@@ -18,4 +18,4 @@
 
 - **qdev v1.6.0 release** — commit `efe90b8`, tag `qdev/v1.6.0`, release published. D2 feature (grounding skill + sanitizer) shipped in tagged release; prior 18 commits on `main` with unreleased feature now available to marketplace.
 
-<!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/sessions/<YYYY-MM>.md. -->
+<!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->

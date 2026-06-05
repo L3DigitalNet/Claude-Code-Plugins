@@ -132,7 +132,7 @@ The schema's `supersedes`/`superseded_by` pair + `status: superseded` make repla
 ### 4.4 Current-corpus bootstrap & legacy migration (resolves SA-001)
 
 - **Legacy report migration (one-time, part of D1):** the single existing top-level report [`docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md`](../research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md) predates this scheme and has no frontmatter. Migrate it: prepend a valid `research` frontmatter block with `id: 2026-05-08-up-docs-plugin-security-eval-infrastructure`, `created: 2026-05-08`, `updated: <migration date>`, `status: active`, `confidence: high`, and `tags`/`title`/`description`/`source` derived from its content. After migration, **every** top-level `docs/research/*.md` carries frontmatter, so the validator (§5) can _require_ frontmatter rather than skip-on-absence.
-- **Stale-link cleanup (✅ fixed in this revision):** `docs/specs-plans.md` referenced `docs/research/2026-05-08-testing-hardening-claude-code-plugin-sub-agents.md`, which was deleted in `66b02d4` but left in the index (pre-existing drift, surfaced by SA-001). The stale row has been removed.
+- **Stale-link cleanup (✅ fixed in this revision):** `docs/handoff/specs-plans.md` referenced `docs/research/2026-05-08-testing-hardening-claude-code-plugin-sub-agents.md`, which was deleted in `66b02d4` but left in the index (pre-existing drift, surfaced by SA-001). The stale row has been removed.
 - **Acceptance includes the current corpus:** the validator must pass over the _post-migration_ `docs/research/` tree, and the first repeat query must dedup against the migrated legacy report (not append a duplicate).
 
 ---
@@ -213,9 +213,9 @@ This resolves the drift: the existing "general web search → brave + serper (bo
 | `plugins/qdev/tests/test_validate_research_frontmatter.py` | pytest: validator unit tests (TEST-001) | **new** |
 | `plugins/qdev/tests/` scaffold (`conftest.py` + `requirements.txt`) | pytest deps, per the up-docs precedent | **new** |
 | `docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md` | Migrate to `research` frontmatter (§4.4, SA-001) | edit |
-| `docs/architecture.md` | qdev no longer "pure-markdown only" — gains pytest; **also scrub the dead `testing/STRATEGY.md` reference** (tree removed in `66b02d4`) (SA-003 r2) | edit |
-| `docs/conventions.md` | TEST-001: add qdev's pytest tests; **scrub the dead `testing/STRATEGY.md` §3 reference** (SA-003 r2) | edit |
-| `docs/specs-plans.md` | Fix the stale `testing-hardening…` link (§4.4) | edit |
+| `docs/handoff/architecture.md` | qdev no longer "pure-markdown only" — gains pytest; **also scrub the dead `testing/STRATEGY.md` reference** (tree removed in `66b02d4`) (SA-003 r2) | edit |
+| `docs/handoff/conventions.md` | TEST-001: add qdev's pytest tests; **scrub the dead `testing/STRATEGY.md` §3 reference** (SA-003 r2) | edit |
+| `docs/handoff/specs-plans.md` | Fix the stale `testing-hardening…` link (§4.4) | edit |
 | `~/.claude/CLAUDE.md` | Routing reconciliation (§8 — confirm wording first) | edit (external) |
 
 ---
@@ -292,6 +292,6 @@ End-to-end on `/qdev:research <topic>`:
 | SA-001 | Partial → resolved | §4.1/§4.2 — first-run preflight **generates the index from existing frontmatter before dedup** (migrate → generate → dedup); absent index = empty corpus only when no reports exist. |
 | SA-003 | Partial → resolved | §9 — the root `testing/` tree was removed in `66b02d4`; stop referencing it. Tests live at `plugins/qdev/tests/` (TEST-001); scope-doc updates target the real surfaces (`architecture.md`, `conventions.md`) and **scrub the dead `testing/STRATEGY.md` references** there. |
 
-**Discovered (pre-existing, beyond D1):** `66b02d4` deleted the entire root `testing/` tree but left dead `testing/STRATEGY.md` / `testing/plans/` references in `CLAUDE.md`, `README.md`, `docs/architecture.md`, and `docs/conventions.md`. D1 scrubs the two scope docs it already edits; the `CLAUDE.md` / `README.md` references are flagged for a separate cleanup (human-facing / global-pointer docs — confirm scope before editing).
+**Discovered (pre-existing, beyond D1):** `66b02d4` deleted the entire root `testing/` tree but left dead `testing/STRATEGY.md` / `testing/plans/` references in `CLAUDE.md`, `README.md`, `docs/handoff/architecture.md`, and `docs/handoff/conventions.md`. D1 scrubs the two scope docs it already edits; the `CLAUDE.md` / `README.md` references are flagged for a separate cleanup (human-facing / global-pointer docs — confirm scope before editing).
 
 **Round 3 (2026-06-03):** clean — no significant findings, no new issues, no regressions; all four findings resolved. **Audit loop closed.** Carry-forward to implementation validation: migrated-frontmatter validity, `uv run` behavior in a clean plugin context, and Context7 tool-name exposure / no-op behavior.

@@ -4,13 +4,13 @@
 
 **Goal:** Add qdev's first auto-trigger skill — an inline grounding skill that does cheap inline lookups (Category C) and escalates to the `qdev-researcher` medium sweep (Category A / failure), routing every outbound payload through a deterministic egress sanitizer.
 
-**Architecture:** One PEP 723 Python script (`sanitize_query.py`, the deterministic egress sanitizer, `dependencies = []`, stdin-driven) reused by the skill's sanitize gate; one inline skill (`skills/research-grounding/`, shape C: lean `SKILL.md` + a `references/` detail file). **Enforcement is behavioral:** the sanitizer is deterministic, but *calling* it before each MCP call / `Agent` dispatch is a skill instruction the model follows — there is no mechanical interceptor (the frontmatter grants the MCP/Bash/Agent tools directly). This is the weakest enforcement layer per `docs/architecture.md`; the residual bypass risk is documented (§ Residual risk) and checked by the manual fake-token smoke (Task 7). A `PreToolUse` hook is a deferred hardening (not in the design's scope). The skill sanitizes light-path queries *and* the medium handoff, and gates auto-fired medium runs with approval *before dispatch* (because `qdev-researcher` persists internally before returning). The medium engine and reporting cycle are D1, reused unchanged.
+**Architecture:** One PEP 723 Python script (`sanitize_query.py`, the deterministic egress sanitizer, `dependencies = []`, stdin-driven) reused by the skill's sanitize gate; one inline skill (`skills/research-grounding/`, shape C: lean `SKILL.md` + a `references/` detail file). **Enforcement is behavioral:** the sanitizer is deterministic, but *calling* it before each MCP call / `Agent` dispatch is a skill instruction the model follows — there is no mechanical interceptor (the frontmatter grants the MCP/Bash/Agent tools directly). This is the weakest enforcement layer per `docs/handoff/architecture.md`; the residual bypass risk is documented (§ Residual risk) and checked by the manual fake-token smoke (Task 7). A `PreToolUse` hook is a deferred hardening (not in the design's scope). The skill sanitizes light-path queries *and* the medium handoff, and gates auto-fired medium runs with approval *before dispatch* (because `qdev-researcher` persists internally before returning). The medium engine and reporting cycle are D1, reused unchanged.
 
 **Tech Stack:** Python 3.11+ (PEP 723 inline metadata, `uv run`, stdlib `re`/`json`/`sys` only — no third-party deps), pytest. Markdown skill/reference definitions. Claude Code plugin skill model.
 
 **Source spec:** [`docs/plans/2026-06-03-qdev-d2-grounding-skill-design.md`](2026-06-03-qdev-d2-grounding-skill-design.md) (survived 3 adversarial audit rounds — SA-001…007 + SA-NEW-001/002 resolved; §12 ledger). Section references below (§N) point at it.
 
-**Prerequisite (gate, not a code task):** D1's plugin-loaded `/qdev:research` dispatch smoke is still pending (`docs/state.md`). D2's medium path *is* that dispatch, so run/confirm the D1 smoke as the first item of final acceptance (Task 7, Step 1).
+**Prerequisite (gate, not a code task):** D1's plugin-loaded `/qdev:research` dispatch smoke is still pending (`docs/handoff/state.md`). D2's medium path *is* that dispatch, so run/confirm the D1 smoke as the first item of final acceptance (Task 7, Step 1).
 
 **Reused from D1 (do NOT modify):** `plugins/qdev/agents/qdev-researcher.md`, `scripts/build_research_index.py`, `scripts/validate_research_frontmatter.py`, `scripts/dedup.py`, `scripts/_frontmatter.py`, `tests/conftest.py` (already puts `scripts/` on `sys.path`), `tests/requirements.txt` (already has pytest).
 
@@ -28,9 +28,9 @@
 | `plugins/qdev/.claude-plugin/plugin.json` | Description mentions the grounding skill (version bump deferred to release pipeline) | modify |
 | `.claude-plugin/marketplace.json` | qdev `description` also mentions the grounding skill (version bump deferred to release pipeline) | modify |
 | `plugins/qdev/CHANGELOG.md` | `[Unreleased]` entries | modify |
-| `docs/conventions.md` | TEST-001: bump qdev pytest count | modify |
-| `docs/architecture.md` | qdev now ships a skill + first auto-trigger | modify |
-| `docs/specs-plans.md` | Index this plan | modify |
+| `docs/handoff/conventions.md` | TEST-001: bump qdev pytest count | modify |
+| `docs/handoff/architecture.md` | qdev now ships a skill + first auto-trigger | modify |
+| `docs/handoff/specs-plans.md` | Index this plan | modify |
 
 ---
 
@@ -734,9 +734,9 @@ git commit -m "docs(qdev): reword P2 for the auto-trigger skill; describe ground
 
 **Files:**
 
-- Modify: `docs/conventions.md`
-- Modify: `docs/architecture.md`
-- Modify: `docs/specs-plans.md`
+- Modify: `docs/handoff/conventions.md`
+- Modify: `docs/handoff/architecture.md`
+- Modify: `docs/handoff/specs-plans.md`
 - Modify: `plugins/qdev/CHANGELOG.md`
 
 - [ ] **Step 1: CHANGELOG `[Unreleased]`**
@@ -752,15 +752,15 @@ Add under `[Unreleased]` in `plugins/qdev/CHANGELOG.md`:
 
 - [ ] **Step 2: conventions.md TEST-001 — bump qdev count**
 
-In `docs/conventions.md` TEST-001, update qdev's pytest count to include the sanitizer tests. Get the exact number: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q | tail -1` (expect 55), and write "qdev: 55 pytest".
+In `docs/handoff/conventions.md` TEST-001, update qdev's pytest count to include the sanitizer tests. Get the exact number: `cd plugins/qdev/tests && uv run --with pyyaml --with jsonschema --with pytest pytest -q | tail -1` (expect 55), and write "qdev: 55 pytest".
 
 - [ ] **Step 3: architecture.md — qdev gains a skill + first auto-trigger**
 
-In `docs/architecture.md`, update the qdev description to note it now ships a skill (`research-grounding`) and the marketplace's first auto-trigger, plus a second script family (`sanitize_query.py`).
+In `docs/handoff/architecture.md`, update the qdev description to note it now ships a skill (`research-grounding`) and the marketplace's first auto-trigger, plus a second script family (`sanitize_query.py`).
 
 - [ ] **Step 4: specs-plans.md — confirm this plan is indexed**
 
-This row was added when the plan was committed; confirm it is present in `docs/specs-plans.md` (add it under the D2 design row only if missing):
+This row was added when the plan was committed; confirm it is present in `docs/handoff/specs-plans.md` (add it under the D2 design row only if missing):
 
 ```markdown
 | 2026-06-03 | [`docs/plans/2026-06-03-qdev-d2-grounding-skill-plan.md`](plans/2026-06-03-qdev-d2-grounding-skill-plan.md) | Active — execution-ready | D2 implementation plan: `sanitize_query.py` + 31 pytest, the `research-grounding` skill (SKILL.md + reference), README P2 reword + manifest/marketplace descriptions, repo-doc updates. |
@@ -768,13 +768,13 @@ This row was added when the plan was committed; confirm it is present in `docs/s
 
 - [ ] **Step 5: Verify no stale testing refs**
 
-Run: `grep -n "testing/STRATEGY\|testing/plans" docs/architecture.md docs/conventions.md || echo "clean"`
+Run: `grep -n "testing/STRATEGY\|testing/plans" docs/handoff/architecture.md docs/handoff/conventions.md || echo "clean"`
 Expected: `clean`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add docs/conventions.md docs/architecture.md docs/specs-plans.md plugins/qdev/CHANGELOG.md
+git add docs/handoff/conventions.md docs/handoff/architecture.md docs/handoff/specs-plans.md plugins/qdev/CHANGELOG.md
 git commit -m "docs(qdev): record D2 grounding skill + sanitizer in repo docs"
 ```
 
@@ -831,7 +831,7 @@ Expected: pass.
   deterministic, but *invoking* it before each MCP/`Agent` call is a skill
   instruction — the skill holds those tools directly, so a model lapse could
   call out without sanitizing. This is the weakest enforcement layer per
-  `docs/architecture.md`. Mitigations: explicit mandatory-gate wording in
+  `docs/handoff/architecture.md`. Mitigations: explicit mandatory-gate wording in
   `SKILL.md`; the fake-token egress smoke (Task 7 Step 3) inspects real outbound
   args. Accepted for this cycle (matches the design's "skill + sanitizer" scope);
   a `PreToolUse` hook that mechanically intercepts the skill's outbound calls is

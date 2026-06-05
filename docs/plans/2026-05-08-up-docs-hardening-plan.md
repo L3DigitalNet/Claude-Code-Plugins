@@ -707,7 +707,7 @@ If output contains `FUNCTIONAL`: proceed.
 
 - [ ] **Step 2: Define the canonical denylist for propagators**
 
-Propagators need `Bash` for `python3 docs/bugs/_regen_index.py` (propagate-repo only) but should not delete or push. The denylist:
+Propagators need `Bash` for `python3 docs/handoff/bugs/_regen_index.py` (propagate-repo only) but should not delete or push. The denylist:
 
 ```
 disallowedTools: Bash(rm *), Bash(git rm *), Bash(git push --force *), Bash(git push -f *), Bash(systemctl *), Bash(pct *), Bash(docker *)
@@ -1999,19 +1999,19 @@ setup() {
     cd "$TEST_TMPDIR/fakerepo"
     git init -q -b main
     echo "# Test Repo" > README.md
-    echo "BAO_ADDR=127.0.0.1" > docs/deployed.md
+    echo "BAO_ADDR=127.0.0.1" > docs/handoff/deployed.md
     git add . && git -c user.email=t@t.com -c user.name=T commit -q -m "init"
 }
 
 teardown() { teardown_test_env; }
 
-@test "repo propagator on rebind summary updates docs/deployed.md" {
+@test "repo propagator on rebind summary updates docs/handoff/deployed.md" {
     local fixture="$BATS_TEST_DIRNAME/fixtures/session-summary-config-rebind.md"
     claude --print --agent up-docs:up-docs-propagate-repo \
            --output-format json < "$fixture" > /tmp/repo-out.json
 
-    # The agent should have edited docs/deployed.md to include the new IP
-    grep -q "100.90.121.89" docs/deployed.md
+    # The agent should have edited docs/handoff/deployed.md to include the new IP
+    grep -q "100.90.121.89" docs/handoff/deployed.md
 }
 ```
 
@@ -2231,7 +2231,7 @@ Loosens the propagate-repo agent's hard coupling to the V1/V2 handoff layout. Le
 
 - [ ] **Step 1: Add layout-config probe to the agent prompt**
 
-In `plugins/up-docs/agents/up-docs-propagate-repo.md`, in `<task>` step 3, replace the existing layout-detection block (the `[ -f docs/state.md ] && echo V2 …` shell) with:
+In `plugins/up-docs/agents/up-docs-propagate-repo.md`, in `<task>` step 3, replace the existing layout-detection block (the `[ -f docs/handoff/state.md ] && echo V2 …` shell) with:
 
 ````markdown
    First, detect which layout this repo uses:
@@ -2240,7 +2240,7 @@ In `plugins/up-docs/agents/up-docs-propagate-repo.md`, in `<task>` step 3, repla
    if [ -f docs/.up-docs.json ]; then
      # Explicit user override
      python3 -c "import json; print(json.load(open('docs/.up-docs.json')).get('layout','auto').upper())"
-   elif [ -f docs/state.md ]; then
+   elif [ -f docs/handoff/state.md ]; then
      echo V2
    elif [ -f docs/handoff.md ]; then
      echo V1
@@ -2250,7 +2250,7 @@ In `plugins/up-docs/agents/up-docs-propagate-repo.md`, in `<task>` step 3, repla
    ```
 
    Layout values:
-   - **`V2`** (default when `docs/state.md` is present): full handoff-system-v2 audit (state.md, deployed.md, sessions/, bugs/, conventions.md, .claude/rules/).
+   - **`V2`** (default when `docs/handoff/state.md` is present): full handoff-system-v2 audit (state.md, deployed.md, sessions/, bugs/, conventions.md, .claude/rules/).
    - **`V1`** (default when `docs/handoff.md` is present without state.md): legacy single-file handoff audit.
    - **`SIMPLE`** (set via `docs/.up-docs.json`): audit only the files listed in the config's `audit_targets` array — typically just README.md and CHANGELOG.md.
    - **`DIATAXIS`** (set via `docs/.up-docs.json`): audit `tutorials/`, `how-to/`, `reference/`, `explanation/` directories at the file-list level; no opinionated state-tracking.
@@ -2290,7 +2290,7 @@ In `plugins/up-docs/README.md`, in §Project Setup, after the existing `## Docum
 ````markdown
 ### Custom Layout (Optional)
 
-By default, `up-docs-propagate-repo` detects either the v1 (`docs/handoff.md`) or v2 (`docs/state.md`) handoff-system layout. To override — for projects using Diátaxis or a simpler layout — create `docs/.up-docs.json`:
+By default, `up-docs-propagate-repo` detects either the v1 (`docs/handoff.md`) or v2 (`docs/handoff/state.md`) handoff-system layout. To override — for projects using Diátaxis or a simpler layout — create `docs/.up-docs.json`:
 
 ```json
 {

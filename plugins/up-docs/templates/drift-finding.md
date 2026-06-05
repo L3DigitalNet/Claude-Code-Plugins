@@ -62,7 +62,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 |---|-------|------|---------------|------------|------------|
 | 1 | Wiki | OpenBao — CT 111 | `BAO_ADDR=127.0.0.1:8200` | `BAO_ADDR=100.90.121.89:8200` | high |
 | 2 | Notion | Homelab / Backup | Backup uses 127.0.0.1 | Backup uses 100.90.121.89 | medium |
-| 3 | Repo | docs/deployed.md | Old `MAXAGE=20` | `MAXAGE=30` | high |
+| 3 | Repo | docs/handoff/deployed.md | Old `MAXAGE=20` | `MAXAGE=30` | high |
 
 **Totals:** 3 findings | 2 high-confidence | 0 requiring destructive fix
 ```

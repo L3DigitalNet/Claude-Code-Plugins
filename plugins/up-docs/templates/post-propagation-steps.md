@@ -31,8 +31,8 @@ audited-but-unchanged vs. deleted (if any). For `/up-docs:all`, one line per lay
 **(b) Handoff brief.** Detect the repo's handoff layout (probe-based, not flag-based) and source from
 the matching files:
 
-- **V2 (handoff v3 layout; `docs/state.md` present):** `docs/state.md` exists. Read it + `docs/deployed.md` + `docs/bugs/INDEX.md`.
-- **V1 (legacy):** `docs/handoff.md` exists (and no `docs/state.md`). Read it.
+- **V2 (handoff v3 layout; `docs/handoff/state.md` present):** `docs/handoff/state.md` exists. Read it + `docs/handoff/deployed.md` + `docs/handoff/bugs/INDEX.md`.
+- **V1 (legacy):** `docs/handoff.md` exists (and no `docs/handoff/state.md`). Read it.
 - **NONE:** neither file exists. Skip this subsection silently.
 
 Emit using this structure (fields sourced per layout):
@@ -40,18 +40,18 @@ Emit using this structure (fields sourced per layout):
 ```markdown
 ## 📋 Handoff for Next Session
 
-**Last work:** <V2: top row of docs/sessions/<current-month>.md | V1: top Last Updated line>
+**Last work:** <V2: top row of docs/handoff/sessions/<current-month>.md | V1: top Last Updated line>
 
 **Currently deployed:**
-- <V2: docs/deployed.md rows, one per row, name + version + state>
+- <V2: docs/handoff/deployed.md rows, one per row, name + version + state>
 - <V1: docs/handoff.md What Is Deployed bullets>
 
 **Open items — what remains:**
-- <V2: docs/deployed.md ## What Remains bullets | V1: docs/handoff.md What Remains bullets>
+- <V2: docs/handoff/deployed.md ## What Remains bullets | V1: docs/handoff.md What Remains bullets>
 
-**Active incidents:** <V2: docs/state.md Session Instructions 🔴/🟡/🟢 block | V1: skip>
+**Active incidents:** <V2: docs/handoff/state.md Session Instructions 🔴/🟡/🟢 block | V1: skip>
 
-**Open bugs:** <V2: docs/bugs/INDEX.md rows with status != fixed | V1: docs/handoff.md Bugs table with unresolved items. "None" if all are fixed.>
+**Open bugs:** <V2: docs/handoff/bugs/INDEX.md rows with status != fixed | V1: docs/handoff.md Bugs table with unresolved items. "None" if all are fixed.>
 ```
 
 Keep it scannable — no narrative prose, no full-file dump. The brief is a READ-only excerpt of the

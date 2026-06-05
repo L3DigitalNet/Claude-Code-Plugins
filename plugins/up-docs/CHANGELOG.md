@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - propagate-repo: state.md over-cap trim is route-first (route to sessions/deployed/architecture before deleting), per handoff v3.
 
 ### Added
-- propagate-repo: enforces `CLAUDE.md` (≤2048) and `AGENTS.md` (≤4096) byte caps; audits `docs/specs-plans.md`; verifies bug-index regen with `git diff --exit-code`.
+- propagate-repo: enforces `CLAUDE.md` (≤2048) and `AGENTS.md` (≤4096) byte caps; audits `docs/handoff/specs-plans.md`; verifies bug-index regen with `git diff --exit-code`.
 - audit-drift: conditional handoff-layout conformance phase — runs `~/projects/agent-configs/scripts/validate-layout.sh` against the project root when present and surfaces failures as `layer: "layout"` findings (read-only; never fixes).
 
 ### Changed
@@ -30,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.8.4] - 2026-05-29
 
 ### Fixed
-- state-condition the docs/state.md 2KB cap enforcement
+- state-condition the docs/handoff/state.md 2KB cap enforcement
 
 
 ## [0.8.3] - 2026-05-29
@@ -92,7 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Fixed
 
 - `up-docs-propagate-repo` agent now audits **`AGENTS.md`** and **`AGENTS.reviews.md`** as mandatory targets on every run (same discipline as `CLAUDE.md`). These are Codex CLI's equivalent of `CLAUDE.md`; v0.7.0's mandatory-audit list omitted them, so a V2 migration could leave their "Session handoff: docs/handoff.md" pointers unchanged — Codex sessions would then try to read a deleted file. Discovered by the drift auditor on the homelab `/up-docs:all` run that ran immediately after v0.7.0 shipped. The auditor caught 4 findings; 2 of them were these two files.
-- `up-docs-propagate-repo` V2 mandatory-audit block gains a **post-split self-reference check**: after Phase 1 has moved content from `docs/handoff.md` into `docs/state.md` (and siblings), grep the new files for literal `docs/handoff.md` strings. Pre-migration Session Instructions text frequently contained self-references like "Check `docs/handoff.md` (this file)" that became stale after the file was renamed to `state.md`. The check covers `state.md`, `deployed.md`, `architecture.md`, `credentials.md` — any of which may have inherited handoff.md references from their source sections. Fix in-place. Drift auditor caught this on homelab (`docs/state.md:11` was the offender).
+- `up-docs-propagate-repo` V2 mandatory-audit block gains a **post-split self-reference check**: after Phase 1 has moved content from `docs/handoff.md` into `docs/handoff/state.md` (and siblings), grep the new files for literal `docs/handoff.md` strings. Pre-migration Session Instructions text frequently contained self-references like "Check `docs/handoff.md` (this file)" that became stale after the file was renamed to `state.md`. The check covers `state.md`, `deployed.md`, `architecture.md`, `credentials.md` — any of which may have inherited handoff.md references from their source sections. Fix in-place. Drift auditor caught this on homelab (`docs/handoff/state.md:11` was the offender).
 - Stale-file-scan NEVER-flag list extended to include `AGENTS.reviews.md` (was only `AGENTS.md` in v0.7.0).
 
 ### Notes
@@ -103,25 +103,25 @@ Both fixes traced to the same root cause — v0.7.0's mandatory-audit list was m
 
 ### Changed
 
-- **Handoff-system-v2 adaptation.** `up-docs-propagate-repo`, `/up-docs:repo`, and `/up-docs:all` now target the post-2026-04-24 handoff layout (`docs/state.md` + `docs/deployed.md` + `docs/architecture.md` + `docs/credentials.md` + `docs/sessions/<YYYY-MM>.md` + `docs/bugs/<NNN>-*.md` + `docs/conventions.md` + `.claude/rules/*.md`) while preserving full backward compatibility with the legacy `docs/handoff.md` layout via probe-based detection. Rationale: 23 repos in the author's fleet migrated to v2 during the 2026-04-24 batch (pre/post reduction 91.1% aggregate); the plugin now matches.
+- **Handoff-system-v2 adaptation.** `up-docs-propagate-repo`, `/up-docs:repo`, and `/up-docs:all` now target the post-2026-04-24 handoff layout (`docs/handoff/state.md` + `docs/handoff/deployed.md` + `docs/handoff/architecture.md` + `docs/handoff/credentials.md` + `docs/handoff/sessions/<YYYY-MM>.md` + `docs/handoff/bugs/<NNN>-*.md` + `docs/handoff/conventions.md` + `.claude/rules/*.md`) while preserving full backward compatibility with the legacy `docs/handoff.md` layout via probe-based detection. Rationale: 23 repos in the author's fleet migrated to v2 during the 2026-04-24 batch (pre/post reduction 91.1% aggregate); the plugin now matches.
 
-  - **Layout detection:** agent probes `docs/state.md` first. If present → V2; if absent and `docs/handoff.md` present → V1 legacy; otherwise NONE. No CLI flag or user input required.
-  - **V2 mandatory-audit rewrite:** `docs/state.md` (`**Last updated:**` + `🔴/🟡/🟢` active-incidents block under `## Session Instructions`, 2 KB hard cap), `docs/deployed.md` (deployment-truth rows + What Remains), `docs/architecture.md` (system graph, optional), `docs/credentials.md` (secret paths, optional), `docs/sessions/<current-month>.md` (append row with ≤20-word headline + commit SHAs + bug refs; update INDEX.md row count), `docs/bugs/<NNN>-<slug>.md` (create one per session-fixed bug with frontmatter; run `docs/bugs/_regen_index.py` after), `docs/conventions.md` (numbered skeleton; full rule body may live in `.claude/rules/` after Phase 5 of migration), `.claude/rules/<topic>.md` (path-scoped behavioral rules, ≤200 lines per file), `CLAUDE.md` (usually no-change post-migration — pure index).
-  - **V1 legacy fallback:** repos that haven't run the v2 migration still work. Agent falls back to the pre-0.7.0 audit (`docs/handoff.md` + `docs/conventions.md`) and includes an advisory note in its output suggesting the migration.
-  - **Handoff brief (Step 6/7 in skills) upgraded:** sources fields from the matching layout. V2 brief pulls Last-work from `docs/sessions/<current-month>.md`, deployed from `docs/deployed.md`, active incidents from `docs/state.md`, open bugs from `docs/bugs/INDEX.md` (rows with `status != fixed`). V1 brief unchanged. NONE skips the brief silently.
+  - **Layout detection:** agent probes `docs/handoff/state.md` first. If present → V2; if absent and `docs/handoff.md` present → V1 legacy; otherwise NONE. No CLI flag or user input required.
+  - **V2 mandatory-audit rewrite:** `docs/handoff/state.md` (`**Last updated:**` + `🔴/🟡/🟢` active-incidents block under `## Session Instructions`, 2 KB hard cap), `docs/handoff/deployed.md` (deployment-truth rows + What Remains), `docs/handoff/architecture.md` (system graph, optional), `docs/handoff/credentials.md` (secret paths, optional), `docs/handoff/sessions/<current-month>.md` (append row with ≤20-word headline + commit SHAs + bug refs; update INDEX.md row count), `docs/handoff/bugs/<NNN>-<slug>.md` (create one per session-fixed bug with frontmatter; run `docs/handoff/bugs/_regen_index.py` after), `docs/handoff/conventions.md` (numbered skeleton; full rule body may live in `.claude/rules/` after Phase 5 of migration), `.claude/rules/<topic>.md` (path-scoped behavioral rules, ≤200 lines per file), `CLAUDE.md` (usually no-change post-migration — pure index).
+  - **V1 legacy fallback:** repos that haven't run the v2 migration still work. Agent falls back to the pre-0.7.0 audit (`docs/handoff.md` + `docs/handoff/conventions.md`) and includes an advisory note in its output suggesting the migration.
+  - **Handoff brief (Step 6/7 in skills) upgraded:** sources fields from the matching layout. V2 brief pulls Last-work from `docs/handoff/sessions/<current-month>.md`, deployed from `docs/handoff/deployed.md`, active incidents from `docs/handoff/state.md`, open bugs from `docs/handoff/bugs/INDEX.md` (rows with `status != fixed`). V1 brief unchanged. NONE skips the brief silently.
   - **Append-only bug KB rule codified:** creating a new bug file uses `max(existing_ids) + 1`; editing or renumbering prior bug files is forbidden. Supersession handled via `supersedes:` / `superseded_by:` frontmatter fields, both files kept.
-  - **Stale-file scan NEVER-flag list** extended to include v2 files (`docs/state.md`, `docs/deployed.md`, `docs/architecture.md`, `docs/credentials.md`, `docs/specs-plans.md`), the `docs/sessions/` and `docs/bugs/` directories (persistent logs), and everything under `.claude/` (plugin-lifecycle-managed).
-  - **`python3 docs/bugs/_regen_index.py`** is a sanctioned Bash call in the agent's guardrails (only destructive-adjacent operation allowed; rewrites `docs/bugs/INDEX.md` idempotently from frontmatter).
+  - **Stale-file scan NEVER-flag list** extended to include v2 files (`docs/handoff/state.md`, `docs/handoff/deployed.md`, `docs/handoff/architecture.md`, `docs/handoff/credentials.md`, `docs/handoff/specs-plans.md`), the `docs/handoff/sessions/` and `docs/handoff/bugs/` directories (persistent logs), and everything under `.claude/` (plugin-lifecycle-managed).
+  - **`python3 docs/handoff/bugs/_regen_index.py`** is a sanctioned Bash call in the agent's guardrails (only destructive-adjacent operation allowed; rewrites `docs/handoff/bugs/INDEX.md` idempotently from frontmatter).
 
-- `templates/drift-finding.md` example row updated: `docs/handoff.md` → `docs/deployed.md` to reflect the new layout's deployed-truth file.
+- `templates/drift-finding.md` example row updated: `docs/handoff.md` → `docs/handoff/deployed.md` to reflect the new layout's deployed-truth file.
 
 ### Notes
 
 Rule-body migration decision per repo:
 
-- **Phase 5 run (rule bodies in `.claude/rules/`):** extend the matching rules file; leave `docs/conventions.md` pointer unchanged.
-- **Phase 5 deferred (real conventions.md still full-body):** append to `docs/conventions.md` using the six-field schema + Quick Reference row.
-- **Template DOC-001/002/003 conventions.md:** extend `docs/conventions.md` for now; Phase 5 backfill will migrate to rules later.
+- **Phase 5 run (rule bodies in `.claude/rules/`):** extend the matching rules file; leave `docs/handoff/conventions.md` pointer unchanged.
+- **Phase 5 deferred (real conventions.md still full-body):** append to `docs/handoff/conventions.md` using the six-field schema + Quick Reference row.
+- **Template DOC-001/002/003 conventions.md:** extend `docs/handoff/conventions.md` for now; Phase 5 backfill will migrate to rules later.
 
 The plugin does not enforce one or the other — it adapts to what exists.
 
@@ -155,12 +155,12 @@ The plugin does not enforce one or the other — it adapts to what exists.
 ## [0.5.0] - 2026-04-20
 
 ### Added
-- `up-docs-propagate-repo` agent now performs a **mandatory audit** of `docs/handoff.md` and `docs/conventions.md` on every run (when either file exists). The audit covers each `docs/handoff.md` schema section (Last Updated, What Is Deployed, What Remains, Bugs Found And Fixed, Architecture, Credentials, Gotchas) and extracts any session-durable pattern into `docs/conventions.md` using the six-field schema + Quick Reference row. Both files always appear in the propagator's output table as explicit rows — never silently omitted.
+- `up-docs-propagate-repo` agent now performs a **mandatory audit** of `docs/handoff.md` and `docs/handoff/conventions.md` on every run (when either file exists). The audit covers each `docs/handoff.md` schema section (Last Updated, What Is Deployed, What Remains, Bugs Found And Fixed, Architecture, Credentials, Gotchas) and extracts any session-durable pattern into `docs/handoff/conventions.md` using the six-field schema + Quick Reference row. Both files always appear in the propagator's output table as explicit rows — never silently omitted.
 - `up-docs-propagate-repo` agent `<writing_style>` block codifies the repo-doc audience split: `README.md` files are human-facing prose; `CLAUDE.md`, `AGENTS.md`, and everything under `docs/` are LLM-facing (terse, scannable, tables over narrative). The agent preserves existing style when extending a file.
 - `/up-docs:repo` and `/up-docs:all` skills now emit a **"Handoff for Next Session" brief** after the propagator table. The brief is a scannable read-only excerpt of the updated `docs/handoff.md` (Last Updated, Currently Deployed, Open Items, Open Bugs, Gotchas) meant to bridge session boundaries.
 
 ### Changed
-- `up-docs-propagate-repo` guardrails explicitly allow the mandatory `docs/handoff.md` + `docs/conventions.md` audit as an exception to the "only act on items in the session-change summary" rule.
+- `up-docs-propagate-repo` guardrails explicitly allow the mandatory `docs/handoff.md` + `docs/handoff/conventions.md` audit as an exception to the "only act on items in the session-change summary" rule.
 
 
 ## [0.4.1] - 2026-04-20

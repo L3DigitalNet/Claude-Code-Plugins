@@ -984,7 +984,7 @@ Expected: every line prints `OK`.
 
 - [ ] **Step 4: Update session handoff state**
 
-Use `Edit` on `docs/state.md` to add an entry under "Recently closed (this session, 2026-05-08)"
+Use `Edit` on `docs/handoff/state.md` to add an entry under "Recently closed (this session, 2026-05-08)"
 mirroring the format of existing entries:
 
 ```markdown
@@ -994,7 +994,7 @@ mirroring the format of existing entries:
 - [ ] **Step 5: Final commit**
 
 ```bash
-git add docs/state.md
+git add docs/handoff/state.md
 git commit -m "$(cat <<'EOF'
 docs: closeout for 2026-05-08 qdev:research v1.5.0 session
 

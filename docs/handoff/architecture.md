@@ -18,16 +18,16 @@
 - **MCP server .mcp.json is flat format, not wrapped:** `{"server-name": {"command": "..."}}` not `{"mcpServers": {"server-name": ...}}`. Incorrect format causes "invalid mcp" errors.
 - **TypeScript plugins must `npm run build`** before testing — plugin install does not run npm/pip automatically.
 - **Release pipeline expects matching versions:** plugin.json version and marketplace.json version must match. Validation catches these mismatches.
-- **Test frameworks standardized:** bash plugins use bats-core, Python plugins use pytest, TypeScript plugins use Jest. See `docs/conventions.md` TEST-001 for canonical layout and rationale. Bats on Fedora 44+ requires `tests/run-bats.sh` wrapper due to gnu env stripping bash function exports (TEST-002).
+- **Test frameworks standardized:** bash plugins use bats-core, Python plugins use pytest, TypeScript plugins use Jest. See `docs/handoff/conventions.md` TEST-001 for canonical layout and rationale. Bats on Fedora 44+ requires `tests/run-bats.sh` wrapper due to gnu env stripping bash function exports (TEST-002).
 
 ## Test Coverage Snapshot (2026-06-03)
 
 Marketplace-wide tests use canonical frameworks and plugin-local suites. Keep
-counts in `docs/conventions.md` TEST-001 current when adding tests.
+counts in `docs/handoff/conventions.md` TEST-001 current when adding tests.
 
 **Quick reference:**
-- Strategic overview: `docs/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
-- Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/sessions/`
+- Strategic overview: `docs/handoff/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
+- Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/handoff/sessions/`
 - In scope: 9 plugins with qdev's research-KB + grounding-sanitizer scripts (qdev is no longer pure-markdown). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
@@ -143,7 +143,7 @@ CI runs the full matrix automatically on push to `main`.
 git add <specific files> && git commit -m "..." && git push origin main
 ```
 
-For tagged plugin releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`. See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md).
+For tagged plugin releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`. See [BRANCH_PROTECTION.md](../../BRANCH_PROTECTION.md).
 
 ## Release Pipeline
 

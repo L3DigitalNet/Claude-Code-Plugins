@@ -3434,13 +3434,13 @@ setup() {
     cd "$TEST_TMPDIR/fakerepo"
     git init -q -b main
     echo "# Test Repo" > README.md
-    echo "BAO_ADDR=127.0.0.1" > docs/deployed.md
+    echo "BAO_ADDR=127.0.0.1" > docs/handoff/deployed.md
     git add . && git -c user.email=t@t.com -c user.name=T commit -q -m "init"
 }
 
 teardown() { teardown_test_env; }
 
-@test "propagate-repo: rebind summary updates docs/deployed.md" {
+@test "propagate-repo: rebind summary updates docs/handoff/deployed.md" {
     local fixture="$BATS_TEST_DIRNAME/fixtures/session-summary-config-rebind.md"
 
     run claude --plugin-dir "$PLUGIN_DIR" \
@@ -3452,8 +3452,8 @@ teardown() { teardown_test_env; }
                --print "$(cat "$fixture")"
     [ "$status" -eq 0 ]
 
-    # The agent should have edited docs/deployed.md to include the new IP
-    grep -q "100.90.121.89" docs/deployed.md
+    # The agent should have edited docs/handoff/deployed.md to include the new IP
+    grep -q "100.90.121.89" docs/handoff/deployed.md
 }
 ```
 
@@ -3682,7 +3682,7 @@ Run `/release-pipeline:release`.
 
 - [ ] **Step 1: Replace the existing layout-detection block in the agent prompt**
 
-In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 layout-detection block (the current bash that does `[ -f docs/state.md ] && echo V2`). Replace with:
+In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 layout-detection block (the current bash that does `[ -f docs/handoff/state.md ] && echo V2`). Replace with:
 
 ````markdown
    First, detect which layout this repo uses. The `docs/.up-docs.json` config (if present) overrides any auto-detection:
@@ -3697,7 +3697,7 @@ In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 
    case "$CFG_LAYOUT" in
      auto)
        # Probe for v1/v2; fall through to NONE if neither marker file exists.
-       if   [ -f docs/state.md ];   then echo V2
+       if   [ -f docs/handoff/state.md ];   then echo V2
        elif [ -f docs/handoff.md ]; then echo V1
        else                              echo NONE
        fi
@@ -3716,7 +3716,7 @@ In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 
 
    | Layout value | Audit scope |
    |---|---|
-   | `AUTO` (default) | Probe for `docs/state.md` (V2) → `docs/handoff.md` (V1) → fall through to NONE. |
+   | `AUTO` (default) | Probe for `docs/handoff/state.md` (V2) → `docs/handoff.md` (V1) → fall through to NONE. |
    | `V2` (forced or detected) | Full handoff-system-v2 audit: `state.md`, `deployed.md`, `sessions/`, `bugs/`, `conventions.md`, `.claude/rules/`. |
    | `V1` (forced or detected) | Legacy single-file audit of `docs/handoff.md`. |
    | `SIMPLE` (config-only) | Audit only files listed in the config's `audit_targets` array. No state-tracking, no bugs/, no sessions/. If `audit_targets` is missing or empty, error out. |
@@ -3726,7 +3726,7 @@ In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 
    **Specific behaviors:**
 
    - **AUTO with both markers present** (rare — a repo migrating from v1 to v2 may have both temporarily): prefer V2 (newer marker wins).
-   - **Forced `V2` when `docs/state.md` is absent**: emit a single advisory row `"V2 layout requested but docs/state.md not found — initialize handoff-system-v2 before re-running"` and stop.
+   - **Forced `V2` when `docs/handoff/state.md` is absent**: emit a single advisory row `"V2 layout requested but docs/handoff/state.md not found — initialize handoff-system-v2 before re-running"` and stop.
    - **Forced `V1` when `docs/handoff.md` is absent**: emit `"V1 layout requested but docs/handoff.md not found"` and stop.
    - **`SIMPLE` with missing `audit_targets`**: emit `"SIMPLE layout requested but audit_targets is missing or empty in docs/.up-docs.json"` and stop.
    - **`DIATAXIS` with no canonical dirs**: emit one advisory row per missing directory, then proceed with whatever exists.
@@ -3778,7 +3778,7 @@ In `plugins/up-docs/README.md` §Project Setup (or §Documentation if §Project 
 ````markdown
 ### Custom Layout (Optional)
 
-By default, `up-docs-propagate-repo` auto-detects the v1 (`docs/handoff.md`) or v2 (`docs/state.md`) handoff-system layout. To override — for projects using Diátaxis or a simpler layout — create `docs/.up-docs.json`:
+By default, `up-docs-propagate-repo` auto-detects the v1 (`docs/handoff.md`) or v2 (`docs/handoff/state.md`) handoff-system layout. To override — for projects using Diátaxis or a simpler layout — create `docs/.up-docs.json`:
 
 ```json
 {
@@ -3791,7 +3791,7 @@ Recognized `layout` values:
 
 | Value | Audit scope |
 |---|---|
-| `auto` | Default — probe for `docs/state.md` then `docs/handoff.md`; fall through to `none` if neither exists. |
+| `auto` | Default — probe for `docs/handoff/state.md` then `docs/handoff.md`; fall through to `none` if neither exists. |
 | `v1` | Force the legacy single-file `docs/handoff.md` audit even if other markers are present. |
 | `v2` | Force the handoff-system-v2 audit (state.md, deployed.md, sessions/, bugs/, conventions.md, .claude/rules/). |
 | `simple` | Audit only the files in `audit_targets`. Requires `audit_targets` to be present and non-empty. No state-tracking, bug KB, or session logs. |
@@ -3992,7 +3992,7 @@ Prepend to `plugins/up-docs/CHANGELOG.md`:
 - `up-docs-propagate-notion` fuzzy fallback: when `notion-search(query: "<exact name>")` returns 0 hits, retry up to 3 broadened OR-queries derived from the session summary's `Affected area` field. Search depth recorded in output table.
 
 ### Changed
-- Default repo-layout detection probe now reads `docs/.up-docs.json` first; falls back to `docs/state.md` (V2) → `docs/handoff.md` (V1) → NONE.
+- Default repo-layout detection probe now reads `docs/.up-docs.json` first; falls back to `docs/handoff/state.md` (V2) → `docs/handoff.md` (V1) → NONE.
 
 ### Fixed
 - v1 plan's CR-009 finding — every documented `layout` value now branches; previously `auto`, `v1`, `v2`, `none` were documented but unimplemented in the agent prompt.

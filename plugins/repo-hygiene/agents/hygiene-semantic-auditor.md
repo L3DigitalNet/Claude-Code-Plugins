@@ -104,8 +104,8 @@ Read `README.md` at repo root.
 
 For each `.md` file under `docs/` (skip `docs/plans/` entirely):
 
-**Handoff-v3 awareness (read before flagging anything in `docs/`).** This repo — and most repos repo-hygiene runs in — uses the v3 agent-handoff layout: `docs/{state,deployed,architecture,credentials,conventions,specs-plans}.md` plus `docs/sessions/` and `docs/bugs/`. These are canonical session-state files, not stale docs:
-- Never flag the *existence* of a canonical handoff file as a problem, and treat its intentional internal pointers (e.g. "`docs/state.md` — auto-injected, do not read directly") as correct, not broken.
+**Handoff-v3 awareness (read before flagging anything in `docs/`).** This repo — and most repos repo-hygiene runs in — uses the v3 agent-handoff layout: `docs/{state,deployed,architecture,credentials,conventions,specs-plans}.md` plus `docs/handoff/sessions/` and `docs/handoff/bugs/`. These are canonical session-state files, not stale docs:
+- Never flag the *existence* of a canonical handoff file as a problem, and treat its intentional internal pointers (e.g. "`docs/handoff/state.md` — auto-injected, do not read directly") as correct, not broken.
 - `docs/handoff.md` is **retired** in v3. If you find it, emit a single `info` finding noting it is a migration target (per `agent-handoff-system.md` §Migration Trigger) — never a `warn`, and never use it as an example of a normal doc.
 - repo-hygiene does **not** validate handoff conformance (the `CLAUDE.md`/`state.md`/`AGENTS.md` byte caps, the SessionStart hook hash, the `AGENTS.md` three-line block). That contract is owned by `agent-configs/scripts/validate-layout.sh` and the up-docs drift auditor. Do not emit findings about it here — surfacing it would duplicate a check this plugin does not own.
 
@@ -148,7 +148,7 @@ Single JSON object with a `findings` array. No markdown wrapper, no prose commen
   "findings": [
     {"check": "readme-freshness", "severity": "warn", "path": "plugins/foo/README.md", "detail": "README declares skill 'foo-helper' but plugins/foo/skills/foo-helper/SKILL.md not found on disk", "auto_fix": false, "fix_cmd": null},
     {"check": "readme-freshness", "severity": "warn", "path": "plugins/bar/README.md", "detail": "Contains 7 em dashes — replace '**Term** — desc' with '**Term**: desc' and prose dashes with commas or periods", "auto_fix": false, "fix_cmd": null},
-    {"check": "docs-accuracy", "severity": "warn", "path": "docs/deployed.md", "detail": "References 'plugins/removed-plugin/README.md' which does not exist on disk — may be stale or renamed", "auto_fix": false, "fix_cmd": null}
+    {"check": "docs-accuracy", "severity": "warn", "path": "docs/handoff/deployed.md", "detail": "References 'plugins/removed-plugin/README.md' which does not exist on disk — may be stale or renamed", "auto_fix": false, "fix_cmd": null}
   ],
   "stats": {"plugins_scanned": 9, "docs_files_scanned": 4, "total_findings": 3}
 }

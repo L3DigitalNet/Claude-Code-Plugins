@@ -285,7 +285,7 @@ These principles apply across all plugins in this collection. Individual plugins
 
 ## Testing & Validation
 
-The marketplace standardizes test frameworks per language — bats for bash, pytest for Python, Jest for TypeScript. See [docs/conventions.md](docs/conventions.md) (TEST-001) for the canonical frameworks and per-language naming conventions.
+The marketplace standardizes test frameworks per language — bats for bash, pytest for Python, Jest for TypeScript. See [docs/handoff/conventions.md](docs/handoff/conventions.md) (TEST-001) for the canonical frameworks and per-language naming conventions.
 
 **Quick reference:**
 
