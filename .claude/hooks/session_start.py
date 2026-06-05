@@ -23,6 +23,7 @@ Exit codes:
   0 — always. Errors are embedded in additionalContext as "(unavailable)"/"(failed)"
       markers so a hook bug never blocks session start.
 """
+
 import json
 import os
 import subprocess
@@ -30,7 +31,7 @@ import sys
 import traceback
 from pathlib import Path
 
-STATE_REL = "docs/state.md"
+STATE_CANDIDATES = ("docs/handoff/state.md", "docs/state.md")
 MAX_STATE_BYTES = 2048
 MAX_STATUS_LINES = 10
 
@@ -59,11 +60,26 @@ def project_root() -> Path:
     return Path(".")
 
 
-def read_state(root: Path) -> str:
-    state_file = root / STATE_REL
+def resolve_state(root: Path) -> tuple[Path | None, str]:
+    """Locate state.md under dual-read preference and report its handoff dir.
+
+    Prefers docs/handoff/ (post-migration) over docs/ (legacy). The returned base
+    ("docs/handoff" or "docs") prefixes the pointer block so emitted pointers
+    always match the repo's real layout. When neither exists, default the base to
+    "docs/handoff" (the canonical target) so a fresh/unmigrated repo still points
+    operators at the intended location.
+    """
+    for rel in STATE_CANDIDATES:
+        candidate = root / rel
+        if candidate.exists():
+            return candidate, str(Path(rel).parent)
+    return None, "docs/handoff"
+
+
+def read_state_text(state_file: Path | None) -> str:
+    if state_file is None:
+        return "(no state.md — repo may not be migrated)"
     try:
-        if not state_file.exists():
-            return "(no docs/state.md — repo may not be migrated)"
         raw = state_file.read_bytes()
         if len(raw) <= MAX_STATE_BYTES:
             return raw.decode("utf-8", errors="replace")
@@ -80,12 +96,11 @@ def read_state(root: Path) -> str:
         if text is None:
             text = chunk.decode("utf-8", errors="replace")
         return (
-            text
-            + f"\n\n... state.md truncated at {MAX_STATE_BYTES} bytes "
+            text + f"\n\n... state.md truncated at {MAX_STATE_BYTES} bytes "
             "— route long-lived content out"
         )
     except Exception as exc:
-        return f"(failed to read docs/state.md: {exc})"
+        return f"(failed to read {state_file}: {exc})"
 
 
 def run(cmd: list[str], root: Path) -> str:
@@ -103,30 +118,35 @@ def working_tree(root: Path) -> str:
         return "(clean)"
     lines = out.splitlines()
     if len(lines) > MAX_STATUS_LINES:
-        return "\n".join(lines[:MAX_STATUS_LINES]) + \
-               f"\n... +{len(lines) - MAX_STATUS_LINES} more"
+        return (
+            "\n".join(lines[:MAX_STATUS_LINES])
+            + f"\n... +{len(lines) - MAX_STATUS_LINES} more"
+        )
     return out
 
 
 def build_context() -> str:
     root = project_root()
+    state_file, base = resolve_state(root)
     branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"], root) or "(unknown)"
-    commits = run(["git", "log", "--oneline", "-5", "--no-color"], root) \
+    commits = (
+        run(["git", "log", "--oneline", "-5", "--no-color"], root)
         or "(git log unavailable)"
+    )
     return (
         "=== SESSION START CONTEXT ===\n\n"
         f"## Branch\n{branch}\n\n"
-        f"## State (docs/state.md)\n{read_state(root)}\n\n"
+        f"## State ({base}/state.md)\n{read_state_text(state_file)}\n\n"
         f"## Last 5 commits\n{commits}\n\n"
         f"## Working tree\n{working_tree(root)}\n\n"
         "## Pointers (read as needed)\n"
-        "- docs/deployed.md — deployment truth\n"
-        "- docs/architecture.md — system graph\n"
-        "- docs/conventions.md — pattern library\n"
-        "- docs/credentials.md — credential references (OpenBao paths)\n"
-        "- docs/specs-plans.md — specs/plans pointer table\n"
-        "- docs/bugs/ — bug KB (grep by service or tag)\n"
-        "- docs/sessions/ — session log (grep by date)\n\n"
+        f"- {base}/deployed.md — deployment truth\n"
+        f"- {base}/architecture.md — system graph\n"
+        f"- {base}/conventions.md — pattern library\n"
+        f"- {base}/credentials.md — credential references (OpenBao paths)\n"
+        f"- {base}/specs-plans.md — specs/plans pointer table\n"
+        f"- {base}/bugs/ — bug KB (grep by service or tag)\n"
+        f"- {base}/sessions/ — session log (grep by date)\n\n"
         "=== END ==="
     )
 
