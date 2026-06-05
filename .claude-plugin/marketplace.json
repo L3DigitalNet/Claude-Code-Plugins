@@ -98,7 +98,7 @@
     {
       "name": "qdev",
       "description": "Development quality toolkit: /research sweeps before you build via qdev-researcher (Sonnet); /quality-review iterates to convergence via qdev-quality-reviewer (Sonnet); /deps-audit checks manifests for CVEs via qdev-deps-auditor (Haiku); /doc-sync keeps inline docs aligned via qdev-doc-syncer (Haiku); /spec-update syncs spec to code. Plus the qdev-grounding skill - an inline auto-trigger that does sanitizer-gated lookups and escalates to qdev-researcher when stuck.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"

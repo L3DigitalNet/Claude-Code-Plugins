@@ -1,6 +1,6 @@
 {
   "name": "qdev",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Development quality toolkit: /research dispatches a Sonnet subagent for dual-source sweeps with Context7 routing and persisted reports; /quality-review iterates to convergence; /deps-audit checks manifests for CVEs; /doc-sync keeps inline docs aligned; /spec-update syncs spec to code. Plus the qdev-grounding skill - an inline auto-trigger that does sanitizer-gated lookups and escalates to qdev-researcher when stuck.",
   "author": {
     "name": "L3DigitalNet",

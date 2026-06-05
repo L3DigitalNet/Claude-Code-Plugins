@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.6.0] - 2026-06-05
+
+### Added
+- add inline grounding skill (sanitize gate + light/medium escalation)
+- add deterministic egress sanitizer for the grounding skill
+- per-path routing, Context7 gate, reporting cycle + guardrails in qdev-researcher
+- deterministic dedup decision helper with per-branch tests
+- add scoped research-frontmatter validator
+- add regenerable research-index generator
+- add shared frontmatter parser for research-KB scripts
+
+### Changed
+- record D2 grounding skill + sanitizer in repo docs
+- reword P2 for the auto-trigger skill; describe grounding skill in manifest/marketplace
+- grounding-skill reference (category catalog, egress verdicts, trigger matrix)
+- cover sanitizer stdin transport + no-leak (SA-NEW-002)
+- document reporting cycle; bring qdev into test scope; scrub dead testing/ refs
+- scaffold research-KB tests dir + vendor frontmatter schema
+
+### Fixed
+- resolve code-review findings — 5 sanitizer/reader bugs + test hardening
+- close 3 egress/index bugs + expand test coverage 75→133
+- qualified subagent_type + pass scripts path; relay reporting cycle
+- qualify subagent_type in all four command dispatches (PLUGIN-001)
+- correct Tavily MCP tool prefix in three agents
+
+
 ## [Unreleased]
 
 ### Added
