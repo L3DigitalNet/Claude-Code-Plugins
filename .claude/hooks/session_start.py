@@ -3,8 +3,8 @@
 Canonical SessionStart hook (handoff system v3.0).
 
 Tracked source: agent-configs/global/claude/hooks/session_start.py. Installed into
-each Claude-managed repo as a byte-identical copy by scripts/install-globals.sh and
-verified by hash by scripts/validate-layout.sh. Do NOT hand-edit the per-repo copy:
+each Claude-managed repo as a byte-identical copy by scripts/handoff/install-globals.sh and
+verified by hash by scripts/handoff/validate-layout.sh. Do NOT hand-edit the per-repo copy:
 divergent copies were the 2026-05-29 hook-drift finding this version eliminates.
 
 Emits lean startup context (docs/state.md + git branch/log/status + pointers) via
