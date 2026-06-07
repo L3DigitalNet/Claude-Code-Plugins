@@ -54,7 +54,7 @@ When auto-update is enabled, Claude Code refreshes the marketplace catalog and u
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
 | [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
-| [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (Haiku propagators + Sonnet drift auditor) from session context, plus full infrastructure drift analysis |
+| [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (Haiku repo/Notion propagators + Sonnet wiki propagator & drift auditor) from session context, plus full infrastructure drift analysis |
 
 ## Principles
 
@@ -264,13 +264,13 @@ These principles apply across all plugins in this collection. Individual plugins
 
 ### Up Docs
 
-**Three-layer documentation updater via sub-agent dispatch**: infers what changed during a session and updates repo docs, Outline wiki, and Notion at the right level of detail for each layer. Also provides comprehensive drift analysis that SSHes into live infrastructure.
+**Three-layer documentation updater via sub-agent dispatch**: infers what changed during a session and updates repo docs, llm-wiki, and Notion at the right level of detail for each layer. Also provides comprehensive drift analysis that SSHes into live infrastructure.
 
 **Features:**
 
-- Parallel sub-agent architecture: three Haiku propagators (repo, wiki, notion) run in isolated context windows for cost efficiency (~1/10 Opus cost), while Sonnet audit ensures drift detection quality
+- Parallel sub-agent architecture: two Haiku propagators (repo, notion) + one Sonnet (wiki) run in isolated context windows for cost efficiency, while Sonnet audit ensures drift detection quality
 - `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`: dispatch targeted propagators from session context
-- `/up-docs:drift`: four-phase convergence loop that gathers live server state via SSH, syncs the Outline wiki, resolves internal contradictions, verifies and enriches links, then updates Notion
+- `/up-docs:drift`: four-phase convergence loop that gathers live server state via SSH, syncs llm-wiki, resolves internal contradictions, verifies and enriches links, then updates Notion
 - Wall-clock time to completion reduced to `max(repo, wiki, notion)` via parallel dispatch; sequential drift audit phases protect data integrity
 
 **Install:**
