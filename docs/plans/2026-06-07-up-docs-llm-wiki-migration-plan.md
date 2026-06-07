@@ -10,7 +10,7 @@
 
 **Authoritative spec:** [`docs/plans/2026-06-07-up-docs-llm-wiki-migration-design.md`](2026-06-07-up-docs-llm-wiki-migration-design.md) (Codex-converged, §13 ledger). Section refs below (§4, §5, …) point into it.
 
-**Plan status:** Reviewed — Codex `$plan-review` converged in 2 rounds (round-2 verdict: _No significant findings remain_; CR-NEW-001 hardening applied). Ready for execution. See the Plan audit ledger at the end.
+**Plan status:** Executed 2026-06-07 — all tasks implemented as up-docs **0.10.0** (commits `0d73dcb` propagate-wiki · `3e34c4f` audit-drift · `b3b6d32` minor agents · `99efdb0` skills · `098dd82` templates · `f6e45ce` plugin README · `8c45353` root README+deployed · `4b84b0a` manifests/CHANGELOG · `3cb7594` final-review polish). Gates green: bats 52 · pytest 29 · marketplace validator pass. Per-task two-stage review (T1/T2) + final whole-diff review passed. **Tagged release (`up-docs/v0.10.0` via `/release-pipeline:release`) still pending.** See the Plan audit ledger at the end.
 
 ---
 
