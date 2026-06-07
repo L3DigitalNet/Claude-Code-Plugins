@@ -1,27 +1,27 @@
 # up-docs
 
-Update documentation across three layers (repo, Outline wiki, Notion) based on what changed during a session, plus comprehensive drift analysis for infrastructure documentation.
+Update documentation across three layers (repo, llm-wiki, Notion) based on what changed during a session, plus comprehensive drift analysis for infrastructure documentation.
 
 ## Summary
 
-Documentation lives in three places with different purposes: repo-local files capture project-specific details, the Outline wiki holds implementation-level reference material, and Notion maintains strategic context and organizational knowledge. Keeping all three in sync after a work session means explaining the same layering rules every time. up-docs encodes those rules into five slash commands, each of which dispatches a dedicated sub-agent on the model tier that fits its workload: Haiku for propagation (mechanical edits scoped to an explicit change list) and Sonnet for drift detection (search + infer against live state).
+Documentation lives in three places with different purposes: repo-local files capture project-specific details, llm-wiki holds implementation-level reference material, and Notion maintains strategic context and organizational knowledge. Keeping all three in sync after a work session means explaining the same layering rules every time. up-docs encodes those rules into five slash commands, each of which dispatches a dedicated sub-agent on the model tier that fits its workload: Haiku for the repo and Notion propagators (mechanical edits scoped to an explicit change list) and Sonnet for the wiki propagator and drift detection (the wiki layer's llm-wiki contract + validators, and search-plus-infer drift work).
 
 ## Principles
 
-**[P1] Right Content, Right Layer**: Each documentation layer has a defined purpose and information level. Repo docs are project-specific. Outline is implementation reference ("how"). Notion is strategic context ("what and why"). Content that belongs in one layer does not get duplicated into another.
+**[P1] Right Content, Right Layer**: Each documentation layer has a defined purpose and information level. Repo docs are project-specific. llm-wiki is implementation reference ("how"). Notion is strategic context ("what and why"). Content that belongs in one layer does not get duplicated into another.
 
 **[P2] Infer, Don't Interrogate**: Commands assess what changed from git diffs, recent commits, and conversation context. No pre-work questionnaires or intake forms.
 
 **[P3] Update, Don't Rewrite**: Changes are targeted edits that preserve existing tone, structure, and formatting. Full-page rewrites only happen when a page is genuinely wrong throughout.
 
-**[P4] Ground Truth Wins**: The live server or repository is the authority. When documentation conflicts with reality, update the documentation. Both Notion and Outline may lag slightly; that's acceptable. Factual conflicts are not.
+**[P4] Ground Truth Wins**: The live server or repository is the authority. When documentation conflicts with reality, update the documentation. Both Notion and llm-wiki may lag slightly; that's acceptable. Factual conflicts are not.
 
 ## Requirements
 
 - Python 3.x in `$PATH` (used by all four helper scripts under `scripts/`)
 - Claude Code (any recent version)
-- Outline wiki accessible via MCP (mcp-outline server configured)
-- Notion accessible via MCP (Notion MCP server configured)
+- The local `~/projects/llm-wiki` repo present on disk, plus `uv`/`uvx` for the wiki validators (no MCP required for the wiki layer)
+- Notion accessible via MCP (Notion MCP server configured) — the only layer that needs a configured MCP server and network
 - SSH access to infrastructure hosts (for `/up-docs:drift`)
 
 ## Security
@@ -105,7 +105,7 @@ flowchart TD
     User([User]) -->|"/up-docs:all"| Orchestrator[Orchestrator skill<br/>gather context + build<br/>session-change summary]
     Orchestrator --> Dispatch[Parallel dispatch<br/>via Agent tool]
     Dispatch --> Repo[up-docs-propagate-repo<br/>Haiku]
-    Dispatch --> Wiki[up-docs-propagate-wiki<br/>Haiku]
+    Dispatch --> Wiki[up-docs-propagate-wiki<br/>Sonnet]
     Dispatch --> Notion[up-docs-propagate-notion<br/>Haiku]
     Repo --> Audit[up-docs-audit-drift<br/>Sonnet]
     Wiki --> Audit
@@ -118,7 +118,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     User([User]) -->|"/up-docs:repo<br/>/up-docs:wiki<br/>/up-docs:notion"| Wrapper[Thin wrapper skill<br/>builds session-change summary]
-    Wrapper --> Agent[Single propagator sub-agent<br/>Haiku, isolated context]
+    Wrapper --> Agent[Single propagator sub-agent<br/>Haiku (repo/Notion) / Sonnet (wiki), isolated context]
     Agent --> Table((Single-layer<br/>summary table))
 ```
 
@@ -144,7 +144,7 @@ Run a command at a natural pausing point or end of session:
 
 ```
 /up-docs:repo                Update repo documentation only
-/up-docs:wiki                Update Outline wiki only
+/up-docs:wiki                Update llm-wiki only
 /up-docs:notion              Update Notion only
 /up-docs:all                 Update all three layers sequentially
 /up-docs:drift [collection]  Full drift analysis (infrastructure → wiki → links → Notion)
@@ -168,7 +168,7 @@ Add a documentation mapping section to your project's CLAUDE.md so the commands 
 ```markdown
 ## Documentation
 
-- Outline: "Homelab" collection
+- llm-wiki: wiki/ paths (e.g. wiki/systems/, wiki/services/)
 - Notion: "Infrastructure" section
 - Repo docs: docs/, README.md
 ```
@@ -190,21 +190,21 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 | Agent | Model | Role |
 |-------|-------|------|
 | `up-docs-propagate-repo` | Haiku | Mechanical edits to README.md, docs/, CLAUDE.md scoped to the session-change summary |
-| `up-docs-propagate-wiki` | Haiku | Mechanical edits to Outline pages at implementation-reference level |
+| `up-docs-propagate-wiki` | Sonnet | Edits/creates llm-wiki wiki/ pages at implementation-reference level under the llm-wiki contract |
 | `up-docs-propagate-notion` | Haiku | Mechanical edits to Notion at strategic/organizational level; never writes configs or procedures |
 | `up-docs-audit-drift` | Sonnet | Read-only drift scan across all three layers with live-state verification; never auto-fixes |
 
-Per-agent `model:` frontmatter overrides the caller's model tier, so propagation runs on Haiku (≈ 1/10 Opus cost) even when the orchestrator was invoked from an Opus session.
+Per-agent `model:` frontmatter overrides the caller's model tier, so the repo and Notion propagators run on Haiku (≈ 1/10 Opus cost); the wiki propagator runs on Sonnet given its llm-wiki contract — even when the orchestrator was invoked from an Opus session.
 
 ## Planned Features
 
-- Per-layer dry-run mode that previews changes without pushing to Outline or Notion
+- Per-layer dry-run mode that previews changes without pushing to llm-wiki or Notion
 
 ## Known Issues
 
-- Requires both Outline and Notion MCP servers to be configured and running. If only one external system is available, use the individual commands for the layers you have.
+- Only the Notion layer requires a configured MCP server. The wiki layer needs the local `~/projects/llm-wiki` repo plus `uv`/`uvx`; if a layer's backing system is unavailable, use the individual commands for the layers you have.
 - The session context inference relies on git history; in a fresh repo with no commits, the commands have less signal to work from.
-- Notion and Outline MCP servers must be accessible from the current environment. Air-gapped systems can only use `/up-docs:repo`.
+- The repo and wiki layers read and write **offline** — only `/up-docs:notion` (and the Notion portion of `/up-docs:all` and `/up-docs:drift`) needs network/MCP. The one caveat: the pinned `validate-frontmatter` tool is fetched from git on first use (then cached), so air-gapped systems can run `/up-docs:repo` and `/up-docs:wiki` once that validator is cached.
 - `/up-docs:drift` requires SSH access to all documented hosts. Unreachable hosts are logged and skipped, not fatal.
 - Drift analysis runs on Sonnet by default (`model: sonnet` in `up-docs-audit-drift` frontmatter). The auditor's `<output_format>` flags escalation when results would benefit from Opus reasoning — large affected docs (>1000 lines), >10 findings, or cross-layer contradictions — leaving the user to opt in.
 
