@@ -1,7 +1,7 @@
 # up-docs — Outline → llm-wiki Migration (Design)
 
 **Date:** 2026-06-07
-**Status:** Draft (rev 2) — round-1 Codex `$spec-review` applied (SA-001..004 + nits); awaiting round-2 re-audit
+**Status:** Reviewed — Codex `$spec-review` converged in 2 rounds (round-2 verdict: _No significant findings remain_); ready for `writing-plans`
 **Target version:** up-docs `0.9.1` → `0.10.0`
 **Topic owner:** documentation-propagation plugin (`plugins/up-docs/`)
 
@@ -266,5 +266,8 @@ spec. Raw output kept under `/tmp/codex-specreview/`.
 | nit | Low | "No MCP server in repo" too broad | **Resolved** — §1 reworded (other plugins carry `.mcp.json`) |
 | ambiguity | — | llm-wiki validator-version drift across docs | **Resolved** — §4.8 makes runtime AGENTS.md authoritative |
 
-Open issue IDs after round-1 fixes: none pending. Round 2 should confirm SA-001..004 resolved with no
-regressions and no new findings, then the loop can stop on "No significant findings remain".
+### Round 2 — verdict: No significant findings remain (loop stopped)
+
+Follow-up audit (`codex exec resume`, same session) re-read rev 2 and retested every prior finding:
+SA-001, SA-002, SA-003, SA-004 + both nits all **Resolved**; **no new `SA-NEW-*` issues, no
+regressions**. Codex: _"The audit loop can stop."_ Spec converged — ready for `writing-plans`.
