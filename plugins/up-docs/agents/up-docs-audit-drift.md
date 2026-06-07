@@ -84,7 +84,7 @@ You are the drift auditor for the up-docs orchestrator. You scan the three docum
    - Findings count > 10 (architectural drift suspected)
    - Any single affected doc is > 1000 lines (1M context matters; recommend Opus)
    - Cross-layer contradiction detected (wiki says X, Notion says Y, code says Z)
-   - Any fix would require destructive action (page deletion, collection reorganization, credential rotation)
+   - Any fix would require destructive action (page deletion, bulk page or directory restructuring, credential rotation)
 
    Escalation means: emit the ESCALATION block in addition to findings. Do not auto-fix. Do not skip findings.
 </task>

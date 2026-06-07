@@ -48,7 +48,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 | `stale_line` | Exact text currently in the doc. Do not paraphrase. This is what a propagator will match against. |
 | `should_say` | What the line should be. If unknown, copy `stale_line` and lower `confidence` accordingly. |
 | `confidence` | `"high"` = verified against live state; `"medium"` = verified against another doc or the session summary; `"low"` = unverified but smells wrong; `"unverifiable"` = verification command was attempted and failed (use when you would otherwise have been tempted to fabricate). |
-| `destructive_fix` | `true` if the fix would require page deletion, collection reorg, or anything that can't be cleanly undone. |
+| `destructive_fix` | `true` if the fix would require page deletion, bulk page or directory restructuring, or anything that can't be cleanly undone. |
 | `evidence` | **Structured object**, not a free-form string: `{command, expected_output_signature, source_tool_use_id?}`. `command` = the exact `tool_input.command` you ran; `expected_output_signature` = a distinctive substring you literally observed in that call's `tool_response.output` (never summarized, paraphrased, or inferred); `source_tool_use_id` is optional. May be `null` **only** when `confidence: "unverifiable"` (command failed / host unreachable / no verifying command produced real output); a non-null object is required for `low`, `medium`, and `high`. **Never fabricate** — `validate_output.py` rejects string-form evidence at parse time, and `verify_evidence_grounded.py` rejects any signature absent from the captured transcript. See the agent prompt's `<verification_discipline>` block. |
 
 ## Markdown Form (rendered for user)
