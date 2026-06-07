@@ -10,7 +10,7 @@
 
 **Authoritative spec:** [`docs/plans/2026-06-07-up-docs-llm-wiki-migration-design.md`](2026-06-07-up-docs-llm-wiki-migration-design.md) (Codex-converged, §13 ledger). Section refs below (§4, §5, …) point into it.
 
-**Plan status:** rev 2 — Codex `$plan-review` round-1 applied (CR-001..005 resolved); awaiting round-2. See the Plan audit ledger at the end.
+**Plan status:** Reviewed — Codex `$plan-review` converged in 2 rounds (round-2 verdict: _No significant findings remain_; CR-NEW-001 hardening applied). Ready for execution. See the Plan audit ledger at the end.
 
 ---
 
@@ -423,7 +423,7 @@ Expected: propagate-wiki `sonnet`; propagate-repo + propagate-notion `haiku`.
 Run (per-pattern absence, CHANGELOG excluded — CR-001/CR-005):
 
 ```bash
-for p in 'Haiku propagators' 'propagate-wiki.*Haiku' 'three Haiku' 'all Haiku' 'three propagator sub-agents in parallel \(Haiku\)'; do
+for p in 'Haiku propagators' 'propagate-wiki.*Haiku' 'three Haiku' 'all Haiku' 'three propagator sub-agents in parallel \(Haiku\)' 'Single propagator.*Haiku'; do
   hits=$(rg -n "$p" README.md plugins/up-docs -g '!CHANGELOG.md' || true)
   [ -z "$hits" ] || { echo "STALE ($p): $hits"; exit 1; }
 done; echo "no stale Haiku model surfaces"
@@ -476,7 +476,9 @@ Read-only adversarial audits via `codex exec` (gpt-5.5, xhigh, `-s read-only`) a
 | CR-005 | Med | Alternation `rg` "each matches" can pass on one hit | **Resolved** — Task 1 Step 7 + Task 2 Step 5 + Task 9 Step 3 use per-pattern loops |
 | nit | Low | Task 0 `/tmp` tee not literally "Files: none"; add session-handoff row | **Resolved** — Task 0 Step 5 notes the scratch artifact; Task 9 Step 5 adds the sessions/state handoff |
 
-Open issue IDs after round-1 fixes: none pending. Round 2 should confirm CR-001..005 resolved with no regressions and no new findings.
+### Round 2 — verdict: No significant findings remain (loop stopped)
+
+Follow-up audit (`codex exec resume`, same session) re-read rev 2 at commit `fac5d49` and retested every prior finding: CR-001..005 + the nit all **Resolved**, **0 regressions**. One new Low surfaced — **CR-NEW-001** (Task 9's stale-Haiku loop didn't include the `Single propagator…Haiku` README node; the edit itself was already covered by Task 6 Step 3). Marked optional by Codex; **applied anyway** (added `'Single propagator.*Haiku'` to the Task 9 Step 3 loop) so the gate is fully adversarial. Codex: _"the audit/fix loop can stop."_ Plan converged — ready for execution.
 
 ## Self-Review (writing-plans)
 
