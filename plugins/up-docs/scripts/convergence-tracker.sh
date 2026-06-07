@@ -72,10 +72,15 @@ cmd_record_iteration() {
   local phase="${1:?Usage: record-iteration <phase>}"
   local findings_json
   findings_json=$(cat)
-  local state
+  local state new_state
   state=$(read_state)
 
-  echo "$state" | $PYTHON -c "
+  # Capture the updated state in memory rather than piping straight to write_state.
+  # Two payoffs: the iteration echo below reads it back from the variable instead of
+  # re-reading + re-parsing the file from disk, and a Python abort (phase-not-started)
+  # fails the substitution *before* write_state runs, so we never clobber state with
+  # an empty write — the original `… | write_state` pipeline wrote empty then errored.
+  new_state=$(echo "$state" | $PYTHON -c "
 import json, sys
 state = json.load(sys.stdin)
 phase = sys.argv[1]
@@ -99,9 +104,10 @@ p['history'].append({
 })
 
 print(json.dumps(state, indent=2))
-" "$phase" "$findings_json" | write_state
+" "$phase" "$findings_json")
 
-  echo "{\"phase\":$phase,\"iteration\":$(read_state | $PYTHON -c "import json,sys; print(json.load(sys.stdin)['phases']['$phase']['iteration'])")}"
+  printf '%s\n' "$new_state" | write_state
+  echo "{\"phase\":$phase,\"iteration\":$(printf '%s' "$new_state" | $PYTHON -c "import json,sys; print(json.load(sys.stdin)['phases']['$phase']['iteration'])")}"
 }
 
 cmd_check_convergence() {

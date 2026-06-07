@@ -38,7 +38,8 @@ fi
 export CONTENT TIMEOUT
 
 $PYTHON << 'PYEOF'
-import json, os, re, subprocess, sys
+import json, os, re, subprocess, sys, threading
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 
 content = os.environ.get("CONTENT", "")
@@ -83,35 +84,19 @@ for line in content.splitlines():
         slug = re.sub(r'\s+', '-', slug.strip())
         headings.add(slug)
 
-# Track domains that returned 429
-rate_limited_domains = set()
+# External link checks hit the network; running one blocking curl per URL in
+# series makes wall-clock = sum(latencies). Split local checks (anchors, relative
+# links — no network) from external ones, then fan the external checks across a
+# bounded thread pool so wall-clock collapses to ~slowest / worker_count.
+rate_limited_domains = set()   # best-effort: skip domains already seen to 429
+rl_lock = threading.Lock()     # guards the shared set across worker threads
 
-for link in links:
+def check_external(link):
     url = link["url"]
-
-    # Internal anchor
-    if url.startswith("#"):
-        anchor = url[1:]
-        if anchor in headings:
-            internal["valid"].append({"text": link["text"], "target": anchor})
-        else:
-            internal["broken"].append({"text": link["text"], "target": anchor})
-        continue
-
-    # Internal/relative link
-    if not url.startswith("http://") and not url.startswith("https://"):
-        internal["needs_verification"].append({"text": link["text"], "target": url})
-        continue
-
-    # External link
-    parsed = urlparse(url)
-    domain = parsed.netloc
-
-    # Skip if domain is rate limited
-    if domain in rate_limited_domains:
-        external["rate_limited"].append({"url": url, "status": 429})
-        continue
-
+    domain = urlparse(url).netloc
+    with rl_lock:
+        if domain in rate_limited_domains:
+            return ("rate_limited", {"url": url, "status": 429})
     try:
         r = subprocess.run(
             ["curl", "-sIL", "-o", "/dev/null", "-w", "%{http_code} %{url_effective}",
@@ -123,19 +108,43 @@ for link in links:
         final_url = parts[1] if len(parts) > 1 else url
 
         if status == 429:
-            external["rate_limited"].append({"url": url, "status": 429})
-            rate_limited_domains.add(domain)
-        elif 200 <= status < 300:
-            external["live"].append({"url": url, "status": status})
-        elif 300 <= status < 400:
-            external["redirect"].append({"url": url, "status": status, "final_url": final_url})
-        else:
-            external["dead"].append({"url": url, "status": status})
-
+            with rl_lock:
+                rate_limited_domains.add(domain)
+            return ("rate_limited", {"url": url, "status": 429})
+        if 200 <= status < 300:
+            return ("live", {"url": url, "status": status})
+        if 300 <= status < 400:
+            return ("redirect", {"url": url, "status": status, "final_url": final_url})
+        return ("dead", {"url": url, "status": status})
     except subprocess.TimeoutExpired:
-        external["timeout"].append({"url": url, "error": "Connection timed out"})
+        return ("timeout", {"url": url, "error": "Connection timed out"})
     except Exception as e:
-        external["timeout"].append({"url": url, "error": str(e)[:100]})
+        return ("timeout", {"url": url, "error": str(e)[:100]})
+
+external_links = []
+for link in links:
+    url = link["url"]
+
+    # Internal anchor — checked against local headings, no network
+    if url.startswith("#"):
+        anchor = url[1:]
+        bucket = "valid" if anchor in headings else "broken"
+        internal[bucket].append({"text": link["text"], "target": anchor})
+        continue
+
+    # Internal/relative link — deferred to caller, no network
+    if not url.startswith("http://") and not url.startswith("https://"):
+        internal["needs_verification"].append({"text": link["text"], "target": url})
+        continue
+
+    external_links.append(link)
+
+# map() preserves input order and re-raises worker exceptions in the main thread.
+if external_links:
+    workers = min(8, len(external_links))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for bucket, payload in pool.map(check_external, external_links):
+            external[bucket].append(payload)
 
 ext_checked = sum(len(v) for v in external.values())
 
