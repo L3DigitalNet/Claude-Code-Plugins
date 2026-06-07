@@ -58,4 +58,4 @@ When assembling the summary from `context-gather.sh` output and conversation his
 
 ## Caching Structure
 
-Put this summary at the **stable front** of every sub-agent prompt. Layer-specific detail (which files to search, which collections to browse) goes at the end. This maximizes prompt-cache hits across the three propagator calls in a single `/up-docs:all` run.
+Put this summary at the **stable front** of every sub-agent prompt. Layer-specific detail (which files to search, which `wiki/` subtrees/tags to browse) goes at the end. This maximizes prompt-cache hits across the three propagator calls in a single `/up-docs:all` run.

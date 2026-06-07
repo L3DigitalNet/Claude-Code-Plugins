@@ -126,7 +126,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    User([User]) -->|"/up-docs:drift [collection]"| Wrapper2[Thin wrapper skill<br/>builds session-change summary]
+    User([User]) -->|"/up-docs:drift [wiki-subtree-or-tag]"| Wrapper2[Thin wrapper skill<br/>builds session-change summary]
     Wrapper2 --> Auditor[up-docs-audit-drift<br/>Sonnet, read-only]
     Auditor --> P1[Phase 1: Infrastructure → Wiki]
     Auditor --> P2[Phase 2: Wiki Consistency]
@@ -147,7 +147,7 @@ Run a command at a natural pausing point or end of session:
 /up-docs:wiki                Update llm-wiki only
 /up-docs:notion              Update Notion only
 /up-docs:all                 Update all three layers sequentially
-/up-docs:drift [collection]  Full drift analysis (infrastructure → wiki → links → Notion)
+/up-docs:drift [wiki-subtree-or-tag]  Full drift analysis (infrastructure → wiki → links → Notion)
 ```
 
 Each command produces a summary table listing every page or file examined, the action taken, and a one-line description of changes.
