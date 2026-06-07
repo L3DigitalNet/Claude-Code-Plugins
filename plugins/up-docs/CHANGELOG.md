@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.10.1] - 2026-06-07
+
+### Changed
+- parallelize link-audit curls + drop redundant tracker re-read
+- retire final Outline "collection" vocabulary stragglers
+
+
 ## [0.10.0] - 2026-06-07
 
 ### Changed
