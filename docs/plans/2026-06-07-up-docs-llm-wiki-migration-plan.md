@@ -10,6 +10,8 @@
 
 **Authoritative spec:** [`docs/plans/2026-06-07-up-docs-llm-wiki-migration-design.md`](2026-06-07-up-docs-llm-wiki-migration-design.md) (Codex-converged, §13 ledger). Section refs below (§4, §5, …) point into it.
 
+**Plan status:** rev 2 — Codex `$plan-review` round-1 applied (CR-001..005 resolved); awaiting round-2. See the Plan audit ledger at the end.
+
 ---
 
 ## File Structure
@@ -25,6 +27,7 @@
 | `plugins/up-docs/skills/drift/SKILL.md` | Outline-collection wording + Haiku-cost nuance |
 | `plugins/up-docs/templates/summary-report.md` | `Wiki (Outline)` → `Wiki (llm-wiki)` |
 | `plugins/up-docs/templates/drift-finding.md` | `page_id` wording (KEEP literal `"layout"`) |
+| `plugins/up-docs/templates/session-change-summary.md` | line 5 "Haiku propagators" → "the propagators" (CR-001) |
 | `plugins/up-docs/README.md` | Layer prose, prereqs, model-surface inventory |
 | `README.md` (root) | up-docs row + summary (Outline→llm-wiki; model tiers) |
 | `plugins/up-docs/.claude-plugin/plugin.json` | `version` 0.10.0 + description |
@@ -63,7 +66,7 @@ Expected: PASS (no errors). Records the pre-change baseline so a later failure i
 - [ ] **Step 5: Capture the pre-change Outline/Haiku surface (reference snapshot)**
 
 Run: `rg -n -i 'outline|mcp-outline' plugins/up-docs README.md .claude-plugin/marketplace.json | tee /tmp/up-docs-outline-before.txt | wc -l`
-Expected: a non-zero count; the file is the worklist. (No commit — verification only.)
+Expected: a non-zero count; the file is the worklist. The `/tmp/...` snapshot is an intentional scratch artifact **outside git** — Task 0 changes no tracked files (verification only, no commit).
 
 ---
 
@@ -107,7 +110,7 @@ The `<task>` steps become:
 Add a `<llm_wiki_contract>` block stating, verbatim intent:
 - Writes touch `wiki/` only; never normalize `raw/` (immutable, C-4); never cite `capture/` (ADR-0007).
 - **Session changes are operator testimony** — do NOT fabricate a `raw/` source. Record the claim in the `wiki/` page as operator-asserted, set `confidence: 'unknown'`, keep the page `status: 'draft'`, and flag the missing citation. Never self-promote `draft`→`active`.
-- New pages: `status: 'draft'`, carry the `wiki` tag, and an `id` minted with `(cd "$LLM_WIKI_ROOT" && uv run python -m llm_wiki_tools.lint.frontmatter_ids mint)` — never hand-authored. Field set / key order from the `markdown-frontmatter` skill + `docs/schemas/`.
+- New pages: `status: 'draft'`, carry the `wiki` tag, and an `id` minted with `(cd "$LLM_WIKI_ROOT" && uv run python -m llm_wiki_tools.lint.frontmatter_ids mint --title "<page title>")` — `--title` is **required** (Typer `...`; see llm-wiki conventions C-11); never hand-authored. Field set / key order from the `markdown-frontmatter` skill + `docs/schemas/`.
 - Links: v1.1 path-links, never `[[wikilinks]]` (frontmatter relations no-slash+`.md`; body links leading-slash Markdown).
 - Smallest coherent change; on edit preserve `id`/`created`, bump `updated` only for a meaningful change.
 - **All Bash runs `(cd "$LLM_WIKI_ROOT" && …)`; all `Read`/`Edit`/`Write` use absolute paths under `$LLM_WIKI_ROOT`** (SA-004).
@@ -129,14 +132,23 @@ The agent, after writing, runs (copied from AGENTS.md at runtime; do not hardcod
   && uv run python -m llm_wiki_tools.lint.resolve_links \
   && uv run python -m llm_wiki_tools.lint.frontmatter_ids check)
 ```
+
 Plus Prettier + markdownlint for changed `md` (never reformat `raw/`/`capture/`/`.claude/`). If the gate fails, report failure — never claim clean.
 
 - [ ] **Step 7: Verify no MCP residue + required elements (acceptance)**
 
 Run: `rg -n -i 'mcp-outline|outline|read_document|create_document|update_document|search_documents' plugins/up-docs/agents/up-docs-propagate-wiki.md`
 Expected: **no matches.**
-Run: `rg -n 'model: sonnet|Edit, Write|frontmatter_ids mint|LLM_WIKI_ROOT|Wiki \(llm-wiki\)' plugins/up-docs/agents/up-docs-propagate-wiki.md`
-Expected: each pattern matches (model bumped, tools added, id-mint present, root var present, output header retargeted).
+Run (per-pattern, so a single hit can't mask a miss — CR-005):
+
+```bash
+F=plugins/up-docs/agents/up-docs-propagate-wiki.md
+for p in 'model: sonnet' 'Edit, Write' 'frontmatter_ids mint --title' 'LLM_WIKI_ROOT' 'Wiki (llm-wiki)'; do
+  rg -qF "$p" "$F" || { echo "MISSING: $p"; exit 1; }
+done; echo "all required elements present"
+```
+
+Expected: `all required elements present` (each literal found; exits non-zero naming the first missing one).
 
 - [ ] **Step 8: Confirm no bats regression + commit**
 
@@ -163,6 +175,7 @@ Replace the six `mcp-outline` read verbs; keep the Notion verbs. New `tools:`:
 ```yaml
 tools: Read, Glob, Grep, Bash, WebFetch, mcp__plugin_Notion_notion__notion-search, mcp__plugin_Notion_notion__notion-fetch
 ```
+
 Leave `model: sonnet` unchanged.
 
 - [ ] **Step 2: Retarget the wiki layer in `<role>`/`<task>`**
@@ -171,13 +184,16 @@ Everywhere the prompt says "Outline" for the wiki layer, say "llm-wiki". In `<ta
 
 - [ ] **Step 3: Add llm-wiki-native wiki drift checks (spec §6)**
 
-In the wiki phase, instruct the auditor to run llm-wiki's own validators as live-state verification and emit `layer: "wiki"` findings for failures:
+In the wiki phase, instruct the auditor to run llm-wiki's **full** validator gate (all three, per design §6 + AGENTS.md — CR-004) as live-state verification and emit `layer: "wiki"` findings for failures:
 
 ```bash
-(cd "$LLM_WIKI_ROOT" && uv run python -m llm_wiki_tools.lint.resolve_links; \
- uv run python -m llm_wiki_tools.lint.frontmatter_ids check)
+(cd "$LLM_WIKI_ROOT" \
+  && uvx --from 'git+https://github.com/L3DigitalNet/project-standards@v2.0.0' validate-frontmatter --config .project-standards.yml; \
+  uv run python -m llm_wiki_tools.lint.resolve_links; \
+  uv run python -m llm_wiki_tools.lint.frontmatter_ids check)
 ```
-A broken path-link or malformed id is a high-confidence `wiki` finding (evidence = the validator command + its literal failing line, per the existing structured-evidence schema). Also flag a `status: draft` page being treated as authoritative. Keep `<verification_discipline>`, `<forbidden_commands>`, escalation thresholds, and the `layer` enum (`repo|wiki|notion|layout`) **unchanged** — `frontmatter_ids check` / `resolve_links` are read-only and fit the allowed-verbs list.
+
+A failed `validate-frontmatter` (bad `status`/`doc_type`/schema drift), a broken path-link (`resolve_links`), or a malformed id (`frontmatter_ids check`) is a high-confidence `wiki` finding — capture each validator's literal failing line as the `expected_output_signature` (per the existing structured-evidence schema). Also flag a `status: draft` page treated as authoritative. All three are read-only and fit the allowed-verbs list. Keep `<verification_discipline>`, `<forbidden_commands>`, escalation thresholds, and the `layer` enum (`repo|wiki|notion|layout`) **unchanged**.
 
 - [ ] **Step 4: De-Outline the examples**
 
@@ -187,8 +203,16 @@ In `<examples>`, change wiki-layer example actions from `search_documents`/`read
 
 Run: `rg -n -i 'mcp-outline|read_document|search_documents|get_collection_structure|get_document_backlinks|get_document_id_from_title' plugins/up-docs/agents/up-docs-audit-drift.md`
 Expected: **no matches.**
-Run: `rg -n 'notion-search|notion-fetch|LLM_WIKI_ROOT|resolve_links' plugins/up-docs/agents/up-docs-audit-drift.md`
-Expected: each matches (Notion retained; wiki retargeted).
+Run (per-pattern — CR-005):
+
+```bash
+F=plugins/up-docs/agents/up-docs-audit-drift.md
+for p in 'notion-search' 'notion-fetch' 'LLM_WIKI_ROOT' 'resolve_links' 'validate-frontmatter' 'frontmatter_ids check'; do
+  rg -qF "$p" "$F" || { echo "MISSING: $p"; exit 1; }
+done; echo "all required elements present"
+```
+
+Expected: `all required elements present` (Notion retained; wiki retargeted with the full validator set).
 
 - [ ] **Step 6: Run pytest + bats, then commit**
 
@@ -243,7 +267,7 @@ Frontmatter `description:` (line 3) → "Update the llm-wiki knowledge base (~/p
 
 - [ ] **Step 2: skills/all/SKILL.md**
 
-Line 21 dispatch list: `up-docs-propagate-wiki (Haiku, parallel)` → `(Sonnet, parallel)`. Line 73 table cell `Updates Outline pages at implementation-reference level` → `Updates llm-wiki wiki/ pages at implementation-reference level`. Any "(Haiku)" describing the wiki propagator → "(Sonnet)"; leave repo/notion "(Haiku)" intact.
+Line 10 (CR-001): `dispatch three propagator sub-agents in parallel (Haiku), then run the drift auditor (Sonnet)` → `dispatch three propagator sub-agents in parallel — repo + Notion on Haiku, wiki on Sonnet — then run the drift auditor (Sonnet)`. Line 21 dispatch tree: `up-docs-propagate-wiki     (Haiku, parallel)` → `(Sonnet, parallel)` (leave lines 20/22 repo/notion Haiku). Line 73 table cell `Updates Outline pages at implementation-reference level` → `Updates llm-wiki wiki/ pages at implementation-reference level`.
 
 - [ ] **Step 3: skills/drift/SKILL.md**
 
@@ -273,16 +297,20 @@ Line ~47 `### Wiki (Outline)` → `### Wiki (llm-wiki)`. Any other "Outline" →
 
 Line ~14 `"page_id": "<Outline/Notion page ID, or null for repo>"` → `"page_id": "<wiki page path or Notion page id; null for repo>"`. Line ~46 `Human-readable page title (Outline, Notion) or file path (repo).` → `… (llm-wiki path, Notion title) or file path (repo).` **Do NOT remove the literal `"layout"`** (asserted by `prompt-conformance.bats`).
 
-- [ ] **Step 3: Acceptance + bats + commit**
+- [ ] **Step 3: session-change-summary.md model wording (CR-001)**
 
-Run: `rg -n -i 'outline' plugins/up-docs/templates; rg -n '"layout"' plugins/up-docs/templates/drift-finding.md`
-Expected: first returns **no matches**; second **matches** (layout enum preserved).
+Line 5 `… the Haiku propagators will miss changes or over-edit.` → `… the propagators will miss changes or over-edit.` (drop the now-inaccurate "Haiku" — repo/Notion are Haiku but wiki is Sonnet, so generic "the propagators" is correct).
+
+- [ ] **Step 4: Acceptance + bats + commit**
+
+Run: `rg -n -i 'outline' plugins/up-docs/templates; rg -n '"layout"' plugins/up-docs/templates/drift-finding.md; rg -n 'Haiku propagators' plugins/up-docs/templates/session-change-summary.md`
+Expected: first **no matches**; second **matches** (layout enum preserved); third **no matches** (stale "Haiku propagators" gone).
 Run: `bash plugins/up-docs/tests/run-bats.sh`
 Expected: PASS (the layout-enum test stays green).
 
 ```bash
 git add plugins/up-docs/templates
-git commit -m "docs(up-docs): retarget summary-report/drift-finding templates to llm-wiki"
+git commit -m "docs(up-docs): retarget templates to llm-wiki + drop stale Haiku-propagator wording"
 ```
 
 ---
@@ -376,10 +404,12 @@ git commit -m "chore(up-docs): bump to 0.10.0 — llm-wiki backend (manifest + m
 
 **Files:** none (verification), then `docs/handoff/specs-plans.md` + `docs/plans/2026-06-07-up-docs-llm-wiki-migration-plan.md` status
 
-- [ ] **Step 1: Outline fully retired from runtime surface**
+- [ ] **Step 1: Outline retired from runtime surface (CHANGELOG excluded — CR-003)**
 
-Run: `rg -i 'outline' plugins/up-docs .claude-plugin/marketplace.json README.md docs/handoff/deployed.md`
-Expected: matches **only** in `plugins/up-docs/CHANGELOG.md` historical lines (213/222). Anything else is a miss — fix before proceeding.
+Run: `rg -i 'outline' plugins/up-docs .claude-plugin/marketplace.json README.md docs/handoff/deployed.md -g '!CHANGELOG.md'`
+Expected: **no matches.** CHANGELOG.md is a release-note surface (not runtime): it legitimately names "Outline" in both the historical 213/222 entries **and** the new 0.10.0 entry describing the retirement, so it is excluded from this sweep.
+Run (changelog sanity): `rg -c -i 'outline' plugins/up-docs/CHANGELOG.md`
+Expected: a small count (historical entries + the new release-note line) — all legitimate; no other file matched Step 1's sweep.
 
 - [ ] **Step 2: No mcp-outline tool anywhere**
 
@@ -390,8 +420,16 @@ Expected: **no matches.**
 
 Run: `rg -n '^model:' plugins/up-docs/agents/up-docs-propagate-wiki.md plugins/up-docs/agents/up-docs-propagate-repo.md plugins/up-docs/agents/up-docs-propagate-notion.md`
 Expected: propagate-wiki `sonnet`; propagate-repo + propagate-notion `haiku`.
-Run: `rg -n "Haiku propagators|propagate-wiki.*Haiku|three Haiku|all Haiku" README.md plugins/up-docs | rg -v CHANGELOG`
-Expected: **no matches** (SA-003 clean).
+Run (per-pattern absence, CHANGELOG excluded — CR-001/CR-005):
+
+```bash
+for p in 'Haiku propagators' 'propagate-wiki.*Haiku' 'three Haiku' 'all Haiku' 'three propagator sub-agents in parallel \(Haiku\)'; do
+  hits=$(rg -n "$p" README.md plugins/up-docs -g '!CHANGELOG.md' || true)
+  [ -z "$hits" ] || { echo "STALE ($p): $hits"; exit 1; }
+done; echo "no stale Haiku model surfaces"
+```
+
+Expected: `no stale Haiku model surfaces` (SA-003/CR-001 clean — these patterns target the wiki propagator + collective framing; the standalone repo/Notion "(Haiku)" mentions are correct and intentionally not matched).
 
 - [ ] **Step 4: Full suites green**
 
@@ -404,11 +442,11 @@ Expected: PASS.
 
 - [ ] **Step 5: Update the plan + index status, commit**
 
-Mark this plan's status "Done — shipped up-docs 0.10.0 (pending tag)". Update the `docs/handoff/specs-plans.md` plan row likewise. Add the plan row if not present.
+Mark this plan's status "Done — shipped up-docs 0.10.0 (pending tag)". Update the `docs/handoff/specs-plans.md` plan row likewise. If implementation materially changed session state, add a `docs/handoff/sessions/2026-06.md` row and refresh `docs/handoff/state.md` per the handoff ritual (CR-001 non-blocking).
 
 ```bash
-git add docs/plans/2026-06-07-up-docs-llm-wiki-migration-plan.md docs/handoff/specs-plans.md
-git commit -m "docs(up-docs): mark llm-wiki migration plan complete"
+git add docs/plans/2026-06-07-up-docs-llm-wiki-migration-plan.md docs/handoff/specs-plans.md docs/handoff/sessions/2026-06.md docs/handoff/state.md
+git commit -m "docs(up-docs): mark llm-wiki migration plan complete + session handoff"
 ```
 
 - [ ] **Step 6: Release (separate, user-initiated)**
@@ -423,8 +461,25 @@ Per spec §11: `~/.claude/CLAUDE.md` Source-of-Truth table ("Implementation refe
 
 ---
 
+## Plan audit ledger (Codex `$plan-review`, adversarial)
+
+Read-only adversarial audits via `codex exec` (gpt-5.5, xhigh, `-s read-only`) against this plan. Raw output: `/tmp/codex-planreview/`. (Companion to the spec's `SA-*` ledger; this namespace is `CR-*`.)
+
+### Round 1 — verdict: Needs major correction before execution (3 blocking, 2 non-blocking)
+
+| ID | Sev | Title | Disposition |
+| --- | --- | --- | --- |
+| CR-001 | High | Model-tier cleanup omits `session-change-summary.md:5` + `skills/all/SKILL.md:10` | **Resolved** — added to File Structure + Task 5 Step 3 + Task 4 Step 2; Task 9 Step 3 adds the broad-prose absence check |
+| CR-002 | High | `frontmatter_ids mint` missing required `--title` | **Resolved** — Task 1 Step 4 + acceptance now use `mint --title "<page title>"` (verified `[required]` in source + C-11) |
+| CR-003 | High | Final Outline sweep contradicts the new CHANGELOG entry | **Resolved** — Task 9 Step 1 excludes `CHANGELOG.md` (`-g '!CHANGELOG.md'`) + separate changelog sanity check |
+| CR-004 | Med | audit-drift validator set omits `validate-frontmatter` | **Resolved** — Task 2 Step 3 runs the full three-validator gate |
+| CR-005 | Med | Alternation `rg` "each matches" can pass on one hit | **Resolved** — Task 1 Step 7 + Task 2 Step 5 + Task 9 Step 3 use per-pattern loops |
+| nit | Low | Task 0 `/tmp` tee not literally "Files: none"; add session-handoff row | **Resolved** — Task 0 Step 5 notes the scratch artifact; Task 9 Step 5 adds the sessions/state handoff |
+
+Open issue IDs after round-1 fixes: none pending. Round 2 should confirm CR-001..005 resolved with no regressions and no new findings.
+
 ## Self-Review (writing-plans)
 
-- **Spec coverage:** §3 scope → Tasks 1–8 (every in-scope file has a task); §4 contract → Task 1 Steps 3–6 + Task 2 Step 3; §5 propagate-wiki → Task 1; §6 audit-drift → Task 2; §7 minor agents → Task 3; §8 skills/templates → Tasks 4–5; §9 README/manifest/marketplace/CHANGELOG/repo-docs → Tasks 6–8; §10 acceptance → Task 9; §11 follow-ups → final section. SA-001 (homelab in-scope) → Task 1 Steps 3/5; SA-002 (marketplace) → Task 8; SA-003 (model surfaces) → Tasks 4/5/6/7/8 + Task 9 Step 3; SA-004 (cwd) → Task 1 Step 4 + Task 2 Steps 2–3. No gaps.
+- **Spec coverage:** §3 scope → Tasks 1–8 (every in-scope file has a task; `session-change-summary.md` added per CR-001); §4 contract → Task 1 Steps 3–6 + Task 2 Step 3; §5 propagate-wiki → Task 1; §6 audit-drift → Task 2; §7 minor agents → Task 3; §8 skills/templates → Tasks 4–5; §9 README/manifest/marketplace/CHANGELOG/repo-docs → Tasks 6–8; §10 acceptance → Task 9; §11 follow-ups → final section. SA-001 (homelab in-scope) → Task 1 Steps 3/5; SA-002 (marketplace) → Task 8; SA-003 (model surfaces) → Tasks 4/5/6/7/8 + Task 9 Step 3; SA-004 (cwd) → Task 1 Step 4 + Task 2 Steps 2–3. No gaps.
 - **Placeholder scan:** exact paths, commands, and frontmatter blocks given; the two prose rewrites specify exact frontmatter + block-by-block required content + concrete examples/commands (authored from the converged spec contract, not invented). No "TBD"/"add error handling"/"similar to Task N".
 - **Type/string consistency:** `LLM_WIKI_ROOT` default, the three validator commands, `frontmatter_ids mint`/`check`, the output header `## Documentation Update: Wiki (llm-wiki)`, version `0.10.0`, and the identical plugin/marketplace description string are used consistently across tasks. bats-guarded strings (`"layout"`, the propagate-repo six) are explicitly preserved in Tasks 3/5.
