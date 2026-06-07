@@ -11,6 +11,17 @@
 # the top-level *.bats glob when called with no arguments.
 
 set -euo pipefail
+
+# Ensure GNU coreutils lead the PATH before invoking bats. This workstation's
+# interactive shells shim `find`->fd and `grep`->ugrep (Claude Code search
+# accelerators). bats uses `find`/`grep` for test DISCOVERY, and those shims make
+# discovery return zero tests while exiting 0 — so a broken or failing suite
+# reports green (a deliberately failing @test "passes"). Prepending the system
+# coreutils dirs makes `bash run-bats.sh` deterministic regardless of the caller's
+# shell config or CI image. Harmless if /usr/bin is already present (just re-wins).
+PATH="/usr/bin:/bin:$PATH"
+export PATH
+
 TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 BATS_ROOT="${BATS_ROOT:-/home/chris/.local/lib/node_modules/bats}"
 BATS_LIBEXEC="$BATS_ROOT/libexec/bats-core"
