@@ -1,7 +1,7 @@
 {
   "name": "up-docs",
-  "version": "0.9.1",
-  "description": "Update documentation across three layers (repo, Outline wiki, Notion) via sub-agent propagation (Haiku) plus drift audit (Sonnet). Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
+  "version": "0.10.0",
+  "description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation (Haiku repo/Notion + Sonnet wiki) plus drift audit (Sonnet). Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
   "author": {
     "name": "L3DigitalNet",
     "url": "https://github.com/L3DigitalNet"

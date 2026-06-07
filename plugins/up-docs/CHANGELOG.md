@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.10.0] - 2026-06-07
+
+### Changed
+- Wiki layer retargeted from the retired Outline MCP server to the local llm-wiki repo (`~/projects/llm-wiki`) — the wiki propagator now writes `status:draft` pages under the llm-wiki contract (frontmatter v1.1, path-links, citations, validators, no self-promote) instead of Outline MCP page edits. `up-docs-propagate-wiki` model promoted Haiku → Sonnet (repo + Notion propagators stay Haiku). `/up-docs:drift` reads llm-wiki from disk.
+
+### Added
+- Validator-backed wiki drift checks in the auditor (runs llm-wiki's `validate-frontmatter`, `resolve_links`, `frontmatter_ids check` as live-state verification). Offline wiki read/write (only the Notion layer needs network).
+
 ## [0.9.1] - 2026-05-30
 
 ### Changed
