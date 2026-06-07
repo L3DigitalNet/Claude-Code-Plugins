@@ -7,7 +7,7 @@ allowed-tools: Read, Bash, Agent, AskUserQuestion
 
 # /up-docs:all
 
-Orchestrates up-docs: gather session context, build a canonical session-change summary, dispatch three propagator sub-agents in parallel (Haiku), then run the drift auditor (Sonnet), and collate all output into a single combined report.
+Orchestrates up-docs: gather session context, build a canonical session-change summary, dispatch three propagator sub-agents in parallel — repo + Notion on Haiku, wiki on Sonnet — then run the drift auditor (Sonnet), and collate all output into a single combined report.
 
 ## Architecture
 
@@ -18,7 +18,7 @@ This skill (orchestrator, inherits caller model)
   ├─ assemble canonical session-change summary
   │
   ├─▶ up-docs-propagate-repo     (Haiku, parallel)
-  ├─▶ up-docs-propagate-wiki     (Haiku, parallel)
+  ├─▶ up-docs-propagate-wiki     (Sonnet, parallel)
   ├─▶ up-docs-propagate-notion   (Haiku, parallel)
   │
   ├─▶ up-docs-audit-drift        (Sonnet, after propagators complete)
@@ -70,7 +70,7 @@ Invoke the three propagator sub-agents **in a single message with three Agent to
 | Sub-agent — pass as `subagent_type` | Purpose |
 |-------------------------------------|---------|
 | `up-docs:up-docs-propagate-repo` | Updates README.md, docs/, CLAUDE.md |
-| `up-docs:up-docs-propagate-wiki` | Updates Outline pages at implementation-reference level |
+| `up-docs:up-docs-propagate-wiki` | Updates llm-wiki wiki/ pages at implementation-reference level |
 | `up-docs:up-docs-propagate-notion` | Updates Notion at strategic/organizational level |
 
 The `up-docs:` prefix is mandatory — plugin-defined agents are only addressable through their plugin namespace. Calling `Agent` with the bare name (e.g. `"up-docs-propagate-repo"`) returns "Agent type not found".

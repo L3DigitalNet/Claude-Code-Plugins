@@ -1,15 +1,15 @@
 ---
 name: up-drift
 description: "Comprehensive documentation drift analysis across infrastructure and wiki by dispatching the up-docs-audit-drift sub-agent. This skill should be used when the user runs /up-docs:drift."
-argument-hint: "[collection-name]"
+argument-hint: "[wiki-subtree-or-tag]"
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---
 
-# /up-docs:drift [collection-name]
+# /up-docs:drift [wiki-subtree-or-tag]
 
 Run drift analysis via the `up-docs-audit-drift` sub-agent (Sonnet). Read-only by design: the auditor surfaces findings; the user decides whether to re-invoke propagators to fix them.
 
-If a collection name is provided, scope the analysis to that Outline collection. Otherwise, analyze all collections.
+If a wiki subtree or tag is provided, scope the analysis to that llm-wiki `wiki/` subtree. Otherwise, analyze the whole `wiki/`.
 
 ## Architecture
 
@@ -43,7 +43,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/templates/session-change-summary.md` for the canonic
 
 Invoke via the Agent tool with `subagent_type: "up-docs:up-docs-audit-drift"` (the `up-docs:` prefix is required — plugin-defined agents are only addressable through their plugin namespace). The prompt:
 - Session-change summary at the stable front
-- Collection scope argument (if provided) at the end
+- Wiki subtree/tag scope argument (if provided) at the end
 - The reference docs `skills/drift/references/convergence-tracking.md` and `skills/drift/references/server-inspection.md` are read by the sub-agent itself; do not duplicate their content into the prompt.
 
 ### 4. Pass Findings Through
@@ -55,7 +55,7 @@ If the sub-agent includes an `⚠ ESCALATION RECOMMENDED` block, include it verb
 ### 5. Offer Next Step (bounded choice)
 
 After findings land, use AskUserQuestion to offer:
-- Re-invoke propagators with findings as a new session-change summary (fixes them at Haiku cost)
+- Re-invoke propagators with findings as a new session-change summary (fixes them at propagator cost (wiki on Sonnet, repo/Notion on Haiku))
 - Re-run the audit with Opus (if escalation was recommended)
 - Accept findings as advisory and exit
 
@@ -65,4 +65,4 @@ Do not auto-invoke any of the above.
 
 - This skill no longer runs SSH/pct/curl directly — the sub-agent does.
 - Convergence + oscillation detection live in `scripts/convergence-tracker.sh`. The default state-file path is `${TMPDIR:-/tmp}/up-docs-tracker-${CLAUDE_CODE_SESSION_ID:-default}.json` so that the 6+ separate invocations in one drift session share state. Override with `UP_DOCS_TRACKER_STATE` for tests or for non-session usage.
-- Findings are advisory: the auditor has no write tools for Outline or Notion. Fixes go through the propagators on a follow-up pass with the user's explicit consent.
+- Findings are advisory: the auditor has no write tools for llm-wiki or Notion. Fixes go through the propagators on a follow-up pass with the user's explicit consent.
