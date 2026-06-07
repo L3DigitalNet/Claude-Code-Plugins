@@ -1,7 +1,7 @@
 # up-docs — Outline → llm-wiki Migration (Design)
 
 **Date:** 2026-06-07
-**Status:** Draft — awaiting user review before `writing-plans`
+**Status:** Draft (rev 2) — round-1 Codex `$spec-review` applied (SA-001..004 + nits); awaiting round-2 re-audit
 **Target version:** up-docs `0.9.1` → `0.10.0`
 **Topic owner:** documentation-propagation plugin (`plugins/up-docs/`)
 
@@ -29,15 +29,16 @@ The two integration shapes are **opposite**, so this is not a tool-name swap:
 | Governance | none enforced by the tool | strict layer model (`raw/`,`wiki/`,`capture/`), frontmatter v1.1, path-links, `## Source` citations, validators, **draft→active promotion gate agents may not self-cross** |
 | Prereq | `mcp-outline` MCP server configured + reachable | local `~/projects/llm-wiki` repo present + `uv`/`uvx`; **no MCP.** Read/write + repo-local validators are offline; the pinned `validate-frontmatter` tool is fetched from git on first use (cached after) |
 
-**No MCP server definition lives in this repo.** up-docs has no `.mcp.json`; `mcp-outline`
-is a globally-defined server, so the migration is entirely prompt / tool-list / doc surface.
+**No up-docs MCP server definition lives in this repo.** up-docs has no `.mcp.json` (other plugins
+— `home-assistant-dev`, `plugin-test-harness`, `qt-suite` — do); `mcp-outline` is a globally-defined
+server, so the migration is entirely prompt / tool-list / doc surface.
 
 ## 2. Locked decisions (from brainstorming Q&A, 2026-06-07)
 
 | # | Decision | Choice |
 | --- | --- | --- |
 | D1 | What the wiki layer DOES now | **Write `status: draft` pages directly into `~/projects/llm-wiki/wiki/`** — respecting the full llm-wiki contract; never self-promote. |
-| D2 | Homelab infra docs | **Generic examples; homelab stays elsewhere.** llm-wiki holds cross-cutting synthesized reference, NOT homelab infra. The propagator must not imply homelab ownership. |
+| D2 | Homelab infra docs | **llm-wiki owns homelab implementation-reference.** Homelab reference pages are in-scope propagation targets (ADR-0009; `homelab-wiki` skill retired; `wiki/systems/homelab-overview.md` + `wiki/services/monitoring.md` are `status: active`). _Revised from the original "homelab elsewhere" after round-1 Codex SA-001 + user confirmation — see §13._ |
 | D3 | Blast radius | **up-docs plugin + this repo's live handoff docs + root README.** Historical `docs/plans/*` + `docs/research/*` untouched; global `~/.claude` files flagged as out-of-repo follow-ups. |
 | D4 | Rule grounding | **Read canonical at runtime.** The rewritten propagator `Read`s `~/projects/llm-wiki/AGENTS.md` + `docs/handoff/conventions.md` (C-1..C-12) + the frontmatter schema each run — the llm-wiki repo's own docs are authoritative. No rule duplication in the prompt. |
 | D5 | Version | **Minor → `0.10.0`** (unchanged command surface; one layer's backend replaced). |
@@ -54,6 +55,7 @@ is a globally-defined server, so the migration is entirely prompt / tool-list / 
 - `plugins/up-docs/skills/{wiki,all,drift}/SKILL.md`
 - `plugins/up-docs/templates/{summary-report.md,drift-finding.md}`
 - `plugins/up-docs/README.md`, `plugins/up-docs/.claude-plugin/plugin.json`, `plugins/up-docs/CHANGELOG.md`
+- `.claude-plugin/marketplace.json` — root marketplace up-docs entry; version + description must match `plugin.json` (SA-002)
 - `plugins/up-docs/tests/*` — only where a structural assertion needs updating (verify in plan)
 - Repo: root `README.md`; `docs/handoff/deployed.md` (version + description)
 
@@ -61,10 +63,9 @@ is a globally-defined server, so the migration is entirely prompt / tool-list / 
 
 - Historical `docs/plans/*` and `docs/research/*` — dated point-in-time records.
 - `CHANGELOG.md` lines 213/222 — historical entries kept verbatim; a NEW entry is added.
-- The notion/repo agents' homelab _examples_ — only their Outline→wiki _naming_ changes;
-  de-homelab'ing those examples is a separate concern, not Outline retirement.
-- Global `~/.claude/CLAUDE.md` Source-of-Truth table and the `llm-wiki` skill's stale homelab
-  carve-out — see §11 follow-ups.
+- The notion/repo agents' homelab _examples_ — they stay; only their Outline→wiki _naming_ changes.
+  (Homelab is now in-scope, so the examples are domain-correct as written.)
+- Global `~/.claude/CLAUDE.md` Source-of-Truth table + "infra work" step 3 — see §11 follow-up.
 
 ## 4. The new wiki-layer contract (applies to both agents)
 
@@ -72,9 +73,13 @@ The rewritten agents must honor the llm-wiki governance model. The **authoritati
 `~/projects/llm-wiki/AGENTS.md` + `docs/handoff/conventions.md` (rules C-1..C-12), read at
 runtime (D4). Summarized here for design intent only — on any conflict the repo doc wins:
 
-1. **Path & override.** Root = `${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}`. If absent, the agent
-   reports cleanly (one-row table / "wiki not checked" note) and exits its layer — it never fails
-   the whole run. Mirrors the existing "validator absent" graceful-skip pattern in audit-drift.
+1. **Path, cwd & override (SA-004).** Root = `${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}`. Every
+   llm-wiki Bash command (searches + validators) MUST run as `(cd "$LLM_WIKI_ROOT" && …)` — the gate
+   uses repo-relative paths (`.project-standards.yml`, `uv run -m llm_wiki_tools…`) and silently
+   validates the wrong tree if run from the caller's project. Every Read/Edit/Write targets an
+   absolute path under that root. If the root is absent, the agent reports cleanly (one-row table /
+   "wiki not checked" note) and exits its layer — it never fails the whole run. Mirrors the existing
+   "validator absent" graceful-skip pattern in audit-drift.
 2. **Layers never blur (C-2).** Writes go to `wiki/` only. `raw/` is immutable evidence (C-4);
    `capture/` is staging and is never cited (ADR-0007).
 3. **Session changes are operator testimony, not external evidence.** Per the llm-wiki `†` rule:
@@ -92,8 +97,9 @@ runtime (D4). Summarized here for design intent only — on any conflict the rep
 6. **Smallest coherent change (C-1/6/7).** No unsolicited tooling, folders, or fields; prefer
    `git mv`; search before creating; flag contradictions instead of smoothing them.
 7. **No secrets** — credential references only (env var names, OpenBao paths), never values.
-8. **Validate before claiming clean.** Run the gate block **copied from AGENTS.md at runtime**
-   (do not hardcode validator versions). As of this writing:
+8. **Validate before claiming clean.** Run the gate block **copied from `~/projects/llm-wiki/AGENTS.md`
+   at runtime** — that block is authoritative over any schema/convention text that disagrees on a
+   validator version (do not hardcode versions; AGENTS.md is the single source). As of this writing:
 
    ```bash
    uvx --from 'git+https://github.com/L3DigitalNet/project-standards@v2.0.0' validate-frontmatter --config .project-standards.yml
@@ -116,14 +122,16 @@ runtime (D4). Summarized here for design intent only — on any conflict the rep
 | Create new | `create_document` | `Write` (draft page per §4.3–4.4) |
 | Pre-flight | — | `Read` AGENTS.md + conventions + frontmatter schema (D4); locate `LLM_WIKI_ROOT` or graceful-skip |
 | Post-flight | retry-once / FAILED row | retry-once / FAILED row **+ run validator gate (§4.8)** |
-| Domain filter | (none) | Skip items that are homelab infra (→ elsewhere), strategy (→ Notion), or live facts (→ system-of-record); report them as "No change needed — out of llm-wiki domain" |
-| Examples | homelab (OpenBao CT 111, Kismet CT 105, AIDE GMK) | **generic** (e.g. a library's config reference, a repo's build procedure, a service integration note) |
-| `<layer_boundary>` | "Outline implementer's shelf" | llm-wiki `wiki/` synthesized cross-cutting reference; explicit exclusions: homelab infra, strategy, live facts |
+| Domain filter | (none) | Skip only: strategy (→ Notion), live operational facts (→ system-of-record), and homelab **execution-state** (→ the homelab repo's own `README`/`docs/handoff`). **Homelab implementation-reference is in-scope** (SA-001). Report skips as "No change needed — out of llm-wiki domain" |
+| Examples | homelab (OpenBao CT 111, Kismet CT 105, AIDE GMK) | refreshed to the llm-wiki taxonomy, **homelab reference retained** (now in-scope) alongside a non-homelab case (e.g. a repo's build procedure) — include ≥1 explicit "update" and ≥1 explicit "skip" example (SA-001) |
+| `<layer_boundary>` | "Outline implementer's shelf" | llm-wiki `wiki/` synthesized implementation-reference (**incl. homelab infra**); explicit exclusions: strategy (→ Notion), live facts (→ system-of-record), execution-state (→ repo docs) |
 | Output | `## Documentation Update: Wiki (Outline)` | `## Documentation Update: Wiki (llm-wiki)` |
 
-**Behavior note (honest under-delivery is correct):** with homelab excluded, many of this user's
-sessions will yield "nothing for llm-wiki." The propagator must report that plainly rather than
-invent a page — the same anti-fabrication discipline the drift auditor already enforces.
+**Behavior note (honest reporting):** the propagator still reports "No change needed" plainly when an
+item is genuinely out of domain (strategy / live fact / execution-state) rather than inventing a page
+— the same anti-fabrication discipline the drift auditor enforces. But homelab
+implementation-reference now DOES produce real wiki updates (SA-001), so this user's infra sessions
+are expected to land llm-wiki edits, not routinely no-op.
 
 **Preserved structure** (so `prompt-conformance.bats` stays green): keep the `<role>`, `<task>`,
 `<layer_boundary>`, `<guardrails>`, `<examples>`, `<output_format>` blocks and the leading routing
@@ -142,12 +150,13 @@ comment. Only contents change.
 - **Unchanged:** `<verification_discipline>`, `<forbidden_commands>`, escalation thresholds,
   structured-evidence schema (`{command, expected_output_signature, source_tool_use_id?}`), the
   `layer` enum (`repo|wiki|notion|layout` — `"wiki"` now denotes llm-wiki), the `stats` shape.
-- Examples de-homelab'd to generic where they currently cite homelab pages.
+- Examples: homelab pages are valid llm-wiki targets (SA-001), so homelab-citing examples stay; only
+  the read mechanism (disk vs MCP) and the "wiki = llm-wiki" framing change.
 
 ## 7. Minor agents — naming only
 
 - `up-docs-propagate-notion.md` — change the Notion↔Outline boundary prose and `→ Outline wiki`
-  pointers to llm-wiki / "the wiki." Homelab examples (OpenBao/Kismet) stay (out of scope).
+  pointers to llm-wiki / "the wiki." Homelab examples (OpenBao/Kismet) stay — domain-correct.
 - `up-docs-propagate-repo.md` — change `(→ Outline wiki)` and the "New Outline wiki page created"
   example item to llm-wiki wording.
 
@@ -163,20 +172,39 @@ comment. Only contents change.
 - `templates/drift-finding.md` — `page_id` note: "Outline/Notion page ID" → "wiki page path or
   Notion page id; null for repo"; `page` description likewise.
 
-## 9. README, manifest, CHANGELOG, repo docs
+## 9. README, manifest, marketplace, CHANGELOG, repo docs
 
 - `plugins/up-docs/README.md`:
   - Three-layer description + [P1]/[P4] principle text: "Outline" → "llm-wiki".
   - **Prerequisites rewrite (capability upgrade):** wiki layer needs the local `~/projects/llm-wiki`
     repo present + `uv`/`uvx` for validators — **no MCP**. Replace "Requires both Outline and Notion
     MCP servers" + "Air-gapped systems can only use `/up-docs:repo`" with: only Notion needs network;
-    repo + wiki layers work air-gapped.
-  - Generic CLAUDE.md `## Documentation` mapping example (drop "Outline: 'Homelab' collection").
+    repo + wiki read/write work offline (the pinned `validate-frontmatter` tool fetches from git on
+    first use, cached after).
+  - CLAUDE.md `## Documentation` mapping example → an llm-wiki `wiki/` path mapping (not an Outline
+    collection).
   - Roadmap line 201 "without pushing to Outline or Notion" → "llm-wiki or Notion".
-  - Agent table line 193 model: `up-docs-propagate-wiki` Haiku → **Sonnet**.
-- `plugin.json` — `version` → `0.10.0`; `description` "Outline wiki" → "llm-wiki".
-- `CHANGELOG.md` — new `0.10.0` entry describing the Outline→llm-wiki backend swap, the model bump,
-  the air-gapped-wiki capability, and the new validator-backed drift checks. Historical entries kept.
+- **Model-surface inventory (SA-003) — ONLY `propagate-wiki` changes; `propagate-repo` +
+  `propagate-notion` stay Haiku.** The "three Haiku propagators" framing becomes "two Haiku
+  (repo, notion) + one Sonnet (wiki)". Surfaces to update (verified via `rg -ni haiku`, excl.
+  CHANGELOG):
+  - `plugins/up-docs/README.md`: line 7 ("Haiku for propagation" → split tiers), mermaid line 108
+    (`propagate-wiki<br/>Haiku` → Sonnet), line 121 (generic "Haiku" propagator node note), agent
+    table line 193 (wiki → Sonnet), line 197 (cost-note nuance).
+  - root `README.md`: line 57 ("Haiku propagators + Sonnet drift auditor" → "Haiku/Sonnet
+    propagators…"), line 271 ("three Haiku propagators (repo, wiki, notion)" → "two Haiku (repo,
+    notion) + one Sonnet (wiki)").
+  - `skills/wiki/SKILL.md` line 10 ("(Haiku)" → "(Sonnet)"); `skills/all/SKILL.md` line 21 (wiki
+    "(Haiku, parallel)" → Sonnet); `skills/drift/SKILL.md` line 58 ("at Haiku cost" nuance).
+  - `templates/session-change-summary.md` line 5 ("Haiku propagators" → "the propagators").
+- **Manifest + marketplace (SA-002) — both must change together (architecture.md "Updating a
+  plugin"):**
+  - `plugins/up-docs/.claude-plugin/plugin.json` — `version` → `0.10.0`; `description` "Outline wiki"
+    → "llm-wiki" and "(Haiku)" → "(Haiku/Sonnet)".
+  - `.claude-plugin/marketplace.json` up-docs entry (line ~88) — matching `version` `0.10.0` +
+    identical description edit. `scripts/validate-marketplace.sh` errors on version mismatch.
+- `CHANGELOG.md` — new `0.10.0` entry: Outline→llm-wiki backend swap, the wiki-propagator model bump,
+  the offline-wiki capability, and the new validator-backed drift checks. Historical entries kept.
 - Root `README.md` lines 267/273 — "Outline wiki" → "llm-wiki"; "SSHes into live infrastructure /
   syncs the Outline wiki" reworded for the llm-wiki phase.
 - `docs/handoff/deployed.md` — up-docs version (→ 0.10.0) + description; mark released/pending per
@@ -191,15 +219,21 @@ comment. Only contents change.
    `mcp-outline` tool or an Outline-specific string (none found so far).
 2. `validate_output.py` / `verify_evidence_grounded.py` — schema unchanged (`layer` enum keeps
    `wiki`); confirm green.
-3. Run gates: `bash tests/run-bats.sh` + pytest; `scripts/validate-marketplace.sh` (plugin.json
-   fields/version valid per marketplace strict-Zod rules).
+3. Run gates: `bash tests/run-bats.sh` + pytest; `scripts/validate-marketplace.sh` (plugin.json +
+   marketplace.json fields valid + version match per marketplace strict-Zod rules).
 
 **Acceptance criteria:**
 
-- `rg -i 'outline' plugins/up-docs` returns only `CHANGELOG.md` historical lines.
+- `rg -i 'outline' plugins/up-docs .claude-plugin/marketplace.json README.md` returns only
+  `CHANGELOG.md` historical lines.
 - No agent `tools:` line contains `mcp-outline`.
-- `propagate-wiki` model is `sonnet`; tool list adds `Edit, Write`, drops all MCP verbs.
-- All bats + pytest green; marketplace validator passes.
+- `propagate-wiki` model is `sonnet`; tool list adds `Edit, Write`, drops all MCP verbs;
+  `propagate-repo` + `propagate-notion` remain `haiku`.
+- `jq` version match: `plugin.json` `0.10.0` == marketplace up-docs entry `0.10.0`;
+  `scripts/validate-marketplace.sh` passes.
+- `rg -n "Haiku propagators|propagate-wiki.*Haiku|three Haiku|all Haiku" README.md plugins/up-docs`
+  returns nothing outside CHANGELOG (SA-003).
+- All bats + pytest green.
 - README prereqs no longer claim the wiki layer needs MCP / is air-gap-blocked.
 
 ## 11. Out-of-repo follow-ups (flagged, not done here)
@@ -207,12 +241,30 @@ comment. Only contents change.
 - `~/.claude/CLAUDE.md` Source-of-Truth table row: "Implementation reference → **Outline wiki** +
   repo docs" is now stale → llm-wiki + repo docs.
 - `~/.claude/CLAUDE.md` "Before Any Infrastructure Work" step 3 ("Search and read Outline wiki
-  FIRST") references a retired system.
-- The `llm-wiki` **skill's** "When NOT to use" + "Where does this belong?" still route homelab infra
-  to "Outline / the homelab-wiki skill" — internally contradictory now that Outline is retired.
-  Resolving where homelab infra docs live (D2 left it "elsewhere") is the user's call.
+  FIRST") references a retired system → should point at llm-wiki (`rg` over `~/projects/llm-wiki/wiki/`).
+- _Resolved 2026-06-07 (was round-1 SA-001): the `llm-wiki` skill already reflects homelab ownership
+  and the `homelab-wiki` skill is retired — no follow-up needed; D2 was flipped to match._
 
 ## 12. Open questions
 
-None blocking. D2 deliberately leaves the homelab-docs destination unresolved; the plugin simply
-stops claiming that domain. The §11 items are surfaced for the user to action outside this repo.
+None blocking. D2 was resolved against ground truth (homelab implementation-reference lives in
+llm-wiki; see §13 SA-001). The §11 items are surfaced for the user to action outside this repo.
+
+## 13. Audit ledger (Codex `$spec-review`, adversarial)
+
+Read-only adversarial audits via `codex exec` (gpt-5.5, xhigh reasoning, `-s read-only`) against this
+spec. Raw output kept under `/tmp/codex-specreview/`.
+
+### Round 1 — verdict: Needs major specification correction (2 blocking, 2 non-blocking)
+
+| ID | Sev | Title | Disposition |
+| --- | --- | --- | --- |
+| SA-001 | High | Homelab exclusion contradicts the active llm-wiki corpus (ADR-0009; `homelab-overview.md` + `monitoring.md` active) | **Resolved** — D2 flipped to "llm-wiki owns homelab reference" (user-confirmed); domain filter, examples, layer_boundary, §11 updated |
+| SA-002 | High | Marketplace metadata omitted from version-bump scope | **Resolved** — `.claude-plugin/marketplace.json` added to §3 scope, §9, §10 acceptance |
+| SA-003 | Med | Sonnet bump leaves stale "Haiku propagator" surfaces | **Resolved** — §9 model-surface inventory (13 surfaces; "two Haiku + one Sonnet"); §10 `rg` acceptance check |
+| SA-004 | Med | llm-wiki command cwd unspecified | **Resolved** — §4.1 requires `(cd "$LLM_WIKI_ROOT" && …)` + absolute paths |
+| nit | Low | "No MCP server in repo" too broad | **Resolved** — §1 reworded (other plugins carry `.mcp.json`) |
+| ambiguity | — | llm-wiki validator-version drift across docs | **Resolved** — §4.8 makes runtime AGENTS.md authoritative |
+
+Open issue IDs after round-1 fixes: none pending. Round 2 should confirm SA-001..004 resolved with no
+regressions and no new findings, then the loop can stop on "No significant findings remain".
