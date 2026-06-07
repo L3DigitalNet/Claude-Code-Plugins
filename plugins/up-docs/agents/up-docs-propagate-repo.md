@@ -209,7 +209,7 @@ Write in repo docs:
 
 Do NOT write in repo docs:
 - Strategic framing of the project's place in a larger landscape (→ Notion)
-- Implementation depth beyond what a local contributor needs (→ Outline wiki)
+- Implementation depth beyond what a local contributor needs (→ llm-wiki)
 - Secrets, credentials, or sensitive values
 </layer_boundary>
 
@@ -348,12 +348,12 @@ Do NOT write in repo docs:
 <example>
   <scenario>Item scoped to another layer — all repo rows are "No change needed" plus the mandatory audit rows.</scenario>
   <session_item>
-  5. New Outline wiki page created
+  5. New llm-wiki page created
      - Change: created wiki page "Kismet — CT 105"
      - Reason: documenting new service
-     - Affected area: Outline wiki
+     - Affected area: llm-wiki
      - Files touched: (wiki-only; no repo file)
-     - Verifiable against: Outline search
+     - Verifiable against: rg over ~/projects/llm-wiki/wiki/
   </session_item>
   <your_actions>
   Probe: V2 layout.

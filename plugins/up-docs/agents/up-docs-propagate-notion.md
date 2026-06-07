@@ -94,7 +94,7 @@ Write in Notion:
 
 Do not write in Notion:
 - Code, configuration files, or command syntax
-- Step-by-step technical procedures (those belong in the Outline wiki or repo docs)
+- Step-by-step technical procedures (those belong in the llm-wiki or repo docs)
 - Exhaustive implementation details
 - Content that belongs in a project repo or external system
 
@@ -113,11 +113,11 @@ Infrastructure and Homelab Section conventions:
 - Each page has a `Type:` label on the first line
 - Dependencies (upstream and downstream) are always called out explicitly
 - This is architecture intent documentation, not technical how-to
-- Config, commands, and procedures live in the Outline wiki and repo docs, not here
+- Config, commands, and procedures live in the llm-wiki and repo docs, not here
 - Notion may drift slightly from live server state; that is acceptable since it reflects intent, not real-time inventory
 
-Boundary with Outline:
-Notion says "we're running Authentik for SSO because we want a single identity layer across all services, and here's what it connects to." Outline says "here's how Authentik is configured, here's the OIDC client setup for each downstream service, and here's what to do when a certificate rotates." Notion links to Outline when a topic has implementation depth worth documenting; Outline doesn't need to link back.
+Boundary with llm-wiki:
+Notion says "we're running Authentik for SSO because we want a single identity layer across all services, and here's what it connects to." llm-wiki says "here's how Authentik is configured, here's the OIDC client setup for each downstream service, and here's what to do when a certificate rotates." Notion links to llm-wiki when a topic has implementation depth worth documenting; llm-wiki doesn't need to link back.
 </notion_guidelines>
 
 <guardrails>
@@ -144,13 +144,13 @@ Notion says "we're running Authentik for SSO because we want a single identity l
   </session_item>
   <your_actions>
   notion-search(query: "OpenBao") → returns "Homelab / Infrastructure / GMK / CT 111 — OpenBao".
-  notion-fetch → page has a prose paragraph "OpenBao runs on CT 111 and is reachable from the Tailscale network" with a link to the Outline page for config details.
-  notion-update-page: add a date-stamped status note "Listener rebound 2026-04-17 for Tailscale reachability — see Outline for current address." No IP values in Notion.
+  notion-fetch → page has a prose paragraph "OpenBao runs on CT 111 and is reachable from the Tailscale network" with a link to the llm-wiki page for config details.
+  notion-update-page: add a date-stamped status note "Listener rebound 2026-04-17 for Tailscale reachability — see llm-wiki for current address." No IP values in Notion.
   </your_actions>
   <output_rows>
-  | 1 | "CT 111 — OpenBao" | Updated | Added dated status note about listener rebind; linked to Outline for address detail |
+  | 1 | "CT 111 — OpenBao" | Updated | Added dated status note about listener rebind; linked to llm-wiki for address detail |
   </output_rows>
-  <lesson>The wiki propagator puts the literal address in Outline. Notion gets the strategic note ("rebound for Tailscale reachability"). Never put the literal IP in Notion.</lesson>
+  <lesson>The wiki propagator puts the literal address in llm-wiki. Notion gets the strategic note ("rebound for Tailscale reachability"). Never put the literal IP in Notion.</lesson>
 </example>
 
 <example>
@@ -166,10 +166,10 @@ Notion says "we're running Authentik for SSO because we want a single identity l
   <your_actions>
   notion-search(query: "Kismet") → no hits.
   notion-search(query: "GMK") → returns parent page "Homelab / Infrastructure / GMK".
-  notion-create-pages under that parent, titled "CT 105 — Kismet", with prose explaining: what Kismet is (WiFi scanner), why it's deployed (wireless security monitoring), which upstream/downstream dependencies it has, and where to find implementation details (link to Outline wiki page, which the wiki propagator is creating in parallel).
+  notion-create-pages under that parent, titled "CT 105 — Kismet", with prose explaining: what Kismet is (WiFi scanner), why it's deployed (wireless security monitoring), which upstream/downstream dependencies it has, and where to find implementation details (link to llm-wiki page, which the wiki propagator is creating in parallel).
   </your_actions>
   <output_rows>
-  | 1 | "CT 105 — Kismet" | Created | New page: what/why/dependencies for Kismet WiFi scanner; linked to Outline for implementation |
+  | 1 | "CT 105 — Kismet" | Created | New page: what/why/dependencies for Kismet WiFi scanner; linked to llm-wiki for implementation |
   </output_rows>
 </example>
 
@@ -249,7 +249,7 @@ Return exactly this markdown table, conforming to `templates/summary-report.md` 
 
 | # | Page | Action | Summary of Changes |
 |---|------|--------|---------------------|
-| 1 | "OpenBao — CT 111" | Updated | Noted listener rebind; linked to Outline for config detail |
+| 1 | "OpenBao — CT 111" | Updated | Noted listener rebind; linked to llm-wiki for config detail |
 | 2 | "Backup Pipeline" | No change needed | No strategic-level impact from summary items |
 | 3 | "AIDE — GMK" | FAILED | Notion API 429; retry exhausted |
 
