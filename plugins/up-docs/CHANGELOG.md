@@ -7,62 +7,69 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.10.0] - 2026-06-07
 
 ### Changed
+
 - Wiki layer retargeted from the retired Outline MCP server to the local llm-wiki repo (`~/projects/llm-wiki`) — the wiki propagator now writes `status:draft` pages under the llm-wiki contract (frontmatter v1.1, path-links, citations, validators, no self-promote) instead of Outline MCP page edits. `up-docs-propagate-wiki` model promoted Haiku → Sonnet (repo + Notion propagators stay Haiku). `/up-docs:drift` reads llm-wiki from disk.
 
 ### Added
+
 - Validator-backed wiki drift checks in the auditor (runs llm-wiki's `validate-frontmatter`, `resolve_links`, `frontmatter_ids check` as live-state verification). Offline wiki read/write (only the Notion layer needs network).
 
 ## [0.9.1] - 2026-05-30
 
 ### Changed
+
 - propagate-repo: the `AGENTS.md` / `AGENTS.reviews.md` / `conventions.md` mandatory audit now explicitly scans for **retired V1/V2 layout-detection** language — pre-v3 `detect layout first. V2:… V1:…` Session-state conditionals, `V2 repos read… / V1 legacy…` review-input conditionals, and stale `(V2 handoff layout)` version labels — and relabels them to the v3 single-path form. The catch was previously non-deterministic: a `/up-docs:repo` run after v0.9.0 shipped left two `AGENTS.md` stragglers and a `conventions.md` label that only a later `/up-docs:all` drift audit caught. New `tests/prompt-conformance.bats` guard (52 bats total).
 
 ### Added
+
 - README "Propagation vs. drift" section + `/up-docs:repo` skill note: the propagators (`/up-docs:repo|wiki|notion`) run no drift auditor and will not catch pre-existing drift the current session didn't introduce; run `/up-docs:drift` or `/up-docs:all` periodically (e.g. after a release).
 
 ## [0.9.0] - 2026-05-30
 
 ### Fixed
+
 - propagate-repo: `AGENTS.md` remediation now emits the handoff v3 three-line block (`Session state:` / `Full conventions reference:` / `Detailed review workflows:`) — prior output failed `validate-layout.sh`'s Codex block. (Bug #6)
 - propagate-repo: new bug files include `## Lesson` (handoff v3 Cause/Fix/Lesson body). (Bug #6)
 - propagate-repo: state.md over-cap trim is route-first (route to sessions/deployed/architecture before deleting), per handoff v3.
 
 ### Added
+
 - propagate-repo: enforces `CLAUDE.md` (≤2048) and `AGENTS.md` (≤4096) byte caps; audits `docs/handoff/specs-plans.md`; verifies bug-index regen with `git diff --exit-code`.
 - audit-drift: conditional handoff-layout conformance phase — runs `~/projects/agent-configs/scripts/validate-layout.sh` against the project root when present and surfaces failures as `layer: "layout"` findings (read-only; never fixes).
 
 ### Changed
-- Relabeled handoff "v2" → "v3"; removed stale `/mnt/share/` migration pointer and superseded "Phase 5 / §9.2 / ≤200-line rules cap" references (not part of the v3 contract).
 
+- Relabeled handoff "v2" → "v3"; removed stale `/mnt/share/` migration pointer and superseded "Phase 5 / §9.2 / ≤200-line rules cap" references (not part of the v3 contract).
 
 ## [0.8.4] - 2026-05-29
 
 ### Fixed
-- state-condition the docs/handoff/state.md 2KB cap enforcement
 
+- state-condition the docs/handoff/state.md 2KB cap enforcement
 
 ## [0.8.3] - 2026-05-29
 
 ### Changed
-- de-dup skills, fix stale evidence schema, drop orphaned reference
 
+- de-dup skills, fix stale evidence schema, drop orphaned reference
 
 ## [0.8.2] - 2026-05-29
 
 ### Fixed
-- remove unsound deny-guard PreToolUse hook
 
+- remove unsound deny-guard PreToolUse hook
 
 ## [0.8.1] - 2026-05-25
 
 ### Fixed
+
 - repair bats suite — neutralize global git hook + add deny-guard transcript fixture
 - scope deny-guard to up-docs subagents only
-
 
 ## [0.8.0] - 2026-05-08
 
 ### Added
+
 - `hooks/hooks.json` — plugin-shipped hook component (PreToolUse + PostToolUse) at the supported plugin path; replaces v1's invalid `.claude/settings.json` packaging.
 - `scripts/deny-guard.sh` — PreToolUse forbidden-command validator. Parses pipes, redirects, `&&` chains, `$()`, backticks; mirrors the auditor's `<forbidden_commands>` table. Defense-in-depth, NOT an enforced security boundary. 13 bats tests.
 - `scripts/capture-transcript.sh` + `scripts/_capture-redactor.py` — opt-in PostToolUse capture hook. No-op unless `UP_DOCS_TRANSCRIPT_LOG` is set; uses `umask 077`; redacts Bearer/ghp/ghs/AKIA/BAO_TOKEN/password/token/sk-ant-/aws_secret patterns; truncates output at 4 KiB; Bash only (Read excluded — file contents leak per GH-44868). 10 bats tests.
@@ -74,25 +81,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - README §Security — documents the plugin's defense-in-depth `deny-guard.sh` and recommends a consumer-side `permissions.deny` block for projects that want a hard security boundary.
 
 ### Changed
+
 - Auditor (`up-docs-audit-drift`) prompt: `evidence` is now a structured object `{command, expected_output_signature, source_tool_use_id?}` instead of a free-form string. New no-fabrication rule in `<verification_discipline>`: when `expected_output_signature` was not literally observed in tool output, the auditor MUST set `confidence: "unverifiable"` and `evidence: null` rather than inventing a signature. All 4 examples + the output_format JSON updated to the structured shape.
 - `tests/run-bats.sh` honors explicit path arguments (single files, directories, multiple files), falling back to the top-level glob when called bare. Closes CR-004's wrapper-side gap.
 - All five skill files now check for `python3` in PATH at Step 1 and exit with a clear ERROR message if missing.
 
 ### Fixed
+
 - v1 plan's CR-001 through CR-008 audit findings — see [`docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md`](../../docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md) for the full list of structural defects this release closes.
 
 ### Notes
+
 - Phase 2 hook-firing smoke test (Task 8) result: PASS (2026-05-08, claude 2.1.133). See `plugins/up-docs/docs/phase-2-smoke-result.txt`.
 
 ## [0.7.2] - 2026-05-08
 
 ### Fixed
+
 - README "Known Issues" no longer claims drift analysis is "designed for Opus 4.6" — auditor runs Sonnet by frontmatter; Opus is opt-in via the escalation block.
 - Stale Claude Code v2.1.92 MCP-loading mitigation note removed from Known Issues.
 - Duplicate `## [0.3.0]` CHANGELOG entry merged into one block.
 - `tests/link-audit.bats` no longer breaks on inputs containing single quotes; added a red-first regression test that exercises the `O'Reilly`-style failure case using the OLD pattern, then rewrites all 8 invocations to the safe `printf '%s\n' "$1"` form.
 
 ### Added
+
 - README §Requirements now lists Python 3.x in `$PATH` as a hard prerequisite (used by all four helper scripts under `scripts/`).
 
 ## [0.7.1] - 2026-04-24
@@ -112,7 +124,6 @@ Both fixes traced to the same root cause — v0.7.0's mandatory-audit list was m
 ### Changed
 
 - **Handoff-system-v2 adaptation.** `up-docs-propagate-repo`, `/up-docs:repo`, and `/up-docs:all` now target the post-2026-04-24 handoff layout (`docs/handoff/state.md` + `docs/handoff/deployed.md` + `docs/handoff/architecture.md` + `docs/handoff/credentials.md` + `docs/handoff/sessions/<YYYY-MM>.md` + `docs/handoff/bugs/<NNN>-*.md` + `docs/handoff/conventions.md` + `.claude/rules/*.md`) while preserving full backward compatibility with the legacy `docs/handoff.md` layout via probe-based detection. Rationale: 23 repos in the author's fleet migrated to v2 during the 2026-04-24 batch (pre/post reduction 91.1% aggregate); the plugin now matches.
-
   - **Layout detection:** agent probes `docs/handoff/state.md` first. If present → V2; if absent and `docs/handoff.md` present → V1 legacy; otherwise NONE. No CLI flag or user input required.
   - **V2 mandatory-audit rewrite:** `docs/handoff/state.md` (`**Last updated:**` + `🔴/🟡/🟢` active-incidents block under `## Session Instructions`, 2 KB hard cap), `docs/handoff/deployed.md` (deployment-truth rows + What Remains), `docs/handoff/architecture.md` (system graph, optional), `docs/handoff/credentials.md` (secret paths, optional), `docs/handoff/sessions/<current-month>.md` (append row with ≤20-word headline + commit SHAs + bug refs; update INDEX.md row count), `docs/handoff/bugs/<NNN>-<slug>.md` (create one per session-fixed bug with frontmatter; run `docs/handoff/bugs/_regen_index.py` after), `docs/handoff/conventions.md` (numbered skeleton; full rule body may live in `.claude/rules/` after Phase 5 of migration), `.claude/rules/<topic>.md` (path-scoped behavioral rules, ≤200 lines per file), `CLAUDE.md` (usually no-change post-migration — pure index).
   - **V1 legacy fallback:** repos that haven't run the v2 migration still work. Agent falls back to the pre-0.7.0 audit (`docs/handoff.md` + `docs/handoff/conventions.md`) and includes an advisory note in its output suggesting the migration.
@@ -142,6 +153,7 @@ The plugin does not enforce one or the other — it adapts to what exists.
 ## [0.6.0] - 2026-04-20
 
 ### Added
+
 - `up-docs-propagate-repo` agent now performs **handoff.md pruning** and **stale-file candidate detection** on every run as routine maintenance:
   - **Handoff pruning:** `docs/handoff.md` "Last Updated" section retains at most the 5 most recent entries — older entries are pruned (session outcomes live in git log + CHANGELOGs already). "Bugs Found And Fixed" is explicitly non-prunable (persistent log). Pruning rules for "What Is Deployed", "Architecture", "Gotchas" require demonstrable staleness, not age alone.
   - **Stale file scan:** globs `docs/superpowers/plans/`, `docs/superpowers/specs/`, `docs/plans/`, `docs/specs/`, and ISO-8601-prefixed files under `docs/` for candidates. A file is flagged only when ALL three hold: (a) contains a completion marker (`Status: ✅ Complete`, `DO NOT EXECUTE`, `superseded by`, etc.); (b) referenced work is shipped/abandoned per CHANGELOG evidence; (c) older than 60 days. Active plans, templates, handoff/conventions/CLAUDE/README/AGENTS, and persistent logs are never flagged.
@@ -150,60 +162,65 @@ The plugin does not enforce one or the other — it adapts to what exists.
 - `/up-docs:repo` and `/up-docs:all` gain `AskUserQuestion` in their `allowed-tools` list and a new Step 5/6 for stale-candidate review.
 
 ### Changed
-- `up-docs-audit-drift` output-format block now explicitly enumerates the five required `stats` keys (`total_findings`, `by_layer`, `high_confidence`, `unverifiable`, `destructive_fixes_required`) and states that `unverifiable` must always be emitted, even when zero. Prior `<output_format>` listed the key in its example but a `/up-docs:all` run still emitted the legacy 4-key shape — the few-shot gradient from single-finding examples without stats blocks pulled the model toward pre-training defaults. Explicit enumeration pins the schema.
 
+- `up-docs-audit-drift` output-format block now explicitly enumerates the five required `stats` keys (`total_findings`, `by_layer`, `high_confidence`, `unverifiable`, `destructive_fixes_required`) and states that `unverifiable` must always be emitted, even when zero. Prior `<output_format>` listed the key in its example but a `/up-docs:all` run still emitted the legacy 4-key shape — the few-shot gradient from single-finding examples without stats blocks pulled the model toward pre-training defaults. Explicit enumeration pins the schema.
 
 ## [0.5.1] - 2026-04-20
 
 ### Fixed
+
 - `up-docs-audit-drift` agent no longer fabricates verification evidence. The agent prompt now has a dedicated `<verification_discipline>` block defining two sanctioned responses when a verification command fails (omit the finding, or record with `"confidence": "unverifiable"` and put the literal error text in `evidence`). Added a worked example covering the "No such file or directory" case that previously led to invented findings (Hermes v0.8.0 → v1.0.0 fabrication reported 2026-04-20). Confidence enum extended to `"high" | "medium" | "low" | "unverifiable"`, and stats block gained an `unverifiable` counter.
 - `templates/drift-finding.md` `evidence` field rule rewritten with explicit guard: verbatim output only, `"Command failed: <error>"` when verification fails, never fabricate. Confidence enum updated to match.
-
 
 ## [0.5.0] - 2026-04-20
 
 ### Added
+
 - `up-docs-propagate-repo` agent now performs a **mandatory audit** of `docs/handoff.md` and `docs/handoff/conventions.md` on every run (when either file exists). The audit covers each `docs/handoff.md` schema section (Last Updated, What Is Deployed, What Remains, Bugs Found And Fixed, Architecture, Credentials, Gotchas) and extracts any session-durable pattern into `docs/handoff/conventions.md` using the six-field schema + Quick Reference row. Both files always appear in the propagator's output table as explicit rows — never silently omitted.
 - `up-docs-propagate-repo` agent `<writing_style>` block codifies the repo-doc audience split: `README.md` files are human-facing prose; `CLAUDE.md`, `AGENTS.md`, and everything under `docs/` are LLM-facing (terse, scannable, tables over narrative). The agent preserves existing style when extending a file.
 - `/up-docs:repo` and `/up-docs:all` skills now emit a **"Handoff for Next Session" brief** after the propagator table. The brief is a scannable read-only excerpt of the updated `docs/handoff.md` (Last Updated, Currently Deployed, Open Items, Open Bugs, Gotchas) meant to bridge session boundaries.
 
 ### Changed
-- `up-docs-propagate-repo` guardrails explicitly allow the mandatory `docs/handoff.md` + `docs/handoff/conventions.md` audit as an exception to the "only act on items in the session-change summary" rule.
 
+- `up-docs-propagate-repo` guardrails explicitly allow the mandatory `docs/handoff.md` + `docs/handoff/conventions.md` audit as an exception to the "only act on items in the session-change summary" rule.
 
 ## [0.4.1] - 2026-04-20
 
 ### Fixed
-- Orchestrator and wrapper skills now pass the plugin-namespaced `subagent_type` (`up-docs:up-docs-propagate-repo`, etc.) to the Agent tool. Previous bare-name strings (`up-docs-propagate-repo`) caused "Agent type not found" errors because Claude Code only addresses plugin-defined agents through their plugin namespace. Affected: `skills/all/SKILL.md`, `skills/repo/SKILL.md`, `skills/wiki/SKILL.md`, `skills/notion/SKILL.md`, `skills/drift/SKILL.md`.
 
+- Orchestrator and wrapper skills now pass the plugin-namespaced `subagent_type` (`up-docs:up-docs-propagate-repo`, etc.) to the Agent tool. Previous bare-name strings (`up-docs-propagate-repo`) caused "Agent type not found" errors because Claude Code only addresses plugin-defined agents through their plugin namespace. Affected: `skills/all/SKILL.md`, `skills/repo/SKILL.md`, `skills/wiki/SKILL.md`, `skills/notion/SKILL.md`, `skills/drift/SKILL.md`.
 
 ## [0.4.0] - 2026-04-19
 
 ### Added
+
 - Four sub-agents under `agents/`: `up-docs-propagate-repo`, `up-docs-propagate-wiki`, `up-docs-propagate-notion` (all Haiku), and `up-docs-audit-drift` (Sonnet). Each runs in its own context window with per-agent `model:` frontmatter overriding the caller's model tier.
 - `templates/session-change-summary.md` — canonical format for the orchestrator's numbered change list; the single critical artifact consumed by every sub-agent.
 - `templates/drift-finding.md` — dual-form (JSON + markdown) output contract for the drift auditor, including escalation triggers.
 
 ### Changed
+
 - `/up-docs:all` orchestrates rather than executes: builds the session-change summary, dispatches three propagators in parallel via the Agent tool (formerly Task; renamed in Claude Code v2.1.63), then sequentially dispatches the drift auditor. Main-agent context stays slim — sub-agents read and edit pages in their own isolated contexts.
 - `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:drift` are now thin wrappers that dispatch their single matching sub-agent. Layer guidelines and Notion content rules are inlined into sub-agent system prompts (no runtime `Read` on `references/notion-guidelines.md` from the propagator).
 - Cost model: propagation runs on Haiku (≈ 1/10 the cost of Opus) while preserving Sonnet-quality drift detection. Parallel dispatch reduces wall time to `max(repo, wiki, notion)` instead of their sum.
 
 ### Fixed
+
 - Opus escalation is now surfaced as an advisory block in the combined report rather than silently consuming Opus budget on routine drift passes. User decides whether to re-run with Opus.
 - Agent prompts rewritten for Anthropic canonical patterns: XML tag structure (`<role>`, `<task>`, `<guardrails>`, `<examples>`, `<output_format>`), 5 worked few-shot examples per agent, canonical "Never speculate about X you have not read" grounding language, and commit-to-approach anti-flip-flop guidance. Particularly beneficial for the 3 Haiku propagators, which are more example-dependent than Sonnet.
 - Drift auditor prompt now cross-checks propagator reports before emitting findings, preventing double-dispatch on a re-propagation pass.
 
-
 ## [0.3.0] - 2026-04-09
 
 ### Added
+
 - `scripts/context-gather.sh` consolidating git context assessment for all 5 skills
 - `scripts/server-inspect.sh` batching 5-15 SSH commands per host into a single session
 - `scripts/link-audit.sh` for markdown link extraction and verification
 - `scripts/convergence-tracker.sh` for managing iteration state across drift analysis phases
 
 ### Changed
+
 - All 5 skill files (repo, wiki, notion, all, drift) now use context-gather.sh for session context
 - `skills/drift/SKILL.md` Phase 1 uses server-inspect.sh and convergence-tracker.sh
 - `skills/drift/SKILL.md` Phase 3 uses link-audit.sh for external link verification
@@ -212,6 +229,7 @@ The plugin does not enforce one or the other — it adapts to what exists.
 - add 166 bats tests across 9 plugins for new scripts
 
 ### Fixed
+
 - add handoff to root README, fix up-docs skill names
 
 ## [0.2.0] - 2026-03-28

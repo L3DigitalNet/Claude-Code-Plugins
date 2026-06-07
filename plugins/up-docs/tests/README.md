@@ -43,4 +43,4 @@ cd plugins/up-docs/tests && \
   .venv/bin/python -m pytest test_agent_prose.py -v
 ```
 
-Note: env-var prefix in POSIX shell binds to the next *single* simple command. Putting the prefix before `cd` would set the variables for `cd` only, not `pytest`. The `cd` must run first, then the prefix-and-pytest command is a single simple command in the shell's view.
+Note: env-var prefix in POSIX shell binds to the next _single_ simple command. Putting the prefix before `cd` would set the variables for `cd` only, not `pytest`. The `cd` must run first, then the prefix-and-pytest command is a single simple command in the shell's view.

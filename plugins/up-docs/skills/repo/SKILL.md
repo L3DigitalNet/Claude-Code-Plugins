@@ -1,7 +1,7 @@
 ---
 name: up-repo
-description: "Update repository documentation (README.md, docs/, CLAUDE.md) based on session changes by dispatching the up-docs-propagate-repo sub-agent. This skill should be used when the user runs /up-docs:repo."
-argument-hint: ""
+description: 'Update repository documentation (README.md, docs/, CLAUDE.md) based on session changes by dispatching the up-docs-propagate-repo sub-agent. This skill should be used when the user runs /up-docs:repo.'
+argument-hint: ''
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---
 
@@ -20,8 +20,9 @@ git status --porcelain
 ```
 
 If the output is **non-empty**, STOP immediately:
+
 - Emit the list of dirty files to the user.
-- Refuse with: *"Unstaged changes detected — stash or commit them before running `/up-docs:repo` to prevent data loss."*
+- Refuse with: _"Unstaged changes detected — stash or commit them before running `/up-docs:repo` to prevent data loss."_
 - Do NOT dispatch the sub-agent. Do NOT read session context. Do NOT proceed to Step 1.
 
 If the output is empty, continue.

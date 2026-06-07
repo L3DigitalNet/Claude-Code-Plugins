@@ -1,7 +1,7 @@
 ---
 name: up-wiki
-description: "Update the llm-wiki knowledge base (~/projects/llm-wiki) with implementation-level details from the current session by dispatching the up-docs-propagate-wiki sub-agent. This skill should be used when the user runs /up-docs:wiki."
-argument-hint: ""
+description: 'Update the llm-wiki knowledge base (~/projects/llm-wiki) with implementation-level details from the current session by dispatching the up-docs-propagate-wiki sub-agent. This skill should be used when the user runs /up-docs:wiki.'
+argument-hint: ''
 allowed-tools: Read, Bash, Agent
 ---
 

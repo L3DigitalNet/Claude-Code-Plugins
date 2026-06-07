@@ -32,56 +32,56 @@ For a definitively-enforced boundary that holds regardless of which agent is run
 
 ```json
 {
-  "permissions": {
-    "deny": [
-      "Bash(rm *)",
-      "Bash(rmdir *)",
-      "Bash(shred *)",
-      "Bash(mv * *)",
-      "Bash(cp -f *)",
-      "Bash(sed -i *)",
-      "Bash(git rm *)",
-      "Bash(git push --force *)",
-      "Bash(git push -f *)",
-      "Bash(git reset --hard *)",
-      "Bash(pct stop *)",
-      "Bash(pct shutdown *)",
-      "Bash(pct destroy *)",
-      "Bash(pct restore *)",
-      "Bash(pct migrate *)",
-      "Bash(qm stop *)",
-      "Bash(qm destroy *)",
-      "Bash(docker stop *)",
-      "Bash(docker rm *)",
-      "Bash(docker-compose down *)",
-      "Bash(systemctl stop *)",
-      "Bash(systemctl restart *)",
-      "Bash(systemctl disable *)",
-      "Bash(systemctl mask *)",
-      "Bash(kill *)",
-      "Bash(killall *)",
-      "Bash(pkill *)",
-      "Bash(iptables *)",
-      "Bash(nft *)",
-      "Bash(chmod *)",
-      "Bash(chown *)",
-      "Bash(chgrp *)",
-      "Bash(chattr *)",
-      "Bash(setfacl *)",
-      "Bash(apt install *)",
-      "Bash(apt remove *)",
-      "Bash(dnf install *)",
-      "Bash(dnf remove *)",
-      "Bash(pip install *)",
-      "Bash(npm install --save *)"
-    ]
-  }
+	"permissions": {
+		"deny": [
+			"Bash(rm *)",
+			"Bash(rmdir *)",
+			"Bash(shred *)",
+			"Bash(mv * *)",
+			"Bash(cp -f *)",
+			"Bash(sed -i *)",
+			"Bash(git rm *)",
+			"Bash(git push --force *)",
+			"Bash(git push -f *)",
+			"Bash(git reset --hard *)",
+			"Bash(pct stop *)",
+			"Bash(pct shutdown *)",
+			"Bash(pct destroy *)",
+			"Bash(pct restore *)",
+			"Bash(pct migrate *)",
+			"Bash(qm stop *)",
+			"Bash(qm destroy *)",
+			"Bash(docker stop *)",
+			"Bash(docker rm *)",
+			"Bash(docker-compose down *)",
+			"Bash(systemctl stop *)",
+			"Bash(systemctl restart *)",
+			"Bash(systemctl disable *)",
+			"Bash(systemctl mask *)",
+			"Bash(kill *)",
+			"Bash(killall *)",
+			"Bash(pkill *)",
+			"Bash(iptables *)",
+			"Bash(nft *)",
+			"Bash(chmod *)",
+			"Bash(chown *)",
+			"Bash(chgrp *)",
+			"Bash(chattr *)",
+			"Bash(setfacl *)",
+			"Bash(apt install *)",
+			"Bash(apt remove *)",
+			"Bash(dnf install *)",
+			"Bash(dnf remove *)",
+			"Bash(pip install *)",
+			"Bash(npm install --save *)"
+		]
+	}
 }
 ```
 
 The `permissions.deny` block is enforced by Claude Code's permission engine regardless of which agent is running. See [Claude Code permission docs](https://code.claude.com/docs/en/settings) for the full deny-pattern syntax.
 
-> **Why not a bundled `PreToolUse` guard?** Versions through 0.8.1 shipped a `scripts/deny-guard.sh` `PreToolUse` hook that tried to block these commands only while an up-docs subagent was running. It was removed afterward: it ran on *every* Bash call in *every* session (a per-command latency tax), and its scope detection was unsound — subagents run with their own isolated transcript, so the hook could never reliably tell whether it was inside an up-docs subagent. The engine-enforced `permissions.deny` above is both simpler and strictly more reliable.
+> **Why not a bundled `PreToolUse` guard?** Versions through 0.8.1 shipped a `scripts/deny-guard.sh` `PreToolUse` hook that tried to block these commands only while an up-docs subagent was running. It was removed afterward: it ran on _every_ Bash call in _every_ session (a per-command latency tax), and its scope detection was unsound — subagents run with their own isolated transcript, so the hook could never reliably tell whether it was inside an up-docs subagent. The engine-enforced `permissions.deny` above is both simpler and strictly more reliable.
 
 ## Installation
 
@@ -156,7 +156,7 @@ Each command produces a summary table listing every page or file examined, the a
 
 The five commands split into two kinds, and the distinction matters:
 
-- **Propagators** (`/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`) push only *this session's* named changes into their layer. They do **not** run the drift auditor, so they will not catch pre-existing drift your current session didn't introduce — a stale version string, a doc that references a renamed file, an outdated label.
+- **Propagators** (`/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`) push only _this session's_ named changes into their layer. They do **not** run the drift auditor, so they will not catch pre-existing drift your current session didn't introduce — a stale version string, a doc that references a renamed file, an outdated label.
 - **Auditor** (`/up-docs:drift`) is the read-only Sonnet scan that finds that pre-existing drift. `/up-docs:all` runs the propagators **and** the auditor in a single pass.
 
 Use `/up-docs:repo` for a quick post-change sync, but run `/up-docs:drift` (or `/up-docs:all`) periodically — for example after a release — to catch drift that targeted propagation cannot see. A lone `/up-docs:repo` after a release is a sync, not a full consistency check.
@@ -178,7 +178,7 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 ## Skills
 
 | Skill | Role | Invoked by |
-|-------|------|------------|
+| --- | --- | --- |
 | `all` | Orchestrator — builds session-change summary, dispatches propagators in parallel, then drift auditor | `/up-docs:all` |
 | `repo` | Thin wrapper, dispatches `up-docs-propagate-repo` | `/up-docs:repo` |
 | `wiki` | Thin wrapper, dispatches `up-docs-propagate-wiki` | `/up-docs:wiki` |
@@ -188,7 +188,7 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 ## Agents
 
 | Agent | Model | Role |
-|-------|-------|------|
+| --- | --- | --- |
 | `up-docs-propagate-repo` | Haiku | Mechanical edits to README.md, docs/, CLAUDE.md scoped to the session-change summary |
 | `up-docs-propagate-wiki` | Sonnet | Edits/creates llm-wiki wiki/ pages at implementation-reference level under the llm-wiki contract |
 | `up-docs-propagate-notion` | Haiku | Mechanical edits to Notion at strategic/organizational level; never writes configs or procedures |

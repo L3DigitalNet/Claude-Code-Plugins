@@ -1,7 +1,7 @@
 ---
 name: up-drift
-description: "Comprehensive documentation drift analysis across infrastructure and wiki by dispatching the up-docs-audit-drift sub-agent. This skill should be used when the user runs /up-docs:drift."
-argument-hint: "[wiki-subtree-or-tag]"
+description: 'Comprehensive documentation drift analysis across infrastructure and wiki by dispatching the up-docs-audit-drift sub-agent. This skill should be used when the user runs /up-docs:drift.'
+argument-hint: '[wiki-subtree-or-tag]'
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---
 
@@ -14,6 +14,7 @@ If a wiki subtree or tag is provided, scope the analysis to that llm-wiki `wiki/
 ## Architecture
 
 The auditor sub-agent runs the full four-phase drift flow in its own isolated context:
+
 1. Infrastructure → Wiki sync (SSH/pct/curl against live state)
 2. Wiki internal consistency (cross-reference map)
 3. Link integrity & enrichment
@@ -42,6 +43,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/templates/session-change-summary.md` for the canonic
 ### 3. Dispatch `up-docs-audit-drift`
 
 Invoke via the Agent tool with `subagent_type: "up-docs:up-docs-audit-drift"` (the `up-docs:` prefix is required — plugin-defined agents are only addressable through their plugin namespace). The prompt:
+
 - Session-change summary at the stable front
 - Wiki subtree/tag scope argument (if provided) at the end
 - The reference docs `skills/drift/references/convergence-tracking.md` and `skills/drift/references/server-inspection.md` are read by the sub-agent itself; do not duplicate their content into the prompt.
@@ -55,6 +57,7 @@ If the sub-agent includes an `⚠ ESCALATION RECOMMENDED` block, include it verb
 ### 5. Offer Next Step (bounded choice)
 
 After findings land, use AskUserQuestion to offer:
+
 - Re-invoke propagators with findings as a new session-change summary (fixes them at propagator cost (wiki on Sonnet, repo/Notion on Haiku))
 - Re-run the audit with Opus (if escalation was recommended)
 - Accept findings as advisory and exit
