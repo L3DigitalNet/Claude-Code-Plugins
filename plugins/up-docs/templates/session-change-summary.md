@@ -2,7 +2,7 @@
 
 Canonical format for the session-change summary produced by the `/up-docs:all` orchestrator and consumed by every up-docs sub-agent (propagators and drift auditor).
 
-This is the **critical artifact** of the orchestrator-dispatch architecture. Garbage in, garbage out — if the orchestrator produces a vague summary, the Haiku propagators will miss changes or over-edit. Spend orchestrator tokens to produce this well.
+This is the **critical artifact** of the orchestrator-dispatch architecture. Garbage in, garbage out — if the orchestrator produces a vague summary, the propagators will miss changes or over-edit. Spend orchestrator tokens to produce this well.
 
 ## Format
 

@@ -25,7 +25,7 @@ Use this template for the final output of every /up-docs command.
 - "Context" derives from git diff and session activity, not user input
 - Every page or file examined gets a row, even if no change was needed
 - Action is exactly one of: Created, Updated, No change needed, FAILED
-- FAILED rows carry a one-sentence reason (e.g., "MCP timeout; retry exhausted") so the orchestrator can surface it clearly in the combined report
+- FAILED rows carry a one-sentence reason (e.g., "Edit failed / validate-frontmatter rejected; retry exhausted") so the orchestrator can surface it clearly in the combined report
 - Summary of Changes is one sentence max
 - For /up-docs:all, emit one table per layer under its own heading
 - Totals line goes at the bottom of each table
@@ -44,7 +44,7 @@ Use this template for the final output of every /up-docs command.
 
 **Totals:** ...
 
-### Wiki (Outline)
+### Wiki (llm-wiki)
 **Context:** ...
 
 | # | Page | Action | Summary of Changes |

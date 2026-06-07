@@ -11,7 +11,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
       "id": 1,
       "layer": "wiki",
       "page": "<page title or file path>",
-      "page_id": "<Outline/Notion page ID, or null for repo>",
+      "page_id": "<wiki page path or Notion page id; null for repo>",
       "stale_line": "<exact text as it currently appears>",
       "should_say": "<what it should be, based on live state or session summary>",
       "confidence": "low | medium | high | unverifiable",
@@ -43,7 +43,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 |-------|------|
 | `id` | Sequential from 1. Stable across JSON + markdown so a user can cross-reference. |
 | `layer` | Exactly one of: `"repo"`, `"wiki"`, `"notion"`, `"layout"`. Use `"layout"` only for findings from the step-3b handoff-conformance phase (validator failures), never for content drift. |
-| `page` | Human-readable page title (Outline, Notion) or file path (repo). |
+| `page` | Human-readable page title (llm-wiki path, Notion) or file path (repo). |
 | `page_id` | Machine ID for wiki/Notion; `null` for repo. Used by downstream propagators to target the right page. |
 | `stale_line` | Exact text currently in the doc. Do not paraphrase. This is what a propagator will match against. |
 | `should_say` | What the line should be. If unknown, copy `stale_line` and lower `confidence` accordingly. |
