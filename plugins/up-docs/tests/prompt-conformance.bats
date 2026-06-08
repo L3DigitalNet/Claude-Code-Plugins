@@ -128,3 +128,38 @@ POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
   run grep -iF 'Commit offer (part (c))' "$PLUGIN_ROOT/skills/repo/SKILL.md"
   [ "$status" -eq 0 ]
 }
+
+PROPAGATE_WIKI="$PLUGIN_ROOT/agents/up-docs-propagate-wiki.md"
+
+@test "propagate-wiki declares remote SSH access constants, not a local wiki path (0.12.0)" {
+  # The wiki repo moved off the workstation into CT 103; the propagator addresses
+  # it over SSH. The old local default ~/projects/llm-wiki must be fully gone.
+  run grep -F 'LLM_WIKI_SSH' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+  run grep -F '/srv/workspaces/llm-wiki' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+  run grep -F 'projects/llm-wiki' "$PROPAGATE_WIKI"
+  [ "$status" -ne 0 ]
+}
+
+@test "propagate-wiki pre-flight probes reachability over ssh, not a local directory (0.12.0)" {
+  run grep -Ei 'ConnectTimeout|ssh[^\n]*test -d' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+  run grep -iF 'unreachable' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+}
+
+@test "propagate-wiki runs all repo I/O + validators over ssh, no local FS verbs on the wiki (0.12.0)" {
+  run grep -F 'validate-frontmatter' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+  run grep -F 'resolve_links' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+  # no local Read/Edit/Write tool verbs pointed at the wiki path remain
+  run grep -E '(Read|Edit|Write) "\$LLM_WIKI_ROOT' "$PROPAGATE_WIKI"
+  [ "$status" -ne 0 ]
+}
+
+@test "propagate-wiki tools field is Bash-only (remote repo, no local FS tools) (0.12.0)" {
+  run grep -E '^tools:[[:space:]]*Bash[[:space:]]*$' "$PROPAGATE_WIKI"
+  [ "$status" -eq 0 ]
+}
