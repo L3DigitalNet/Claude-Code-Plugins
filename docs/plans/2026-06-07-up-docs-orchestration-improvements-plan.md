@@ -27,8 +27,9 @@
 | `plugins/up-docs/skills/drift/references/convergence-tracking.md` | defer narrowing rule to the auditor task step | 2 |
 | `plugins/up-docs/skills/all/SKILL.md` | routing matrix (Step 2) + conditional dispatch (Step 3) + skipped-layer line; baseline-capture ref (Step 6) | 3, 5 |
 | `plugins/up-docs/templates/summary-report.md` | document the presentation-only skipped-layer line | 3 |
-| `plugins/up-docs/scripts/commit-candidates.sh` | git-ground-truth: `snapshot` + `candidates` (changed-since-baseline) | 4 |
-| `plugins/up-docs/tests/commit-candidates.bats` | commit-safety scenarios | 4 |
+| `plugins/up-docs/scripts/commit-candidates.sh` | git-ground-truth: `snapshot` + `candidates` (changed-since-baseline) + `fingerprint` (content guard, CR-001); `--no-optional-locks` (CR-004) | 4 |
+| `plugins/up-docs/tests/commit-candidates.bats` | commit-safety scenarios incl. fingerprint mutation (CR-001) | 4 |
+| `plugins/up-docs/tests/fixtures/routing-cases.md` | worked routing cases incl. system-of-record edges (CR-002/003) | 3 |
 | `plugins/up-docs/templates/post-propagation-steps.md` | part (c): baseline + per-path diff approval + late re-check + no-push + headless report-only | 5 |
 | `plugins/up-docs/skills/repo/SKILL.md` | baseline-capture ref (shares the template) | 5 |
 | `plugins/up-docs/tests/prompt-conformance.bats` | grep guards for the prompt/template changes (Tasks 2,3,5) | 2,3,5 |
@@ -41,10 +42,10 @@
 
 **Files:** none (read-only).
 
-- [ ] **Step 1: Confirm clean tree + current version**
+- [ ] **Step 1: Confirm no TRACKED changes + current version**
 
 Run: `git status --porcelain && grep '"version"' plugins/up-docs/.claude-plugin/plugin.json`
-Expected: empty working tree; `"version": "0.10.1"`.
+Expected: `"version": "0.10.1"`. The tree may contain **pre-existing user-owned untracked files** (e.g. `?? TODO.md`) — these are OUT OF SCOPE: never stage, move, or delete them. Require only that there are no *tracked* modifications (` M`/`A `/`D ` lines). Every task below stages only explicitly-named files, so untracked user files are never swept (CR-001/CR-004 missing-consideration).
 
 - [ ] **Step 2: Confirm the existing suites are green before changing anything**
 
@@ -72,6 +73,7 @@ Replace the existing `@test "record-iteration tracks pages_touched as max"` bloc
   [ "$status" -eq 0 ]
   [ "$(echo "$output" | jq -c '.phases["1"].touched_pages')" = '["wiki/a.md","wiki/b.md"]' ]
   [ "$(echo "$output" | jq '.phases["1"].pages_touched')" = "2" ]
+  [ "$(echo "$output" | jq '.phases["1"].changes_applied')" = "1" ]  # CR-005: not double-counted
 }
 
 @test "pages_touched is len of the latest touched_pages (not a running max)" {
@@ -122,7 +124,7 @@ In `cmd_start_phase` (the python `state['phases'][phase] = {...}` initializer, ~
 
 - [ ] **Step 4: Rewrite the `pages_touched` handling in `cmd_record_iteration`**
 
-Replace the line `p['pages_touched'] = max(p['pages_touched'], findings.get('pages_touched', 0))` and the `p['history'].append({...})` call with:
+Replace the **entire existing block** from `fixes = findings.get('fixes_applied', 0)` through the end of the `p['history'].append({...})` call (current lines 96–104). **CR-005:** `fixes`/`changes_applied` already live in that block — replace the whole block so they are not duplicated (a narrow replace that re-adds them double-counts `changes_applied`). The replacement block (containing each line exactly once):
 
 ```python
 fixes = findings.get('fixes_applied', 0)
@@ -287,6 +289,14 @@ ALL_SKILL="$PLUGIN_ROOT/skills/all/SKILL.md"
   run grep -iF 'audits all three layers' "$ALL_SKILL"
   [ "$status" -eq 0 ]
 }
+
+@test "routing fixtures cover the system-of-record edge cases (CR-002/003)" {
+  F="$PLUGIN_ROOT/tests/fixtures/routing-cases.md"
+  [ -f "$F" ]
+  run grep -iF 'OpenBao listener rebind' "$F"; [ "$status" -eq 0 ]
+  run grep -iF 'Secret VALUE' "$F"; [ "$status" -eq 0 ]
+  run grep -iF 'Ambiguous' "$F"; [ "$status" -eq 0 ]
+}
 ```
 
 - [ ] **Step 2: Run to verify they fail**
@@ -304,12 +314,33 @@ At the end of `### 2. Build the Canonical Session-Change Summary`, add:
 | Item characteristic | Routes to |
 |---|---|
 | Project-repo artifact: README/docs/CLAUDE.md/AGENTS.md, handoff files, CLI flags, repo build/test config | `repo` |
-| Implementation reference: config values, env vars, file paths, service procedures, troubleshooting, command usage (incl. homelab implementation) | `wiki` |
+| Credential **reference** added/rotated/removed (env-var name, OpenBao path — *not* the secret value) | `repo` (handoff/credentials.md) + `wiki` if a page cites it |
+| Implementation reference: config values, env-var names, file paths, service procedures, troubleshooting, command usage, auth/networking wiring (incl. homelab implementation) | `wiki` |
 | Strategic/organizational: new service in the stack, architecture decision, ownership/roadmap, personnel | `notion` |
-| Live system-of-record fact (NetBox/OpenBao/DNS/firewall inventory) | none of the doc layers (owned elsewhere) — no propagator |
+| **Secret VALUE or live inventory RECORD only** (a secret's actual value in OpenBao; a device/IP/VLAN row in NetBox; an actual DNS/firewall entry) — owned by its system-of-record | none — no propagator |
 | **Ambiguous / spans concerns** | **all candidate layers (fail-open)** |
 
-An item may route to multiple layers. A layer is "routed-to" if ≥1 item carries its tag.
+**CR-002 — do not over-route to "none".** Only the *value/record itself* is system-of-record-owned. A change *about* such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
+```
+
+- [ ] **Step 3b: Create the routing fixtures (CR-003 behavioral coverage)**
+
+Create `plugins/up-docs/tests/fixtures/routing-cases.md` — the canonical worked cases the matrix references. These double as the documented transcript-smoke checklist (LLM routing correctness is not unit-testable in bats; the conformance test in Step 1 only asserts the fixtures exist and cover the key rows):
+
+```markdown
+# Routing cases (up-docs fast-path) — expected layer tags
+
+| # | Session item | Expected layers |
+|---|---|---|
+| 1 | CLI flag `--verbose` added to a repo tool | repo |
+| 2 | Service procedure / config path / env-var name documented | wiki |
+| 3 | New monitoring service added to the homelab stack (strategic) | notion |
+| 4 | OpenBao listener rebind (`BAO_ADDR` 127.0.0.1 → 100.90.121.89) | wiki (+repo if credentials.md cites it) |
+| 5 | Secret PATH rotation (OpenBao path moved) — reference only, not the value | repo (credentials.md) (+wiki if referenced) |
+| 6 | DNS A-record value changed (record-only inventory) | none (Pi-hole/Porkbun is system-of-record) |
+| 7 | Secret VALUE changed in OpenBao | none (OpenBao is system-of-record) |
+| 8 | New service added: deploy steps + strategic note + repo README | all (repo + wiki + notion) |
+| 9 | Ambiguous "updated the auth setup" with no detail | all (fail-open) |
 ```
 
 - [ ] **Step 4: Make Step 3 dispatch conditional**
@@ -425,6 +456,21 @@ teardown() { rm -rf "$REPO" "$BASE"; }
   [[ "$output" == *"tracked.md"* ]]
   [[ "$output" == *"untracked.md"* ]]
 }
+
+@test "fingerprint changes when an approved path's content changes (CR-001)" {
+  echo a > "$REPO/written.md"
+  fp1=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" written.md)
+  echo b >> "$REPO/written.md"          # content mutated after "disclosure"
+  fp2=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" written.md)
+  [ "$fp1" != "$fp2" ]
+}
+
+@test "fingerprint is stable when content is unchanged (CR-001)" {
+  echo a > "$REPO/written.md"
+  fp1=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" written.md)
+  fp2=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" written.md)
+  [ "$fp1" = "$fp2" ]
+}
 ```
 
 - [ ] **Step 2: Run to verify they fail**
@@ -453,8 +499,10 @@ PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
 
 # Emit NUL-safe dirty paths for the repo, one per line. Rename/copy records (R/C) carry
 # the OLD path in the following NUL field; we keep the NEW path and skip the old one.
+# --no-optional-locks: `git status` may otherwise refresh/write the index; a read-only
+# candidate-surfacing helper must not mutate git metadata before user consent (CR-004).
 dirty_paths() {
-  git -C "$1" status --porcelain=v1 -z | "$PYTHON" -c '
+  git --no-optional-locks -C "$1" status --porcelain=v1 -z | "$PYTHON" -c '
 import sys
 data = sys.stdin.buffer.read().split(b"\0")
 i = 0
@@ -478,8 +526,19 @@ case "${1:-}" in
     # set difference on exact path lines (doc paths do not contain newlines in practice)
     comm -23 <(dirty_paths "$repo" | sort -u) <(sort -u "$baseline")
     ;;
+  fingerprint)
+    repo="${2:?usage: fingerprint <repo> <path>}"
+    path="${3:?usage: fingerprint <repo> <path>}"
+    # Stable content+status fingerprint for ONE candidate path. Captured at disclosure and
+    # re-checked immediately before staging (CR-001): if the worktree content changes after
+    # the user approved the shown diff — even under the same path/status — the fingerprint
+    # differs, and the offer must re-disclose instead of staging undisclosed content.
+    xy=$(git --no-optional-locks -C "$repo" status --porcelain=v1 -- "$path" | cut -c1-2)
+    if [ -e "$repo/$path" ]; then blob=$(git -C "$repo" hash-object -- "$path"); else blob="DELETED"; fi
+    printf '%s:%s\n' "${xy:-??}" "$blob"
+    ;;
   *)
-    echo "usage: commit-candidates.sh {snapshot <repo> | candidates <repo> <baseline-file>}" >&2
+    echo "usage: commit-candidates.sh {snapshot <repo> | candidates <repo> <baseline-file> | fingerprint <repo> <path>}" >&2
     exit 2
     ;;
 esac
@@ -529,6 +588,8 @@ POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
   [ "$status" -eq 0 ]
   run grep -iF 're-check' "$POST_PROP"
   [ "$status" -eq 0 ]
+  run grep -iF 'fingerprint' "$POST_PROP"
+  [ "$status" -eq 0 ]
   run grep -iF 'never push' "$POST_PROP"
   [ "$status" -eq 0 ]
 }
@@ -570,16 +631,22 @@ commit — report dirty trees and stop.
    them (a hook/editor/other process could have dirtied a clean-baseline path). Ownership is
    established by your per-path diff disclosure below, not by git.
 2. If every repo's candidate set is empty, skip silently.
-3. **Disclose**: for each candidate path, show its `git -C <repo> diff -- <path>` (or a tight
-   summary) so the user sees exactly what would be staged. Baseline-dirty paths are already
-   excluded by the helper; surface them separately as "pre-existing local changes in <repo> —
-   left for you to handle manually."
+3. **Disclose + fingerprint**: for each candidate path, show its `git -C <repo> diff -- <path>`
+   (or a tight summary) so the user sees exactly what would be staged, AND capture that path's
+   content fingerprint now: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh fingerprint
+   <repo> <path>` — record it next to the diff you showed (CR-001). Baseline-dirty paths are
+   already excluded by the helper; surface them separately as "pre-existing local changes in
+   <repo> — left for you to handle manually."
 4. **Non-interactive guard**: if you cannot ask the user (headless `-p`, no `AskUserQuestion`),
    **commit nothing** — report the candidate paths and stop. No consent → no commit.
 5. Otherwise present ONE `AskUserQuestion` (`multiSelect` over candidate paths/repos).
-6. On approval, per selected repo: **late re-check** — re-run `commit-candidates.sh candidates`
-   immediately before staging; if an approved path is gone or unexpected new paths appeared,
-   re-disclose and re-confirm rather than staging blindly. Then stage only the approved paths by
+6. On approval, per selected repo: **late re-check (content, not just path — CR-001)** —
+   immediately before staging, recompute each approved path's fingerprint
+   (`commit-candidates.sh fingerprint <repo> <path>`) and compare to the value captured at
+   disclosure, AND re-run `commit-candidates.sh candidates` to catch added/removed paths. If any
+   approved path's fingerprint **differs** from what was shown, or a path is gone, or unexpected
+   new paths appeared, **re-disclose and re-confirm** rather than staging blindly — never stage
+   content the user did not see. Then stage only the approved, fingerprint-matched paths by
    explicit literal name (`git -C <repo> add -- <path>`), commit under that repo's convention
    (project repo: signed `docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message,
    page stays `status: draft`), and **never push**. Report the commit SHA(s) and that nothing
@@ -591,11 +658,13 @@ commit — report dirty trees and stop.
 In `skills/all/SKILL.md`, in `### 0. Pre-flight` (after the dirty-tree guard passes), add:
 
 ```markdown
-**Capture commit baselines** (for the Step 6 commit offer): snapshot each committable repo's
-dirty set BEFORE any propagation —
-`bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "${TMPDIR:-/tmp}/up-docs-baseline-repo.txt"`
-and, when the wiki layer is in scope, likewise for `~/projects/llm-wiki` into
-`${TMPDIR:-/tmp}/up-docs-baseline-wiki.txt`. Pass these baseline paths to Step 6.
+**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot
+each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path —
+concurrent runs would collide, CR-004) and remember the generated paths:
+`BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"`
+and, when the wiki layer is in scope,
+`BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`.
+Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
 ```
 
 In `skills/repo/SKILL.md`, add the same project-repo snapshot line in its pre-flight (it has no wiki layer, so only the repo baseline).
@@ -686,4 +755,6 @@ Release is a separate `/release-pipeline:release` step (plugin release, scoped t
 
 **Placeholder scan:** every code step shows complete code; every test step shows real assertions and exact run commands with expected results. No TBD/TODO.
 
-**Type/name consistency:** subcommand `touched-pages` (Task 1 Step 5) matches its use in the auditor step (Task 2 Step 3) and the `touched-pages <phase>` test (Task 1 Step 1). `commit-candidates.sh {snapshot|candidates}` (Task 4) matches the calls in `post-propagation-steps.md` and the skills (Task 5) and the baseline-capture (Task 5 Step 4). `touched_pages` (findings-JSON key + state field) is consistent across Tasks 1–2.
+**Type/name consistency:** subcommand `touched-pages` (Task 1 Step 5) matches its use in the auditor step (Task 2 Step 3) and the `touched-pages <phase>` test (Task 1 Step 1). `commit-candidates.sh {snapshot|candidates|fingerprint}` (Task 4) matches the calls in `post-propagation-steps.md` and the skills (Task 5) and the baseline-capture (Task 5 Step 4). `touched_pages` (findings-JSON key + state field) is consistent across Tasks 1–2.
+
+**Codex plan-review ledger (round 1 → applied):** CR-001 (late re-check missed content) → `fingerprint` subcommand + disclose/recompare flow + bats mutation test; CR-002 (routing over-routed to "none") → split system-of-record row + worked cases; CR-003 (grep-only validation) → `tests/fixtures/routing-cases.md` + fixtures-coverage conformance + concrete transcript-smoke note; CR-004 (fixed temp paths + git locks) → `mktemp` baselines + `git --no-optional-locks`; CR-005 (double-count) → Task 1 Step 4 replaces the whole `fixes…history` block + `changes_applied` assertion. Pre-existing untracked `TODO.md` flagged out-of-scope in Task 0.
