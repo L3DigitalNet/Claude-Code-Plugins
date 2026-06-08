@@ -23,3 +23,5 @@ This document is the user's visible task list alongside the v3 handoff system. U
   - [ ] Adopt python-tooling
 
 ## Repo & Agent Tracked Tasks
+
+- [ ] **MCP E2E Tests (HA Container) CI is red** — `HA Dev Plugin Tests` → `MCP E2E Tests` job fails: the HA test container's demo integration loads 0 entities, so e2e assertions for `light.bed_light` / `sensor.outside_temperature` etc. fail (13 pass / 10 fail). Pre-existing, environmental (HA version / container onboarding), NOT a dependency issue — surfaced after the 2026-06-08 `typescript-eslint` bump cleared the `npm ci` ERESOLVE that previously masked it. The other 4 HA jobs pass.
