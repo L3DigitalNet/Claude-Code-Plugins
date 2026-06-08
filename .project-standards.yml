@@ -1,0 +1,6 @@
+# Contract-version selection for the copy-adopted markdown-tooling standard.
+# Validated-if-present metadata only — no enforcement by itself; the lint-markdown
+# + format workflows are the enforcement. The markdown-frontmatter and python-tooling
+# standards are NOT adopted in this cycle and are intentionally absent here.
+markdown_tooling:
+  version: "1.0"

@@ -17,3 +17,33 @@ Plugin authoring and release workspace for Claude Code / Codex plugins.
 - Validate substantive plugin changes with the plugin test harness before wrapping up.
 - Preserve documented enforcement layers, hooks, and release-pipeline expectations when refactoring.
 - **Branch workflow:** direct commit to `main`. No `testing` branch — that convention was retired 2026-05-07. For plugin releases, use the release-pipeline plugin (Codex equivalent of `/release-pipeline:release`). See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md).
+
+## Markdown & Structured-Text Tooling
+
+This repository follows the Markdown Tooling Standard. Prettier formats the structured-text it supports (`md`/`json`/`jsonc`/`yaml`/`code-workspace`); markdownlint lints Markdown structure only. JS/TS source is excluded from Prettier, and MD060 is disabled — both recorded in [`docs/decisions/adr-0001-prettier-jsts-scope.md`](docs/decisions/adr-0001-prettier-jsts-scope.md). Do not introduce a competing formatter or linter.
+
+### Fix pass
+
+When changing Markdown, JSON, JSONC, or YAML, run the fix pass first:
+
+```bash
+npx prettier --write .
+npx markdownlint-cli2 --fix "**/*.md"
+```
+
+### Check contract
+
+Before considering work complete, run the non-mutating check:
+
+```bash
+npx prettier --check .
+npx markdownlint-cli2 "**/*.md"
+```
+
+Do not claim completion if either command fails.
+
+### Rules
+
+- Prettier owns physical formatting. Do not fight its output or hand-format.
+- markdownlint owns Markdown structure. Do not disable a rule to silence a warning — fix the Markdown.
+- Do not edit `.prettierrc.json` or `.markdownlint.json` to bypass a check without a documented ADR exception.
