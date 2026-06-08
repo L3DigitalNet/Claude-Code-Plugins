@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-07 (up-docs v0.11.0 orchestration improvements implemented + released — tag `up-docs/v0.11.0` + GitHub release; marketplace index refreshed)
+**Last updated:** 2026-06-08 (qdev 2.0.0 search-decoupling shipped + released; 3 plugins de-listed; new agent-configs `web-search` skill)
 
 ## Session Instructions
 
@@ -14,7 +14,6 @@ _(none)_
 
 ## Recently closed (this session, 2026-06-08)
 
-- **qdev grounding skill removed (search decoupling).** The D2 grounding skill + `sanitize_query.py` were deleted; routine search moved to the agent-configs `web-search` skill. This supersedes the pending D2 Task-7 manual matrix (no longer applicable). qdev bumped to 2.0.0 (research-only). See `docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md`.
-- **up-docs v0.11.0 released** (`up-docs/v0.11.0` tag + GitHub release): 8-task plan executed via `superpowers:subagent-driven-development` — (A) `touched_pages` auditor narrowing, (B) routing-matrix fail-open empty-layer skip, (C) baseline-safe consent-gated Step 6 commit offer (`commit-candidates.sh`). 6 review-driven fixes (incl. a real inert-feature defect: part (c) was unreachable). 78 bats + 29 pytest green; commits `b0c8170..29747fe` pushed; tag-only release; marketplace clone refreshed. Full detail in `sessions/2026-06.md`.
+- **qdev 2.0.0 — search decoupling, shipped + released.** qdev slimmed to research-only (removed 4 commands + 3 agents + the `research-grounding` skill + `sanitize_query.py`); routine search moved to a new Claude-only **`web-search` skill** in agent-configs. Released `qdev/v2.0.0` (tag-only). Precursor bugfix `56494ad` corrected qdev-researcher's Tavily MCP key. **De-listed** github-repo-manager / plugin-test-harness / repo-hygiene (marketplace 9→6; tags/releases kept). Spec+plan Codex-converged; executed subagent-driven. Detail + commit refs in `sessions/2026-06.md`. **Next session: restart needed for qdev 2.0.0 to load.**
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->
