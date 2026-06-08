@@ -647,7 +647,7 @@ In the Summary paragraph, add a sentence: "The `qdev-grounding` skill auto-fires
 
 - [ ] **Step 3: Update `plugin.json` description**
 
-In `plugins/qdev/.claude-plugin/plugin.json`, append to the `description` value (leave `version` unchanged): ` Plus the qdev-grounding skill — an inline auto-trigger that does sanitizer-gated lookups and escalates to qdev-researcher when stuck.`
+In `plugins/qdev/.claude-plugin/plugin.json`, append to the `description` value (leave `version` unchanged): `Plus the qdev-grounding skill — an inline auto-trigger that does sanitizer-gated lookups and escalates to qdev-researcher when stuck.`
 
 - [ ] **Step 4: Update `marketplace.json` qdev description**
 

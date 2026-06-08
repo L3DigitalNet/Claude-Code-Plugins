@@ -110,37 +110,37 @@ None found.
 ### Internet research performed
 
 - Source name: Git `git-status` documentation
-- URL: https://git-scm.com/docs/git-status
+- URL: <https://git-scm.com/docs/git-status>
 - Access date: 2026-06-08
 - What it was used to verify: `--untracked-files=all`, porcelain `-z`, and `--no-optional-locks` context.
 - Relevant conclusion: The CR-001 nested-untracked fix is aligned; `all` shows individual files inside untracked directories.
 
 - Source name: Git documentation
-- URL: https://git-scm.com/docs/git
+- URL: <https://git-scm.com/docs/git>
 - Access date: 2026-06-08
 - What it was used to verify: `--no-optional-locks` and `--literal-pathspecs`.
 - Relevant conclusion: `--no-optional-locks` supports the read-only helper goal; `--literal-pathspecs` is needed when treating candidate strings as literal filenames.
 
 - Source name: Git glossary pathspec documentation
-- URL: https://git-scm.com/docs/gitglossary
+- URL: <https://git-scm.com/docs/gitglossary>
 - Access date: 2026-06-08
 - What it was used to verify: Git pathspec pattern/magic behavior.
 - Relevant conclusion: Plain `<path>` arguments to `git add/diff/status` are pathspecs, not necessarily literal filenames.
 
 - Source name: Git `git-diff` documentation
-- URL: https://git-scm.com/docs/git-diff
+- URL: <https://git-scm.com/docs/git-diff>
 - Access date: 2026-06-08
 - What it was used to verify: `--no-index` and patch metadata.
 - Relevant conclusion: `--no-index` is appropriate for untracked content disclosure; diffs also expose file mode metadata that the current fingerprint does not cover.
 
 - Source name: Git `git-hash-object` documentation
-- URL: https://git-scm.com/docs/git-hash-object
+- URL: <https://git-scm.com/docs/git-hash-object>
 - Access date: 2026-06-08
 - What it was used to verify: What `hash-object` fingerprints.
 - Relevant conclusion: `hash-object` computes a blob ID from file contents, so it is insufficient by itself for mode/type-safe commit approval.
 
 - Source name: Claude Code CLI reference
-- URL: https://code.claude.com/docs/en/cli-reference
+- URL: <https://code.claude.com/docs/en/cli-reference>
 - Access date: 2026-06-08
 - What it was used to verify: `claude -p` / print-mode non-interactive behavior.
 - Relevant conclusion: The plan’s non-interactive report-only commit guard remains appropriate.

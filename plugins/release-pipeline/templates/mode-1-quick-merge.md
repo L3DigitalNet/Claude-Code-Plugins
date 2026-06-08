@@ -1,12 +1,12 @@
 # Mode 1: Quick Push
 
-# Loaded by the release command router after the user selects "Quick Push".
+# Loaded by the release command router after the user selects "Quick Push"
 
-# Context variables from Phase 0 are available: is_dirty, current_branch, last_tag, commit_count.
+# Context variables from Phase 0 are available: is_dirty, current_branch, last_tag, commit_count
 
 # Note: filename retained as `mode-1-quick-merge.md` for backward compatibility with the
 
-# router lookup table; mode is now Quick Push under the direct-to-main branch convention.
+# router lookup table; mode is now Quick Push under the direct-to-main branch convention
 
 Stage uncommitted changes (if any), commit, and push to `main`. No version bump, no tag, no GitHub release. Use this when you have working-tree edits ready to ship without the full release ceremony.
 

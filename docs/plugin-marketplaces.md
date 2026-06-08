@@ -121,6 +121,7 @@ This is the canonical format used by L3DigitalNet:
 
 1. **Create repository** with `.claude-plugin/marketplace.json`
 2. **Users add with**:
+
    ```bash
    /plugin marketplace add username/my-marketplace
    ```

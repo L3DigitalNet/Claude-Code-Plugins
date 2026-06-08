@@ -99,43 +99,43 @@ None found.
 ### Internet research performed
 
 - Source name: Prettier CLI documentation
-- URL: https://prettier.io/docs/cli
+- URL: <https://prettier.io/docs/cli>
 - Access date: 2026-06-08
 - What it was used to verify: `prettier . --write`, supported-file recursion, `--check` behavior, ignore-path defaults.
 - Relevant conclusion: The plan’s Prettier write/check model is valid, but ignore files are part of the formatter scope.
 
 - Source name: Prettier Ignore documentation
-- URL: https://prettier.io/docs/ignore
+- URL: <https://prettier.io/docs/ignore>
 - Access date: 2026-06-08
 - What it was used to verify: `.prettierignore` syntax and `.gitignore` interaction.
 - Relevant conclusion: `.prettierignore` is load-bearing, so CI path filters should include it.
 
 - Source name: markdownlint-cli2 README
-- URL: https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md
+- URL: <https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: CLI glob behavior, `--fix`, config discovery, and `gitignore` option.
 - Relevant conclusion: The plan’s quoted globs and `.markdownlint-cli2.jsonc` approach are valid; tracked ignored files can still be skipped.
 
 - Source name: markdownlint-cli2-action README
-- URL: https://github.com/DavidAnson/markdownlint-cli2-action/blob/main/README.md
+- URL: <https://github.com/DavidAnson/markdownlint-cli2-action/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: `@v23`, `globs`, `config`, and default glob behavior.
 - Relevant conclusion: Passing `globs: "**/*.md"` is necessary and correct.
 
 - Source name: GitHub Actions workflow syntax
-- URL: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+- URL: <https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax>
 - Access date: 2026-06-08
 - What it was used to verify: `paths` filter behavior.
 - Relevant conclusion: Workflows with `paths` filters only run when changed files match; `gh run list --branch` is insufficient proof of head-SHA validation.
 
 - Source name: actions/checkout README
-- URL: https://github.com/actions/checkout/blob/main/README.md
+- URL: <https://github.com/actions/checkout/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: Current `actions/checkout@v6` availability.
 - Relevant conclusion: `checkout@v6` exists and is not a blocker.
 
 - Source name: actions/setup-node README
-- URL: https://github.com/actions/setup-node/blob/main/README.md
+- URL: <https://github.com/actions/setup-node/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: Current setup-node usage, Node versions, and npm cache behavior.
 - Relevant conclusion: Node 22 with npm cache is plausible; the plan’s `setup-node@v4` is older than this repo’s existing `@v6` convention but not proven unsafe.

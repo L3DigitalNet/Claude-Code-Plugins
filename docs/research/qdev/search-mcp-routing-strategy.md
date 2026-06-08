@@ -732,54 +732,54 @@ The main improvement is not adding another MCP server. It is making the routing 
 
 ## Sources
 
-[^serper-repo]: GitHub, `marcopesani/mcp-server-serper`, repository metadata showing stars, forks, commits, and no releases. https://github.com/marcopesani/mcp-server-serper
+[^serper-repo]: GitHub, `marcopesani/mcp-server-serper`, repository metadata showing stars, forks, commits, and no releases. <https://github.com/marcopesani/mcp-server-serper>
 
-[^serper-readme]: GitHub README, `marcopesani/mcp-server-serper`, tools and installation sections. https://github.com/marcopesani/mcp-server-serper
+[^serper-readme]: GitHub README, `marcopesani/mcp-server-serper`, tools and installation sections. <https://github.com/marcopesani/mcp-server-serper>
 
-[^serper-source]: GitHub raw source, `marcopesani/mcp-server-serper/src/index.ts`, tool schemas for `google_search` and `scrape`. https://raw.githubusercontent.com/marcopesani/mcp-server-serper/main/src/index.ts
+[^serper-source]: GitHub raw source, `marcopesani/mcp-server-serper/src/index.ts`, tool schemas for `google_search` and `scrape`. <https://raw.githubusercontent.com/marcopesani/mcp-server-serper/main/src/index.ts>
 
-[^serper-platform]: Serper homepage, advertised Google Search API and endpoint categories. https://serper.dev/
+[^serper-platform]: Serper homepage, advertised Google Search API and endpoint categories. <https://serper.dev/>
 
-[^tavily-readme]: GitHub README, `tavily-ai/tavily-mcp`, tool summary and remote/local setup. https://github.com/tavily-ai/tavily-mcp
+[^tavily-readme]: GitHub README, `tavily-ai/tavily-mcp`, tool summary and remote/local setup. <https://github.com/tavily-ai/tavily-mcp>
 
-[^tavily-docs]: Tavily Docs, Tavily MCP Server documentation, remote/local setup, OAuth, defaults, and local examples. https://docs.tavily.com/documentation/mcp
+[^tavily-docs]: Tavily Docs, Tavily MCP Server documentation, remote/local setup, OAuth, defaults, and local examples. <https://docs.tavily.com/documentation/mcp>
 
-[^tavily-package]: GitHub raw source, `tavily-ai/tavily-mcp/package.json`, package metadata. https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/package.json
+[^tavily-package]: GitHub raw source, `tavily-ai/tavily-mcp/package.json`, package metadata. <https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/package.json>
 
-[^tavily-source]: GitHub raw source, `tavily-ai/tavily-mcp/src/index.ts`, current MCP tool definitions and schemas. https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/src/index.ts
+[^tavily-source]: GitHub raw source, `tavily-ai/tavily-mcp/src/index.ts`, current MCP tool definitions and schemas. <https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/src/index.ts>
 
-[^tavily-search-api]: Tavily Search API docs. https://docs.tavily.com/documentation/api-reference/endpoint/search
+[^tavily-search-api]: Tavily Search API docs. <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 
-[^tavily-search-depth]: Tavily Search API docs, `search_depth`, auto parameters, and usage behavior. https://docs.tavily.com/documentation/api-reference/endpoint/search
+[^tavily-search-depth]: Tavily Search API docs, `search_depth`, auto parameters, and usage behavior. <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 
-[^tavily-extract-api]: Tavily Extract API docs, URL extraction endpoint and parameters. https://docs.tavily.com/documentation/api-reference/endpoint/extract
+[^tavily-extract-api]: Tavily Extract API docs, URL extraction endpoint and parameters. <https://docs.tavily.com/documentation/api-reference/endpoint/extract>
 
-[^tavily-map-api]: Tavily Map API docs, mapping root URL and crawl controls. https://docs.tavily.com/documentation/api-reference/endpoint/map
+[^tavily-map-api]: Tavily Map API docs, mapping root URL and crawl controls. <https://docs.tavily.com/documentation/api-reference/endpoint/map>
 
-[^tavily-crawl-api]: Tavily Crawl API docs, crawl controls including max depth and chunks. https://docs.tavily.com/documentation/api-reference/endpoint/crawl
+[^tavily-crawl-api]: Tavily Crawl API docs, crawl controls including max depth and chunks. <https://docs.tavily.com/documentation/api-reference/endpoint/crawl>
 
-[^tavily-research-api]: Tavily Research API docs, research task endpoint and model options. https://docs.tavily.com/documentation/api-reference/endpoint/research
+[^tavily-research-api]: Tavily Research API docs, research task endpoint and model options. <https://docs.tavily.com/documentation/api-reference/endpoint/research>
 
-[^brave-repo]: GitHub, `brave/brave-search-mcp-server`, repository metadata and release panel. https://github.com/brave/brave-search-mcp-server
+[^brave-repo]: GitHub, `brave/brave-search-mcp-server`, repository metadata and release panel. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-readme]: GitHub README, `brave/brave-search-mcp-server`, project description, migration notes, transport defaults, and tools list. https://github.com/brave/brave-search-mcp-server
+[^brave-readme]: GitHub README, `brave/brave-search-mcp-server`, project description, migration notes, transport defaults, and tools list. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-package]: GitHub raw source, `brave/brave-search-mcp-server/package.json`, package metadata. https://raw.githubusercontent.com/brave/brave-search-mcp-server/main/package.json
+[^brave-package]: GitHub raw source, `brave/brave-search-mcp-server/package.json`, package metadata. <https://raw.githubusercontent.com/brave/brave-search-mcp-server/main/package.json>
 
-[^brave-api-independent]: Brave Search API product page, independent index and API FAQ. https://brave.com/search/api/
+[^brave-api-independent]: Brave Search API product page, independent index and API FAQ. <https://brave.com/search/api/>
 
-[^brave-web]: GitHub README, Brave `brave_web_search` tool section. https://github.com/brave/brave-search-mcp-server
+[^brave-web]: GitHub README, Brave `brave_web_search` tool section. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-local]: GitHub README, Brave `brave_local_search` tool section and Pro-plan note. https://github.com/brave/brave-search-mcp-server
+[^brave-local]: GitHub README, Brave `brave_local_search` tool section and Pro-plan note. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-place]: GitHub README, Brave `brave_place_search` tool section. https://github.com/brave/brave-search-mcp-server
+[^brave-place]: GitHub README, Brave `brave_place_search` tool section. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-news]: GitHub README, Brave `brave_news_search` tool section and freshness parameter. https://github.com/brave/brave-search-mcp-server
+[^brave-news]: GitHub README, Brave `brave_news_search` tool section and freshness parameter. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-image-stale]: GitHub README, Brave `brave_image_search` section and v2 image-output migration note. https://github.com/brave/brave-search-mcp-server
+[^brave-image-stale]: GitHub README, Brave `brave_image_search` section and v2 image-output migration note. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-video]: GitHub README, Brave `brave_video_search` tool section. https://github.com/brave/brave-search-mcp-server
+[^brave-video]: GitHub README, Brave `brave_video_search` tool section. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-llm]: GitHub README, Brave `brave_llm_context` section. https://github.com/brave/brave-search-mcp-server
+[^brave-llm]: GitHub README, Brave `brave_llm_context` section. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-summarizer]: GitHub README, Brave `brave_summarizer` section. https://github.com/brave/brave-search-mcp-server
+[^brave-summarizer]: GitHub README, Brave `brave_summarizer` section. <https://github.com/brave/brave-search-mcp-server>

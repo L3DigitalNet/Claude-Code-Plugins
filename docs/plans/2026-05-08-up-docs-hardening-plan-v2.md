@@ -2807,6 +2807,7 @@ Find every example finding in the agent prompt (typically inside `<examples>` or
 
 - old: `"evidence": "ssh gmk 'grep BAO_ADDR /usr/local/bin/backup.sh' returned BAO_ADDR=100.90.121.89"`
 - new:
+
   ```json
   "evidence": {
     "command": "ssh gmk 'grep BAO_ADDR /usr/local/bin/backup.sh'",

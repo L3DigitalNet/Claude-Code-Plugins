@@ -99,25 +99,25 @@ None found.
 ### Internet research performed
 
 - Source name: Git `git-status` documentation
-- URL: https://git-scm.com/docs/git-status
+- URL: <https://git-scm.com/docs/git-status>
 - Access date: 2026-06-08
 - What it was used to verify: Porcelain status parsing, `-z`, `--no-optional-locks` context, and default untracked-file behavior.
 - Relevant conclusion: Without `--untracked-files=all`, Git’s default reports untracked files and directories, not necessarily individual files inside untracked directories.
 
 - Source name: Git `git-diff` documentation
-- URL: https://git-scm.com/docs/git-diff
+- URL: <https://git-scm.com/docs/git-diff>
 - Access date: 2026-06-08
 - What it was used to verify: `--no-index` behavior for filesystem path comparison.
 - Relevant conclusion: `--no-index` is the right family for untracked file disclosure, but the plan still needs individual file candidates.
 
 - Source name: Git documentation
-- URL: https://git-scm.com/docs/git
+- URL: <https://git-scm.com/docs/git>
 - Access date: 2026-06-08
 - What it was used to verify: `--no-optional-locks`.
 - Relevant conclusion: The helper’s use of `--no-optional-locks` remains aligned with official Git behavior.
 
 - Source name: Claude Code CLI reference
-- URL: https://code.claude.com/docs/en/cli-usage
+- URL: <https://code.claude.com/docs/en/cli-usage>
 - Access date: 2026-06-08
 - What it was used to verify: `claude -p` / `--print` non-interactive mode.
 - Relevant conclusion: The plan’s non-interactive report-only guard remains appropriate.

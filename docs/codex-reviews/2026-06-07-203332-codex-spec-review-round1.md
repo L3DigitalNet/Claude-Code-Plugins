@@ -54,7 +54,7 @@ Could not verify the historical `~188k subagent tokens + 103 tool calls` and “
 - Spec reference: §3.C, lines 108-118; risk table line 148.
 - Finding: The spec detects dirty trees only after propagation and stages propagation-written paths by explicit name. That is not enough to prevent committing pre-existing local edits in `~/projects/llm-wiki`, especially when a pre-existing dirty file is later also touched by the wiki propagator.
 - Repository evidence: `/up-docs:all` currently guards only the active project repo with `git status --porcelain` before work (`plugins/up-docs/skills/all/SKILL.md:31-44`). The wiki propagator preflight checks only that `LLM_WIKI_ROOT` exists and reads contract docs (`plugins/up-docs/agents/up-docs-propagate-wiki.md:39-44`); it has no dirty-tree baseline. `git -C /home/chris/projects/llm-wiki status --short` was clean during this audit, but the spec must be safe when it is not.
-- External research evidence: Official Claude Code hooks docs confirm `AskUserQuestion` supports multiple-choice questions with optional `multiSelect`, so the consent mechanism is plausible, but consent does not prove the staged diff is scoped correctly: https://code.claude.com/docs/en/hooks (accessed 2026-06-08).
+- External research evidence: Official Claude Code hooks docs confirm `AskUserQuestion` supports multiple-choice questions with optional `multiSelect`, so the consent mechanism is plausible, but consent does not prove the staged diff is scoped correctly: <https://code.claude.com/docs/en/hooks> (accessed 2026-06-08).
 - Why it matters: `git add -- path` stages all hunks in that path, including pre-existing user work. The user may approve “commit propagation-written paths” while the implementation silently includes unrelated edits.
 - Recommended action for Claude Code: Add a pre-propagation baseline for every repo that may be committed. For any repo or path dirty before propagation, either exclude it from the commit offer or present it as a separate explicit risk. Require after-propagation diff checks that prove selected paths were clean at baseline and were written by this run.
 - Suggested validation: Scenario test with `llm-wiki` dirty before `/up-docs:all`, including same-path dirtiness; approving the commit must not commit the pre-existing change and should refuse or require separate user approval.
@@ -108,7 +108,7 @@ Could not verify the historical `~188k subagent tokens + 103 tool calls` and “
 - Spec reference: §3.A/B/C verifiability notes and §6, lines 78-80, 99-101, 127-129, 151-156.
 - Finding: Most validation is prompt-conformance text plus one manual scenario. It does not require proving fewer Agent calls, fewer Notion calls, narrowed re-pass candidates, or safe commit behavior under negative cases.
 - Repository evidence: Existing `plugins/up-docs/tests/prompt-conformance.bats` is grep-level prompt conformance. The proposed additions follow the same pattern but do not exercise behavior.
-- External research evidence: Official Claude Code hooks docs expose Agent tool response telemetry fields such as `totalTokens` and `totalToolUseCount`, which could support a stronger measurement strategy in hooks/transcripts: https://code.claude.com/docs/en/hooks (accessed 2026-06-08).
+- External research evidence: Official Claude Code hooks docs expose Agent tool response telemetry fields such as `totalTokens` and `totalToolUseCount`, which could support a stronger measurement strategy in hooks/transcripts: <https://code.claude.com/docs/en/hooks> (accessed 2026-06-08).
 - Why it matters: The main problem is cost-to-outcome. A spec that only checks prompt wording can ship a version that still dispatches too much work or silently loses checks.
 - Recommended action for Claude Code: Add at least one behavioral/smoke validation for each change: skipped propagator call count, narrowed re-pass candidate set, and dirty-baseline commit refusal.
 - Suggested validation: Use a captured transcript or disposable plugin smoke run to assert no Notion/wiki Agent call occurs for repo-only routed items, and that the auditor receives or computes a smaller pass-N candidate set.
@@ -148,25 +148,25 @@ Could not verify the historical `~188k subagent tokens + 103 tool calls` and “
 ### Internet research performed
 
 - Source name: Claude Code Docs — Create plugins
-  - URL: https://code.claude.com/docs/en/plugins
+  - URL: <https://code.claude.com/docs/en/plugins>
   - Access date: 2026-06-08
   - What it was used to verify: Plugin component locations and plugin root structure.
   - Relevant conclusion: `agents/`, `skills/`, `hooks/`, and `.claude-plugin/plugin.json` are valid plugin-root components.
 
 - Source name: Claude Code Docs — Create custom subagents
-  - URL: https://code.claude.com/docs/en/sub-agents
+  - URL: <https://code.claude.com/docs/en/sub-agents>
   - Access date: 2026-06-08
   - What it was used to verify: Agent frontmatter, model aliases, plugin subagents, Agent/Task rename behavior.
   - Relevant conclusion: `model: haiku|sonnet|opus` and Agent tool spawning are current; `Task` was renamed to `Agent` in 2.1.63.
 
 - Source name: Claude Code Docs — Hooks reference
-  - URL: https://code.claude.com/docs/en/hooks
+  - URL: <https://code.claude.com/docs/en/hooks>
   - Access date: 2026-06-08
   - What it was used to verify: `Agent` and `AskUserQuestion` tool input shape, `multiSelect`, and Agent telemetry.
   - Relevant conclusion: `AskUserQuestion` supports multiple-choice questions with optional `multiSelect`; Agent tool responses can expose token/tool-use telemetry.
 
 - Source name: Claude Code Docs — Settings
-  - URL: https://code.claude.com/docs/en/settings
+  - URL: <https://code.claude.com/docs/en/settings>
   - Access date: 2026-06-08
   - What it was used to verify: Current permission-rule syntax.
   - Relevant conclusion: Deny/allow permission rules are current but do not affect the repository-contract findings above.

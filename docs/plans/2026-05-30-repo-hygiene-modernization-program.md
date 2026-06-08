@@ -232,10 +232,10 @@ tests/  detect-profile.bats, check-conformance.bats, fixtures/<per-harness|multi
 
 ## 12. References
 
-- Skills: https://code.claude.com/docs/en/skills (incl. `#control-who-invokes-a-skill`)
-- Plugins guide: https://code.claude.com/docs/en/plugins
-- Plugins reference: https://code.claude.com/docs/en/plugins-reference
-- Agent Skills open standard: https://agentskills.io
+- Skills: <https://code.claude.com/docs/en/skills> (incl. `#control-who-invokes-a-skill`)
+- Plugins guide: <https://code.claude.com/docs/en/plugins>
+- Plugins reference: <https://code.claude.com/docs/en/plugins-reference>
+- Agent Skills open standard: <https://agentskills.io>
 - v3 handoff spec: `~/projects/agent-configs/docs/handoff/agent-handoff-system.md`
 - Local memory: marketplace Zod-strict validation; plugin install does not pip/npm-install; `.mcp.json`/hooks gotchas (see session MEMORY.md).
 - Prior repo-hygiene artifacts: `docs/plans/2026-02-20-repo-hygiene-{design,implementation}.md`.

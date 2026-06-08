@@ -87,7 +87,7 @@ I did not run `npm`, `npx`, Prettier, markdownlint, pytest, or CI jobs because t
 - Spec reference: Lines 72-76 and 80-81.
 - Finding: Step 0 says pre-existing dirty/untracked files, including prior codex-review outputs, are left untouched. But Step 2 runs `npx prettier --write .` and `npx markdownlint-cli2 --fix "**/*.md"`, which operate on working-tree files, not just tracked files. The current repo has two untracked, non-ignored Markdown review files under `docs/codex-reviews/`, so the fix pass can rewrite them.
 - Repository evidence: `git status --short` lists `?? docs/codex-reviews/2026-06-08-024554-codex-spec-review-round1.md` and `?? docs/codex-reviews/2026-06-08-030232-codex-spec-review-round2.md`. `git ls-files -o --exclude-standard docs/codex-reviews` lists both, and `git check-ignore -v` reports no ignore match.
-- External research evidence: Prettier CLI docs state `prettier . --write` formats supported files in the current directory and subdirectories: https://prettier.io/docs/cli. markdownlint-cli2 docs state `**` matches recursively and `--fix` updates files directly with no backup: https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md. Access date: 2026-06-08.
+- External research evidence: Prettier CLI docs state `prettier . --write` formats supported files in the current directory and subdirectories: <https://prettier.io/docs/cli>. markdownlint-cli2 docs state `**` matches recursively and `--fix` updates files directly with no backup: <https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md>. Access date: 2026-06-08.
 - Why it matters: Claude Code could follow the spec, mutate user-local untracked audit artifacts, and still see no tracked `git diff` evidence unless those files are later staged. This violates the spec’s own local-work preservation rule.
 - Recommended action for Claude Code: Add a preflight gate for all dirty/untracked non-ignored supported files, not only `TODO.md`. Stop unless the user commits, removes, ignores, or explicitly approves formatting them. Alternatively, specify a tracked-file-only mechanical pass and reconcile that with the standard check contract.
 - Suggested validation: Before any write-producing fix pass, run `git status --short` and `git ls-files -o --exclude-standard`, filter for Prettier/markdownlint-supported extensions, and stop if any untracked/dirty supported file is not explicitly approved.
@@ -115,25 +115,25 @@ None found.
 ### Internet research performed
 
 - Source name: Prettier CLI documentation
-- URL: https://prettier.io/docs/cli
+- URL: <https://prettier.io/docs/cli>
 - Access date: 2026-06-08
 - What it was used to verify: `prettier . --write`, recursive supported-file discovery, and `--check` behavior.
 - Relevant conclusion: `prettier .` operates over supported working-tree files under the directory, so untracked non-ignored files are in scope.
 
 - Source name: Prettier Ignore documentation
-- URL: https://prettier.io/docs/ignore
+- URL: <https://prettier.io/docs/ignore>
 - Access date: 2026-06-08
 - What it was used to verify: `.prettierignore` syntax and `.gitignore` interaction.
 - Relevant conclusion: `.prettierignore` uses gitignore syntax; Prettier documents following the `.gitignore` file in the directory from which it is run.
 
 - Source name: Git gitignore documentation
-- URL: https://git-scm.com/docs/gitignore
+- URL: <https://git-scm.com/docs/gitignore>
 - Access date: 2026-06-08
 - What it was used to verify: negation and parent-directory exclusion rules.
 - Relevant conclusion: The revised `.vscode/*` plus negation approach is the correct shape; re-including files under an excluded parent directory would not work.
 
 - Source name: markdownlint-cli2 README
-- URL: https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md
+- URL: <https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: glob behavior, `--fix`, config discovery, and `gitignore: true`.
 - Relevant conclusion: `**/*.md` recursively matches Markdown, `--fix` writes files in place, and `gitignore: true` imports gitignore rules for linting.

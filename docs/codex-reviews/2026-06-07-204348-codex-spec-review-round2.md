@@ -139,31 +139,31 @@ None found.
 ### Internet research performed
 
 - Source name: Claude Code Docs — Hooks reference
-  - URL: https://code.claude.com/docs/en/hooks
+  - URL: <https://code.claude.com/docs/en/hooks>
   - Access date: 2026-06-08
   - What it was used to verify: `Agent` response telemetry and `AskUserQuestion` input shape.
   - Relevant conclusion: Agent responses expose `totalTokens` and `totalToolUseCount`; `AskUserQuestion` supports multiple-choice questions with optional `multiSelect`.
 
 - Source name: Claude Code Docs — CLI reference
-  - URL: https://code.claude.com/docs/en/cli-usage
+  - URL: <https://code.claude.com/docs/en/cli-usage>
   - Access date: 2026-06-08
   - What it was used to verify: `claude -p` print/non-interactive mode and prompt-tool behavior.
   - Relevant conclusion: `-p` is non-interactive print mode, and non-interactive permission prompting can be handled via `--permission-prompt-tool`; the spec’s “no consent → no commit” fallback is directionally safe.
 
 - Source name: Claude Code Docs — Create plugins
-  - URL: https://code.claude.com/docs/en/plugins
+  - URL: <https://code.claude.com/docs/en/plugins>
   - Access date: 2026-06-08
   - What it was used to verify: Plugin structure and component placement.
   - Relevant conclusion: `.claude-plugin/plugin.json` is the manifest path, and `skills/`, `commands/`, `agents/`, and hooks belong at plugin root.
 
 - Source name: Claude Code Docs — Plugins reference
-  - URL: https://code.claude.com/docs/en/plugins-reference
+  - URL: <https://code.claude.com/docs/en/plugins-reference>
   - Access date: 2026-06-08
   - What it was used to verify: Version management.
   - Relevant conclusion: Explicit `version` in `plugin.json` or marketplace entry is the update cache key, so the 0.11.0 rollout bump is necessary.
 
 - Source name: Claude Code Docs — Create custom subagents
-  - URL: https://code.claude.com/docs/en/sub-agents
+  - URL: <https://code.claude.com/docs/en/sub-agents>
   - Access date: 2026-06-08
   - What it was used to verify: Current subagent documentation availability and plugin-agent context.
   - Relevant conclusion: No conflict found with the spec’s continued use of plugin agents.

@@ -45,7 +45,7 @@
 
 - [ ] **Step 1: Inspect working-tree state**
 
-Run: `git status --short` Expected: `TODO.md` shows ` M` (the user's uncommitted Purpose/Usage restructure). The spec + codex-review files are already committed (`83a6cf9`). There should be no other dirty/untracked **supported** files.
+Run: `git status --short` Expected: `TODO.md` shows `M` (the user's uncommitted Purpose/Usage restructure). The spec + codex-review files are already committed (`83a6cf9`). There should be no other dirty/untracked **supported** files.
 
 - [ ] **Step 2: Enumerate untracked supported files (none may be silently reformatted)**
 
@@ -539,7 +539,7 @@ git commit -m "docs(markdown-tooling): agent tooling block + contract label + AD
 
 - [ ] **Step 1: Flip the TODO checkbox (hunk-isolated — never `git add TODO.md` wholesale)**
 
-In `TODO.md`, change exactly the one line: `  - [ ] Adopt markdown-tooling` → `  - [x] Adopt markdown-tooling` Leave the user's surrounding restructure untouched.
+In `TODO.md`, change exactly the one line: `- [ ] Adopt markdown-tooling` → `- [x] Adopt markdown-tooling` Leave the user's surrounding restructure untouched.
 
 - [ ] **Step 2: Stage ONLY the checkbox hunk and verify isolation**
 

@@ -140,13 +140,13 @@ None found.
 ### Internet research performed
 
 - Source name: Git documentation - git-status
-  - URL: https://git-scm.com/docs/git-status/2.24.0.html
+  - URL: <https://git-scm.com/docs/git-status/2.24.0.html>
   - Access date: 2026-06-08
   - What it was used to verify: `git status --porcelain` path/status semantics and machine parsing.
   - Relevant conclusion: Porcelain status is stable for scripts and reports path states; `-z` avoids quoting and is safer for machine parsing.
 
 - Source name: Git documentation - git-add
-  - URL: https://git-scm.com/docs/git-add
+  - URL: <https://git-scm.com/docs/git-add>
   - Access date: 2026-06-08
   - What it was used to verify: What `git add -- <path>` stages.
   - Relevant conclusion: `git add` stages the specified path contents at the time the command runs; it does not prove who produced those contents.

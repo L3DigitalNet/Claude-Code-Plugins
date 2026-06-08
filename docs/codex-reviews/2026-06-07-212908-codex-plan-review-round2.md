@@ -113,25 +113,25 @@ None found.
 ### Internet research performed
 
 - Source name: Git `git-status` documentation
-- URL: https://git-scm.com/docs/git-status
+- URL: <https://git-scm.com/docs/git-status>
 - Access date: 2026-06-08
 - What it was used to verify: Porcelain status format, untracked entry representation, and `-z` pathname handling.
 - Relevant conclusion: Porcelain v1 is parseable and untracked entries are distinct status records; `-z` is appropriate for machine path parsing.
 
 - Source name: Git `git-diff` documentation
-- URL: https://git-scm.com/docs/git-diff
+- URL: <https://git-scm.com/docs/git-diff>
 - Access date: 2026-06-08
 - What it was used to verify: What plain `git diff -- <path>` compares.
 - Relevant conclusion: Plain `git diff` compares tracked endpoints such as working tree vs index/tree; it is not sufficient as the only disclosure mechanism for untracked new-file content.
 
 - Source name: Git documentation
-- URL: https://git-scm.com/docs/git
+- URL: <https://git-scm.com/docs/git>
 - Access date: 2026-06-08
 - What it was used to verify: `--no-optional-locks` behavior.
 - Relevant conclusion: The revised helper’s use of `--no-optional-locks` matches official Git guidance.
 
 - Source name: Claude Code CLI reference / headless docs
-- URL: https://code.claude.com/docs/en/cli-usage and https://code.claude.com/docs/en/headless
+- URL: <https://code.claude.com/docs/en/cli-usage> and <https://code.claude.com/docs/en/headless>
 - Access date: 2026-06-08
 - What it was used to verify: `claude -p` / `--print` non-interactive behavior.
 - Relevant conclusion: The report-only non-interactive commit guard remains a valid plan requirement.

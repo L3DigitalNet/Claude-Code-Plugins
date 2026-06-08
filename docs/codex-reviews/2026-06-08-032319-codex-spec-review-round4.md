@@ -106,31 +106,31 @@ None found.
 ### Internet research performed
 
 - Source name: Prettier CLI documentation
-- URL: https://prettier.io/docs/cli
+- URL: <https://prettier.io/docs/cli>
 - Access date: 2026-06-08
 - What it was used to verify: `prettier . --write`, recursive supported-file discovery, `--check`, and exit codes.
 - Relevant conclusion: `prettier . --write` formats supported files under the current directory and rewrites them in place.
 
 - Source name: Prettier Ignore documentation
-- URL: https://prettier.io/docs/ignore
+- URL: <https://prettier.io/docs/ignore>
 - Access date: 2026-06-08
 - What it was used to verify: `.prettierignore` syntax and `.gitignore` interaction.
 - Relevant conclusion: `.prettierignore` uses gitignore syntax; Prettier follows `.gitignore` in the directory from which it is run.
 
 - Source name: Git gitignore documentation
-- URL: https://git-scm.com/docs/gitignore
+- URL: <https://git-scm.com/docs/gitignore>
 - Access date: 2026-06-08
 - What it was used to verify: tracked ignored files, nested `.gitignore` behavior, and negation rules.
 - Relevant conclusion: Git checks `.gitignore` files from the path’s directory up to the worktree root, but already tracked files are not affected by ignore status.
 
 - Source name: markdownlint-cli2 README
-- URL: https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md
+- URL: <https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: glob behavior, `--fix`, config discovery, and `gitignore: true`.
 - Relevant conclusion: `**/*.md` is recursive, `--fix` writes files directly, and `gitignore: true` uses `.gitignore` files in the tree and up to the repository root.
 
 - Source name: markdownlint-cli2-action README / action metadata
-- URL: https://github.com/DavidAnson/markdownlint-cli2-action/blob/main/README.md and https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2-action/main/action.yml
+- URL: <https://github.com/DavidAnson/markdownlint-cli2-action/blob/main/README.md> and <https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2-action/main/action.yml>
 - Access date: 2026-06-08
 - What it was used to verify: action inputs, recursive glob override, `@v23` examples, and Node runtime.
 - Relevant conclusion: The action defaults to non-recursive `*.{md,markdown}` unless `globs: '**/*.md'` is passed; current metadata uses `node24`.

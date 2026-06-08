@@ -622,38 +622,8 @@ Do not keep researching this abstractly. The architecture is now research-inform
 
 # Sources
 
-[^context7-overview]: Context7 Docs, “Intro.” https://context7.com/docs/overview
+[^context7-overview]: Context7 Docs, “Intro.” <https://context7.com/docs/overview>
 
-[^context7-refresh]: Context7 Docs, “Keeping Libraries Fresh.” https://context7.com/docs/library-updates
+[^context7-refresh]: Context7 Docs, “Keeping Libraries Fresh.” <https://context7.com/docs/library-updates>
 
-[^context7-api]: Context7 Docs, “API Guide.” https://context7.com/docs/api-guide
-
-[^context7-privacy]: Context7 Docs, “Data Privacy.” https://context7.com/docs/security/data-privacy
-
-[^context7-safety]: Context7 Docs, “Data Safety.” https://context7.com/docs/security/data-safety
-
-[^context7-pricing]: Context7 Pricing & Plans. https://context7.com/plans
-
-[^tavily-privacy]: Tavily Privacy Policy, last updated 2025-11-24. https://www.tavily.com/privacy
-
-[^brave-api]: Brave Search API product page. https://brave.com/search/api/
-
-[^brave-api-security]: Brave Search API security documentation. https://api-dashboard.search.brave.com/documentation/resources/security
-
-[^brave-zdr]: Brave Search API Zero Data Retention announcement, 2026-01-26. https://brave.com/blog/search-api-zero-data-retention/
-
-[^brave-api-terms]: Brave Search API Terms of Use, last updated 2026-02-11. https://api-dashboard.search.brave.com/documentation/resources/terms-of-service
-
-[^brave-search-privacy]: Brave Search privacy notice. https://search.brave.com/help/privacy-policy
-
-[^brave-mcp]: Brave Search MCP Server README. https://github.com/brave/brave-search-mcp-server
-
-[^serper-privacy]: Serper Privacy Policy, last reviewed 2025-11-05. https://serper.dev/privacy
-
-[^serper-terms]: Serper Terms of Service, updated 2024-05-29. https://serper.dev/terms
-
-[^serper-mcp]: `marcopesani/mcp-server-serper` README. https://github.com/marcopesani/mcp-server-serper
-
-[^tavily-search]: Tavily Search API docs. https://docs.tavily.com/documentation/api-reference/endpoint/search
-
-[^tavily-extract]: Tavily Extract API docs. https://docs.tavily.com/documentation/api-reference/endpoint/extract
+[^context7-api]: Context7 Docs, “API Guide.” <https://context7.com/docs/api-guide>

@@ -28,9 +28,11 @@ See `ha-deprecation-fixes` for 2024–2025 deprecation patterns with before/afte
 1. Check the [Home Assistant Developer Blog](https://developers.home-assistant.io/blog/) for breaking changes
 2. Search for deprecated imports in your code
 3. Run `check-patterns.py` to detect common issues:
+
    ```bash
    python3 scripts/check-patterns.py custom_components/my_integration/
    ```
+
 4. Update minimum HA version in `hacs.json`
 5. Test against target HA version
 

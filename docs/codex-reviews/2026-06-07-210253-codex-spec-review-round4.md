@@ -61,25 +61,25 @@ None found.
 ### Internet research performed
 
 - Source name: Git documentation — git-status
-- URL: https://git-scm.com/docs/git-status
+- URL: <https://git-scm.com/docs/git-status>
 - Access date: 2026-06-08
 - What it was used to verify: `git status --porcelain=v1 -z` parsing semantics and whether status output proves changed paths rather than process ownership.
 - Relevant conclusion: Porcelain status is stable for scripts; `-z` uses NUL-delimited entries. It reports path state, not who changed the path.
 
 - Source name: Git documentation — git-add
-- URL: https://git-scm.com/docs/git-add
+- URL: <https://git-scm.com/docs/git-add>
 - Access date: 2026-06-08
 - What it was used to verify: Safe staging of selected pathspecs.
 - Relevant conclusion: Git supports `--pathspec-from-file` and `--pathspec-file-nul`; staging selected current contents still does not prove authorship.
 
 - Source name: Git documentation — git-diff
-- URL: https://git-scm.com/docs/git-diff
+- URL: <https://git-scm.com/docs/git-diff>
 - Access date: 2026-06-08
 - What it was used to verify: Difference between full diff output and summary/stat output.
 - Relevant conclusion: Summary/stat forms are condensed; implementation should ensure the user gets enough per-path diff disclosure to approve safely.
 
 - Source name: Claude Code CLI reference
-- URL: https://code.claude.com/docs/en/cli-usage
+- URL: <https://code.claude.com/docs/en/cli-usage>
 - Access date: 2026-06-08
 - What it was used to verify: `-p` / `--print` non-interactive mode.
 - Relevant conclusion: `claude -p` is a non-interactive SDK-style invocation, so D10’s “no consent, no commit” rule is appropriate.

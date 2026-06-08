@@ -43,7 +43,7 @@
 
 - [ ] **Step 1: Confirm no TRACKED changes + current version**
 
-Run: `git status --porcelain && grep '"version"' plugins/up-docs/.claude-plugin/plugin.json` Expected: `"version": "0.10.1"`. The tree may contain **pre-existing user-owned untracked files** (e.g. `?? TODO.md`) — these are OUT OF SCOPE: never stage, move, or delete them. Require only that there are no _tracked_ modifications (` M`/`A `/`D ` lines). Every task below stages only explicitly-named files, so untracked user files are never swept (CR-001/CR-004 missing-consideration).
+Run: `git status --porcelain && grep '"version"' plugins/up-docs/.claude-plugin/plugin.json` Expected: `"version": "0.10.1"`. The tree may contain **pre-existing user-owned untracked files** (e.g. `?? TODO.md`) — these are OUT OF SCOPE: never stage, move, or delete them. Require only that there are no _tracked_ modifications (`M`/`A`/`D` lines). Every task below stages only explicitly-named files, so untracked user files are never swept (CR-001/CR-004 missing-consideration).
 
 - [ ] **Step 2: Confirm the existing suites are green before changing anything**
 

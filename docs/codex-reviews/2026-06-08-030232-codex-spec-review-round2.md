@@ -73,7 +73,7 @@ I did not run `npx`, `npm`, Prettier, markdownlint, pytest, or CI jobs because t
 - Spec reference: Lines 58, 60, 77-78, 97, 118.
 - Finding: The spec proposes `.prettierignore` content like `**/*.{ts,tsx,js,jsx,mjs,cjs}`. Prettier documents `.prettierignore` as using gitignore syntax, while Git’s pattern format documents `*`, `?`, ranges, and special `**`, not brace expansion. Brace alternation is documented for markdownlint/globby command globs and Prettier command-line glob examples, but that is not the same syntax as `.prettierignore`.
 - Repository evidence: There are 27 tracked `.ts`/`.js`/`.mjs`/`.cjs` files, including `plugins/home-assistant-dev/mcp-server/dist/server.bundle.cjs`. These are exactly the files D5 says must remain untouched.
-- External research evidence: Prettier ignore docs state `.prettierignore` uses gitignore syntax: https://prettier.io/docs/ignore. Git gitignore docs define the supported pattern format without brace expansion: https://git-scm.com/docs/gitignore.
+- External research evidence: Prettier ignore docs state `.prettierignore` uses gitignore syntax: <https://prettier.io/docs/ignore>. Git gitignore docs define the supported pattern format without brace expansion: <https://git-scm.com/docs/gitignore>.
 - Why it matters: Claude could implement the spec as written, run `npx prettier --write .`, and still format the JS/TS/CJS files D5 claims are out of scope. That reopens the original blast-radius problem and could create a large MCP server diff without requiring MCP validation.
 - Recommended action for Claude Code: Replace the brace pattern with explicit gitignore-compatible patterns, for example one extension per line, and keep the `dist/` rule precise. Also state that this is a repo-specific exception to the standard if JS/TS/CJS remain excluded.
 - Suggested validation: After implementation, run the fix pass, then verify `git diff --name-only` contains no `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, or `.cjs` files. If any appear, stop and correct `.prettierignore` before continuing.
@@ -112,25 +112,25 @@ None found.
 ### Internet research performed
 
 - Source name: Prettier CLI documentation
-- URL: https://prettier.io/docs/cli
+- URL: <https://prettier.io/docs/cli>
 - Access date: 2026-06-08
 - What it was used to verify: `prettier .` directory traversal, supported-file discovery, default ignore files, and `--check`.
 - Relevant conclusion: `prettier .` recursively finds supported files and uses ignore files; exclusions must be correctly expressed.
 
 - Source name: Prettier Ignore documentation
-- URL: https://prettier.io/docs/ignore
+- URL: <https://prettier.io/docs/ignore>
 - Access date: 2026-06-08
 - What it was used to verify: `.prettierignore` syntax and ignore behavior.
 - Relevant conclusion: `.prettierignore` uses gitignore syntax, not command-line globby brace syntax.
 
 - Source name: Git gitignore documentation
-- URL: https://git-scm.com/docs/gitignore
+- URL: <https://git-scm.com/docs/gitignore>
 - Access date: 2026-06-08
 - What it was used to verify: Git ignore negation and pattern grammar.
 - Relevant conclusion: Files cannot be re-included while the parent directory remains excluded; gitignore pattern syntax does not document brace expansion.
 
 - Source name: markdownlint-cli2 README
-- URL: https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md
+- URL: <https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: glob syntax, `gitignore` behavior, and exit codes.
 - Relevant conclusion: markdownlint-cli2 supports brace globs on the command line, but its `gitignore: true` setting imports gitignore files and can skip ignored tracked paths.

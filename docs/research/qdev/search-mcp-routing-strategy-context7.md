@@ -600,62 +600,60 @@ If docs/API usage: Context7 first. If web research: Tavily/Brave/Serper accordin
 
 ## Sources
 
-[^context7-overview]: Context7 Docs, Intro, “Context7 brings up-to-date, version-specific documentation and code examples directly into your AI coding assistant.” https://context7.com/docs/overview
+[^context7-overview]: Context7 Docs, Intro, “Context7 brings up-to-date, version-specific documentation and code examples directly into your AI coding assistant.” <https://context7.com/docs/overview>
 
-[^context7-github]: GitHub, `upstash/context7`, repository metadata, README, stars/forks/commits/releases, and project description. https://github.com/upstash/context7
+[^context7-github]: GitHub, `upstash/context7`, repository metadata, README, stars/forks/commits/releases, and project description. <https://github.com/upstash/context7>
 
-[^context7-source]: GitHub raw source, `upstash/context7/packages/mcp/src/index.ts`, MCP server instructions and registered tools `resolve-library-id` and `query-docs`. https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/src/index.ts
+[^context7-source]: GitHub raw source, `upstash/context7/packages/mcp/src/index.ts`, MCP server instructions and registered tools `resolve-library-id` and `query-docs`. <https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/src/index.ts>
 
-[^context7-package]: GitHub raw source, `upstash/context7/packages/mcp/package.json`, package metadata for `@upstash/context7-mcp`. https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/package.json
+[^context7-package]: GitHub raw source, `upstash/context7/packages/mcp/package.json`, package metadata for `@upstash/context7-mcp`. <https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/package.json>
 
-[^context7-serverjson]: GitHub raw source, `upstash/context7/server.json`, MCP registry metadata, package/remotes, and environment variables. https://raw.githubusercontent.com/upstash/context7/master/server.json
+[^context7-serverjson]: GitHub raw source, `upstash/context7/server.json`, MCP registry metadata, package/remotes, and environment variables. <https://raw.githubusercontent.com/upstash/context7/master/server.json>
 
-[^context7-mcp-readme-install]: GitHub raw README, `upstash/context7/packages/mcp/README.md`, installation, Claude Code, Codex, remote/local, CLI flags, and API key notes. https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/README.md
+[^context7-mcp-readme-install]: GitHub raw README, `upstash/context7/packages/mcp/README.md`, installation, Claude Code, Codex, remote/local, CLI flags, and API key notes. <https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/README.md>
 
-[^context7-mcp-readme-tools]: GitHub raw README, `upstash/context7/packages/mcp/README.md`, Available Tools section listing `resolve-library-id` and `get-library-docs`. https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/README.md
+[^context7-mcp-readme-tools]: GitHub raw README, `upstash/context7/packages/mcp/README.md`, Available Tools section listing `resolve-library-id` and `get-library-docs`. <https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/README.md>
 
-[^context7-mcp-readme-disclaimer]: GitHub raw README, `upstash/context7/packages/mcp/README.md`, disclaimer that projects are community-contributed and supporting backend/parsing/crawling engines are private. https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/README.md
+[^context7-mcp-readme-disclaimer]: GitHub raw README, `upstash/context7/packages/mcp/README.md`, disclaimer that projects are community-contributed and supporting backend/parsing/crawling engines are private. <https://raw.githubusercontent.com/upstash/context7/master/packages/mcp/README.md>
 
-[^context7-cli]: Context7 Docs, CLI page, `ctx7 library` and `ctx7 docs` two-step workflow, result fields, version IDs, setup modes, authentication, and telemetry. https://context7.com/docs/clients/cli
+[^context7-cli]: Context7 Docs, CLI page, `ctx7 library` and `ctx7 docs` two-step workflow, result fields, version IDs, setup modes, authentication, and telemetry. <https://context7.com/docs/clients/cli>
 
-[^context7-api-guide]: Context7 Docs, API Guide, authentication, API methods, library ID formats, version pinning, workflow example, rate limits, and error handling. https://context7.com/docs/api-guide
+[^context7-api-guide]: Context7 Docs, API Guide, authentication, API methods, library ID formats, version pinning, workflow example, rate limits, and error handling. <https://context7.com/docs/api-guide>
 
-[^context7-api-best-practices]: Context7 Docs, API Guide, best practices for specific natural-language queries, caching, rate-limit handling, and version pinning. https://context7.com/docs/api-guide
+[^context7-api-best-practices]: Context7 Docs, API Guide, best practices for specific natural-language queries, caching, rate-limit handling, and version pinning. <https://context7.com/docs/api-guide>
 
-[^context7-library-owners]: Context7 Docs, Library Owners, `context7.json`, configuration fields, defaults, exclusions, previous versions, and source submission. https://context7.com/docs/adding-libraries
+[^context7-library-owners]: Context7 Docs, Library Owners, `context7.json`, configuration fields, defaults, exclusions, previous versions, and source submission. <https://context7.com/docs/adding-libraries>
 
-[^context7-freshness]: Context7 Docs, Keeping Libraries Fresh, automatic refresh thresholds and behavior. https://context7.com/docs/library-updates
+[^context7-freshness]: Context7 Docs, Keeping Libraries Fresh, automatic refresh thresholds and behavior. <https://context7.com/docs/library-updates>
 
-[^context7-privacy]: Context7 Docs, Data Privacy, query privacy, what is sent to Context7, query use for reranking/benchmarking, enterprise controls, retrieval scope, and data storage. https://context7.com/docs/security/data-privacy
+[^context7-privacy]: Context7 Docs, Data Privacy, query privacy, what is sent to Context7, query use for reranking/benchmarking, enterprise controls, retrieval scope, and data storage. <https://context7.com/docs/security/data-privacy>
 
-[^context7-safety]: Context7 Docs, Data Safety, prompt-injection and malware-pattern detection. https://context7.com/docs/security/data-safety
+[^context7-pricing]: Context7 Pricing & Plans, Free/Pro/Enterprise limits, private repo parsing costs, privacy FAQ, and enterprise/self-hosting notes. <https://context7.com/plans>
 
-[^context7-pricing]: Context7 Pricing & Plans, Free/Pro/Enterprise limits, private repo parsing costs, privacy FAQ, and enterprise/self-hosting notes. https://context7.com/plans
+[^tavily-readme]: GitHub README, `tavily-ai/tavily-mcp`, tool summary and setup sections. <https://github.com/tavily-ai/tavily-mcp>
 
-[^tavily-readme]: GitHub README, `tavily-ai/tavily-mcp`, tool summary and setup sections. https://github.com/tavily-ai/tavily-mcp
+[^tavily-docs]: Tavily Docs, Tavily MCP Server documentation, remote/local setup, OAuth, defaults, and examples. <https://docs.tavily.com/documentation/mcp>
 
-[^tavily-docs]: Tavily Docs, Tavily MCP Server documentation, remote/local setup, OAuth, defaults, and examples. https://docs.tavily.com/documentation/mcp
+[^tavily-source]: GitHub raw source, `tavily-ai/tavily-mcp/src/index.ts`, current MCP tool definitions. <https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/src/index.ts>
 
-[^tavily-source]: GitHub raw source, `tavily-ai/tavily-mcp/src/index.ts`, current MCP tool definitions. https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/src/index.ts
+[^tavily-package]: GitHub raw source, `tavily-ai/tavily-mcp/package.json`, package metadata. <https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/package.json>
 
-[^tavily-package]: GitHub raw source, `tavily-ai/tavily-mcp/package.json`, package metadata. https://raw.githubusercontent.com/tavily-ai/tavily-mcp/main/package.json
+[^tavily-search-depth]: Tavily Search API docs, `search_depth` behavior. <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 
-[^tavily-search-depth]: Tavily Search API docs, `search_depth` behavior. https://docs.tavily.com/documentation/api-reference/endpoint/search
+[^tavily-research]: Tavily Research API docs, research task endpoint and model options. <https://docs.tavily.com/documentation/api-reference/endpoint/research>
 
-[^tavily-research]: Tavily Research API docs, research task endpoint and model options. https://docs.tavily.com/documentation/api-reference/endpoint/research
+[^brave-repo]: GitHub, `brave/brave-search-mcp-server`, repository metadata and release panel. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-repo]: GitHub, `brave/brave-search-mcp-server`, repository metadata and release panel. https://github.com/brave/brave-search-mcp-server
+[^brave-readme]: GitHub README, `brave/brave-search-mcp-server`, project description, migration notes, transport defaults, and tools list. <https://github.com/brave/brave-search-mcp-server>
 
-[^brave-readme]: GitHub README, `brave/brave-search-mcp-server`, project description, migration notes, transport defaults, and tools list. https://github.com/brave/brave-search-mcp-server
+[^brave-package]: GitHub raw source, `brave/brave-search-mcp-server/package.json`, package metadata. <https://raw.githubusercontent.com/brave/brave-search-mcp-server/main/package.json>
 
-[^brave-package]: GitHub raw source, `brave/brave-search-mcp-server/package.json`, package metadata. https://raw.githubusercontent.com/brave/brave-search-mcp-server/main/package.json
+[^brave-api]: Brave Search API product page, independent index, plans, endpoint categories, index size/freshness, and special features. <https://brave.com/search/api/>
 
-[^brave-api]: Brave Search API product page, independent index, plans, endpoint categories, index size/freshness, and special features. https://brave.com/search/api/
+[^serper-repo]: GitHub, `marcopesani/mcp-server-serper`, repository metadata showing stars, forks, commits, and no releases. <https://github.com/marcopesani/mcp-server-serper>
 
-[^serper-repo]: GitHub, `marcopesani/mcp-server-serper`, repository metadata showing stars, forks, commits, and no releases. https://github.com/marcopesani/mcp-server-serper
+[^serper-readme]: GitHub README, `marcopesani/mcp-server-serper`, tools and installation sections. <https://github.com/marcopesani/mcp-server-serper>
 
-[^serper-readme]: GitHub README, `marcopesani/mcp-server-serper`, tools and installation sections. https://github.com/marcopesani/mcp-server-serper
+[^serper-source]: GitHub raw source, `marcopesani/mcp-server-serper/src/index.ts`, tool schemas for `google_search` and `scrape`. <https://raw.githubusercontent.com/marcopesani/mcp-server-serper/main/src/index.ts>
 
-[^serper-source]: GitHub raw source, `marcopesani/mcp-server-serper/src/index.ts`, tool schemas for `google_search` and `scrape`. https://raw.githubusercontent.com/marcopesani/mcp-server-serper/main/src/index.ts
-
-[^serper-api]: Serper homepage, advertised Google Search API speed and endpoint categories. https://serper.dev/
+[^serper-api]: Serper homepage, advertised Google Search API speed and endpoint categories. <https://serper.dev/>

@@ -1,10 +1,10 @@
 # Mode 5: Dry Run
 
-# Loaded by the release command router after the user selects "Dry Run".
+# Loaded by the release command router after the user selects "Dry Run"
 
-# Context variables from Phase 0 are available: suggested_version, feat_count, fix_count,
+# Context variables from Phase 0 are available: suggested_version, feat_count, fix_count
 
-# other_count, last_tag, is_monorepo, unreleased_plugins.
+# other_count, last_tag, is_monorepo, unreleased_plugins
 
 Simulates a Full Release without committing, tagging, or pushing. Uses --dry-run and --preview flags that prevent file writes — no mutations occur and no revert step is needed.
 

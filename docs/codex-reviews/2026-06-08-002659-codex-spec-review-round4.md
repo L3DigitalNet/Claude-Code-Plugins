@@ -101,19 +101,19 @@ None found.
 ### Internet research performed
 
 - Source name: Claude Code skills documentation
-- URL: https://code.claude.com/docs/en/skills
+- URL: <https://code.claude.com/docs/en/skills>
 - Access date: 2026-06-08
 - What it was used to verify: Skill layout, `SKILL.md`, personal/project/plugin skill paths, automatic invocation, and `allowed-tools`.
 - Relevant conclusion: `~/.claude/skills/<skill-name>/SKILL.md` is a valid Claude Code personal skill location; `description` drives automatic loading; `allowed-tools` grants permission while active but does not restrict all other tools.
 
 - Source name: Claude Code MCP documentation
-- URL: https://code.claude.com/docs/en/agent-sdk/mcp
+- URL: <https://code.claude.com/docs/en/agent-sdk/mcp>
 - Access date: 2026-06-08
 - What it was used to verify: MCP tool naming and permission behavior.
 - Relevant conclusion: MCP tools use `mcp__<server-name>__<tool-name>` naming, so local server names remain the relevant source for concrete Claude Code tool prefixes.
 
 - Source name: Tavily Search API documentation
-- URL: https://docs.tavily.com/documentation/api-reference/endpoint/search
+- URL: <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 - Access date: 2026-06-08
 - What it was used to verify: External Tavily `topic` options and raw-content behavior.
 - Relevant conclusion: Official Tavily API supports `general`, `news`, and `finance`, but the local MCP schema exposed here remains narrower; the spec is correct to defer to installed schema.

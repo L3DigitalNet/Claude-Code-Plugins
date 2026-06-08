@@ -99,19 +99,19 @@ SA-001 regressed: although the locked decision and Part B now specify `.claude/`
 ### Internet research performed
 
 - Source name: Claude Code skills documentation
-- URL: https://docs.claude.com/en/docs/claude-code/skills
+- URL: <https://docs.claude.com/en/docs/claude-code/skills>
 - Access date: 2026-06-08
 - What it was used to verify: Skill layout, `SKILL.md`, direct/model invocation, and `allowed-tools` behavior.
 - Relevant conclusion: Claude Code skills load from `~/.claude/skills/<name>/SKILL.md` or project `.claude/skills/<name>/SKILL.md`; description drives automatic use, and `allowed-tools` grants permission but does not restrict all other tools.
 
 - Source name: Claude Code tools reference
-- URL: https://code.claude.com/docs/en/tools-reference
+- URL: <https://code.claude.com/docs/en/tools-reference>
 - Access date: 2026-06-08
 - What it was used to verify: Tool-name authority and MCP custom-tool relationship.
 - Relevant conclusion: Tool names are exact strings used in permissions/subagent tool lists; environment-specific MCP metadata remains the right authority.
 
 - Source name: Tavily Search API documentation
-- URL: https://docs.tavily.com/documentation/api-reference/endpoint/search
+- URL: <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 - Access date: 2026-06-08
 - What it was used to verify: External Tavily `topic` options.
 - Relevant conclusion: Official API supports `general`, `news`, and `finance`, but the installed local MCP schema may be narrower; the spec is correct to defer to installed schema.

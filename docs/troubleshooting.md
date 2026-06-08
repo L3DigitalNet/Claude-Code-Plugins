@@ -663,7 +663,7 @@ claude diagnose > diagnostic-report.txt
 - Error messages
 - Diagnostic output
 
-**File at:** GitHub Issues or support@anthropic.com
+**File at:** GitHub Issues or <support@anthropic.com>
 
 ### Configuration Locations
 

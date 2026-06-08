@@ -631,44 +631,44 @@ Make prompt-injection handling part of the skill/subagent system prompt, not an 
 
 ## Source Notes
 
-[^claude-skills-overview]: Anthropic Claude Code Docs, “Extend Claude with skills,” overview and getting started. https://code.claude.com/docs/en/skills
+[^claude-skills-overview]: Anthropic Claude Code Docs, “Extend Claude with skills,” overview and getting started. <https://code.claude.com/docs/en/skills>
 
-[^claude-skills-frontmatter]: Anthropic Claude Code Docs, skills frontmatter reference. https://code.claude.com/docs/en/skills
+[^claude-skills-frontmatter]: Anthropic Claude Code Docs, skills frontmatter reference. <https://code.claude.com/docs/en/skills>
 
-[^claude-skills-troubleshooting]: Anthropic Claude Code Docs, skills troubleshooting: not triggering, triggers too often, descriptions cut short. https://code.claude.com/docs/en/skills
+[^claude-skills-troubleshooting]: Anthropic Claude Code Docs, skills troubleshooting: not triggering, triggers too often, descriptions cut short. <https://code.claude.com/docs/en/skills>
 
-[^claude-skills-dynamic-context]: Anthropic Claude Code Docs, dynamic context injection in skills. https://code.claude.com/docs/en/skills
+[^claude-skills-dynamic-context]: Anthropic Claude Code Docs, dynamic context injection in skills. <https://code.claude.com/docs/en/skills>
 
-[^claude-skills-fork]: Anthropic Claude Code Docs, `context: fork` skill execution and research skill pattern. https://code.claude.com/docs/en/skills
+[^claude-skills-fork]: Anthropic Claude Code Docs, `context: fork` skill execution and research skill pattern. <https://code.claude.com/docs/en/skills>
 
-[^claude-subagent-tools]: Anthropic Claude Code Docs, subagent tool availability and unavailable UI/session tools. https://code.claude.com/docs/en/sub-agents
+[^claude-subagent-tools]: Anthropic Claude Code Docs, subagent tool availability and unavailable UI/session tools. <https://code.claude.com/docs/en/sub-agents>
 
-[^claude-subagent-spawn]: Anthropic Claude Code Docs, restricting which subagents can be spawned with `Agent(agent_type)`. https://code.claude.com/docs/en/sub-agents
+[^claude-subagent-spawn]: Anthropic Claude Code Docs, restricting which subagents can be spawned with `Agent(agent_type)`. <https://code.claude.com/docs/en/sub-agents>
 
-[^claude-mcp-manage]: Anthropic Claude Code Docs, managing MCP servers with `claude mcp list`, `claude mcp get`, and `/mcp`. https://code.claude.com/docs/en/mcp
+[^claude-mcp-manage]: Anthropic Claude Code Docs, managing MCP servers with `claude mcp list`, `claude mcp get`, and `/mcp`. <https://code.claude.com/docs/en/mcp>
 
-[^claude-mcp-list-changed]: Anthropic Claude Code Docs, dynamic MCP `list_changed` updates. https://code.claude.com/docs/en/mcp
+[^claude-mcp-list-changed]: Anthropic Claude Code Docs, dynamic MCP `list_changed` updates. <https://code.claude.com/docs/en/mcp>
 
-[^claude-mcp-output-limits]: Anthropic Claude Code Docs, MCP output warning threshold and limits. https://code.claude.com/docs/en/mcp
+[^claude-mcp-output-limits]: Anthropic Claude Code Docs, MCP output warning threshold and limits. <https://code.claude.com/docs/en/mcp>
 
-[^claude-mcp-tool-search]: Anthropic Claude Code Docs, MCP Tool Search. https://code.claude.com/docs/en/mcp
+[^claude-mcp-tool-search]: Anthropic Claude Code Docs, MCP Tool Search. <https://code.claude.com/docs/en/mcp>
 
-[^brave-mcp-readme]: Brave Search MCP Server README. https://github.com/brave/brave-search-mcp-server
+[^brave-mcp-readme]: Brave Search MCP Server README. <https://github.com/brave/brave-search-mcp-server>
 
-[^opencode-agents]: OpenCode Docs, Agents. https://opencode.ai/docs/agents/
+[^opencode-agents]: OpenCode Docs, Agents. <https://opencode.ai/docs/agents/>
 
-[^opencode-scout]: OpenCode Docs, Scout subagent. https://opencode.ai/docs/agents/
+[^opencode-scout]: OpenCode Docs, Scout subagent. <https://opencode.ai/docs/agents/>
 
-[^opencode-auto-subagents]: OpenCode Docs, automatic subagent invocation by description. https://opencode.ai/docs/agents/
+[^opencode-auto-subagents]: OpenCode Docs, automatic subagent invocation by description. <https://opencode.ai/docs/agents/>
 
-[^owasp-llm01]: OWASP GenAI Security Project, LLM01:2025 Prompt Injection. https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+[^owasp-llm01]: OWASP GenAI Security Project, LLM01:2025 Prompt Injection. <https://genai.owasp.org/llmrisk/llm01-prompt-injection/>
 
-[^owasp-cheatsheet]: OWASP Cheat Sheet Series, LLM Prompt Injection Prevention. https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html
+[^owasp-cheatsheet]: OWASP Cheat Sheet Series, LLM Prompt Injection Prevention. <https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html>
 
-[^mcp-prompt-injection-study]: Huang et al., “Are AI-assisted Development Tools Immune to Prompt Injection?” arXiv, 2026. https://arxiv.org/abs/2603.21642
+[^mcp-prompt-injection-study]: Huang et al., “Are AI-assisted Development Tools Immune to Prompt Injection?” arXiv, 2026. <https://arxiv.org/abs/2603.21642>
 
-[^iterinject]: Chen et al., “IterInject: Indirect Prompt Injection Against LLM Agents via Feedback-Guided Iterative Optimization,” arXiv, 2026. https://arxiv.org/abs/2605.24659
+[^iterinject]: Chen et al., “IterInject: Indirect Prompt Injection Against LLM Agents via Feedback-Guided Iterative Optimization,” arXiv, 2026. <https://arxiv.org/abs/2605.24659>
 
-[^skillmd-supply-chain]: Saha et al., “Under the Hood of SKILL.md: Semantic Supply-chain Attacks on AI Agent Skill Registry,” arXiv, 2026. https://arxiv.org/abs/2605.11418
+[^skillmd-supply-chain]: Saha et al., “Under the Hood of SKILL.md: Semantic Supply-chain Attacks on AI Agent Skill Registry,” arXiv, 2026. <https://arxiv.org/abs/2605.11418>
 
-[^llamaindex-doc-mgmt]: LlamaIndex Developer Documentation, Document Management. https://developers.llamaindex.ai/python/framework/module_guides/indexing/document_management/
+[^llamaindex-doc-mgmt]: LlamaIndex Developer Documentation, Document Management. <https://developers.llamaindex.ai/python/framework/module_guides/indexing/document_management/>

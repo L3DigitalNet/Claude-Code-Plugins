@@ -1,10 +1,10 @@
 # Mode 4: Release Status
 
-# Loaded by the release command router after the user selects "Release Status".
+# Loaded by the release command router after the user selects "Release Status"
 
-# Context variables from Phase 0 are available: current_branch, last_tag, commit_count,
+# Context variables from Phase 0 are available: current_branch, last_tag, commit_count
 
-# suggested_version, feat_count, fix_count, other_count, is_dirty, is_monorepo, unreleased_plugins.
+# suggested_version, feat_count, fix_count, other_count, is_dirty, is_monorepo, unreleased_plugins
 
 Shows the current release state without making any changes.
 

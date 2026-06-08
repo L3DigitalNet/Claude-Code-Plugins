@@ -82,13 +82,13 @@ None found.
 ### Internet research performed
 
 - Source name: Claude Code Docs — Extend Claude with skills
-- URL: https://code.claude.com/docs/en/skills
+- URL: <https://code.claude.com/docs/en/skills>
 - Access date: 2026-06-08
 - What it was used to verify: Claude Code skill directory layout, `SKILL.md` frontmatter, model invocation control, and `.claude/skills` loading.
 - Relevant conclusion: The planned Claude-only `SKILL.md` shape is compatible; omitting `disable-model-invocation` is consistent with a model-invocable skill.
 
 - Source name: Claude Code Docs — Connect Claude Code to tools via MCP
-- URL: https://docs.anthropic.com/en/docs/claude-code/mcp
+- URL: <https://docs.anthropic.com/en/docs/claude-code/mcp>
 - Access date: 2026-06-08
 - What it was used to verify: MCP ToolSearch behavior and the need to discover deferred MCP tools from the live session.
 - Relevant conclusion: ToolSearch is enabled by default in Claude Code and discovers deferred MCP tools on demand, so the plan’s B1 live-schema recheck is appropriate.

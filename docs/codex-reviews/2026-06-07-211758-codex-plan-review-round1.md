@@ -38,7 +38,7 @@ I did not run the bats/pytest suites because this audit is read-only and those s
 - Plan reference: Task 5 Step 3, especially lines 573-583; design §3C lines 104-110.
 - Finding: The plan discloses a diff, asks for approval, then late re-checks only the candidate set/path presence before staging. If an approved file’s content changes after disclosure but remains dirty under the same path, the path set is unchanged and the plan can stage undisclosed content.
 - Repository evidence: The proposed `commit-candidates.sh` surfaces paths only, not content hashes or diff fingerprints. Task 5’s prompt says to re-run candidates and re-confirm only when an approved path is gone or unexpected new paths appear.
-- External research evidence: Git status porcelain is path/status oriented; Git docs describe `git status` as showing paths that differ from HEAD/index/worktree, not an immutable approved diff. Source: https://git-scm.com/docs/git-status, accessed 2026-06-08.
+- External research evidence: Git status porcelain is path/status oriented; Git docs describe `git status` as showing paths that differ from HEAD/index/worktree, not an immutable approved diff. Source: <https://git-scm.com/docs/git-status>, accessed 2026-06-08.
 - Why it matters: This breaks the plan’s core “consent-gated” safety claim and can commit unrelated or malicious same-path changes made between approval and staging.
 - Recommended action for Claude Code: Revise the plan to capture the exact offered diff or blob/index/worktree fingerprint per candidate at disclosure time, then compare it immediately before staging. If the diff changed, re-disclose and ask again.
 - Suggested validation: Add a commit-offer test/smoke scenario where a candidate path is approved, then modified again before staging; expected behavior is re-disclosure and no blind staging.
@@ -66,7 +66,7 @@ I did not run the bats/pytest suites because this audit is read-only and those s
 - Plan reference: Task 2 lines 200-211, Task 3 lines 270-288 and 338-340, Task 5 lines 523-545; self-review line 685.
 - Finding: The design requires behavioral checks for A1 narrowing, B routing fixtures, and C headless/commit safety. The plan mostly adds grep-level prompt-conformance checks plus one manual note. Those checks prove strings exist, not that routing/narrowing/commit behavior works.
 - Repository evidence: `prompt-conformance.bats` currently contains grep guards only. No planned routing fixture file exists, and Task 3 explicitly defers transcript behavior to a comment.
-- External research evidence: Claude Code docs confirm `claude -p` is non-interactive/print mode, making the headless behavior materially testable. Source: https://code.claude.com/docs/en/cli-usage, accessed 2026-06-08.
+- External research evidence: Claude Code docs confirm `claude -p` is non-interactive/print mode, making the headless behavior materially testable. Source: <https://code.claude.com/docs/en/cli-usage>, accessed 2026-06-08.
 - Why it matters: The validation attack pass has obvious false positives: a prompt can contain “touched_pages” or “ambiguous” while still not routing or narrowing correctly.
 - Recommended action for Claude Code: Add deterministic fixtures or transcript-smoke checks for the behavioral contract, not just text presence.
 - Suggested validation: Add fixture tests for routing classification and a documented disposable `/up-docs:all` transcript smoke for repo-only and ambiguous summaries.
@@ -79,7 +79,7 @@ I did not run the bats/pytest suites because this audit is read-only and those s
 - Plan reference: Task 5 Step 4 lines 594-598; Task 4 script lines 457-479.
 - Finding: The plan writes fixed baseline files under `${TMPDIR:-/tmp}/up-docs-baseline-repo.txt` and `...wiki.txt`. Concurrent runs can overwrite each other. Also, the helper uses plain `git status`; official Git docs note status may refresh/write the index and recommend `git --no-optional-locks status` for background scripts.
 - Repository evidence: Existing `convergence-tracker.sh` already avoids state collisions with `CLAUDE_CODE_SESSION_ID`, showing this repo has learned from cross-process state issues.
-- External research evidence: Git docs state porcelain v1 is stable and `-z` is machine-parsable, but also state background scripts should consider `git --no-optional-locks status` because status can write the index. Source: https://git-scm.com/docs/git-status, accessed 2026-06-08.
+- External research evidence: Git docs state porcelain v1 is stable and `-z` is machine-parsable, but also state background scripts should consider `git --no-optional-locks status` because status can write the index. Source: <https://git-scm.com/docs/git-status>, accessed 2026-06-08.
 - Why it matters: A commit-safety helper should not have cross-session state collisions or surprise Git lock/index side effects before user consent.
 - Recommended action for Claude Code: Use `mktemp` or a session-scoped baseline directory, pass the generated paths through Step 6, and call `git --no-optional-locks -C "$repo" status --porcelain=v1 -z`.
 - Suggested validation: Add tests/inspection for unique baseline path creation and update the shellcheck/bash-n gate after changing the helper.
@@ -108,13 +108,13 @@ I did not run the bats/pytest suites because this audit is read-only and those s
 ### Internet research performed
 
 - Source name: Git `git-status` documentation
-- URL: https://git-scm.com/docs/git-status
+- URL: <https://git-scm.com/docs/git-status>
 - Access date: 2026-06-08
 - What it was used to verify: Porcelain v1 stability, `-z` path format, rename ordering, and optional index refresh behavior.
 - Relevant conclusion: Porcelain `-z` is suitable for path parsing, but `git status` may write optional index state; scripts should consider `git --no-optional-locks status`.
 
 - Source name: Claude Code CLI reference
-- URL: https://code.claude.com/docs/en/cli-usage
+- URL: <https://code.claude.com/docs/en/cli-usage>
 - Access date: 2026-06-08
 - What it was used to verify: Non-interactive print mode.
 - Relevant conclusion: `claude -p` / `--print` is documented as print/non-interactive mode, supporting the plan’s need for a report-only headless path.

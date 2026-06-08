@@ -1,4 +1,4 @@
-## conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot.
+## conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot
 
 # Stack Profile: Python / PySide6
 

@@ -109,13 +109,13 @@ None found. The Tavily namespace problem is captured as SA-006 partially resolve
 ### Internet research performed
 
 - Source name: Claude Code skills documentation
-- URL: https://docs.claude.com/en/docs/claude-code/skills
+- URL: <https://docs.claude.com/en/docs/claude-code/skills>
 - Access date: 2026-06-08
 - What it was used to verify: Claude Code skill shape and install expectations.
 - Relevant conclusion: Supports SKILL.md-based Claude Code skills under Claude skill roots; does not resolve local MCP server namespace names.
 
 - Source name: Tavily Search API documentation
-- URL: https://docs.tavily.com/documentation/api-reference/endpoint/search
+- URL: <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 - Access date: 2026-06-08
 - What it was used to verify: Tavily `topic` API behavior.
 - Relevant conclusion: Official API supports more topics than the installed MCP metadata exposed here; local MCP schema remains authoritative for this skill.

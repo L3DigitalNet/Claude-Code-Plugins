@@ -1,10 +1,10 @@
 # Mode 3: Plugin Release
 
-# Loaded by the release command router after the user selects "Plugin Release".
+# Loaded by the release command router after the user selects "Plugin Release"
 
-# Context variables from Phase 0 are available: is_monorepo, unreleased_plugins,
+# Context variables from Phase 0 are available: is_monorepo, unreleased_plugins
 
-# current_branch, last_tag, commit_count.
+# current_branch, last_tag, commit_count
 
 Scoped release for a single plugin. Uses scoped tags, scoped changelog, and only stages plugin files.
 

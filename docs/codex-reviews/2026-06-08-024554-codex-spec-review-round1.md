@@ -64,8 +64,8 @@ Areas not checked: I did not run `npx`, `npm`, pytest, or formatter/linter comma
 - Status: Confirmed
 - Adversarial angle: The spec requires editing `TODO.md`, but the working tree already has unrelated local changes in that same file.
 - Spec reference: Lines 7, 99-105.
-- Finding: The current worktree has ` M TODO.md`. The diff rewrites the TODO document’s purpose/usage structure and keeps “Adopt markdown-tooling” unchecked. The spec says the implementation should check that item, but gives no dirty-tree or same-file hunk-isolation requirement.
-- Repository evidence: `git status --short` shows ` M TODO.md`. `git diff -- TODO.md` shows pre-existing content changes unrelated to simply checking the `Adopt markdown-tooling` task.
+- Finding: The current worktree has `M TODO.md`. The diff rewrites the TODO document’s purpose/usage structure and keeps “Adopt markdown-tooling” unchecked. The spec says the implementation should check that item, but gives no dirty-tree or same-file hunk-isolation requirement.
+- Repository evidence: `git status --short` shows `M TODO.md`. `git diff -- TODO.md` shows pre-existing content changes unrelated to simply checking the `Adopt markdown-tooling` task.
 - External research evidence: Not applicable.
 - Why it matters: A later implementation commit sequence could accidentally stage or overwrite the user’s in-progress TODO edits while checking the markdown-tooling box.
 - Recommended action for Claude Code: Add a preflight requirement to inspect `git status --short` and `git diff -- TODO.md`; require hunk-level isolation for only the checkbox change, or stop for user guidance if isolation is not possible.
@@ -134,49 +134,49 @@ Areas not checked: I did not run `npx`, `npm`, pytest, or formatter/linter comma
 ### Internet research performed
 
 - Source name: Prettier CLI documentation
-- URL: https://prettier.io/docs/cli
+- URL: <https://prettier.io/docs/cli>
 - Access date: 2026-06-08
 - What it was used to verify: Directory recursion, supported-file discovery, and `--check` behavior.
 - Relevant conclusion: `prettier .` recursively finds every Prettier-supported file under the directory.
 
 - Source name: Prettier Options documentation
-- URL: https://prettier.io/docs/options
+- URL: <https://prettier.io/docs/options>
 - Access date: 2026-06-08
 - What it was used to verify: Supported parsers/options, including TypeScript, JavaScript, JSON, Markdown, YAML, and `proseWrap`.
 - Relevant conclusion: This repo contains Prettier-supported file types beyond Markdown/JSON/YAML.
 
 - Source name: Prettier Ignore documentation
-- URL: https://prettier.io/docs/ignore
+- URL: <https://prettier.io/docs/ignore>
 - Access date: 2026-06-08
 - What it was used to verify: `.gitignore` and `node_modules` default ignore behavior.
 - Relevant conclusion: Ignored `.vscode/` files require explicit tracking/ignore decisions.
 
 - Source name: markdownlint-cli2 README
-- URL: https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md
+- URL: <https://github.com/DavidAnson/markdownlint-cli2/blob/main/README.md>
 - Access date: 2026-06-08
 - What it was used to verify: Glob syntax, config discovery, `--fix`, and `gitignore` option.
 - Relevant conclusion: The spec’s markdownlint command shape is broadly valid, but config/glob scope must be explicit.
 
 - Source name: markdownlint-cli2-action README and action.yml
-- URL: https://github.com/DavidAnson/markdownlint-cli2-action
+- URL: <https://github.com/DavidAnson/markdownlint-cli2-action>
 - Access date: 2026-06-08
 - What it was used to verify: `@v23`, `globs`, `config`, `fix`, and Node runtime.
 - Relevant conclusion: `@v23` and explicit `globs: '**/*.md'` match the current action guidance; action.yml uses Node 24.
 
 - Source name: GitHub Docs, reusable workflows
-- URL: https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows
+- URL: <https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows>
 - Access date: 2026-06-08
 - What it was used to verify: Calling reusable workflows via job-level `uses`.
 - Relevant conclusion: The planned reusable workflow call shape is valid.
 
 - Source name: YAML 1.2.2 specification
-- URL: https://yaml.org/spec/1.2.2/
+- URL: <https://yaml.org/spec/1.2.2/>
 - Access date: 2026-06-08
 - What it was used to verify: YAML indentation semantics.
 - Relevant conclusion: YAML block structure is indentation-based and tabs must not be used for indentation.
 
 - Source name: L3DigitalNet/project-standards GitHub repository
-- URL: https://github.com/L3DigitalNet/project-standards/tree/main/standards/markdown-tooling
+- URL: <https://github.com/L3DigitalNet/project-standards/tree/main/standards/markdown-tooling>
 - Access date: 2026-06-08
 - What it was used to verify: Current remote standard contents.
 - Relevant conclusion: The web tool did not return the repository content. I used the local checkout at `/home/chris/projects/project-standards` as reference evidence; Claude should re-confirm remote freshness if needed before implementation.

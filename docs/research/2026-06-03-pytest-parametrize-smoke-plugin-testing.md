@@ -90,12 +90,12 @@ license: proprietary
 
 | Tool | Maintenance | Link | Fit for use case |
 | --- | --- | --- | --- |
-| pytest (built-in `parametrize`) | Active (8.4, Jun 2025) | https://docs.pytest.org/en/stable/how-to/parametrize.html | Core tool — all parametrize needs |
-| pytest-cases | Active | https://smarie.github.io/python-pytest-cases/ | Complex fixture+case separation; overkill for simple smoke suites |
-| Hypothesis | Active | https://hypothesis.readthedocs.io/ | Property-based generation; complementary, not a replacement |
-| pytest-subtests | Active | https://pypi.org/project/pytest-subtests/ | Sub-assertions inside a single parametrized test; useful for CLI output validation |
-| pytester (built-in) | Active (8.4) | https://docs.pytest.org/en/stable/how-to/writing_plugins.html | Testing pytest plugins themselves; replaces deprecated `testdir` |
-| pytest-better-parametrize | Low activity | https://pypi.org/project/pytest-better-parametrize/ | Improved display of parametrized case descriptions |
+| pytest (built-in `parametrize`) | Active (8.4, Jun 2025) | <https://docs.pytest.org/en/stable/how-to/parametrize.html> | Core tool — all parametrize needs |
+| pytest-cases | Active | <https://smarie.github.io/python-pytest-cases/> | Complex fixture+case separation; overkill for simple smoke suites |
+| Hypothesis | Active | <https://hypothesis.readthedocs.io/> | Property-based generation; complementary, not a replacement |
+| pytest-subtests | Active | <https://pypi.org/project/pytest-subtests/> | Sub-assertions inside a single parametrized test; useful for CLI output validation |
+| pytester (built-in) | Active (8.4) | <https://docs.pytest.org/en/stable/how-to/writing_plugins.html> | Testing pytest plugins themselves; replaces deprecated `testdir` |
+| pytest-better-parametrize | Low activity | <https://pypi.org/project/pytest-better-parametrize/> | Improved display of parametrized case descriptions |
 
 ## Security and Compatibility
 
@@ -131,12 +131,12 @@ license: proprietary
 
 | URL | Title | Date | Authority |
 | --- | --- | --- | --- |
-| https://docs.pytest.org/en/stable/how-to/parametrize.html | How to parametrize fixtures and test functions | 2025 | [official] |
-| https://docs.pytest.org/en/stable/reference/reference.html#pytest.param | pytest API reference — pytest.param | 2025 | [official] |
-| https://docs.pytest.org/en/stable/example/parametrize.html | Parametrize examples | 2025 | [official] |
-| https://docs.pytest.org/en/stable/example/markers.html | Working with custom marks | 2025 | [official] |
-| https://docs.pytest.org/en/stable/how-to/mark.html | How to mark test functions | 2025 | [official] |
-| https://docs.pytest.org/en/stable/how-to/writing_plugins.html | Writing plugins (pytester) | 2025 | [official] |
-| https://docs.pytest.org/en/8.3.x/changelog.html | pytest 8.0–8.3 changelog | 2024 | [official] |
-| https://docs.pytest.org/en/latest/changelog.html | pytest 8.4 changelog | 2025-06-02 | [official] |
-| https://realpython.com/pytest-python-testing/ | Effective Python Testing With pytest — Real Python | 2024 | [community] |
+| <https://docs.pytest.org/en/stable/how-to/parametrize.html> | How to parametrize fixtures and test functions | 2025 | [official] |
+| <https://docs.pytest.org/en/stable/reference/reference.html#pytest.param> | pytest API reference — pytest.param | 2025 | [official] |
+| <https://docs.pytest.org/en/stable/example/parametrize.html> | Parametrize examples | 2025 | [official] |
+| <https://docs.pytest.org/en/stable/example/markers.html> | Working with custom marks | 2025 | [official] |
+| <https://docs.pytest.org/en/stable/how-to/mark.html> | How to mark test functions | 2025 | [official] |
+| <https://docs.pytest.org/en/stable/how-to/writing_plugins.html> | Writing plugins (pytester) | 2025 | [official] |
+| <https://docs.pytest.org/en/8.3.x/changelog.html> | pytest 8.0–8.3 changelog | 2024 | [official] |
+| <https://docs.pytest.org/en/latest/changelog.html> | pytest 8.4 changelog | 2025-06-02 | [official] |
+| <https://realpython.com/pytest-python-testing/> | Effective Python Testing With pytest — Real Python | 2024 | [community] |

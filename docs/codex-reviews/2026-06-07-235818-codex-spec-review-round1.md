@@ -91,7 +91,7 @@ Could not safely run pytest because pytest may write `.pytest_cache` and `__pyca
 - Spec reference: Line 98
 - Finding: The spec copies the global rule “Tavily with `topic=news`/`finance`”, but the installed Tavily MCP metadata exposed in this session only allows `topic: "general"`. Existing qdev routing also says the MCP schema is general-only and routes news/finance elsewhere.
 - Repository evidence: `plugins/qdev/agents/qdev-researcher.md:67-73`; `agent-configs/global/codex/AGENTS.md:83-88`; `agent-configs/global/claude/CLAUDE.md:27-32`
-- External research evidence: Tavily Search API docs list `topic` options `general`, `news`, and `finance` (https://docs.tavily.com/documentation/api-reference/endpoint/search, accessed 2026-06-08), but current local MCP tool metadata exposed `topic?: "general"` only.
+- External research evidence: Tavily Search API docs list `topic` options `general`, `news`, and `finance` (<https://docs.tavily.com/documentation/api-reference/endpoint/search>, accessed 2026-06-08), but current local MCP tool metadata exposed `topic?: "general"` only.
 - Why it matters: The new skill could instruct agents to make invalid tool calls in this environment.
 - Recommended action for Claude Code: Require installed-tool schema inspection during spec correction. For the current schema, route news to `brave_news_search` and do not prescribe Tavily `topic=news|finance` unless the installed MCP schema is updated.
 - Suggested validation: Re-run MCP tool metadata discovery for Tavily, Brave, and Serper before writing the skill.
@@ -148,19 +148,19 @@ Could not safely run pytest because pytest may write `.pytest_cache` and `__pyca
 ### Internet research performed
 
 - Source name: Tavily MCP Server docs
-- URL: https://docs.tavily.com/documentation/mcp
+- URL: <https://docs.tavily.com/documentation/mcp>
 - Access date: 2026-06-08
 - What it was used to verify: Current Tavily MCP capabilities and setup.
 - Relevant conclusion: Tavily MCP provides search and extract tooling, but local installed schema still must be checked.
 
 - Source name: Tavily Search API docs
-- URL: https://docs.tavily.com/documentation/api-reference/endpoint/search
+- URL: <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 - Access date: 2026-06-08
 - What it was used to verify: Search parameters including `topic`, `search_depth`, and `include_raw_content`.
 - Relevant conclusion: Official API supports `topic=general|news|finance`, but this conflicts with the installed MCP schema exposed in-session.
 
 - Source name: Brave Search MCP Server README
-- URL: https://github.com/brave/brave-search-mcp-server
+- URL: <https://github.com/brave/brave-search-mcp-server>
 - Access date: 2026-06-08
 - What it was used to verify: Brave MCP tool surface.
 - Relevant conclusion: Brave MCP documents `brave_web_search` and `brave_news_search`, supporting the spec’s use of Brave for general/news search.

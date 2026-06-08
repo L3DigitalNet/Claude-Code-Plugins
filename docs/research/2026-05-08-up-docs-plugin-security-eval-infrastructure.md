@@ -80,11 +80,11 @@ The `if` field on individual hook handlers uses permission-rule syntax: `"Bash(g
 
 ### Sub-agent Tool Call Firing
 
-Yes: hooks fire for sub-agent tool calls. The stdin JSON includes `agent_id` and `agent_type` fields when the hook fires inside a sub-agent context. A plugin-scoped agent dispatched via the `Agent` tool fires the parent session's hooks (not a separate hook context). [official] (https://code.claude.com/docs/en/hooks)
+Yes: hooks fire for sub-agent tool calls. The stdin JSON includes `agent_id` and `agent_type` fields when the hook fires inside a sub-agent context. A plugin-scoped agent dispatched via the `Agent` tool fires the parent session's hooks (not a separate hook context). [official] (<https://code.claude.com/docs/en/hooks>)
 
 ### `${CLAUDE_PLUGIN_ROOT}` in Command Field
 
-Confirmed working. `${CLAUDE_PLUGIN_ROOT}` is substituted in hook command strings and exported as an environment variable to hook subprocesses. Same for `${CLAUDE_PLUGIN_DATA}`. [official] (https://code.claude.com/docs/en/plugins-reference)
+Confirmed working. `${CLAUDE_PLUGIN_ROOT}` is substituted in hook command strings and exported as an environment variable to hook subprocesses. Same for `${CLAUDE_PLUGIN_DATA}`. [official] (<https://code.claude.com/docs/en/plugins-reference>)
 
 Evidence from five sibling plugins in this repo: all use `bash ${CLAUDE_PLUGIN_ROOT}/scripts/...` pattern successfully.
 
@@ -145,7 +145,7 @@ exit 0
 
 ### Footgun: GH Issue 34573 — Plugin PreToolUse/PostToolUse Command Hooks Silently Dropped
 
-**This is a confirmed, closed-as-not-planned bug.** Prompt hooks fire; command hooks are silently dropped for PreToolUse/PostToolUse in plugins. However: the five sibling plugins in this repo (`release-pipeline`, `github-repo-manager`, `home-assistant-dev`, `plugin-test-harness`, `opus-context`) all use command hooks for PreToolUse/PostToolUse and appear to work based on their production use. The issue may be version-specific or partially resolved. **Verify with `/hooks` menu before relying on plugin PreToolUse/PostToolUse command hooks.** [community] (https://github.com/anthropics/claude-code/issues/34573)
+**This is a confirmed, closed-as-not-planned bug.** Prompt hooks fire; command hooks are silently dropped for PreToolUse/PostToolUse in plugins. However: the five sibling plugins in this repo (`release-pipeline`, `github-repo-manager`, `home-assistant-dev`, `plugin-test-harness`, `opus-context`) all use command hooks for PreToolUse/PostToolUse and appear to work based on their production use. The issue may be version-specific or partially resolved. **Verify with `/hooks` menu before relying on plugin PreToolUse/PostToolUse command hooks.** [community] (<https://github.com/anthropics/claude-code/issues/34573>)
 
 **Recommended for up-docs v2 plan:** Ship `hooks/hooks.json` with `PreToolUse` and `PostToolUse` command hooks using `bash ${CLAUDE_PLUGIN_ROOT}/scripts/capture-transcript.sh`; verify the hooks appear in `/hooks` menu after `claude plugin install --scope local` before trusting the security gate.
 
@@ -220,11 +220,11 @@ The consuming project adds to its `.claude/settings.json`:
 { "permissions": { "deny": ["Bash(curl *)", "Bash(wget *)", "WebFetch", "WebSearch"] } }
 ```
 
-This is enforced by Claude Code's permission engine regardless of agent frontmatter. Known caveat: GH issue #27040 reports `permissions.deny` not enforced in some versions for file paths — the rule syntax using `//` for absolute paths differs from Linux convention. Tool-name-based deny patterns (`Bash(curl *)`) are more reliable than path-based ones. [official] (https://code.claude.com/docs/en/settings), [community] (https://github.com/anthropics/claude-code/issues/27040)
+This is enforced by Claude Code's permission engine regardless of agent frontmatter. Known caveat: GH issue #27040 reports `permissions.deny` not enforced in some versions for file paths — the rule syntax using `//` for absolute paths differs from Linux convention. Tool-name-based deny patterns (`Bash(curl *)`) are more reliable than path-based ones. [official] (<https://code.claude.com/docs/en/settings>), [community] (<https://github.com/anthropics/claude-code/issues/27040>)
 
 ### Agent Frontmatter `disallowedTools`
 
-`disallowedTools:` in agent `.md` frontmatter removes tools from the model's available set for that agent. This is the `--disallowedTools` CLI flag equivalent, applied per-agent. It is best-effort (model-context removal, not engine enforcement). [official] (https://code.claude.com/docs/en/plugins-reference)
+`disallowedTools:` in agent `.md` frontmatter removes tools from the model's available set for that agent. This is the `--disallowedTools` CLI flag equivalent, applied per-agent. It is best-effort (model-context removal, not engine enforcement). [official] (<https://code.claude.com/docs/en/plugins-reference>)
 
 Important: the plugins-reference explicitly states: "For security reasons, `hooks`, `mcpServers`, and `permissionMode` are not supported for plugin-shipped agents." Agent frontmatter cannot set `permissionMode`.
 
@@ -236,7 +236,7 @@ Important: the plugins-reference explicitly states: "For security reasons, `hook
 
 ### `--plugin-dir <path>` Confirmed
 
-`--plugin-dir ./plugins/up-docs` loads a plugin from the local filesystem path for the duration of that `--print` session. Each `--plugin-dir` flag takes one path; repeat for multiple. [official] (https://code.claude.com/docs/en/cli-reference)
+`--plugin-dir ./plugins/up-docs` loads a plugin from the local filesystem path for the duration of that `--print` session. Each `--plugin-dir` flag takes one path; repeat for multiple. [official] (<https://code.claude.com/docs/en/cli-reference>)
 
 Works with `--bare` for faster startup (skips other auto-discovery). The `--bare` flag still honors explicit `--plugin-dir`.
 
@@ -248,7 +248,7 @@ Failure mode surfaced in `system/init` stream event: `plugin_errors` array lists
 
 ### `--mcp-config <file>` Flag
 
-`--mcp-config ./test-mcp.json` loads additional MCP servers. The `--strict-mcp-config` flag restricts to ONLY those servers, ignoring all other MCP configs including the plugin's `.mcp.json`. Use `--strict-mcp-config --mcp-config` to replace plugin MCP servers with test stubs. [official] (https://code.claude.com/docs/en/cli-reference)
+`--mcp-config ./test-mcp.json` loads additional MCP servers. The `--strict-mcp-config` flag restricts to ONLY those servers, ignoring all other MCP configs including the plugin's `.mcp.json`. Use `--strict-mcp-config --mcp-config` to replace plugin MCP servers with test stubs. [official] (<https://code.claude.com/docs/en/cli-reference>)
 
 ### `--output-format stream-json` Event Schema
 
@@ -261,9 +261,9 @@ Events are newline-delimited JSON objects. Key events for testing:
 | `result` | — | `result` (final text), `session_id`, `total_cost_usd` |
 | `system` | `api_retry` | `attempt`, `error`, `retry_delay_ms` |
 
-**Tool RESULTS:** Tool results (Bash stdout, file contents) are **NOT** emitted in the stream. Only tool inputs (`tool_use` content blocks) appear. Tool outputs are consumed internally. The PostToolUse hook's `tool_response.output` field is the only programmatic access path to tool results. [official] (https://code.claude.com/docs/en/headless)
+**Tool RESULTS:** Tool results (Bash stdout, file contents) are **NOT** emitted in the stream. Only tool inputs (`tool_use` content blocks) appear. Tool outputs are consumed internally. The PostToolUse hook's `tool_response.output` field is the only programmatic access path to tool results. [official] (<https://code.claude.com/docs/en/headless>)
 
-**`parent_tool_use_id`:** Present in the Agent SDK Python/TypeScript library's message objects for sub-agent context. Not documented as a raw stream-json field in the CLI output format. The Agent SDK (`claude-agent-sdk`) is the preferred path if `parent_tool_use_id` tracking is needed. [official] (https://code.claude.com/docs/en/agent-sdk/overview)
+**`parent_tool_use_id`:** Present in the Agent SDK Python/TypeScript library's message objects for sub-agent context. Not documented as a raw stream-json field in the CLI output format. The Agent SDK (`claude-agent-sdk`) is the preferred path if `parent_tool_use_id` tracking is needed. [official] (<https://code.claude.com/docs/en/agent-sdk/overview>)
 
 ### Working Headless Test Pattern (bats-style)
 
@@ -303,7 +303,7 @@ Note: `--output-format json` (not stream-json) returns a single JSON object at e
 
 ### FastMCP `Client(server)` In-Memory Transport — What It Does NOT Solve
 
-FastMCP's `Client(server_instance)` runs server and client in the same Python process. There is no network or subprocess. This is excellent for unit-testing the stub server itself. [official] (https://gofastmcp.com/development/tests), [community] (https://smithery.ai/skills/ghosttypes/mcp-test-harness)
+FastMCP's `Client(server_instance)` runs server and client in the same Python process. There is no network or subprocess. This is excellent for unit-testing the stub server itself. [official] (<https://gofastmcp.com/development/tests>), [community] (<https://smithery.ai/skills/ghosttypes/mcp-test-harness>)
 
 **The fundamental mismatch:** When `claude --plugin-dir` runs as an external subprocess, it launches its own MCP client via stdio transport. The `Client(server)` in-memory pattern is inaccessible to Claude Code's subprocess. You cannot wire an in-memory FastMCP server to an external `claude -p` call.
 
@@ -377,9 +377,9 @@ Using `--strict-mcp-config` drops ALL other MCP servers including user-level one
 
 ### `tool_response` IS Available
 
-Confirmed: `tool_response: { output: "...", isError: false }` is present in PostToolUse stdin payload. `output` contains the full tool stdout/stderr text as a string. This is the only programmatic path to Bash tool output from a plugin. [official] (https://code.claude.com/docs/en/hooks)
+Confirmed: `tool_response: { output: "...", isError: false }` is present in PostToolUse stdin payload. `output` contains the full tool stdout/stderr text as a string. This is the only programmatic path to Bash tool output from a plugin. [official] (<https://code.claude.com/docs/en/hooks>)
 
-New (May 2026 changelog): `PostToolUse hooks can now replace tool output for all tools via hookSpecificOutput.updatedToolOutput` — previously MCP-only. This enables the hook to sanitize the output Claude sees, not just log it. [official] (https://code.claude.com/docs/en/changelog)
+New (May 2026 changelog): `PostToolUse hooks can now replace tool output for all tools via hookSpecificOutput.updatedToolOutput` — previously MCP-only. This enables the hook to sanitize the output Claude sees, not just log it. [official] (<https://code.claude.com/docs/en/changelog>)
 
 ### Opt-In Pattern via Env Var
 
@@ -456,7 +456,7 @@ Known secret patterns to cover for up-docs context:
 - AWS keys: `AKIA[A-Z0-9]{16}` (access key) + `aws_secret_access_key=...`
 - Generic password/token assignments: `password=X`, `token=X`, `key=X`
 
-Single-source reference for redaction regex: community gist at https://gist.github.com/ruvnet/332336ad5e0516daa810d98f8f0ddca9 [community]. No Anthropic advisory specifically on hook-as-data-leak pattern; the risk is inferrable from CVE-2025-59536 (RCE via hooks) and GH issue #44868 (secrets from .env files in transcripts). [official] (https://github.com/anthropics/claude-code/issues/44868)
+Single-source reference for redaction regex: community gist at <https://gist.github.com/ruvnet/332336ad5e0516daa810d98f8f0ddca9> [community]. No Anthropic advisory specifically on hook-as-data-leak pattern; the risk is inferrable from CVE-2025-59536 (RCE via hooks) and GH issue #44868 (secrets from .env files in transcripts). [official] (<https://github.com/anthropics/claude-code/issues/44868>)
 
 ### Cleanup
 
@@ -552,7 +552,7 @@ LayeredReport = Annotated[
 ]
 ```
 
-Use `Tag` + `Discriminator` when the discriminator field name differs across models. For up-docs (all models have `layer`), `Field(discriminator="layer")` is simpler. [official] (https://pydantic.dev/docs/validation/latest/concepts/unions)
+Use `Tag` + `Discriminator` when the discriminator field name differs across models. For up-docs (all models have `layer`), `Field(discriminator="layer")` is simpler. [official] (<https://pydantic.dev/docs/validation/latest/concepts/unions>)
 
 ### DRY Shared Fields
 
@@ -594,7 +594,7 @@ The error type is `union_tag_invalid`. It explicitly names the bad tag and all v
 
 The DeepEval 2025 changelog explicitly states:
 
-> "LLMTestCaseParams has been renamed to SingleTurnParams, and TurnParams has been renamed to MultiTurnParams ... The old names still work but importing them now emits a DeprecationWarning; switch to SingleTurnParams / MultiTurnParams to silence it." [official] (https://deepeval.com/changelog/changelog-2025)
+> "LLMTestCaseParams has been renamed to SingleTurnParams, and TurnParams has been renamed to MultiTurnParams ... The old names still work but importing them now emits a DeprecationWarning; switch to SingleTurnParams / MultiTurnParams to silence it." [official] (<https://deepeval.com/changelog/changelog-2025>)
 
 The audit's CR-012 finding is confirmed correct. The stale name still works (no import error) but emits a warning.
 
@@ -612,7 +612,7 @@ correctness = GEval(
 )
 ```
 
-`evaluation_params` takes `list[SingleTurnParams]`. The `GEval` class docs state: "There are THREE mandatory and SEVEN optional parameters." Mandatory: `name`, `criteria` OR `evaluation_steps` (not both), `evaluation_params`. [official] (https://deepeval.com/docs/metrics-llm-evals)
+`evaluation_params` takes `list[SingleTurnParams]`. The `GEval` class docs state: "There are THREE mandatory and SEVEN optional parameters." Mandatory: `name`, `criteria` OR `evaluation_steps` (not both), `evaluation_params`. [official] (<https://deepeval.com/docs/metrics-llm-evals>)
 
 ### `LLMTestCase` Signature and `expected_output`
 
@@ -625,7 +625,7 @@ test_case = LLMTestCase(
 )
 ```
 
-`expected_output` is required only when `SingleTurnParams.EXPECTED_OUTPUT` is in `evaluation_params`. For rubric-only style (no reference output), omit `SingleTurnParams.EXPECTED_OUTPUT` from the list and omit `expected_output` from `LLMTestCase`. [official] (https://deepeval.com/docs/getting-started)
+`expected_output` is required only when `SingleTurnParams.EXPECTED_OUTPUT` is in `evaluation_params`. For rubric-only style (no reference output), omit `SingleTurnParams.EXPECTED_OUTPUT` from the list and omit `expected_output` from `LLMTestCase`. [official] (<https://deepeval.com/docs/getting-started>)
 
 ### Anthropic Routing — No OpenAI Key Required
 
@@ -650,7 +650,7 @@ prose_quality = GEval(
 )
 ```
 
-Requires `ANTHROPIC_API_KEY` in environment. No `OPENAI_API_KEY` needed. Alternatively set `USE_ANTHROPIC_MODEL=1` env var to route all metrics to Anthropic by default. [official] (https://github.com/confident-ai/deepeval/blob/main/docs/integrations/models/anthropic.mdx)
+Requires `ANTHROPIC_API_KEY` in environment. No `OPENAI_API_KEY` needed. Alternatively set `USE_ANTHROPIC_MODEL=1` env var to route all metrics to Anthropic by default. [official] (<https://github.com/confident-ai/deepeval/blob/main/docs/integrations/models/anthropic.mdx>)
 
 ### Minimal Working Example (pinned)
 
@@ -696,21 +696,21 @@ def test_no_fabrication(session_summary, propagator_output):
 
 ## Footguns and Gotchas
 
-- **Plugin `settings.json` scope is narrow** — only `agent` and `subagentStatusLine` keys; `permissions.deny` silently ignored — corroborated by official plugins-reference table and verified by `find plugins -path '*/.claude/settings.json'` returning 0 results. [official] (https://code.claude.com/docs/en/plugins-reference)
+- **Plugin `settings.json` scope is narrow** — only `agent` and `subagentStatusLine` keys; `permissions.deny` silently ignored — corroborated by official plugins-reference table and verified by `find plugins -path '*/.claude/settings.json'` returning 0 results. [official] (<https://code.claude.com/docs/en/plugins-reference>)
 
-- **GH issue 34573: plugin PreToolUse/PostToolUse command hooks may be silently dropped** — closed not-planned; verify with `/hooks` menu before relying on plugin security hooks. Prompt hooks work; command hooks have the reported issue. [community] (https://github.com/anthropics/claude-code/issues/34573)
+- **GH issue 34573: plugin PreToolUse/PostToolUse command hooks may be silently dropped** — closed not-planned; verify with `/hooks` menu before relying on plugin security hooks. Prompt hooks work; command hooks have the reported issue. [community] (<https://github.com/anthropics/claude-code/issues/34573>)
 
-- **Tool results not in stream-json CLI output** — `claude -p --output-format stream-json` emits tool inputs but NOT tool outputs. PostToolUse hook is the mandatory capture path. Corroborated by official headless docs and the v1 plan's own "Resolved blockers" section. [official] (https://code.claude.com/docs/en/headless)
+- **Tool results not in stream-json CLI output** — `claude -p --output-format stream-json` emits tool inputs but NOT tool outputs. PostToolUse hook is the mandatory capture path. Corroborated by official headless docs and the v1 plan's own "Resolved blockers" section. [official] (<https://code.claude.com/docs/en/headless>)
 
-- **`permissions.deny` file-path syntax quirk** — absolute paths require `//` prefix (double slash), not `/`. Tool-name deny patterns are more reliable: `Bash(curl *)`, not `Read(//etc/*)`. [community] (https://github.com/anthropics/claude-code/issues/27040), [community] (https://www.theregister.com/2026/01/28/claude_code_ai_secrets_files/)
+- **`permissions.deny` file-path syntax quirk** — absolute paths require `//` prefix (double slash), not `/`. Tool-name deny patterns are more reliable: `Bash(curl *)`, not `Read(//etc/*)`. [community] (<https://github.com/anthropics/claude-code/issues/27040>), [community] (<https://www.theregister.com/2026/01/28/claude_code_ai_secrets_files/>)
 
 - **MCP stub key must match plugin's `.mcp.json` key exactly** — `--strict-mcp-config` replaces all MCP servers; stub key must replicate the original server key or tool names won't resolve. Case-sensitive (the `Notion` key example). [official, inferred from tool name inspection]
 
-- **FastMCP `Client(server)` is in-process only** — cannot wire to external `claude -p` subprocess. Use stdio FastMCP server + `--mcp-config` instead. [official] (https://gofastmcp.com/development/tests)
+- **FastMCP `Client(server)` is in-process only** — cannot wire to external `claude -p` subprocess. Use stdio FastMCP server + `--mcp-config` instead. [official] (<https://gofastmcp.com/development/tests>)
 
-- **Plugin agent frontmatter does not support `hooks`, `mcpServers`, or `permissionMode`** — these fields are explicitly excluded for security reasons. [official] (https://code.claude.com/docs/en/plugins-reference)
+- **Plugin agent frontmatter does not support `hooks`, `mcpServers`, or `permissionMode`** — these fields are explicitly excluded for security reasons. [official] (<https://code.claude.com/docs/en/plugins-reference>)
 
-- **`exit 1` is non-blocking in hooks** — only `exit 2` blocks a tool call. Standard Unix convention inverted. [official] (https://code.claude.com/docs/en/hooks)
+- **`exit 1` is non-blocking in hooks** — only `exit 2` blocks a tool call. Standard Unix convention inverted. [official] (<https://code.claude.com/docs/en/hooks>)
 
 - **PostToolUse cannot undo execution** — `updatedToolOutput` changes what Claude sees, but the tool already ran. Data exfiltration via Bash cannot be prevented by a PostToolUse hook. [official]
 
@@ -724,32 +724,32 @@ def test_no_fabrication(session_summary, propagator_output):
 | --- | --- | --- | --- |
 | `release-pipeline/scripts/force-push-guard.sh` | Active (this repo) | local | Reference implementation of PreToolUse exit-2 blocking pattern |
 | `github-repo-manager/scripts/gh-manager-guard.sh` | Active (this repo) | local | Reference implementation of PostToolUse audit-log capture |
-| FastMCP | Active | https://gofastmcp.com | MCP stub server for headless test wiring |
-| DeepEval | Active | https://deepeval.com | LLM-judge eval with Anthropic backend |
+| FastMCP | Active | <https://gofastmcp.com> | MCP stub server for headless test wiring |
+| DeepEval | Active | <https://deepeval.com> | LLM-judge eval with Anthropic backend |
 
 ---
 
 ## Security and Compatibility
 
-- **CVE-2025-59536 / CVE-2026-21852** — RCE and API token exfiltration via malicious `.claude/config.json` hooks, MCP servers, and env vars in project files. Attacker-controlled repos can ship hooks that run before trust prompts. [community] (https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/)
+- **CVE-2025-59536 / CVE-2026-21852** — RCE and API token exfiltration via malicious `.claude/config.json` hooks, MCP servers, and env vars in project files. Attacker-controlled repos can ship hooks that run before trust prompts. [community] (<https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/>)
 
-- **GH issue #44868** — Claude Code reads and echoes `.env` / `.dev.vars` files into conversation transcript despite CLAUDE.md prohibitions. `permissions.deny` with `Read(./.env*)` mitigates. [community] (https://github.com/anthropics/claude-code/issues/44868)
+- **GH issue #44868** — Claude Code reads and echoes `.env` / `.dev.vars` files into conversation transcript despite CLAUDE.md prohibitions. `permissions.deny` with `Read(./.env*)` mitigates. [community] (<https://github.com/anthropics/claude-code/issues/44868>)
 
-- **PostToolUse data-leak vector (CR-006)** — hook capturing `tool_response` receives raw Bash output including any secrets printed by commands. Opt-in guard + redaction patterns are the mitigation; no Anthropic advisory specifically on this. [community] (https://gist.github.com/ruvnet/332336ad5e0516daa810d98f8f0ddca9)
+- **PostToolUse data-leak vector (CR-006)** — hook capturing `tool_response` receives raw Bash output including any secrets printed by commands. Opt-in guard + redaction patterns are the mitigation; no Anthropic advisory specifically on this. [community] (<https://gist.github.com/ruvnet/332336ad5e0516daa810d98f8f0ddca9>)
 
 ---
 
 ## Recent Changes
 
-- **PostToolUse `updatedToolOutput` for all tools** (May 2026 changelog) — hooks can now replace the tool output Claude sees for ALL tools, not just MCP tools. New capability for up-docs: the capture hook can sanitize sensitive output before it enters context. [official] (https://code.claude.com/docs/en/changelog)
+- **PostToolUse `updatedToolOutput` for all tools** (May 2026 changelog) — hooks can now replace the tool output Claude sees for ALL tools, not just MCP tools. New capability for up-docs: the capture hook can sanitize sensitive output before it enters context. [official] (<https://code.claude.com/docs/en/changelog>)
 
 - **`CLAUDE_CODE_SESSION_ID` in Bash subprocess env** (May 2026) — enables per-session log file naming from within hook scripts without parsing the stdin JSON. [official]
 
-- **`--bare` to become default for `-p`** — official docs note `--bare` will become the default for print mode. Headless tests should use `--bare --plugin-dir` explicitly now to be forward-compatible. [official] (https://code.claude.com/docs/en/headless)
+- **`--bare` to become default for `-p`** — official docs note `--bare` will become the default for print mode. Headless tests should use `--bare --plugin-dir` explicitly now to be forward-compatible. [official] (<https://code.claude.com/docs/en/headless>)
 
-- **PostToolUse `duration_ms` field** (v2.1.119) — hook inputs now include `duration_ms` for performance monitoring. [official] (https://code.claude.com/docs/en/changelog)
+- **PostToolUse `duration_ms` field** (v2.1.119) — hook inputs now include `duration_ms` for performance monitoring. [official] (<https://code.claude.com/docs/en/changelog>)
 
-- **`LLMTestCaseParams` → `SingleTurnParams`** (DeepEval 2025) — rename confirmed; old name deprecated with warning, not removed. [official] (https://deepeval.com/changelog/changelog-2025)
+- **`LLMTestCaseParams` → `SingleTurnParams`** (DeepEval 2025) — rename confirmed; old name deprecated with warning, not removed. [official] (<https://deepeval.com/changelog/changelog-2025>)
 
 ---
 

@@ -1,4 +1,4 @@
-## discovery conventions, execution commands, coverage tools, and UI testing via XCUITest.
+## discovery conventions, execution commands, coverage tools, and UI testing via XCUITest
 
 # Stack Profile: Swift / SwiftUI
 

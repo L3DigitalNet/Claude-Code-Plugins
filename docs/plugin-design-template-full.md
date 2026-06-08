@@ -165,9 +165,6 @@ enter Claude's context window, if at all).
 
 **Commands** (`/[name] <subcommand>`)
 
-- [Subcommand 1]: [Purpose]
-- [Subcommand 2]: [Purpose]
-
 **Skills**
 
 - [skill-name]: [When does Claude invoke this contextually?]

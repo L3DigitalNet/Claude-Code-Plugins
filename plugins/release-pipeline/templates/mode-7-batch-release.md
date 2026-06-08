@@ -1,16 +1,16 @@
 # Mode 7: Batch Release All Plugins
 
-# Loaded by the release command router after the user selects "Batch Release All Plugins".
+# Loaded by the release command router after the user selects "Batch Release All Plugins"
 
-# Context from Phase 0: is_monorepo=true, unreleased_plugins (TSV list), current_branch.
+# Context from Phase 0: is_monorepo=true, unreleased_plugins (TSV list), current_branch
 
 #
 
-# Quarantine semantics: on any FAIL during pre-flight, prep, or release phases,
+# Quarantine semantics: on any FAIL during pre-flight, prep, or release phases
 
-# add the plugin to the failed list and continue to the next plugin WITHOUT stopping.
+# add the plugin to the failed list and continue to the next plugin WITHOUT stopping
 
-# Phase 4 (verification) failures are recorded as warnings but do NOT quarantine.
+# Phase 4 (verification) failures are recorded as warnings but do NOT quarantine
 
 ## Step 0 — Release Plan Presentation
 

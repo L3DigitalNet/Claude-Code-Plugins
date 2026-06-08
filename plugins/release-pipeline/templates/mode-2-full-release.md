@@ -1,10 +1,10 @@
 # Mode 2: Full Release
 
-# Loaded by the release command router after the user selects "Full Release".
+# Loaded by the release command router after the user selects "Full Release"
 
-# Context variables from Phase 0 are available: suggested_version, feat_count, fix_count,
+# Context variables from Phase 0 are available: suggested_version, feat_count, fix_count
 
-# other_count, last_tag, commit_count, current_branch.
+# other_count, last_tag, commit_count, current_branch
 
 Full semver release with parallel pre-flight checks, version bumps, changelog, git tag, and GitHub release.
 

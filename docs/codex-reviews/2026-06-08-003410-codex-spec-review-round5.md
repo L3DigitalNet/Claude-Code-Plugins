@@ -55,7 +55,7 @@ I did not run pytest, deploy scripts, live Claude deploys, or `claude mcp list`;
 
 - Previous severity: High
 - Current status: Resolved
-- Evidence: Spec lines 164-194 now add an explicit same-file dirty guard. It calls out the observed `agent-configs/skills/README.md` hazard, requires `git diff -- <target>` before editing already-modified target files, requires classifying existing hunks, requires non-interactive hunk isolation such as a constructed cached patch, forbids whole-file `git add`, requires `git diff --cached -- <target>` content review, and requires stopping if isolation fails. Current `agent-configs` still has ` M skills/README.md`, and `git diff -- skills/README.md` confirms unrelated table reformatting and row removals; the revised spec now directly addresses that case.
+- Evidence: Spec lines 164-194 now add an explicit same-file dirty guard. It calls out the observed `agent-configs/skills/README.md` hazard, requires `git diff -- <target>` before editing already-modified target files, requires classifying existing hunks, requires non-interactive hunk isolation such as a constructed cached patch, forbids whole-file `git add`, requires `git diff --cached -- <target>` content review, and requires stopping if isolation fails. Current `agent-configs` still has `M skills/README.md`, and `git diff -- skills/README.md` confirms unrelated table reformatting and row removals; the revised spec now directly addresses that case.
 - Remaining action for Claude Code: None, beyond following the guard during implementation.
 
 #### SA-005: Handoff state active incident is omitted from current-truth updates
@@ -98,19 +98,19 @@ None found.
 ### Internet research performed
 
 - Source name: Claude Code skills documentation
-- URL: https://code.claude.com/docs/en/skills
+- URL: <https://code.claude.com/docs/en/skills>
 - Access date: 2026-06-08
 - What it was used to verify: Skill placement, `SKILL.md` entrypoint, automatic invocation, and `allowed-tools` behavior.
 - Relevant conclusion: `~/.claude/skills/<skill-name>/SKILL.md` is a valid personal skill location; `description` drives automatic loading; `allowed-tools` pre-approves tools while active but does not restrict all other tools.
 
 - Source name: Claude Code MCP documentation
-- URL: https://code.claude.com/docs/en/agent-sdk/mcp
+- URL: <https://code.claude.com/docs/en/agent-sdk/mcp>
 - Access date: 2026-06-08
 - What it was used to verify: MCP tool naming and tool-search behavior.
 - Relevant conclusion: MCP tools follow `mcp__<server-name>__<tool-name>` naming, and tool search can defer tool definitions until needed. This supports the spec’s requirement to re-check live Claude Code server names before writing concrete tool names.
 
 - Source name: Tavily Search API documentation
-- URL: https://docs.tavily.com/documentation/api-reference/endpoint/search
+- URL: <https://docs.tavily.com/documentation/api-reference/endpoint/search>
 - Access date: 2026-06-08
 - What it was used to verify: Tavily upstream `topic` options.
 - Relevant conclusion: Upstream Tavily supports `general`, `news`, and `finance`, but the installed MCP schema exposed here remains narrower. The spec is correct to defer to the installed schema.
