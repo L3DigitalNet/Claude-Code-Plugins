@@ -38,16 +38,12 @@ cd my-plugin
 **plugin.json:**
 
 ```json
-{
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "description": "Plugin description"
-}
+{ "name": "my-plugin", "version": "1.0.0", "description": "Plugin description" }
 ```
 
 **Directory structure:**
 
-```
+```text
 my-plugin/
 ├── .claude-plugin/
 │   └── plugin.json
@@ -83,31 +79,25 @@ claude --version
 
 ```json
 {
-  "name": "plugin-identifier", // lowercase-hyphenated
-  "version": "1.0.0", // semver
-  "description": "Brief description" // one-line summary
+	"name": "plugin-identifier", // lowercase-hyphenated
+	"version": "1.0.0", // semver
+	"description": "Brief description" // one-line summary
 }
 ```
 
 **Optional fields:**
 
 ```json
-{
-  "author": { "name": "Your Name", "url": "https://..." },
-  "homepage": "https://..."
-}
+{ "author": { "name": "Your Name", "url": "https://..." }, "homepage": "https://..." }
 ```
 
-> **Strict mode warning:** `plugin.json` uses Zod strict validation — unknown fields are rejected on install.
-> Invalid fields (silently dropped by local tooling but rejected at install): `keywords`, `repository`, `license`, `category`.
-> MCP and LSP servers use separate sidecar files (`.mcp.json`, `.lsp.json`) — not `plugin.json`.
+> **Strict mode warning:** `plugin.json` uses Zod strict validation — unknown fields are rejected on install. Invalid fields (silently dropped by local tooling but rejected at install): `keywords`, `repository`, `license`, `category`. MCP and LSP servers use separate sidecar files (`.mcp.json`, `.lsp.json`) — not `plugin.json`.
 
 ## Component Types
 
 ### Commands
 
-**Location:** `commands/*.md` **Format:** Markdown files with optional YAML frontmatter
-**Invocation:** `/plugin-name:command-name`
+**Location:** `commands/*.md` **Format:** Markdown files with optional YAML frontmatter **Invocation:** `/plugin-name:command-name`
 
 ```markdown
 ---
@@ -119,8 +109,7 @@ Command instructions using $ARGUMENTS placeholder for user input.
 
 ### Skills
 
-**Location:** `skills/*/SKILL.md` **Format:** Folder per skill with SKILL.md file
-**Invocation:** Auto-invoked by AI based on context
+**Location:** `skills/*/SKILL.md` **Format:** Folder per skill with SKILL.md file **Invocation:** Auto-invoked by AI based on context
 
 ```yaml
 ---
@@ -136,45 +125,39 @@ See [skills.md](./skills.md) for complete reference.
 
 ### Agents
 
-**Location:** `agents/*.md` **Purpose:** Specialized subprocesses with tool restrictions
-**Invocation:** `/agent-name`
+**Location:** `agents/*.md` **Purpose:** Specialized subprocesses with tool restrictions **Invocation:** `/agent-name`
 
 See [sub-agents.md](./sub-agents.md) for complete reference.
 
 ### Hooks
 
-**Location:** `hooks/hooks.json` **Purpose:** Lifecycle event handlers **Events:**
-SessionStart, SessionEnd, PreToolUse, PostToolUse, etc.
+**Location:** `hooks/hooks.json` **Purpose:** Lifecycle event handlers **Events:** SessionStart, SessionEnd, PreToolUse, PostToolUse, etc.
 
 See [hooks.md](./hooks.md) for complete reference.
 
 ### MCP Servers
 
-**Location:** Configured in `.mcp.json` at plugin root **Purpose:** External tool integrations via
-Model Context Protocol
+**Location:** Configured in `.mcp.json` at plugin root **Purpose:** External tool integrations via Model Context Protocol
 
 See [mcp.md](./mcp.md) for complete reference.
 
 ### LSP Servers
 
-**Location:** Configured in `.lsp.json` at plugin root **Purpose:** Language Server
-Protocol for code intelligence
+**Location:** Configured in `.lsp.json` at plugin root **Purpose:** Language Server Protocol for code intelligence
 
 ```json
 {
-  "python": {
-    "command": "pylsp",
-    "args": [],
-    "extensionToLanguage": {
-      ".py": "python"
-    }
-  }
+	"python": {
+		"command": "pylsp",
+		"args": [],
+		"extensionToLanguage": { ".py": "python" }
+	}
 }
 ```
 
 ## Directory Structure
 
-```
+```text
 plugin-name/
 ├── .claude-plugin/
 │   └── plugin.json            # Required metadata
@@ -191,13 +174,9 @@ plugin-name/
 └── README.md                  # Documentation — use docs/plugin-readme-template.md
 ```
 
-**Important:** Only `plugin.json` goes inside `.claude-plugin/`. All other directories
-are at plugin root.
+**Important:** Only `plugin.json` goes inside `.claude-plugin/`. All other directories are at plugin root.
 
-Every plugin `README.md` should follow `docs/plugin-readme-template.md`. Required sections:
-Summary, Principles, Requirements, Installation, How It Works (Mermaid), Usage, Planned
-Features, Known Issues, Links. Delete optional sections (Features, Configuration, Design
-Decisions, etc.) that don't apply to the specific plugin.
+Every plugin `README.md` should follow `docs/plugin-readme-template.md`. Required sections: Summary, Principles, Requirements, Installation, How It Works (Mermaid), Usage, Planned Features, Known Issues, Links. Delete optional sections (Features, Configuration, Design Decisions, etc.) that don't apply to the specific plugin.
 
 ## Development Workflow
 

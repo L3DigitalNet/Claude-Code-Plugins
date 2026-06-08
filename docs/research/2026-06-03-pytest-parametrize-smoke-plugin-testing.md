@@ -3,10 +3,9 @@ schema_version: '1.0'
 id: 2026-06-03-pytest-parametrize-smoke-plugin-testing
 title: pytest Parametrization Best Practices for Smoke and Plugin Testing (2026)
 description: >
-  API idioms, best practices, footguns, and smoke-test documentation patterns for
-  pytest parametrize. Covers pytest 8.x changes including HIDDEN_PARAM (8.4),
-  indirect fixtures, pytest_generate_tests, mark registration, and the pytester
-  plugin for testing pytest plugins themselves.
+  API idioms, best practices, footguns, and smoke-test documentation patterns for pytest parametrize. Covers pytest 8.x changes including HIDDEN_PARAM (8.4), indirect fixtures, pytest_generate_tests, mark registration, and the pytester plugin for testing pytest plugins themselves.
+
+
 doc_type: research
 status: active
 created: '2026-06-03'
@@ -90,7 +89,7 @@ license: proprietary
 ## Existing Tools
 
 | Tool | Maintenance | Link | Fit for use case |
-|------|-------------|------|------------------|
+| --- | --- | --- | --- |
 | pytest (built-in `parametrize`) | Active (8.4, Jun 2025) | https://docs.pytest.org/en/stable/how-to/parametrize.html | Core tool — all parametrize needs |
 | pytest-cases | Active | https://smarie.github.io/python-pytest-cases/ | Complex fixture+case separation; overkill for simple smoke suites |
 | Hypothesis | Active | https://hypothesis.readthedocs.io/ | Property-based generation; complementary, not a replacement |
@@ -123,7 +122,7 @@ license: proprietary
 ## Open Questions
 
 | # | Question | Why unresolved |
-|---|----------|----------------|
+| --- | --- | --- |
 | 1 | Does `pytest.HIDDEN_PARAM` interact with `--collect-only` output and CI reporters (JUnit XML)? | Introduced in 8.4 (Jun 2025); community usage and CI adapter behavior not yet documented. |
 | 2 | Is `pytest-cases` (case/fixture separation) well-suited for large plugin smoke suites vs. flat `pytest.param()` lists? | No community-sourced benchmark or comparison found; would require empirical testing. |
 | 3 | What is the recommended pytest version floor for new plugins shipping in 2026? | No official statement; community convention appears to be 7.x or 8.x but no canonical guidance found. |
@@ -131,7 +130,7 @@ license: proprietary
 ## Sources
 
 | URL | Title | Date | Authority |
-| --- | ----- | ---- | --------- |
+| --- | --- | --- | --- |
 | https://docs.pytest.org/en/stable/how-to/parametrize.html | How to parametrize fixtures and test functions | 2025 | [official] |
 | https://docs.pytest.org/en/stable/reference/reference.html#pytest.param | pytest API reference — pytest.param | 2025 | [official] |
 | https://docs.pytest.org/en/stable/example/parametrize.html | Parametrize examples | 2025 | [official] |

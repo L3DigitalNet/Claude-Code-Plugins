@@ -63,10 +63,10 @@ Design decisions in this plugin are evaluated against these principles.
      If there are no external requirements beyond Claude Code, state: "None beyond Claude Code." -->
 
 - Claude Code (any recent version)
-- Node.js 20+ *(if MCP server or TypeScript build required)*
-- Python 3.12+ *(if Python-based)*
-- `gh` CLI authenticated *(if GitHub API access needed)*
-- Linux (Debian/RHEL-based) *(if OS-constrained)*
+- Node.js 20+ _(if MCP server or TypeScript build required)_
+- Python 3.12+ _(if Python-based)_
+- `gh` CLI authenticated _(if GitHub API access needed)_
+- Linux (Debian/RHEL-based) _(if OS-constrained)_
 
 ## Installation
 
@@ -94,8 +94,7 @@ cd ~/.claude/plugins/cache/l3digitalnet-plugins/plugin-name
 npm install
 ```
 
-The `dist/` directory ships prebuilt — a build step is only required if you modify the
-TypeScript source.
+The `dist/` directory ships prebuilt — a build step is only required if you modify the TypeScript source.
 
 ## How It Works
 
@@ -131,7 +130,7 @@ flowchart TD
 /command-name [optional-args]
 ```
 
-Natural language triggers: *"phrase that activates this plugin"*, *"alternative phrase"*.
+Natural language triggers: _"phrase that activates this plugin"_, _"alternative phrase"_.
 
 Typical workflow:
 
@@ -143,20 +142,20 @@ Typical workflow:
 
 <!-- One table per component type. Delete sections that don't apply. -->
 
-| Command | Description |
-|---------|-------------|
+| Command         | Description                      |
+| --------------- | -------------------------------- |
 | `/command-name` | What it does and when to use it. |
 
 ## Skills
 
 | Skill | Loaded when |
-|-------|-------------|
+| --- | --- |
 | `skill-name` | On `/command-name` invocation, or when Claude deems it contextually relevant. |
 
 ## Agents
 
 | Agent | Description |
-|-------|-------------|
+| --- | --- |
 | `agent-name` | What it does, what tools it has access to, and what it's isolated from. |
 
 ## Hooks
@@ -168,7 +167,7 @@ Typical workflow:
 All hooks are registered declaratively via `hooks/hooks.json` — no runtime setup needed.
 
 | Hook | Event | What it does |
-|------|-------|-------------|
+| --- | --- | --- |
 | `script-name.sh` | PreToolUse / PostToolUse / SessionStart | Behavior when triggered; what it blocks, warns about, or records. |
 
 ## Tools
@@ -176,9 +175,9 @@ All hooks are registered declaratively via `hooks/hooks.json` — no runtime set
 <!-- MCP server plugins only. Group by module if there are many tools.
      Delete this section for non-MCP plugins. -->
 
-| Module | Count | Example Tools |
-|--------|-------|--------------|
-| Module name | N | `tool_one`, `tool_two`, `tool_three` |
+| Module      | Count | Example Tools                        |
+| ----------- | ----- | ------------------------------------ |
+| Module name | N     | `tool_one`, `tool_two`, `tool_three` |
 
 ## Configuration
 
@@ -190,8 +189,8 @@ All hooks are registered declaratively via `hooks/hooks.json` — no runtime set
 A default configuration is generated at `~/.config/plugin-name/config.yaml` on first run.
 
 ```yaml
-key_setting: default_value   # What this controls
-other_setting: true          # Why the default is what it is
+key_setting: default_value # What this controls
+other_setting: true # Why the default is what it is
 ```
 
 ## Planned Features
@@ -209,7 +208,7 @@ other_setting: true          # Why the default is what it is
      belong in Design Decisions). Each entry: bold title, colon, description,
      workaround if one exists. Don't pad with trivial caveats. -->
 
-- **Issue title**: What goes wrong and under what conditions. Workaround: *do X instead*.
+- **Issue title**: What goes wrong and under what conditions. Workaround: _do X instead_.
 - **Issue title**: What goes wrong and under what conditions. No workaround currently.
 
 ## Design Decisions
@@ -220,12 +219,11 @@ other_setting: true          # Why the default is what it is
      safety guard doesn't cover a particular tool, why a simpler approach was ruled out.
      Delete this section if there are no non-obvious decisions worth documenting. -->
 
-- **Decision title**: What the choice is, what the alternative was, and why the
-  alternative was rejected.
+- **Decision title**: What the choice is, what the alternative was, and why the alternative was rejected.
 
 ## Links
 
 - Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 - Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
-- Design document: [`docs/DESIGN.md`](docs/DESIGN.md) *(if one exists)*
+- Design document: [`docs/DESIGN.md`](docs/DESIGN.md) _(if one exists)_

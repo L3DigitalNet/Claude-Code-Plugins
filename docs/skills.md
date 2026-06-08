@@ -10,9 +10,7 @@ keywords: [skills, yaml, frontmatter, applyTo, triggers]
 
 ## Quick Reference
 
-**Location:** `skills/<skill-name>/SKILL.md` at plugin root — one folder per skill
-**File format:** Markdown with YAML frontmatter
-**Invocation:** Context-based (AI determines relevance)
+**Location:** `skills/<skill-name>/SKILL.md` at plugin root — one folder per skill **File format:** Markdown with YAML frontmatter **Invocation:** Context-based (AI determines relevance)
 
 **Minimum viable skill:**
 
@@ -48,8 +46,7 @@ applyTo: # File patterns for context matching
 
 ### name
 
-**Type:** `string` **Required:** Yes **Format:** lowercase-hyphenated **Example:**
-`python-testing-patterns`
+**Type:** `string` **Required:** Yes **Format:** lowercase-hyphenated **Example:** `python-testing-patterns`
 
 ```yaml
 name: api-error-handling
@@ -57,19 +54,15 @@ name: api-error-handling
 
 ### description
 
-**Type:** `string` **Required:** Yes **Purpose:** Helps AI determine when to invoke
-skill **Best practice:** Include trigger conditions and use cases
+**Type:** `string` **Required:** Yes **Purpose:** Helps AI determine when to invoke skill **Best practice:** Include trigger conditions and use cases
 
 ```yaml
-description:
-  Use when handling API errors, implementing retry logic, or building resilient HTTP
-  clients. Triggers on "error handling", "retry", "resilience".
+description: Use when handling API errors, implementing retry logic, or building resilient HTTP clients. Triggers on "error handling", "retry", "resilience".
 ```
 
 ### applyTo
 
-**Type:** `string[]` **Required:** No **Format:** Glob patterns **Purpose:** File-based
-context matching
+**Type:** `string[]` **Required:** No **Format:** Glob patterns **Purpose:** File-based context matching
 
 ```yaml
 applyTo:
@@ -88,8 +81,7 @@ applyTo:
 
 ### triggerPhrases
 
-**Type:** `string[]` **Required:** No **Purpose:** User input patterns that activate
-skill
+**Type:** `string[]` **Required:** No **Purpose:** User input patterns that activate skill
 
 ```yaml
 triggerPhrases:
@@ -133,8 +125,7 @@ triggerPhrases:
 
 ## Skill content
 
-Write your skill content in markdown below the frontmatter. Use clear structure and
-examples.
+Write your skill content in markdown below the frontmatter. Use clear structure and examples.
 
 ### Example: Testing skill
 
@@ -401,16 +392,13 @@ triggerPhrases:
 
 Always use async/await:
 
-\`\`\`python async def async_setup_entry(hass, entry): """Set up from config entry."""
-coordinator = DataUpdateCoordinator( hass, \_LOGGER, name="sensor",
-update_interval=timedelta(seconds=30), ) await coordinator.async_refresh() \`\`\`
+\`\`\`python async def async_setup_entry(hass, entry): """Set up from config entry.""" coordinator = DataUpdateCoordinator( hass, \_LOGGER, name="sensor", update_interval=timedelta(seconds=30), ) await coordinator.async_refresh() \`\`\`
 
 ## Entity setup
 
 Use coordinator pattern:
 
-\`\`\`python class MySensorEntity(CoordinatorEntity, SensorEntity): """Representation of
-a sensor."""
+\`\`\`python class MySensorEntity(CoordinatorEntity, SensorEntity): """Representation of a sensor."""
 
     def __init__(self, coordinator, config_entry):
         """Initialize the sensor."""

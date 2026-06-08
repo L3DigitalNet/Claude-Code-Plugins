@@ -12,11 +12,7 @@ If your plugin is commands and/or skills only, use the simpler template
 (docs/plugin-design-template-simple.md) instead.
 -->
 
-Version: 0.1 (Draft)
-Status: In Progress — NOT FOR IMPLEMENTATION
-Last Updated: YYYY-MM-DD
-Authors: TBD
-Reviewers: TBD
+Version: 0.1 (Draft) Status: In Progress — NOT FOR IMPLEMENTATION Last Updated: YYYY-MM-DD Authors: TBD Reviewers: TBD
 
 ---
 
@@ -121,36 +117,17 @@ purpose could use the same preamble, it's too vague.
 The full principle format used across this repo. Every field is required.
 -->
 
-**Statement**:
-[One declarative sentence — a decision rule the plugin follows when under implementation
-pressure. It should tell you what to do in a specific situation, not just express a value.]
+**Statement**: [One declarative sentence — a decision rule the plugin follows when under implementation pressure. It should tell you what to do in a specific situation, not just express a value.]
 
-**Intent**:
-[What specific failure mode does this principle prevent? Name it concretely. The minimum
-bar: "Prevents [specific bad outcome] that would otherwise occur when [specific pressure]."
-If no concrete failure mode comes to mind, the principle may be too vague.]
+**Intent**: [What specific failure mode does this principle prevent? Name it concretely. The minimum bar: "Prevents [specific bad outcome] that would otherwise occur when [specific pressure]." If no concrete failure mode comes to mind, the principle may be too vague.]
 
-**Enforcement Heuristic**:
-[What does a violation look like in practice? Name a specific code pattern, architectural
-choice, or behavior. E.g., "A hook script that exits non-zero on failure" or "A command that
-runs a destructive operation without first surfacing a summary for user confirmation." Be
-specific enough that another developer could identify a violation without asking you.]
+**Enforcement Heuristic**: [What does a violation look like in practice? Name a specific code pattern, architectural choice, or behavior. E.g., "A hook script that exits non-zero on failure" or "A command that runs a destructive operation without first surfacing a summary for user confirmation." Be specific enough that another developer could identify a violation without asking you.]
 
-**Cost of Following This Principle**:
-[What does this plugin or user give up to honor this principle? There must be a real cost.
-If following this principle is free, it's not a principle — it's a platitude. E.g., "The
-plugin gives up the ability to run silently end-to-end without user involvement, because
-confirmation gates are required at key decision points."]
+**Cost of Following This Principle**: [What does this plugin or user give up to honor this principle? There must be a real cost. If following this principle is free, it's not a principle — it's a platitude. E.g., "The plugin gives up the ability to run silently end-to-end without user involvement, because confirmation gates are required at key decision points."]
 
-**Tiebreaker**:
-[If this principle conflicts with another principle in this plugin, which one wins? State the
-rule. E.g., "When P2 and P3 conflict, P2 takes precedence — correctness over speed."
-If no conflict is expected: "None."]
+**Tiebreaker**: [If this principle conflicts with another principle in this plugin, which one wins? State the rule. E.g., "When P2 and P3 conflict, P2 takes precedence — correctness over speed." If no conflict is expected: "None."]
 
-**Risk Areas**:
-[Which parts of this plugin are most likely to violate this principle under implementation
-pressure? E.g., "The session-end hook, where the temptation is to skip the queue review
-to reduce friction."]
+**Risk Areas**: [Which parts of this plugin are most likely to violate this principle under implementation pressure? E.g., "The session-end hook, where the temptation is to skip the queue review to reduce friction."]
 
 ---
 
@@ -187,22 +164,28 @@ enter Claude's context window, if at all).
 -->
 
 **Commands** (`/[name] <subcommand>`)
+
 - [Subcommand 1]: [Purpose]
 - [Subcommand 2]: [Purpose]
 
 **Skills**
+
 - [skill-name]: [When does Claude invoke this contextually?]
 
 **Hooks**
+
 - [hook-event] → [script-name.sh]: [What does this hook detect/enforce?]
 
 **Scripts**
+
 - [script-name.sh]: [Called by? Does what?]
 
 **Agents** (if applicable)
+
 - [agent-name]: [What task does it handle? What tool restrictions apply?]
 
 **MCP Server** (if applicable)
+
 - [server-name]: [What tools does it expose?]
 
 ---
@@ -227,8 +210,8 @@ If the plugin is stateless (no files outside its directory): write "None — sta
 
 ```yaml
 # ~/.plugin-name/config.yaml (example)
-field-one: value     # [What does this field control?]
-field-two: value     # [What does this field control?]
+field-one: value # [What does this field control?]
+field-two: value # [What does this field control?]
 ```
 
 ---
@@ -241,14 +224,14 @@ This matters because large context costs degrade performance at scale.
 Reference: CLAUDE.md "Context Footprint" table for the standard format.
 -->
 
-| Component | Enters context? | When? |
-|-----------|-----------------|-------|
-| Command markdown | Yes | On `/[name]` invocation |
-| Skills | Conditionally | When Claude deems relevant |
-| Hook scripts | No | Run externally; only stdout returned |
-| Scripts | No | Run externally; only stdout returned |
-| Agent definitions | No (for parent) | Loaded by spawned agent |
-| [State file summary] | Yes | [When?] |
+| Component            | Enters context? | When?                                |
+| -------------------- | --------------- | ------------------------------------ |
+| Command markdown     | Yes             | On `/[name]` invocation              |
+| Skills               | Conditionally   | When Claude deems relevant           |
+| Hook scripts         | No              | Run externally; only stdout returned |
+| Scripts              | No              | Run externally; only stdout returned |
+| Agent definitions    | No (for parent) | Loaded by spawned agent              |
+| [State file summary] | Yes             | [When?]                              |
 
 ---
 
@@ -268,7 +251,7 @@ Hook-specific: hook scripts should always exit 0 (see CLAUDE.md §Hooks Referenc
 -->
 
 | Failure | Detection | Behavior | Recovery |
-|---------|-----------|----------|----------|
+| --- | --- | --- | --- |
 | Config file missing | [How?] | [What happens?] | [How to recover?] |
 | [External dependency] unavailable | [How?] | [What happens?] | [Recovery command?] |
 | State file corrupted | [How?] | [What happens?] | [Recovery?] |
@@ -361,6 +344,7 @@ If your plugin has no runtime state, this layer may not apply. Say so.
 -->
 
 **Self-test checks** (all read-only, non-destructive):
+
 - [ ] [Check 1: e.g., config file exists and contains required fields]
 - [ ] [Check 2: e.g., state file is valid JSON or absent]
 - [ ] [Check 3: e.g., external dependency is reachable]
@@ -376,6 +360,7 @@ Tests must run against a disposable temp directory ($BATS_TMPDIR) — never agai
 -->
 
 **What bats covers:**
+
 - Happy path: [description of core script behavior]
 - Error path: [description of failure handling]
 - Edge case: [description of boundary condition]
@@ -394,6 +379,7 @@ List any plugin-specific structural requirements PTH should verify.
 -->
 
 **PTH checks for this plugin:**
+
 - Hook registration: hooks.json uses the record format (keyed by event name)
 - Command structure: all commands have required frontmatter fields
 - Skill triggers: skill files have appropriate trigger metadata
@@ -410,12 +396,14 @@ For each scenario: what you invoke, what you verify, what the success condition 
 -->
 
 **Sandbox setup:**
+
 ```bash
 # [Commands to create a throwaway test environment]
 # Override config to point at sandbox, not production state
 ```
 
 **Scenarios (one Claude session per scenario):**
+
 1. [Scenario name] — invoke [command/trigger], verify [expected outcome]
 2. [Scenario name] — invoke [command/trigger], verify [expected outcome]
 3. Error path — [trigger failure condition], verify [expected error handling]
@@ -438,7 +426,7 @@ If you find yourself writing an OQ you can answer right now — answer it here i
 -->
 
 | # | Question | Why it matters | Owner | Status |
-|---|----------|----------------|-------|--------|
+| --- | --- | --- | --- | --- |
 | OQ1 | [Specific, answerable question] | [Concrete consequence if unresolved] | TBD | Open |
 
 ---
@@ -457,8 +445,8 @@ Domain terms unique to this plugin. Omit standard software/plugin terms unless
 your usage differs from the standard meaning.
 -->
 
-| Term | Definition |
-|------|------------|
+| Term   | Definition   |
+| ------ | ------------ |
 | [Term] | [Definition] |
 
 ---
@@ -470,8 +458,8 @@ Expand each command entry with flags, examples, and edge-case behavior during
 implementation. Seed entries here during design.
 -->
 
-| Command | Description | Key flags |
-|---------|-------------|-----------|
+| Command                | Description   | Key flags  |
+| ---------------------- | ------------- | ---------- |
 | `/[name] [subcommand]` | [Description] | `--[flag]` |
 
 ---
@@ -484,5 +472,5 @@ Populate during implementation as fields are finalized.
 -->
 
 | Field | Required | Type | Default | Notes |
-|-------|----------|------|---------|-------|
+| --- | --- | --- | --- | --- |
 | `[field-name]` | ✓ | string | — | [What it controls, what breaks if wrong] |

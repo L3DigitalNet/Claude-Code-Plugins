@@ -10,9 +10,7 @@ If your plugin requires hooks, agents, scripts, or external state, use the full
 template (docs/plugin-design-template-full.md) instead.
 -->
 
-Version: 0.1 (Draft)
-Status: In Progress — NOT FOR IMPLEMENTATION
-Last Updated: YYYY-MM-DD
+Version: 0.1 (Draft) Status: In Progress — NOT FOR IMPLEMENTATION Last Updated: YYYY-MM-DD
 
 ---
 
@@ -32,8 +30,7 @@ check in CLAUDE.md isn't reliable because Claude skips it under time pressure."
 BAD: "This plugin helps streamline the workflow and improve efficiency."
 -->
 
-[Describe the specific workflow failure this plugin prevents. Be concrete about who experiences
-it and what goes wrong.]
+[Describe the specific workflow failure this plugin prevents. Be concrete about who experiences it and what goes wrong.]
 
 ---
 
@@ -80,11 +77,9 @@ Each principle entry should answer:
 Reference these principles in §6 Workflows with [→ P1] annotations.
 -->
 
-**P1 — [Principle Name]**: [One declarative sentence stating the decision rule.]
-*Cost: [What the plugin or user gives up when this principle is honored under pressure.]*
+**P1 — [Principle Name]**: [One declarative sentence stating the decision rule.] _Cost: [What the plugin or user gives up when this principle is honored under pressure.]_
 
-**P2 — [Principle Name]**: [Statement.]
-*Cost: [Cost.]*
+**P2 — [Principle Name]**: [Statement.] _Cost: [Cost.]_
 
 <!-- Add P3, P4 as needed. Most simple plugins need 2–4 principles. -->
 
@@ -102,7 +97,7 @@ Component types:
 -->
 
 | Type | Name | Purpose | Trigger |
-|------|------|---------|---------|
+| --- | --- | --- | --- |
 | Command | `/[name]` | [What does invoking this command do?] | User types `/[name]` |
 | Skill | `[skill-name]` | [When does Claude use this contextually?] | [Trigger condition] |
 
@@ -152,11 +147,13 @@ If there are no shell scripts, bats tests are not needed. Say so explicitly.
 -->
 
 **Manual scenarios:**
+
 - [ ] [Scenario 1: specific action + expected result]
 - [ ] [Scenario 2]
 - [ ] [Error path: what happens when X is missing or wrong?]
 
 **PTH structural checks:**
+
 - [ ] Command file has required frontmatter (`argument-hint`, `description`)
 - [ ] Skill file has `name` and `description` in frontmatter
 - [ ] [Any plugin-specific structural requirement]
@@ -173,5 +170,5 @@ question. Stubs and open questions are different things.
 -->
 
 | # | Question | Why it matters | Status |
-|---|----------|----------------|--------|
+| --- | --- | --- | --- |
 | OQ1 | [Specific, answerable question] | [Concrete consequence if not resolved] | Open |

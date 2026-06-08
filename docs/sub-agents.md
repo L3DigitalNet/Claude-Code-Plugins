@@ -10,10 +10,7 @@ keywords: [agents, subagents, tools, permissions, specialization]
 
 ## Overview
 
-**Purpose:** Specialized Claude modes with custom tools and prompts
-**Invocation:** `/agent-name [prompt]` (or spawned via the Task tool)
-**Location:** `agents/*.md` at plugin root
-**Format:** Markdown with YAML frontmatter
+**Purpose:** Specialized Claude modes with custom tools and prompts **Invocation:** `/agent-name [prompt]` (or spawned via the Task tool) **Location:** `agents/*.md` at plugin root **Format:** Markdown with YAML frontmatter
 
 **Characteristics:**
 
@@ -132,25 +129,25 @@ Use the Claude Code tool names exactly as they appear in the tool list. Common t
 
 ### Read-Only Tools
 
-| Tool    | Purpose                    |
-| ------- | -------------------------- |
-| `Read`  | Read file contents         |
-| `Grep`  | Pattern search in files    |
-| `Glob`  | File name/pattern matching |
+| Tool   | Purpose                    |
+| ------ | -------------------------- |
+| `Read` | Read file contents         |
+| `Grep` | Pattern search in files    |
+| `Glob` | File name/pattern matching |
 
 ### Write Tools
 
-| Tool   | Purpose            |
-| ------ | ------------------ |
-| `Edit` | Edit existing file |
-| `Write`| Create/replace file|
+| Tool    | Purpose             |
+| ------- | ------------------- |
+| `Edit`  | Edit existing file  |
+| `Write` | Create/replace file |
 
 ### Execution Tools
 
-| Tool   | Purpose                 |
-| ------ | ----------------------- |
-| `Bash` | Run shell commands      |
-| `Task` | Spawn a subagent        |
+| Tool   | Purpose            |
+| ------ | ------------------ |
+| `Bash` | Run shell commands |
+| `Task` | Spawn a subagent   |
 
 ## Tool Access Control
 
@@ -196,11 +193,7 @@ restrictedTools:
 Reference the agent in `manifest.json`:
 
 ```json
-{
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "description": "Plugin with custom agent"
-}
+{ "name": "my-plugin", "version": "1.0.0", "description": "Plugin with custom agent" }
 ```
 
 Agents in `agents/` (at the plugin root) are automatically discovered.
@@ -359,10 +352,7 @@ description: Adapts to programming language
 
 # Language-Aware Agent
 
-${language === 'python' ? `You are a Python expert. Follow PEP 8 and use type hints.` :
-language === 'typescript' ?
-`You are a TypeScript expert. Use strict mode and proper types.` :
-`General programming assistant.`}
+${language === 'python' ? `You are a Python expert. Follow PEP 8 and use type hints.` : language === 'typescript' ? `You are a TypeScript expert. Use strict mode and proper types.` : `General programming assistant.`}
 ```
 
 ### Chained agents
@@ -442,14 +432,11 @@ You generate comprehensive test cases for code.
 
 \`\`\`python import pytest
 
-def test_happy_path(): """Test normal operation.""" result = function(valid_input)
-assert result == expected_output
+def test_happy_path(): """Test normal operation.""" result = function(valid_input) assert result == expected_output
 
-def test_edge_case(): """Test boundary condition.""" result = function(edge_input)
-assert result == edge_output
+def test_edge_case(): """Test boundary condition.""" result = function(edge_input) assert result == edge_output
 
-def test_error_handling(): """Test error condition.""" with
-pytest.raises(ExpectedException): function(invalid_input) \`\`\`
+def test_error_handling(): """Test error condition.""" with pytest.raises(ExpectedException): function(invalid_input) \`\`\`
 ```
 
 ### Documentation agent
@@ -582,8 +569,7 @@ Verify:
 
 Write specific, actionable instructions:
 
-✅ Good: "Check for SQL injection by looking for string concatenation in SQL queries" ❌
-Vague: "Look for security issues"
+✅ Good: "Check for SQL injection by looking for string concatenation in SQL queries" ❌ Vague: "Look for security issues"
 
 ### Appropriate tool access
 
@@ -595,8 +581,7 @@ Only grant tools needed for the task:
 
 One agent, one job:
 
-✅ Good: Separate review and fix agents ❌ Too broad: One agent to review, fix, test,
-and deploy
+✅ Good: Separate review and fix agents ❌ Too broad: One agent to review, fix, test, and deploy
 
 ### Documentation
 

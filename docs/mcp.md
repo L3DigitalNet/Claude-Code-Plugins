@@ -10,9 +10,7 @@ keywords: [mcp, model-context-protocol, external-tools, integrations]
 
 ## Overview
 
-**MCP (Model Context Protocol):** Standard for connecting AI to external services
-**Provides:** External tools, resources, prompts, sampling
-**Configuration:** `.mcp.json` at plugin root
+**MCP (Model Context Protocol):** Standard for connecting AI to external services **Provides:** External tools, resources, prompts, sampling **Configuration:** `.mcp.json` at plugin root
 
 **Capabilities:**
 
@@ -25,54 +23,44 @@ keywords: [mcp, model-context-protocol, external-tools, integrations]
 
 ### Stdio (Standard I/O)
 
-**Transport:** stdin/stdout **Use case:** Local processes, npm packages **Pros:**
-Simple, universal **Cons:** One process per connection
+**Transport:** stdin/stdout **Use case:** Local processes, npm packages **Pros:** Simple, universal **Cons:** One process per connection
 
 ```json
 {
-  "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-      }
-    }
-  }
+	"mcpServers": {
+		"github": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-github"],
+			"env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+		}
+	}
 }
 ```
 
 ### SSE (Server-Sent Events)
 
-**Transport:** HTTP streaming **Use case:** Remote services, cloud deployments **Pros:**
-Remote hosting, multiple clients **Cons:** Requires HTTP server
+**Transport:** HTTP streaming **Use case:** Remote services, cloud deployments **Pros:** Remote hosting, multiple clients **Cons:** Requires HTTP server
 
 ```json
 {
-  "mcpServers": {
-    "remote-service": {
-      "url": "https://api.example.com/mcp",
-      "headers": {
-        "Authorization": "Bearer ${API_TOKEN}"
-      }
-    }
-  }
+	"mcpServers": {
+		"remote-service": {
+			"url": "https://api.example.com/mcp",
+			"headers": { "Authorization": "Bearer ${API_TOKEN}" }
+		}
+	}
 }
 ```
 
 ### HTTP Streaming
 
-**Transport:** HTTP long-polling **Use case:** Firewall-friendly connections **Pros:**
-Standard HTTP, NAT-friendly **Cons:** More complex than stdio
+**Transport:** HTTP long-polling **Use case:** Firewall-friendly connections **Pros:** Standard HTTP, NAT-friendly **Cons:** More complex than stdio
 
 ```json
 {
-  "mcpServers": {
-    "api-server": {
-      "url": "http://localhost:8080/mcp",
-      "transport": "http"
-    }
-  }
+	"mcpServers": {
+		"api-server": { "url": "http://localhost:8080/mcp", "transport": "http" }
+	}
 }
 ```
 
@@ -84,25 +72,18 @@ Standard HTTP, NAT-friendly **Cons:** More complex than stdio
 
 ```json
 {
-  "server-name": {
-    "command": "node",
-    "args": ["dist/server.js"],
-    "env": {
-      "VARIABLE": "value"
-    }
-  }
+	"server-name": {
+		"command": "node",
+		"args": ["dist/server.js"],
+		"env": { "VARIABLE": "value" }
+	}
 }
 ```
 
 For npx-based servers:
 
 ```json
-{
-  "server-name": {
-    "command": "npx",
-    "args": ["-y", "@scope/package"]
-  }
-}
+{ "server-name": { "command": "npx", "args": ["-y", "@scope/package"] } }
 ```
 
 ### Required fields
@@ -120,12 +101,10 @@ For HTTP/SSE servers:
 
 ```json
 {
-  "env": {
-    "API_KEY": "${API_KEY}"
-  },
-  "timeout": 30000,
-  "disabled": false,
-  "scope": "user"
+	"env": { "API_KEY": "${API_KEY}" },
+	"timeout": 30000,
+	"disabled": false,
+	"scope": "user"
 }
 ```
 
@@ -140,10 +119,10 @@ Reference environment variables with `${VAR_NAME}`:
 
 ```json
 {
-  "env": {
-    "GITHUB_TOKEN": "${GITHUB_TOKEN}",
-    "API_URL": "${CUSTOM_API_URL:-https://api.default.com}"
-  }
+	"env": {
+		"GITHUB_TOKEN": "${GITHUB_TOKEN}",
+		"API_URL": "${CUSTOM_API_URL:-https://api.default.com}"
+	}
 }
 ```
 
@@ -162,35 +141,32 @@ claude
 
 ```json
 {
-  "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-      }
-    }
-  }
+	"mcpServers": {
+		"github": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-github"],
+			"env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+		}
+	}
 }
 ```
 
-**Tools**: Create issues, PRs, manage repos, search code **Setup**: Requires GitHub
-personal access token
+**Tools**: Create issues, PRs, manage repos, search code **Setup**: Requires GitHub personal access token
 
 ### GitLab
 
 ```json
 {
-  "mcpServers": {
-    "gitlab": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-gitlab"],
-      "env": {
-        "GITLAB_TOKEN": "${GITLAB_TOKEN}",
-        "GITLAB_URL": "${GITLAB_URL:-https://gitlab.com}"
-      }
-    }
-  }
+	"mcpServers": {
+		"gitlab": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-gitlab"],
+			"env": {
+				"GITLAB_TOKEN": "${GITLAB_TOKEN}",
+				"GITLAB_URL": "${GITLAB_URL:-https://gitlab.com}"
+			}
+		}
+	}
 }
 ```
 
@@ -200,35 +176,32 @@ personal access token
 
 ```json
 {
-  "mcpServers": {
-    "slack": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-slack"],
-      "env": {
-        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
-        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
-      }
-    }
-  }
+	"mcpServers": {
+		"slack": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-slack"],
+			"env": {
+				"SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+				"SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+			}
+		}
+	}
 }
 ```
 
-**Tools**: Send messages, create channels, manage users **Setup**: Requires Slack app
-with bot token
+**Tools**: Send messages, create channels, manage users **Setup**: Requires Slack app with bot token
 
 ### PostgreSQL
 
 ```json
 {
-  "mcpServers": {
-    "postgres": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres"],
-      "env": {
-        "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
-      }
-    }
-  }
+	"mcpServers": {
+		"postgres": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-postgres"],
+			"env": { "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}" }
+		}
+	}
 }
 ```
 
@@ -238,17 +211,17 @@ with bot token
 
 ```json
 {
-  "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/allowed/path1",
-        "/allowed/path2"
-      ]
-    }
-  }
+	"mcpServers": {
+		"filesystem": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-filesystem",
+				"/allowed/path1",
+				"/allowed/path2"
+			]
+		}
+	}
 }
 ```
 
@@ -279,31 +252,23 @@ if __name__ == "__main__":
 **TypeScript** (MCP SDK):
 
 ```typescript
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
-const server = new Server({
-  name: 'my-server',
-  version: '1.0.0',
-});
+const server = new Server({ name: 'my-server', version: '1.0.0' })
 
 server.setRequestHandler('tools/list', async () => ({
-  tools: [
-    {
-      name: 'my_tool',
-      description: 'Tool description',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          param: { type: 'string' },
-        },
-      },
-    },
-  ],
-}));
+	tools: [
+		{
+			name: 'my_tool',
+			description: 'Tool description',
+			inputSchema: { type: 'object', properties: { param: { type: 'string' } } },
+		},
+	],
+}))
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
+const transport = new StdioServerTransport()
+await server.connect(transport)
 ```
 
 ### 2. Package as plugin
@@ -324,10 +289,10 @@ my-plugin/
 
 ```json
 {
-  "my-server": {
-    "command": "node",
-    "args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.bundle.cjs"]
-  }
+	"my-server": {
+		"command": "node",
+		"args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.bundle.cjs"]
+	}
 }
 ```
 
@@ -351,11 +316,7 @@ In README.md, document:
 Most common authentication method:
 
 ```json
-{
-  "env": {
-    "API_TOKEN": "${SERVICE_API_TOKEN}"
-  }
-}
+{ "env": { "API_TOKEN": "${SERVICE_API_TOKEN}" } }
 ```
 
 Document in README:
@@ -401,22 +362,18 @@ Support multiple accounts:
 
 ```json
 {
-  "mcpServers": {
-    "github-personal": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_PERSONAL_TOKEN}"
-      }
-    },
-    "github-work": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_WORK_TOKEN}"
-      }
-    }
-  }
+	"mcpServers": {
+		"github-personal": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-github"],
+			"env": { "GITHUB_TOKEN": "${GITHUB_PERSONAL_TOKEN}" }
+		},
+		"github-work": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-github"],
+			"env": { "GITHUB_TOKEN": "${GITHUB_WORK_TOKEN}" }
+		}
+	}
 }
 ```
 
@@ -465,18 +422,18 @@ For complex services, provide managed config:
 
 ```json
 {
-  "mcpServers": {
-    "complex-service": {
-      "command": "npx",
-      "args": ["-y", "@myorg/complex-server"],
-      "managed": true,
-      "config": {
-        "endpoint": "https://api.example.com",
-        "features": ["feature1", "feature2"],
-        "rateLimit": 100
-      }
-    }
-  }
+	"mcpServers": {
+		"complex-service": {
+			"command": "npx",
+			"args": ["-y", "@myorg/complex-server"],
+			"managed": true,
+			"config": {
+				"endpoint": "https://api.example.com",
+				"features": ["feature1", "feature2"],
+				"rateLimit": 100
+			}
+		}
+	}
 }
 ```
 
@@ -500,7 +457,7 @@ Set appropriate timeouts:
 
 ```json
 {
-  "timeout": 60000 // 60 seconds
+	"timeout": 60000 // 60 seconds
 }
 ```
 
@@ -579,11 +536,7 @@ Interact via stdin/stdout to test.
 Set debug environment variable:
 
 ```json
-{
-  "env": {
-    "DEBUG": "mcp:*"
-  }
-}
+{ "env": { "DEBUG": "mcp:*" } }
 ```
 
 ### MCP Inspector
@@ -661,18 +614,18 @@ def sensitive_operation(param: str):
 
 ```json
 {
-  "name": "company-api-plugin",
-  "version": "1.0.0",
-  "mcpServers": {
-    "company-api": {
-      "command": "python",
-      "args": ["-m", "company_mcp_server"],
-      "env": {
-        "API_KEY": "${COMPANY_API_KEY}",
-        "API_URL": "${COMPANY_API_URL:-https://api.company.com}"
-      }
-    }
-  }
+	"name": "company-api-plugin",
+	"version": "1.0.0",
+	"mcpServers": {
+		"company-api": {
+			"command": "python",
+			"args": ["-m", "company_mcp_server"],
+			"env": {
+				"API_KEY": "${COMPANY_API_KEY}",
+				"API_URL": "${COMPANY_API_URL:-https://api.company.com}"
+			}
+		}
+	}
 }
 ```
 
@@ -680,32 +633,25 @@ def sensitive_operation(param: str):
 
 ```json
 {
-  "name": "dev-tools",
-  "version": "1.0.0",
-  "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-      }
-    },
-    "jira": {
-      "command": "npx",
-      "args": ["-y", "@myorg/jira-mcp-server"],
-      "env": {
-        "JIRA_TOKEN": "${JIRA_TOKEN}",
-        "JIRA_URL": "${JIRA_URL}"
-      }
-    },
-    "slack": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-slack"],
-      "env": {
-        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}"
-      }
-    }
-  }
+	"name": "dev-tools",
+	"version": "1.0.0",
+	"mcpServers": {
+		"github": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-github"],
+			"env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+		},
+		"jira": {
+			"command": "npx",
+			"args": ["-y", "@myorg/jira-mcp-server"],
+			"env": { "JIRA_TOKEN": "${JIRA_TOKEN}", "JIRA_URL": "${JIRA_URL}" }
+		},
+		"slack": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-slack"],
+			"env": { "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}" }
+		}
+	}
 }
 ```
 

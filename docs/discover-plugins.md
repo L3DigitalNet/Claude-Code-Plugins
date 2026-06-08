@@ -43,20 +43,17 @@ claude
 2. Browse catalog → view available plugins
 3. Install plugins → download and activate individual plugins
 
-**Marketplace storage:** `~/.config/claude/marketplaces.json` **Plugin storage:**
-`~/.cache/claude/plugins/`
+**Marketplace storage:** `~/.config/claude/marketplaces.json` **Plugin storage:** `~/.cache/claude/plugins/`
 
 ## Official Marketplace
 
-**ID:** `claude-plugins-official` **Auto-registered:** Yes (available by default)
-**Install syntax:** `/plugin install <name>@claude-plugins-official`
+**ID:** `claude-plugins-official` **Auto-registered:** Yes (available by default) **Install syntax:** `/plugin install <name>@claude-plugins-official`
 
 ### Available Plugin Categories
 
 #### LSP (Language Server Protocol)
 
-**Purpose:** Code intelligence (definitions, references, type checking) **Requires:**
-Language server binary installed on system
+**Purpose:** Code intelligence (definitions, references, type checking) **Requires:** Language server binary installed on system
 
 **Linux installation examples:**
 
@@ -103,24 +100,23 @@ go install golang.org/x/tools/gopls@latest
 
 #### Development Workflows
 
-| Plugin              | Purpose            | Install Command                                             |
-| ------------------- | ------------------ | ----------------------------------------------------------- |
-| `commit-commands`   | Git workflows      | `/plugin install commit-commands@claude-plugins-official`   |
-| `pr-review-toolkit` | PR review agents   | `/plugin install pr-review-toolkit@claude-plugins-official` |
-| `agent-sdk-dev`     | Agent SDK tools    | `/plugin install agent-sdk-dev@claude-plugins-official`     |
-| `plugin-dev`        | Plugin development | `/plugin install plugin-dev@claude-plugins-official`        |
+| Plugin | Purpose | Install Command |
+| --- | --- | --- |
+| `commit-commands` | Git workflows | `/plugin install commit-commands@claude-plugins-official` |
+| `pr-review-toolkit` | PR review agents | `/plugin install pr-review-toolkit@claude-plugins-official` |
+| `agent-sdk-dev` | Agent SDK tools | `/plugin install agent-sdk-dev@claude-plugins-official` |
+| `plugin-dev` | Plugin development | `/plugin install plugin-dev@claude-plugins-official` |
 
 #### Output Customization
 
-| Plugin                     | Purpose              | Install Command                                                    |
-| -------------------------- | -------------------- | ------------------------------------------------------------------ |
+| Plugin | Purpose | Install Command |
+| --- | --- | --- |
 | `explanatory-output-style` | Educational insights | `/plugin install explanatory-output-style@claude-plugins-official` |
-| `learning-output-style`    | Interactive learning | `/plugin install learning-output-style@claude-plugins-official`    |
+| `learning-output-style` | Interactive learning | `/plugin install learning-output-style@claude-plugins-official` |
 
 ## Demo Marketplace
 
-**ID:** `anthropics-claude-code` **Auto-registered:** No (manual add required)
-**Repository:** `anthropics/claude-code`
+**ID:** `anthropics-claude-code` **Auto-registered:** No (manual add required) **Repository:** `anthropics/claude-code`
 
 ```bash
 /plugin marketplace add anthropics/claude-code
@@ -139,8 +135,7 @@ go install golang.org/x/tools/gopls@latest
 
 ## Marketplace Sources
 
-**Add marketplace command:** `/plugin marketplace add <source>` **Aliases:**
-`/plugin market add`, `/plugin marketplace rm`
+**Add marketplace command:** `/plugin marketplace add <source>` **Aliases:** `/plugin market add`, `/plugin marketplace rm`
 
 **Supported source types:**
 
@@ -203,8 +198,7 @@ Example after installing commit-commands:
 
 ## Security Note
 
-Plugins can include MCP servers, hooks, and arbitrary code. Verify trust before
-installation. Anthropic does not audit third-party plugins.
+Plugins can include MCP servers, hooks, and arbitrary code. Verify trust before installation. Anthropic does not audit third-party plugins.
 
 ## Troubleshooting
 
@@ -218,19 +212,14 @@ If you see "unknown command" or the `/plugin` command doesn't appear:
 
 ### Common issues
 
-- **Marketplace not loading**: Verify the URL is accessible and that
-  `.claude-plugin/marketplace.json` exists
+- **Marketplace not loading**: Verify the URL is accessible and that `.claude-plugin/marketplace.json` exists
 - **Plugin installation failures**: Check that plugin source URLs are accessible
-- **Files not found after installation**: Plugins are copied to a cache, so paths
-  referencing files outside the plugin directory won't work
+- **Files not found after installation**: Plugins are copied to a cache, so paths referencing files outside the plugin directory won't work
 
 For detailed troubleshooting, see [Troubleshooting](./troubleshooting.md).
 
 ## Next steps
 
-- **Build your own plugins**: See [Plugins](./plugins.md) to create skills, agents, and
-  hooks
-- **Create a marketplace**: See [Create a plugin marketplace](./plugin-marketplaces.md)
-  to distribute plugins
-- **Technical reference**: See [Plugins reference](./plugins-reference.md) for complete
-  specifications
+- **Build your own plugins**: See [Plugins](./plugins.md) to create skills, agents, and hooks
+- **Create a marketplace**: See [Create a plugin marketplace](./plugin-marketplaces.md) to distribute plugins
+- **Technical reference**: See [Plugins reference](./plugins-reference.md) for complete specifications

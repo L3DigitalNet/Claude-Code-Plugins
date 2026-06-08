@@ -10,14 +10,14 @@ keywords: [reference, schema, manifest, cli, debugging]
 
 ## Component Overview
 
-| Component | Location        | Purpose                | Details                          |
-| --------- | --------------- | ---------------------- | -------------------------------- |
-| Skills    | `skills/`       | Domain knowledge       | [skills.md](./skills.md)         |
-| Agents    | `agents/`       | Specialized assistants | [sub-agents.md](./sub-agents.md) |
-| Hooks     | `hooks/`        | Lifecycle events       | [hooks.md](./hooks.md)           |
-| MCP       | `.mcp.json`     | External tools         | [mcp.md](./mcp.md)               |
-| LSP       | `.lsp.json`     | Code intelligence      | See below                        |
-| Commands  | `commands/`     | User commands          | Slash commands (see plugins.md)  |
+| Component | Location    | Purpose                | Details                          |
+| --------- | ----------- | ---------------------- | -------------------------------- |
+| Skills    | `skills/`   | Domain knowledge       | [skills.md](./skills.md)         |
+| Agents    | `agents/`   | Specialized assistants | [sub-agents.md](./sub-agents.md) |
+| Hooks     | `hooks/`    | Lifecycle events       | [hooks.md](./hooks.md)           |
+| MCP       | `.mcp.json` | External tools         | [mcp.md](./mcp.md)               |
+| LSP       | `.lsp.json` | Code intelligence      | See below                        |
+| Commands  | `commands/` | User commands          | Slash commands (see plugins.md)  |
 
 ## manifest.json Schema
 
@@ -43,8 +43,7 @@ The manifest uses Zod strict mode — unknown fields are rejected. Only the fiel
 }
 ```
 
-MCP servers are configured in `.mcp.json` at plugin root (not in `plugin.json`).
-LSP servers are configured in `.lsp.json` at plugin root (not in `plugin.json`).
+MCP servers are configured in `.mcp.json` at plugin root (not in `plugin.json`). LSP servers are configured in `.lsp.json` at plugin root (not in `plugin.json`).
 
 - **author**: Object with `name` and `url` (or `email`). Plugin creator information.
 - **homepage**: String. URL to plugin documentation or repository.
@@ -53,14 +52,11 @@ LSP servers are configured in `.lsp.json` at plugin root (not in `plugin.json`).
 
 ```json
 {
-  "name": "my-plugin",
-  "version": "1.2.0",
-  "description": "One-line description of what this plugin does.",
-  "author": {
-    "name": "Your Name",
-    "url": "https://github.com/your-org"
-  },
-  "homepage": "https://github.com/your-org/your-repo/tree/main/plugins/my-plugin"
+	"name": "my-plugin",
+	"version": "1.2.0",
+	"description": "One-line description of what this plugin does.",
+	"author": { "name": "Your Name", "url": "https://github.com/your-org" },
+	"homepage": "https://github.com/your-org/your-repo/tree/main/plugins/my-plugin"
 }
 ```
 
@@ -69,55 +65,38 @@ LSP servers are configured in `.lsp.json` at plugin root (not in `plugin.json`).
 Configure MCP servers in `.mcp.json` at plugin root (not inside `.claude-plugin/`):
 
 ```json
-{
-  "server-name": {
-    "command": "node",
-    "args": ["dist/server.js"]
-  }
-}
+{ "server-name": { "command": "node", "args": ["dist/server.js"] } }
 ```
 
 For npx-based servers:
 
 ```json
-{
-  "server-name": {
-    "command": "npx",
-    "args": ["-y", "@scope/package"]
-  }
-}
+{ "server-name": { "command": "npx", "args": ["-y", "@scope/package"] } }
 ```
 
 For HTTP servers:
 
 ```json
-{
-  "server-name": {
-    "type": "http",
-    "url": "https://api.example.com/mcp"
-  }
-}
+{ "server-name": { "type": "http", "url": "https://api.example.com/mcp" } }
 ```
 
 Note: Plugin install does **not** run `npm install`. Dependencies must be pre-built or use `npx`.
 
-See [MCP](./mcp.md) for complete documentation on server types, authentication, and
-advanced configuration.
+See [MCP](./mcp.md) for complete documentation on server types, authentication, and advanced configuration.
 
 ## LSP servers
 
-Language Server Protocol integrations give Claude code intelligence. Configure them in
-`manifest.json`:
+Language Server Protocol integrations give Claude code intelligence. Configure them in `manifest.json`:
 
 ```json
 {
-  "lspServers": {
-    "typescript": {
-      "command": "typescript-language-server",
-      "args": ["--stdio"],
-      "filetypes": ["typescript", "typescriptreact", "javascript", "javascriptreact"]
-    }
-  }
+	"lspServers": {
+		"typescript": {
+			"command": "typescript-language-server",
+			"args": ["--stdio"],
+			"filetypes": ["typescript", "typescriptreact", "javascript", "javascriptreact"]
+		}
+	}
 }
 ```
 
@@ -126,8 +105,7 @@ Language Server Protocol integrations give Claude code intelligence. Configure t
 - **command**: String (required). The LSP server executable.
 - **args**: Array of strings. Command-line arguments.
 - **filetypes**: Array of strings. File extensions that trigger this server.
-- **rootPatterns**: Array of strings. Files/directories that identify project root
-  (e.g., `["package.json"]`).
+- **rootPatterns**: Array of strings. Files/directories that identify project root (e.g., `["package.json"]`).
 - **initializationOptions**: Object. Server-specific initialization options.
 - **env**: Object. Environment variables.
 
@@ -135,32 +113,32 @@ Language Server Protocol integrations give Claude code intelligence. Configure t
 
 ```json
 {
-  "lspServers": {
-    "python": {
-      "command": "pylsp",
-      "args": [],
-      "filetypes": ["python"],
-      "rootPatterns": ["pyproject.toml", "setup.py", "requirements.txt"],
-      "initializationOptions": {
-        "plugins": {
-          "pycodestyle": { "enabled": false },
-          "pylint": { "enabled": true }
-        }
-      }
-    }
-  }
+	"lspServers": {
+		"python": {
+			"command": "pylsp",
+			"args": [],
+			"filetypes": ["python"],
+			"rootPatterns": ["pyproject.toml", "setup.py", "requirements.txt"],
+			"initializationOptions": {
+				"plugins": {
+					"pycodestyle": { "enabled": false },
+					"pylint": { "enabled": true }
+				}
+			}
+		}
+	}
 }
 ```
 
 ### Common LSP servers
 
-| Language              | Server                     | Command                              | Installation                                 |
-| --------------------- | -------------------------- | ------------------------------------ | -------------------------------------------- |
-| TypeScript/JavaScript | typescript-language-server | `typescript-language-server --stdio` | `npm i -g typescript-language-server`        |
-| Python                | pylsp                      | `pylsp`                              | `pip install python-lsp-server`              |
-| Go                    | gopls                      | `gopls`                              | `go install golang.org/x/tools/gopls@latest` |
-| Rust                  | rust-analyzer              | `rust-analyzer`                      | via rustup                                   |
-| Java                  | jdtls                      | `jdtls`                              | via Eclipse JDT                              |
+| Language | Server | Command | Installation |
+| --- | --- | --- | --- |
+| TypeScript/JavaScript | typescript-language-server | `typescript-language-server --stdio` | `npm i -g typescript-language-server` |
+| Python | pylsp | `pylsp` | `pip install python-lsp-server` |
+| Go | gopls | `gopls` | `go install golang.org/x/tools/gopls@latest` |
+| Rust | rust-analyzer | `rust-analyzer` | via rustup |
+| Java | jdtls | `jdtls` | via Eclipse JDT |
 
 ## CLI commands
 

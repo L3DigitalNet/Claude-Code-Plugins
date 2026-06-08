@@ -10,10 +10,7 @@ keywords: [marketplace, distribution, publishing, catalog]
 
 ## Quick Reference
 
-**Purpose:** Catalog of plugins and where to install them from
-**File:** `.claude-plugin/marketplace.json`
-**Format:** JSON — validated with Zod strict mode (unknown fields are rejected)
-**Distribution:** Git repository (GitHub/GitLab), HTTP URL, or local path
+**Purpose:** Catalog of plugins and where to install them from **File:** `.claude-plugin/marketplace.json` **Format:** JSON — validated with Zod strict mode (unknown fields are rejected) **Distribution:** Git repository (GitHub/GitLab), HTTP URL, or local path
 
 **Minimum viable marketplace:**
 
@@ -37,18 +34,14 @@ The validator uses **Zod strict mode** — unknown fields cause validation failu
 
 ```json
 {
-  "name": "my-marketplace",
-  "description": "My collection of Claude Code plugins",
-  "owner": {
-    "name": "Your Name or Org",
-    "url": "https://github.com/your-org"
-  },
-  "plugins": []
+	"name": "my-marketplace",
+	"description": "My collection of Claude Code plugins",
+	"owner": { "name": "Your Name or Org", "url": "https://github.com/your-org" },
+	"plugins": []
 }
 ```
 
-**Required:** `name`, `owner`, `plugins`
-**Optional:** `description`
+**Required:** `name`, `owner`, `plugins` **Optional:** `description`
 
 `owner` accepts either `{name, url}` or `{name, email}`.
 
@@ -58,19 +51,18 @@ The validator uses **Zod strict mode** — unknown fields cause validation failu
 
 ```json
 {
-  "name": "plugin-name",
-  "description": "One or two sentence description.",
-  "version": "1.0.0",
-  "author": { "name": "Your Name", "url": "https://github.com/your-org" },
-  "category": "development",
-  "homepage": "https://github.com/your-org/your-repo/tree/main/plugins/plugin-name",
-  "tags": ["tag1", "tag2"],
-  "source": "./plugins/plugin-name"
+	"name": "plugin-name",
+	"description": "One or two sentence description.",
+	"version": "1.0.0",
+	"author": { "name": "Your Name", "url": "https://github.com/your-org" },
+	"category": "development",
+	"homepage": "https://github.com/your-org/your-repo/tree/main/plugins/plugin-name",
+	"tags": ["tag1", "tag2"],
+	"source": "./plugins/plugin-name"
 }
 ```
 
-**Required:** `name`, `description`, `source`
-**Optional:** `version`, `author` (object), `category`, `homepage`, `tags`, `strict`
+**Required:** `name`, `description`, `source` **Optional:** `version`, `author` (object), `category`, `homepage`, `tags`, `strict`
 
 **Invalid in plugin entries** (rejected by validator): `displayName`, `keywords`, `license`
 
@@ -100,29 +92,26 @@ This is the canonical format used by L3DigitalNet:
 
 ```json
 {
-  "name": "l3digitalnet-plugins",
-  "description": "Claude Code plugins by L3DigitalNet",
-  "owner": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  },
-  "plugins": [
-    {
-      "name": "release-pipeline",
-      "description": "Interactive release pipeline: quick merge, full semver release, plugin release, status checks, dry runs.",
-      "version": "2.2.0",
-      "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
-      "source": "./plugins/release-pipeline"
-    },
-    {
-      "name": "external-tool",
-      "description": "An external plugin hosted in a separate repository.",
-      "version": "1.0.0",
-      "author": { "name": "Someone", "url": "https://github.com/someone" },
-      "source": { "source": "url", "url": "https://github.com/someone/external-tool" }
-    }
-  ]
+	"name": "l3digitalnet-plugins",
+	"description": "Claude Code plugins by L3DigitalNet",
+	"owner": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"plugins": [
+		{
+			"name": "release-pipeline",
+			"description": "Interactive release pipeline: quick merge, full semver release, plugin release, status checks, dry runs.",
+			"version": "2.2.0",
+			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+			"source": "./plugins/release-pipeline"
+		},
+		{
+			"name": "external-tool",
+			"description": "An external plugin hosted in a separate repository.",
+			"version": "1.0.0",
+			"author": { "name": "Someone", "url": "https://github.com/someone" },
+			"source": { "source": "url", "url": "https://github.com/someone/external-tool" }
+		}
+	]
 }
 ```
 

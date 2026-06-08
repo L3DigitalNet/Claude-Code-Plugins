@@ -10,34 +10,33 @@ keywords: [hooks, lifecycle, events, automation, triggers]
 
 ## Overview
 
-**Purpose:** Run shell commands at lifecycle events — before or after tool calls, at session start, or before context compaction.
-**Location:** `hooks/hooks.json` at plugin root
-**Format:** JSON record keyed by event name
+**Purpose:** Run shell commands at lifecycle events — before or after tool calls, at session start, or before context compaction. **Location:** `hooks/hooks.json` at plugin root **Format:** JSON record keyed by event name
 
-Hooks provide *mechanical* enforcement — they run regardless of AI behavior and cannot be bypassed by prompts. This makes them stronger than behavioral instructions.
+Hooks provide _mechanical_ enforcement — they run regardless of AI behavior and cannot be bypassed by prompts. This makes them stronger than behavioral instructions.
 
 ## hooks.json Format
 
 ```json
 {
-  "hooks": {
-    "EventName": [
-      {
-        "matcher": "ToolName|OtherTool",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/my-hook.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"EventName": [
+			{
+				"matcher": "ToolName|OtherTool",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/my-hook.sh",
+						"timeout": 30
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
 **Structure:**
+
 - `hooks`: Record (object) keyed by event name — **not** an array
 - Each event value: array of hook groups, each with a `matcher` and a `hooks` array
 - `type`: always `"command"` — runs an external shell process
@@ -46,13 +45,13 @@ Hooks provide *mechanical* enforcement — they run regardless of AI behavior an
 
 ## Event Types
 
-| Event | Timing | Stdin |
-|-------|--------|-------|
-| `SessionStart` | Session begins | None |
-| `SessionEnd` | Session ends | None |
-| `PreToolUse` | Before tool call | Tool name + arguments (JSON) |
-| `PostToolUse` | After tool call | Tool name + arguments + result (JSON) |
-| `PreCompact` | Before context compaction | None |
+| Event          | Timing                    | Stdin                                 |
+| -------------- | ------------------------- | ------------------------------------- |
+| `SessionStart` | Session begins            | None                                  |
+| `SessionEnd`   | Session ends              | None                                  |
+| `PreToolUse`   | Before tool call          | Tool name + arguments (JSON)          |
+| `PostToolUse`  | After tool call           | Tool name + arguments + result (JSON) |
+| `PreCompact`   | Before context compaction | None                                  |
 
 ## Matcher Pattern
 
@@ -75,11 +74,8 @@ For `PreToolUse` and `PostToolUse`, the hook script receives a JSON object on st
 
 ```json
 {
-  "tool_name": "Write",
-  "tool_input": {
-    "file_path": "/path/to/file.py",
-    "content": "..."
-  }
+	"tool_name": "Write",
+	"tool_input": { "file_path": "/path/to/file.py", "content": "..." }
 }
 ```
 
@@ -127,8 +123,8 @@ Stdout from `SessionStart` hooks is displayed in the terminal when the session b
 
 Only one variable substitution is available in hook `command` strings:
 
-| Variable | Value |
-|----------|-------|
+| Variable                | Value                                           |
+| ----------------------- | ----------------------------------------------- |
 | `${CLAUDE_PLUGIN_ROOT}` | Absolute path to the installed plugin directory |
 
 There is no `${file}` or other automatic variable substitution. Pass data to scripts via stdin JSON (for PreToolUse/PostToolUse) or by using `${CLAUDE_PLUGIN_ROOT}` to reference scripts and state bundled with the plugin.
@@ -139,23 +135,23 @@ One event can have multiple hook groups, and each group can have multiple hooks.
 
 ```json
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/force-push-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-build.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/force-push-guard.sh"
+					},
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-build.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -167,19 +163,19 @@ When multiple files or patterns need different handling, use a single hook that 
 
 ```json
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/post-write-hook.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Write|Edit|MultiEdit",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/post-write-hook.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -206,20 +202,20 @@ esac
 
 ```json
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/sync-local-plugins.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "*",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/sync-local-plugins.sh",
+						"timeout": 30
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -258,19 +254,19 @@ fi
 
 ```json
 {
-  "hooks": {
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/on-pre-compact.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreCompact": [
+			{
+				"matcher": "auto",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/on-pre-compact.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -301,7 +297,7 @@ echo "[DEBUG] FILE_PATH=$FILE_PATH" >&2
 ## Common Mistakes
 
 | Mistake | Effect | Fix |
-|---------|--------|-----|
+| --- | --- | --- |
 | `"hooks"` field is an array, not a record | Schema error on load | Use `{"hooks": {"EventName": [...]}}`, not `{"hooks": [...]}` |
 | Using `${file}` in command string | Literal string — no substitution happens | Read file path from stdin JSON in the script |
 | Exit 1 in PreToolUse | Tool proceeds (exit 1 is not a block) | Only exit code `2` blocks tool execution |
