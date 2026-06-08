@@ -1,7 +1,7 @@
 ---
 name: qdev-researcher
 description: Dual-source web research over a topic, task, or technology. Covers official docs, best practices, footguns, existing tools, security, and ecosystem changes. Routes library questions through Context7. Persists a structured report under docs/research/. Read-only on project source.
-tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_search, mcp__tavily-mcp__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__get-library-docs, mcp__plugin_context7_context7__resolve-library-id
+tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily__tavily_search, mcp__tavily__tavily_extract, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__get-library-docs, mcp__plugin_context7_context7__resolve-library-id
 model: sonnet
 ---
 
@@ -65,7 +65,7 @@ independent sources, and emit a structured report that downstream commands can c
    Always include the current year (from step 1) in queries that risk surfacing stale content.
 
 5. **Execute search (per-path: this agent is the recall engine).** Route Tavily-first:
-   `mcp__tavily-mcp__tavily_search` (the primary recall pass; `search_depth=basic`, `advanced`
+   `mcp__tavily__tavily_search` (the primary recall pass; `search_depth=basic`, `advanced`
    for high-stakes - never `fast`, which returns empty) -> cross-check the top claims with
    `mcp__brave-search__brave_web_search` -> use `mcp__serper-search__google_search` only for
    Google-specific operators (`site:`, `filetype:`), always passing `gl: us, hl: en`.
@@ -73,7 +73,7 @@ independent sources, and emit a structured report that downstream commands can c
    Brave instead.
 
 6. **Deep-read.** Identify 3-5 highest-signal pages across all results. Read via
-   `mcp__tavily-mcp__tavily_extract` (handles JS-rendered content). Fall back to `WebFetch` only on
+   `mcp__tavily__tavily_extract` (handles JS-rendered content). Fall back to `WebFetch` only on
    extract failure.
 
 7. **Corroboration check.** Before listing any item under **Footguns**, verify it appears in at
