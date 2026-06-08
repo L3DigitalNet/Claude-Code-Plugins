@@ -8,7 +8,7 @@
 - Drift auditor (Sonnet) receives session-change summary after propagators complete; checks for contradictions in propagator output; emits convergence loop phases.
 - Parallel dispatch reduces wall time to `max(repo, wiki, notion)` + drift; sequential phases protect consistency.
 
-**All plugins:** follow plugin-marketplace canonical structure (plugin.json, CHANGELOG.md, README.md from template, optional agents/hooks/skills). 9 plugins total in marketplace as of 2026-05-30 (was 12; opus-context, handoff, nominal removed as unused). Prior cut 2026-05-08: 17 → 12 (claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev removed in commit 3b8323e).
+**All plugins:** follow plugin-marketplace canonical structure (plugin.json, CHANGELOG.md, README.md from template, optional agents/hooks/skills). 6 plugins total in marketplace as of 2026-06-08 (was 9; github-repo-manager, plugin-test-harness, repo-hygiene de-listed as unused). Was 9 as of 2026-05-30 (was 12; opus-context, handoff, nominal removed). Prior cut 2026-05-08: 17 → 12 (claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev removed in commit 3b8323e).
 
 ## Handoff Gotchas
 
@@ -28,7 +28,7 @@ counts in `docs/handoff/conventions.md` TEST-001 current when adding tests.
 **Quick reference:**
 - Strategic overview: `docs/handoff/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
 - Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/handoff/sessions/`
-- In scope: 9 plugins with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
+- In scope: 6 plugins (github-repo-manager, plugin-test-harness, repo-hygiene de-listed 2026-06-08). Was 9 with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
 - Branch workflow: direct commits to `main`.
@@ -68,13 +68,10 @@ Claude-Code-Plugins/
 ├── .claude-plugin/marketplace.json   # Marketplace catalog
 ├── .github/workflows/                # CI: codeql, ha-dev-plugin-tests, plugin-test-harness-ci
 ├── plugins/
-│   ├── github-repo-manager/          # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
-│   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
 │   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
 │   ├── qt-suite/                     # Qt development and testing toolkit
 │   ├── release-pipeline/             # Autonomous release pipeline
-│   ├── repo-hygiene/                 # Autonomous repo maintenance sweep
 │   ├── test-driver/                  # Proactive testing via gap analysis and convergence
 │   └── up-docs/                      # Three-layer documentation updater + drift analysis
 ├── scripts/validate-marketplace.sh   # Zod-schema marketplace validation
@@ -107,20 +104,11 @@ No root-level test runner — each plugin is self-contained. TypeScript plugins 
 pytest plugins/home-assistant-dev/tests/scripts/ -m unit
 pytest plugins/home-assistant-dev/tests/scripts/ -m integration
 
-cd plugins/plugin-test-harness
-npm ci && npm run build && npm test
-
 ./scripts/validate-marketplace.sh   # always run before merging to main
 claude --plugin-dir ./plugins/plugin-name
 ```
 
 CI runs the full matrix automatically on push to `main`.
-
-## Plugin Test Harness (PTH)
-
-- PTH loads tests from previous sessions. ALWAYS clear/regenerate tests for the current target plugin before running.
-- PTH does NOT auto-execute tests — you must manually call MCP tools and record results.
-- When testing a plugin, confirm the target plugin name explicitly before generating tests to avoid stale/mismatched test data.
 
 ## Development Workflow
 
@@ -192,7 +180,7 @@ PreToolUse blocking (exit 2): `echo '{"hookSpecificOutput":{"hookEventName":"Pre
 
 PostToolUse warnings: write to stdout — injected into agent context.
 
-Prefer one hook per event type with a dispatcher script routing by file path. Reference: `plugins/github-repo-manager/hooks/hooks.json`
+Prefer one hook per event type with a dispatcher script routing by file path. Reference: `plugins/home-assistant-dev/hooks/hooks.json`
 
 ## Marketplace Schema
 

@@ -65,8 +65,7 @@ LLM-facing (terse, scannable, tables > prose, no narrative framing):
 **Sources:**
 - `plugins/qdev/commands/research.md` (thin orchestrator)
 - `plugins/qdev/agents/qdev-researcher.md` (sonnet agent)
-- `plugins/repo-hygiene/commands/hygiene.md` (Step 1 inline; Step 2 dispatches agent)
-- Session summary: plugin delegation migration (2026-04-23). The `plugins/python-dev/` exemplars referenced in earlier revisions were deleted 2026-05-08 along with the plugin.
+- Session summary: plugin delegation migration (2026-04-23). The `plugins/python-dev/` exemplars referenced in earlier revisions were deleted 2026-05-08 along with the plugin. `plugins/repo-hygiene/` (also referenced) was de-listed 2026-06-08.
 
 **Related:** PLUGIN-001, DOC-001
 
@@ -131,11 +130,11 @@ Python:     pytest (test files: tests/test_<module>.py)
 TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 ```
 
-**Why:** Consistency across the marketplace reduces context-switching cost for sessions that work on multiple plugins. Each framework dominates its language (bats = 9 existing bash plugins; pytest = HA, Qt, up-docs Python, and qdev use it; Jest = HA/MCP and PTH established it for TypeScript). Ad-hoc bash runners are preserved but not extended.
+**Why:** Consistency across the marketplace reduces context-switching cost for sessions that work on multiple plugins. Each framework dominates its language (bats = 6 active bash plugins; pytest = HA, Qt, up-docs Python, and qdev use it; Jest = HA/MCP). Ad-hoc bash runners are preserved but not extended.
 
 **Sources:**
 - Rule table in this convention (canonical framework + naming conventions)
-- Existing test coverage (9 in-scope plugins, post-qdev research-KB scripts; was 8 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qdev 50 pytest (was 144; −94 from removing the grounding sanitizer suite `test_sanitize_query.py` in qdev 2.0.0 search decoupling), qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then -14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
+- Existing test coverage (6 in-scope plugins, post-qdev research-KB scripts; was 9 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): home-assistant-dev 207 pytest + 31 Jest, qdev 50 pytest (was 144; −94 from removing the grounding sanitizer suite `test_sanitize_query.py` in qdev 2.0.0 search decoupling), qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then -14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). github-repo-manager (40 bats), plugin-test-harness (68 Jest), repo-hygiene (40 bats) removed 2026-06-08. handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
 
 **Related:** TEST-002, DOC-001
 
@@ -160,7 +159,7 @@ exec bash "$BATS_ROOT/libexec/bats-core/bats" "$@"
 **Sources:**
 - Issue: reproducer `bats /tmp/minimal.bats > out.txt 2>&1; ls -la out.txt` shows 0 bytes via wrapper, populated via direct call
 - Discovered during release-pipeline Phase 2 (2026-04-25)
-- Affects 6 plugins (post-2026-05-30 cleanup): release-pipeline, up-docs, repo-hygiene, github-repo-manager, test-driver, qt-suite
+- Affects 4 plugins (post-2026-06-08 de-listing): release-pipeline, up-docs, test-driver, qt-suite (github-repo-manager, repo-hygiene removed 2026-06-08)
 
 **Related:** TEST-001, DOC-001
 

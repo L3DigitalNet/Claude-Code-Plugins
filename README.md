@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, Home Assistant integration dev, Qt UI development, GitHub repo health, plugin testing, and three-layer documentation propagation.
+A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, Home Assistant integration dev, Qt UI development, deep web research, and three-layer documentation propagation.
 
 ## Installation
 
@@ -46,13 +46,10 @@ When auto-update is enabled, Claude Code refreshes the marketplace catalog and u
 
 | Plugin | Type | Command | Description |
 | --- | --- | --- | --- |
-| [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
-| [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
 | [qdev](#qdev) | Commands + Agents | `/research` | Deep web research for development decisions: dual-source sweeps with Context7 docs gating, persisted as cited reports under `docs/research/` |
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
-| [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
 | [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
 | [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (Haiku repo/Notion propagators + Sonnet wiki propagator & drift auditor) from session context, plus full infrastructure drift analysis |
 
@@ -71,33 +68,6 @@ These principles apply across all plugins in this collection. Individual plugins
 **[P5] Convergence is the Contract**: Iterative work defines completion as a measurable criterion (set by the plugin, the user, or collaboratively) and drives toward it without check-ins. Proceed quietly when converging normally. Surface immediately if progress stalls or regresses unexpectedly. If the cycle begins oscillating (making and undoing the same changes repeatedly), flag the pattern and stop rather than continuing. Stop only when the criterion is met, oscillation is detected, or the user intervenes.
 
 **[P6] Composable, Focused Units**: Every plugin component (command, skill, hook) does one thing and is independently useful. Complex workflows emerge from combining atomic units at runtime; orchestration is assembled from the outside, not baked in.
-
----
-
-### GitHub Repo Manager
-
-**Conversational GitHub repository maintenance**: assess and fix repo health interactively, with owner approval at every step.
-
-**Features:**
-
-- Wiki sync: keeps wiki pages in sync with in-repo docs and code
-- Community health: audits and updates CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue/PR templates
-- PR triage: conflict detection, staleness checks, review summaries
-- Issue triage: labels, assignees, staleness, linked PRs
-- Release health: unreleased commits, changelog drift, draft releases
-- Security posture: Dependabot alerts, code scanning, secret scanning
-- Dependency audit: outdated packages, license concerns
-- Notifications & discussions: triage and summarise
-- Cross-repo mode: scan all accessible repos for a specific concern and fix in batch
-- Structured maintenance report generated at session end
-
-**Install:**
-
-```bash
-/plugin install github-repo-manager@l3digitalnet-plugins
-```
-
-**Learn more:** [plugins/github-repo-manager/README.md](plugins/github-repo-manager/README.md)
 
 ---
 
@@ -125,29 +95,6 @@ These principles apply across all plugins in this collection. Individual plugins
 
 ---
 
-### Plugin Test Harness
-
-**Iterative plugin testing framework**: generates tests, records pass/fail results, applies source fixes, reloads the target plugin, and retests until convergence.
-
-**Features:**
-
-- Auto-generates tests from plugin source and schema introspection
-- Test/fix/reload loop with convergence tracking (improving, plateau, oscillating, diverging)
-- Dedicated git branch per session for a complete audit trail of fixes
-- Sessions persist to disk and can be resumed after interruption
-- Native MCP client for MCP-mode plugins; source analysis for hook/command plugins
-- 18 tools across session management, test management, execution, and fix management
-
-**Install:**
-
-```bash
-/plugin install plugin-test-harness@l3digitalnet-plugins
-```
-
-**Learn more:** [plugins/plugin-test-harness/README.md](plugins/plugin-test-harness/README.md)
-
----
-
 ### Release Pipeline
 
 **Autonomous release pipeline**: quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.
@@ -169,29 +116,6 @@ These principles apply across all plugins in this collection. Individual plugins
 ```
 
 **Learn more:** [plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
-
----
-
-### Repo Hygiene
-
-**Autonomous maintenance sweep**: five parallel mechanical checks plus a semantic README pass, with safe corrections applied automatically and destructive changes requiring explicit approval.
-
-**Features:**
-
-- `.gitignore` pattern validation against actual repo contents
-- `marketplace.json` path and format checks
-- Orphaned plugin cache detection
-- Stale `enabledPlugins` entry cleanup
-- Semantic README freshness scan with inline AI reasoning
-- `--dry-run` flag shows full plan without touching anything
-
-**Install:**
-
-```bash
-/plugin install repo-hygiene@l3digitalnet-plugins
-```
-
-**Learn more:** [plugins/repo-hygiene/README.md](plugins/repo-hygiene/README.md)
 
 ---
 
@@ -292,9 +216,6 @@ cd plugins/release-pipeline && ./tests/run-bats.sh
 # Python plugins
 pytest plugins/home-assistant-dev/tests/ -m unit
 
-# TypeScript plugins
-cd plugins/plugin-test-harness && npm ci && npm run build && npm test
-
 # Marketplace schema validation (always run before merging to main)
 ./scripts/validate-marketplace.sh
 ```
@@ -344,14 +265,11 @@ This repository also serves as a development workspace for creating new plugins.
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
-├── plugins/                     # All plugin implementations (9 plugins)
-│   ├── github-repo-manager/     # Conversational GitHub repo maintenance
+├── plugins/                     # All plugin implementations (6 plugins)
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
-│   ├── plugin-test-harness/     # Iterative plugin testing framework
 │   ├── qdev/                    # Deep web research (research sweeps via qdev-researcher)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
 │   ├── release-pipeline/        # Autonomous release pipeline
-│   ├── repo-hygiene/            # Autonomous repo maintenance sweep
 │   ├── test-driver/             # Proactive testing via gap analysis and convergence
 │   └── up-docs/                 # Three-layer documentation updater (repo, wiki, Notion)
 ├── scripts/

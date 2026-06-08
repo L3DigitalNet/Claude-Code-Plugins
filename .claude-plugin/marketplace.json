@@ -18,17 +18,6 @@
       "source": "./plugins/home-assistant-dev"
     },
     {
-      "name": "github-repo-manager",
-      "description": "Conversational GitHub repository maintenance \u2014 health auditing, wiki sync, PR triage, issue triage, security posture, dependency auditing, and community file management via PAT",
-      "version": "0.5.1",
-      "author": {
-        "name": "L3DigitalNet",
-        "url": "https://github.com/L3DigitalNet"
-      },
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/github-repo-manager",
-      "source": "./plugins/github-repo-manager"
-    },
-    {
       "name": "release-pipeline",
       "description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
       "version": "2.2.2",
@@ -38,28 +27,6 @@
       },
       "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
       "source": "./plugins/release-pipeline"
-    },
-    {
-      "name": "plugin-test-harness",
-      "description": "Iterative live testing framework for Claude Code plugins and MCP servers. Run a session branch, generate tests, record results, apply fixes, and iterate until convergence.",
-      "version": "0.7.7",
-      "author": {
-        "name": "L3DigitalNet",
-        "url": "https://github.com/L3DigitalNet"
-      },
-      "source": "./plugins/plugin-test-harness",
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-test-harness"
-    },
-    {
-      "name": "repo-hygiene",
-      "description": "Autonomous maintenance sweep for any git repository: validates .gitignore patterns, stale uncommitted changes, Claude Code plugin state, and (in plugin repos) marketplace manifests. Dispatches hygiene-semantic-auditor (Haiku) for README freshness and docs/ accuracy checks.",
-      "version": "1.4.3",
-      "author": {
-        "name": "L3DigitalNet",
-        "url": "https://github.com/L3DigitalNet"
-      },
-      "source": "./plugins/repo-hygiene",
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
     },
     {
       "name": "qt-suite",

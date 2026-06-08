@@ -10,7 +10,7 @@
 
 ## Active Incidents
 
-- **repo-hygiene modernization — paused mid-brainstorm.** Resume from `docs/plans/2026-05-30-repo-hygiene-modernization-program.md` (§11 + §6 Phase 0). Next: spec Phase 0 (skills migration), then `superpowers:writing-plans`.
+_(none)_
 
 ## Recently closed (this session, 2026-06-08)
 
