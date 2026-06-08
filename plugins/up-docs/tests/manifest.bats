@@ -23,3 +23,15 @@ print(','.join(sorted(missing)) if missing else 'OK')
 ")
   [ "$result" = "OK" ]
 }
+
+@test "plugin.json version matches the marketplace.json up-docs entry (M3)" {
+  # both manifests carry the version independently; they must never drift.
+  result=$(python3 -c "
+import json
+pv = json.load(open('$PLUGIN_ROOT/.claude-plugin/plugin.json'))['version']
+mkt = json.load(open('$PLUGIN_ROOT/../../.claude-plugin/marketplace.json'))['plugins']
+mv = next(p['version'] for p in mkt if p['name'] == 'up-docs')
+print('OK' if pv == mv else pv + ' != ' + mv)
+")
+  [ "$result" = "OK" ]
+}

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.0] - 2026-06-08
+
+### Changed
+
+- Wiki layer retargeted from the local `~/projects/llm-wiki` directory to the canonical repo on GMK CT 103 (`/srv/workspaces/llm-wiki`), reachable only over SSH (alias `llm-wiki`). The wiki propagator (`up-docs-propagate-wiki`) and the drift auditor's wiki phase now run every read/search/edit/write/validate/git operation inside the LXC over SSH (`LLM_WIKI_SSH`/`LLM_WIKI_ROOT` indirection) instead of local `Read`/`Edit`/`Write`/`rg`. Pre-flight switched from "local directory exists" to an SSH reachability probe (graceful-skip on unreachable host). `up-docs-propagate-wiki` `tools:` narrowed to `Bash`. The Step-6 commit offer runs the `commit-candidates.sh` ground-truth helper on the CT via `ssh llm-wiki 'bash -s'` and stages/commits with `ssh llm-wiki 'git -C /srv/workspaces/llm-wiki …'`; the wiki commit stays draft and is commit-only (never pushed — CT `vzdump`/restic back it up). `commit-candidates.sh` itself is unchanged (pure git+python, runs wherever invoked).
+- Requires `~/.local/bin` on the CT's **non-interactive** SSH PATH so `uv`/`uvx` resolve under `ssh host 'cmd'`.
+
+### Added
+
+- `manifest.bats` M3: asserts `plugin.json` and the `marketplace.json` up-docs entry carry the same version (they had drifted-prone independent copies).
+
 ## [0.11.0] - 2026-06-07
 
 ### Added

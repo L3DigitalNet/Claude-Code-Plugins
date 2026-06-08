@@ -20,7 +20,7 @@ Documentation lives in three places with different purposes: repo-local files ca
 
 - Python 3.x in `$PATH` (used by all four helper scripts under `scripts/`)
 - Claude Code (any recent version)
-- The local `~/projects/llm-wiki` repo present on disk, plus `uv`/`uvx` for the wiki validators (no MCP required for the wiki layer)
+- SSH access to the `llm-wiki` host (the wiki repo and its `uv`/`uvx` validators live in CT 103 at `/srv/workspaces/llm-wiki`; nothing is required on the workstation's disk, no MCP)
 - Notion accessible via MCP (Notion MCP server configured) — the only layer that needs a configured MCP server and network
 - SSH access to infrastructure hosts (for `/up-docs:drift`)
 
@@ -202,7 +202,7 @@ Per-agent `model:` frontmatter overrides the caller's model tier, so the repo an
 
 ## Known Issues
 
-- Only the Notion layer requires a configured MCP server. The wiki layer needs the local `~/projects/llm-wiki` repo plus `uv`/`uvx`; if a layer's backing system is unavailable, use the individual commands for the layers you have.
+- Only the Notion layer requires a configured MCP server. The wiki layer needs SSH reachability to the `llm-wiki` host (CT 103, `/srv/workspaces/llm-wiki`) where `uv`/`uvx` run; if a layer's backing system is unavailable, use the individual commands for the layers you have.
 - The session context inference relies on git history; in a fresh repo with no commits, the commands have less signal to work from.
 - The repo and wiki layers read and write **offline** — only `/up-docs:notion` (and the Notion portion of `/up-docs:all` and `/up-docs:drift`) needs network/MCP. The one caveat: the pinned `validate-frontmatter` tool is fetched from git on first use (then cached), so air-gapped systems can run `/up-docs:repo` and `/up-docs:wiki` once that validator is cached.
 - `/up-docs:drift` requires SSH access to all documented hosts. Unreachable hosts are logged and skipped, not fatal.
