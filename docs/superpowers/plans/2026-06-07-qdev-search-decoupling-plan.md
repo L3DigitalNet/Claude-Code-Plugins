@@ -432,7 +432,11 @@ Immediately after the intro (after the `The format is based on [Keep a Changelog
 - `/qdev:research` and `qdev-researcher` no longer reference the removed `/qdev:quality-review` in their downstream-chaining text (output text only; research behavior unchanged).
 - Manifest + marketplace description rewritten to research-only; structural test (`test_plugin_structure.py`) updated for the skill-less, single-dispatcher surface.
 
+### Fixed
+- Corrected the Tavily MCP server key in `qdev-researcher` (`mcp__tavily-mcp__*` → `mcp__tavily__*`) to match this host's configured server name; the wrong key silently dropped the Tavily grant and forced a `WebFetch` fallback on every deep-read. (Lands via precursor commit `56494ad`.)
+
 ```
+> Implementation note: the tavily-key fix is already committed (`56494ad`); this `### Fixed` line just documents it in the 2.0.0 notes. Do not re-edit `qdev-researcher.md`'s tool list — only its Handoff text (Task A4 Step 3).
 
 - [ ] **Step 3: Delete the stale post-1.6.0 `## [Unreleased]` block**
 
@@ -908,7 +912,7 @@ Expected: each repo's HEAD is the commit from Task A9 / B4; **no staged paths re
 - **Release/tagging** (`qdev/v2.0.0` via `/release-pipeline:release`) — separate, user-initiated, post-merge.
 - **Live skill deploy** (`bash scripts/skills/deploy-skill.sh` against the real `$HOME`) — only after explicit user approval.
 - **Local marketplace cache refresh** (`~/.claude/plugins/...`) — post-merge user step.
-- **qdev-researcher Tavily tool-key audit** — the CHANGELOG records the agent's frontmatter using `mcp__tavily-mcp__*`, which may not match the live `mcp__tavily__*` key. This is a *pre-existing* possible bug, out of this plan's scope (non-goal: no qdev-researcher behavior changes). Flag it for a separate investigation; do not fix it here.
+- **qdev-researcher Tavily tool-key bug — ALREADY FIXED (commit `56494ad`), not pending.** The agent granted/used `mcp__tavily-mcp__*` but this host's `~/.claude.json` keys the server `tavily` (`mcp__tavily__*`), so the grant was silently dropped and every deep-read fell back to `WebFetch`. Corrected to `mcp__tavily__*` as a standalone precursor bugfix before this plan executes. Nothing to do here; the 2.0.0 CHANGELOG (Task A7) records it under `### Fixed`.
 
 ## Spec coverage check
 

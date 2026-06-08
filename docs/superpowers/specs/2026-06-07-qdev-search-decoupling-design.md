@@ -222,7 +222,11 @@ Guards (per the repo non-negotiable "never `git add .` / `git add -A`"):
 
 - No changes to the `qdev-researcher` agent's **research behavior or report machinery**.
   *Output/handoff text may be edited* solely to remove references to deleted qdev commands
-  (SA-003) — that is a doc fix, not a behavior change.
+  (SA-003) — that is a doc fix, not a behavior change. **Exception (user-directed):** a
+  pre-existing Tavily MCP server-key bug in `qdev-researcher` (`mcp__tavily-mcp__*` →
+  `mcp__tavily__*`, matching this host's configured server name) was corrected as a standalone
+  precursor bugfix (commit `56494ad`) — a correctness fix, landed outside this decoupling's
+  edits but recorded in the 2.0.0 CHANGELOG.
 - No rewrite of historical session logs, specs, or plans (current-truth handoff docs and
   `state.md` incident closure are in scope; dated history is not).
 - No new search depth tiers or report features in the routine-search skill.
