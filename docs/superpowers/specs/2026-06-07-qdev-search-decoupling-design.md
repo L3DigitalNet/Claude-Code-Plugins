@@ -18,9 +18,11 @@ We want two clean things instead of one tangled one:
 1. **qdev = deep research only.** One user-initiated command, `/qdev:research`, that runs
    the deep search routine and persists a report. Everything else in qdev is deprecated and
    removed.
-2. **Routine searching = a separate, simple skill** living in the `agent-configs` repo at
-   `skills/.agents/skills/`, telling agents how to use the three installed search MCP
-   servers. No report saving, no depth tiers, no auto-escalation.
+2. **Routine searching = a separate, simple skill** living in the `agent-configs` repo,
+   telling agents how to use the three installed search MCP servers. No report saving, no
+   depth tiers, no auto-escalation. *(Placement is `skills/.claude/skills/web-search/` —
+   Claude Code-only — because it names MCP tools; see the SA-001 decision below. The original
+   `.agents/` idea is superseded.)*
 
 ## Decisions (locked)
 
