@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-08 (qdev 2.0.0 search-decoupling shipped + released; 3 plugins de-listed; new agent-configs `web-search` skill)
+**Last updated:** 2026-06-08 (up-docs v0.12.0 released — remote-SSH wiki layer)
 
 ## Session Instructions
 
@@ -14,6 +14,6 @@
 
 ## Recently closed (this session, 2026-06-08)
 
-- **qdev 2.0.0 — search decoupling, shipped + released.** qdev slimmed to research-only (removed 4 commands + 3 agents + the `research-grounding` skill + `sanitize_query.py`); routine search moved to a new Claude-only **`web-search` skill** in agent-configs. Released `qdev/v2.0.0` (tag-only). Precursor bugfix `56494ad` corrected qdev-researcher's Tavily MCP key. **De-listed** github-repo-manager / plugin-test-harness / repo-hygiene (marketplace 9→6; tags/releases kept). Spec+plan Codex-converged; executed subagent-driven. Detail + commit refs in `sessions/2026-06.md`. **Next session: restart needed for qdev 2.0.0 to load.**
+- **up-docs v0.12.0 released.** Remote-SSH wiki layer (CT 103) implemented in prior session; this session cut the release. Pre-flight found 1 broken link in `CHANGELOG.md` [0.8.0] notes (dead plan-file reference) — de-linked and committed as part of the release. Tag `up-docs/v0.12.0` created, pushed; GitHub release published (`0f07df6`). Detail in `sessions/2026-06.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->
