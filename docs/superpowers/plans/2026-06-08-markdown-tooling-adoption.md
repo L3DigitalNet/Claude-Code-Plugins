@@ -137,37 +137,11 @@ Expected: `rule set OK` (confirms `default:true`, MD043 inert, MD013 off, MD025 
 }
 ```
 
-- [ ] **Step 5: Copy `.editorconfig` (verbatim from reference — forward-compatible with the later Python cycle)**
+- [ ] **Step 5: Copy `.editorconfig` byte-identically from the reference** (verbatim — forward-compatible with the later Python cycle)
 
-```ini
-# EditorConfig — editor-agnostic whitespace baseline. https://editorconfig.org
-root = true
+Run: `cp ~/projects/project-standards/.editorconfig .editorconfig`
 
-[*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-indent_style = tab
-indent_size = 2
-
-[*.py]
-indent_style = space
-indent_size = 4
-
-[*.toml]
-indent_style = space
-indent_size = 4
-
-[*.{yml,yaml}]
-indent_style = space
-indent_size = 2
-
-# Two trailing spaces are a Markdown hard line break, which Prettier preserves —
-# do not strip them here, or the editor and Prettier would disagree on save.
-[*.md]
-trim_trailing_whitespace = false
-```
+Then verify byte-identity: `diff .editorconfig ~/projects/project-standards/.editorconfig && echo "editorconfig OK"` → expect `editorconfig OK` (no diff). The reference file's `[*]` block is `indent_style = tab`, `[*.{yml,yaml}]`/`[*.md]` follow, plus `[*.py]`/`[*.toml]` (forward-compatible). Do **not** retype it inline — copy it so future reference syncs diff cleanly.
 
 - [ ] **Step 6: Create `.prettierignore` (D5 / ADR-0001 — gitignore syntax, one pattern per line, NO braces)**
 
@@ -227,8 +201,15 @@ Expected: `3.8.3`.
 
 - [ ] **Step 11: Verify the negation works (empirically)**
 
-Run: `git check-ignore -v .vscode/settings.json; echo "exit=$?"`
-Expected: **no output**, `exit=1` (file is NOT ignored). If it prints a `.gitignore` match (`exit=0`), the pattern is wrong — re-check Step 10.
+Use the **quiet** form — `git check-ignore -v` is unreliable here: with a `!` negation it prints the negation rule and exits `0` even though the file is *not* ignored. The reliable signals are `-q` (exit 1 = not ignored) and a dry-run add:
+
+```bash
+git check-ignore -q .vscode/settings.json; echo "q-exit=$?  # expect 1 = NOT ignored"
+mkdir -p .vscode && printf '{}\n' > .vscode/settings.json
+git add --dry-run .vscode/settings.json   # expect: prints "add '.vscode/settings.json'" (would stage)
+rm -rf .vscode
+```
+Expected: `q-exit=1` and the dry-run shows the file would be added. If `q-exit=0`, the pattern is wrong — re-check Step 10.
 
 - [ ] **Step 12: Commit the config layer**
 
