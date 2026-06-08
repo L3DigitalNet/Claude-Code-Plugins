@@ -246,6 +246,10 @@ The narrowing rule is **owned by the auditor task step** (`agents/up-docs-audit-
 Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
 Expected: all PASS.
 
+- [ ] **Step 5b: Record the behavioral narrowing smoke (CR-003)**
+
+The auditor is an LLM prompt, so pass-N narrowing correctness is not unit-testable in bats; the *mechanizable* substrate it keys off (the `touched_pages` round-trip) is already proven by Task 1's tracker tests. Add this acceptance check to the plugin's manual-smoke notes, to run on the next real `/up-docs:drift` whose phase takes ≥2 convergence passes: from the transcript, confirm pass 2's scanned set equals `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh touched-pages <phase>` (the prior pass's set) plus one-hop `related` dependents — not a fresh full scan. **Pass criterion:** pass-2 page count ≤ pass-1, and every pass-2 page ∈ (prior `touched_pages` ∪ their `related`).
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -373,9 +377,16 @@ Add a comment line to the top of the new conformance tests: `# Behavioral check 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add plugins/up-docs/skills/all/SKILL.md plugins/up-docs/templates/summary-report.md plugins/up-docs/tests/prompt-conformance.bats
+git add plugins/up-docs/skills/all/SKILL.md plugins/up-docs/templates/summary-report.md plugins/up-docs/tests/fixtures/routing-cases.md plugins/up-docs/tests/prompt-conformance.bats
 git commit -m "feat(up-docs): fast-path empty-layer skip via routing matrix, fail-open (B)"
 ```
+
+- [ ] **Step 9: Verify the fixture is tracked (CR-NEW-001)**
+
+A created-but-unstaged fixture passes locally yet fails on a clean checkout. The `git add` in Step 8 includes `routing-cases.md`; confirm it:
+
+Run: `git ls-files plugins/up-docs/tests/fixtures/routing-cases.md`
+Expected: prints the path.
 
 ---
 
@@ -393,9 +404,12 @@ Create `plugins/up-docs/tests/commit-candidates.bats`:
 #!/usr/bin/env bats
 # commit-candidates.bats — git-ground-truth candidate surfacing for the Step 6 commit offer.
 bats_require_minimum_version 1.5.0
-SCRIPTS_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/../scripts" && pwd)"
+load helpers
 
 setup() {
+  setup_test_env   # exports SCRIPTS_DIR + GIT_CONFIG_GLOBAL=/dev/null + GIT_CONFIG_NOSYSTEM=1
+                   # (TEST-003: neutralizes the global noreply-email hook + GPG signing so the
+                   # temp-repo `git commit` below is not rejected/blocked — CR-NEW-002).
   REPO="$(mktemp -d)"
   git -C "$REPO" init -q
   git -C "$REPO" config user.email t@e.x
@@ -405,7 +419,7 @@ setup() {
   git -C "$REPO" commit -qm base
   BASE="$(mktemp)"
 }
-teardown() { rm -rf "$REPO" "$BASE"; }
+teardown() { teardown_test_env; rm -rf "$REPO" "$BASE"; }
 
 @test "clean baseline: a newly written file is a candidate" {
   bash "$SCRIPTS_DIR/commit-candidates.sh" snapshot "$REPO" > "$BASE"   # empty
@@ -590,7 +604,14 @@ POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
   [ "$status" -eq 0 ]
   run grep -iF 'fingerprint' "$POST_PROP"
   [ "$status" -eq 0 ]
+  run grep -iF 'no-index' "$POST_PROP"   # untracked candidate content disclosure (CR-001)
+  [ "$status" -eq 0 ]
   run grep -iF 'never push' "$POST_PROP"
+  [ "$status" -eq 0 ]
+}
+
+@test "repo-skill also captures a pre-propagation baseline (CR-NEW-003)" {
+  run grep -iF 'commit-candidates.sh snapshot' "$PLUGIN_ROOT/skills/repo/SKILL.md"
   [ "$status" -eq 0 ]
 }
 
@@ -631,12 +652,15 @@ commit — report dirty trees and stop.
    them (a hook/editor/other process could have dirtied a clean-baseline path). Ownership is
    established by your per-path diff disclosure below, not by git.
 2. If every repo's candidate set is empty, skip silently.
-3. **Disclose + fingerprint**: for each candidate path, show its `git -C <repo> diff -- <path>`
-   (or a tight summary) so the user sees exactly what would be staged, AND capture that path's
-   content fingerprint now: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh fingerprint
-   <repo> <path>` — record it next to the diff you showed (CR-001). Baseline-dirty paths are
-   already excluded by the helper; surface them separately as "pre-existing local changes in
-   <repo> — left for you to handle manually."
+3. **Disclose + fingerprint**: show each candidate path's actual content so the user sees exactly
+   what would be staged — `git -C <repo> diff -- <path>` for tracked modifications, and
+   `git -C <repo> diff --no-index -- /dev/null <path>` for **untracked** candidates (plain
+   `git diff` shows NOTHING for untracked files, so an untracked candidate's content would
+   otherwise be approved unseen — CR-001). AND capture that path's content fingerprint now:
+   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh fingerprint <repo> <path>` — record
+   it next to the diff you showed. Baseline-dirty paths are already excluded by the helper;
+   surface them separately as "pre-existing local changes in <repo> — left for you to handle
+   manually."
 4. **Non-interactive guard**: if you cannot ask the user (headless `-p`, no `AskUserQuestion`),
    **commit nothing** — report the candidate paths and stop. No consent → no commit.
 5. Otherwise present ONE `AskUserQuestion` (`multiSelect` over candidate paths/repos).
@@ -758,3 +782,5 @@ Release is a separate `/release-pipeline:release` step (plugin release, scoped t
 **Type/name consistency:** subcommand `touched-pages` (Task 1 Step 5) matches its use in the auditor step (Task 2 Step 3) and the `touched-pages <phase>` test (Task 1 Step 1). `commit-candidates.sh {snapshot|candidates|fingerprint}` (Task 4) matches the calls in `post-propagation-steps.md` and the skills (Task 5) and the baseline-capture (Task 5 Step 4). `touched_pages` (findings-JSON key + state field) is consistent across Tasks 1–2.
 
 **Codex plan-review ledger (round 1 → applied):** CR-001 (late re-check missed content) → `fingerprint` subcommand + disclose/recompare flow + bats mutation test; CR-002 (routing over-routed to "none") → split system-of-record row + worked cases; CR-003 (grep-only validation) → `tests/fixtures/routing-cases.md` + fixtures-coverage conformance + concrete transcript-smoke note; CR-004 (fixed temp paths + git locks) → `mktemp` baselines + `git --no-optional-locks`; CR-005 (double-count) → Task 1 Step 4 replaces the whole `fixes…history` block + `changes_applied` assertion. Pre-existing untracked `TODO.md` flagged out-of-scope in Task 0.
+
+**Round 2 → applied:** CR-002/004/005 resolved. CR-001 (untracked content undisclosed) → `git diff --no-index -- /dev/null <path>` for untracked candidates + conformance grep. CR-003 (behavioral gaps) → Task 2 Step 5b A1 narrowing smoke with pass/fail criterion + repo-skill baseline conformance. CR-NEW-001 (fixture unstaged) → `routing-cases.md` added to Task 3 `git add` + Step 9 `git ls-files` verify. CR-NEW-002 (temp-repo hooks/signing) → `commit-candidates.bats` `load helpers` + `setup_test_env` (TEST-003). CR-NEW-003 (repo-skill baseline untested) → conformance assertion on `skills/repo/SKILL.md`.
