@@ -25,7 +25,7 @@ Two commands generate integrations at selectable quality tiers. Twenty-seven ski
 
 ## Installation
 
-```
+```text
 /plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install home-assistant-dev@l3digitalnet-plugins
 ```

@@ -8,7 +8,7 @@ Coverage-driven test generation is a loop: **run tests with instrumentation → 
 
 ## The Coverage Loop
 
-```
+```text
 run instrumented tests
         ↓
 parse coverage report (gaps list)
@@ -68,7 +68,7 @@ When analyzing gaps, prioritize:
 
 After identifying gaps, structure the handoff:
 
-```
+```text
 Gaps found in calculator.py: lines 18-22 (divide by zero path), line 45 (overflow check)
 Gaps found in formatter.py: lines 8-10 (empty string handling)
 Current coverage: 74%. Target: 80%.

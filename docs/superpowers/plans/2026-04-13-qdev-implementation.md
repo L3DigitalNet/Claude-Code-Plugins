@@ -575,7 +575,7 @@ None.
 - [Design spec](../../docs/superpowers/specs/2026-04-13-qdev-design.md)
 - [Source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev)
 
-````
+````bash
 
 - [ ] **Step 2: Commit**
 

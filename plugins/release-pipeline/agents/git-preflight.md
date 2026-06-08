@@ -81,7 +81,7 @@ The plugin-name argument is the scoped plugin being released, or omit it for ful
 
 ## Output Format
 
-```
+```yaml
 GIT PRE-FLIGHT
 ==============
 Status: PASS | FAIL

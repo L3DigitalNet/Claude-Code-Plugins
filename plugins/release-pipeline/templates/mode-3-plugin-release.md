@@ -1,10 +1,10 @@
 # Mode 3: Plugin Release
 
-# Loaded by the release command router after the user selects "Plugin Release"
+## Loaded by the release command router after the user selects "Plugin Release"
 
-# Context variables from Phase 0 are available: is_monorepo, unreleased_plugins
+## Context variables from Phase 0 are available: is_monorepo, unreleased_plugins
 
-# current_branch, last_tag, commit_count
+## current_branch, last_tag, commit_count
 
 Scoped release for a single plugin. Uses scoped tags, scoped changelog, and only stages plugin files.
 
@@ -93,9 +93,9 @@ Then launch THREE Task agents simultaneously **in a single message** (all three 
 
 **Agent A — Test Runner (scoped):**
 
-```
-subagent_type: "general-purpose"
-description: "Run test suite for plugin release pre-flight"
+```yaml
+subagent_type: 'general-purpose'
+description: 'Run test suite for plugin release pre-flight'
 prompt: |
   Read the instructions at ${CLAUDE_PLUGIN_ROOT}/agents/test-runner.md and follow them exactly.
   SCOPE: Only run tests for the plugin at plugins/<plugin-name>/.
@@ -108,9 +108,9 @@ prompt: |
 
 **Agent B — Docs Auditor (scoped):**
 
-```
-subagent_type: "general-purpose"
-description: "Audit plugin documentation for release readiness"
+```yaml
+subagent_type: 'general-purpose'
+description: 'Audit plugin documentation for release readiness'
 prompt: |
   Read the instructions at ${CLAUDE_PLUGIN_ROOT}/agents/docs-auditor.md and follow them exactly.
   SCOPE: Only audit documentation in plugins/<plugin-name>/ (README.md, docs/).
@@ -121,9 +121,9 @@ prompt: |
 
 **Agent C — Git Pre-flight (scoped):**
 
-```
-subagent_type: "general-purpose"
-description: "Git pre-flight check for plugin release"
+```yaml
+subagent_type: 'general-purpose'
+description: 'Git pre-flight check for plugin release'
 model: haiku
 prompt: |
   Read the instructions at ${CLAUDE_PLUGIN_ROOT}/agents/git-preflight.md and follow them exactly.
@@ -253,7 +253,7 @@ Use the verification outcome from Phase 4 to determine the header (same rule as 
 - Exit 0: `RELEASE COMPLETE: <plugin-name> v<version>`
 - Exit 1: `RELEASE COMPLETE ⚠: <plugin-name> v<version>` with post-block note
 
-```
+```yaml
 RELEASE COMPLETE: <plugin-name> v<version>
 ==========================================
 Tests:     ✓ PASS | ✗ FAIL — <one-line summary from Phase 1>

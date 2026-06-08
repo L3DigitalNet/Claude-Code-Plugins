@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 
 Use `src` layout to prevent accidental imports from the project root:
 
-```
+```text
 my-qt-app/
 ├── src/
 │   └── myapp/

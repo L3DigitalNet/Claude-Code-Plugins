@@ -204,7 +204,7 @@ Manage plugins from within Claude Code using the `/plugin` command.
 
 A complete plugin with all component types:
 
-```
+```text
 my-plugin/
 ├── .claude-plugin/
 │   └── plugin.json            # Required: plugin metadata (only this file goes here)

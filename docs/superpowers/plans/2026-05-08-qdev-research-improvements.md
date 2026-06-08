@@ -748,7 +748,7 @@ Tell the user:
 
 Run interactively (operator action):
 
-```
+```text
 /qdev:research "FastAPI dependency injection patterns"
 ```
 
@@ -778,7 +778,7 @@ Expected: file exists, header line matches the `Saved:` path the agent reported.
 
 Run interactively:
 
-```
+```text
 /qdev:research "rate limiting strategies for outbound API calls"
 ```
 
@@ -808,7 +808,7 @@ This task uses the plugin's own spec-sync tool to absorb every change since 2026
 
 Run interactively:
 
-```
+```text
 /qdev:spec-update docs/superpowers/specs/2026-04-13-qdev-design.md
 ```
 

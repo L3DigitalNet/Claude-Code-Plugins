@@ -51,7 +51,7 @@ license: null
 
 From `code.claude.com/docs/en/hooks` [official]:
 
-```
+```text
 SessionStart, Setup, UserPromptSubmit, UserPromptExpansion,
 PreToolUse, PermissionRequest, PermissionDenied,
 PostToolUse, PostToolUseFailure, PostToolBatch,
@@ -514,7 +514,7 @@ class PropagatorOutput(BaseModel):
 
 Validation error when discriminator value is wrong:
 
-```
+```text
 1 validation error for PropagatorOutput
 report
   Input tag 'notion' found using 'layer' does not match any of the
@@ -523,7 +523,7 @@ report
 
 Wait — if all three are present and `notion` is passed, it will match `NotionReport`. The error fires when `layer` has a value that matches NONE of the expected literals. Example: if `layer: "drift"` is passed when the union has only `repo|wiki|notion`:
 
-```
+```text
 Input tag 'drift' found using 'layer' does not match any of the
 expected tags: 'repo', 'wiki', 'notion'
 ```
@@ -574,7 +574,7 @@ The `model_config` approach (`ConfigDict(arbitrary_types_allowed=True)`) is for 
 
 ### Validation Error Message for Mismatched Discriminator
 
-```
+```text
 1 validation error for PropagatorOutput
 report
   Input tag 'wrong-value' found using 'layer' does not match any of the

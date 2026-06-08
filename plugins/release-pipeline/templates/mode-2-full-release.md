@@ -1,10 +1,10 @@
 # Mode 2: Full Release
 
-# Loaded by the release command router after the user selects "Full Release"
+## Loaded by the release command router after the user selects "Full Release"
 
-# Context variables from Phase 0 are available: suggested_version, feat_count, fix_count
+## Context variables from Phase 0 are available: suggested_version, feat_count, fix_count
 
-# other_count, last_tag, commit_count, current_branch
+## other_count, last_tag, commit_count, current_branch
 
 Full semver release with parallel pre-flight checks, version bumps, changelog, git tag, and GitHub release.
 
@@ -68,9 +68,9 @@ Then launch THREE Task agents simultaneously **in a single message** (all three 
 
 **Agent A — Test Runner:**
 
-```
-subagent_type: "general-purpose"
-description: "Run test suite for release pre-flight"
+```yaml
+subagent_type: 'general-purpose'
+description: 'Run test suite for release pre-flight'
 prompt: |
   Read the instructions at ${CLAUDE_PLUGIN_ROOT}/agents/test-runner.md and follow them exactly.
   Run the full test suite for the repository at the current working directory.
@@ -79,9 +79,9 @@ prompt: |
 
 **Agent B — Docs Auditor:**
 
-```
-subagent_type: "general-purpose"
-description: "Audit documentation for release readiness"
+```yaml
+subagent_type: 'general-purpose'
+description: 'Audit documentation for release readiness'
 prompt: |
   Read the instructions at ${CLAUDE_PLUGIN_ROOT}/agents/docs-auditor.md and follow them exactly.
   Audit documentation in the current repository.
@@ -91,9 +91,9 @@ prompt: |
 
 **Agent C — Git Pre-flight:**
 
-```
-subagent_type: "general-purpose"
-description: "Git pre-flight check"
+```yaml
+subagent_type: 'general-purpose'
+description: 'Git pre-flight check'
 model: haiku
 prompt: |
   Read the instructions at ${CLAUDE_PLUGIN_ROOT}/agents/git-preflight.md and follow them exactly.
@@ -106,7 +106,7 @@ prompt: |
 
 Display each agent's summary in a consolidated pre-flight report. Use ✓ for PASS, ⚠ for WARN, and ✗ for FAIL:
 
-```
+```text
 PRE-FLIGHT RESULTS
 ==================
 <✓|✗> Tests:  PASS|FAIL  — <one-line summary>
@@ -235,7 +235,7 @@ Display a completion report. Use the verification outcome from Phase 4 to determ
 - If verification passed (exit 0): use `RELEASE COMPLETE: v<version>`
 - If verification had failures (exit 1): use `RELEASE COMPLETE ⚠: v<version>` and append a note after the block: "⚠ Some post-release verification checks failed — see Phase 4 output above. Verify manually."
 
-```
+```yaml
 RELEASE COMPLETE: v<version>
 ============================
 Tests:     ✓ PASS | ✗ FAIL — <one-line summary from Phase 1>

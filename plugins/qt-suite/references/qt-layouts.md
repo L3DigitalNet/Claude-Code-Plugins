@@ -8,7 +8,7 @@ Trigger phrases: "arrange widgets", "layout", "resize behavior", "QSplitter", "c
 
 Qt lays out widgets using layout objects attached to containers. Never call `setGeometry()` manually — use layouts.
 
-```
+```text
 QWidget (parent)
 └── QVBoxLayout (attached via setLayout or constructor arg)
     ├── QLabel

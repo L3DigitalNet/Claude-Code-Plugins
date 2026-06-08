@@ -111,7 +111,7 @@ print(f"Coverage: {totals['percent_covered']:.1f}% ({totals['covered_lines']}/{t
 
 Display a table of files below threshold:
 
-```
+```text
 File                      Coverage   Missing Lines
 calculator.py               74.2%    18-22, 45, 67
 utils/formatter.py          61.5%    8-10, 30
@@ -127,7 +127,7 @@ If overall coverage >= threshold: report "✅ Coverage ${N}% — above threshold
 
 When files below threshold exist, use `AskUserQuestion` with bounded options:
 
-```
+```yaml
 Question: "Coverage is X%. N files are below threshold. Generate tests to fill the gaps?"
 Options:
   - "Yes, generate tests for all gaps"
@@ -142,10 +142,10 @@ If the user selects "Yes" (or the command was invoked with `--generate`), hand o
 
 Format the handoff:
 
-```
+```yaml
 Files below threshold:
-- calculator.py: 74% (missing lines 18-22, 45, 67 — error path in divide(), overflow check)
-- formatter.py: 62% (missing lines 8-10 — empty string handling)
+  - calculator.py: 74% (missing lines 18-22, 45, 67 — error path in divide(), overflow check)
+  - formatter.py: 62% (missing lines 8-10 — empty string handling)
 Target: 80%. Generate tests for these specific lines/paths.
 ```
 
@@ -153,7 +153,7 @@ Target: 80%. Generate tests for these specific lines/paths.
 
 Always end by reporting where the HTML report was saved:
 
-```
+```text
 HTML coverage report: htmlcov/index.html
 Open with: xdg-open htmlcov/index.html
 ```

@@ -57,13 +57,13 @@ Read `.qt-test.json` for `app_entry`. If absent, Glob for `main.py`, `app.py`, o
 
 Call `get_app_status`. If `running: true`, proceed with the existing session. If not running:
 
-```
+```text
 launch_app(script_path="/absolute/path/to/main.py")
 ```
 
 Or for module mode:
 
-```
+```text
 launch_app(module="myapp.main", working_dir="/absolute/path/to/project")
 ```
 
@@ -73,14 +73,14 @@ Wait for `success: true`. If launch fails, call `get_app_status` to retrieve std
 
 Always run discovery before testing:
 
-```
+```text
 find_widgets("*")   → discover named widgets
 list_actions()      → discover QActions (menus, toolbars)
 ```
 
 If many widgets have no names (unnamed), run:
 
-```
+```text
 list_all_widgets(include_invisible=false)
 ```
 
@@ -88,7 +88,7 @@ This reveals coordinates for click_at-based interaction.
 
 ### 5. Take Initial Screenshot
 
-```
+```text
 capture_screenshot(output_path="tests/reports/gui_<timestamp>_initial.png")
 ```
 
@@ -124,7 +124,7 @@ Use the format `YYYY-MM-DD_HH-MM` for timestamps.
 
 ### 7. Close the App
 
-```
+```text
 close_app()
 ```
 
@@ -182,7 +182,7 @@ Named widgets discovered: <list from find_widgets> QActions discovered: <list fr
 
 After writing the report, return a compact in-context summary — do not reproduce the full report in context:
 
-```
+```yaml
 Visual test complete: <N>/<M> interactions passed  (<PASS|PARTIAL|FAIL>)
 Report: tests/reports/gui-<timestamp>.md
 ```

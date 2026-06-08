@@ -28,14 +28,14 @@ Release Pipeline presents a context-aware menu at invocation, detects monorepo v
 
 ## Installation
 
-```
+```text
 /plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install release-pipeline@l3digitalnet-plugins
 ```
 
 For local development:
 
-```
+```text
 claude --plugin-dir ./plugins/release-pipeline
 ```
 
@@ -66,13 +66,13 @@ flowchart TD
 
 ## Usage
 
-```
+```text
 /release
 ```
 
 The command auto-detects context before showing the menu. The menu header shows a one-line summary:
 
-```
+```yaml
 Branch: main  |  Last tag: v1.2.0  |  14 commits since last tag  |  uncommitted changes
 ```
 

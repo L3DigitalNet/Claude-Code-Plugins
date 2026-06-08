@@ -10,7 +10,7 @@ Use `/qt:visual` to start a visual testing session.
 
 ## Architecture
 
-```
+```text
 Claude (MCP tools)
        ↓
 Qt Pilot MCP server (mcp/qt-pilot/main.py)
@@ -66,7 +66,7 @@ Quick reference by category:
 
 ### 1. Launch the App
 
-```
+```text
 launch_app(script_path="/path/to/project/main.py")
 # or for module mode:
 launch_app(module="myapp.main", working_dir="/path/to/project")
@@ -76,7 +76,7 @@ Wait for `success: true` before proceeding. If `success: false`, check `get_app_
 
 ### 2. Discover Widgets
 
-```
+```text
 find_widgets("*")            → lists all named widgets
 list_all_widgets()           → lists everything including unnamed, with coordinates
 list_actions()               → lists all menu/toolbar actions
@@ -86,7 +86,7 @@ Use discovery before writing the test scenario — it reveals what's actually av
 
 ### 3. Interact
 
-```
+```text
 click_widget("calculate_btn")
 wait_for_idle()              → let Qt process the click event
 type_text("42", widget_name="input_field")
@@ -97,20 +97,20 @@ Always call `wait_for_idle()` after actions that trigger async processing or ani
 
 ### 4. Verify State
 
-```
+```text
 get_widget_info("result_label")   → check text, visibility, enabled
 capture_screenshot()              → visual confirmation
 ```
 
 ### 5. Close
 
-```
+```text
 close_app()
 ```
 
 ## Typical Visual Test Session
 
-```
+```text
 1. launch_app(script_path="main.py")
 2. find_widgets("*")                    → discover widget names
 3. click_widget("open_file_btn")

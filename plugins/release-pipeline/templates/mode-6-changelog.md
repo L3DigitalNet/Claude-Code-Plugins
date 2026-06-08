@@ -1,10 +1,10 @@
 # Mode 6: Changelog Preview
 
-# Loaded by the release command router after the user selects "Changelog Preview"
+## Loaded by the release command router after the user selects "Changelog Preview"
 
-# Context variables from Phase 0 are available: suggested_version, feat_count, fix_count
+## Context variables from Phase 0 are available: suggested_version, feat_count, fix_count
 
-# other_count, last_tag, is_monorepo, unreleased_plugins
+## other_count, last_tag, is_monorepo, unreleased_plugins
 
 Generates and displays a changelog entry without modifying any files (unless the user opts in).
 

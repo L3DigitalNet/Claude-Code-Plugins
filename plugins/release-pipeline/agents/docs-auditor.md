@@ -81,7 +81,7 @@ Note: broken links are NOT waivable — only stale version references are covere
 
 ## Output Format
 
-```
+```yaml
 DOCS AUDIT
 ==========
 Status: PASS | WARN | FAIL

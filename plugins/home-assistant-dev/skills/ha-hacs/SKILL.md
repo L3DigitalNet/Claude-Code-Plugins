@@ -9,7 +9,7 @@ HACS (Home Assistant Community Store) is the standard distribution method for cu
 
 ## Repository Structure
 
-```
+```text
 my-integration/
 ├── custom_components/
 │   └── {domain}/

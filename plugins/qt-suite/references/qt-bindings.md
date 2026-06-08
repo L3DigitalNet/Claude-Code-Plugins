@@ -108,7 +108,7 @@ def value(self) -> int: return self._value
 
 ### Migrating PyQt5 → PySide6
 
-**Step 1: Update imports**
+#### Step 1: Update imports
 
 ```bash
 # Mass replace with sed
@@ -116,7 +116,7 @@ sed -i 's/from PyQt5\./from PySide6./g' src/**/*.py
 sed -i 's/import PyQt5\./import PySide6./g' src/**/*.py
 ```
 
-**Step 2: Replace signal/slot decorators**
+## Step 2: Replace signal/slot decorators
 
 ```python
 # PyQt5 → PySide6
@@ -142,7 +142,7 @@ app.exec_()   → app.exec()
 dialog.exec_() → dialog.exec()
 ```
 
-**Step 5: Remove deprecated Qt5 API**
+## Step 5: Remove deprecated Qt5 API
 
 ```python
 # Removed in Qt6

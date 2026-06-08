@@ -42,13 +42,13 @@ Call the Qt Pilot `get_app_status` MCP tool. If `running: true`, attach to the e
 
 Call `launch_app` with the resolved entry point:
 
-```
+```text
 launch_app(script_path="/abs/path/to/main.py")
 ```
 
 Or for module-based apps:
 
-```
+```text
 launch_app(module="myapp.main", working_dir="/abs/path/to/project")
 ```
 
@@ -58,7 +58,7 @@ Wait for `success: true`. If launch fails, call `get_app_status` to retrieve std
 
 Before testing, always discover available widgets:
 
-```
+```text
 find_widgets("*")        → lists all named widgets
 list_actions()           → lists all menu/toolbar actions
 ```
@@ -87,7 +87,7 @@ After every click or input action that may trigger async behavior, call `wait_fo
 
 Capture screenshots at key moments:
 
-```
+```text
 capture_screenshot(output_path="tests/reports/visual_<timestamp>_initial.png")
 capture_screenshot(output_path="tests/reports/visual_<timestamp>_final.png")
 ```
@@ -96,7 +96,7 @@ Use ISO timestamp format: `2026-02-22_14-35`.
 
 ## Step 8: Close the App
 
-```
+```text
 close_app()
 ```
 

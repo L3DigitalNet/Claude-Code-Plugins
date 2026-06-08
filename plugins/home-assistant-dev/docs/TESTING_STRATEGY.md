@@ -817,7 +817,7 @@ jobs:
 
 #### 8.1 Fixtures Directory Structure
 
-```
+```text
 tests/
 ├── fixtures/
 │   ├── manifests/

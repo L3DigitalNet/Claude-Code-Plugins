@@ -46,7 +46,7 @@ Main decision impact:
 
 ---
 
-# 1. Topic 7 — Context7 Coverage, Freshness, and Docs-vs-Web Gate
+## 1. Topic 7 — Context7 Coverage, Freshness, and Docs-vs-Web Gate
 
 ## 1.1 What public docs establish
 
@@ -215,7 +215,7 @@ Metrics:
 
 ---
 
-# 2. Topic 11 — Provider Data Handling and Query Egress
+## 2. Topic 11 — Provider Data Handling and Query Egress
 
 ## 2.1 Bottom line
 
@@ -389,7 +389,7 @@ Human approval should be required if the sanitizer detects secrets, regulated da
 
 ---
 
-# 3. Topics 4–6 — Local Benchmark Harness Spec
+## 3. Topics 4–6 — Local Benchmark Harness Spec
 
 Topics 4–6 cannot be completed honestly by web research. They require your installed MCP servers and actual serialized outputs.
 
@@ -540,7 +540,7 @@ If `brave_llm_context` exceeds 5,000 actual serialized tokens in common light-pa
 
 ---
 
-# 4. Updated qdev Routing Decisions
+## 4. Updated qdev Routing Decisions
 
 ## 4.1 Recommended routing order
 
@@ -590,7 +590,7 @@ Before external lookup:
 
 ---
 
-# 5. Open Work Remaining
+## 5. Open Work Remaining
 
 ## 5.1 Required local measurements
 
@@ -620,7 +620,7 @@ Do not keep researching this abstractly. The architecture is now research-inform
 
 ---
 
-# Sources
+## Sources
 
 [^context7-overview]: Context7 Docs, “Intro.” <https://context7.com/docs/overview>
 

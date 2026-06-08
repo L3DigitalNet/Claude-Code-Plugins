@@ -116,7 +116,7 @@ Use **AskUserQuestion** to present the release menu. Build the options dynamical
 
 Before calling `AskUserQuestion`, output one context line:
 
-```
+```yaml
 Branch: <current_branch>  |  Last tag: <last_tag>  |  <commit_count> commits since last tag  |  ⚠ uncommitted changes
 ```
 

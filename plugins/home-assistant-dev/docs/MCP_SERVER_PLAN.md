@@ -32,7 +32,7 @@ Enable Claude to interact with live Home Assistant instances during integration 
 
 ### Component Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     Claude Desktop/Web                       │
 └─────────────────────────┬───────────────────────────────────┘
@@ -450,7 +450,7 @@ HA_DEV_MCP_VERIFY_SSL=true
 
 **Files:**
 
-```
+```text
 mcp-server/
 ├── package.json
 ├── tsconfig.json
@@ -472,7 +472,7 @@ mcp-server/
 
 **Files:**
 
-```
+```text
 src/tools/
 ├── ha-connect.ts
 ├── ha-states.ts
@@ -492,7 +492,7 @@ src/tools/
 
 **Files:**
 
-```
+```text
 src/
 ├── safety.ts              # Safety checks
 └── tools/
@@ -512,7 +512,7 @@ src/
 
 **Files:**
 
-```
+```text
 src/
 ├── docs-index.ts          # Doc indexing
 ├── cache.ts               # Caching layer
@@ -533,7 +533,7 @@ src/
 
 **Files:**
 
-```
+```text
 src/tools/
 ├── validate-manifest.ts
 ├── validate-strings.ts

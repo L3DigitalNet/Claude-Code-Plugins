@@ -33,7 +33,7 @@ The `gui-tester` agent saves reports to `tests/reports/gui-YYYY-MM-DD-HH-MM.md`.
 
 ## Naming Convention
 
-```
+```text
 tests/reports/gui-YYYY-MM-DD-HH-MM.md
 tests/reports/screenshot_before.png
 tests/reports/screenshot_after.png

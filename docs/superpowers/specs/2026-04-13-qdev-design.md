@@ -12,7 +12,7 @@ A five-command plugin that acts as a quality companion across the full developme
 
 ## Plugin Structure
 
-```
+```text
 plugins/qdev/
 ├── .claude-plugin/
 │   └── plugin.json
@@ -159,7 +159,7 @@ Read the spec file in full. Read all source files in the current project. Identi
 
 Present a structured list of proposed spec changes before writing anything:
 
-```
+```text
 Proposed spec updates:
   [ADD]     Section X.Y — document new <feature>
   [UPDATE]  Section Z — behavior changed from <old> to <new>
@@ -172,7 +172,7 @@ Use `AskUserQuestion` to ask for bulk approval or per-item review. Never overwri
 
 Apply approved changes using the `Edit` tool (targeted edits, never a full file rewrite). Emit a final summary:
 
-```
+```text
 Spec updated: N additions, N modifications, N removals.
 ```
 

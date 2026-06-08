@@ -180,7 +180,7 @@ def qapp():
 
 ### `.gitignore`
 
-```
+```text
 __pycache__/
 *.pyc
 *.pyo
@@ -211,7 +211,7 @@ cd <app-name> && python -m venv .venv && .venv/bin/pip install -e . PySide6 pyte
 
 Lead with the outcome, then show the tree:
 
-```
+```text
 Initialized <app-name>/ — <N> files across <M> directories.
 ```
 

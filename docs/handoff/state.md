@@ -10,7 +10,7 @@
 
 ## Active Incidents
 
-_(none)_
+### (none)
 
 ## Recently closed (this session, 2026-06-08)
 

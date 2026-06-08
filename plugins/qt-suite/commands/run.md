@@ -68,7 +68,7 @@ Parse and report the test outcomes clearly:
 
 **Python (pytest):**
 
-```
+```yaml
 Test Results: 23 passed, 1 failed, 2 skipped  (4.2s)
 
 FAILED tests/test_calculator.py::TestCalculator::test_divide_by_zero
@@ -78,11 +78,10 @@ FAILED tests/test_calculator.py::TestCalculator::test_divide_by_zero
 
 **C++ (CTest):**
 
-```
+```yaml
 Test Results: 18/20 tests passed  (2.1s)
 
-FAILED: TestMainWindow (exit code 1)
-  (show stdout from the failing test)
+FAILED: TestMainWindow (exit code 1) (show stdout from the failing test)
 ```
 
 If all tests pass, report the count and time concisely — no further detail needed.

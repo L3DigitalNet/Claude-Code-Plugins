@@ -426,7 +426,7 @@ None.
 - [Search decoupling spec](https://github.com/L3DigitalNet/Claude-Code-Plugins/blob/main/docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md)
 - [Source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev)
 
-````
+````yaml
 
 ### Task A7: Normalize the CHANGELOG — add 2.0.0, clear the stale Unreleased block (CR-001)
 

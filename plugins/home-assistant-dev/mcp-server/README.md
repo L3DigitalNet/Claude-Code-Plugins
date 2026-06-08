@@ -103,45 +103,45 @@ For more control, create `~/.config/ha-dev-mcp/config.json`:
 
 ### Connect and Query States
 
-```
+```text
 Connect to my Home Assistant at http://192.168.1.100:8123
 ```
 
-```
+```text
 Show me all sensor entities
 ```
 
-```
+```text
 What's the state of light.living_room?
 ```
 
 ### Query Devices and Services
 
-```
+```text
 List all devices from the hue integration
 ```
 
-```
+```text
 What services are available for the light domain?
 ```
 
 ### Validate Integration Code
 
-```
+```text
 Validate the manifest.json in /path/to/my_integration
 ```
 
-```
+```text
 Check /path/to/my_integration for anti-patterns
 ```
 
 ### Search Documentation
 
-```
+```text
 Search the HA docs for DataUpdateCoordinator
 ```
 
-```
+```text
 Show me a full example of a config flow
 ```
 
@@ -211,7 +211,7 @@ npm run lint
 
 ## Architecture
 
-```
+```text
 src/
 ├── index.ts          # MCP server entry point
 ├── config.ts         # Configuration loading

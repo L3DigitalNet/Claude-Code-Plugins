@@ -126,7 +126,7 @@ flowchart TD
      Use numbered steps for multi-phase workflows. Include natural language
      alternatives if the plugin responds to them. -->
 
-```
+```text
 /command-name [optional-args]
 ```
 

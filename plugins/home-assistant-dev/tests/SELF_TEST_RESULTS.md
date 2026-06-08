@@ -11,7 +11,7 @@
 - MCP REST API Tests: **24/24 passed**
 - MCP WebSocket Tests: **38/39 passed** (1 test expectation issue, not a bug)
 
-**Total: 96/97 passed (99%)**
+### Total: 96/97 passed (99%)
 
 ## Test Environment
 

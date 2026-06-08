@@ -18,7 +18,7 @@ Use device triggers when:
 
 ## File Structure
 
-```
+```text
 custom_components/{domain}/
 ├── device_trigger.py    # Trigger implementation
 ├── device_condition.py  # See ha-device-conditions-actions

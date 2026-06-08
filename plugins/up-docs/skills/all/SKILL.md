@@ -11,7 +11,7 @@ Orchestrates up-docs: gather session context, build a canonical session-change s
 
 ## Architecture
 
-```
+```text
 This skill (orchestrator, inherits caller model)
   │
   ├─ run context-gather.sh once

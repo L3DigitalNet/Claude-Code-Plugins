@@ -201,7 +201,7 @@ QUICK_TEST_MAIN_WITH_SETUP(qml_tests, Setup)
 
 QML test files should be prefixed with `tst_` to distinguish them from the components they test:
 
-```
+```text
 tests/
 ├── tst_Calculator.qml
 ├── tst_MainWindow.qml

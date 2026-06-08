@@ -129,7 +129,7 @@ automation:
 
 MIT
 
-````
+````yaml
 
 ## HACS info.md Template
 

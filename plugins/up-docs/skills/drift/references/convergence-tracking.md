@@ -6,7 +6,7 @@ Shared iteration mechanics for all four phases of drift analysis.
 
 Each phase follows the same pattern:
 
-```
+```toml
 iteration = 0
 max_iterations = 10
 previous_findings = []
@@ -60,19 +60,19 @@ When oscillation is detected:
 
 At the end of each iteration within a phase, emit a single-line status:
 
-```
+```text
 Phase N, iteration M: X findings (Y fixed, Z remaining)
 ```
 
 At the end of each phase, emit the convergence status:
 
-```
+```text
 Phase N converged after M iterations. Pages touched: X. Changes applied: Y.
 ```
 
 Or if not converged:
 
-```
+```text
 Phase N stopped after M iterations (STALLED/OSCILLATING/TIMEOUT). Remaining findings: X.
 ```
 

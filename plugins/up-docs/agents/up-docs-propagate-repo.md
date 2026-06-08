@@ -78,7 +78,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
    - **`docs/handoff/bugs/<NNN>-<slug>.md`** — per-file bug KB.
      - For each bug the session fixed OR opened, create a new file with frontmatter and a **Cause / Fix / Lesson** body:
 
-       ```
+       ```yaml
        ---
        bug_id: <max existing + 1>
        date: YYYY-MM-DD

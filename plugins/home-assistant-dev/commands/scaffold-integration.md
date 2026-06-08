@@ -15,7 +15,7 @@ Ask for the domain name and integration name as a single open-ended question:
 
 Then use AskUserQuestion for the bounded choices:
 
-```
+```yaml
 AskUserQuestion:
   "What type of integration is this?"
   header: "Integration type"
@@ -28,7 +28,7 @@ AskUserQuestion:
       description: "A cloud or network service (e.g. weather API, notification service)"
 ```
 
-```
+```yaml
 AskUserQuestion:
   "How does this integration communicate with the device/service?"
   header: "IoT class"
@@ -43,7 +43,7 @@ AskUserQuestion:
       description: "Remote service pushes state changes via webhook or SSE"
 ```
 
-```
+```yaml
 AskUserQuestion:
   "Which entity platforms does this integration expose? (select all that apply)"
   header: "Platforms"
@@ -67,7 +67,7 @@ Finally, ask for the GitHub username:
 
 Before writing any files, display a summary and confirm:
 
-```
+```yaml
 AskUserQuestion:
   "Ready to generate {N} files for `{domain}` ({integration_name})?"
   header: "Confirm"
@@ -108,7 +108,7 @@ Generate code that meets **Silver tier** on the Integration Quality Scale:
 
 After all files are written, output:
 
-```
+```text
 ✓ Generated {N} files for `{domain}` ({integration_name}) — Silver tier
 
 Files created:

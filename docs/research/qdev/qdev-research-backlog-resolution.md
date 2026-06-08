@@ -126,14 +126,14 @@ Do **not** make a forked skill responsible for “light path, then escalate to m
 
 Use one of these instead:
 
-**Recommended v1: inline coordinator skill**
+#### Recommended v1: inline coordinator skill
 
 - Runs in main context.
 - Performs light checks using low-output search tools.
 - Escalates to `Agent(qdev-researcher)` when thresholds are met.
 - Uses strict untrusted-content quarantine rules.
 
-**Safer v1.5: explicit command + forked research skill**
+##### Safer v1.5: explicit command + forked research skill
 
 - `/qdev-research` invokes a read-only/forked research context.
 - Main agent remains less exposed to raw search content.

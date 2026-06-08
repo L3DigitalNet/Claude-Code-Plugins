@@ -168,7 +168,7 @@ The validator uses Zod strict mode — it will reject unknown fields and missing
 
 When users add a marketplace via `/plugin marketplace add`, Claude Code clones it to:
 
-```
+```text
 ~/.claude/plugins/marketplaces/<name>/
 ```
 

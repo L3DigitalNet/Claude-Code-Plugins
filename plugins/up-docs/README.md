@@ -142,7 +142,7 @@ flowchart TD
 
 Run a command at a natural pausing point or end of session:
 
-```
+```text
 /up-docs:repo                Update repo documentation only
 /up-docs:wiki                Update llm-wiki only
 /up-docs:notion              Update Notion only

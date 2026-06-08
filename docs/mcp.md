@@ -275,7 +275,7 @@ await server.connect(transport)
 
 Create plugin with MCP server:
 
-```
+```text
 my-plugin/
 ├── .claude-plugin/
 │   └── plugin.json
@@ -333,7 +333,7 @@ Document in README:
 
 3. Restart Claude Code
 
-````
+````text
 
 ### OAuth
 

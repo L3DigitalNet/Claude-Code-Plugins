@@ -261,7 +261,7 @@ This repository also serves as a development workspace for creating new plugins.
 
 ## Repository Structure
 
-```
+```text
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog

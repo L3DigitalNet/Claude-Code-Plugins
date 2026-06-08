@@ -61,7 +61,7 @@ If exit 0 (waived): report `⊘ missing_tests WAIVED — <reason>` and set statu
 
 ## Output Format
 
-```
+```yaml
 TEST RESULTS
 ============
 Status: PASS | FAIL

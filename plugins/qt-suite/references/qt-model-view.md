@@ -6,7 +6,7 @@ Trigger phrases: "QAbstractItemModel", "table view", "list model", "QTableView",
 
 ### Architecture Overview
 
-```
+```text
 Data Source ──→ Model ──→ [Proxy Model] ──→ View ──→ Delegate (renders cells)
                  ↕                            ↕
               QAbstractItemModel         QAbstractItemView

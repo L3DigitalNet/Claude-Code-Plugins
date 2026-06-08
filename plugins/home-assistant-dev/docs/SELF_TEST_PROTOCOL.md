@@ -488,23 +488,23 @@ When a test fails:
 
 ### 1. Diagnose
 
-```
+```yaml
 Identify which component failed:
-- Skill trigger? → Check description/triggers in SKILL.md frontmatter
-- Code quality? → Check templates/examples in skill content
-- Validator? → Check regex patterns in scripts/
-- MCP tool? → Check handler in mcp-server/src/tools/
-- MCP client? → Check ha-client.ts (connection, state, service methods)
+  - Skill trigger? → Check description/triggers in SKILL.md frontmatter
+  - Code quality? → Check templates/examples in skill content
+  - Validator? → Check regex patterns in scripts/
+  - MCP tool? → Check handler in mcp-server/src/tools/
+  - MCP client? → Check ha-client.ts (connection, state, service methods)
 ```
 
 ### 2. Fix
 
-```
+```yaml
 Edit the source file directly (symlink makes changes immediate):
-- plugins/home-assistant-dev/skills/*/SKILL.md
-- plugins/home-assistant-dev/scripts/*.py
-- plugins/home-assistant-dev/mcp-server/src/*.ts
-- plugins/home-assistant-dev/mcp-server/src/tools/*.ts
+  - plugins/home-assistant-dev/skills/*/SKILL.md
+  - plugins/home-assistant-dev/scripts/*.py
+  - plugins/home-assistant-dev/mcp-server/src/*.ts
+  - plugins/home-assistant-dev/mcp-server/src/tools/*.ts
 ```
 
 ### 3. Rebuild (MCP server changes only)
@@ -516,7 +516,7 @@ npx tsc
 
 ### 4. Retest
 
-```
+```text
 Run the same test again to verify fix.
 If symlinked, skill/script changes are immediately active.
 MCP server changes require rebuild (step 3).
@@ -524,12 +524,12 @@ MCP server changes require rebuild (step 3).
 
 ### 5. Document
 
-```
+```yaml
 Update SELF_TEST_RESULTS.md with:
-- What failed
-- Root cause
-- What was fixed
-- File and line numbers
+  - What failed
+  - Root cause
+  - What was fixed
+  - File and line numbers
 ```
 
 ---
@@ -603,7 +603,7 @@ Issues discovered during self-testing sessions. These inform what to watch for o
 
 Copy-paste this to start testing:
 
-```
+```yaml
 I'm going to self-test the HA Dev Plugin. I have:
 - Plugin installed at ~/.claude/plugins/home-assistant-dev (symlinked to source)
 - Test workspace at ~/ha-plugin-test-workspace
@@ -621,7 +621,7 @@ Document pass/fail for each test. Report any issues found with root cause and fi
 
 For Categories 1-4 only (no HA instance):
 
-```
+```yaml
 I'm going to self-test the HA Dev Plugin (Categories 1-4, no HA instance). I have:
 - Plugin installed at ~/.claude/plugins/home-assistant-dev (symlinked to source)
 - Test workspace at ~/ha-plugin-test-workspace

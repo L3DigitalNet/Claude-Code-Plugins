@@ -9,7 +9,7 @@ Tests are **required** for Bronze tier on the Integration Quality Scale. At mini
 
 ## Test Structure
 
-```
+```text
 tests/
 ├── conftest.py           # Shared fixtures
 ├── test_config_flow.py   # Config flow tests (REQUIRED)

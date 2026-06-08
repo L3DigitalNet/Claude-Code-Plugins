@@ -1,10 +1,10 @@
 # Mode 4: Release Status
 
-# Loaded by the release command router after the user selects "Release Status"
+## Loaded by the release command router after the user selects "Release Status"
 
-# Context variables from Phase 0 are available: current_branch, last_tag, commit_count
+## Context variables from Phase 0 are available: current_branch, last_tag, commit_count
 
-# suggested_version, feat_count, fix_count, other_count, is_dirty, is_monorepo, unreleased_plugins
+## suggested_version, feat_count, fix_count, other_count, is_dirty, is_monorepo, unreleased_plugins
 
 Shows the current release state without making any changes.
 
@@ -12,7 +12,7 @@ Shows the current release state without making any changes.
 
 Display:
 
-```
+```yaml
 RELEASE STATUS
 ==============
 Branch:     <current_branch>
@@ -36,7 +36,7 @@ Display them grouped by conventional commit type (feat, fix, chore, docs, etc.).
 
 If `is_monorepo` is true, show per-plugin status from the `unreleased_plugins` list:
 
-```
+```text
 PLUGIN STATUS
 =============
   home-assistant-dev   v2.1.0   3 commits since home-assistant-dev/v2.1.0

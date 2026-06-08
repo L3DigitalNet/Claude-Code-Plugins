@@ -14,7 +14,7 @@ For production integrations with multiple devices or complex state management, s
 
 ## Structure
 
-```
+```text
 minimal_sensor/
 ├── __init__.py      # Entry point (minimal)
 ├── config_flow.py   # Simple user flow

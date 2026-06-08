@@ -92,6 +92,6 @@ mypy .
 
 [Test or pattern to prevent recurrence]
 
-```
+```text
 
 ```

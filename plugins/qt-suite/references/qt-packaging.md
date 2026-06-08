@@ -6,7 +6,7 @@ Trigger phrases: "package app", "PyInstaller", "distribute", "deploy", "standalo
 
 ### PyInstaller (most common)
 
-**Critical: Virtual Environment Isolation**
+#### Critical: Virtual Environment Isolation
 
 The official Qt for Python docs document a known PyInstaller gotcha: **if a system-level PySide6 is installed, PyInstaller silently picks it instead of your venv version**. Before building:
 

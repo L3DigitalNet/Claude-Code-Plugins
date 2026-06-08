@@ -36,7 +36,7 @@ Marketplace-wide tests use canonical frameworks and plugin-local suites. Keep co
 
 ---
 
-# CLAUDE.md detail (pre-extracted 2026-04-24)
+## CLAUDE.md detail (pre-extracted 2026-04-24)
 
 The "Plugin Design Principles" [P1]–[P6] are behavioral cross-cutting rules and are Phase 5 candidates for migration to `.claude/rules/global.md`. Deferred with the rest of this repo's Phase 5 for batch-dispatch reasons.
 
@@ -62,7 +62,7 @@ Evaluate every design decision against these.
 
 ## Repository Structure
 
-```
+```text
 Claude-Code-Plugins/
 ├── .claude-plugin/marketplace.json   # Marketplace catalog
 ├── .github/workflows/                # CI: codeql, ha-dev-plugin-tests, plugin-test-harness-ci

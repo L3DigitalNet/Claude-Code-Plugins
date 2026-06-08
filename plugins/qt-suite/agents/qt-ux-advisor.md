@@ -66,7 +66,7 @@ Check for:
 
 Group findings by dimension. For each finding use this structure:
 
-```
+```python
 ## Widget Naming (Testability)    ← dimension header
 🔴 save_btn — missing setObjectName()
    Fix: self.save_btn.setObjectName("save_btn")

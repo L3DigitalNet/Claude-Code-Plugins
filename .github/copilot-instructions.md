@@ -21,7 +21,7 @@ Direct commit to `main`. There is no `testing` branch — that convention was re
 
 ### Directory Structure
 
-````
+````text
 ├── .claude-plugin/marketplace.json  # Marketplace catalog (source of truth)
 ├── plugins/                         # All plugins
 │   ├── release-pipeline/            # Tagged-release orchestrator

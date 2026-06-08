@@ -14,7 +14,7 @@ Ask as a single open-ended question:
 
 Then collect bounded choices:
 
-```
+```yaml
 AskUserQuestion:
   "What type of integration is this?"
   header: "Integration type"
@@ -27,7 +27,7 @@ AskUserQuestion:
       description: "A cloud or network service (e.g. weather API, notification service)"
 ```
 
-```
+```yaml
 AskUserQuestion:
   "How does this integration communicate with the device/service?"
   header: "IoT class"
@@ -42,7 +42,7 @@ AskUserQuestion:
       description: "Remote service pushes state changes via webhook or SSE"
 ```
 
-```
+```yaml
 AskUserQuestion:
   "Which entity platforms does this integration expose? (select all that apply)"
   header: "Platforms"
@@ -60,7 +60,7 @@ AskUserQuestion:
 
 ## Step 2: Optional Features
 
-```
+```yaml
 AskUserQuestion:
   "Which optional features should be included?"
   header: "Features"
@@ -78,7 +78,7 @@ AskUserQuestion:
 
 ## Step 3: Target Quality Tier
 
-```
+```yaml
 AskUserQuestion:
   "What quality tier should the generated code target?"
   header: "Target tier"
@@ -101,7 +101,7 @@ Ask:
 
 Display a plan and confirm:
 
-```
+```yaml
 AskUserQuestion:
   "Ready to generate files for `{domain}` ({integration_name}) at {tier} tier?"
   header: "Confirm"
@@ -118,7 +118,7 @@ If Abort: stop with "Generation cancelled."
 
 ### Bronze tier (always generated)
 
-```
+```text
 custom_components/{domain}/
 ├── __init__.py
 ├── manifest.json
@@ -145,7 +145,7 @@ custom_components/{domain}/
 
 ### HACS ready (always)
 
-```
+```text
 hacs.json
 README.md
 ```
@@ -156,7 +156,7 @@ Use the `ha-integration-scaffold`, `ha-config-flow`, `ha-coordinator`, and `ha-e
 
 After all files are written, output:
 
-```
+```text
 ✓ Generated {N} files for `{domain}` ({integration_name}) — {tier} tier
 
 Files created:

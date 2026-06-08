@@ -9,7 +9,7 @@ Diagnostics provide users and developers with structured debug information while
 
 ## File Structure
 
-```
+```text
 custom_components/{domain}/
 ├── __init__.py
 ├── diagnostics.py    # Diagnostics implementation

@@ -101,7 +101,7 @@ A Claude Code plugin providing:
 
 ### 3.1 High-Level Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Claude Code                               │
 │  ┌─────────────────────────────────────────────────────────────┐│
@@ -142,7 +142,7 @@ A Claude Code plugin providing:
 
 ### 3.2 Directory Structure
 
-```
+```text
 ha-dev-plugin-v2/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest
@@ -281,7 +281,7 @@ ha-dev-plugin-v2/
 
 ### 3.3 Data Flow
 
-```
+```text
 User Query
     │
     ▼
@@ -430,7 +430,7 @@ description: Config flows, options flows, reauth, reconfigure, discovery (zeroco
 
 Large skills use `reference/` subdirectories:
 
-```
+```text
 skills/ha-entity-platforms/
 ├── SKILL.md                    # Main skill (concise)
 └── reference/
@@ -481,7 +481,7 @@ The MCP (Model Context Protocol) server provides live connectivity to Home Assis
 
 ### 6.3 Safety Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │                 Service Call                     │
 └────────────────────┬────────────────────────────┘
@@ -564,7 +564,7 @@ interface MCPConfig {
 
 **Output:**
 
-```
+```yaml
 Validating: custom_components/my_integration/manifest.json
 Mode: Custom Integration (HACS)
 
@@ -646,7 +646,7 @@ Mode: Custom Integration (HACS)
 
 **Files:**
 
-```
+```text
 custom_components/minimal_sensor/
 ├── __init__.py      # Simple setup, no coordinator
 ├── config_flow.py   # User step only
@@ -668,7 +668,7 @@ custom_components/minimal_sensor/
 
 **Files:**
 
-```
+```text
 custom_components/push_example/
 ├── __init__.py
 ├── config_flow.py
@@ -692,7 +692,7 @@ custom_components/push_example/
 
 **Files:**
 
-```
+```text
 custom_components/example_hub/
 ├── __init__.py
 ├── config_flow.py   # User, reauth, reconfigure, options flows
@@ -722,7 +722,7 @@ custom_components/example_hub/
 
 ### 9.1 Test Categories
 
-```
+```text
 tests/
 ├── scripts/           # Unit tests for validators
 ├── validation/        # Documentation accuracy tests
@@ -905,21 +905,21 @@ npm install -g .
 
 **Scaffold Integration:**
 
-```
+```yaml
 User: Create a new integration for my Acme thermostat
 Claude: [Uses ha-integration-scaffold skill to generate files]
 ```
 
 **Quality Review:**
 
-```
+```yaml
 User: Review my integration for IQS compliance
 Claude: [Uses ha-quality-review skill, runs validators]
 ```
 
 **Live HA Queries:**
 
-```
+```yaml
 User: What sensors are available in my Home Assistant?
 Claude: [Uses MCP ha_get_states tool to query live HA]
 ```
@@ -974,11 +974,11 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ### 14.3 Changelog Summary
 
-**v2.2.2**
+#### v2.2.2
 
 - Incremental improvements and fixes since v2.2.1
 
-**v2.0.0**
+##### v2.0.0
 
 - 19 skills (up from 11)
 - MCP server with 12 tools

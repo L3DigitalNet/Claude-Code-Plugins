@@ -105,7 +105,7 @@ Enable with `branch = true` in config or `--cov-branch` flag.
 
 ## Reading the Gap Report
 
-```
+```text
 Name                    Stmts   Miss Branch BrPart  Cover   Missing
 calculator.py              24      4      8      2    75%   18-22, 45
 utils/formatter.py         12      2      4      1    67%   8-10

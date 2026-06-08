@@ -7,7 +7,7 @@ description: Scaffold a new Home Assistant integration with correct file structu
 
 ## Required File Structure
 
-```
+```text
 custom_components/{domain}/
 ├── __init__.py           # Entry point: async_setup_entry, async_unload_entry
 ├── manifest.json         # Integration metadata (REQUIRED)
@@ -25,7 +25,7 @@ custom_components/{domain}/
 
 **For HACS distribution, also include at repository root:**
 
-```
+```text
 /
 ├── custom_components/{domain}/   # Integration files
 ├── hacs.json                     # HACS metadata (REQUIRED for HACS)

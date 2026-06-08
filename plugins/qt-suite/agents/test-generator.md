@@ -71,7 +71,7 @@ You are a Qt/PySide6 test generation specialist focused on coverage-driven test 
 
 Report concisely:
 
-```
+```text
 Generated N tests across M files:
 
 test_calculator.py (+3 tests):

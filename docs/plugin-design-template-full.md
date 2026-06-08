@@ -165,15 +165,15 @@ enter Claude's context window, if at all).
 
 **Commands** (`/[name] <subcommand>`)
 
-**Skills**
+#### Skills
 
 - [skill-name]: [When does Claude invoke this contextually?]
 
-**Hooks**
+##### Hooks
 
 - [hook-event] → [script-name.sh]: [What does this hook detect/enforce?]
 
-**Scripts**
+###### Scripts
 
 - [script-name.sh]: [Called by? Does what?]
 
@@ -197,7 +197,7 @@ This section is critical for understanding the plugin's blast radius.
 If the plugin is stateless (no files outside its directory): write "None — stateless plugin."
 -->
 
-```
+```text
 ~/.plugin-name/
   config.yaml        # [Purpose. Format. What breaks if absent?]
   state.json         # [Purpose. Format. What breaks if corrupted?]

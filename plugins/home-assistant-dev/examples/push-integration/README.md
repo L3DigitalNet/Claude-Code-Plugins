@@ -62,7 +62,7 @@ The coordinator handles:
 
 ## Structure
 
-```
+```text
 push_example/
 ├── __init__.py      # Setup with async_connect/disconnect
 ├── coordinator.py   # Push connection manager
