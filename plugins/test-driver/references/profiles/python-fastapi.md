@@ -1,6 +1,6 @@
-## conventions, execution commands, coverage tools, and key testing patterns for FastAPI APIs
-
 # Stack Profile: Python / FastAPI
+
+conventions, execution commands, coverage tools, and key testing patterns for FastAPI APIs
 
 ## 1. Applicable Test Categories
 

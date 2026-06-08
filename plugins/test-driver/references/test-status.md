@@ -1,8 +1,8 @@
+# Test Status: Persistent State Management
+
 test results, reading TEST_STATUS.json, writing test reports, tracking test history, or managing deferred test gaps.
 
 ---
-
-# Test Status: Persistent State Management
 
 Governs the `docs/testing/TEST_STATUS.json` file, which tracks a project's testing posture across sessions. This path is a convention default; projects without a `docs/` directory get it created on first analysis.
 

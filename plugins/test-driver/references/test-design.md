@@ -1,8 +1,8 @@
+# Test Design: Universal Principles
+
 to test, or applying test patterns. Covers isolation, boundary testing, error paths, Arrange-Act-Assert, naming, mock boundaries, and meaningful assertions.
 
 ---
-
-# Test Design: Universal Principles
 
 These principles apply to every test you write, regardless of language or framework. Consult the active stack profile for framework-specific syntax; this skill provides the design thinking.
 

@@ -1,6 +1,6 @@
-## discovery conventions, execution commands, coverage tools, and UI testing via XCUITest
-
 # Stack Profile: Swift / SwiftUI
+
+discovery conventions, execution commands, coverage tools, and UI testing via XCUITest
 
 ## 1. Applicable Test Categories
 

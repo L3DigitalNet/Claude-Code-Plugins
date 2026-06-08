@@ -1,6 +1,6 @@
-## execution commands, coverage tools, and UI testing via Charlotte or Playwright
-
 # Stack Profile: Python / Django
+
+execution commands, coverage tools, and UI testing via Charlotte or Playwright
 
 ## 1. Applicable Test Categories
 

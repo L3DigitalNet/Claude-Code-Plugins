@@ -61,7 +61,7 @@ flowchart TD
 
 **Explicit commands:**
 
-```
+```bash
 /test-driver:analyze              # Full gap analysis, optionally fill gaps
 /test-driver:analyze src/api/     # Scoped to a directory
 /test-driver:status               # View current test posture

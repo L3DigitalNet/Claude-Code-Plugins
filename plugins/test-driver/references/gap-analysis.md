@@ -1,8 +1,8 @@
+# Gap Analysis: Finding Missing Tests
+
 test coverage, identifying untested code, inventorying tests, or when /test-driver:analyze is invoked. Provides the step-by-step process for detecting project type, loading stack profiles, and producing a prioritized gap report.
 
 ---
-
-# Gap Analysis: Finding Missing Tests
 
 A systematic methodology for identifying which source files and functions lack adequate test coverage. This skill produces a structured gap report that the convergence-loop skill consumes.
 

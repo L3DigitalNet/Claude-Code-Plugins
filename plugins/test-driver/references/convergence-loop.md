@@ -1,14 +1,14 @@
+# Convergence Loop: Iterative Test Generation Engine
+
 criteria are met. Includes oscillation detection, bug fix boundaries, and convergence reporting. Triggers on: convergence loop, test loop, generate and fix tests, iterate tests, fill test gaps, run tests until green, test convergence.
 
 ---
-
-# Convergence Loop: Iterative Test Generation Engine
 
 The convergence loop takes a gap report from the gap-analysis skill and iteratively generates tests, runs them, fixes failures, and repeats until all tests pass or exit criteria are met.
 
 ## Loop Phases
 
-```
+```text
 ANALYZE ── read gap report, prioritize by severity
    |
 GENERATE ── write 3-5 tests for highest-priority gaps

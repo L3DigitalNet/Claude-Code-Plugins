@@ -1,8 +1,8 @@
+# Stack Profile: Home Assistant Custom Integration
+
 test categories, discovery conventions, execution commands, and coverage tools for HA custom components.
 
 ---
-
-# Stack Profile: Home Assistant Custom Integration
 
 ## 1. Applicable Test Categories
 

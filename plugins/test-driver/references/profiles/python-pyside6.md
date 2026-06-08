@@ -1,6 +1,6 @@
-## conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot
-
 # Stack Profile: Python / PySide6
+
+conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot
 
 ## 1. Applicable Test Categories
 
