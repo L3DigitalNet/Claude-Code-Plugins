@@ -78,7 +78,7 @@ You are the drift auditor for the up-docs orchestrator. You scan the three docum
 
 4. Iterate per phase under convergence. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/convergence-tracking.md` for iteration mechanics and oscillation detection. **Narrowing (authoritative here):**
    - **Pass 1** of a phase: scan the full phase surface.
-   - At the end of each pass, record the paths you examined-or-touched via `convergence-tracker.sh record-iteration <phase>` with a `touched_pages` array in the findings JSON.
+   - At the end of each pass, record the paths you examined-or-touched via `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh record-iteration <phase>` with a `touched_pages` array in the findings JSON.
    - **Pass N+1**: scan only the union of (i) the immediately prior pass's `touched_pages` (fetch with `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh touched-pages <phase>`) and (ii) pages whose frontmatter `related` references a page in that set (one-hop dependents). Pages outside that union are presumed stable for this phase.
    This narrowing keys off your OWN per-pass findings, so it applies identically in `/up-docs:all` and standalone `/up-docs:drift`. It never reduces pass-1 coverage.
 
