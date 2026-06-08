@@ -60,10 +60,11 @@ If the sub-agent fails entirely (MCP timeout, spawn error), report a single-row 
 
 ### 5. Post-Propagation Steps (stale-candidate review + handoff brief)
 
-Read `${CLAUDE_PLUGIN_ROOT}/templates/post-propagation-steps.md` and follow both procedures against the sub-agent's output:
+Read `${CLAUDE_PLUGIN_ROOT}/templates/post-propagation-steps.md` and follow all three procedures against the sub-agent's output:
 
 - **Stale File Candidate Review** — if the output has a `## Stale File Candidates` section, present it via `AskUserQuestion` (`multiSelect`) and `git rm` only user-approved paths. Skip silently if none.
 - **Handoff for Next Session** — emit the update confirmation, then the layout-detected (V2/V1/NONE) handoff brief.
+- **Commit offer (part (c))** — after the handoff brief, run the template's consent-gated, baseline-safe, no-push commit offer, passing the pre-flight baseline `$BASELINE_REPO` you captured for the project repo.
 
 Both are READ-only over already-updated state files; the skill makes no further edits here.
 

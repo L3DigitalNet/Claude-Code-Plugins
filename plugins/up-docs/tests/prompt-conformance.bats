@@ -121,3 +121,10 @@ POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
   run grep -iF 'commit-candidates.sh snapshot' "$PLUGIN_ROOT/skills/all/SKILL.md"
   [ "$status" -eq 0 ]
 }
+
+@test "skills surface the part (c) commit offer in their post-propagation dispatch (not silently skipped)" {
+  run grep -iF 'Commit offer (part (c))' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  run grep -iF 'Commit offer (part (c))' "$PLUGIN_ROOT/skills/repo/SKILL.md"
+  [ "$status" -eq 0 ]
+}

@@ -62,8 +62,9 @@ already-updated state files; do not re-edit them.
 Prereq — **baseline**: the orchestrator must have captured, BEFORE propagation, a dirty-path
 snapshot per committable repo via `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh
 snapshot <repo> > <baseline-file>` (project repo; and `~/projects/llm-wiki` when the wiki
-layer was in scope). If no baseline was captured (e.g. a code path that skipped it), do NOT
-commit — report dirty trees and stop.
+layer was in scope). If no baseline was captured (the baseline variable is unset / the snapshot
+step never ran — note an EMPTY baseline file is a VALID baseline meaning the tree was clean at
+start, NOT a missing one), do NOT commit — report dirty trees and stop.
 
 1. For each committable repo, compute candidates:
    `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh candidates <repo> <baseline-file>`.
@@ -89,8 +90,9 @@ commit — report dirty trees and stop.
    (`commit-candidates.sh fingerprint <repo> <path>`) and compare to the value captured at
    disclosure, AND re-run `commit-candidates.sh candidates` to catch added/removed paths. If any
    approved path's fingerprint **differs** from what was shown, or a path is gone, or unexpected
-   new paths appeared, **re-disclose and re-confirm** rather than staging blindly — never stage
-   content the user did not see. Then stage only the approved, fingerprint-matched paths by
+   new paths appeared, **re-disclose and re-confirm** (a fresh `AskUserQuestion` over only the
+   changed/new/missing paths; still-matching approved paths may proceed) rather than staging
+   blindly — never stage content the user did not see. Then stage only the approved, fingerprint-matched paths by
    explicit literal pathspec (`git -C <repo> --literal-pathspecs add -- <path>` — so a name with
    pathspec magic stages only itself, CR-NEW-004), commit under that repo's convention
    (project repo: signed `docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message,

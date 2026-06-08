@@ -122,10 +122,11 @@ Do not re-fetch pages or files. Do not make your own edits. Your job after dispa
 
 ### 6. Post-Propagation Steps (stale-candidate review + handoff brief)
 
-Read `${CLAUDE_PLUGIN_ROOT}/templates/post-propagation-steps.md` and follow both procedures after the combined report (Step 5):
+Read `${CLAUDE_PLUGIN_ROOT}/templates/post-propagation-steps.md` and follow all three procedures after the combined report (Step 5):
 
 - **Stale File Candidate Review** — if the repo propagator's report has a `## Stale File Candidates` section, present it via `AskUserQuestion` (`multiSelect`) and `git rm` only user-approved paths. Skip silently if none.
 - **Handoff for Next Session** — emit a per-layer update confirmation, then the layout-detected (V2/V1/NONE) handoff brief.
+- **Commit offer (part (c))** — after the handoff brief, run the template's consent-gated, baseline-safe, no-push commit offer, passing the pre-flight baselines you captured: `$BASELINE_REPO` for the project repo and `$BASELINE_WIKI` for `~/projects/llm-wiki` (when the wiki layer ran).
 
 The brief is READ-only over already-updated state files; do not re-edit.
 
