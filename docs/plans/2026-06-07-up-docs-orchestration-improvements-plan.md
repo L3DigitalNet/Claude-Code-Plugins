@@ -501,6 +501,23 @@ teardown() { teardown_test_env; rm -rf "$REPO" "$BASE"; }
   run bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" adir
   [ "$status" -eq 3 ]
 }
+
+@test "candidate name with pathspec magic is handled literally (CR-NEW-004)" {
+  bash "$SCRIPTS_DIR/commit-candidates.sh" snapshot "$REPO" > "$BASE"
+  printf 'x' > "$REPO/star*.md"                    # a file literally named star*.md
+  run bash "$SCRIPTS_DIR/commit-candidates.sh" candidates "$REPO" "$BASE"
+  [[ "$output" == *'star*.md'* ]]
+  run bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" 'star*.md'
+  [ "$status" -eq 0 ]                               # literal, no pattern expansion or error
+}
+
+@test "fingerprint changes on a post-disclosure mode (exec-bit) change (CR-NEW-004)" {
+  echo a > "$REPO/m.sh"
+  fp1=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" m.sh)
+  chmod +x "$REPO/m.sh"
+  fp2=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" m.sh)
+  [ "$fp1" != "$fp2" ]                              # mode is part of the fingerprint
+}
 ```
 
 - [ ] **Step 2: Run to verify they fail**
@@ -535,7 +552,7 @@ PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
 # `?? dir/` entry; the wiki propagator can Write a new page into a new dir, and we must
 # surface (and later fingerprint/stage) the individual FILE, not the directory (CR-001).
 dirty_paths() {
-  git --no-optional-locks -C "$1" status --porcelain=v1 -z --untracked-files=all | "$PYTHON" -c '
+  git --no-optional-locks --literal-pathspecs -C "$1" status --porcelain=v1 -z --untracked-files=all | "$PYTHON" -c '
 import sys
 data = sys.stdin.buffer.read().split(b"\0")
 i = 0
@@ -570,9 +587,16 @@ case "${1:-}" in
       echo "ERROR: candidate '$path' is a directory — candidates must be per-file (re-run with --untracked-files=all)" >&2
       exit 3   # fail closed: never fingerprint/stage a whole directory (CR-001)
     fi
-    xy=$(git --no-optional-locks -C "$repo" status --porcelain=v1 --untracked-files=all -- "$path" | cut -c1-2)
-    if [ -e "$repo/$path" ]; then blob=$(git -C "$repo" hash-object -- "$path"); else blob="DELETED"; fi
-    printf '%s:%s\n' "${xy:-??}" "$blob"
+    # --literal-pathspecs: a candidate name with pathspec magic (`*`, `?`, `[`, `:(...)`) must be
+    # taken literally, never as a pattern, by status/hash-object/add (CR-NEW-004).
+    xy=$(git --no-optional-locks --literal-pathspecs -C "$repo" status --porcelain=v1 --untracked-files=all -- "$path" | cut -c1-2)
+    if [ -e "$repo/$path" ]; then
+      blob=$(git --literal-pathspecs -C "$repo" hash-object -- "$path")
+      mode=$(stat -c '%a' "$repo/$path" 2>/dev/null || echo '-')   # include file mode: a post-disclosure
+    else                                                            # chmod (exec bit) changes the fingerprint
+      blob="DELETED"; mode='-'
+    fi
+    printf '%s:%s:%s\n' "${xy:-??}" "$mode" "$blob"
     ;;
   *)
     echo "usage: commit-candidates.sh {snapshot <repo> | candidates <repo> <baseline-file> | fingerprint <repo> <path>}" >&2
@@ -676,8 +700,9 @@ commit — report dirty trees and stop.
    established by your per-path diff disclosure below, not by git.
 2. If every repo's candidate set is empty, skip silently.
 3. **Disclose + fingerprint**: show each candidate path's actual content so the user sees exactly
-   what would be staged — `git -C <repo> diff -- <path>` for tracked modifications, and
-   `git -C <repo> diff --no-index -- /dev/null <path>` for **untracked** candidates (plain
+   what would be staged — `git -C <repo> --literal-pathspecs diff -- <path>` for tracked
+   modifications, and `git -C <repo> --literal-pathspecs diff --no-index -- /dev/null <path>`
+   for **untracked** candidates (plain
    `git diff` shows NOTHING for untracked files, so an untracked candidate's content would
    otherwise be approved unseen — CR-001). AND capture that path's content fingerprint now:
    `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh fingerprint <repo> <path>` — record
@@ -694,7 +719,8 @@ commit — report dirty trees and stop.
    approved path's fingerprint **differs** from what was shown, or a path is gone, or unexpected
    new paths appeared, **re-disclose and re-confirm** rather than staging blindly — never stage
    content the user did not see. Then stage only the approved, fingerprint-matched paths by
-   explicit literal name (`git -C <repo> add -- <path>`), commit under that repo's convention
+   explicit literal pathspec (`git -C <repo> --literal-pathspecs add -- <path>` — so a name with
+   pathspec magic stages only itself, CR-NEW-004), commit under that repo's convention
    (project repo: signed `docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message,
    page stays `status: draft`), and **never push**. Report the commit SHA(s) and that nothing
    was pushed.
@@ -823,3 +849,5 @@ Release is a separate `/release-pipeline:release` step (plugin release, scoped t
 **Round 2 → applied:** CR-002/004/005 resolved. CR-001 (untracked content undisclosed) → `git diff --no-index -- /dev/null <path>` for untracked candidates + conformance grep. CR-003 (behavioral gaps) → Task 2 Step 5b A1 narrowing smoke with pass/fail criterion + repo-skill baseline conformance. CR-NEW-001 (fixture unstaged) → `routing-cases.md` added to Task 3 `git add` + Step 9 `git ls-files` verify. CR-NEW-002 (temp-repo hooks/signing) → `commit-candidates.bats` `load helpers` + `setup_test_env` (TEST-003). CR-NEW-003 (repo-skill baseline untested) → conformance assertion on `skills/repo/SKILL.md`.
 
 **Round 3 → applied:** CR-002/004/005 + CR-NEW-001/002/003 resolved. CR-001 (untracked directory) → `commit-candidates.sh` uses `--untracked-files=all` (per-file, not `?? dir/`) + `fingerprint` fails closed (exit 3) on a directory + two new bats tests (nested-untracked surfaced per-file; directory-fingerprint fails). CR-003 (unattached smoke) → behavioral acceptance moved to a **tracked** `plugins/up-docs/docs/0.11.0-acceptance.md` (A1-SMOKE/B-ROUTING/C-COMMIT, each with pass/fail), staged in Task 7.
+
+**Round 4 → CONVERGED** (verdict "Needs minor correction" — no blocking). Applied the one Medium nit CR-NEW-004: `--literal-pathspecs` on every per-candidate git op (status/diff/hash-object/add) so pathspec-magic names stage only themselves; `fingerprint` now includes file mode so a post-disclosure exec-bit chmod forces re-disclosure; +2 bats tests (magic-name literal, mode-change). Plan converged in 4 rounds (5+3+2+1 findings).
