@@ -176,6 +176,22 @@ Guards (per the repo non-negotiable "never `git add .` / `git add -A`"):
 3. `git diff --name-only --cached` must list *only* intended files before `git commit`.
 4. If unrelated dirty files cannot be cleanly isolated from a staged set, **stop** and
    surface it rather than committing.
+5. **Same-file dirty guard (SA-004 — the real hole).** A spec-owned target file may already
+   carry *unrelated* pre-existing edits — notably `agent-configs/skills/README.md`, which
+   this spec edits (the `web-search` inventory row) and which has been observed dirty with
+   unrelated table reformatting / row removals. Whole-file `git add <target>` would commit
+   those foreign hunks. So for **any target file that `git status` shows as already
+   modified**:
+   - Run `git diff -- <target>` *before editing* and classify the existing hunks as
+     related vs unrelated.
+   - Isolate to spec hunks only via a **non-interactive** mechanism (`git add -p` is
+     interactive and unavailable in this harness): e.g. `git stash push -- <target>`, apply
+     the spec edit, stage, then restore; or stage a constructed patch with
+     `git apply --cached`. Do **not** rely on whole-file `git add`.
+   - Review **content**, not just names: `git diff --cached -- <target>` must show *only*
+     the spec change before `git commit`.
+   - If the spec hunk cannot be cleanly separated from the user's unrelated work, **stop and
+     surface it** — do not commit.
 
 ## Testing / verification
 
