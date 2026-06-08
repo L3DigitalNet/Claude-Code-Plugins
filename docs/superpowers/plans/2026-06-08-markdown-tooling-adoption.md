@@ -35,7 +35,7 @@
 | `AGENTS.md` | modify | Append the standard's §12 tooling instruction block. |
 | `TODO.md` | modify | Check the "Adopt markdown-tooling" box (hunk-isolated, last). |
 | `docs/handoff/specs-plans.md` | modify | Flip spec row status to "Implemented". |
-| (all tracked `.md`/`.json`/`.yaml`/`.code-workspace`) | modify | One-time Prettier/markdownlint normalization. |
+| (tracked, **non-ignored** `.md`/`.json`/`.yaml`/`.code-workspace`) | modify | One-time Prettier/markdownlint normalization. Post-fix `git diff --name-only` is the ground-truth touched-set. Two tracked-but-gitignored files are *not* governed: `.claude/state/test-checklist.md` (root-ignored) and `plugins/home-assistant-dev/mcp-server/package-lock.json` (nested-ignored) — intentional. |
 
 ---
 
@@ -241,7 +241,7 @@ git commit -m "build(markdown-tooling): add Prettier + markdownlint config + pin
 
 ## Task 2: One-time bulk reformat + markdownlint normalization
 
-**Files:** all tracked `.md`/`.json`/`.jsonc`/`.yaml`/`.code-workspace` (the mechanical diff). Excludes JS/TS via `.prettierignore`.
+**Files:** tracked, **non-ignored** `.md`/`.json`/`.jsonc`/`.yaml`/`.code-workspace` (the mechanical diff). Excludes JS/TS via `.prettierignore`, and the two tracked-but-gitignored files (both tools honor `.gitignore`); the post-fix `git diff --name-only` is the authoritative touched-set.
 
 - [ ] **Step 1: Confirm preflight still holds (no stray untracked supported files)**
 
@@ -415,6 +415,7 @@ on:
       - "**/*.yaml"
       - "**/*.code-workspace"
       - ".prettierrc.json"
+      - ".prettierignore"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/format.yml"
@@ -427,6 +428,7 @@ on:
       - "**/*.yaml"
       - "**/*.code-workspace"
       - ".prettierrc.json"
+      - ".prettierignore"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/format.yml"
@@ -439,7 +441,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6 # repo convention (existing workflows use @v6); reference uses @v4
         with:
           node-version: "22"
           cache: npm
@@ -601,7 +603,7 @@ Expected: the staged diff shows **only** the `- [ ]` → `- [x]` change. If othe
 
 - [ ] **Step 3: Update the spec-row status in `docs/handoff/specs-plans.md`**
 
-Change the markdown-tooling spec row status from `In Codex review` to `Implemented — <commit>` (fill the reformat commit short-hash from `git log --oneline`). Also add a row for this plan:
+Change the markdown-tooling spec row status from `In Codex review` to `Implemented — <range>`, where `<range>` is the **full implementation commit range** (first config commit `..` this seal commit), not the reformat commit alone — get it from `git log --oneline origin/main..HEAD`. Also add a row for this plan:
 `| 2026-06-08 | docs/superpowers/plans/2026-06-08-markdown-tooling-adoption.md | Implemented | Markdown-tooling adoption plan (6 tasks); executed. |`
 
 Then format the edited index so it passes the gate: `npx prettier --write docs/handoff/specs-plans.md`
@@ -620,12 +622,26 @@ git commit -m "chore(markdown-tooling): mark adoption complete (TODO + specs-pla
 
 (The `TODO.md` checkbox hunk was already staged in Step 2; include it — confirm `git status` shows no unintended `TODO.md` hunks committed.)
 
-- [ ] **Step 6: Push and confirm CI is green**
+- [ ] **Step 6: Review exactly what will publish, then push**
 
+Run: `git log --oneline origin/main..HEAD`
+Expected: the markdown-tooling commit set (3 pre-existing design/spec/plan commits + the ~6 implementation commits from Tasks 1–6). Confirm nothing unexpected, then:
 Run: `git push origin main`
-Then confirm both new workflows pass and no pre-existing workflow regressed:
-Run: `gh run list --branch main --limit 6`
-Expected: `Lint Markdown` ✅, `Format` ✅, and `ha-dev-plugin-tests` / `plugin-test-harness-ci` / `codeql` still ✅ (no regression from whitespace changes).
+
+- [ ] **Step 7: Verify CI for THIS head SHA (not stale runs)**
+
+Run:
+```bash
+SHA=$(git rev-parse HEAD)
+gh run list --branch main --limit 20 --json headSha,name,conclusion,status \
+  | jq -r --arg s "$SHA" '.[] | select(.headSha==$s) | "\(.name): \(.status)/\(.conclusion)"'
+```
+Expected — for this head SHA, these workflows run and conclude `success`:
+- `Lint Markdown` ✅ and `Format` ✅ (the two new gates).
+- `CodeQL` ✅ (runs on every push).
+- `ha-dev-plugin-tests` ✅ — it **does** trigger, because the reformat touched `plugins/home-assistant-dev/**` (its path filter); confirm whitespace changes didn't regress it.
+
+**Not applicable (must NOT be treated as red):** `plugin-test-harness-ci` does **not** trigger — its path filter is `plugins/plugin-test-harness/**` and that directory is absent. A workflow that correctly didn't run for this SHA is N/A, not a failure.
 
 ---
 
@@ -637,3 +653,17 @@ Expected: `Lint Markdown` ✅, `Format` ✅, and `ha-dev-plugin-tests` / `plugin
 4. No `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs` file appears in the adoption diff.
 5. `.vscode/settings.json` + `.vscode/extensions.json` tracked (un-ignored, force-added); `AGENTS.md` carries the tooling block; `ADR-0001` present.
 6. User's `TODO.md` restructure preserved; "Adopt markdown-tooling" checked via a hunk-isolated edit; `docs/handoff/specs-plans.md` updated; `state.md`-generator follow-up (spec §7) recorded for the Python cycle.
+
+---
+
+## Rollback
+
+The adoption is a contiguous commit range on `main` (Tasks 1–6), so the clean rollback is to revert that range in reverse order:
+
+- [ ] Identify the range: `git log --oneline origin/main..HEAD` (or the pushed range). The boundary is the **first config commit** (Task 1) through the **seal commit** (Task 6).
+- [ ] Revert in reverse: `git revert --no-commit <seal>..<first-config>^` then `git commit`, **or** revert commits individually newest-first. This removes the CI workflows, `.vscode/` config, ADR/label/AGENTS block, the mechanical reformat, and the root `package.json`/lockfile/`.gitignore` edit together.
+- [ ] The `TODO.md` checkbox revert returns it to `- [ ]`; re-confirm the user's surrounding restructure is intact.
+- [ ] `node_modules/` is gitignored — delete it manually if desired (`rm -rf node_modules`).
+- [ ] Re-run `bash scripts/validate-marketplace.sh` after rollback to confirm manifests still validate.
+
+Partial rollback (e.g. keep the configs but undo only the reformat) is **not** recommended — it would leave CI red on the un-reformatted tree.
