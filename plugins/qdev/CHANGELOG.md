@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+## [2.0.0] - 2026-06-07
+
+### Removed (BREAKING)
+- Removed `/qdev:quality-review`, `/qdev:deps-audit`, `/qdev:doc-sync`, and `/qdev:spec-update` commands and their agents (`qdev-quality-reviewer`, `qdev-deps-auditor`, `qdev-doc-syncer`). qdev is now research-only: `/qdev:research` is the single remaining command.
+- Removed the `qdev-grounding` (`research-grounding`) auto-trigger skill and its egress sanitizer `scripts/sanitize_query.py` (+ `tests/test_sanitize_query.py`). Routine, agent-initiated web search is decoupled to the standalone Claude Code `web-search` skill (in the agent-configs repo); it does not persist reports or tier search depth.
+
+### Changed
+- `/qdev:research` and `qdev-researcher` no longer reference the removed `/qdev:quality-review` in their downstream-chaining text (output text only; research behavior unchanged).
+- Manifest + marketplace description rewritten to research-only; structural test (`test_plugin_structure.py`) updated for the skill-less, single-dispatcher surface.
+
+### Fixed
+- Corrected the Tavily MCP server key in `qdev-researcher` (`mcp__tavily-mcp__*` → `mcp__tavily__*`) to match this host's configured server name; the wrong key silently dropped the Tavily grant and forced a `WebFetch` fallback on every deep-read. (Lands via precursor commit `56494ad`.)
+
 ## [1.6.0] - 2026-06-05
 
 ### Added
@@ -29,29 +44,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - qualified subagent_type + pass scripts path; relay reporting cycle
 - qualify subagent_type in all four command dispatches (PLUGIN-001)
 - correct Tavily MCP tool prefix in three agents
-
-
-## [Unreleased]
-
-### Added
-
-- `qdev-grounding` skill: the plugin's first auto-trigger. Cheap inline lookups (Category C) that escalate to the `qdev-researcher` medium sweep (Category A / after 2 failed rounds). Every outbound payload passes a deterministic egress sanitizer (`scripts/sanitize_query.py`) before leaving the machine; flagged payloads pause for approval, auto-fired medium runs confirm before dispatch.
-- `scripts/sanitize_query.py`: stdin-driven egress sanitizer (collapse tracebacks -> redact secret families -> strip private identifiers -> approval/provider decision), fail-closed.
-- Research reporting cycle: `qdev-researcher` reports now carry project-standards `research` frontmatter; `docs/research/index.md` is regenerated from frontmatter by `scripts/build_research_index.py`; `scripts/validate_research_frontmatter.py` enforces the schema. Dedup updates/links/supersedes prior reports.
-
-### Changed
-
-- `qdev-researcher` routing: Tavily-first recall → Brave cross-check → Serper operators → Tavily extract, with a Context7 docs-vs-web gate (both `query-docs`/`get-library-docs` variants), enforced provider quirks (`gl/hl`, `topic=general`→Brave, `search_depth=basic`), and a fail-soft fallback chain.
-
-### Fixed
-
-- `sanitize_query.py` hardening from a high-effort code review: (a) env-style secret assignments whose keyword is a suffix of a longer name (`AWS_SECRET_ACCESS_KEY=…`, `MY_API_KEY_PROD=…`) are now redacted+flagged — previously the value egressed with no approval; (b) bearer tokens containing base64 chars (`/ + =`) are redacted whole (`\S+`), not just the run before the first such char; (c) two quadratic ReDoS holes fixed by bounding repetition — `host:internal` (`{1,12}` labels; ~16s→0.02s on a 60k dotted string) and `pii:email` (RFC length caps). The egress over-flag bias and the documented heuristic limits (unkeyed high-entropy secrets, non-suffix internal FQDNs) are intentional and noted in the module docstring.
-- `build_research_index.py` / `validate_research_frontmatter.py` now also catch `UnicodeDecodeError` (a `ValueError`, not `OSError`), so a single non-UTF-8 report is skipped/reported per-file instead of crashing index regeneration or validation.
-- `sanitize_query.py` no longer leaks the tail of a spaced secret value: the `secret:assignment` / `customer:identifier` value capture was `\S+` (first whitespace-delimited token only), so `password: correct horse battery staple` redacted to `[REDACTED] horse battery staple`. Now captures to end of line (`.+`), so the whole value is redacted — over-redaction is the correct bias for an egress sanitizer. Regression test added.
-- `build_research_index.py` now escapes `|` (and collapses newlines) in generated index cells, so a report title/field containing a pipe can no longer inject extra columns into `index.md`. Regression test added.
-- `build_research_index.py` `collect_reports` no longer aborts the whole index regeneration when a single report has malformed-YAML frontmatter; the bad file is skipped with a stderr warning (parity with `validate_research_frontmatter.py`'s per-file resilience). Regression test added.
-- Corrected the Tavily MCP tool prefix in three agents (`qdev-researcher`, `qdev-quality-reviewer`, `qdev-deps-auditor`): `mcp__tavily__tavily_*` → `mcp__tavily-mcp__tavily_*`. The wrong server key meant the Tavily tools were never granted, so every deep-read/extract silently fell back to `WebFetch` — which returns sparse content on the JS-rendered docs/advisory/issue pages these agents target. The prefix now matches the canonical `tavily-mcp` server key (consistent with the sibling `brave-search` / `serper-search` keys).
-- Qualified the `subagent_type` in all four qdev command dispatches (`/qdev:deps-audit`, `/qdev:doc-sync`, `/qdev:quality-review`, `/qdev:research`): bare `qdev-<agent>` → `qdev:qdev-<agent>`. Per repo convention PLUGIN-001, a bare plugin-agent name is not resolvable from outside the plugin namespace; it fails at runtime with "Agent type not found", and the failure silently no-ops rather than erroring — so each command could dispatch nothing. Same fix class as the earlier up-docs correction.
 
 ## [1.5.0] - 2026-05-08
 

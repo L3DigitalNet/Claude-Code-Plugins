@@ -47,14 +47,14 @@ LLM-facing (terse, scannable, tables > prose, no narrative framing):
 **Rule:** Implement the command as a thin dispatcher (30-50 lines) that calls an Agent via the Agent tool, passing session context and user input; implement the actual work in a sibling agent with explicit `model:` (haiku for mechanical, sonnet for reasoning). Commands own user interaction only; agents own all data access and iteration.
 
 ```yaml
-# commands/qdev-review.md — thin dispatcher (30 lines)
-/qdev:quality-review target.py
-├─ Call Agent: qdev:qdev-quality-reviewer
+# commands/research.md — thin dispatcher
+/qdev:research "topic"
+├─ Call Agent: qdev:qdev-researcher
 │  (receives: user input, prior findings, iteration count)
 │  (returns: findings JSON + convergence status)
 └─ AskUserQuestion: approve/revise/skip per finding
 
-# agents/qdev-quality-reviewer.md — fat agent (200+ lines, explicit model: sonnet)
+# agents/qdev-researcher.md — fat agent (200+ lines, explicit model: sonnet)
 - Does all the work: file reads, pattern matching, multi-pass iteration
 - No AskUserQuestion calls; returns structured findings only
 - Model set explicitly per workload (haiku = mechanical, sonnet = reasoning)
@@ -63,8 +63,8 @@ LLM-facing (terse, scannable, tables > prose, no narrative framing):
 **Why:** Commands that held research results, file contents, and iteration state in Opus context burned 15-22K tokens per invocation. Splitting separates concerns: commands handle user interaction (trivial) while agents handle work (and can run cheaper). Agents are stateless (no persistent context pressure); iteration state flows as JSON between Agent returns. For convergence-loop work, agents need the model tier for consistency/reasoning — sonnet over haiku for multi-pass quality audits. Mechanical work (manifest parsing, CVE lookups, docstring generation) downgrades to haiku. Pattern established across qdev and repo-hygiene (and previously python-dev before its 2026-05-08 removal); generalizes to any research-heavy or iterative plugin command.
 
 **Sources:**
-- `plugins/qdev/commands/deps-audit.md` (thin orchestrator, 40 lines)
-- `plugins/qdev/agents/qdev-deps-auditor.md` (haiku agent, 180 lines)
+- `plugins/qdev/commands/research.md` (thin orchestrator)
+- `plugins/qdev/agents/qdev-researcher.md` (sonnet agent)
 - `plugins/repo-hygiene/commands/hygiene.md` (Step 1 inline; Step 2 dispatches agent)
 - Session summary: plugin delegation migration (2026-04-23). The `plugins/python-dev/` exemplars referenced in earlier revisions were deleted 2026-05-08 along with the plugin.
 
@@ -135,7 +135,7 @@ TypeScript: Jest (test files: test/unit/<path-mirror>/<module>.test.ts)
 
 **Sources:**
 - Rule table in this convention (canonical framework + naming conventions)
-- Existing test coverage (9 in-scope plugins, post-qdev research-KB scripts; was 8 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qdev 144 pytest (was 75; +69 from the D2 coverage + code-review-fix passes — sanitizer invariants/bypass/ReDoS, D1 branch/CLI/CRLF edges, and a markdown-surface structural tier `test_plugin_structure.py`), qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then -14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
+- Existing test coverage (9 in-scope plugins, post-qdev research-KB scripts; was 8 after the 2026-05-30 cleanup; was 11 at the 2026-05-25 batch): github-repo-manager 40 bats, home-assistant-dev 207 pytest + 31 Jest, plugin-test-harness 68 Jest, qdev 50 pytest (was 144; −94 from removing the grounding sanitizer suite `test_sanitize_query.py` in qdev 2.0.0 search decoupling), qt-suite 6 bats + 54 pytest, release-pipeline 76 bats, repo-hygiene 40 bats, test-driver 57 bats, up-docs 48 bats + 26 pytest (was 34 bats pre-v0.8.0; +27 bats from deny-guard/capture-transcript/convergence-tracker tests and +1 from a v0.8.1 deny-guard regression test, then -14 bats when the deny-guard PreToolUse hook was removed after v0.8.1; +26 pytest from validate_output and verify_evidence_grounded suites). handoff (22 bats), nominal (79 bats), opus-context (10 bats) removed 2026-05-30.
 
 **Related:** TEST-002, DOC-001
 

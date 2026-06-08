@@ -49,7 +49,7 @@ When auto-update is enabled, Claude Code refreshes the marketplace catalog and u
 | [GitHub Repo Manager](#github-repo-manager) | Commands + Skills | `/repo-manager` | Conversational GitHub repo health assessment and maintenance |
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [Plugin Test Harness](#plugin-test-harness) | MCP | 18 tools | Iterative test/fix/reload loop for plugin development |
-| [qdev](#qdev) | Skills | `/research`, `/quality-review`, `/deps-audit`, `/doc-sync`, `/spec-update` | Development quality toolkit: pre-build research sweeps, convergence-loop quality reviews, CVE dependency audits, and inline doc sync |
+| [qdev](#qdev) | Commands + Agents | `/research` | Deep web research for development decisions: dual-source sweeps with Context7 docs gating, persisted as cited reports under `docs/research/` |
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Repo Hygiene](#repo-hygiene) | Commands | `/hygiene` | Autonomous maintenance sweep for .gitignore, manifests, and READMEs |
@@ -220,15 +220,11 @@ These principles apply across all plugins in this collection. Individual plugins
 
 ### qdev
 
-**Development quality toolkit**: five skills covering the full dev cycle from initial research through delivery.
+**Deep web research**: a single user-initiated command that sweeps current sources before you design or build.
 
 **Features:**
 
-- `/research`: sweeps current libraries, APIs, and best practices before you build
-- `/quality-review`: iterates to convergence, running checks until findings drop to zero
-- `/deps-audit`: scans dependency manifests for known CVEs and outdated packages
-- `/doc-sync`: aligns inline documentation with current implementation
-- `/spec-update`: propagates code changes back to the specification document
+- `/research`: dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) persisted as a cited, frontmatter-indexed report under `docs/research/`
 
 **Install:**
 
@@ -352,7 +348,7 @@ Claude-Code-Plugins/
 │   ├── github-repo-manager/     # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── plugin-test-harness/     # Iterative plugin testing framework
-│   ├── qdev/                    # Development quality toolkit (research, reviews, dep audits, doc-sync, spec-update)
+│   ├── qdev/                    # Deep web research (research sweeps via qdev-researcher)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
 │   ├── release-pipeline/        # Autonomous release pipeline
 │   ├── repo-hygiene/            # Autonomous repo maintenance sweep

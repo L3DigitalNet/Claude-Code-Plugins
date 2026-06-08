@@ -192,9 +192,8 @@ Mode: research  ·  Topic: <topic>  ·  Saved: <persisted path>
 
 ## Handoff
 
-Persisted at `<path>`. Downstream commands that may consume it:
+Persisted at `<path>`. Downstream skills that may consume it:
 
-- `/qdev:quality-review` — review a related artifact with this research as ground truth
 - `superpowers:brainstorming` — feed Open Questions into a design conversation
 - `feature-dev:feature-dev` — start architecture work with this background
 

@@ -28,7 +28,7 @@ counts in `docs/handoff/conventions.md` TEST-001 current when adding tests.
 **Quick reference:**
 - Strategic overview: `docs/handoff/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
 - Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/handoff/sessions/`
-- In scope: 9 plugins with qdev's research-KB + grounding-sanitizer scripts (qdev is no longer pure-markdown). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
+- In scope: 9 plugins with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
 - Branch workflow: direct commits to `main`.
@@ -71,7 +71,7 @@ Claude-Code-Plugins/
 │   ├── github-repo-manager/          # Conversational GitHub repo maintenance
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
 │   ├── plugin-test-harness/          # Iterative test/fix/reload loop (TypeScript)
-│   ├── qdev/                         # Development quality toolkit (commands + `skills/research-grounding`; research-KB scripts + `scripts/sanitize_query.py`)
+│   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
 │   ├── qt-suite/                     # Qt development and testing toolkit
 │   ├── release-pipeline/             # Autonomous release pipeline
 │   ├── repo-hygiene/                 # Autonomous repo maintenance sweep

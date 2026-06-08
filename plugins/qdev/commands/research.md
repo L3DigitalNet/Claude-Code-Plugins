@@ -20,8 +20,8 @@ The research workflow performs 6-8 queries through a Tavily-first recall path, B
 cross-checks, 3-5 full-page Tavily extracts, and per-library Context7 round-trips. Running it in
 Opus context burns ~25K tokens per sweep on raw search results alone. The Sonnet subagent
 consolidates research + corroboration + synthesis into one dispatch and returns a compact
-structured report. This matches the v1.3.0 extraction pattern used for `quality-review`,
-`deps-audit`, and `doc-sync`.
+structured report. This is the v1.3.0 subagent-extraction pattern: the orchestrator stays
+out of raw search results and receives only the compact structured report.
 
 ## How to run it
 
@@ -78,8 +78,7 @@ structured report. This matches the v1.3.0 extraction pattern used for `quality-
    - question: `"Research saved to <path>. What's next?"`
    - options:
      1. label: `"Brainstorm next"`, description: `"Feed Open Questions into superpowers:brainstorming"`
-     2. label: `"Quality-review related artifact"`, description: `"Run /qdev:quality-review with this research as context"`
-     3. label: `"Just save and exit"`, description: `"No follow-up"`
+     2. label: `"Just save and exit"`, description: `"No follow-up"`
 
    Apply the chosen option in this session: invoke the named skill/command and pass the persisted
    research path as context.

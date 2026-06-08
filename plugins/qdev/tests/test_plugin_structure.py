@@ -47,7 +47,9 @@ def _tool_entries(fm: dict | None) -> list[str]:
 
 def test_discovery_found_the_expected_surface():
     # Guards against a glob that silently matches nothing (vacuous pass).
-    assert AGENTS and COMMANDS and SKILLS
+    # qdev ships commands + agents but no skill since 2.0.0 (search decoupled
+    # to the agent-configs web-search skill), so SKILLS is legitimately empty.
+    assert AGENTS and COMMANDS
 
 
 @pytest.mark.parametrize("path", ALL_DEFS, ids=_rel)
@@ -95,7 +97,8 @@ def test_dispatching_file_has_qualified_subagent_type(path):
 
 
 def test_dispatch_markers_present_so_guard_is_not_vacuous():
-    # Pin that the per-file guard actually runs against real dispatchers; the 4
-    # subagent-backed commands + the grounding skill each carry the marker.
+    # Pin that the per-file guard actually runs against a real dispatcher. Since
+    # 2.0.0 the only qdev dispatcher is commands/research.md (-> qdev-researcher);
+    # the deprecated subagent commands and the grounding skill were removed.
     marked = [p for p in DISPATCHERS if _DISPATCH_MARKER.search(p.read_text(encoding="utf-8"))]
-    assert len(marked) >= 5
+    assert len(marked) >= 1
