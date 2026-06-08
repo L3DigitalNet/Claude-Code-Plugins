@@ -73,7 +73,9 @@ export class HaClient {
       return this.connectionInfo;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to connect to Home Assistant: ${message}`);
+      throw new Error(`Failed to connect to Home Assistant: ${message}`, {
+        cause: error,
+      });
     }
   }
 

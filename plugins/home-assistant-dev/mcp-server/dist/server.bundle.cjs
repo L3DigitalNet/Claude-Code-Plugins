@@ -20932,7 +20932,7 @@ async function loadConfigFile() {
   try {
     const content = await (0, import_promises.readFile)(CONFIG_FILE_PATH, "utf-8");
     return JSON.parse(content);
-  } catch (error3) {
+  } catch {
     return {};
   }
 }
@@ -24046,7 +24046,9 @@ var HaClient = class {
       return this.connectionInfo;
     } catch (error3) {
       const message = error3 instanceof Error ? error3.message : String(error3);
-      throw new Error(`Failed to connect to Home Assistant: ${message}`);
+      throw new Error(`Failed to connect to Home Assistant: ${message}`, {
+        cause: error3
+      });
     }
   }
   /**
@@ -24934,7 +24936,7 @@ async function handleValidateManifest(input) {
         severity: "error"
       });
     }
-    const pathParts = input.path.split(/[\/\\]/);
+    const pathParts = input.path.split(/[/\\]/);
     const dirName = pathParts[pathParts.length - 2];
     if (dirName && manifest.domain !== dirName) {
       warnings.push({
@@ -25030,7 +25032,7 @@ async function handleValidateStrings(input) {
     strings = JSON.parse(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid JSON in strings.json: ${message}`);
+    throw new Error(`Invalid JSON in strings.json: ${message}`, { cause: err });
   }
   const config3 = strings.config;
   const stringSteps = new Set(
@@ -25043,9 +25045,9 @@ async function handleValidateStrings(input) {
     Object.keys(config3?.abort || {})
   );
   const configFlowPath = (0, import_path3.join)((0, import_path3.dirname)(input.path), "config_flow.py");
-  let flowSteps = /* @__PURE__ */ new Set();
-  let flowErrors = /* @__PURE__ */ new Set();
-  let flowAborts = /* @__PURE__ */ new Set();
+  const flowSteps = /* @__PURE__ */ new Set();
+  const flowErrors = /* @__PURE__ */ new Set();
+  const flowAborts = /* @__PURE__ */ new Set();
   if ((0, import_fs2.existsSync)(configFlowPath)) {
     const flowContent = await (0, import_promises4.readFile)(configFlowPath, "utf-8");
     const stepMatches = flowContent.matchAll(/async def async_step_(\w+)\s*\(/g);

@@ -22,7 +22,7 @@ export async function handleValidateStrings(
     strings = JSON.parse(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid JSON in strings.json: ${message}`);
+    throw new Error(`Invalid JSON in strings.json: ${message}`, { cause: err });
   }
 
   // Extract steps, errors, aborts from strings.json
@@ -39,9 +39,9 @@ export async function handleValidateStrings(
 
   // Try to load config_flow.py
   const configFlowPath = join(dirname(input.path), "config_flow.py");
-  let flowSteps = new Set<string>();
-  let flowErrors = new Set<string>();
-  let flowAborts = new Set<string>();
+  const flowSteps = new Set<string>();
+  const flowErrors = new Set<string>();
+  const flowAborts = new Set<string>();
 
   if (existsSync(configFlowPath)) {
     const flowContent = await readFile(configFlowPath, "utf-8");

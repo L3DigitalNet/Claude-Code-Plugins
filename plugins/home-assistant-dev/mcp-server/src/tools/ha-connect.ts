@@ -3,7 +3,7 @@
  */
 
 import { HaClient } from "../ha-client.js";
-import type { HaConnectInput, HaConnectOutput, ServerConfig } from "../types.js";
+import type { HaConnectInput, ServerConfig } from "../types.js";
 
 export async function handleHaConnect(
   input: HaConnectInput,

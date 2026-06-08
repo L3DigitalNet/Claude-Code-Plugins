@@ -50,7 +50,7 @@ async function loadConfigFile(): Promise<Partial<ServerConfig>> {
   try {
     const content = await readFile(CONFIG_FILE_PATH, "utf-8");
     return JSON.parse(content);
-  } catch (error) {
+  } catch {
     // Config file doesn't exist or is invalid - that's okay
     return {};
   }

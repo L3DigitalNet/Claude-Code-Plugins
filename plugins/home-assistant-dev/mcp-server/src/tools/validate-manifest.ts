@@ -106,7 +106,7 @@ export async function handleValidateManifest(
     }
 
     // Check domain matches directory
-    const pathParts = input.path.split(/[\/\\]/);
+    const pathParts = input.path.split(/[/\\]/);
     const dirName = pathParts[pathParts.length - 2];
     if (dirName && manifest.domain !== dirName) {
       warnings.push({
