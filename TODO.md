@@ -19,7 +19,7 @@ This document is the user's visible task list alongside the v3 handoff system. U
 ## User Tracked Tasks
 
 - From [https://github.com/L3DigitalNet/project-standards/tree/main/standards](https://github.com/L3DigitalNet/project-standards/tree/main/standards):
-  - [ ] Adopt markdown-tooling
+  - [x] Adopt markdown-tooling
   - [ ] Adopt python-tooling
 
 ## Repo & Agent Tracked Tasks
