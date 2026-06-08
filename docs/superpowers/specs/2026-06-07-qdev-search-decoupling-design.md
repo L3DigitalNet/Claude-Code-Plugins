@@ -117,16 +117,23 @@ We want two clean things instead of one tangled one:
   `metadata.author: Chris Purcell`, `metadata.version: '1.0'`. `deploy-skill.sh` routes
   `Claude Code` → `~/.claude/skills/web-search/` (copy, version-guarded). Mirror the shape of
   the existing `.claude/skills/populate-config/SKILL.md`, which names the same MCP tools.
-- **Installed-tool schema is authoritative (SA-006).** Use the tool names exposed in *this*
-  environment, not the global routing table verbatim:
+- **Installed-tool schema is authoritative (SA-006).** Because this is a **Claude Code-only**
+  skill, the live Claude Code MCP schema is the *sole* authority — not the global routing
+  table, not qdev's `CHANGELOG.md`, not Codex's tool metadata. **Verified this session via
+  ToolSearch (2026-06-08):**
   - `mcp__brave-search__brave_web_search`, `mcp__brave-search__brave_news_search`,
-    `mcp__brave-search__brave_summarizer`
+    `mcp__brave-search__brave_summarizer`, `mcp__brave-search__brave_image_search`
   - `mcp__serper-search__google_search`, `mcp__serper-search__scrape`
   - `mcp__tavily__tavily_search`, `mcp__tavily__tavily_extract`, `mcp__tavily__tavily_map`,
-    `mcp__tavily__tavily_crawl`
-  - The installed Tavily MCP exposes **`topic: "general"` only** — do **not** prescribe
-    `topic=news`/`finance`. The plan/implementation must re-verify these names against the
-    live MCP schema before writing (ToolSearch / tool metadata), in case the install changed.
+    `mcp__tavily__tavily_crawl`, `mcp__tavily__tavily_research`
+  - `mcp__tavily__tavily_search` declares `topic` as **`const: "general"`** — there is no
+    `news`/`finance` topic in this install; do **not** prescribe one.
+  - **Provenance note (resists future "correction"):** qdev's `CHANGELOG.md:53` records a
+    historical `mcp__tavily__*` → `mcp__tavily-mcp__*` server-key fix, and Codex exposes
+    `mcp__tavily_mcp`. Both are **non-authoritative** for a Claude-only skill — the install
+    has since reverted to the `mcp__tavily__*` key confirmed live above. The
+    plan/implementation must **re-run ToolSearch and use whatever the CC schema exposes at
+    write-time**; if it no longer matches, use the live value and update this note.
 - **Content** (flat reference, no tiers):
   - General web search → `brave_web_search` + `google_search` (dual-source, 10+ results each).
   - News / finance → `brave_news_search` (+ `tavily_search`, general topic) — Brave carries
@@ -154,12 +161,11 @@ Two repos, two commits, direct to `main` in each (single-developer workflow):
 
 ### Commit safety (SA-004 — both repos currently have unrelated dirty state)
 
-Both worktrees hold pre-existing, unrelated changes that must be preserved, **not** swept
-into these commits:
-
-- `Claude-Code-Plugins`: `M .claude/settings.json`, `M TODO.md`.
-- `agent-configs`: modified `.claude/settings.json`, `TODO.md`, `configs/openbao-wrapper.md`,
-  + an untracked review doc.
+Both worktrees carry pre-existing, unrelated changes that must be preserved, **not** swept
+into these commits (e.g. at spec-authoring time `Claude-Code-Plugins` had `M TODO.md`,
+`M .claude/settings.json`, and untracked `docs/codex-reviews/` audit files; `agent-configs`
+had assorted modified configs). **This list is illustrative and goes stale — inspect live
+`git status` at implementation time; do not trust this snapshot.**
 
 Guards (per the repo non-negotiable "never `git add .` / `git add -A`"):
 
@@ -178,13 +184,21 @@ Guards (per the repo non-negotiable "never `git add .` / `git add -A`"):
 - `bash scripts/validate-marketplace.sh` green after the marketplace.json description **and
   version** edits (catches the SA-002 equality check).
 - **No dangling refs (SA-003):** `grep -rn 'qdev:quality-review\|qdev:deps-audit\|
-  qdev:doc-sync\|qdev:spec-update\|research-grounding\|qdev-grounding\|sanitize_query'`
-  over *non-historical* surfaces (commands/, agents/, README, marketplace, current handoff
-  docs) returns nothing.
-- **New skill (SA-007):** `bash agent-configs/scripts/skills/deploy-skill.sh` routes
-  `web-search` to `~/.claude/skills/web-search/` (copy, not symlink) and does **not**
-  overwrite unrelated installed skills; `agent-configs/scripts/tests/run.sh` (deploy.bats)
-  stays green. Frontmatter/shape compared against `.claude/skills/populate-config/SKILL.md`.
+  qdev:doc-sync\|qdev:spec-update\|research-grounding\|qdev-grounding\|sanitize_query'` over
+  the *live qdev surface* (`plugins/qdev/commands/`, `plugins/qdev/agents/`,
+  `plugins/qdev/README.md`, `plugins/qdev/.claude-plugin/`, root `README.md`,
+  `.claude-plugin/marketplace.json`) returns nothing. **Handoff docs are checked by hand,
+  not this grep:** `docs/handoff/specs-plans.md` legitimately *points to* dated specs/plans
+  whose titles name removed commands — those historical pointer rows stay; only
+  current-surface *descriptions* of qdev get updated.
+- **New skill (SA-007) — isolated validation only; no live deploy without consent.**
+  `deploy-skill.sh` mutates live skill roots (`~/.claude`, `~/.codex`, `~/.agents`) and an
+  equal-version rerun refreshes installed copies. So validate routing in an isolated home —
+  `HOME="$(mktemp -d)" bash scripts/skills/deploy-skill.sh` from the agent-configs root —
+  and confirm `web-search` lands at `$HOME/.claude/skills/web-search/` (copy, not symlink).
+  Run `bash scripts/tests/run.sh` (deploy.bats) green. Compare frontmatter/shape against
+  `.claude/skills/populate-config/SKILL.md`. **A live `deploy-skill.sh` is a separate,
+  explicitly user-approved post-implementation step — not part of this work.**
 
 ## Non-goals
 
