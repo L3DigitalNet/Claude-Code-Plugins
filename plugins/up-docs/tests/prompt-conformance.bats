@@ -177,3 +177,18 @@ PROPAGATE_WIKI="$PLUGIN_ROOT/agents/up-docs-propagate-wiki.md"
   run grep -iF 'unreachable' "$AUDIT_DRIFT"
   [ "$status" -eq 0 ]
 }
+
+@test "commit offer handles the remote wiki repo over ssh, not a local path (0.12.0)" {
+  # post-propagation template: wiki baseline + commit run over ssh on the CT
+  run grep -F "ssh llm-wiki 'bash -s'" "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -F '/srv/workspaces/llm-wiki' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -F 'projects/llm-wiki' "$POST_PROP"
+  [ "$status" -ne 0 ]
+  # all-skill pre-flight wiki baseline snapshot runs on the CT
+  run grep -F "ssh llm-wiki 'bash -s' snapshot /srv/workspaces/llm-wiki" "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  run grep -F 'projects/llm-wiki' "$ALL_SKILL"
+  [ "$status" -ne 0 ]
+}

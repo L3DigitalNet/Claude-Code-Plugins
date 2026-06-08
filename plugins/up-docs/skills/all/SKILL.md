@@ -44,7 +44,7 @@ If the output is **non-empty**, STOP immediately:
 
 If the output is empty, continue.
 
-**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated paths: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"` and, when the wiki layer is in scope, `BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`. Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
+**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated paths: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"` and, when the wiki layer is in scope (the wiki repo is REMOTE on CT 103), capture its baseline by piping the same helper to the CT: `BASELINE_WIKI=$(mktemp); ssh llm-wiki 'bash -s' snapshot /srv/workspaces/llm-wiki < ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh > "$BASELINE_WIKI"`. Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
 
 ### 1. Gather Session Context (once)
 
@@ -122,7 +122,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/templates/post-propagation-steps.md` and follow all 
 
 - **Stale File Candidate Review** — if the repo propagator's report has a `## Stale File Candidates` section, present it via `AskUserQuestion` (`multiSelect`) and `git rm` only user-approved paths. Skip silently if none.
 - **Handoff for Next Session** — emit a per-layer update confirmation, then the layout-detected (V2/V1/NONE) handoff brief.
-- **Commit offer (part (c))** — after the handoff brief, run the template's consent-gated, baseline-safe, no-push commit offer, passing the pre-flight baselines you captured: `$BASELINE_REPO` for the project repo and `$BASELINE_WIKI` for `~/projects/llm-wiki` (when the wiki layer ran).
+- **Commit offer (part (c))** — after the handoff brief, run the template's consent-gated, baseline-safe, no-push commit offer, passing the pre-flight baselines you captured: `$BASELINE_REPO` for the project repo and `$BASELINE_WIKI` for the remote wiki repo (CT 103, `/srv/workspaces/llm-wiki`) (when the wiki layer ran).
 
 The brief is READ-only over already-updated state files; do not re-edit.
 

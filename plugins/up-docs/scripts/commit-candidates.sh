@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # commit-candidates.sh — git-ground-truth helper for the up-docs Step 6 commit offer.
+# Pure git + python, so it runs wherever it is invoked: locally for the project repo,
+# and ON the remote wiki LXC (CT 103) when piped over SSH —
+#   ssh llm-wiki 'bash -s' snapshot /srv/workspaces/llm-wiki < this-script
+# (the git -C <repo> below then runs against the CT's working tree).
 # Surfaces paths CHANGED SINCE A BASELINE in a repo. It does NOT assert run-ownership
 # (a hook/editor/other process could dirty a clean-baseline file too) — the orchestrator
 # discloses each candidate's diff for explicit human approval (post-propagation-steps.md
