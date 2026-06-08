@@ -63,7 +63,22 @@ Field rules (from the template):
 - Name exact keys/values/paths — not "updated config" but "`BAO_ADDR=127.0.0.1` → `100.90.121.89` in `/usr/local/bin/backup-dumps.sh`".
 - Every item includes {Change, Reason, Affected area, Files touched, Verifiable against}.
 
+**Routing matrix (tag each numbered item with target layer(s)).** Kept in sync with the agents' layer-boundary sections (`agents/up-docs-propagate-{repo,wiki,notion}.md`). Tag, do not drop:
+
+| Item characteristic | Routes to |
+|---|---|
+| Project-repo artifact: README/docs/CLAUDE.md/AGENTS.md, handoff files, CLI flags, repo build/test config | `repo` |
+| Credential **reference** added/rotated/removed (env-var name, OpenBao path — *not* the secret value) | `repo` (handoff/credentials.md) + `wiki` if a page cites it |
+| Implementation reference: config values, env-var names, file paths, service procedures, troubleshooting, command usage, auth/networking wiring (incl. homelab implementation) | `wiki` |
+| Strategic/organizational: new service in the stack, architecture decision, ownership/roadmap, personnel | `notion` |
+| **Secret VALUE or live inventory RECORD only** (a secret's actual value in OpenBao; a device/IP/VLAN row in NetBox; an actual DNS/firewall entry) — owned by its system-of-record | none — no propagator |
+| **Ambiguous / spans concerns** | **all candidate layers (fail-open)** |
+
+**CR-002 — do not over-route to "none".** Only the *value/record itself* is system-of-record-owned. A change *about* such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
+
 ### 3. Dispatch Propagators in Parallel
+
+Dispatch **only the propagators with ≥1 routed item** (from the Step 2 routing matrix), still in a single message with one Agent call each so they run concurrently. For every layer with zero routed items, do NOT dispatch its propagator; instead record a combined-report line `<Layer> — skipped (0 items routed to this layer)`. This never applies to the auditor — Step 4 still **audits all three layers** regardless of which propagators ran.
 
 Invoke the three propagator sub-agents **in a single message with three Agent tool calls** so they run concurrently (the tool was called `Task` before Claude Code v2.1.63 and still accepts that name as an alias). Each receives the session-change summary as the stable front of its prompt; layer-specific detail goes at the end (cache-friendly structure).
 
@@ -93,7 +108,7 @@ If the auditor emits an `⚠ ESCALATION RECOMMENDED` block, include it in the co
 
 Read `${CLAUDE_PLUGIN_ROOT}/templates/summary-report.md` for the `/up-docs:all` format.
 
-Produce one combined report: a heading per layer, each with its own table and totals line, followed by the drift findings table and (if present) the escalation block.
+Produce one combined report: a heading per layer, each with its own table and totals line, followed by the drift findings table and (if present) the escalation block. For any layer skipped in Step 3, emit its "<Layer> — skipped (0 items routed)" line in place of that layer's table; it is presentation-only and carries no action-row totals.
 
 Do not re-fetch pages or files. Do not make your own edits. Your job after dispatching is pure collation.
 

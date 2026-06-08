@@ -63,6 +63,10 @@ Use this template for the final output of every /up-docs command.
 **Totals:** ...
 ```
 
+## /up-docs:all Format Notes
+
+- A propagation layer skipped because zero session items routed to it is rendered as a single orchestrator line `<Layer> — skipped (0 items routed to this layer)`, NOT a table row. It is presentation-only: it is not an agent `Action` value and does not pass through `validate_output.py`.
+
 ## Escalation Block (appended only when the drift auditor triggers it)
 
 When `/up-docs:all` or `/up-docs:drift` includes an auditor-generated escalation, append the block verbatim below the drift findings table. See `templates/drift-finding.md` for the canonical escalation format.

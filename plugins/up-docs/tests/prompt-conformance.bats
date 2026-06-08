@@ -53,3 +53,35 @@ AUDIT_DRIFT="$PLUGIN_ROOT/agents/up-docs-audit-drift.md"
   run grep -iF 'touched_pages' "$PLUGIN_ROOT/skills/drift/references/convergence-tracking.md"
   [ "$status" -eq 0 ]
 }
+
+# Behavioral check (manual): a repo-only routed summary must dispatch NO wiki/notion Agent call while the auditor still covers all three layers. Verified by transcript inspection on the next /up-docs:all run.
+ALL_SKILL="$PLUGIN_ROOT/skills/all/SKILL.md"
+
+@test "all-skill has a routing matrix with a fail-open ambiguous rule" {
+  run grep -iF 'Routing matrix' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  run grep -iF 'ambiguous' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  run grep -iF 'all candidate layers' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+}
+
+@test "all-skill dispatches only propagators with routed items and logs skips" {
+  run grep -iF 'only the propagators with' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  run grep -iF 'skipped (0 items routed' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+}
+
+@test "audit still covers all layers even when a propagator is skipped" {
+  run grep -iF 'audits all three layers' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+}
+
+@test "routing fixtures cover the system-of-record edge cases (CR-002/003)" {
+  F="$PLUGIN_ROOT/tests/fixtures/routing-cases.md"
+  [ -f "$F" ]
+  run grep -iF 'OpenBao listener rebind' "$F"; [ "$status" -eq 0 ]
+  run grep -iF 'Secret VALUE' "$F"; [ "$status" -eq 0 ]
+  run grep -iF 'Ambiguous' "$F"; [ "$status" -eq 0 ]
+}
