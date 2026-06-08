@@ -118,7 +118,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
-- v1 plan's CR-001 through CR-008 audit findings — see [`docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md`](../../docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md) for the full list of structural defects this release closes.
+- v1 plan's CR-001 through CR-008 audit findings — see `docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md` for the full list of structural defects this release closes.
 
 ### Notes
 

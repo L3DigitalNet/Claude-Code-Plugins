@@ -1,56 +1,77 @@
 {
-	"name": "l3digitalnet-plugins",
-	"description": "Curated collection of Claude Code plugins for enhanced development workflows",
-	"owner": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-	"plugins": [
-		{
-			"name": "home-assistant-dev",
-			"description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
-			"version": "2.2.10",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
-			"source": "./plugins/home-assistant-dev"
-		},
-		{
-			"name": "release-pipeline",
-			"description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
-			"version": "2.2.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
-			"source": "./plugins/release-pipeline"
-		},
-		{
-			"name": "qt-suite",
-			"description": "Qt development and testing toolkit: proactive specialist agents, 16 domain references, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
-			"version": "0.3.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/qt-suite",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
-		},
-		{
-			"name": "test-driver",
-			"description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
-			"version": "0.6.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"category": "testing",
-			"source": "./plugins/test-driver",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/test-driver"
-		},
-		{
-			"name": "up-docs",
-			"description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation (Haiku repo/Notion + Sonnet wiki) plus drift audit (Sonnet). Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
-			"version": "0.12.0",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/up-docs",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
-		},
-		{
-			"name": "qdev",
-			"description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
-			"version": "2.0.0",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/qdev",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
-		}
-	]
+  "name": "l3digitalnet-plugins",
+  "description": "Curated collection of Claude Code plugins for enhanced development workflows",
+  "owner": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  },
+  "plugins": [
+    {
+      "name": "home-assistant-dev",
+      "description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
+      "version": "2.2.10",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
+      "source": "./plugins/home-assistant-dev"
+    },
+    {
+      "name": "release-pipeline",
+      "description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
+      "version": "2.2.2",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+      "source": "./plugins/release-pipeline"
+    },
+    {
+      "name": "qt-suite",
+      "description": "Qt development and testing toolkit: proactive specialist agents, 16 domain references, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
+      "version": "0.3.2",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/qt-suite",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
+    },
+    {
+      "name": "test-driver",
+      "description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
+      "version": "0.6.2",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "testing",
+      "source": "./plugins/test-driver",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/test-driver"
+    },
+    {
+      "name": "up-docs",
+      "description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation (Haiku repo/Notion + Sonnet wiki) plus drift audit (Sonnet). Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
+      "version": "0.12.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/up-docs",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
+    },
+    {
+      "name": "qdev",
+      "description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
+      "version": "2.0.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/qdev",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
+    }
+  ]
 }
