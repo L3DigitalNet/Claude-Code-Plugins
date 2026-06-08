@@ -98,7 +98,7 @@ Each sub-agent returns a single-layer markdown table per `templates/summary-repo
 
 #### Failure handling
 
-If a propagator returns a FAILED row or errors out entirely, record the failure in the combined report as a clear "layer not updated due to <reason>" row for that layer. Do not retry across sub-agents and do not abort the other layers — propagation is independent by design.
+If a propagator returns a FAILED row or errors out entirely, record the failure in the combined report as a clear "layer not updated due to `<reason>`" row for that layer. Do not retry across sub-agents and do not abort the other layers — propagation is independent by design.
 
 ### 4. Dispatch Drift Auditor (sequentially, after propagators)
 
@@ -112,7 +112,7 @@ If the auditor emits an `⚠ ESCALATION RECOMMENDED` block, include it in the co
 
 Read `${CLAUDE_PLUGIN_ROOT}/templates/summary-report.md` for the `/up-docs:all` format.
 
-Produce one combined report: a heading per layer, each with its own table and totals line, followed by the drift findings table and (if present) the escalation block. For any layer skipped in Step 3, emit its "<Layer> — skipped (0 items routed to this layer)" line in place of that layer's table; it is presentation-only and carries no action-row totals.
+Produce one combined report: a heading per layer, each with its own table and totals line, followed by the drift findings table and (if present) the escalation block. For any layer skipped in Step 3, emit its "`<Layer>` — skipped (0 items routed to this layer)" line in place of that layer's table; it is presentation-only and carries no action-row totals.
 
 Do not re-fetch pages or files. Do not make your own edits. Your job after dispatching is pure collation.
 
