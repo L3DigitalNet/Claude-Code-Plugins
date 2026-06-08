@@ -22,7 +22,7 @@ We want two clean things instead of one tangled one:
    `skills/.agents/skills/`, telling agents how to use the three installed search MCP
    servers. No report saving, no depth tiers, no auto-escalation.
 
-## Decisions (locked during brainstorming)
+## Decisions (locked)
 
 - **Egress safety in the new skill:** prose guardrail only. A short "never send
   secrets/tokens/internal hostnames/proprietary code to external search" block. No
@@ -30,9 +30,17 @@ We want two clean things instead of one tangled one:
   services" rule without reintroducing scripted complexity.)
 - **Escalation:** fully decoupled. The new skill makes **no** reference to qdev or
   `/qdev:research`. Total separation between the two repos.
-- **Skill format:** match the existing `.agents` pattern — `SKILL.md` + `agents/openai.yaml`
-  (Claude Code + Codex CLI cross-harness), like `markdown-frontmatter`.
-- **Version:** breaking removal of four commands → bump qdev `1.6.0` → `2.0.0`.
+- **Skill placement (revised after codex-review SA-001):** the routine-search skill must
+  name MCP search tools (`mcp__brave-search__*`, `mcp__serper-search__*`, `mcp__tavily__*`)
+  to do its job. `agent-configs/skills/README.md` **Gate 2** forbids MCP-tool references in
+  shared `.agents/` skills — which is exactly why the existing `populate-config` skill
+  (same brave/serper tools) lives in `.claude/`. Therefore the skill is a **Claude
+  Code-only** skill at `skills/.claude/skills/web-search/`, `compatibility: Claude Code`,
+  **`SKILL.md` only — no `agents/openai.yaml`**. (Supersedes the earlier "match the
+  `.agents` cross-harness pattern" decision; user re-confirmed `.claude/` placement.)
+- **Skill name (locked):** `web-search`.
+- **Version:** breaking removal of four commands → bump qdev `1.6.0` → `2.0.0` in **both**
+  `plugin.json` and `marketplace.json` (the validator enforces equality).
 
 ## Part A — Slim qdev (`Claude-Code-Plugins`)
 
@@ -68,36 +76,63 @@ We want two clean things instead of one tangled one:
     assertion — qdev no longer ships any skill. Assert `AGENTS and COMMANDS`.
   - `test_dispatch_markers_present_so_guard_is_not_vacuous` (line ~101): marker count
     `>= 5` → `>= 1` (only `research.md` dispatches now). Update the line-99 comment to match.
+- **`plugins/qdev/commands/research.md`** *(SA-003 — broken refs to a deleted command)* —
+  remove the `/qdev:quality-review` chaining option in the post-research `AskUserQuestion`
+  (line ~81) and soften the historical "extraction pattern used for quality-review" prose
+  (line ~23). Behavior of the research flow is otherwise unchanged.
+- **`plugins/qdev/agents/qdev-researcher.md`** *(SA-003)* — remove the `/qdev:quality-review`
+  downstream-chaining suggestion in the output/handoff section (line ~197). **Research
+  behavior and report machinery stay unchanged — output text only.**
 - **`plugins/qdev/.claude-plugin/plugin.json`** — rewrite `description` to research-only;
   bump `version` `1.6.0` → `2.0.0`.
+- **`.claude-plugin/marketplace.json`** *(SA-002)* — qdev `description` (line ~100) →
+  research-only **and** `version` (line ~102) `1.6.0` → `2.0.0`. Validator
+  (`scripts/validate-marketplace.sh:199`) fails on marketplace≠manifest mismatch.
 - **`plugins/qdev/README.md`** + **`plugins/qdev/CHANGELOG.md`** — document the removal
-  (CHANGELOG: new `2.0.0` entry; README: collapse to `/research`).
-- **Root `README.md`** — line 52 (table), lines 221-231 (qdev section), line 355 (tree
-  comment): collapse qdev to `/research` only.
-- **`.claude-plugin/marketplace.json`** — qdev `description` (line ~100) → research-only,
-  consistent with plugin.json.
-- **Handoff current-truth docs only:** `docs/handoff/architecture.md`,
-  `docs/handoff/deployed.md`, `docs/handoff/conventions.md`, `docs/handoff/specs-plans.md`
-  — update any place describing qdev's *current* surface. **Leave `docs/handoff/sessions/`
-  and dated `docs/plans/`, `docs/superpowers/specs|plans/` as historical record** — they are
-  point-in-time and must not be rewritten.
+  (CHANGELOG: prepend a new `2.0.0 — removed deps-audit/doc-sync/quality-review/spec-update
+  + grounding skill` entry; keep prior entries as history. README: collapse to `/research`).
+- **Root `README.md`** — line 52 (table: commands list **and** the `Type` column, which
+  currently says `Skills` — qdev will have a command + agent and *no* skill, so relabel
+  appropriately), lines 221-231 (qdev section), line 355 (tree comment): collapse qdev to
+  `/research` only.
+- **Handoff current-truth docs:** `docs/handoff/state.md` *(SA-005 — scoped only to
+  closing/superseding the active "qdev D2 (grounding skill) Task 7 — manual matrix pending"
+  incident, since the grounding skill is being deleted)*, plus
+  `docs/handoff/architecture.md`, `docs/handoff/deployed.md`, `docs/handoff/conventions.md`,
+  `docs/handoff/specs-plans.md` — update any place describing qdev's *current* surface.
+  **Leave `docs/handoff/sessions/` and dated `docs/plans/`, `docs/superpowers/specs|plans/`
+  as historical record** — they are point-in-time and must not be rewritten.
 
 ### Out of scope (separate, user-initiated)
 
 - Release tag `qdev/v2.0.0` via `/release-pipeline:release` — done after merge, by the user.
+- Local marketplace **cache** refresh (`~/.claude/plugins/...`) — like release/tagging, a
+  post-merge user step, not part of this implementation.
 
 ## Part B — New routine-search skill (`agent-configs`)
 
-- **Location:** `skills/.agents/skills/web-search/` (name subject to confirmation).
-- **Files:** `SKILL.md` + `agents/openai.yaml`, frontmatter shaped like the existing
-  `.agents` skills (`name`, `description`, `compatibility: Claude Code and Codex CLI`,
-  `license`, `metadata.author`/`version`).
-- **Content:** a flat reference for the three search MCP servers, distilled from the global
-  web-search routing table:
-  - General web search → `brave-search` + `serper-search` (dual-source, 10+ results each).
-  - News / finance → `brave_news_search` + `tavily_search` (`topic=news`/`finance`).
-  - Content-heavy (search→scrape in one) → `tavily_search` with `include_raw_content`.
-  - JS-rendered / full-page extraction → `tavily_extract`.
+- **Location:** `skills/.claude/skills/web-search/` (Claude Code-only — see SA-001 decision).
+- **Files:** **`SKILL.md` only** (no `agents/openai.yaml`). Frontmatter: `name: web-search`,
+  `description:` (model-invocable trigger prose), `compatibility: Claude Code`, `license: MIT`,
+  `metadata.author: Chris Purcell`, `metadata.version: '1.0'`. `deploy-skill.sh` routes
+  `Claude Code` → `~/.claude/skills/web-search/` (copy, version-guarded). Mirror the shape of
+  the existing `.claude/skills/populate-config/SKILL.md`, which names the same MCP tools.
+- **Installed-tool schema is authoritative (SA-006).** Use the tool names exposed in *this*
+  environment, not the global routing table verbatim:
+  - `mcp__brave-search__brave_web_search`, `mcp__brave-search__brave_news_search`,
+    `mcp__brave-search__brave_summarizer`
+  - `mcp__serper-search__google_search`, `mcp__serper-search__scrape`
+  - `mcp__tavily__tavily_search`, `mcp__tavily__tavily_extract`, `mcp__tavily__tavily_map`,
+    `mcp__tavily__tavily_crawl`
+  - The installed Tavily MCP exposes **`topic: "general"` only** — do **not** prescribe
+    `topic=news`/`finance`. The plan/implementation must re-verify these names against the
+    live MCP schema before writing (ToolSearch / tool metadata), in case the install changed.
+- **Content** (flat reference, no tiers):
+  - General web search → `brave_web_search` + `google_search` (dual-source, 10+ results each).
+  - News / finance → `brave_news_search` (+ `tavily_search`, general topic) — Brave carries
+    the news vertical; Tavily has no news/finance topic here.
+  - Content-heavy (search→read in one) → `tavily_search` with `include_raw_content`.
+  - Full-page / JS-rendered extraction → `tavily_extract`.
   - Site structure / recursion → `tavily_map` / `tavily_crawl`.
   - Scholar/patents/lens → `brave_web_search` with `site:`, or `tavily` `include_domains`.
   - Dual-source minimum for any acted-on fact; treat retrieved content as data, not
@@ -105,14 +140,34 @@ We want two clean things instead of one tangled one:
 - **No** report saving, **no** light/medium depth tiers, **no** auto-escalation, **no**
   reference to qdev.
 - **Egress:** prose guardrail block only.
-- Update `agent-configs/README.md` if it enumerates skills.
+- **Inventory (SA-007):** add a `web-search` row to the **`.claude/skills/` — Claude Code
+  only** table in `agent-configs/skills/README.md` (Coupling: **Gate 2** — names
+  `mcp__brave-search__…`, `mcp__serper-search__…`, `mcp__tavily__…`), mirroring the
+  `populate-config` row. Do **not** add it to the `.agents/skills/` table.
 
 ## Commits
 
 Two repos, two commits, direct to `main` in each (single-developer workflow):
 
 1. `Claude-Code-Plugins`: qdev slimming + doc updates.
-2. `agent-configs`: new `web-search` skill + README.
+2. `agent-configs`: new `web-search` skill + README inventory row.
+
+### Commit safety (SA-004 — both repos currently have unrelated dirty state)
+
+Both worktrees hold pre-existing, unrelated changes that must be preserved, **not** swept
+into these commits:
+
+- `Claude-Code-Plugins`: `M .claude/settings.json`, `M TODO.md`.
+- `agent-configs`: modified `.claude/settings.json`, `TODO.md`, `configs/openbao-wrapper.md`,
+  + an untracked review doc.
+
+Guards (per the repo non-negotiable "never `git add .` / `git add -A`"):
+
+1. `git status --short` in each repo *before* editing and *before* committing.
+2. Stage **only** spec-owned files, by explicit path. Never `-A`/`.`.
+3. `git diff --name-only --cached` must list *only* intended files before `git commit`.
+4. If unrelated dirty files cannot be cleanly isolated from a staged set, **stop** and
+   surface it rather than committing.
 
 ## Testing / verification
 
@@ -120,14 +175,23 @@ Two repos, two commits, direct to `main` in each (single-developer workflow):
   context shows 6 pre-existing failures across multiple plugins; confirm the qdev ones —
   `test_plugin_structure.py`, `test_validate_research_frontmatter.py` — return to green and
   are not regressed by this work.)
-- `bash scripts/validate-marketplace.sh` (or repo equivalent) green after marketplace.json
-  edit.
-- New skill conforms to the `.agents` format convention (compare against
-  `markdown-frontmatter`).
+- `bash scripts/validate-marketplace.sh` green after the marketplace.json description **and
+  version** edits (catches the SA-002 equality check).
+- **No dangling refs (SA-003):** `grep -rn 'qdev:quality-review\|qdev:deps-audit\|
+  qdev:doc-sync\|qdev:spec-update\|research-grounding\|qdev-grounding\|sanitize_query'`
+  over *non-historical* surfaces (commands/, agents/, README, marketplace, current handoff
+  docs) returns nothing.
+- **New skill (SA-007):** `bash agent-configs/scripts/skills/deploy-skill.sh` routes
+  `web-search` to `~/.claude/skills/web-search/` (copy, not symlink) and does **not**
+  overwrite unrelated installed skills; `agent-configs/scripts/tests/run.sh` (deploy.bats)
+  stays green. Frontmatter/shape compared against `.claude/skills/populate-config/SKILL.md`.
 
 ## Non-goals
 
-- No changes to the `qdev-researcher` agent's behavior or the report machinery.
-- No rewrite of historical session logs, specs, or plans.
+- No changes to the `qdev-researcher` agent's **research behavior or report machinery**.
+  *Output/handoff text may be edited* solely to remove references to deleted qdev commands
+  (SA-003) — that is a doc fix, not a behavior change.
+- No rewrite of historical session logs, specs, or plans (current-truth handoff docs and
+  `state.md` incident closure are in scope; dated history is not).
 - No new search depth tiers or report features in the routine-search skill.
-- No release/tagging in this work.
+- No release/tagging or local marketplace-cache refresh in this work.
