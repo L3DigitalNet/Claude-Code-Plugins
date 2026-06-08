@@ -1,7 +1,7 @@
 # up-docs — Orchestration Efficiency & Completeness Improvements (Design)
 
 **Date:** 2026-06-07
-**Status:** Draft — Codex `spec-review` rounds 1–2 applied (6 + 3 findings); re-audit pending
+**Status:** Draft — Codex `spec-review` rounds 1–3 applied (6 + 3 + 2 findings); re-audit pending
 **Target version:** up-docs `0.10.1` → `0.11.0`
 **Topic owner:** documentation-propagation plugin (`plugins/up-docs/`)
 
@@ -36,7 +36,7 @@ From brainstorming + Codex rounds 1–2 corrections (2026-06-07):
 | D5 | Review gate | `writing-plans` → Codex review to convergence before implementation. |
 | D6 | A1 narrowing data source *(SA-001)* | **New per-iteration `touched_pages` path list** in the tracker. Existing numeric `pages_touched` becomes `len(touched_pages)`. |
 | **D7** | A2 cross-propagator dedup *(SA-003, SA-NEW-001)* | **Dropped.** After SA-003 forced touched pages to stay fully scanned, a signature-dedup of *reports* required a new collision-resistant finding-key contract (`discrepancy_type` exists in no schema and is too coarse) for near-zero benefit. The existing page-level report-dedup (`audit-drift.md:99`) is **kept unchanged**. Scan reduction comes solely from A1. |
-| **D8** | Commit-safety source *(SA-002, SA-NEW-002)* | **Git ground truth, not agent self-report.** The committable set is derived per repo as `(porcelain now) − (pre-propagation baseline-dirty paths)`. No `written_paths`/`fixed_findings` schema change; propagator output schema untouched. |
+| **D8** | Commit-safety source *(SA-002, SA-NEW-002, SA-NEW-004)* | **Git surfaces candidates; the human's per-path diff review authorizes them.** Per repo, `candidates = (porcelain now) − (pre-propagation baseline-dirty)` = paths **changed since baseline** (NOT asserted to be run-owned — a post-baseline edit by a hook/editor/other process is possible). Safety = per-path **diff disclosure + explicit approval** + a **late re-check immediately before staging** + literal-pathspec staging. No propagator schema change. |
 | D9 | `Skipped` representation *(SA-004)* | Orchestrator combined-report line only; agent action enum (`validate_output.py`) untouched. |
 | D10 | Non-interactive contexts | Headless `-p` (no `AskUserQuestion`) → commit step reports dirty trees, commits nothing. |
 | **D11** | Fast-path routing *(SA-NEW-003)* | **Explicit routing matrix** in `/up-docs:all`, synchronized with the agent layer-boundaries; ambiguous items route to **all** candidate layers (fail-open); covered by routing fixtures. |
@@ -87,26 +87,34 @@ the combined markdown). The four-value action enum is untouched [D9].
 
 Add **part (c)** to the "Handoff for Next Session" section of `templates/post-propagation-steps.md`.
 
-**Baseline (new, captured BEFORE propagation — [D8]):** snapshot `git status --porcelain`
-for every repo the run may commit — the active project repo (already clean at `/up-docs:all`
-Step 0, but `/up-docs:repo` has no such guard) and `~/projects/llm-wiki` (if the wiki layer
-is in scope), captured immediately before the wiki propagator is dispatched. Persist each
+**Baseline (new, captured BEFORE propagation — [D8]):** snapshot `git status --porcelain=v1 -z`
+(NUL-delimited, robust to spaces/special chars) for every repo the run may commit — the
+active project repo (both `/up-docs:all` and `/up-docs:repo` guard it clean at their Step 0,
+so its baseline is normally empty) and `~/projects/llm-wiki` (no Step 0 guard — the real
+baseline need), captured immediately before the wiki propagator is dispatched. Persist each
 repo's baseline-dirty path set.
 
-**Committable set (git ground truth, [D8]):** after propagation, for each repo compute
-`candidates = (paths dirty now) − (baseline-dirty paths)`. These are exactly the paths
-**clean at baseline and written by this run** — no dependence on agent self-report. Notion
-writes nothing to a filesystem, so it never contributes candidates (no special-casing).
+**Candidate set ([D8]):** after propagation, for each repo compute
+`candidates = (paths dirty now) − (baseline-dirty paths)` = paths **changed since baseline**.
+This is the *candidate surface*, **not** a proof of run-ownership: a hook, editor, or other
+process could have dirtied a clean-baseline path in the window between baseline and commit
+(SA-NEW-004). Ownership is established by the human's diff review below, not by git. Notion
+writes nothing to a filesystem, so it never contributes candidates.
 
-**Offer:** if any repo has a non-empty `candidates` set, present **one** `AskUserQuestion`
-(`multiSelect` across the dirty repos). On approval, per selected repo: stage only
-`candidates` by explicit name (`git add -- <path>`; safe because each was clean at baseline,
-so all current hunks are this run's), commit under that repo's convention (project repo:
-signed `docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message, page stays
-`status: draft`), and **never push**. Report SHAs and that nothing was pushed.
+**Offer (per-path, diff-disclosed):** if any repo has a non-empty `candidates` set, **show
+the per-path diff** (the combined report lists each candidate path with its `git diff`
+summary) so the user can see exactly what would be staged, then present **one**
+`AskUserQuestion` (`multiSelect` over candidate paths/repos). On approval:
+1. **Late re-check:** immediately before staging, re-run `--porcelain=v1 -z`. If any approved
+   path's status changed since the offer, or unexpected new paths appeared, re-disclose and
+   re-confirm rather than staging blindly.
+2. Stage only the approved paths with literal pathspecs (`git add -- <path>`, NUL-safe).
+3. Commit under that repo's convention (project repo: signed `docs(handoff): …`;
+   `~/projects/llm-wiki`: its draft-contract message, page stays `status: draft`).
+4. **Never push.** Report SHAs and that nothing was pushed.
 
 **Excluded paths:** baseline-dirty paths (including a same-path collision where a baseline-
-dirty file is also written this run) are **excluded** from staging and **disclosed
+dirty file is also changed this run) are **excluded** from the candidate set and **disclosed
 separately** as "pre-existing local changes in `<repo>` — left for you to handle manually."
 
 **Non-interactive ([D10]):** if `AskUserQuestion` cannot be answered (headless `-p`), skip
@@ -130,7 +138,7 @@ the commit and report dirty trees. No consent → no commit.
 | Risk | Mitigation |
 | --- | --- |
 | A1 narrowing misses drift on a page not touched in the prior pass | Pass 1 always full; one-hop `related` dependents included; oscillation detection (existing) still applies. |
-| Commit step stages pre-existing work | Committable set = dirty-now − baseline-dirty (git ground truth); baseline-dirty (incl. same-path collisions) excluded + disclosed [D8]. |
+| Commit step stages unrelated work changed *after* baseline (SA-NEW-004) | Candidates are "changed since baseline", not asserted run-owned; per-path diff disclosure + explicit approval + late re-check immediately before staging is the ownership guard; baseline-dirty (incl. same-path collisions) excluded + disclosed [D8]. |
 | Fast-path wrongly skips a layer with real work | Routing matrix synced with agent boundaries; ambiguous → all layers (fail-open); audit still covers all three [D11]. |
 | `Skipped` enum churn | Presentation-only; agent enum untouched [D9]. |
 | Headless run mis-commits | Non-interactive → report-only [D10]. |
@@ -146,9 +154,11 @@ Each change gets **prompt-conformance assertions AND ≥1 behavioral check** (SA
   items (ambiguous ⇒ all candidate layers); a transcript/disposable-smoke check that a
   repo-only routed summary dispatches **no** wiki/Notion Agent call while the audit still
   covers all three layers.
-- **C:** dirty-baseline scenarios — clean baseline; baseline-dirty *different* path;
-  baseline-dirty *same* path (collision); headless `-p` (commits nothing). Approving a commit
-  must never include a baseline-dirty change.
+- **C:** commit-safety scenarios — clean baseline; baseline-dirty *different* path;
+  baseline-dirty *same* path (collision); **unrelated path dirtied *after* baseline but before
+  the offer** (must be excluded or require explicit per-path approval — SA-NEW-004); paths with
+  spaces/special chars; deleted and untracked files; headless `-p` (commits nothing). Approving
+  a commit must never silently include a non-approved or baseline-dirty change.
 
 **Rollout:**
 - Keep the `docs/handoff/specs-plans.md` row (added this round) status-current on spec
@@ -173,3 +183,4 @@ matrix synced to agent boundaries [D11].
 | --- | --- | --- | --- |
 | 1 (`…-203332-…round1.md`) | Needs major correction | SA-001/002/003 (High); SA-004/005/006 (Med) | SA-001→D6/§3A; SA-002→D8/§3C; SA-003→D7; SA-004→D9/§3B; SA-005→indexed §6; SA-006→§6 behavioral tests |
 | 2 (`…-204348-…round2.md`) | Needs major correction | SA-001..006 **resolved**; new SA-NEW-001/002 (High), SA-NEW-003 (Med) | SA-NEW-001 (coarse finding-key) → **A2 dropped** [D7]; SA-NEW-002 (`written_paths` schema gap) → **commit-safety via git baseline diff** [D8], no schema change; SA-NEW-003 (under-specified routing) → **routing matrix + fixtures** [D11] |
+| 3 (`…-205347-…round3.md`) | Needs major correction | SA-001..006 + SA-NEW-001..003 **resolved**; new SA-NEW-004 (High), SA-NEW-005 (Med) | SA-NEW-004 (git diff ≠ run-ownership) → **D8 downgraded: candidates are "changed since baseline"; per-path diff approval + late re-check is the ownership guard**; SA-NEW-005 (stale index row) → specs-plans.md row updated; also corrected stale `/up-docs:repo`-has-no-guard claim |
