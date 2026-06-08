@@ -43,6 +43,14 @@ If the output is **non-empty**, STOP immediately:
 
 If the output is empty, continue.
 
+**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot
+each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path —
+concurrent runs would collide, CR-004) and remember the generated paths:
+`BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"`
+and, when the wiki layer is in scope,
+`BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`.
+Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
+
 ### 1. Gather Session Context (once)
 
 First, verify Python 3 is available — all helper scripts depend on it:

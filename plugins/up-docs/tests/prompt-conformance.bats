@@ -85,3 +85,39 @@ ALL_SKILL="$PLUGIN_ROOT/skills/all/SKILL.md"
   run grep -iF 'Secret VALUE' "$F"; [ "$status" -eq 0 ]
   run grep -iF 'Ambiguous' "$F"; [ "$status" -eq 0 ]
 }
+
+POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
+
+@test "post-propagation part (c) is consent-gated, baseline-safe, no-push" {
+  run grep -iF 'commit-candidates.sh' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -iF 'changed since baseline' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -iF 'per-path' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -iF 're-check' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -iF 'fingerprint' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -iF 'no-index' "$POST_PROP"   # untracked candidate content disclosure (CR-001)
+  [ "$status" -eq 0 ]
+  run grep -iF 'never push' "$POST_PROP"
+  [ "$status" -eq 0 ]
+}
+
+@test "repo-skill also captures a pre-propagation baseline (CR-NEW-003)" {
+  run grep -iF 'commit-candidates.sh snapshot' "$PLUGIN_ROOT/skills/repo/SKILL.md"
+  [ "$status" -eq 0 ]
+}
+
+@test "post-propagation commit offer degrades to report-only when non-interactive" {
+  run grep -iF 'non-interactive' "$POST_PROP"
+  [ "$status" -eq 0 ]
+  run grep -iF 'commit nothing' "$POST_PROP"
+  [ "$status" -eq 0 ]
+}
+
+@test "all-skill captures a pre-propagation baseline for committable repos" {
+  run grep -iF 'commit-candidates.sh snapshot' "$PLUGIN_ROOT/skills/all/SKILL.md"
+  [ "$status" -eq 0 ]
+}
