@@ -80,7 +80,7 @@ Field rules (from the template):
 
 Dispatch **only the propagators with ≥1 routed item** (from the Step 2 routing matrix), still in a single message with one Agent call each so they run concurrently. For every layer with zero routed items, do NOT dispatch its propagator; instead record a combined-report line `<Layer> — skipped (0 items routed to this layer)`. This never applies to the auditor — Step 4 still **audits all three layers** regardless of which propagators ran.
 
-Invoke the three propagator sub-agents **in a single message with three Agent tool calls** so they run concurrently (the tool was called `Task` before Claude Code v2.1.63 and still accepts that name as an alias). Each receives the session-change summary as the stable front of its prompt; layer-specific detail goes at the end (cache-friendly structure).
+Invoke each propagator being dispatched (from the ≥1-routed-item set above) **in a single message, one Agent call each,** so they run concurrently (the tool was called `Task` before Claude Code v2.1.63 and still accepts that name as an alias). Each receives the session-change summary as the stable front of its prompt; layer-specific detail goes at the end (cache-friendly structure).
 
 | Sub-agent — pass as `subagent_type` | Purpose |
 |-------------------------------------|---------|
@@ -108,7 +108,7 @@ If the auditor emits an `⚠ ESCALATION RECOMMENDED` block, include it in the co
 
 Read `${CLAUDE_PLUGIN_ROOT}/templates/summary-report.md` for the `/up-docs:all` format.
 
-Produce one combined report: a heading per layer, each with its own table and totals line, followed by the drift findings table and (if present) the escalation block. For any layer skipped in Step 3, emit its "<Layer> — skipped (0 items routed)" line in place of that layer's table; it is presentation-only and carries no action-row totals.
+Produce one combined report: a heading per layer, each with its own table and totals line, followed by the drift findings table and (if present) the escalation block. For any layer skipped in Step 3, emit its "<Layer> — skipped (0 items routed to this layer)" line in place of that layer's table; it is presentation-only and carries no action-row totals.
 
 Do not re-fetch pages or files. Do not make your own edits. Your job after dispatching is pure collation.
 

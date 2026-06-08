@@ -11,3 +11,5 @@
 | 7 | Secret VALUE changed in OpenBao | none (OpenBao is system-of-record) |
 | 8 | New service added: deploy steps + strategic note + repo README | all (repo + wiki + notion) |
 | 9 | Ambiguous "updated the auth setup" with no detail | all (fail-open) |
+
+> Row 4 vs 5: a listener/bind ADDRESS is a config value → implementation-reference (wiki). A secret PATH or VALUE is credential/system-of-record-owned → repo reference (row 5) or none (rows 6–7). The matrix's credential-reference "env-var name" example means a secret's name, not every BAO_ADDR-style config var.
