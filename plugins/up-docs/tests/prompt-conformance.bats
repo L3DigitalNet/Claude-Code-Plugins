@@ -37,3 +37,19 @@ PROPAGATE_REPO="$PLUGIN_ROOT/agents/up-docs-propagate-repo.md"
   run grep -iF 'retired handoff-version label' "$PROPAGATE_REPO"
   [ "$status" -eq 0 ]
 }
+
+AUDIT_DRIFT="$PLUGIN_ROOT/agents/up-docs-audit-drift.md"
+
+@test "audit-drift narrows pass N+1 to prior-pass touched_pages + one-hop related" {
+  run grep -iF 'touched_pages' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+  run grep -iF 'one-hop' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+  run grep -iF 'pass 1' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+}
+
+@test "convergence-tracking defers the narrowing rule to the auditor task step" {
+  run grep -iF 'touched_pages' "$PLUGIN_ROOT/skills/drift/references/convergence-tracking.md"
+  [ "$status" -eq 0 ]
+}

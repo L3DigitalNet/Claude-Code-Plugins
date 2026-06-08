@@ -44,13 +44,7 @@ loop:
 
 ## Narrowing on Re-pass
 
-After applying fixes in a pass, the next iteration does not need to re-check everything. Narrow the scope:
-
-- **Phase 1**: Only re-check pages that were updated in the previous pass, plus any pages whose documented dependencies include an updated page.
-- **Phase 2**: Only re-check pages involved in contradictions that were resolved in the previous pass.
-- **Phase 3**: Only re-check pages where links were modified in the previous pass.
-
-This prevents O(n^2) growth as the page count increases.
+The narrowing rule is **owned by the auditor task step** (`agents/up-docs-audit-drift.md`, step 4): pass 1 is full; pass N+1 scans only the prior pass's `touched_pages` (from `convergence-tracker.sh touched-pages <phase>`) plus one-hop `related` dependents. This prevents O(n^2) re-scan growth. Do not restate the rule here — defer to the task step so the two cannot drift.
 
 ## Oscillation Detection
 

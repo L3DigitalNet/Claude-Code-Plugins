@@ -76,7 +76,11 @@ You are the drift auditor for the up-docs orchestrator. You scan the three docum
 
     **Draft-authority check (separate from the validator gate).** Independently of the validators, flag — as a `layer: "wiki"` finding — any page the session treats as authoritative that carries `status: draft` in its frontmatter (draft pages are not yet promoted; citing one as settled fact is drift). Here the evidence is the page's own `status: draft` frontmatter line, a real citable observation — set `evidence.command` to the `rg`/`Read` you used to surface it and `evidence.expected_output_signature` to the literal `status: draft` line. This is not a validator output, so do not attribute it to the gate above.
 
-4. Iterate per phase under convergence. The four drift phases (Infrastructure → Wiki, Wiki Consistency, Link Integrity, Notion Relevance) each run as a convergence loop. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/convergence-tracking.md` before entering any phase — it defines the iteration mechanics, oscillation detection, and narrowing rules that every phase uses. Use `${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh` to persist iteration state.
+4. Iterate per phase under convergence. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/convergence-tracking.md` for iteration mechanics and oscillation detection. **Narrowing (authoritative here):**
+   - **Pass 1** of a phase: scan the full phase surface.
+   - At the end of each pass, record the paths you examined-or-touched via `convergence-tracker.sh record-iteration <phase>` with a `touched_pages` array in the findings JSON.
+   - **Pass N+1**: scan only the union of (i) the immediately prior pass's `touched_pages` (fetch with `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh touched-pages <phase>`) and (ii) pages whose frontmatter `related` references a page in that set (one-hop dependents). Pages outside that union are presumed stable for this phase.
+   This narrowing keys off your OWN per-pass findings, so it applies identically in `/up-docs:all` and standalone `/up-docs:drift`. It never reduces pass-1 coverage.
 
 5. Record findings as structured JSON. Each finding carries: page, exact stale line, what it should say, confidence (low/medium/high), layer, and whether fixing it would require destructive action.
 
