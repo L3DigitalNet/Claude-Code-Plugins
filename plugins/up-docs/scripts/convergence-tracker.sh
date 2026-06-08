@@ -8,6 +8,7 @@
 #   check-convergence <phase>  Check if phase has converged
 #   check-oscillation <phase>  Check for oscillating findings
 #   status                     Current state of all phases
+#   touched-pages <phase>      Emit the phase's latest touched_pages path list
 #   reset                      Clear all state
 #
 # Output: JSON to stdout.
@@ -61,6 +62,7 @@ state['phases'][phase] = {
     'max_iterations': 10,
     'history': [],
     'pages_touched': 0,
+    'touched_pages': [],
     'changes_applied': 0,
 }
 print(json.dumps(state, indent=2))
@@ -95,12 +97,20 @@ p['iteration'] += 1
 
 fixes = findings.get('fixes_applied', 0)
 p['changes_applied'] += fixes
-p['pages_touched'] = max(p['pages_touched'], findings.get('pages_touched', 0))
+
+# touched_pages is the per-iteration PATH set that drives auditor narrowing (D6).
+# De-dupe preserving first-seen order; pages_touched is now its length, not a max.
+raw = findings.get('touched_pages', [])
+seen = set()
+touched = [x for x in raw if not (x in seen or seen.add(x))]
+p['touched_pages'] = touched
+p['pages_touched'] = len(touched)
 
 p['history'].append({
     'iteration': p['iteration'],
     'findings': findings.get('findings', []),
     'fixes_applied': fixes,
+    'touched_pages': touched,
 })
 
 print(json.dumps(state, indent=2))
@@ -212,6 +222,20 @@ cmd_reset() {
   echo '{"status":"reset"}'
 }
 
+cmd_touched_pages() {
+  local phase="${1:?Usage: touched-pages <phase>}"
+  read_state | $PYTHON -c "
+import json, sys
+state = json.load(sys.stdin)
+phase = sys.argv[1]
+p = state['phases'].get(phase)
+if p is None:
+    print(json.dumps({'error': f'phase {phase} not started'}), file=sys.stderr)
+    sys.exit(1)
+print(json.dumps(p.get('touched_pages', [])))
+" "$phase"
+}
+
 # --- Dispatch ---
 subcmd="${1:-}"
 shift || true
@@ -223,9 +247,10 @@ case "$subcmd" in
   check-convergence)  cmd_check_convergence "$@" ;;
   check-oscillation)  cmd_check_oscillation "$@" ;;
   status)             cmd_status ;;
+  touched-pages)      cmd_touched_pages "$@" ;;
   reset)              cmd_reset ;;
   *)
-    echo '{"error":"Usage: convergence-tracker.sh {init|start-phase|record-iteration|check-convergence|check-oscillation|status|reset}"}' >&2
+    echo '{"error":"Usage: convergence-tracker.sh {init|start-phase|record-iteration|check-convergence|check-oscillation|status|touched-pages|reset}"}' >&2
     exit 1
     ;;
 esac

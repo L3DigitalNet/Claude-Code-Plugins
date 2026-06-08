@@ -159,17 +159,42 @@ teardown() {
     [ "$(echo "$output" | jq '.phases["1"].changes_applied')" = "5" ]
 }
 
-@test "record-iteration tracks pages_touched as max" {
-    bash "$SCRIPTS_DIR/convergence-tracker.sh" init
-    bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
+@test "record-iteration stores touched_pages as a path list (round-trip)" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
+  echo '{"fixes_applied":1,"touched_pages":["wiki/a.md","wiki/b.md"]}' \
+    | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
+  run bash "$SCRIPTS_DIR/convergence-tracker.sh" status
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -c '.phases["1"].touched_pages')" = '["wiki/a.md","wiki/b.md"]' ]
+  [ "$(echo "$output" | jq '.phases["1"].pages_touched')" = "2" ]
+  [ "$(echo "$output" | jq '.phases["1"].changes_applied')" = "1" ]  # CR-005: not double-counted
+}
 
-    echo '{"findings":["a"],"fixes_applied":1,"pages_touched":3}' | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
-    echo '{"findings":["b"],"fixes_applied":1,"pages_touched":5}' | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
+@test "pages_touched is len of the latest touched_pages (not a running max)" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
+  echo '{"touched_pages":["wiki/a.md","wiki/b.md","wiki/c.md"]}' \
+    | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
+  echo '{"touched_pages":["wiki/a.md"]}' \
+    | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
+  run bash "$SCRIPTS_DIR/convergence-tracker.sh" status
+  [ "$(echo "$output" | jq '.phases["1"].pages_touched')" = "1" ]
+}
 
-    run bash "$SCRIPTS_DIR/convergence-tracker.sh" status
-    [ "$status" -eq 0 ]
-    echo "$output" | jq -e . >/dev/null 2>&1
-    [ "$(echo "$output" | jq '.phases["1"].pages_touched')" = "5" ]
+@test "record-iteration de-duplicates touched_pages preserving order" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
+  echo '{"touched_pages":["wiki/a.md","wiki/a.md","wiki/b.md"]}' \
+    | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
+  run bash "$SCRIPTS_DIR/convergence-tracker.sh" status
+  [ "$(echo "$output" | jq -c '.phases["1"].touched_pages')" = '["wiki/a.md","wiki/b.md"]' ]
+}
+
+@test "touched-pages subcommand emits the latest set for a phase" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 2
+  echo '{"touched_pages":["wiki/x.md"]}' \
+    | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 2
+  run bash "$SCRIPTS_DIR/convergence-tracker.sh" touched-pages 2
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -c '.')" = '["wiki/x.md"]' ]
 }
 
 @test "invalid subcommand exits 1" {
