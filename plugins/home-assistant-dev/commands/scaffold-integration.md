@@ -97,6 +97,7 @@ Write these files using the `ha-integration-scaffold`, `ha-config-flow`, `ha-coo
 ## Quality Target
 
 Generate code that meets **Silver tier** on the Integration Quality Scale:
+
 - DataUpdateCoordinator for polling
 - Full error handling (UpdateFailed, ConfigEntryAuthFailed)
 - CoordinatorEntity inheritance

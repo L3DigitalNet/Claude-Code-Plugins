@@ -1,8 +1,6 @@
 # up-docs Hardening Plan v1 — Adversarial Audit
 
-**Audit date:** 2026-05-08
-**Plan audited:** `docs/plans/2026-05-08-up-docs-hardening-plan.md` (v1, 2576 lines, 22 tasks across 5 phases)
-**Verdict:** Unsafe / do not execute as written. 7 blocking + 5 non-blocking findings. v2 rewrite required.
+**Audit date:** 2026-05-08 **Plan audited:** `docs/plans/2026-05-08-up-docs-hardening-plan.md` (v1, 2576 lines, 22 tasks across 5 phases) **Verdict:** Unsafe / do not execute as written. 7 blocking + 5 non-blocking findings. v2 rewrite required.
 
 The audit was performed by an external reviewer (qdev-quality-reviewer pattern: claim inventory → repository falsification → blast-radius → failure-mode → validation attack → external-assumption → maintainability passes). It uncovered structural defects in the plan's central security/eval mechanism that make v1 unsafe to execute.
 
@@ -194,9 +192,9 @@ Major stale-assumption finding: `plugins/up-docs/.claude/settings.json` is not a
 ## Static verification performed by maintainer (2026-05-08, post-audit)
 
 | Finding | Verification | Result |
-|---|---|---|
+| --- | --- | --- |
 | CR-001 | `find plugins -path '*/.claude/settings.json'` → 0 hits; `find plugins -name "hooks.json"` → 5 sibling plugins (release-pipeline, opus-context, github-repo-manager, home-assistant-dev, plugin-test-harness fixture) | Confirmed: hooks ship via `hooks/hooks.json`; plan's `.claude/settings.json` packaging is invalid. |
-| CR-003 | Traced `evidence_signature()` on Bug #4 fixture: signature is 40 chars of the *command*, not response. `load_transcript()` searches `tool_input` + `tool_response` union — signature matches even when response contradicts evidence claim. | Confirmed: anti-fabrication argument is broken as written. |
+| CR-003 | Traced `evidence_signature()` on Bug #4 fixture: signature is 40 chars of the _command_, not response. `load_transcript()` searches `tool_input` + `tool_response` union — signature matches even when response contradicts evidence claim. | Confirmed: anti-fabrication argument is broken as written. |
 | CR-005 | Three sequential `bash -c 'echo $$'` calls: PIDs 137702 → 137703 → 137704 | Confirmed: `-$$.json` default breaks multi-call skill flow. |
 | CR-004 | `run-bats.sh` line 10: `"$TESTS_DIR"/*.bats` — passed paths ignored. `audit-drift.bats setup()` gates ALL tests on `RUN_INTEGRATION` AND `ANTHROPIC_API_KEY`. No `--plugin-dir`, no `--mcp-config` wiring to FastMCP stubs. | Confirmed on every sub-claim. |
 
@@ -207,6 +205,7 @@ Remaining 8 findings accepted on inspection of v1 plan text without further repo
 ## Items the v2 plan must address (consolidated checklist)
 
 Blocking — must be resolved or v2 cannot be shipped:
+
 - [ ] Hook packaging via `hooks/hooks.json` (CR-001)
 - [ ] Deny list scope clearly stated; `PreToolUse` validator script handles full command lines including shell metacharacters and inline SQL (CR-002)
 - [ ] Evidence schema with structured `command`/`expected_output_signature` fields; verifier requires signature in `tool_response` not the union (CR-003)
@@ -216,6 +215,7 @@ Blocking — must be resolved or v2 cannot be shipped:
 - [ ] Python deps pinned in plugin-local `pyproject.toml` or `requirements-test.txt`; no `pip install --user` fallbacks (CR-007)
 
 Non-blocking — preferred for v2 completeness:
+
 - [ ] Pydantic discriminated union over `layer` Literal types (CR-008)
 - [ ] Layout config: explicit branch behavior for every documented value (CR-009)
 - [ ] Link-audit regression test exercises the OLD pattern first (CR-010)

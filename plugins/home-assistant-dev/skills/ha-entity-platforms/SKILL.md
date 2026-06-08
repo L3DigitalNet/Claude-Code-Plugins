@@ -166,7 +166,7 @@ class {Name}Switch({Name}Entity, SwitchEntity):
 ## Platform Quick Reference
 
 | Platform | Base Class | Key Property | Device Classes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `sensor` | `SensorEntity` | `native_value` | TEMPERATURE, HUMIDITY, POWER, ENERGY, BATTERY... |
 | `binary_sensor` | `BinarySensorEntity` | `is_on` | MOTION, DOOR, WINDOW, SMOKE, MOISTURE... |
 | `switch` | `SwitchEntity` | `is_on` + `turn_on/off` | SWITCH, OUTLET |

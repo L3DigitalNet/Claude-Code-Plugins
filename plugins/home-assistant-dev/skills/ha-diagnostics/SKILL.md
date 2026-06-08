@@ -122,7 +122,7 @@ async def async_get_config_entry_diagnostics(
                 "disabled_by": entity.disabled_by,
                 "platform": entity.platform,
             })
-        
+
         devices.append({
             "name": device.name,
             "model": device.model,
@@ -161,15 +161,15 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     coordinator = entry.runtime_data
-    
+
     # Find device data from coordinator
     device_id = next(
         (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
         None
     )
-    
+
     device_data = coordinator.data.get(device_id, {}) if device_id else {}
-    
+
     return {
         "device": {
             "name": device.name,
@@ -185,7 +185,7 @@ async def async_get_device_diagnostics(
 ### Always Redact
 
 | Category | Keys to Redact |
-|----------|---------------|
+| --- | --- |
 | **Auth** | password, token, api_key, access_token, refresh_token, secret, credentials, auth |
 | **Personal** | email, username, user_id, account_id |
 | **Device IDs** | serial, serial_number, unique_id, mac, mac_address |
@@ -249,10 +249,10 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     coordinator = entry.runtime_data
-    
+
     # Custom redaction for URLs
     api_url = redact_url(coordinator.client.base_url)
-    
+
     return {
         "api_url": api_url,
         "data": async_redact_data(coordinator.data, TO_REDACT),
@@ -277,11 +277,11 @@ async def test_diagnostics(hass: HomeAssistant, mock_client) -> None:
     await hass.async_block_till_done()
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
-    
+
     # Verify structure
     assert "config_entry" in diagnostics
     assert "coordinator_data" in diagnostics
-    
+
     # Verify sensitive data is redacted
     assert diagnostics["config_entry"]["data"]["password"] == "**REDACTED**"
 ```

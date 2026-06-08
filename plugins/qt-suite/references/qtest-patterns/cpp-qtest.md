@@ -5,7 +5,7 @@
 ### Assertion Macros
 
 | Macro | Passes when | Fails with |
-|---|---|---|
+| --- | --- | --- |
 | `QVERIFY(expr)` | expr is truthy | "expr returned false" |
 | `QVERIFY2(expr, msg)` | expr is truthy | custom message |
 | `QCOMPARE(actual, expected)` | values are equal | diff showing both values |
@@ -97,6 +97,7 @@ void MyBenchmark::sortBenchmark() {
 Run benchmarks: `./my_test -benchmark`.
 
 Available measurement backends:
+
 - Default: walltime
 - `-callgrind`: Valgrind Callgrind
 - `-perf`: Linux perf event counters

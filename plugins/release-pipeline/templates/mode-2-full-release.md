@@ -1,7 +1,9 @@
 # Mode 2: Full Release
 
 # Loaded by the release command router after the user selects "Full Release".
+
 # Context variables from Phase 0 are available: suggested_version, feat_count, fix_count,
+
 # other_count, last_tag, commit_count, current_branch.
 
 Full semver release with parallel pre-flight checks, version bumps, changelog, git tag, and GitHub release.
@@ -11,6 +13,7 @@ Full semver release with parallel pre-flight checks, version bumps, changelog, g
 Present the auto-suggested version to the user:
 
 Use **AskUserQuestion**:
+
 - question: `"Which version should this release be?"`
 - header: `"Version"`
 - options:
@@ -18,6 +21,7 @@ Use **AskUserQuestion**:
   2. label: `"Custom version"`, description: `"Enter a specific version number"`
 
 If "Custom version" selected:
+
 1. Ask: `"Enter the version (e.g., 1.2.0 or v1.2.0):"`
 2. Validate the input matches `X.Y.Z` format (with optional leading `v`, where X/Y/Z are non-negative integers).
 3. If invalid, say: `"That doesn't look like a valid version (expected X.Y.Z, e.g. 1.2.3). Please try again:"` and re-ask once.
@@ -27,8 +31,7 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` f
 
 ## Phase 0.5 — Auto-Heal
 
-Before launching pre-flight checks, apply automatic recovery for the two most common failure
-modes. Set `auto_stash_pending=false` before starting.
+Before launching pre-flight checks, apply automatic recovery for the two most common failure modes. Set `auto_stash_pending=false` before starting.
 
 **IMPORTANT:** Before any script calls, output: `"Applying auto-heal checks..."`
 
@@ -64,6 +67,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/fix-git-email.sh . --auto-fix
 Then launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
 
 **Agent A — Test Runner:**
+
 ```
 subagent_type: "general-purpose"
 description: "Run test suite for release pre-flight"
@@ -74,6 +78,7 @@ prompt: |
 ```
 
 **Agent B — Docs Auditor:**
+
 ```
 subagent_type: "general-purpose"
 description: "Audit documentation for release readiness"
@@ -85,6 +90,7 @@ prompt: |
 ```
 
 **Agent C — Git Pre-flight:**
+
 ```
 subagent_type: "general-purpose"
 description: "Git pre-flight check"
@@ -109,6 +115,7 @@ PRE-FLIGHT RESULTS
 ```
 
 **Before proceeding, verify each agent's status explicitly:**
+
 - Locate the `TEST RESULTS`, `DOCS AUDIT`, and `GIT PRE-FLIGHT` blocks in each agent's output.
 - If any block is missing, incomplete, or ambiguous → treat it as FAIL.
 - If **ANY agent reports FAIL** → STOP immediately. Display the failure details and suggest: "Fix the issues above and re-run `/release`." Do NOT proceed to Phase 2.
@@ -139,18 +146,19 @@ git diff --stat
 ```
 
 Display both in a single pre-gate summary:
+
 - "Version files updated:" — from the diff
 - "Changelog entry that will be added:" — from the preview output, in a fenced block
 
 **Step 3 — Approval gate:**
 
 Use **AskUserQuestion**:
+
 - question: `"Proceed with the v<version> release?"`
 - header: `"Release"`
 - options:
   1. label: `"Proceed"`, description: `"Write changelog, commit, tag, merge to main, and push"`
-  2. label: `"Abort"`, description: `"Cancel — revert version bumps (git checkout -- .)"`
-If "Abort" → run `git checkout -- .` and report "Release aborted. Version bumps reverted." and stop.
+  2. label: `"Abort"`, description: `"Cancel — revert version bumps (git checkout -- .)"` If "Abort" → run `git checkout -- .` and report "Release aborted. Version bumps reverted." and stop.
 
 **Step 4 — Write changelog (after approval):**
 
@@ -182,6 +190,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "v<version>"
 ```
 
 Capture the first line of stdout as `tag_status`. Branch based on value:
+
 - `MISSING`: proceed to `git tag -a` step normally
 - `LOCAL_ONLY`, `BOTH`, or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists; note: `"⚡ Tag v<version> already found (<tag_status>) — skipping local tag creation"`; proceed directly to `git push origin main --tags`
 
@@ -195,8 +204,7 @@ git push origin main --tags
 
 ## Phase 3.5 — Stash Restore
 
-If `auto_stash_pending` is true, restore auto-stashed changes now. All git operations are
-complete — the stash can safely be restored before the GitHub API call:
+If `auto_stash_pending` is true, restore auto-stashed changes now. All git operations are complete — the stash can safely be restored before the GitHub API call:
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-stash.sh . pop
@@ -223,6 +231,7 @@ Display the verification report. If verification fails → WARN the user but do 
 ## Final Summary
 
 Display a completion report. Use the verification outcome from Phase 4 to determine the header:
+
 - If verification passed (exit 0): use `RELEASE COMPLETE: v<version>`
 - If verification had failures (exit 1): use `RELEASE COMPLETE ⚠: v<version>` and append a note after the block: "⚠ Some post-release verification checks failed — see Phase 4 output above. Verify manually."
 

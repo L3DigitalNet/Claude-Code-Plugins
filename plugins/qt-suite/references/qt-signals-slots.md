@@ -1,5 +1,5 @@
-  Trigger phrases: "connect signal", "custom signal", "slot not firing", "disconnect signal", "cross-thread signal", "signal not working", "emit signal", "define signal", "QObject signal"
-version: 1.0.0
+Trigger phrases: "connect signal", "custom signal", "slot not firing", "disconnect signal", "cross-thread signal", "signal not working", "emit signal", "define signal", "QObject signal" version: 1.0.0
+
 ---
 
 ## Signals and Slots
@@ -7,6 +7,7 @@ version: 1.0.0
 ### Defining Custom Signals
 
 **Python/PySide6 and PyQt6:**
+
 ```python
 from PySide6.QtCore import QObject, Signal
 
@@ -27,6 +28,7 @@ class DataProcessor(QObject):
 Signals must be declared as **class attributes**, not inside `__init__`. Declaring them in `__init__` causes them to shadow the descriptor and break connection tracking.
 
 **C++/Qt:**
+
 ```cpp
 class DataProcessor : public QObject {
     Q_OBJECT  // REQUIRED — enables signals/slots
@@ -46,6 +48,7 @@ signals:
 ### Connecting Signals
 
 **New-style syntax (use this):**
+
 ```python
 # Direct method connection
 button.clicked.connect(self._on_button_clicked)
@@ -59,6 +62,7 @@ self._processor.error_occurred.connect(self._status_bar.showMessage)
 ```
 
 **C++:**
+
 ```cpp
 connect(button, &QPushButton::clicked, this, &MainWindow::onButtonClicked);
 connect(slider, &QSlider::valueChanged, this, [this](int v) {
@@ -71,6 +75,7 @@ Never use old-style `SIGNAL()`/`SLOT()` macros in new C++ code — they bypass t
 ### @Slot Decorator (Required for PySide6)
 
 Always mark slot methods with `@Slot`. The official Qt for Python docs state that omitting it:
+
 - Causes **runtime overhead** — the method is dynamically added to `QMetaObject` on every `connect()` call
 - **Causes `TypeError` in QML** — QML invocables require `@Slot` (there is no `Q_INVOKABLE` equivalent without it)
 - **Can cause segfaults across threads** — without `@Slot`, a proxy object may be created on the wrong thread
@@ -101,6 +106,7 @@ class DataProcessor(QObject):
 `@Slot` parameters must match the signal's declared types. For QML-callable methods with no signal connection, `@Slot` is still required — it registers the method as invokable in the meta-object system.
 
 Enable the warning to catch missing decorators during development:
+
 ```bash
 QT_LOGGING_RULES="qt.pyside.libpyside.warning=true" python -m myapp
 ```
@@ -108,7 +114,7 @@ QT_LOGGING_RULES="qt.pyside.libpyside.warning=true" python -m myapp
 ### Connection Types
 
 | Type | When to use |
-|------|-------------|
+| --- | --- |
 | `Qt.AutoConnection` (default) | Same or different thread — auto-selects |
 | `Qt.DirectConnection` | Forced same-thread, synchronous |
 | `Qt.QueuedConnection` | Cross-thread, or defer to next event loop iteration |
@@ -176,6 +182,7 @@ In Python, connections to methods of live objects are automatically cleaned up w
 ### Debugging Disconnected Signals
 
 Checklist when a signal isn't firing:
+
 1. Confirm the emitting object is alive (not prematurely garbage-collected)
 2. Verify `connect()` was called and returned successfully
 3. Check signal type matches — `Signal(int)` won't fire if you pass a `str`
@@ -186,6 +193,7 @@ Checklist when a signal isn't firing:
 ### Overloaded Signals (PyQt6 / C++)
 
 When a signal has multiple overloads, use the subscript syntax:
+
 ```python
 # PyQt6 only — PySide6 handles this automatically
 from PyQt6.QtWidgets import QSpinBox

@@ -13,6 +13,7 @@
 ### Task 1: Create `track-d-criteria.md`
 
 **Files:**
+
 - Create: `plugins/plugin-review/templates/track-d-criteria.md`
 - Reference: `plugins/plugin-review/templates/track-a-criteria.md` (format pattern)
 - Reference: `plugins/context-efficiency-toolkit/skills/CONTEXT_EFFICIENCY_REFERENCE.md` (P1–P12 source)
@@ -22,6 +23,7 @@
 ```bash
 ls plugins/plugin-review/templates/track-d-criteria.md 2>&1
 ```
+
 Expected: `No such file or directory`
 
 **Step 2: Create `track-d-criteria.md`**
@@ -51,7 +53,7 @@ Load this template when performing context efficiency analysis. It defines what 
 ## Component Examination Table
 
 | Component | Look for | Relevant principles |
-|-----------|----------|---------------------|
+| --- | --- | --- |
 | **Commands** (`commands/*.md`) | Instruction length, template delegation vs. inlining, preemptive context loading, output verbosity spec | P1, P3, P4, P6 |
 | **Skills** (`skills/*/SKILL.md`) | Load-on-demand patterns, scope creep beyond declared purpose, verbosity of skill content | P1, P4, P7 |
 | **Agents** (`agents/*.md`) | Structured return format, scope boundaries, intermediate result accumulation | P7, P8, P9 |
@@ -110,6 +112,7 @@ Load this template when performing context efficiency analysis. It defines what 
 ```bash
 grep -c "P1\|P2\|P3\|P4\|P5\|P6\|P7\|P8\|P9\|P10\|P11\|P12" plugins/plugin-review/templates/track-d-criteria.md
 ```
+
 Expected: 12+
 
 **Step 4: Commit**
@@ -124,6 +127,7 @@ git commit -m "feat(plugin-review): add track-d-criteria template for context ef
 ### Task 2: Create `efficiency-analyst.md` agent
 
 **Files:**
+
 - Create: `plugins/plugin-review/agents/efficiency-analyst.md`
 - Reference: `plugins/plugin-review/agents/principles-analyst.md` (exact structure to follow)
 
@@ -132,6 +136,7 @@ git commit -m "feat(plugin-review): add track-d-criteria template for context ef
 ```bash
 ls plugins/plugin-review/agents/efficiency-analyst.md 2>&1
 ```
+
 Expected: `No such file or directory`
 
 **Step 2: Create `efficiency-analyst.md`**
@@ -151,8 +156,7 @@ You are a focused analysis subagent. Your sole job is to read a plugin's impleme
 
 ## Role Boundaries
 
-**You may:** Read files, analyze code, produce structured output.
-**You may not:** Write or modify files, interact with the user, or make implementation recommendations. Return your findings — the orchestrator decides what to do with them.
+**You may:** Read files, analyze code, produce structured output. **You may not:** Write or modify files, interact with the user, or make implementation recommendations. Return your findings — the orchestrator decides what to do with them.
 
 ## Setup
 
@@ -169,22 +173,24 @@ For each principle P1–P12, read the relevant implementation files (use the com
 On Pass 2+, focus on changed files and affected principles. Carry forward unchanged assessments as "Unchanged from Pass N."
 
 ## Output Format
-
 ```
+
 ## Context Efficiency — Pass <N>
 
 ### Open Findings
 
 #### [Pn] <Principle Name> — <STATUS>
-**Principle**: <one-line definition>
-**Evidence**: <what supports/contradicts, with file reference>
-**Gap**: <specific misalignment — what should be different>
+
+**Principle**: <one-line definition> **Evidence**: <what supports/contradicts, with file reference> **Gap**: <specific misalignment — what should be different>
 
 ### Upheld
+
 [P1], [P3], [P4] — fully upheld with concrete implementation evidence.
 
 ### Partially Upheld
+
 [P2] — intent present; inconsistently applied in <specific components>.
+
 ```
 
 Do not deviate from this format. The orchestrator parses it to build the unified report.
@@ -194,23 +200,25 @@ Do not deviate from this format. The orchestrator parses it to build the unified
 After your findings, append an `## Assertions` section containing a JSON array of machine-verifiable checks, one per open finding:
 
 ```
+
 ## Assertions
 
 ```json
 [
-  {
-    "id": "A-D-<number>",
-    "finding_id": "<principle ID, e.g. P3>",
-    "track": "D",
-    "type": "<grep_not_match | grep_match | file_exists | file_content | shell_exit_zero>",
-    "description": "One sentence: what this assertion verifies",
-    "command": "<bash command to run — use full relative paths from repo root>",
-    "expected": "<no_match | match | exists | contains | exit_zero>",
-    "path": "<file path — only for file_exists and file_content types>",
-    "needle": "<search string — only for file_content type>"
-  }
+	{
+		"id": "A-D-<number>",
+		"finding_id": "<principle ID, e.g. P3>",
+		"track": "D",
+		"type": "<grep_not_match | grep_match | file_exists | file_content | shell_exit_zero>",
+		"description": "One sentence: what this assertion verifies",
+		"command": "<bash command to run — use full relative paths from repo root>",
+		"expected": "<no_match | match | exists | contains | exit_zero>",
+		"path": "<file path — only for file_exists and file_content types>",
+		"needle": "<search string — only for file_content type>"
+	}
 ]
 ```
+
 ```
 
 **Assertion type guide:**
@@ -229,6 +237,7 @@ After your findings, append an `## Assertions` section containing a JSON array o
 grep "tools:" plugins/plugin-review/agents/efficiency-analyst.md
 grep "track.*D\|A-D-" plugins/plugin-review/agents/efficiency-analyst.md
 ```
+
 Expected: `tools: Read, Grep, Glob` and `A-D-` present
 
 **Step 4: Commit**
@@ -243,6 +252,7 @@ git commit -m "feat(plugin-review): add efficiency-analyst agent for Track D"
 ### Task 3: Update `review.md` — Phase 2 spawn + scoped re-audit
 
 **Files:**
+
 - Modify: `plugins/plugin-review/commands/review.md`
 
 **Step 1: Find the exact Phase 2 subagent list**
@@ -250,11 +260,13 @@ git commit -m "feat(plugin-review): add efficiency-analyst agent for Track D"
 ```bash
 grep -n "Principles Analyst\|UX Analyst\|Docs Analyst\|all three" plugins/plugin-review/commands/review.md
 ```
+
 Expected: Shows lines with the three analyst bullets and the "all three" count
 
 **Step 2: Add Efficiency Analyst to Phase 2 subagent list**
 
 In `commands/review.md`, find this block (around line 84–90):
+
 ```
 Spawn all three analyst subagents. **When spawning each agent, include the resolved template path** so the agent knows where to load its criteria:
 
@@ -285,6 +297,7 @@ Renumber the subsequent rows (old 5 → 6, old 6 → 7).
 grep -c "Efficiency Analyst\|efficiency-analyst" plugins/plugin-review/commands/review.md
 grep "all four" plugins/plugin-review/commands/review.md
 ```
+
 Expected: 2+ references to efficiency-analyst, and "all four" present
 
 **Step 5: Commit**
@@ -299,6 +312,7 @@ git commit -m "feat(plugin-review): add efficiency-analyst Track D to Phase 2 sp
 ### Task 4: Update `pass-report.md` — add Track D summary line and findings section
 
 **Files:**
+
 - Modify: `plugins/plugin-review/templates/pass-report.md`
 
 **Step 1: Verify the current summary block**
@@ -306,11 +320,13 @@ git commit -m "feat(plugin-review): add efficiency-analyst Track D to Phase 2 sp
 ```bash
 grep -n "Documentation\|Open findings\|Summary" plugins/plugin-review/templates/pass-report.md | head -10
 ```
+
 Expected: Shows the Pass 1 Format summary lines including "Documentation" and "Open findings"
 
 **Step 2: Add Context Efficiency line to the Summary block**
 
 In the Pass 1 Format `### Summary` block, add after the Documentation line:
+
 ```
 - Context Efficiency: <N> checked | <N> upheld | <N> partial | <N> violated
 ```
@@ -318,6 +334,7 @@ In the Pass 1 Format `### Summary` block, add after the Documentation line:
 **Step 3: Add "Open Findings — Context Efficiency" section**
 
 After the `### Open Findings — Documentation` section, add:
+
 ```
 ### Open Findings — Context Efficiency
 
@@ -332,6 +349,7 @@ Also update the `### Upheld (no action needed)` roll-up text to mention "Context
 **Step 4: Update the architectural-context comment**
 
 Add to the `<!-- architectural-context -->` comment:
+
 ```
   Autonomous mode additions: ... Context Efficiency summary line added (Pass 1+).
     Track D open findings section added after Documentation section.
@@ -342,6 +360,7 @@ Add to the `<!-- architectural-context -->` comment:
 ```bash
 grep -c "Context Efficiency" plugins/plugin-review/templates/pass-report.md
 ```
+
 Expected: 3+
 
 **Step 6: Commit**
@@ -356,6 +375,7 @@ git commit -m "feat(plugin-review): add Track D context efficiency to pass-repor
 ### Task 5: Update `final-report.md` — add Context Efficiency Status section
 
 **Files:**
+
 - Modify: `plugins/plugin-review/templates/final-report.md`
 
 **Step 1: Find the Documentation Status section**
@@ -363,11 +383,13 @@ git commit -m "feat(plugin-review): add Track D context efficiency to pass-repor
 ```bash
 grep -n "Documentation Status\|UX Status\|Assertion Coverage" plugins/plugin-review/templates/final-report.md
 ```
+
 Expected: Shows the sections in order
 
 **Step 2: Add Context Efficiency Status table after Documentation Status**
 
 After the `### Documentation Status` table and before `### Assertion Coverage`, add:
+
 ```
 ### Context Efficiency Status
 | Principle | Status | Notes |
@@ -395,6 +417,7 @@ In the `## Rules` paragraph at the bottom, add: "Every P1–P12 context efficien
 ```bash
 grep -c "Context Efficiency\|P1.*Imperative\|P12.*Verbosity" plugins/plugin-review/templates/final-report.md
 ```
+
 Expected: 3+
 
 **Step 5: Commit**
@@ -409,6 +432,7 @@ git commit -m "feat(plugin-review): add Track D context efficiency status to fin
 ### Task 6: Update `cross-track-impact.md` — register Track D
 
 **Files:**
+
 - Modify: `plugins/plugin-review/templates/cross-track-impact.md`
 
 **Step 1: Read the full file to understand current structure**
@@ -416,16 +440,19 @@ git commit -m "feat(plugin-review): add Track D context efficiency status to fin
 ```bash
 cat plugins/plugin-review/templates/cross-track-impact.md
 ```
+
 Expected: Track A, B, C impact mappings and a note about "Adding a new track requires updating all four files simultaneously"
 
 **Step 2: Add Track D to all impact mapping sections**
 
 For each track section (A, B, C), add a "Track X affects Track D" entry describing the cross-track relationship:
+
 - Track A affects Track D: principle violations often involve redundant instruction blocks (P3) or behavioral-layer-only enforcement when mechanical is feasible (P10)
 - Track B affects Track D: UX verbosity patterns directly reflect P6 and P2 compliance
 - Track C affects Track D: documentation duplication is a direct P3 signal; doc verbosity reflects P1
 
 Add a new "Track D" section:
+
 - Track D affects Track A: efficiency violations often expose behavioral-only enforcement where mechanical is implied
 - Track D affects Track B: P6 violations surface in the same touchpoints Track B monitors
 - Track D affects Track C: P1 violations (over-long instructions) and P3 violations (duplicated content) show up as doc findings too
@@ -433,6 +460,7 @@ Add a new "Track D" section:
 **Step 3: Update the "four files" note**
 
 Find the note about "Adding a new track requires updating all four files simultaneously" and update it to five files:
+
 ```
 Adding a new track requires updating all five files simultaneously:
 cross-track-impact.md, review.md, pass-report.md, final-report.md, skills/scoped-reaudit/SKILL.md
@@ -443,6 +471,7 @@ cross-track-impact.md, review.md, pass-report.md, final-report.md, skills/scoped
 ```bash
 grep -c "Track D\|efficiency" plugins/plugin-review/templates/cross-track-impact.md
 ```
+
 Expected: 4+
 
 **Step 5: Commit**
@@ -457,6 +486,7 @@ git commit -m "feat(plugin-review): register Track D in cross-track impact map"
 ### Task 7: Update `scoped-reaudit/SKILL.md` — add Track D mapping
 
 **Files:**
+
 - Modify: `plugins/plugin-review/skills/scoped-reaudit/SKILL.md`
 
 **Step 1: Read the current File-to-Track Mapping section**
@@ -464,6 +494,7 @@ git commit -m "feat(plugin-review): register Track D in cross-track impact map"
 ```bash
 grep -n "Track A\|Track B\|Track C\|Track D" plugins/plugin-review/skills/scoped-reaudit/SKILL.md
 ```
+
 Expected: A, B, C entries present; D absent
 
 **Step 2: Add Track D entry to File-to-Track Mapping**
@@ -477,6 +508,7 @@ After the Track C paragraph, add:
 **Step 3: Update the architectural-context comment**
 
 Update the `Output contract` line to mention Track D:
+
 ```
   Output contract: the orchestrator extracts the Track A / Track B / Track C / Track D determination
     from the File-to-Track Mapping section. Track letters (A, B, C, D) must match the agent
@@ -488,6 +520,7 @@ Update the `Output contract` line to mention Track D:
 ```bash
 grep "Track D" plugins/plugin-review/skills/scoped-reaudit/SKILL.md
 ```
+
 Expected: 1+ matches
 
 **Step 5: Commit**
@@ -502,6 +535,7 @@ git commit -m "feat(plugin-review): add Track D file-to-track mapping in scoped-
 ### Task 8: Add skill files to `plugin-review/skills/`
 
 **Files:**
+
 - Create: `plugins/plugin-review/skills/context-efficiency-workflow/SKILL.md`
 - Create: `plugins/plugin-review/skills/context-efficiency-reference/SKILL.md`
 - Create: `plugins/plugin-review/skills/markdown-tighten/SKILL.md`
@@ -514,6 +548,7 @@ git commit -m "feat(plugin-review): add Track D file-to-track mapping in scoped-
 ```bash
 ls plugins/context-efficiency-toolkit/skills/
 ```
+
 Expected: `CONTEXT_EFFICIENCY_REVIEW.md  CONTEXT_EFFICIENCY_REFERENCE.md  MARKDOWN_TIGHTEN.md`
 
 **Step 2: Create skill directories and copy content**
@@ -540,6 +575,7 @@ ls plugins/plugin-review/skills/context-efficiency-workflow/SKILL.md \
    plugins/plugin-review/skills/context-efficiency-reference/SKILL.md \
    plugins/plugin-review/skills/markdown-tighten/SKILL.md
 ```
+
 Expected: all three files found
 
 **Step 4: Commit**
@@ -554,6 +590,7 @@ git commit -m "feat(plugin-review): add context-efficiency-workflow, context-eff
 ### Task 9: Migrate `review-context-efficiency` → `review-efficiency`
 
 **Files:**
+
 - Create: `plugins/plugin-review/commands/review-efficiency.md`
 - Source: `plugins/context-efficiency-toolkit/commands/review-context-efficiency.md`
 
@@ -562,16 +599,19 @@ git commit -m "feat(plugin-review): add context-efficiency-workflow, context-eff
 ```bash
 grep -n "\.claude/skills\|CONTEXT_EFFICIENCY" plugins/context-efficiency-toolkit/commands/review-context-efficiency.md
 ```
+
 Expected: Two `.claude/skills/` references
 
 **Step 2: Create the migrated command**
 
 Create `plugins/plugin-review/commands/review-efficiency.md` as a copy of `review-context-efficiency.md` with:
+
 - The comment header updated to reference new skill paths
 - `.claude/skills/CONTEXT_EFFICIENCY_REFERENCE.md` → `${CLAUDE_PLUGIN_ROOT}/skills/context-efficiency-reference/SKILL.md`
 - `.claude/skills/CONTEXT_EFFICIENCY_REVIEW.md` → `${CLAUDE_PLUGIN_ROOT}/skills/context-efficiency-workflow/SKILL.md`
 
 The two `Read` lines in the command body become:
+
 ```
 Read `${CLAUDE_PLUGIN_ROOT}/skills/context-efficiency-reference/SKILL.md` in full.
 Read `${CLAUDE_PLUGIN_ROOT}/skills/context-efficiency-workflow/SKILL.md` in full.
@@ -582,11 +622,13 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/context-efficiency-workflow/SKILL.md` in full
 ```bash
 grep "\.claude/skills" plugins/plugin-review/commands/review-efficiency.md
 ```
+
 Expected: no output (zero matches)
 
 ```bash
 grep "CLAUDE_PLUGIN_ROOT" plugins/plugin-review/commands/review-efficiency.md
 ```
+
 Expected: 2 matches
 
 **Step 4: Commit**
@@ -601,6 +643,7 @@ git commit -m "feat(plugin-review): migrate review-efficiency command with corre
 ### Task 10: Migrate `tighten-markdown` → `tighten`
 
 **Files:**
+
 - Create: `plugins/plugin-review/commands/tighten.md`
 - Source: `plugins/context-efficiency-toolkit/commands/tighten-markdown.md`
 
@@ -609,15 +652,18 @@ git commit -m "feat(plugin-review): migrate review-efficiency command with corre
 ```bash
 grep -n "\.claude/skills\|MARKDOWN_TIGHTEN" plugins/context-efficiency-toolkit/commands/tighten-markdown.md
 ```
+
 Expected: One `.claude/skills/MARKDOWN_TIGHTEN.md` reference
 
 **Step 2: Create the migrated command**
 
 Create `plugins/plugin-review/commands/tighten.md` as a copy of `tighten-markdown.md` with:
+
 - Comment header updated to reference new skill path
 - `.claude/skills/MARKDOWN_TIGHTEN.md` → `${CLAUDE_PLUGIN_ROOT}/skills/markdown-tighten/SKILL.md`
 
 The `Read` line in the command body becomes:
+
 ```
 Read `${CLAUDE_PLUGIN_ROOT}/skills/markdown-tighten/SKILL.md` in full.
 ```
@@ -627,11 +673,13 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/markdown-tighten/SKILL.md` in full.
 ```bash
 grep "\.claude/skills" plugins/plugin-review/commands/tighten.md
 ```
+
 Expected: no output
 
 ```bash
 grep "CLAUDE_PLUGIN_ROOT" plugins/plugin-review/commands/tighten.md
 ```
+
 Expected: 1 match
 
 **Step 4: Commit**
@@ -646,6 +694,7 @@ git commit -m "feat(plugin-review): migrate tighten command with corrected skill
 ### Task 11: Bump plugin-review version and update CHANGELOG + README
 
 **Files:**
+
 - Modify: `plugins/plugin-review/.claude-plugin/plugin.json` (v0.4.0 → v0.5.0)
 - Modify: `plugins/plugin-review/CHANGELOG.md`
 - Modify: `plugins/plugin-review/README.md`
@@ -655,6 +704,7 @@ git commit -m "feat(plugin-review): migrate tighten command with corrected skill
 ```bash
 cat plugins/plugin-review/.claude-plugin/plugin.json
 ```
+
 Expected: `"version": "0.4.0"`
 
 **Step 2: Bump version in plugin.json**
@@ -684,6 +734,7 @@ Add at the top of `CHANGELOG.md`, before the current latest entry:
 **Step 4: Update README**
 
 In `README.md`, add entries for the three new commands and Track D analyst:
+
 - Under the Commands table: add `review-efficiency` and `tighten`
 - Under the Agents table: add `efficiency-analyst`
 - Under the Skills or Tracks section: mention Track D and the three new skills
@@ -694,6 +745,7 @@ In `README.md`, add entries for the three new commands and Track D analyst:
 grep '"version"' plugins/plugin-review/.claude-plugin/plugin.json
 grep "0.5.0" plugins/plugin-review/CHANGELOG.md
 ```
+
 Expected: `"version": "0.5.0"` and the changelog entry present
 
 **Step 6: Commit**
@@ -710,6 +762,7 @@ git commit -m "feat(plugin-review): bump to v0.5.0 — Track D context efficienc
 ### Task 12: Update `marketplace.json`
 
 **Files:**
+
 - Modify: `.claude-plugin/marketplace.json`
 
 **Step 1: Confirm current entries**
@@ -717,6 +770,7 @@ git commit -m "feat(plugin-review): bump to v0.5.0 — Track D context efficienc
 ```bash
 grep -A3 '"context-efficiency-toolkit"\|"plugin-review"' .claude-plugin/marketplace.json
 ```
+
 Expected: Both entries present; `plugin-review` at v0.4.0
 
 **Step 2: Remove context-efficiency-toolkit entry**
@@ -732,6 +786,7 @@ Change `"version": "0.4.0"` → `"version": "0.5.0"` in the plugin-review entry.
 ```bash
 ./scripts/validate-marketplace.sh
 ```
+
 Expected: PASS
 
 **Step 5: Commit**
@@ -746,6 +801,7 @@ git commit -m "chore: remove context-efficiency-toolkit, bump plugin-review to v
 ### Task 13: Delete `plugins/context-efficiency-toolkit/`
 
 **Files:**
+
 - Delete: `plugins/context-efficiency-toolkit/` (entire directory)
 
 **Step 1: Verify no plugin-review files reference the old plugin's paths**
@@ -754,6 +810,7 @@ git commit -m "chore: remove context-efficiency-toolkit, bump plugin-review to v
 grep -r "context-efficiency-toolkit\|\.claude/skills/CONTEXT_EFFICIENCY\|\.claude/skills/MARKDOWN_TIGHTEN" \
   plugins/plugin-review/ 2>/dev/null
 ```
+
 Expected: no output (zero matches — all migrated paths should use `${CLAUDE_PLUGIN_ROOT}`)
 
 **Step 2: Delete the plugin directory**
@@ -768,6 +825,7 @@ rm -rf plugins/context-efficiency-toolkit/
 ls plugins/context-efficiency-toolkit/ 2>&1
 ./scripts/validate-marketplace.sh
 ```
+
 Expected: `No such file or directory` for ls, and PASS for validator
 
 **Step 4: Verify no broken references anywhere in the repo**
@@ -775,6 +833,7 @@ Expected: `No such file or directory` for ls, and PASS for validator
 ```bash
 grep -r "context-efficiency-toolkit" plugins/ .claude-plugin/ 2>/dev/null
 ```
+
 Expected: no output
 
 **Step 5: Commit**

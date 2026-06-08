@@ -1,8 +1,6 @@
 # qdev Plugin — Design Spec
 
-**Date:** 2026-04-13 (last reviewed: 2026-05-08 via /qdev:spec-update)
-**Plugin:** `qdev`
-**Commands:** `/qdev:quality-review`, `/qdev:research`, `/qdev:deps-audit`, `/qdev:doc-sync`, `/qdev:spec-update`
+**Date:** 2026-04-13 (last reviewed: 2026-05-08 via /qdev:spec-update) **Plugin:** `qdev` **Commands:** `/qdev:quality-review`, `/qdev:research`, `/qdev:deps-audit`, `/qdev:doc-sync`, `/qdev:spec-update`
 
 ---
 
@@ -61,7 +59,7 @@ Thin orchestrator that dispatches `qdev-quality-reviewer` (Sonnet). The agent ow
 ### Modes
 
 | Mode | Detected from | Check dimensions |
-|------|---------------|------------------|
+| --- | --- | --- |
 | **Spec** | `docs/specs/*.md`, `*-design.md`, `*-architecture.md`, content with `## Requirements` + `## Acceptance Criteria` | Completeness, internal consistency, unambiguous requirements (no `should/might/could/may`), scope gaps, term consistency |
 | **Plan** | `docs/plans/*.md`, `*-plan.md`, `*-implementation.md`, `*-roadmap.md`, content with repeated `## Task N:` | Spec coverage, sequencing (no dependency on later step's output), missing dependencies, estimability |
 | **Code** | Source file or directory (default fallback) | Anti-patterns per research, naming consistency, dead code, cross-file inconsistencies, missing error handling at boundaries, structural issues |
@@ -185,7 +183,7 @@ Spec updated: N additions, N modifications, N removals.
 Four of the five commands dispatch a dedicated sub-agent under `agents/`. The orchestrator command file owns user interaction (`AskUserQuestion`, final summaries, file `Edit` for individually-approved changes); the sub-agent owns the high-volume work (search, manifest parsing, signature analysis, convergence loop).
 
 | Agent | Model | Called by | Responsibility |
-|-------|-------|-----------|----------------|
+| --- | --- | --- | --- |
 | `qdev-researcher` | Sonnet | `/qdev:research` | Six-angle dual-source sweep with Context7 routing for libraries, footgun corroboration (2+ independent sources OR an official source), authority-graded citations (`[official]` / `[community]` / `[blog]` / `[unverified]`), single-iteration follow-up pass for thin angles, persists report to `docs/research/<YYYY-MM-DD>-<slug>.md`. Read-only on project source. |
 | `qdev-quality-reviewer` | Sonnet | `/qdev:quality-review` | Mode auto-detection (spec / plan / code), research phase, critical-finding gate, iterative pass loop with oscillation detection, applies auto-fixes silently, emits structured needs-approval list for the command to drive via `AskUserQuestion`. Never calls `AskUserQuestion` itself. |
 | `qdev-deps-auditor` | Haiku | `/qdev:deps-audit` | Manifest discovery across Python / Node / Rust / Go / Ruby / PHP, per-dep dual-source CVE + version research, advisory page extraction via `tavily_extract`, prioritized findings table (Critical / High / Medium / Info). Read-only. |

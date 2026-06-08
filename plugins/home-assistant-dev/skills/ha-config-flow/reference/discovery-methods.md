@@ -15,13 +15,13 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 ## Zeroconf / mDNS Discovery
 
 **manifest.json:**
+
 ```json
-{
-  "zeroconf": [{"type": "_mydevice._tcp.local."}]
-}
+{ "zeroconf": [{ "type": "_mydevice._tcp.local." }] }
 ```
 
 **config_flow.py:**
+
 ```python
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -42,13 +42,13 @@ async def async_step_zeroconf(
 ## SSDP Discovery
 
 **manifest.json:**
+
 ```json
-{
-  "ssdp": [{"st": "urn:schemas-upnp-org:device:Basic:1", "manufacturer": "MyBrand"}]
-}
+{ "ssdp": [{ "st": "urn:schemas-upnp-org:device:Basic:1", "manufacturer": "MyBrand" }] }
 ```
 
 **config_flow.py:**
+
 ```python
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
@@ -67,13 +67,13 @@ async def async_step_ssdp(
 ## DHCP Discovery
 
 **manifest.json:**
+
 ```json
-{
-  "dhcp": [{"macaddress": "AABBCC*", "hostname": "mydevice*"}]
-}
+{ "dhcp": [{ "macaddress": "AABBCC*", "hostname": "mydevice*" }] }
 ```
 
 **config_flow.py:**
+
 ```python
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -90,13 +90,13 @@ async def async_step_dhcp(
 ## USB Discovery
 
 **manifest.json:**
+
 ```json
-{
-  "usb": [{"vid": "10C4", "pid": "EA60", "description": "*cp2102*"}]
-}
+{ "usb": [{ "vid": "10C4", "pid": "EA60", "description": "*cp2102*" }] }
 ```
 
 **config_flow.py:**
+
 ```python
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 

@@ -13,6 +13,7 @@
 ### Task 1: Create `suggest-version.sh` script
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/suggest-version.sh`
 
 **Step 1: Write the script**
@@ -149,6 +150,7 @@ exit 0
 **Step 2: Make the script executable and test it**
 
 Run:
+
 ```bash
 chmod +x plugins/release-pipeline/scripts/suggest-version.sh
 bash plugins/release-pipeline/scripts/suggest-version.sh .
@@ -157,6 +159,7 @@ bash plugins/release-pipeline/scripts/suggest-version.sh .
 Expected: outputs something like `1.2.0 5 2 8` (a version and three counts).
 
 Test plugin mode:
+
 ```bash
 bash plugins/release-pipeline/scripts/suggest-version.sh . --plugin release-pipeline
 ```
@@ -175,6 +178,7 @@ git commit -m "feat(release-pipeline): add suggest-version.sh for auto semver su
 ### Task 2: Add `--preview` flag to `generate-changelog.sh`
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/scripts/generate-changelog.sh:17-35` (argument handling)
 - Modify: `plugins/release-pipeline/scripts/generate-changelog.sh:120-165` (output section)
 
@@ -183,6 +187,7 @@ git commit -m "feat(release-pipeline): add suggest-version.sh for auto semver su
 In argument handling section (after the `--plugin` block at line 35), add parsing for `--preview`. The flag can appear in position 3 or 5 depending on whether `--plugin` was used.
 
 Add after line 35:
+
 ```bash
 # ---------- Optional --preview flag ----------
 PREVIEW=false
@@ -255,6 +260,7 @@ exit 0
 **Step 3: Test the preview flag**
 
 Run:
+
 ```bash
 bash plugins/release-pipeline/scripts/generate-changelog.sh . 99.99.99 --preview
 ```
@@ -262,6 +268,7 @@ bash plugins/release-pipeline/scripts/generate-changelog.sh . 99.99.99 --preview
 Expected: outputs changelog entry to stdout, does NOT modify CHANGELOG.md. Verify with `git status` — no file changes.
 
 Run without preview to verify existing behavior preserved:
+
 ```bash
 # Don't actually run this — just verify the code path exists
 # bash plugins/release-pipeline/scripts/generate-changelog.sh . 99.99.99
@@ -281,6 +288,7 @@ git commit -m "feat(release-pipeline): add --preview flag to generate-changelog.
 This is the main deliverable. Rewrite the entire file with the new structure.
 
 **Files:**
+
 - Rewrite: `plugins/release-pipeline/commands/release.md`
 
 **Step 1: Write the new command file**
@@ -333,7 +341,7 @@ The full content for this file is detailed below. Write this exact content:
 ````markdown
 ---
 name: release
-description: "Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview."
+description: 'Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview.'
 ---
 
 # Release Pipeline
@@ -361,6 +369,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-unreleased.sh .
 ```
 
 Capture result:
+
 - Exit code 0 with output → `is_monorepo = true`, parse TSV output into `unreleased_plugins` list
 - Exit code 0 with "No plugins with unreleased changes" on stderr → `is_monorepo = true`, `unreleased_plugins = []`
 - Exit code 1 → `is_monorepo = false`
@@ -396,9 +405,11 @@ Capture: `last_tag`.
 **Step 5 — Commit count since last tag:**
 
 If `last_tag` is not "(none)":
+
 ```bash
 git log <last_tag>..HEAD --oneline | wc -l
 ```
+
 Capture: `commit_count`.
 
 If `last_tag` is "(none)", set `commit_count` to total commit count.
@@ -439,8 +450,7 @@ Use **AskUserQuestion** to present the release menu. Build the options dynamical
    - description: `"Release a single plugin with scoped tag and changelog (<N> plugins with unreleased changes)"` where N is `len(unreleased_plugins)`
    - If `unreleased_plugins` is empty: `"Release a single plugin with scoped tag and changelog (all plugins up to date)"`
 
-**Question text:** `"What would you like to do?"`
-**Header:** `"Release"`
+**Question text:** `"What would you like to do?"` **Header:** `"Release"`
 
 After the user selects, route to the corresponding mode below.
 
@@ -503,6 +513,7 @@ git checkout testing
 ### Step 4 — Report
 
 Display:
+
 - Number of commits merged
 - Files changed (`git diff --stat HEAD~1` on main before switching back)
 - Confirm current branch is `testing`
@@ -518,6 +529,7 @@ Full semver release with parallel pre-flight checks, version bumps, changelog, g
 Present the auto-suggested version to the user:
 
 Use **AskUserQuestion**:
+
 - question: `"Which version should this release be?"`
 - header: `"Version"`
 - options:
@@ -533,6 +545,7 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `vX.Y.Z` f
 Launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
 
 **Agent A — Test Runner:**
+
 ```
 subagent_type: "general-purpose"
 description: "Run test suite for release pre-flight"
@@ -543,6 +556,7 @@ prompt: |
 ```
 
 **Agent B — Docs Auditor:**
+
 ```
 subagent_type: "general-purpose"
 description: "Audit documentation for release readiness"
@@ -554,6 +568,7 @@ prompt: |
 ```
 
 **Agent C — Git Pre-flight:**
+
 ```
 subagent_type: "general-purpose"
 description: "Git pre-flight check"
@@ -699,6 +714,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-version.sh . --plugin <plugin-name>
 ```
 
 Use **AskUserQuestion**:
+
 - question: `"Which version for <plugin-name>?"`
 - header: `"Version"`
 - options:
@@ -714,6 +730,7 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `<plugin-n
 Launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
 
 **Agent A — Test Runner (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Run test suite for plugin release pre-flight"
@@ -728,6 +745,7 @@ prompt: |
 ```
 
 **Agent B — Docs Auditor (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Audit plugin documentation for release readiness"
@@ -740,6 +758,7 @@ prompt: |
 ```
 
 **Agent C — Git Pre-flight (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Git pre-flight check for plugin release"
@@ -881,8 +900,7 @@ Check if CHANGELOG.md exists. If it does, compare the latest version header in C
 head -20 CHANGELOG.md
 ```
 
-If the latest `## [X.Y.Z]` in CHANGELOG.md matches the last tag version → "Changelog is up to date."
-If it doesn't → "⚠ Changelog may be out of date — last entry is vA.B.C but last tag is vX.Y.Z."
+If the latest `## [X.Y.Z]` in CHANGELOG.md matches the last tag version → "Changelog is up to date." If it doesn't → "⚠ Changelog may be out of date — last entry is vA.B.C but last tag is vX.Y.Z."
 
 ### Done
 
@@ -929,6 +947,7 @@ git diff --stat
 ```
 
 Display:
+
 - Files that would be committed
 - The changelog entry that would be added
 - Tag that would be created: `v<version>` (or `<plugin-name>/v<version>`)
@@ -969,6 +988,7 @@ Display the full formatted changelog entry.
 ### Step 3 — Save Option
 
 Use **AskUserQuestion**:
+
 - question: `"Save this changelog entry to CHANGELOG.md?"`
 - header: `"Save"`
 - options:
@@ -976,16 +996,17 @@ Use **AskUserQuestion**:
   2. label: `"No, discard"`, description: `"Don't save — this was just a preview"`
 
 If "Yes":
+
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-changelog.sh . <version>
 git add CHANGELOG.md
 ```
+
 (For plugin: add `--plugin <plugin-name>` and stage `plugins/<plugin-name>/CHANGELOG.md`)
 
 Display: "Changelog entry saved and staged."
 
-If "No":
-Display: "Preview discarded. No changes made."
+If "No": Display: "Preview discarded. No changes made."
 
 ---
 
@@ -994,7 +1015,7 @@ Display: "Preview discarded. No changes made."
 If a failure occurs, suggest the appropriate rollback based on what phase failed:
 
 | Phase | What happened | Rollback command |
-|-------|--------------|-----------------|
+| --- | --- | --- |
 | Phase 0 (Detection) | Context gathering failed | Nothing to roll back. Check script paths and retry. |
 | Phase 1 (Pre-flight) | Checks failed before any changes | Nothing to roll back. Fix the reported issues and retry. |
 | Phase 2 (Preparation) | Version bump or changelog failed | `git checkout -- .` |
@@ -1008,6 +1029,7 @@ If a failure occurs, suggest the appropriate rollback based on what phase failed
 **Step 2: Verify the command is valid**
 
 After writing, verify:
+
 - YAML frontmatter has `name` and `description`
 - All `${CLAUDE_PLUGIN_ROOT}` references are correct
 - All script paths match existing files
@@ -1032,6 +1054,7 @@ Replaces argument-based routing with:
 ### Task 4: Update release-detection skill
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/skills/release-detection/SKILL.md`
 
 **Step 1: Rewrite the skill to route to menu**
@@ -1042,10 +1065,7 @@ Replace the entire contents of `plugins/release-pipeline/skills/release-detectio
 ---
 name: release-detection
 description: >
-  Detect release intent in natural language and route to the /release command menu.
-  Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main",
-  "deploy to production", "push to main", "release for <repo>",
-  "release <plugin-name> vX.Y.Z", "ship <plugin-name>".
+  Detect release intent in natural language and route to the /release command menu. Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main", "deploy to production", "push to main", "release for <repo>", "release <plugin-name> vX.Y.Z", "ship <plugin-name>".
 ---
 
 # Release Detection
@@ -1073,6 +1093,7 @@ git commit -m "feat(release-pipeline): simplify release-detection skill to route
 ### Task 5: Bump plugin version and update README
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/.claude-plugin/plugin.json:4`
 - Modify: `plugins/release-pipeline/README.md`
 
@@ -1096,9 +1117,10 @@ Replace `plugins/release-pipeline/README.md` with updated documentation reflecti
 Interactive release pipeline for any repo. One command, six options.
 
 ## Usage
-
 ```
+
 /release
+
 ```
 
 Or say: "ship it", "merge to main", "cut a release", "release v1.2.0"
@@ -1149,9 +1171,11 @@ Auto-detected from project files:
 ## Installation
 
 ```
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
-/plugin install release-pipeline@l3digitalnet-plugins
+
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins /plugin install release-pipeline@l3digitalnet-plugins
+
 ```
+
 ```
 
 **Step 4: Commit**

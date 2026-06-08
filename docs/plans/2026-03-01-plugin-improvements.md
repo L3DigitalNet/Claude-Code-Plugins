@@ -17,6 +17,7 @@
 The fix is to exit 2 (Claude Code's blocking exit code for PreToolUse/PostToolUse hooks) when disallowed tools are detected, and emit a blocking-format message instead of a warning. Also update README Known Issues to remove the caveat that blocking enforcement requires "a manual pre-completion check."
 
 **Files:**
+
 - Modify: `plugins/plugin-review/scripts/validate-agent-frontmatter.sh` (last ~15 lines)
 - Modify: `plugins/plugin-review/README.md` (Known Issues, line ~177)
 - Modify: `plugins/plugin-review/CHANGELOG.md`
@@ -111,6 +112,7 @@ immediately for manual revert — same semantics as doc-write-tracker.sh.
 The fix is to replace `'hooks/scripts/'` with `'hooks/'` in the `impl_dirs` tuple, which is a broader match that catches both `hooks/hooks.json` and `hooks/scripts/*.sh`.
 
 **Files:**
+
 - Modify: `plugins/plugin-review/scripts/doc-write-tracker.sh` (Python block, `impl_dirs` line)
 - Modify: `plugins/plugin-review/README.md` (Known Issues, ~line 176)
 - Modify: `plugins/plugin-review/CHANGELOG.md`
@@ -181,6 +183,7 @@ implementation file changes.
 **Context:** `plugins/agent-orchestrator/.claude-plugin/plugin.json` has `"author": {"name": "Agent Orchestrator"}` — it's missing the `url` field and uses a generic descriptive name instead of the publisher identity. All other plugins use `"L3DigitalNet"` with the GitHub URL. The marketplace.json already has the correct author; only plugin.json needs fixing.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/.claude-plugin/plugin.json`
 
 **Step 1: Edit plugin.json**
@@ -223,6 +226,7 @@ git commit -m "fix(agent-orchestrator): standardize plugin.json author to L3Digi
 **Context:** `plugins/home-assistant-dev/.claude-plugin/plugin.json` description says "19 skills" but the actual skills table in the README has 27 entries. The description is shown in marketplace listings — it's user-facing.
 
 **Files:**
+
 - Modify: `plugins/home-assistant-dev/.claude-plugin/plugin.json`
 
 **Step 1: Edit plugin.json description**
@@ -258,6 +262,7 @@ git commit -m "fix(home-assistant-dev): correct skill count from 19 to 27 in plu
 Adding `--dry-run` (or `--preview`) means: run Phases 1+2 fully, then display the ranked opportunities list and exit — no worktrees created, no code changes applied.
 
 **Files:**
+
 - Modify: `plugins/autonomous-refactor/commands/refactor.md`
   - Setup section: add `--dry-run` flag parsing
   - Between Phase 2 and Phase 3: add dry-run exit block
@@ -306,16 +311,17 @@ Find the boundary between Phase 2 (Analyze) and Phase 3 (Refactor Loop). Phase 2
 **If `--dry-run` was specified**, stop here. Do not proceed to Phase 3.
 
 Display:
-
 ```
+
 Dry-run complete. N opportunities identified (max changes: M).
 
 Ranked opportunities:
-  1. [HIGH]   <file>:<line> — <opportunity description>
-  2. [MEDIUM] <file>:<line> — <opportunity description>
-  ...
+
+1. [HIGH] <file>:<line> — <opportunity description>
+2. [MEDIUM] <file>:<line> — <opportunity description> ...
 
 No changes applied. Run without --dry-run to execute.
+
 ```
 
 Exit cleanly after displaying this output.
@@ -369,6 +375,7 @@ Mirrors the --dry-run pattern in repo-hygiene and release-pipeline.
 Add a `Binding` column to the Skills table. Values: `Python`, `C++/Qt`, `Both`.
 
 Applicability map (based on skill content):
+
 - `qt-architecture`: Both
 - `qt-signals-slots`: Both
 - `qt-layouts`: Both
@@ -387,20 +394,23 @@ Applicability map (based on skill content):
 - `qt-pilot-usage`: Python (Qt Pilot MCP server is Python-based)
 
 **Files:**
+
 - Modify: `plugins/qt-suite/README.md` (Skills table)
 
 **Step 1: Replace the Skills table header**
 
 Current:
+
 ```markdown
 | Skill | Loaded when |
-|-------|-------------|
+| ----- | ----------- |
 ```
 
 Replace with:
+
 ```markdown
 | Skill | Binding | Loaded when |
-|-------|---------|-------------|
+| ----- | ------- | ----------- |
 ```
 
 **Step 2: Add Binding column values to every row**
@@ -409,7 +419,7 @@ Replace the entire Skills table (16 rows) with the annotated version:
 
 ```markdown
 | Skill | Binding | Loaded when |
-|-------|---------|-------------|
+| --- | --- | --- |
 | `qt-architecture` | Both | Structuring a Qt app, QApplication setup, project layout |
 | `qt-signals-slots` | Both | Connecting signals, defining custom signals, cross-thread communication |
 | `qt-layouts` | Both | Arranging widgets, resize behavior, QSplitter, layout debugging |
@@ -457,6 +467,7 @@ qt-pilot-usage).
 The fix is two lines: make both values derive from `RELEASE_PIPELINE_MARKETPLACE` env var with a fallback to `l3digitalnet-plugins`. Also update README Known Issues.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/scripts/sync-local-plugins.sh` (lines 22–24)
 - Modify: `plugins/release-pipeline/README.md` (Known Issues)
 - Modify: `plugins/release-pipeline/CHANGELOG.md`
@@ -464,6 +475,7 @@ The fix is two lines: make both values derive from `RELEASE_PIPELINE_MARKETPLACE
 **Step 1: Edit sync-local-plugins.sh**
 
 Find lines 22–24:
+
 ```bash
 CACHE_DIR="$HOME/.claude/plugins/cache/l3digitalnet-plugins"
 INSTALLED_PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
@@ -471,6 +483,7 @@ MARKETPLACE="l3digitalnet-plugins"
 ```
 
 Replace with:
+
 ```bash
 MARKETPLACE="${RELEASE_PIPELINE_MARKETPLACE:-l3digitalnet-plugins}"
 CACHE_DIR="$HOME/.claude/plugins/cache/$MARKETPLACE"
@@ -482,11 +495,13 @@ Note the reordering: `MARKETPLACE` must be defined before `CACHE_DIR` uses it.
 **Step 2: Update README Known Issues**
 
 Find:
+
 ```
 - `sync-local-plugins.sh` is hardcoded to the `l3digitalnet-plugins` marketplace. It will not sync plugins from a differently named marketplace without modifying the script.
 ```
 
 Replace with:
+
 ```
 - `sync-local-plugins.sh` defaults to the `l3digitalnet-plugins` marketplace. Set `RELEASE_PIPELINE_MARKETPLACE=<name>` in your environment to override for differently named marketplaces.
 ```

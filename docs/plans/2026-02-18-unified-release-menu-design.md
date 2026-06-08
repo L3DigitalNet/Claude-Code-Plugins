@@ -1,8 +1,6 @@
 # Unified /release Menu — Design Document
 
-**Date:** 2026-02-18
-**Plugin:** release-pipeline
-**Version:** v1.1.0 → v1.2.0
+**Date:** 2026-02-18 **Plugin:** release-pipeline **Version:** v1.1.0 → v1.2.0
 
 ## Problem
 
@@ -11,6 +9,7 @@ The current `/release` command uses argument-based routing: no args = quick merg
 ## Solution
 
 Redesign `/release` as a single interactive entry point that:
+
 1. Runs context detection automatically
 2. Presents a context-aware menu via `AskUserQuestion`
 3. Walks the user through the selected workflow step by step
@@ -27,7 +26,7 @@ Redesign `/release` as a single interactive entry point that:
 ## Menu Options
 
 | # | Option | Always Shown? | Description |
-|---|--------|---------------|-------------|
+| --- | --- | --- | --- |
 | 1 | Quick Merge | Yes | Commit and merge testing → main (no version bump) |
 | 2 | Full Release | Yes | Semver release with pre-flight, changelog, tag, GitHub release |
 | 3 | Plugin Release | Monorepo only | Release a single plugin (scoped tag, scoped changelog) |
@@ -38,6 +37,7 @@ Redesign `/release` as a single interactive entry point that:
 ### Context Annotations
 
 Menu descriptions are enriched with live context:
+
 - **Quick Merge:** dirty tree warning or clean tree commit count
 - **Full Release:** suggested version with commit breakdown
 - **Plugin Release:** count of plugins with unreleased changes
@@ -60,15 +60,15 @@ Runs automatically when `/release` is invoked (~2-3 seconds):
 
 ### Internal Variables
 
-| Variable | Type | Source |
-|----------|------|--------|
-| `is_monorepo` | bool | detect-unreleased.sh exit code |
-| `unreleased_plugins` | list | detect-unreleased.sh output |
-| `is_dirty` | bool | git status |
-| `current_branch` | string | git branch |
-| `last_tag` | string | git describe |
-| `suggested_version` | string | suggest-version.sh |
-| `commit_summary` | string | suggest-version.sh |
+| Variable             | Type   | Source                         |
+| -------------------- | ------ | ------------------------------ |
+| `is_monorepo`        | bool   | detect-unreleased.sh exit code |
+| `unreleased_plugins` | list   | detect-unreleased.sh output    |
+| `is_dirty`           | bool   | git status                     |
+| `current_branch`     | string | git branch                     |
+| `last_tag`           | string | git describe                   |
+| `suggested_version`  | string | suggest-version.sh             |
+| `commit_summary`     | string | suggest-version.sh             |
 
 ## Mode Workflows
 
@@ -93,6 +93,7 @@ Stage → generate commit message → display for review → GO gate → commit 
 ### Release Status (NEW)
 
 Read-only, no approval gates:
+
 1. Show current branch and last tag
 2. List commits since last tag (categorized)
 3. If monorepo: per-plugin breakdown
@@ -102,6 +103,7 @@ Read-only, no approval gates:
 ### Dry Run (NEW)
 
 Mirrors Full Release but skips destructive operations:
+
 1. Run Phase 1 (pre-flight agents) — same parallel checks
 2. Run Phase 2 (preparation) — bump version + generate changelog
 3. Show full diff of what WOULD be committed
@@ -112,6 +114,7 @@ Mirrors Full Release but skips destructive operations:
 ### Changelog Preview (NEW)
 
 Lightweight, focused:
+
 1. Determine version (auto-suggest or ask)
 2. Run `generate-changelog.sh --preview` (stdout only, no file write)
 3. Display formatted changelog entry
@@ -121,7 +124,7 @@ Lightweight, focused:
 ## File Changes
 
 | File | Change Type | Description |
-|------|-------------|-------------|
+| --- | --- | --- |
 | `commands/release.md` | **Rewrite** | Context detection + menu + all six modes |
 | `skills/release-detection/SKILL.md` | **Update** | Route to /release menu (not direct mode execution) |
 | `scripts/suggest-version.sh` | **New** | Analyze commits, output suggested semver bump |
@@ -157,7 +160,6 @@ Logic:
 
 ## Release Detection Skill Change
 
-**Current behavior:** Parses natural language → invokes `/release` with mode-specific arguments
-**New behavior:** Parses natural language → invokes `/release` (no args) → menu handles everything
+**Current behavior:** Parses natural language → invokes `/release` with mode-specific arguments **New behavior:** Parses natural language → invokes `/release` (no args) → menu handles everything
 
 The skill can extract context hints (if user says "release home-assistant-dev v2.0.0", note this), but the menu is always presented.

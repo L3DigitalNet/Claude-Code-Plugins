@@ -1,5 +1,4 @@
-  execution commands, coverage tools, and UI testing via Charlotte or Playwright.
----
+## execution commands, coverage tools, and UI testing via Charlotte or Playwright.
 
 # Stack Profile: Python / Django
 
@@ -19,7 +18,7 @@
 - **Django convention:** simple apps use `tests.py`; complex apps use a `tests/` package with `__init__.py`
 
 | Category | Directory | Marker |
-|----------|-----------|--------|
+| --- | --- | --- |
 | Unit | `tests/unit/` or `<app>/tests/test_models.py` | `@pytest.mark.unit` |
 | Integration | `tests/integration/` or `<app>/tests/test_views.py` | `@pytest.mark.integration` |
 | E2E | `tests/e2e/` | `@pytest.mark.e2e` |
@@ -46,6 +45,7 @@ pytest <app>/tests/test_views.py::TestLoginView::test_valid_credentials -v
 ```
 
 Requires `DJANGO_SETTINGS_MODULE` set via environment variable or `pyproject.toml`:
+
 ```toml
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "project.settings"
@@ -125,6 +125,7 @@ def test_user_display_name():
 ### pytest-django Fixtures
 
 Key fixtures provided by pytest-django:
+
 - `client` — Django test client
 - `admin_client` — logged-in admin client
 - `rf` — `RequestFactory` for unit-testing views

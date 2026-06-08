@@ -1,5 +1,5 @@
-  Trigger phrases: "QAbstractItemModel", "table view", "list model", "QTableView", "QListView", "tree view", "item delegate", "sort table", "filter model", "QSortFilterProxyModel", "custom model", "model data"
-version: 1.0.0
+Trigger phrases: "QAbstractItemModel", "table view", "list model", "QTableView", "QListView", "tree view", "item delegate", "sort table", "filter model", "QSortFilterProxyModel", "custom model", "model data" version: 1.0.0
+
 ---
 
 ## Qt Model/View Architecture
@@ -16,13 +16,13 @@ Separate data (model) from presentation (view). The delegate handles painting an
 
 ### Choosing a Model Base Class
 
-| Base class | When to use |
-|------------|-------------|
-| `QStringListModel` | Simple list of strings |
-| `QStandardItemModel` | Quick prototype or small dataset |
-| `QAbstractListModel` | Custom list with single column |
-| `QAbstractTableModel` | Custom table with rows × columns |
-| `QAbstractItemModel` | Tree structures with parent/child |
+| Base class            | When to use                       |
+| --------------------- | --------------------------------- |
+| `QStringListModel`    | Simple list of strings            |
+| `QStandardItemModel`  | Quick prototype or small dataset  |
+| `QAbstractListModel`  | Custom list with single column    |
+| `QAbstractTableModel` | Custom table with rows × columns  |
+| `QAbstractItemModel`  | Tree structures with parent/child |
 
 For anything non-trivial, subclass `QAbstractTableModel` or `QAbstractListModel` — `QStandardItemModel` has poor performance with large datasets and poor testability.
 

@@ -4,13 +4,13 @@ on:
   push:
     branches: [testing, main]
     paths:
-      - 'plugins/plugin-test-harness/**'
-      - '.github/workflows/plugin-test-harness-ci.yml'
+      - "plugins/plugin-test-harness/**"
+      - ".github/workflows/plugin-test-harness-ci.yml"
   pull_request:
     branches: [testing, main]
     paths:
-      - 'plugins/plugin-test-harness/**'
-      - '.github/workflows/plugin-test-harness-ci.yml'
+      - "plugins/plugin-test-harness/**"
+      - ".github/workflows/plugin-test-harness-ci.yml"
 
 jobs:
   test:
@@ -25,8 +25,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
           cache-dependency-path: plugins/plugin-test-harness/package-lock.json
 
       - name: Install dependencies

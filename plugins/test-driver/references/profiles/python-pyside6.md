@@ -1,5 +1,4 @@
-  conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot.
----
+## conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot.
 
 # Stack Profile: Python / PySide6
 
@@ -18,12 +17,12 @@
 - **Naming:** files matching `test_*.py`
 - **Categorization:**
 
-| Category | Directory | Marker |
-|----------|-----------|--------|
-| Unit | `tests/unit/` | `@pytest.mark.unit` |
+| Category    | Directory            | Marker                     |
+| ----------- | -------------------- | -------------------------- |
+| Unit        | `tests/unit/`        | `@pytest.mark.unit`        |
 | Integration | `tests/integration/` | `@pytest.mark.integration` |
-| E2E | `tests/e2e/` | `@pytest.mark.e2e` |
-| UI | `tests/ui/` | `@pytest.mark.ui` |
+| E2E         | `tests/e2e/`         | `@pytest.mark.e2e`         |
+| UI          | `tests/ui/`          | `@pytest.mark.ui`          |
 
 ## 3. Test Execution
 
@@ -42,6 +41,7 @@ pytest tests/test_main_window.py -v
 ```
 
 **Headless CI setup** using Xvfb:
+
 ```bash
 Xvfb :99 -screen 0 1280x1024x24 &
 export DISPLAY=:99
@@ -63,16 +63,19 @@ Two complementary tools:
 The `qtbot` fixture provides programmatic widget interaction. Key methods from the official API:
 
 **Widget lifecycle:**
+
 - `qtbot.addWidget(widget)` — **required** for every widget created in tests; ensures cleanup
 - `qtbot.waitActive(widget)` — wait until widget is active
 - `qtbot.waitExposed(widget)` — wait until widget is visible
 
 **Signal testing:**
+
 - `qtbot.waitSignal(signal, timeout=1000)` — block until signal emits
 - `qtbot.waitSignals([sig1, sig2], timeout=1000)` — wait for multiple signals
 - `qtbot.assertNotEmitted(signal)` — verify signal was not emitted
 
 **Input simulation:**
+
 - `qtbot.mouseClick(widget, Qt.LeftButton)` — simulate mouse click
 - `qtbot.keyClick(widget, 'A')` — simulate key press
 - `qtbot.keyClicks(widget, 'Hello')` — type a string
@@ -113,7 +116,7 @@ Setup: requires Xvfb and the `qt-suite` plugin installed.
 
 These PySide6-specific patterns are frequently missed because they involve asynchronous UI behavior:
 
-- **Signal/slot connections**: Verify that connecting signal A to slot B produces the expected *state change* — not just that the signal emits. Use `qtbot.waitSignal()` with assertions on widget state after emission.
+- **Signal/slot connections**: Verify that connecting signal A to slot B produces the expected _state change_ — not just that the signal emits. Use `qtbot.waitSignal()` with assertions on widget state after emission.
 - **QThread lifecycle**: `started`/`finished` signals, `moveToThread()` cleanup, thread safety of shared data. Test that threads terminate cleanly and don't leave dangling references.
 - **Model/view data binding**: `QAbstractItemModel` subclass methods (`data()`, `rowCount()`, `setData()`) — test with various roles (`DisplayRole`, `EditRole`, `DecorationRole`) and empty models.
 - **Widget event overrides**: `closeEvent()`, `resizeEvent()`, `keyPressEvent()` — test that overrides call `event.accept()` or `event.ignore()` correctly and that side effects (save prompts, layout recalculation) trigger.

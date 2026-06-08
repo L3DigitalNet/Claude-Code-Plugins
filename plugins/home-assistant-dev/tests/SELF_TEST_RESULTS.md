@@ -1,8 +1,6 @@
 # HA Dev Plugin Self-Test Results
 
-**Date:** 2026-02-17 (Categories 1-4), 2026-02-18 (Category 5)
-**Claude Code Model:** Claude Opus 4.6
-**Plugin Version:** 2.2.2
+**Date:** 2026-02-17 (Categories 1-4), 2026-02-18 (Category 5) **Claude Code Model:** Claude Opus 4.6 **Plugin Version:** 2.2.2
 
 ## Summary
 
@@ -30,7 +28,7 @@
 All 19 skills have well-defined descriptions that match their test prompts:
 
 | Skill | Test Prompt | Result |
-|-------|-------------|--------|
+| --- | --- | --- |
 | ha-architecture | "Explain how the Home Assistant event bus works" | PASS |
 | ha-integration-scaffold | "Create a new integration called test_device" | PASS |
 | ha-config-flow | "Add a reauth flow to my integration" | PASS |
@@ -41,7 +39,7 @@ All 19 skills have well-defined descriptions that match their test prompts:
 | ha-testing | "Write tests for my config flow" | PASS |
 | ha-debugging | "My integration won't load, help me debug" | PASS |
 | ha-yaml-automations | "Create an automation that turns on lights at sunset" | PASS |
-| ha-quality-review | "Review this integration for IQS compliance" | PASS* |
+| ha-quality-review | "Review this integration for IQS compliance" | PASS\* |
 | ha-hacs | "Prepare my integration for HACS" | PASS |
 | ha-diagnostics | "Add diagnostics support to my integration" | PASS |
 | ha-migration | "Update my integration for HA 2025" | PASS |
@@ -51,7 +49,7 @@ All 19 skills have well-defined descriptions that match their test prompts:
 | ha-websocket-api | "Add a custom websocket command" | PASS |
 | ha-recorder | "Add long-term statistics to my sensor" | PASS |
 
-*Note: `ha-quality-review` has `disable-model-invocation: true` — requires explicit invocation, which is intentional.
+\*Note: `ha-quality-review` has `disable-model-invocation: true` — requires explicit invocation, which is intentional.
 
 ---
 
@@ -62,7 +60,7 @@ All 19 skills have well-defined descriptions that match their test prompts:
 **Prompt:** "Create a new Home Assistant integration called my_weather that polls a REST API every 5 minutes for weather data"
 
 | Check | Result |
-|-------|--------|
+| --- | --- |
 | validate-manifest.py passes | PASS |
 | validate-strings.py passes | PASS |
 | check-patterns.py passes | PASS (after fix) |
@@ -76,7 +74,7 @@ All 19 skills have well-defined descriptions that match their test prompts:
 ## Validation Script Tests (5/5 PASS)
 
 | Test | Script | Expected | Result |
-|------|--------|----------|--------|
+| --- | --- | --- | --- |
 | Missing manifest fields | validate-manifest.py | Report 6 missing fields | PASS (found 6 errors + 1 bonus) |
 | Deprecated patterns | check-patterns.py | Catch 3 issues | PASS (1 error, 2 warnings) |
 | Missing strings step | validate-strings.py | Report missing "confirm" | PASS (found + 3 bonus warnings) |
@@ -88,7 +86,7 @@ All 19 skills have well-defined descriptions that match their test prompts:
 ## Agent Tests (3/3 PASS)
 
 | Agent | Structure | Skills | Tools | Description | Result |
-|-------|-----------|--------|-------|-------------|--------|
+| --- | --- | --- | --- | --- | --- |
 | ha-integration-dev | Valid frontmatter | 7 skills | Read, Write, Edit, Bash, Grep, Glob | PROACTIVE trigger | PASS |
 | ha-integration-reviewer | Valid frontmatter | 3 skills | Read, Grep, Glob, Bash (read-focused) | PROACTIVE trigger | PASS |
 | ha-integration-debugger | Valid frontmatter | 3 skills | Read, Edit, Bash, Grep, Glob | PROACTIVE trigger | PASS |
@@ -98,28 +96,28 @@ All 19 skills have well-defined descriptions that match their test prompts:
 ## MCP REST API Tests (24/24 PASS)
 
 | Test | Result | Detail |
-|------|--------|--------|
+| --- | --- | --- |
 | HA Connection: version | PASS | v2026.2.2 |
 | HA Connection: location | PASS | HA Dev Plugin Test |
 | HA Connection: components loaded | PASS | 153 components |
-| HA Connection: demo integration | PASS | |
+| HA Connection: demo integration | PASS |  |
 | Entity Query: total entities | PASS | 116 entities |
 | Entity Query: sensors | PASS | 20 sensors |
 | Entity Query: lights | PASS | 6 lights |
 | Entity Query: switches | PASS | 2 switches |
-| Entity Query: light.bed_light | PASS | |
-| Entity Query: light.ceiling_lights | PASS | |
-| Entity Query: sensor.outside_temperature | PASS | |
+| Entity Query: light.bed_light | PASS |  |
+| Entity Query: light.ceiling_lights | PASS |  |
+| Entity Query: sensor.outside_temperature | PASS |  |
 | Service Discovery: domains returned | PASS | 58 domains |
-| Service Discovery: light domain | PASS | |
-| Service Discovery: light.turn_on | PASS | |
-| Service Discovery: light.turn_off | PASS | |
-| Service Discovery: light.toggle | PASS | |
-| Dry Run: service light.turn_on exists | PASS | |
-| Dry Run: target light.bed_light exists | PASS | |
+| Service Discovery: light domain | PASS |  |
+| Service Discovery: light.turn_on | PASS |  |
+| Service Discovery: light.turn_off | PASS |  |
+| Service Discovery: light.toggle | PASS |  |
+| Dry Run: service light.turn_on exists | PASS |  |
+| Dry Run: target light.bed_light exists | PASS |  |
 | Dry Run: validation passed | PASS | Would call light.turn_on on light.bed_light (state: off) |
 | Dry Run: non-existent entity rejected | PASS | light.nonexistent correctly not found |
-| Entity Attributes: has attributes | PASS | |
+| Entity Attributes: has attributes | PASS |  |
 | Entity Attributes: has friendly_name | PASS | Bed Light |
 | Entity Attributes: has supported_features | PASS | features: 4 |
 | Logs: accessible | PASS | 355 lines |
@@ -129,46 +127,46 @@ All 19 skills have well-defined descriptions that match their test prompts:
 ## MCP Server WebSocket Tests (38/39 PASS)
 
 | Test | Result | Detail |
-|------|--------|--------|
-| WS Connect: connected | PASS | |
+| --- | --- | --- |
+| WS Connect: connected | PASS |  |
 | WS Connect: version | PASS | v2026.2.2 |
 | WS Connect: location | PASS | HA Dev Plugin Test |
 | WS Connect: components | PASS | 153 components |
-| WS Connect: demo loaded | PASS | |
-| WS Connect: isConnected() | PASS | |
+| WS Connect: demo loaded | PASS |  |
+| WS Connect: isConnected() | PASS |  |
 | getStates: all entities | PASS | 116 entities |
-| getStates: has entity_id | PASS | |
-| getStates: has state | PASS | |
-| getStates: has attributes | PASS | |
-| getStates: has last_changed | PASS | |
+| getStates: has entity_id | PASS |  |
+| getStates: has state | PASS |  |
+| getStates: has attributes | PASS |  |
+| getStates: has last_changed | PASS |  |
 | getStates: domain=sensor | PASS | 20 sensors |
-| getStates: domain filter correct | PASS | |
+| getStates: domain filter correct | PASS |  |
 | getStates: entity=light.bed_light | PASS | state: off |
 | getStates: entity attributes | PASS | Bed Light |
 | getServices: all | PASS | 232 services |
-| getServices: light.turn_on found | PASS | |
+| getServices: light.turn_on found | PASS |  |
 | getServices: has description | FAIL | empty string (HA 2026.2 uses name, not description) |
-| getServices: has fields | PASS | |
+| getServices: has fields | PASS |  |
 | getServices: domain=light | PASS | turn_on, turn_off, toggle |
-| getServices: domain filter correct | PASS | |
-| validateServiceCall: valid call | PASS | |
+| getServices: domain filter correct | PASS |  |
+| validateServiceCall: valid call | PASS |  |
 | validateServiceCall: invalid entity | PASS | Entity light.nonexistent not found |
 | validateServiceCall: fake service | PASS | Service fake.missing not found |
-| Safety: homeassistant.stop blocked | PASS | |
-| Safety: light.turn_on allowed (dry_run) | PASS | |
+| Safety: homeassistant.stop blocked | PASS |  |
+| Safety: light.turn_on allowed (dry_run) | PASS |  |
 | Safety: getSafetyInfo() | PASS | calls=true, dryRun=false, blocked=6 |
-| Safety: input_boolean is safe | PASS | |
-| Safety: homeassistant is not safe | PASS | |
-| Safety: redacts api_key | PASS | |
-| Safety: redacts password | PASS | |
-| Safety: preserves brightness | PASS | |
+| Safety: input_boolean is safe | PASS |  |
+| Safety: homeassistant is not safe | PASS |  |
+| Safety: redacts api_key | PASS |  |
+| Safety: redacts password | PASS |  |
+| Safety: preserves brightness | PASS |  |
 | getDevices: accessible | PASS | 52 devices |
-| getDevices: has id | PASS | |
-| getDevices: has name | PASS | |
+| getDevices: has id | PASS |  |
+| getDevices: has name | PASS |  |
 | getLogs: accessible | PASS | 3 log entries |
-| getConnectionInfo: returns data | PASS | |
-| getConnectionInfo: matches connect | PASS | |
-| Disconnect: clean | PASS | |
+| getConnectionInfo: returns data | PASS |  |
+| getConnectionInfo: matches connect | PASS |  |
+| Disconnect: clean | PASS |  |
 
 ---
 

@@ -1,5 +1,5 @@
-  to test, or applying test patterns. Covers isolation, boundary testing, error paths,
-  Arrange-Act-Assert, naming, mock boundaries, and meaningful assertions.
+to test, or applying test patterns. Covers isolation, boundary testing, error paths, Arrange-Act-Assert, naming, mock boundaries, and meaningful assertions.
+
 ---
 
 # Test Design: Universal Principles
@@ -11,12 +11,14 @@ These principles apply to every test you write, regardless of language or framew
 Each test must be independent. Running tests in any order, or running a single test in isolation, must produce the same result.
 
 **Rules:**
+
 - No shared mutable state between tests. Each test sets up its own data.
 - Use fixtures (pytest fixtures, setUp/tearDown, @Before/@After) for per-test setup.
 - Avoid class-level or module-level state that persists across tests.
 - Never depend on test execution order.
 
 **Anti-pattern:**
+
 ```python
 # BAD: test_update depends on state from test_create
 class TestUser:
@@ -37,6 +39,7 @@ class TestUser:
 For every function parameter, test the edges, not just the middle.
 
 **Checklist for each parameter:**
+
 - **Zero/empty case:** 0, "", [], None, empty dict
 - **Single element:** 1, "a", [x], one-item dict
 - **Boundary value:** the exact threshold (e.g., if max is 100, test 100)
@@ -44,6 +47,7 @@ For every function parameter, test the edges, not just the middle.
 - **Typical case:** a normal, representative value
 
 **Common boundaries to test:**
+
 - Integer overflow/underflow limits
 - String length limits
 - Collection size limits (empty, one, many, max)
@@ -57,6 +61,7 @@ Every code path that can fail should have a test that verifies it fails correctl
 **Rule:** If a function has N distinct error paths (exceptions, error returns, validation failures), write at least N error tests.
 
 **What to verify for each error path:**
+
 - The correct exception type is raised (not just "some exception")
 - The error message is useful and specific (match against key phrases)
 - Side effects are properly rolled back (no partial state left behind)
@@ -93,6 +98,7 @@ def test_user_creation_stores_email():
 ```
 
 **Rules:**
+
 - **One Act per test.** If you're calling multiple methods, you're testing multiple behaviors; split into separate tests.
 - **Multiple Asserts are OK** if they verify different aspects of the same behavior (e.g., checking both the return value and a side effect of a single operation).
 - **Keep phases visually distinct.** A blank line or comment between each phase helps readability.
@@ -122,6 +128,7 @@ def test_it_works():
 Mock the things you don't control. Use real implementations for the things you do.
 
 **Mock these (external boundary):**
+
 - Network calls (HTTP, gRPC, database connections to external services)
 - File system operations (when testing logic, not I/O)
 - Clock/time (use freezegun, frozen_time, or clock mocks)
@@ -129,6 +136,7 @@ Mock the things you don't control. Use real implementations for the things you d
 - Random number generators (when determinism matters)
 
 **Don't mock these (internal boundary):**
+
 - Your own classes and functions (test them with real instances)
 - Internal data structures
 - Pure functions
@@ -155,12 +163,14 @@ assert user.email == "expected@example.com"
 ```
 
 **Assertion hierarchy (most to least specific):**
+
 1. `assert result == expected_value` — exact equality
 2. `assert expected_key in result` — containment
 3. `assert isinstance(result, ExpectedType)` — type check
 4. `assert result` — truthiness (weakest; avoid as sole assertion)
 
 **Avoid magic numbers in assertions.** Use named constants or descriptive variables:
+
 ```python
 # BAD
 assert len(users) == 3

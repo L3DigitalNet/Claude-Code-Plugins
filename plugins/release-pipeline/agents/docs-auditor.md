@@ -75,8 +75,7 @@ When the audit would result in FAIL status **due to stale version references onl
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json stale_docs [plugin-name]
 ```
 
-If exit 0 (waived): downgrade FAIL to WARN and annotate `⊘ stale_docs WAIVED — <reason>`.
-If exit 1 (not waived): proceed with original FAIL behavior.
+If exit 0 (waived): downgrade FAIL to WARN and annotate `⊘ stale_docs WAIVED — <reason>`. If exit 1 (not waived): proceed with original FAIL behavior.
 
 Note: broken links are NOT waivable — only stale version references are covered by `stale_docs`.
 

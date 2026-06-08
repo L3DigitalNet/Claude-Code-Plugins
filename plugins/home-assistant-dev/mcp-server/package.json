@@ -1,63 +1,63 @@
 {
-  "name": "ha-dev-mcp-server",
-  "version": "0.1.0",
-  "description": "MCP server for Home Assistant integration development",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "ha-dev-mcp-server": "dist/index.js"
-  },
-  "scripts": {
-    "build": "tsc && npm run bundle",
-    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/server.bundle.cjs --define:import.meta.url=undefined",
-    "watch": "tsc --watch",
-    "start": "node dist/server.bundle.cjs",
-    "dev": "ts-node src/index.ts",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
-    "prepublishOnly": "npm run build"
-  },
-  "keywords": [
-    "mcp",
-    "home-assistant",
-    "claude",
-    "anthropic",
-    "development"
-  ],
-  "author": "L3DigitalNet",
-  "license": "MIT",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
-    "home-assistant-js-websocket": "^9.0.0",
-    "minisearch": "^7.2.0",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^25.5.0",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
-    "@typescript-eslint/parser": "^8.56.1",
-    "esbuild": "^0.27.4",
-    "eslint": "^10.1.0",
-    "jest": "^30.3.0",
-    "ts-jest": "^29.0.0",
-    "ts-node": "^10.9.0",
-    "typescript": "^6.0.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "files": [
-    "dist/",
-    "README.md"
-  ],
-  "overrides": {
-    "hono": ">=4.12.14",
-    "ip-address": ">=10.1.1",
-    "qs": ">=6.15.2",
-    "fast-uri": ">=3.1.2"
-  }
+	"name": "ha-dev-mcp-server",
+	"version": "0.1.0",
+	"description": "MCP server for Home Assistant integration development",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"bin": {
+		"ha-dev-mcp-server": "dist/index.js"
+	},
+	"scripts": {
+		"build": "tsc && npm run bundle",
+		"bundle": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/server.bundle.cjs --define:import.meta.url=undefined",
+		"watch": "tsc --watch",
+		"start": "node dist/server.bundle.cjs",
+		"dev": "ts-node src/index.ts",
+		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+		"test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint src/",
+		"lint:fix": "eslint src/ --fix",
+		"prepublishOnly": "npm run build"
+	},
+	"keywords": [
+		"mcp",
+		"home-assistant",
+		"claude",
+		"anthropic",
+		"development"
+	],
+	"author": "L3DigitalNet",
+	"license": "MIT",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.27.1",
+		"home-assistant-js-websocket": "^9.0.0",
+		"minisearch": "^7.2.0",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/jest": "^30.0.0",
+		"@types/node": "^25.5.0",
+		"@typescript-eslint/eslint-plugin": "^8.57.2",
+		"@typescript-eslint/parser": "^8.56.1",
+		"esbuild": "^0.27.4",
+		"eslint": "^10.1.0",
+		"jest": "^30.3.0",
+		"ts-jest": "^29.0.0",
+		"ts-node": "^10.9.0",
+		"typescript": "^6.0.2"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"files": [
+		"dist/",
+		"README.md"
+	],
+	"overrides": {
+		"hono": ">=4.12.14",
+		"ip-address": ">=10.1.1",
+		"qs": ">=6.15.2",
+		"fast-uri": ">=3.1.2"
+	}
 }

@@ -1,5 +1,4 @@
-  discovery conventions, execution commands, coverage tools, and UI testing via XCUITest.
----
+## discovery conventions, execution commands, coverage tools, and UI testing via XCUITest.
 
 # Stack Profile: Swift / SwiftUI
 
@@ -15,11 +14,13 @@
 ## 2. Test Discovery
 
 **Swift Package Manager (SPM) projects:**
+
 - **Location:** `Tests/` directory
 - **Naming:** files matching `*Tests.swift` containing `XCTestCase` subclasses or `@Test` functions
 - **Test targets:** defined in `Package.swift` under `testTarget`
 
 **Xcode projects:**
+
 - **Location:** test targets in `.xcodeproj` or `.xcworkspace`
 - **Naming:** test classes inheriting from `XCTestCase`
 - **UI tests:** separate test target (e.g., `MyAppUITests`)
@@ -51,6 +52,7 @@ xcodebuild test \
 ## 4. Coverage Measurement
 
 **SPM:**
+
 ```bash
 # Enable coverage collection
 swift test --enable-code-coverage
@@ -68,6 +70,7 @@ xcrun llvm-cov export \
 ```
 
 **Xcode:**
+
 - Built-in coverage reports via Xcode organizer (Product > Test with coverage enabled)
 - `xcodebuild test -enableCodeCoverage YES` for CI
 
@@ -78,12 +81,14 @@ xcrun llvm-cov export \
 Apple's UI testing framework for iOS, macOS, watchOS, and tvOS.
 
 **Application launch:**
+
 ```swift
 let app = XCUIApplication()
 app.launch()
 ```
 
 **Element queries:**
+
 ```swift
 // Find elements by accessibility identifier or label
 let loginButton = app.buttons["Login"]
@@ -96,6 +101,7 @@ let backButton = app.navigationBars.buttons.element(boundBy: 0)
 ```
 
 **Interactions:**
+
 ```swift
 emailField.tap()
 emailField.typeText("user@example.com")
@@ -103,6 +109,7 @@ loginButton.tap()
 ```
 
 **Assertions:**
+
 ```swift
 XCTAssertTrue(app.staticTexts["Welcome"].exists)
 XCTAssertTrue(loginButton.isEnabled)
@@ -114,6 +121,7 @@ XCTAssertTrue(exists)
 ```
 
 **Example UI test:**
+
 ```swift
 import XCTest
 

@@ -28,15 +28,15 @@ TestCase {
 
 ## Assertion Functions
 
-| Function | Passes when |
-|---|---|
-| `verify(expr)` | expr is truthy |
-| `verify(expr, msg)` | expr is truthy (custom failure message) |
-| `compare(actual, expected)` | values are equal |
-| `fuzzyCompare(a, b, delta)` | `\|a - b\| <= delta` |
-| `fail(msg)` | unconditional failure |
-| `skip(msg)` | skip test with message |
-| `expectFail("", msg, AbortTestOnFail)` | next compare is expected to fail |
+| Function                               | Passes when                             |
+| -------------------------------------- | --------------------------------------- |
+| `verify(expr)`                         | expr is truthy                          |
+| `verify(expr, msg)`                    | expr is truthy (custom failure message) |
+| `compare(actual, expected)`            | values are equal                        |
+| `fuzzyCompare(a, b, delta)`            | `\|a - b\| <= delta`                    |
+| `fail(msg)`                            | unconditional failure                   |
+| `skip(msg)`                            | skip test with message                  |
+| `expectFail("", msg, AbortTestOnFail)` | next compare is expected to fail        |
 
 ## Component Creation
 
@@ -168,6 +168,7 @@ QUICK_TEST_MAIN(qml_tests)
 ### qmltestrunner (Alternative)
 
 If Qt is installed with `qmltestrunner`:
+
 ```bash
 qmltestrunner -input tests/
 ```
@@ -175,6 +176,7 @@ qmltestrunner -input tests/
 ### Import Path Configuration
 
 If your QML module is registered but not in the default import path:
+
 ```cpp
 // Extended entry point with custom import path
 #include <QtQuickTest>

@@ -15,7 +15,7 @@
 ## File Map
 
 | Action | Path | Responsibility |
-|--------|------|---------------|
+| --- | --- | --- |
 | Create | `plugins/qdev/.claude-plugin/plugin.json` | Plugin manifest — name, version, description, author |
 | Create | `plugins/qdev/commands/quality-review.md` | Research-first iterative quality review command |
 | Create | `plugins/qdev/commands/spec-update.md` | One-shot spec sync command |
@@ -28,6 +28,7 @@
 ### Task 1: Scaffold plugin structure
 
 **Files:**
+
 - Create: `plugins/qdev/.claude-plugin/plugin.json`
 - Create: `plugins/qdev/CHANGELOG.md`
 
@@ -41,14 +42,11 @@ Create `plugins/qdev/.claude-plugin/plugin.json`:
 
 ```json
 {
-  "name": "qdev",
-  "version": "1.0.0",
-  "description": "Research-first quality review and spec sync across the development lifecycle. Two slash commands: /quality-review runs web research then an iterative gap/consistency fix loop until convergence, /spec-update brings a spec file up to date with the current implementation.",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  },
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
+	"name": "qdev",
+	"version": "1.0.0",
+	"description": "Research-first quality review and spec sync across the development lifecycle. Two slash commands: /quality-review runs web research then an iterative gap/consistency fix loop until convergence, /spec-update brings a spec file up to date with the current implementation.",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
 }
 ```
 
@@ -74,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.0.0] - 2026-04-13
 
 ### Added
+
 - `/qdev:quality-review` command: research-first iterative quality review for spec, plan, and code artifacts
 - `/qdev:spec-update` command: one-shot sync of a spec file to match current implementation
 ```
@@ -90,6 +89,7 @@ git commit -m "feat(qdev): scaffold plugin structure"
 ### Task 2: Register in marketplace
 
 **Files:**
+
 - Modify: `.claude-plugin/marketplace.json` (add entry before the closing `]`)
 
 - [ ] **Step 1: Add qdev entry to marketplace.json**
@@ -97,17 +97,14 @@ git commit -m "feat(qdev): scaffold plugin structure"
 In `.claude-plugin/marketplace.json`, add the following entry to the `plugins` array (before the closing `]`). The existing last entry ends with `}` — add a comma after it, then add:
 
 ```json
-    {
-      "name": "qdev",
-      "description": "Research-first quality review and spec sync across the development lifecycle. /quality-review runs web research then an iterative gap/consistency fix loop until convergence. /spec-update brings a spec file in sync with the current implementation.",
-      "version": "1.0.0",
-      "author": {
-        "name": "L3DigitalNet",
-        "url": "https://github.com/L3DigitalNet"
-      },
-      "source": "./plugins/qdev",
-      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
-    }
+{
+	"name": "qdev",
+	"description": "Research-first quality review and spec sync across the development lifecycle. /quality-review runs web research then an iterative gap/consistency fix loop until convergence. /spec-update brings a spec file in sync with the current implementation.",
+	"version": "1.0.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"source": "./plugins/qdev",
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
+}
 ```
 
 - [ ] **Step 2: Run marketplace validator**
@@ -130,6 +127,7 @@ git commit -m "feat(qdev): add marketplace entry"
 ### Task 3: Write quality-review command
 
 **Files:**
+
 - Create: `plugins/qdev/commands/quality-review.md`
 
 - [ ] **Step 1: Create quality-review.md**
@@ -140,7 +138,7 @@ Create `plugins/qdev/commands/quality-review.md` with the following complete con
 ---
 name: quality-review
 description: Research-first quality review with iterative gap/consistency check and fix loop until convergence. Detects spec, plan, or code mode automatically. Runs comprehensive web research first to establish ground truth, then iterates until zero findings remain.
-argument-hint: "[optional: path to file or directory to review]"
+argument-hint: '[optional: path to file or directory to review]'
 allowed-tools:
   - Read
   - Write
@@ -177,6 +175,7 @@ Apply this priority order to identify mode:
 If multiple candidates match or the type is ambiguous, use `AskUserQuestion` to present the top candidates as bounded choices. Do not guess.
 
 Announce the detected mode and target before proceeding:
+
 ```
 Target: <path>
 Mode:   <spec | plan | code>
@@ -196,6 +195,7 @@ For each identified dependency or technology, query **both** `mcp__brave-search_
 Compile a **research context** — a structured list of findings grouped by dependency — that will inform all analysis in Step 3.
 
 After compiling, scan the research context for critical findings:
+
 - Known CVE in a dependency version currently in use
 - Breaking change in a dependency that makes the current implementation incorrect
 - Severe deprecation with no migration path documented
@@ -209,6 +209,7 @@ If any critical findings exist, surface them immediately before entering the loo
 ```
 
 Then use `AskUserQuestion`:
+
 - question: `"Critical issues found. How would you like to proceed?"`
 - options:
   1. label: `"Proceed with review"`, description: `"Continue into the analysis loop with these issues noted"`
@@ -227,6 +228,7 @@ Begin each pass with: `--- Pass N ---`
 Read the target artifact(s) in full. Analyze against the research context from Step 2.
 
 **Spec mode checks:**
+
 - **Completeness**: every feature or behavior mentioned anywhere in the spec has its own section with sufficient detail to implement
 - **Internal consistency**: no two sections describe the same behavior differently
 - **Unambiguous requirements**: flag every "should", "might", "could", "may" — these are weak requirements that cause implementation drift; replace with "must" or remove
@@ -234,12 +236,14 @@ Read the target artifact(s) in full. Analyze against the research context from S
 - **Term consistency**: defined terms used consistently throughout — no synonyms for the same concept
 
 **Plan mode checks:**
+
 - **Spec coverage**: every requirement in the referenced spec has at least one plan step that implements it
 - **Sequencing**: no step depends on an output that a later step produces; no circular dependencies
 - **Missing dependencies**: a step uses a function, file, type, or schema that is defined in a step not listed as a prerequisite
 - **Estimability**: each step describes a concrete action — "implement X" without showing how is a gap
 
 **Code mode checks:**
+
 - **Anti-patterns**: patterns the research context flags as deprecated or problematic for this language/framework
 - **Naming consistency**: function, variable, and type names follow a consistent convention across all files in scope
 - **Dead code**: functions, imports, or variables defined but never referenced
@@ -260,12 +264,14 @@ Do not propose fixes based on training knowledge alone when a live source can be
 Classify all findings into two buckets:
 
 **Auto-fixable** (apply silently, count in pass summary):
+
 - Formatting issues (whitespace, punctuation)
 - Broken internal cross-references (a section referenced by name that was renamed)
 - Minor phrasing gaps where only one correct answer exists and no design decision is required
 - Missing punctuation or structural whitespace in documents
 
 **Needs-approval** (present to user one at a time):
+
 - Anything that changes the intent of a requirement or step
 - Resolving an ambiguity that requires making a design choice
 - Dependency upgrade, patch, or removal decisions
@@ -339,6 +345,7 @@ git commit -m "feat(qdev): add quality-review command"
 ### Task 4: Write spec-update command
 
 **Files:**
+
 - Create: `plugins/qdev/commands/spec-update.md`
 
 - [ ] **Step 1: Create spec-update.md**
@@ -349,7 +356,7 @@ Create `plugins/qdev/commands/spec-update.md` with the following complete conten
 ---
 name: spec-update
 description: One-shot sync that brings a spec or design document up to date with the current implementation. Identifies features added, behaviors changed, sections now stale, and removed features. Proposes all changes before writing anything.
-argument-hint: "[optional: path to spec/design file]"
+argument-hint: '[optional: path to spec/design file]'
 allowed-tools:
   - Read
   - Write
@@ -422,6 +429,7 @@ Spec is up to date — no changes needed.
 and stop.
 
 Otherwise, use `AskUserQuestion`:
+
 - question: `"How would you like to review these N proposed changes?"`
 - options:
   1. label: `"Approve all"`, description: `"Apply all N changes without individual review"`
@@ -429,6 +437,7 @@ Otherwise, use `AskUserQuestion`:
   3. label: `"Cancel"`, description: `"Make no changes"`
 
 For `"Review each one"`, present each proposed change with `AskUserQuestion`:
+
 - header: `"Change [N/Total]"`
 - question: `"[ADD | UPDATE | REMOVE] <section>\n\n<what changes and why>"`
 - options:
@@ -466,13 +475,14 @@ git commit -m "feat(qdev): add spec-update command"
 ### Task 5: Write README
 
 **Files:**
+
 - Create: `plugins/qdev/README.md`
 
 - [ ] **Step 1: Create README.md**
 
 Create `plugins/qdev/README.md` with the following complete content:
 
-```markdown
+````markdown
 # qdev
 
 Research-first quality review and spec sync for every stage of the development lifecycle.
@@ -505,6 +515,7 @@ Design decisions in this plugin are evaluated against these principles.
 /plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install qdev@l3digitalnet-plugins
 ```
+````
 
 For local development:
 
@@ -531,7 +542,7 @@ flowchart TD
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `/qdev:quality-review` | Research-first iterative quality review until convergence |
 | `/qdev:spec-update` | One-shot sync of a spec file to match current implementation |
 
@@ -540,6 +551,7 @@ flowchart TD
 Runs a research-first quality review on a spec, implementation plan, or source code. If no path is given, auto-detects the target from the working directory.
 
 **Modes:**
+
 - **Spec**: completeness, internal consistency, ambiguous requirements, scope gaps, term consistency
 - **Plan**: spec coverage, sequencing, missing dependencies, estimability
 - **Code**: anti-patterns, naming consistency, dead code, cross-file inconsistencies, error handling at boundaries
@@ -562,20 +574,22 @@ None.
 
 - [Design spec](../../docs/superpowers/specs/2026-04-13-qdev-design.md)
 - [Source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev)
-```
+
+````
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add plugins/qdev/README.md
 git commit -m "feat(qdev): add README"
-```
+````
 
 ---
 
 ### Task 6: Final validation
 
 **Files:**
+
 - No changes — validation only
 
 - [ ] **Step 1: Run full marketplace validation**
@@ -593,6 +607,7 @@ find plugins/qdev -type f | sort
 ```
 
 Expected output (exactly these 5 files):
+
 ```
 plugins/qdev/.claude-plugin/plugin.json
 plugins/qdev/CHANGELOG.md

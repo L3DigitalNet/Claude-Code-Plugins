@@ -10,6 +10,7 @@ Repair issues provide actionable notifications to users about problems that requ
 ## When to Use Repairs
 
 Use repair issues for:
+
 - Configuration problems the user can fix
 - Firmware updates available
 - Deprecated features being used
@@ -17,6 +18,7 @@ Use repair issues for:
 - Service disruptions with user action needed
 
 Do NOT use for:
+
 - Transient errors (use logging)
 - Entity unavailability (use `available` property)
 - Internal errors (use exceptions)
@@ -138,23 +140,23 @@ async def async_create_fix_flow(
 
 ```json
 {
-  "issues": {
-    "firmware_update_available": {
-      "title": "Firmware update available",
-      "description": "Device {device} has firmware {current_version}. Version {new_version} is available with important fixes."
-    },
-    "reauth_required": {
-      "title": "Re-authentication required",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Re-authenticate",
-            "description": "Your credentials have expired. Click submit to re-authenticate."
-          }
-        }
-      }
-    }
-  }
+	"issues": {
+		"firmware_update_available": {
+			"title": "Firmware update available",
+			"description": "Device {device} has firmware {current_version}. Version {new_version} is available with important fixes."
+		},
+		"reauth_required": {
+			"title": "Re-authentication required",
+			"fix_flow": {
+				"step": {
+					"confirm": {
+						"title": "Re-authenticate",
+						"description": "Your credentials have expired. Click submit to re-authenticate."
+					}
+				}
+			}
+		}
+	}
 }
 ```
 
@@ -176,7 +178,7 @@ class MyCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             data = await self.client.async_get_data()
-            
+
             # Check for conditions that need user attention
             if data.get("firmware_update_available"):
                 ir.async_create_issue(
@@ -198,9 +200,9 @@ class MyCoordinator(DataUpdateCoordinator):
                     DOMAIN,
                     f"firmware_{self.config_entry.entry_id}",
                 )
-            
+
             return data
-            
+
         except AuthenticationError:
             ir.async_create_issue(
                 self.hass,

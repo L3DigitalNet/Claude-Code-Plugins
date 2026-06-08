@@ -17,7 +17,7 @@
 ## File Structure
 
 | Path | New/Modify | Responsibility |
-|---|---|---|
+| --- | --- | --- |
 | `.prettierrc.json` | new | Prettier config (verbatim from reference; `proseWrap: never` + `useTabs: true`). |
 | `.markdownlint.json` | new | markdownlint rule set (verbatim; 53 rules explicit, MD043 inert). |
 | `.markdownlint-cli2.jsonc` | new | Local runner config (`globs`, `gitignore: true`). |
@@ -35,7 +35,7 @@
 | `AGENTS.md` | modify | Append the standard's §12 tooling instruction block. |
 | `TODO.md` | modify | Check the "Adopt markdown-tooling" box (hunk-isolated, last). |
 | `docs/handoff/specs-plans.md` | modify | Flip spec row status to "Implemented". |
-| (tracked, **non-ignored** `.md`/`.json`/`.yaml`/`.code-workspace`) | modify | One-time Prettier/markdownlint normalization. Post-fix `git diff --name-only` is the ground-truth touched-set. Two tracked-but-gitignored files are *not* governed: `.claude/state/test-checklist.md` (root-ignored) and `plugins/home-assistant-dev/mcp-server/package-lock.json` (nested-ignored) — intentional. |
+| (tracked, **non-ignored** `.md`/`.json`/`.yaml`/`.code-workspace`) | modify | One-time Prettier/markdownlint normalization. Post-fix `git diff --name-only` is the ground-truth touched-set. Two tracked-but-gitignored files are _not_ governed: `.claude/state/test-checklist.md` (root-ignored) and `plugins/home-assistant-dev/mcp-server/package-lock.json` (nested-ignored) — intentional. |
 
 ---
 
@@ -45,13 +45,11 @@
 
 - [ ] **Step 1: Inspect working-tree state**
 
-Run: `git status --short`
-Expected: `TODO.md` shows ` M` (the user's uncommitted Purpose/Usage restructure). The spec + codex-review files are already committed (`83a6cf9`). There should be no other dirty/untracked **supported** files.
+Run: `git status --short` Expected: `TODO.md` shows ` M` (the user's uncommitted Purpose/Usage restructure). The spec + codex-review files are already committed (`83a6cf9`). There should be no other dirty/untracked **supported** files.
 
 - [ ] **Step 2: Enumerate untracked supported files (none may be silently reformatted)**
 
-Run: `git ls-files -o --exclude-standard | grep -iE '\.(md|json|jsonc|ya?ml|code-workspace)$' || echo "NONE"`
-Expected: `NONE`. If any appear, **STOP** — commit, gitignore, or get explicit user approval before the Task 2 fix pass (it writes the whole working tree, not just tracked files).
+Run: `git ls-files -o --exclude-standard | grep -iE '\.(md|json|jsonc|ya?ml|code-workspace)$' || echo "NONE"` Expected: `NONE`. If any appear, **STOP** — commit, gitignore, or get explicit user approval before the Task 2 fix pass (it writes the whole working tree, not just tracked files).
 
 - [ ] **Step 3: Resolve the dirty `TODO.md` before any reformat**
 
@@ -66,14 +64,14 @@ Run: `git branch --show-current` → expect `main` (direct-commit convention; a 
 ## Task 1: Tooling config files + Prettier pin
 
 **Files:**
+
 - Create: `.prettierrc.json`, `.markdownlint.json`, `.markdownlint-cli2.jsonc`, `.editorconfig`, `.prettierignore`, `package.json`
 - Generate: `package-lock.json`
 - Modify: `.gitignore`
 
 - [ ] **Step 1: Baseline — confirm no formatter exists yet**
 
-Run: `test -f package.json && echo EXISTS || echo "no root package.json (expected)"`
-Expected: `no root package.json (expected)`.
+Run: `test -f package.json && echo EXISTS || echo "no root package.json (expected)"` Expected: `no root package.json (expected)`.
 
 - [ ] **Step 2: Copy `.prettierrc.json` (verbatim from reference)**
 
@@ -119,8 +117,7 @@ Run: `cp ~/projects/project-standards/.markdownlint.json .markdownlint.json`
 
 Then verify the load-bearing values are present:
 
-Run: `python3 -c "import json; c=json.load(open('.markdownlint.json')); assert c['default'] is True; assert c['MD043'] is True; assert c['MD013'] is False; assert c['MD025']=={'front_matter_title':'','level':1}; print('rule set OK')"`
-Expected: `rule set OK` (confirms `default:true`, MD043 inert, MD013 off, MD025 frontmatter model).
+Run: `python3 -c "import json; c=json.load(open('.markdownlint.json')); assert c['default'] is True; assert c['MD043'] is True; assert c['MD013'] is False; assert c['MD025']=={'front_matter_title':'','level':1}; print('rule set OK')"` Expected: `rule set OK` (confirms `default:true`, MD043 inert, MD013 off, MD025 frontmatter model).
 
 - [ ] **Step 4: Create `.markdownlint-cli2.jsonc`**
 
@@ -133,7 +130,7 @@ Expected: `rule set OK` (confirms `default:true`, MD043 inert, MD013 off, MD025 
 	// matches CI. CI passes `globs` explicitly because the action's own default is
 	// the non-recursive `*.{md,markdown}`.
 	"globs": ["**/*.md"],
-	"gitignore": true
+	"gitignore": true,
 }
 ```
 
@@ -167,25 +164,18 @@ Then verify byte-identity: `diff .editorconfig ~/projects/project-standards/.edi
 	"version": "0.0.0",
 	"private": true,
 	"description": "Dev tooling only (Prettier). Pins the Markdown/structured-text formatter for this plugins meta-repo; the repo's product is the plugins + docs, not a Node package.",
-	"scripts": {
-		"format": "prettier --write .",
-		"format:check": "prettier --check ."
-	},
-	"devDependencies": {
-		"prettier": "3.8.3"
-	}
+	"scripts": { "format": "prettier --write .", "format:check": "prettier --check ." },
+	"devDependencies": { "prettier": "3.8.3" }
 }
 ```
 
 - [ ] **Step 8: Install Prettier (generates `package-lock.json`, fetches `node_modules/`)**
 
-Run: `npm install`
-Expected: creates `package-lock.json` and `node_modules/`; exit 0.
+Run: `npm install` Expected: creates `package-lock.json` and `node_modules/`; exit 0.
 
 - [ ] **Step 9: Verify the pinned Prettier resolves**
 
-Run: `npx prettier --version`
-Expected: `3.8.3`.
+Run: `npx prettier --version` Expected: `3.8.3`.
 
 - [ ] **Step 10: Edit `.gitignore` to un-ignore the two VS Code files**
 
@@ -201,7 +191,7 @@ Expected: `3.8.3`.
 
 - [ ] **Step 11: Verify the negation works (empirically)**
 
-Use the **quiet** form — `git check-ignore -v` is unreliable here: with a `!` negation it prints the negation rule and exits `0` even though the file is *not* ignored. The reliable signals are `-q` (exit 1 = not ignored) and a dry-run add:
+Use the **quiet** form — `git check-ignore -v` is unreliable here: with a `!` negation it prints the negation rule and exits `0` even though the file is _not_ ignored. The reliable signals are `-q` (exit 1 = not ignored) and a dry-run add:
 
 ```bash
 git check-ignore -q .vscode/settings.json; echo "q-exit=$?  # expect 1 = NOT ignored"
@@ -209,6 +199,7 @@ mkdir -p .vscode && printf '{}\n' > .vscode/settings.json
 git add --dry-run .vscode/settings.json   # expect: prints "add '.vscode/settings.json'" (would stage)
 rm -rf .vscode
 ```
+
 Expected: `q-exit=1` and the dry-run shows the file would be added. If `q-exit=0`, the pattern is wrong — re-check Step 10.
 
 - [ ] **Step 12: Commit the config layer**
@@ -226,34 +217,32 @@ git commit -m "build(markdown-tooling): add Prettier + markdownlint config + pin
 
 - [ ] **Step 1: Confirm preflight still holds (no stray untracked supported files)**
 
-Run: `git status --short` and `git ls-files -o --exclude-standard | grep -iE '\.(md|json|jsonc|ya?ml|code-workspace)$' || echo NONE`
-Expected: clean tree (Task 1 committed); `NONE` untracked supported files. If not, STOP (Task 0).
+Run: `git status --short` and `git ls-files -o --exclude-standard | grep -iE '\.(md|json|jsonc|ya?ml|code-workspace)$' || echo NONE` Expected: clean tree (Task 1 committed); `NONE` untracked supported files. If not, STOP (Task 0).
 
 - [ ] **Step 2: Run the Prettier write pass**
 
-Run: `npx prettier --write .`
-Expected: lists reformatted files (md/json/yaml/code-workspace). It must **not** list any `.ts`/`.js`/`.mjs`/`.cjs` (excluded by `.prettierignore`).
+Run: `npx prettier --write .` Expected: lists reformatted files (md/json/yaml/code-workspace). It must **not** list any `.ts`/`.js`/`.mjs`/`.cjs` (excluded by `.prettierignore`).
 
 - [ ] **Step 3: Run the markdownlint auto-fix pass**
 
-Run: `npx markdownlint-cli2 --fix "**/*.md"`
-Expected: auto-fixes structural issues in place; prints a summary. A non-zero exit here means residual (non-auto-fixable) violations remain — handle in Step 5.
+Run: `npx markdownlint-cli2 --fix "**/*.md"` Expected: auto-fixes structural issues in place; prints a summary. A non-zero exit here means residual (non-auto-fixable) violations remain — handle in Step 5.
 
 - [ ] **Step 4: Scope guard — verify NO JS/TS was touched (inverted exit; success = no match)**
 
 Run:
+
 ```bash
 if git diff --name-only | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$'; then echo "FAIL: JS/TS leaked into the diff"; exit 1; else echo "scope guard OK"; fi
 ```
+
 Expected: `scope guard OK`. If it fails, the `.prettierignore` is not matching — fix it before continuing.
 
 - [ ] **Step 5: Run the check contract; triage any residual markdownlint violations**
 
-Run: `npx prettier --check . && npx markdownlint-cli2 "**/*.md"`
-Expected: both clean (exit 0). The rule set is tuned not to fight Prettier, so the fix pass should yield a clean tree. **If markdownlint still reports violations** (these are content rules `--fix` cannot auto-resolve), fix the Markdown per the rule — do **not** disable the rule:
+Run: `npx prettier --check . && npx markdownlint-cli2 "**/*.md"` Expected: both clean (exit 0). The rule set is tuned not to fight Prettier, so the fix pass should yield a clean tree. **If markdownlint still reports violations** (these are content rules `--fix` cannot auto-resolve), fix the Markdown per the rule — do **not** disable the rule:
 
 | Rule | Meaning | Fix |
-|---|---|---|
+| --- | --- | --- |
 | MD040 | fenced code block has no language | add a language (` ```bash `, ` ```json `, ` ```text `) |
 | MD033 | inline HTML element | replace with Markdown, or remove; HTML comments `<!-- -->` are not flagged |
 | MD045 | image missing alt text | add `![alt](src)` text |
@@ -265,18 +254,15 @@ Re-run this step until both commands are clean.
 
 - [ ] **Step 6: Sanity — all tracked JSON still parses**
 
-Run: `git ls-files '*.json' -z | xargs -0 -n1 jq empty && echo "all JSON valid"`
-Expected: `all JSON valid` (no `jq` parse error).
+Run: `git ls-files '*.json' -z | xargs -0 -n1 jq empty && echo "all JSON valid"` Expected: `all JSON valid` (no `jq` parse error).
 
 - [ ] **Step 7: Sanity — marketplace + plugin manifests still validate**
 
-Run: `bash scripts/validate-marketplace.sh`
-Expected: pass (whitespace-only changes do not affect Zod field validation).
+Run: `bash scripts/validate-marketplace.sh` Expected: pass (whitespace-only changes do not affect Zod field validation).
 
 - [ ] **Step 8: Sanity — no whitespace breakage**
 
-Run: `git diff --check`
-Expected: no output.
+Run: `git diff --check` Expected: no output.
 
 - [ ] **Step 9: Commit the mechanical reformat in isolation**
 
@@ -295,6 +281,7 @@ md/json/yaml/code-workspace. JS/TS excluded via .prettierignore. No content chan
 ## Task 3: VS Code workspace config (markdown-only subset)
 
 **Files:**
+
 - Create: `.vscode/extensions.json`, `.vscode/settings.json` (must be `git add -f`-ed — `.vscode/` is otherwise ignored)
 
 - [ ] **Step 1: Create `.vscode/extensions.json` (the 3 Markdown/structured-text extensions only)**
@@ -327,17 +314,18 @@ md/json/yaml/code-workspace. JS/TS excluded via .prettierignore. No content chan
 
 - [ ] **Step 3: Format the new files so they pass the Prettier gate**
 
-Run: `npx prettier --write .vscode/extensions.json .vscode/settings.json`
-Expected: both reformatted to tabs (or already clean).
+Run: `npx prettier --write .vscode/extensions.json .vscode/settings.json` Expected: both reformatted to tabs (or already clean).
 
 - [ ] **Step 4: Verify they are NOT ignored, then force-add**
 
 Run:
+
 ```bash
 if git check-ignore -q .vscode/settings.json .vscode/extensions.json; then echo "FAIL: still ignored"; exit 1; fi
 git add -f .vscode/settings.json .vscode/extensions.json
 git ls-files .vscode/settings.json .vscode/extensions.json
 ```
+
 Expected: no "FAIL"; the final `git ls-files` lists **both** files.
 
 - [ ] **Step 5: Commit**
@@ -351,6 +339,7 @@ git commit -m "build(markdown-tooling): add VS Code Prettier/markdownlint worksp
 ## Task 4: CI workflows (added before the seal, enforce on next push)
 
 **Files:**
+
 - Create: `.github/workflows/lint-markdown.yml`, `.github/workflows/format.yml`
 
 - [ ] **Step 1: Create the markdownlint caller workflow `.github/workflows/lint-markdown.yml`**
@@ -360,24 +349,24 @@ name: Lint Markdown
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
     paths:
-      - "**/*.md"
-      - ".markdownlint.json"
-      - ".markdownlint-cli2.jsonc"
-      - ".github/workflows/lint-markdown.yml"
+      - '**/*.md'
+      - '.markdownlint.json'
+      - '.markdownlint-cli2.jsonc'
+      - '.github/workflows/lint-markdown.yml'
   pull_request:
     paths:
-      - "**/*.md"
-      - ".markdownlint.json"
-      - ".markdownlint-cli2.jsonc"
-      - ".github/workflows/lint-markdown.yml"
+      - '**/*.md'
+      - '.markdownlint.json'
+      - '.markdownlint-cli2.jsonc'
+      - '.github/workflows/lint-markdown.yml'
 
 jobs:
   lint-markdown:
     uses: L3DigitalNet/project-standards/.github/workflows/lint-markdown.yml@v2
     with:
-      globs: "**/*.md"
+      globs: '**/*.md'
 ```
 
 - [ ] **Step 2: Create the Prettier workflow `.github/workflows/format.yml` (verbatim from reference)**
@@ -387,32 +376,32 @@ name: Format
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
     paths:
-      - "**/*.md"
-      - "**/*.json"
-      - "**/*.jsonc"
-      - "**/*.yml"
-      - "**/*.yaml"
-      - "**/*.code-workspace"
-      - ".prettierrc.json"
-      - ".prettierignore"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/format.yml"
+      - '**/*.md'
+      - '**/*.json'
+      - '**/*.jsonc'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.code-workspace'
+      - '.prettierrc.json'
+      - '.prettierignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/format.yml'
   pull_request:
     paths:
-      - "**/*.md"
-      - "**/*.json"
-      - "**/*.jsonc"
-      - "**/*.yml"
-      - "**/*.yaml"
-      - "**/*.code-workspace"
-      - ".prettierrc.json"
-      - ".prettierignore"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/format.yml"
+      - '**/*.md'
+      - '**/*.json'
+      - '**/*.jsonc'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.code-workspace'
+      - '.prettierrc.json'
+      - '.prettierignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/format.yml'
 
 jobs:
   prettier:
@@ -424,7 +413,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6 # repo convention (existing workflows use @v6); reference uses @v4
         with:
-          node-version: "22"
+          node-version: '22'
           cache: npm
       - name: Install pinned Prettier
         run: npm ci
@@ -434,8 +423,7 @@ jobs:
 
 - [ ] **Step 3: Format the new workflow files + verify the whole tree is still clean**
 
-Run: `npx prettier --write .github/workflows/lint-markdown.yml .github/workflows/format.yml && npx prettier --check . && npx markdownlint-cli2 "**/*.md"`
-Expected: all clean (exit 0).
+Run: `npx prettier --write .github/workflows/lint-markdown.yml .github/workflows/format.yml && npx prettier --check . && npx markdownlint-cli2 "**/*.md"` Expected: all clean (exit 0).
 
 - [ ] **Step 4: Commit**
 
@@ -449,6 +437,7 @@ git commit -m "ci(markdown-tooling): enforce markdownlint (reusable @v2) + Prett
 ## Task 5: Agent instructions + contract label + ADR
 
 **Files:**
+
 - Modify: `AGENTS.md`
 - Create: `.project-standards.yml`, `docs/decisions/adr-0001-prettier-jsts-scope.md`
 
@@ -459,11 +448,7 @@ Append this section (the standard's §12 block, with the JS/TS exclusion noted).
 ````markdown
 ## Markdown & Structured-Text Tooling
 
-This repository follows the Markdown Tooling Standard. Prettier formats the
-structured-text it supports (`md`/`json`/`jsonc`/`yaml`/`code-workspace`);
-markdownlint lints Markdown structure only. JS/TS source is excluded from Prettier
-(see `docs/decisions/adr-0001-prettier-jsts-scope.md`). Do not introduce a competing
-formatter or linter.
+This repository follows the Markdown Tooling Standard. Prettier formats the structured-text it supports (`md`/`json`/`jsonc`/`yaml`/`code-workspace`); markdownlint lints Markdown structure only. JS/TS source is excluded from Prettier (see `docs/decisions/adr-0001-prettier-jsts-scope.md`). Do not introduce a competing formatter or linter.
 
 ### Fix pass
 
@@ -500,14 +485,14 @@ Do not claim completion if either command fails.
 # + format workflows are the enforcement. The markdown-frontmatter and python-tooling
 # standards are NOT adopted in this cycle and are intentionally absent here.
 markdown_tooling:
-  version: "1.0"
+  version: '1.0'
 ```
 
 - [ ] **Step 3: Create the ADR `docs/decisions/adr-0001-prettier-jsts-scope.md`**
 
 ```markdown
 ---
-title: "ADR-0001: Prettier scope excludes JS/TS source"
+title: 'ADR-0001: Prettier scope excludes JS/TS source'
 status: accepted
 date: 2026-06-08
 ---
@@ -516,42 +501,26 @@ date: 2026-06-08
 
 ## Context and Problem Statement
 
-Adopting the markdown-tooling standard wires `prettier .`, which formats every file
-type Prettier supports — including the 27 tracked TypeScript/JavaScript files of the
-`home-assistant-dev` MCP server (`.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`, including a
-bundled `dist/*.cjs`). That sub-project has its own `eslint.config.js` + `tsconfig`
-and no Prettier of its own. Letting root Prettier reformat it would produce a large
-diff and risk fighting its ESLint stylistic rules.
+Adopting the markdown-tooling standard wires `prettier .`, which formats every file type Prettier supports — including the 27 tracked TypeScript/JavaScript files of the `home-assistant-dev` MCP server (`.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`, including a bundled `dist/*.cjs`). That sub-project has its own `eslint.config.js` + `tsconfig` and no Prettier of its own. Letting root Prettier reformat it would produce a large diff and risk fighting its ESLint stylistic rules.
 
 ## Considered Options
 
-- **A. Include JS/TS in root Prettier** — the most literal reading of the standard;
-  requires adding `js`/`ts` to CI path filters and running the MCP server's
-  lint/typecheck/test/build on every formatting change to prove no breakage.
-- **B. Exclude JS/TS via `.prettierignore`** — root Prettier governs only
-  structured-text (`md`/`json`/`yaml`/`code-workspace`); each JS/TS sub-project keeps
-  its own toolchain authoritative.
+- **A. Include JS/TS in root Prettier** — the most literal reading of the standard; requires adding `js`/`ts` to CI path filters and running the MCP server's lint/typecheck/test/build on every formatting change to prove no breakage.
+- **B. Exclude JS/TS via `.prettierignore`** — root Prettier governs only structured-text (`md`/`json`/`yaml`/`code-workspace`); each JS/TS sub-project keeps its own toolchain authoritative.
 
 ## Decision Outcome
 
-Chosen: **Option B**. The markdown-tooling standard already scopes source code (`.py`)
-out of Prettier (owned by ruff); JS/TS source is the direct analogue, and the
-reference repo's own `format.yml` never lists `js`/`ts`. `.prettierignore` excludes
-`*.ts *.tsx *.js *.jsx *.mjs *.cjs` (gitignore syntax, one pattern per line).
+Chosen: **Option B**. The markdown-tooling standard already scopes source code (`.py`) out of Prettier (owned by ruff); JS/TS source is the direct analogue, and the reference repo's own `format.yml` never lists `js`/`ts`. `.prettierignore` excludes `*.ts *.tsx *.js *.jsx *.mjs *.cjs` (gitignore syntax, one pattern per line).
 
 ### Consequences
 
-- Root Prettier never fights the MCP server's ESLint; no MCP build/test gate is
-  coupled to Markdown formatting changes.
-- This is an explicit, recorded deviation from the standard's "Prettier owns every
-  supported file type" intent, per standard §14. Revisit if a future sub-project
-  wants root-Prettier-governed JS/TS.
+- Root Prettier never fights the MCP server's ESLint; no MCP build/test gate is coupled to Markdown formatting changes.
+- This is an explicit, recorded deviation from the standard's "Prettier owns every supported file type" intent, per standard §14. Revisit if a future sub-project wants root-Prettier-governed JS/TS.
 ```
 
 - [ ] **Step 4: Format the new/modified docs + verify the gate**
 
-Run: `npx prettier --write AGENTS.md .project-standards.yml docs/decisions/adr-0001-prettier-jsts-scope.md && npx prettier --check . && npx markdownlint-cli2 "**/*.md"`
-Expected: all clean (exit 0). Fix any markdownlint hit in the new files per Task 2 Step 5.
+Run: `npx prettier --write AGENTS.md .project-standards.yml docs/decisions/adr-0001-prettier-jsts-scope.md && npx prettier --check . && npx markdownlint-cli2 "**/*.md"` Expected: all clean (exit 0). Fix any markdownlint hit in the new files per Task 2 Step 5.
 
 - [ ] **Step 5: Commit**
 
@@ -565,34 +534,33 @@ git commit -m "docs(markdown-tooling): agent tooling block + contract label + AD
 ## Task 6: Seal — TODO checkbox, index status, final gate, push
 
 **Files:**
+
 - Modify: `TODO.md` (hunk-isolated), `docs/handoff/specs-plans.md`
 
 - [ ] **Step 1: Flip the TODO checkbox (hunk-isolated — never `git add TODO.md` wholesale)**
 
-In `TODO.md`, change exactly the one line:
-`  - [ ] Adopt markdown-tooling` → `  - [x] Adopt markdown-tooling`
-Leave the user's surrounding restructure untouched.
+In `TODO.md`, change exactly the one line: `  - [ ] Adopt markdown-tooling` → `  - [x] Adopt markdown-tooling` Leave the user's surrounding restructure untouched.
 
 - [ ] **Step 2: Stage ONLY the checkbox hunk and verify isolation**
 
 Run:
+
 ```bash
 git add -p TODO.md   # stage only the checkbox hunk; skip all other hunks
 git diff --cached -- TODO.md
 ```
+
 Expected: the staged diff shows **only** the `- [ ]` → `- [x]` change. If other hunks are staged, `git restore --staged TODO.md` and redo.
 
 - [ ] **Step 3: Update the spec-row status in `docs/handoff/specs-plans.md`**
 
-Change the markdown-tooling spec row status from `In Codex review` to `Implemented — <range>`, where `<range>` is the **full implementation commit range** (first config commit `..` this seal commit), not the reformat commit alone — get it from `git log --oneline origin/main..HEAD`. Also add a row for this plan:
-`| 2026-06-08 | docs/superpowers/plans/2026-06-08-markdown-tooling-adoption.md | Implemented | Markdown-tooling adoption plan (6 tasks); executed. |`
+Change the markdown-tooling spec row status from `In Codex review` to `Implemented — <range>`, where `<range>` is the **full implementation commit range** (first config commit `..` this seal commit), not the reformat commit alone — get it from `git log --oneline origin/main..HEAD`. Also add a row for this plan: `| 2026-06-08 | docs/superpowers/plans/2026-06-08-markdown-tooling-adoption.md | Implemented | Markdown-tooling adoption plan (6 tasks); executed. |`
 
 Then format the edited index so it passes the gate: `npx prettier --write docs/handoff/specs-plans.md`
 
 - [ ] **Step 4: Final full check contract (must be clean)**
 
-Run: `npx prettier --check . && npx markdownlint-cli2 "**/*.md" && echo "GATE GREEN"`
-Expected: `GATE GREEN`.
+Run: `npx prettier --check . && npx markdownlint-cli2 "**/*.md" && echo "GATE GREEN"` Expected: `GATE GREEN`.
 
 - [ ] **Step 5: Commit the seal**
 
@@ -605,19 +573,20 @@ git commit -m "chore(markdown-tooling): mark adoption complete (TODO + specs-pla
 
 - [ ] **Step 6: Review exactly what will publish, then push**
 
-Run: `git log --oneline origin/main..HEAD`
-Expected: the markdown-tooling commit set (3 pre-existing design/spec/plan commits + the ~6 implementation commits from Tasks 1–6). Confirm nothing unexpected, then:
-Run: `git push origin main`
+Run: `git log --oneline origin/main..HEAD` Expected: the markdown-tooling commit set (3 pre-existing design/spec/plan commits + the ~6 implementation commits from Tasks 1–6). Confirm nothing unexpected, then: Run: `git push origin main`
 
 - [ ] **Step 7: Verify CI for THIS head SHA (not stale runs)**
 
 Run:
+
 ```bash
 SHA=$(git rev-parse HEAD)
 gh run list --branch main --limit 20 --json headSha,name,conclusion,status \
   | jq -r --arg s "$SHA" '.[] | select(.headSha==$s) | "\(.name): \(.status)/\(.conclusion)"'
 ```
+
 Expected — for this head SHA, these workflows run and conclude `success`:
+
 - `Lint Markdown` ✅ and `Format` ✅ (the two new gates).
 - `CodeQL` ✅ (runs on every push).
 - `ha-dev-plugin-tests` ✅ — it **does** trigger, because the reformat touched `plugins/home-assistant-dev/**` (its path filter); confirm whitespace changes didn't regress it.

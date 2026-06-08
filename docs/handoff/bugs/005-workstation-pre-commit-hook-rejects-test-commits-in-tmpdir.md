@@ -1,13 +1,27 @@
 ---
 bug_id: 5
 date: 2026-05-07
-title: "workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email"
-services: [claude-code-plugins, plugin-test-harness, release-pipeline, up-docs, handoff, repo-hygiene, test-driver, github-repo-manager, nominal, opus-context, qt-suite]
+title: 'workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email'
+services:
+  [
+    claude-code-plugins,
+    plugin-test-harness,
+    release-pipeline,
+    up-docs,
+    handoff,
+    repo-hygiene,
+    test-driver,
+    github-repo-manager,
+    nominal,
+    opus-context,
+    qt-suite,
+  ]
 tags: [test-infra, git-hooks]
 status: fixed
 supersedes: null
 superseded_by: null
 ---
+
 # Bug 5: workstation pre-commit hook rejects test commits in tmpdir git repos using fake author email
 
 ## Cause
@@ -42,15 +56,15 @@ Surfaced for the third time during `/release-pipeline:release` pre-flight for up
 
 Immediately after the up-docs recurrence, swept the remaining 7 plugin helpers in one session. Broader survey: `grep -L GIT_CONFIG_GLOBAL plugins/*/tests/{helpers,test_helper}.bash`.
 
-| Plugin | Pre-fix | Post-fix | Status |
-|---|---|---|---|
-| handoff | 18/22 | 22/22 | actively broken — recovered 4 tests |
-| repo-hygiene | 29/40 | 40/40 | actively broken — recovered 11 tests |
-| test-driver | 53/57 | 57/57 | actively broken — recovered 4 tests |
-| github-repo-manager | 40/40 | 40/40 | prophylactic |
-| nominal | 79/79 | 79/79 | prophylactic |
-| opus-context | 10/10 | 10/10 | prophylactic |
-| qt-suite | 6/6 | 6/6 | prophylactic |
+| Plugin              | Pre-fix | Post-fix | Status                               |
+| ------------------- | ------- | -------- | ------------------------------------ |
+| handoff             | 18/22   | 22/22    | actively broken — recovered 4 tests  |
+| repo-hygiene        | 29/40   | 40/40    | actively broken — recovered 11 tests |
+| test-driver         | 53/57   | 57/57    | actively broken — recovered 4 tests  |
+| github-repo-manager | 40/40   | 40/40    | prophylactic                         |
+| nominal             | 79/79   | 79/79    | prophylactic                         |
+| opus-context        | 10/10   | 10/10    | prophylactic                         |
+| qt-suite            | 6/6     | 6/6      | prophylactic                         |
 
 Total: 19 silently-failing tests recovered, 7 helpers now uniformly protected. One commit per plugin: 37c97c3, b6597a9, 8341515, d12fd0c, 57b1f4a, e81232f, d1c7aa2.
 

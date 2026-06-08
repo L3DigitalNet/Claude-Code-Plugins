@@ -13,6 +13,7 @@
 ### Task 1: Import cleanup
 
 **Files:**
+
 - Modify: `plugins/qt-suite/mcp/qt-pilot/main.py:14-19`
 - Modify: `plugins/qt-suite/mcp/qt-pilot/harness.py:14-22, 161, 463-464, 516-517, 594`
 
@@ -95,6 +96,7 @@ Expected: `FAIL` — late imports exist in harness.py, unused imports in main.py
 Remove lines 14 (`import asyncio`), 15 (`import base64`), and 19 (`import signal`).
 
 After edit, lines 14-24 should read:
+
 ```python
 import json
 import logging
@@ -110,6 +112,7 @@ from pathlib import Path
 **Step 4: Fix harness.py — move late imports to module level**
 
 In `harness.py`, at lines 24-28 (after the existing Qt imports block), add:
+
 ```python
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QAction
@@ -117,6 +120,7 @@ from PySide6.QtWidgets import QMenuBar, QMenu
 ```
 
 Then remove the four inline import statements:
+
 - Line ~161: `from PySide6.QtCore import QPoint`
 - Lines ~463-464: `from PySide6.QtGui import QAction` / `from PySide6.QtWidgets import QMenuBar, QMenu`
 - Lines ~516-517: same two imports (duplicate)
@@ -144,6 +148,7 @@ git commit -m "fix(qt-pilot): remove unused imports; move late imports to module
 ### Task 2: Type annotations
 
 **Files:**
+
 - Modify: `plugins/qt-suite/mcp/qt-pilot/main.py:52, 156-162, 663`
 
 **Background:** Three issues: (a) `launch_app` parameters typed `str = None` instead of `str | None = None`; (b) `_cleanup_app()` and `main()` missing `-> None` return annotations.
@@ -210,16 +215,19 @@ Expected: `FAIL` — annotations missing.
 **Step 3: Fix annotations in main.py**
 
 Change `_cleanup_app` signature at line 52:
+
 ```python
 def _cleanup_app() -> None:
 ```
 
 Change `main` signature at line 663:
+
 ```python
 def main() -> None:
 ```
 
 Change `launch_app` parameter annotations (lines 157-162):
+
 ```python
 @mcp.tool()
 def launch_app(
@@ -252,6 +260,7 @@ git commit -m "fix(qt-pilot): add missing type annotations — Optional params a
 ### Task 3: Resource management — tempfile and socket
 
 **Files:**
+
 - Modify: `plugins/qt-suite/mcp/qt-pilot/main.py:70-77, 120-153, 197-198`
 
 **Background:** Two issues:
@@ -400,7 +409,7 @@ Update `_cleanup_app()` to also remove the temp directory (after removing the so
     _app_state["socket_dir"] = None
 ```
 
-**Step 4: Fix socket context manager in _send_command**
+**Step 4: Fix socket context manager in \_send_command**
 
 Replace lines 120-153 with context manager form:
 
@@ -458,6 +467,7 @@ git commit -m "fix(qt-pilot): replace mktemp with mkdtemp; use socket context ma
 ### Task 4: Replace `_app_state` dict with `AppState` dataclass
 
 **Files:**
+
 - Modify: `plugins/qt-suite/mcp/qt-pilot/main.py` (multiple locations)
 
 **Background:** `_app_state = {"process": None, ...}` is an untyped global dict. A `@dataclass` gives type-checked field access, IDE support, and makes `None` defaults explicit. All `_app_state["key"]` accesses become `_app_state.key`.
@@ -523,6 +533,7 @@ _app_state = AppState()
 Search for every `_app_state["…"]` and `_app_state.get("…")` in `main.py` and replace with `_app_state.field_name`. The affected locations are `_cleanup_app()`, `_send_command()`, `_get_process_output()`, `launch_app()`, and `close_app()`.
 
 Example replacements:
+
 - `_app_state["process"]` → `_app_state.process`
 - `_app_state["socket_path"]` → `_app_state.socket_path`
 - `_app_state["socket_dir"]` → `_app_state.socket_dir`
@@ -551,6 +562,7 @@ git commit -m "refactor(qt-pilot): replace _app_state dict with AppState datacla
 ### Task 5: Extract magic numbers to named constants
 
 **Files:**
+
 - Modify: `plugins/qt-suite/mcp/qt-pilot/main.py:200-215`
 
 **Background:** `display_num = 99` and `time.sleep(0.5)` are unexplained magic numbers. Making them named constants documents intent (Xvfb display numbering convention) and makes tuning straightforward.
@@ -622,19 +634,25 @@ _XVFB_STARTUP_WAIT_SECS: float = 0.5
 ```
 
 In `launch_app()`, replace:
+
 ```python
 display_num = 99
 ```
+
 with:
+
 ```python
 display_num = _XVFB_DISPLAY_START
 ```
 
 Replace:
+
 ```python
 time.sleep(0.5)  # Wait for Xvfb to start
 ```
+
 with:
+
 ```python
 time.sleep(_XVFB_STARTUP_WAIT_SECS)
 ```
@@ -660,6 +678,7 @@ git commit -m "refactor(qt-pilot): extract magic numbers to named constants"
 ### Task 6: Test infrastructure and cleanup checks
 
 **Files:**
+
 - Create: `plugins/qt-suite/mcp/qt-pilot/pyproject.toml`
 - Create: `plugins/qt-suite/mcp/qt-pilot/requirements-dev.txt`
 - Create: `plugins/qt-suite/mcp/qt-pilot/tests/__init__.py`
@@ -670,6 +689,7 @@ git commit -m "refactor(qt-pilot): extract magic numbers to named constants"
 **Step 1: Create test infrastructure files**
 
 `pyproject.toml`:
+
 ```toml
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -677,6 +697,7 @@ pythonpath = ["."]
 ```
 
 `requirements-dev.txt`:
+
 ```
 pytest>=8.0
 pytest-mock>=3.14
@@ -685,6 +706,7 @@ pytest-mock>=3.14
 `tests/__init__.py`: empty file.
 
 `tests/conftest.py`:
+
 ```python
 """Shared fixtures for qt-pilot unit tests."""
 import sys
@@ -727,7 +749,7 @@ git commit -m "chore(qt-pilot): add pytest config and dev dependencies"
 ## Summary of changes
 
 | File | Changes |
-|------|---------|
+| --- | --- |
 | `main.py` | Remove 3 unused imports; fix 4 type annotations; `mktemp` → `mkdtemp` + socket dir cleanup; socket context manager; `AppState` dataclass replacing global dict; 2 named constants |
 | `harness.py` | Move 5 late imports to module level |
 | `tests/test_imports.py` | New — AST-based import linting |

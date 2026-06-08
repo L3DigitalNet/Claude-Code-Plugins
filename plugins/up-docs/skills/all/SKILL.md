@@ -1,7 +1,7 @@
 ---
 name: up-all
-description: "Update all three documentation layers (repo, wiki, Notion) via parallel sub-agent propagation, then run drift audit. This skill should be used when the user runs /up-docs:all."
-argument-hint: ""
+description: 'Update all three documentation layers (repo, wiki, Notion) via parallel sub-agent propagation, then run drift audit. This skill should be used when the user runs /up-docs:all.'
+argument-hint: ''
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---
 
@@ -37,19 +37,14 @@ git status --porcelain
 ```
 
 If the output is **non-empty**, STOP immediately:
+
 - Emit the list of dirty files to the user.
-- Refuse with: *"Unstaged changes detected — stash or commit them before running `/up-docs:all` to prevent data loss."*
+- Refuse with: _"Unstaged changes detected — stash or commit them before running `/up-docs:all` to prevent data loss."_
 - Do NOT dispatch any sub-agents. Do NOT read session context. Do NOT proceed to Step 1.
 
 If the output is empty, continue.
 
-**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot
-each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path —
-concurrent runs would collide, CR-004) and remember the generated paths:
-`BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"`
-and, when the wiki layer is in scope,
-`BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`.
-Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
+**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated paths: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"` and, when the wiki layer is in scope, `BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`. Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
 
 ### 1. Gather Session Context (once)
 
@@ -67,6 +62,7 @@ Combine with conversation history.
 Read the template at `${CLAUDE_PLUGIN_ROOT}/templates/session-change-summary.md` and produce a concrete summary following that format. This artifact is the **single critical input** to every sub-agent — garbage in, garbage out. Spend main-agent tokens to produce it well.
 
 Field rules (from the template):
+
 - One numbered item per semantically independent change.
 - Name exact keys/values/paths — not "updated config" but "`BAO_ADDR=127.0.0.1` → `100.90.121.89` in `/usr/local/bin/backup-dumps.sh`".
 - Every item includes {Change, Reason, Affected area, Files touched, Verifiable against}.
@@ -74,15 +70,15 @@ Field rules (from the template):
 **Routing matrix (tag each numbered item with target layer(s)).** Kept in sync with the agents' layer-boundary sections (`agents/up-docs-propagate-{repo,wiki,notion}.md`). Tag, do not drop:
 
 | Item characteristic | Routes to |
-|---|---|
+| --- | --- |
 | Project-repo artifact: README/docs/CLAUDE.md/AGENTS.md, handoff files, CLI flags, repo build/test config | `repo` |
-| Credential **reference** added/rotated/removed (env-var name, OpenBao path — *not* the secret value) | `repo` (handoff/credentials.md) + `wiki` if a page cites it |
+| Credential **reference** added/rotated/removed (env-var name, OpenBao path — _not_ the secret value) | `repo` (handoff/credentials.md) + `wiki` if a page cites it |
 | Implementation reference: config values, env-var names, file paths, service procedures, troubleshooting, command usage, auth/networking wiring (incl. homelab implementation) | `wiki` |
 | Strategic/organizational: new service in the stack, architecture decision, ownership/roadmap, personnel | `notion` |
 | **Secret VALUE or live inventory RECORD only** (a secret's actual value in OpenBao; a device/IP/VLAN row in NetBox; an actual DNS/firewall entry) — owned by its system-of-record | none — no propagator |
 | **Ambiguous / spans concerns** | **all candidate layers (fail-open)** |
 
-**CR-002 — do not over-route to "none".** Only the *value/record itself* is system-of-record-owned. A change *about* such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
+**CR-002 — do not over-route to "none".** Only the _value/record itself_ is system-of-record-owned. A change _about_ such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
 
 ### 3. Dispatch Propagators in Parallel
 
@@ -91,7 +87,7 @@ Dispatch **only the propagators with ≥1 routed item** (from the Step 2 routing
 Invoke each propagator being dispatched (from the ≥1-routed-item set above) **in a single message, one Agent call each,** so they run concurrently (the tool was called `Task` before Claude Code v2.1.63 and still accepts that name as an alias). Each receives the session-change summary as the stable front of its prompt; layer-specific detail goes at the end (cache-friendly structure).
 
 | Sub-agent — pass as `subagent_type` | Purpose |
-|-------------------------------------|---------|
+| --- | --- |
 | `up-docs:up-docs-propagate-repo` | Updates README.md, docs/, CLAUDE.md |
 | `up-docs:up-docs-propagate-wiki` | Updates llm-wiki wiki/ pages at implementation-reference level |
 | `up-docs:up-docs-propagate-notion` | Updates Notion at strategic/organizational level |
@@ -133,7 +129,7 @@ The brief is READ-only over already-updated state files; do not re-edit.
 ## Layer Boundaries (reference)
 
 | Layer | Content Level | Example |
-|-------|--------------|---------|
+| --- | --- | --- |
 | Repo | Project-specific | "Added `--verbose` flag to the CLI" |
 | Wiki | Implementation reference | "Authentik OIDC client config for the new service" |
 | Notion | Strategic/organizational | "New monitoring service added to the homelab stack" |
@@ -143,6 +139,7 @@ Each sub-agent enforces its own layer boundary via the guidelines inlined in its
 ## When to Offer Opus Escalation
 
 The drift auditor will flag escalation when any of these hold:
+
 - Findings count > 10
 - Any affected doc is > 1000 lines
 - Cross-layer contradictions detected

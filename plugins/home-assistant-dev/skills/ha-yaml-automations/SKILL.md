@@ -15,18 +15,18 @@ description: Home Assistant YAML automations — triggers, conditions, and actio
 
 ```yaml
 automation:
-  - id: "unique_automation_id"
-    alias: "Descriptive Name"
-    description: "What this does"
-    mode: single  # single | restart | queued | parallel
+  - id: 'unique_automation_id'
+    alias: 'Descriptive Name'
+    description: 'What this does'
+    mode: single # single | restart | queued | parallel
     trigger:
       - trigger: state
         entity_id: binary_sensor.front_door
-        to: "on"
+        to: 'on'
     condition:
       - condition: time
-        after: "08:00:00"
-        before: "22:00:00"
+        after: '08:00:00'
+        before: '22:00:00'
     action:
       - action: light.turn_on
         target:
@@ -45,12 +45,12 @@ automation:
 
 # Time
 - trigger: time
-  at: "07:30:00"
+  at: '07:30:00'
 
 # Sun
 - trigger: sun
   event: sunset
-  offset: "-00:30:00"
+  offset: '-00:30:00'
 
 # Template
 - trigger: template
@@ -58,7 +58,7 @@ automation:
 
 # Webhook
 - trigger: webhook
-  webhook_id: "my_unique_webhook_id"
+  webhook_id: 'my_unique_webhook_id'
   allowed_methods: [POST]
 ```
 
@@ -68,7 +68,7 @@ automation:
 # State
 - condition: state
   entity_id: alarm_control_panel.home
-  state: "armed_away"
+  state: 'armed_away'
 
 # Numeric
 - condition: numeric_state
@@ -78,8 +78,8 @@ automation:
 
 # Time
 - condition: time
-  after: "08:00:00"
-  before: "23:00:00"
+  after: '08:00:00'
+  before: '23:00:00'
   weekday: [mon, tue, wed, thu, fri]
 
 # Template
@@ -91,10 +91,10 @@ automation:
   conditions:
     - condition: state
       entity_id: input_boolean.guest_mode
-      state: "off"
+      state: 'off'
     - condition: state
       entity_id: binary_sensor.motion
-      state: "on"
+      state: 'on'
 ```
 
 ## Common Actions
@@ -115,7 +115,7 @@ automation:
 - wait_for_trigger:
     - trigger: state
       entity_id: binary_sensor.motion
-      to: "off"
+      to: 'off'
   timeout:
     minutes: 5
   continue_on_timeout: true
@@ -125,7 +125,7 @@ automation:
     - conditions:
         - condition: state
           entity_id: input_select.mode
-          state: "away"
+          state: 'away'
       sequence:
         - action: climate.set_temperature
           target:
@@ -135,7 +135,7 @@ automation:
   default:
     - action: notify.mobile_app
       data:
-        message: "Unknown mode"
+        message: 'Unknown mode'
 
 # Repeat
 - repeat:

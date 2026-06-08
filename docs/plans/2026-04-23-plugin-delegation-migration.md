@@ -9,11 +9,13 @@
 **Tech Stack:** Claude Code plugin system — agent files under `plugins/<plugin>/agents/*.md` with YAML frontmatter (`name`, `description`, `tools`, `model`). Commands invoke agents via the `Agent` tool dispatched from slash-command markdown.
 
 **Reference patterns:**
+
 - `plugins/up-docs/agents/up-docs-propagate-repo.md` — Haiku propagator with tight scope guardrails
 - `plugins/up-docs/agents/up-docs-audit-drift.md` — Sonnet research+infer agent with verification discipline
 - `plugins/release-pipeline/agents/test-runner.md` — Sonnet with explicit rationale in frontmatter
 
 **Model-tier heuristics** (from the reference patterns):
+
 - **Haiku** — mechanical, scope-bounded, deterministic (file edits, classification, parsing)
 - **Sonnet** — research + infer, language-specific heuristics, multi-step reasoning with convergence
 - **Opus** — reserved for ambiguous decision-making and user-facing orchestration
@@ -59,6 +61,7 @@ Record the output — each phase bumps its plugin's version, and the final relea
 **Why this first:** These are one-line edits that validate the "smaller model is sufficient" hypothesis on existing, tested agents. If Phase 1 regresses, rollback is a single `git revert`. If it works, it proves the delegation thesis before we build new subagents in later phases.
 
 **Files affected:**
+
 - `plugins/home-assistant-dev/agents/ha-integration-reviewer.md` — `sonnet` → `haiku`
 - `plugins/qt-suite/agents/gui-tester.md` — `inherit` → `sonnet`
 - `plugins/qt-suite/agents/test-generator.md` — `inherit` → `sonnet`
@@ -75,10 +78,13 @@ Record the output — each phase bumps its plugin's version, and the final relea
 File: `plugins/home-assistant-dev/agents/ha-integration-reviewer.md`
 
 Change line 5 from:
+
 ```yaml
 model: sonnet
 ```
+
 to:
+
 ```yaml
 model: haiku
 # haiku chosen: review checklist is structural (manifest fields, config_flow presence,
@@ -100,10 +106,13 @@ Expected: no results beyond the agent file itself.
 File: `plugins/qt-suite/agents/gui-tester.md`
 
 Change line 44 from:
+
 ```yaml
 model: inherit
 ```
+
 to:
+
 ```yaml
 model: sonnet
 # sonnet chosen: multi-step Qt Pilot MCP interactions need reasoning budget, but not Opus —
@@ -117,10 +126,13 @@ model: sonnet
 File: `plugins/qt-suite/agents/test-generator.md`
 
 Change line 35 from:
+
 ```yaml
 model: inherit
 ```
+
 to:
+
 ```yaml
 model: sonnet
 # sonnet chosen: test generation from coverage gaps is code synthesis against a spec
@@ -155,8 +167,7 @@ Prepend to `plugins/home-assistant-dev/CHANGELOG.md` (after the `# Changelog` he
 
 Current: `0.3.0`. Bump to `0.3.1`.
 
-Edit `plugins/qt-suite/.claude-plugin/plugin.json` version line.
-Edit `.claude-plugin/marketplace.json` `qt-suite` entry version.
+Edit `plugins/qt-suite/.claude-plugin/plugin.json` version line. Edit `.claude-plugin/marketplace.json` `qt-suite` entry version.
 
 - [ ] **Step 4: Add CHANGELOG entry for `qt-suite`**
 
@@ -233,6 +244,7 @@ EOF
 **Why second:** Highest single-plugin ROI (~60-80K tokens/week per the scan). Large surface area but each command is independent, so failures localize.
 
 **Files affected:**
+
 - **Create:** `plugins/qdev/agents/qdev-deps-auditor.md` (Haiku)
 - **Create:** `plugins/qdev/agents/qdev-quality-reviewer.md` (Sonnet)
 - **Create:** `plugins/qdev/agents/qdev-doc-syncer.md` (Haiku)
@@ -262,7 +274,7 @@ Then Read each file in full via the Read tool. Do not edit until all three are l
 
 - [ ] **Step 2: Write the agent file**
 
-```markdown
+````markdown
 ---
 name: qdev-deps-auditor
 description: Dependency security and freshness audit. Reads package manifests (requirements.txt, pyproject.toml, package.json, Cargo.toml, go.mod, Gemfile, composer.json), researches each dependency for CVEs, abandonment, and major version lag, and returns a prioritized findings report.
@@ -305,8 +317,7 @@ You are the dependency auditor for the qdev toolkit. You read every package mani
    - 🟡 **Warning** — major version behind, or maintenance mode
    - 🟢 **OK** — current or within 1 major version, no CVEs
 
-5. Emit the prioritized findings table (see `<output_format>`). Do not recommend upgrades that would require a manual migration — state the version and let the user decide.
-</task>
+5. Emit the prioritized findings table (see `<output_format>`). Do not recommend upgrades that would require a manual migration — state the version and let the user decide. </task>
 
 <guardrails>
 - **Read-only.** Never write to any manifest or lockfile. Never run `pip install`, `npm install`, or any package-manager command.
@@ -316,22 +327,22 @@ You are the dependency auditor for the qdev toolkit. You read every package mani
 </guardrails>
 
 <output_format>
+
 ```markdown
 ## Dependency Audit: <project>
 
-**Manifests scanned:** <list>
-**Total dependencies:** N (M direct, P transitive if available)
+**Manifests scanned:** <list> **Total dependencies:** N (M direct, P transitive if available)
 
 ### 🔴 Critical
 
 | # | Package | Current | Latest | Issue | Evidence |
-|---|---------|---------|--------|-------|----------|
+| --- | --- | --- | --- | --- | --- |
 | 1 | django | 3.2.0 | 5.1.0 | CVE-2024-XXXX — SQL injection via ORM | https://nvd.nist.gov/... |
 
 ### 🟡 Warnings
 
 | # | Package | Current | Latest | Issue | Evidence |
-|---|---------|---------|--------|-------|----------|
+| --- | --- | --- | --- | --- | --- |
 | 1 | requests | 2.25.0 | 2.32.0 | 3 major releases behind | https://pypi.org/project/requests/ |
 
 ### 🟢 OK
@@ -340,8 +351,11 @@ N dependencies — details omitted for brevity.
 
 **Summary:** X critical, Y warnings, Z OK. Recommended actions: [top 3 fixes].
 ```
+````
+
 </output_format>
-```
+
+````
 
 ### Task 2.3: Create `qdev-quality-reviewer` (Sonnet)
 
@@ -423,9 +437,11 @@ You are the quality reviewer for the qdev toolkit. You analyze an artifact (spec
 
 | # | File | Change | Rationale |
 |---|------|--------|-----------|
-```
+````
+
 </output_format>
-```
+
+````
 
 ### Task 2.4: Create `qdev-doc-syncer` (Haiku)
 
@@ -502,9 +518,11 @@ You are the inline documentation synchronizer. You enumerate public functions/me
 | 1 | src/foo.py | parse_config | Added docstring |
 
 **Summary:** N symbols updated.
-```
+````
+
 </output_format>
-```
+
+````
 
 ### Task 2.5: Rewrite `qdev:deps-audit` command to thin orchestrator
 
@@ -546,7 +564,7 @@ The subagent owns all research and classification. Do not perform manifest reads
 ## After the agent returns
 
 Present the findings table to the user. Offer (via `AskUserQuestion`) the top 3 recommended actions as bounded choices. Do not auto-apply fixes — dependency upgrades require user judgment.
-```
+````
 
 ### Task 2.6: Rewrite `qdev:quality-review` command to thin orchestrator
 
@@ -567,6 +585,7 @@ Review a spec, plan, or codebase for gaps, inconsistencies, and staleness — wi
 ## What it does
 
 The subagent runs on Sonnet (dual-source research + convergence loop). It:
+
 1. Auto-detects spec / plan / code mode from the artifact.
 2. Enumerates 3-8 key technologies and runs dual-source research (brave + serper + Context7 docs).
 3. Pass 1: detects Gaps, Inconsistencies, and Staleness vs. research corpus.
@@ -609,6 +628,7 @@ Update inline documentation (docstrings, JSDoc, doc comments) to match current f
 ## What it does
 
 The subagent runs on Haiku (mechanical signature→docstring translation). It:
+
 1. Inventories public symbols in the scope (functions, methods, classes).
 2. Classifies each as Missing / Stale / Current against its existing docstring.
 3. Proposes updates following language convention (Google-style for Python, JSDoc for JS/TS).
@@ -631,8 +651,7 @@ Present the proposals and applied-edits table. If the user wants dry-run mode, r
 
 - [ ] **Step 1: Bump `qdev` version from `1.2.1` to `1.3.0`** (minor — new subagents introduce new behavior surface)
 
-Edit `plugins/qdev/.claude-plugin/plugin.json` version.
-Edit `.claude-plugin/marketplace.json` `qdev` entry version.
+Edit `plugins/qdev/.claude-plugin/plugin.json` version. Edit `.claude-plugin/marketplace.json` `qdev` entry version.
 
 - [ ] **Step 2: Add CHANGELOG entry**
 
@@ -734,6 +753,7 @@ In a separate test session, run `/qdev:deps-audit` against this repo. Verify the
 **Scope:** Split the `/hygiene` Step 2 semantic README/docs pass out of the Opus command and into a new Haiku subagent. Keep the Step 1 mechanical script phase inline — those are fast scripts that don't need delegation.
 
 **Files affected:**
+
 - **Create:** `plugins/repo-hygiene/agents/hygiene-semantic-auditor.md` (Haiku)
 - **Modify:** `plugins/repo-hygiene/commands/hygiene.md` — Step 2 becomes an Agent dispatch
 - **Modify:** `plugins/repo-hygiene/.claude-plugin/plugin.json` — version bump
@@ -755,7 +775,7 @@ Identify the exact line range of Step 2 — everything that reads plugin READMEs
 
 - [ ] **Step 1: Write the agent file**
 
-```markdown
+````markdown
 ---
 name: hygiene-semantic-auditor
 description: Semantic audit of plugin READMEs, root README, and docs/ directory for structural conformance, stale cross-references, placeholder text, and template drift. Read-only — surfaces findings for the user to resolve.
@@ -795,8 +815,7 @@ You are the semantic auditor for the repo-hygiene sweep. You read plugin READMEs
    - **Version drift** — if the README shows a version string, verify it matches the plugin.json version.
    - **Capability staleness** — if the README claims a command exists (e.g., "Invoke /foo:bar"), verify the command file exists under `plugins/<name>/commands/`.
 
-4. **Emit the findings table.** Group by plugin / file.
-</task>
+4. **Emit the findings table.** Group by plugin / file. </task>
 
 <guardrails>
 - **Read-only.** No Edit/Write/Bash commands that modify state. `bash ls`, `grep`, `git diff --stat`, `cat` are fine; any `rm`, `mv`, `>`, `>>`, or editor rewrite is forbidden.
@@ -806,6 +825,7 @@ You are the semantic auditor for the repo-hygiene sweep. You read plugin READMEs
 </guardrails>
 
 <output_format>
+
 ```markdown
 ## Semantic Audit Findings
 
@@ -814,17 +834,21 @@ You are the semantic auditor for the repo-hygiene sweep. You read plugin READMEs
 ### Per-file findings
 
 | # | File:Line | Category | Issue | Suggested Fix |
-|---|-----------|----------|-------|---------------|
+| --- | --- | --- | --- | --- |
 | 1 | plugins/foo/README.md:12 | Placeholder | `TODO: add example` | Remove placeholder or replace with a real example |
 | 2 | README.md:45 | Broken cross-ref | Links to `plugins/old-plugin/` which does not exist | Remove the reference or update to a current plugin |
 
 **Totals:** N findings across M files. X placeholders, Y broken refs, Z template drift, W version mismatches.
 
 If zero findings, emit:
+
 ### ✅ All plugin READMEs, root README, and docs/ files are clean.
 ```
+````
+
 </output_format>
-```
+
+````
 
 ### Task 3.3: Rewrite hygiene command Step 2 as agent dispatch
 
@@ -849,7 +873,7 @@ After the agent returns:
 3. Apply approved fixes via Edit in this session. The subagent never edits; the command owns all writes.
 
 Do not re-enumerate plugin READMEs or re-run placeholder greps in this session — those reads all happen in the subagent context.
-```
+````
 
 ### Task 3.4: Version bump, CHANGELOG, marketplace
 
@@ -932,6 +956,7 @@ EOF
 **Why this split:** Domain verification (running 11 scripts, parsing JSON, initial classification) is deterministic grunt work. The interactive anomaly prompts and flight-log narrative construction need user context and should stay in Opus.
 
 **Files affected:**
+
 - **Create:** `plugins/nominal/agents/nominal-systems-verifier.md` (Haiku)
 - **Modify:** `plugins/nominal/commands/postflight.md` — verification phase becomes Agent dispatch
 - **Modify:** `plugins/nominal/.claude-plugin/plugin.json` — version bump
@@ -951,7 +976,7 @@ The command is ~116 lines. Identify the exact range that: (a) executes the 11 do
 
 - [ ] **Step 1: Write the agent file**
 
-```markdown
+`````markdown
 ---
 name: nominal-systems-verifier
 description: Execute the 11 domain verification scripts for /nominal:postflight, parse JSON outputs, classify each domain as nominal or anomalous, and return a consolidated findings table. Does not interact with the user — surfaces anomalies for the command to handle.
@@ -983,8 +1008,7 @@ You are the systems verifier for the nominal postflight check. You execute the 1
    - `nominal` + exit 0 → OK
    - `anomaly` OR exit != 0 → flagged, populate anomaly details
 
-5. Emit the aggregate table + per-domain anomaly blocks (see `<output_format>`). If any domain script emitted stderr, include the last 5 lines.
-</task>
+5. Emit the aggregate table + per-domain anomaly blocks (see `<output_format>`). If any domain script emitted stderr, include the last 5 lines. </task>
 
 <guardrails>
 - **Run each script once.** Do not retry on anomaly — the command decides retry via user interaction.
@@ -994,29 +1018,38 @@ You are the systems verifier for the nominal postflight check. You execute the 1
 </guardrails>
 
 <output_format>
-```markdown
+
+````markdown
 ## Postflight Verification Summary
 
-| # | Domain | Status | Exit | Details |
-|---|--------|--------|------|---------|
-| 1 | network | ✅ nominal | 0 | all 5 targets reachable |
-| 2 | storage | ⚠ anomaly | 0 | disk at 92% on /var |
-| 3 | compute | ❌ FAILED | 1 | script errored (see block below) |
+| #   | Domain  | Status     | Exit | Details                          |
+| --- | ------- | ---------- | ---- | -------------------------------- |
+| 1   | network | ✅ nominal | 0    | all 5 targets reachable          |
+| 2   | storage | ⚠ anomaly  | 0    | disk at 92% on /var              |
+| 3   | compute | ❌ FAILED  | 1    | script errored (see block below) |
 
 ### Anomaly Blocks
 
 #### storage (anomaly)
+
 ```json
-{"status": "anomaly", "details": {"mount": "/var", "used_pct": 92, "threshold": 85}}
+{ "status": "anomaly", "details": { "mount": "/var", "used_pct": 92, "threshold": 85 } }
 ```
+````
+`````
+
+`````
 
 #### compute (FAILED)
+
 Script exited 1. Last stderr lines:
+
 ```
 error: unable to reach hypervisor at 100.92.153.67
 ```
 
 **Totals:** 9 nominal, 1 anomaly, 1 failed. Proceed to interactive anomaly handling.
+
 ```
 </output_format>
 ```
@@ -1039,6 +1072,7 @@ Do not run domain scripts directly in this session — all script execution and 
 ## Post-Verification
 
 After the subagent returns the summary table:
+
 1. Present the table verbatim to the user.
 2. For each anomaly row, offer remediation options via `AskUserQuestion`.
 3. Construct the flight log (session-final narrative) from the subagent's output + the user's interaction record.
@@ -1112,6 +1146,7 @@ EOF
 **Why Sonnet (not Haiku):** Function-level coverage gap analysis requires understanding what each function does (so the gap map is semantically meaningful, not just "no test named test_foo exists"). Haiku can miss nuance here.
 
 **Files affected:**
+
 - **Create:** `plugins/test-driver/agents/test-driver-gap-analyzer.md` (Sonnet)
 - **Modify:** `plugins/test-driver/commands/analyze.md` — analysis phase becomes Agent dispatch
 - **Modify:** `plugins/test-driver/.claude-plugin/plugin.json` — version bump
@@ -1129,7 +1164,7 @@ EOF
 
 - [ ] **Step 1: Write the agent file**
 
-```markdown
+````markdown
 ---
 name: test-driver-gap-analyzer
 description: Analyze a project's source files to enumerate testable functions and compute the test-coverage gap map (which functions lack direct tests). Returns a prioritized gap table keyed by module.
@@ -1172,8 +1207,7 @@ You are the test-coverage gap analyzer. You enumerate public functions/methods i
 
 5. **Suggest test scenarios.** For each gap, read the function body and suggest 1-3 test scenarios (normal path, edge cases, error paths). Cite line numbers.
 
-6. **Emit** the gap table per `<output_format>`.
-</task>
+6. **Emit** the gap table per `<output_format>`. </task>
 
 <guardrails>
 - **Read-only.** No Edit / Write calls. You do not generate the tests — the command does (or delegates to the qt-suite `test-generator` or similar per project conventions).
@@ -1182,28 +1216,31 @@ You are the test-coverage gap analyzer. You enumerate public functions/methods i
 </guardrails>
 
 <output_format>
+
 ```markdown
 ## Test Coverage Gap Analysis
 
-**Scope:** <path>
-**Functions inventoried:** N (M public / P private)
-**Gaps detected:** X (Y critical, Z warnings, W low)
+**Scope:** <path> **Functions inventoried:** N (M public / P private) **Gaps detected:** X (Y critical, Z warnings, W low)
 
 ### Per-module Gaps
 
 #### `src/foo.py`
 
 | # | Function | Line | Priority | Gap | Suggested Tests |
-|---|----------|------|----------|-----|-----------------|
+| --- | --- | --- | --- | --- | --- |
 | 1 | `parse_config` | 42 | 🔴 Critical | No tests; raises `ConfigError` on 3 paths | 1. normal parse 2. missing key → error 3. malformed value → error |
 
 #### `src/bar.py`
+
 ...
 
 **Summary:** <N gaps across M modules>. Top 3 priorities: <list>.
 ```
+`````
+
 </output_format>
-```
+
+````
 
 ### Task 5.3: Rewrite analyze command
 
@@ -1217,7 +1254,7 @@ Dispatch the `test-driver-gap-analyzer` subagent (Sonnet). It inventories public
 Use the `Agent` tool with `subagent_type: test-driver-gap-analyzer`. Pass the scope path.
 
 Do not read source files or enumerate functions in this session — the subagent owns the inventory.
-```
+````
 
 Keep the profile-loading, convergence loop, and result-presentation phases of the command inline.
 
@@ -1274,6 +1311,7 @@ test-driver: 0.6.0 → 0.7.0.
 **Note:** The scan report noted this command is "implied, no explicit command file." This is a new command, not a rewrite.
 
 **Files affected:**
+
 - **Create:** `plugins/python-dev/agents/python-code-reviewer.md` (Sonnet)
 - **Create:** `plugins/python-dev/commands/python-code-review.md` (thin orchestrator)
 - **Modify:** `plugins/python-dev/.claude-plugin/plugin.json` — version bump
@@ -1301,7 +1339,7 @@ Available skills (to be cross-referenced in the agent prompt): testing, async, r
 
 - [ ] **Step 2: Write the agent file**
 
-```markdown
+````markdown
 ---
 name: python-code-reviewer
 description: Comprehensive Python code review — applies the 11 python-dev domain skills (testing, async, resilience, observability, configuration, design patterns, resource management, anti-patterns, type safety, code style, background jobs) across a codebase and returns a prioritized findings report.
@@ -1348,8 +1386,7 @@ You are the Python code reviewer. You apply the 11 python-dev domain skills to a
    - 🟡 **Warning** — missed pattern that affects maintainability (missing type hints, no resource manager, inconsistent style)
    - 🟢 **Info** — style or minor idiom drift
 
-4. **Emit** the per-domain findings tables + overall summary.
-</task>
+4. **Emit** the per-domain findings tables + overall summary. </task>
 
 <guardrails>
 - **Read-only.** No edits — the command handles optional fix dispatch.
@@ -1359,35 +1396,41 @@ You are the Python code reviewer. You apply the 11 python-dev domain skills to a
 </guardrails>
 
 <output_format>
+
 ```markdown
 ## Python Code Review: <scope>
 
-**Files scanned:** N
-**Findings:** X critical, Y warnings, Z info
+**Files scanned:** N **Findings:** X critical, Y warnings, Z info
 
 ### Critical (🔴)
 
-| # | File:Line | Domain | Rule | Fix |
-|---|-----------|--------|------|-----|
+| #   | File:Line | Domain | Rule | Fix |
+| --- | --------- | ------ | ---- | --- |
 
 ### Warnings (🟡)
+
 ...
 
 ### Info (🟢)
+
 ...
 
 ### Per-Domain Summary
 
-| Domain | Critical | Warning | Info |
-|--------|----------|---------|------|
-| anti-patterns | 2 | 1 | 0 |
-| type-safety | 0 | 8 | 3 |
+| Domain        | Critical | Warning | Info |
+| ------------- | -------- | ------- | ---- |
+| anti-patterns | 2        | 1       | 0    |
+| type-safety   | 0        | 8       | 3    |
+
 | ...
 
 **Top 3 recommended actions:** <list>
 ```
+````
+
 </output_format>
-```
+
+````
 
 ### Task 6.3: Create `/python-code-review` command
 
@@ -1423,7 +1466,7 @@ Do not read `.py` files or run domain checks in this session — the subagent ow
 ## After the agent returns
 
 Present the prioritized findings report. Offer the top 3 recommended actions via `AskUserQuestion`. For approved fixes, apply via Edit in this session.
-```
+````
 
 ### Task 6.4: Version + CHANGELOG + marketplace + README
 
@@ -1529,6 +1572,7 @@ Applied in-plan:
 3. **Type consistency:** Agent names are consistent across the agent file, the command dispatch, and the CHANGELOG. Model values are the literal strings `haiku`, `sonnet`, not freeform prose.
 
 **Known scope limits:**
+
 - Phase 1 picks Sonnet (not Haiku) for qt-suite agents to be conservative — if empirical testing shows Haiku works, a future phase can downgrade further.
 - Phase 6 assumes `/python-code-review` does not exist. Task 6.1 verifies and adjusts.
 - Smoke tests in each gate are optional; a full integration test plan is out of scope for this migration (the gate verifications are mechanical: validator pass + frontmatter parse + commit cleanness). User may dry-run each new command manually between gates if desired.

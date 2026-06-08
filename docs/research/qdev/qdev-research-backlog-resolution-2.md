@@ -373,15 +373,15 @@ Recommended implementation output:
 
 ```json
 {
-  "safe_query": "...",
-  "dropped_fields": ["raw_path", "token_like_string", "private_hostname"],
-  "provider_allowed": {
-    "context7": true,
-    "brave": true,
-    "tavily": true,
-    "serper": false
-  },
-  "requires_human_approval": false
+	"safe_query": "...",
+	"dropped_fields": ["raw_path", "token_like_string", "private_hostname"],
+	"provider_allowed": {
+		"context7": true,
+		"brave": true,
+		"tavily": true,
+		"serper": false
+	},
+	"requires_human_approval": false
 }
 ```
 
@@ -474,22 +474,22 @@ Do not force tools into domains they are not built for. For example, do not run 
 
 ```json
 {
-  "run_id": "uuid",
-  "timestamp_utc": "2026-06-03T00:00:00Z",
-  "query_id": "fastapi_latest_dependency_override",
-  "provider": "brave",
-  "tool": "brave_llm_context",
-  "arguments": {},
-  "latency_ms": 1234,
-  "status": "ok",
-  "serialized_bytes": 42000,
-  "token_count_o200k": 9800,
-  "result_count": 5,
-  "urls": [],
-  "matched_gold_sources": [],
-  "freshness_observations": [],
-  "estimated_cost_usd": null,
-  "notes": ""
+	"run_id": "uuid",
+	"timestamp_utc": "2026-06-03T00:00:00Z",
+	"query_id": "fastapi_latest_dependency_override",
+	"provider": "brave",
+	"tool": "brave_llm_context",
+	"arguments": {},
+	"latency_ms": 1234,
+	"status": "ok",
+	"serialized_bytes": 42000,
+	"token_count_o200k": 9800,
+	"result_count": 5,
+	"urls": [],
+	"matched_gold_sources": [],
+	"freshness_observations": [],
+	"estimated_cost_usd": null,
+	"notes": ""
 }
 ```
 

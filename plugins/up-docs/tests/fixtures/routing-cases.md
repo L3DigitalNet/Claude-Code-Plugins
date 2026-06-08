@@ -1,7 +1,7 @@
 # Routing cases (up-docs fast-path) — expected layer tags
 
 | # | Session item | Expected layers |
-|---|---|---|
+| --- | --- | --- |
 | 1 | CLI flag `--verbose` added to a repo tool | repo |
 | 2 | Service procedure / config path / env-var name documented | wiki |
 | 3 | New monitoring service added to the homelab stack (strategic) | notion |

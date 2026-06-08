@@ -10,6 +10,7 @@ Device triggers allow automations to be triggered by device-specific events, lik
 ## When to Use Device Triggers
 
 Use device triggers when:
+
 - Device has physical buttons or inputs
 - Device generates events (motion, doorbell press)
 - Hardware state changes need automation triggers
@@ -130,13 +131,13 @@ def handle_device_event(self, event_type: str) -> None:
 
 ```json
 {
-  "device_automation": {
-    "trigger_type": {
-      "button_press": "Button pressed",
-      "button_long_press": "Button long pressed",
-      "motion_detected": "Motion detected"
-    }
-  }
+	"device_automation": {
+		"trigger_type": {
+			"button_press": "Button pressed",
+			"button_long_press": "Button long pressed",
+			"motion_detected": "Motion detected"
+		}
+	}
 }
 ```
 

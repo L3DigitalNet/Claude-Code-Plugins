@@ -5,6 +5,7 @@ A **Bronze-tier** minimal example for learning Home Assistant integration develo
 ## Purpose
 
 This is the simplest possible integration structure. Use it for:
+
 - Learning the basics
 - Quick prototypes
 - Simple single-sensor devices
@@ -25,6 +26,7 @@ minimal_sensor/
 ## What's Missing (By Design)
 
 This example deliberately omits production patterns:
+
 - ❌ DataUpdateCoordinator (uses direct polling)
 - ❌ Options flow
 - ❌ Reauth flow

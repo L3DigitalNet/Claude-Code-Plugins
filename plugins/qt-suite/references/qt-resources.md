@@ -1,5 +1,5 @@
-  Trigger phrases: ".qrc file", "embed icon", "pyrcc6", "PySide6-rcc", "bundled assets", "resource path", ":/icons/", "QIcon", "QPixmap from resources", "bundle image"
-version: 1.0.0
+Trigger phrases: ".qrc file", "embed icon", "pyrcc6", "PySide6-rcc", "bundled assets", "resource path", ":/icons/", "QIcon", "QPixmap from resources", "bundle image" version: 1.0.0
+
 ---
 
 ## Qt Resource System
@@ -30,11 +30,13 @@ File paths in `.qrc` are relative to the `.qrc` file's location. The `alias` att
 ### Compiling Resources (Python)
 
 **PySide6:**
+
 ```bash
 pyside6-rcc resources/resources.qrc -o src/myapp/resources/rc_resources.py
 ```
 
 **PyQt6:**
+
 ```bash
 pyrcc6 resources/resources.qrc -o src/myapp/resources/rc_resources.py
 ```
@@ -117,6 +119,7 @@ app.setHighDpiScaleFactorRoundingPolicy(
 ```
 
 Use SVG icons wherever possible. For raster icons, provide `@2x` variants:
+
 ```xml
 <qresource prefix="/icons">
   <file alias="save.png">icons/save.png</file>
@@ -150,6 +153,7 @@ def build_editable(config, ...):
 ```
 
 Or a simple `Makefile` target:
+
 ```makefile
 resources: resources/resources.qrc
 	pyside6-rcc $< -o src/myapp/resources/rc_resources.py

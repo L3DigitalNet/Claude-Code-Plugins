@@ -11,6 +11,7 @@ Run with `/home-assistant-dev:ha-quality-review` to perform a systematic review 
 ## Overview
 
 The Integration Quality Scale has **4 tiers** and **52 rules**:
+
 - **Bronze (18 rules)**: Minimum for new core integrations
 - **Silver (10 rules)**: Reliability and maintainability
 - **Gold (21 rules)**: Best user experience
@@ -28,12 +29,14 @@ The Integration Quality Scale has **4 tiers** and **52 rules**:
 ## Bronze Tier (18 Rules) — Required for Core
 
 ### Code Organization
+
 - [ ] **action-setup**: Service actions registered in `async_setup`, not `async_setup_entry`
 - [ ] **common-modules**: Common patterns in dedicated modules (coordinator.py, entity.py)
 - [ ] **dependency-transparency**: All dependencies listed in manifest.json `requirements`
 - [ ] **runtime-data**: Uses `entry.runtime_data` not `hass.data[DOMAIN]`
 
 ### Config Flow
+
 - [ ] **config-flow**: Setup via UI with `config_flow: true` in manifest
   - Uses `data_description` in strings.json for field context
   - `ConfigEntry.data` for connection info, `ConfigEntry.options` for settings
@@ -42,15 +45,18 @@ The Integration Quality Scale has **4 tiers** and **52 rules**:
 - [ ] **unique-config-entry**: Prevents duplicate config entries via `async_set_unique_id`
 
 ### Entities
+
 - [ ] **entity-unique-id**: Every entity has stable `unique_id`
 - [ ] **has-entity-name**: All entities use `_attr_has_entity_name = True`
 - [ ] **entity-event-setup**: Event subscriptions in `async_added_to_hass`, cleanup in `async_will_remove_from_hass`
 
 ### Setup & Reliability
+
 - [ ] **test-before-setup**: Validates connection in `async_setup_entry`, raises `ConfigEntryNotReady` on failure
 - [ ] **appropriate-polling**: Reasonable polling interval (not too frequent)
 
 ### Documentation & Branding
+
 - [ ] **brands**: Has logo/icon in [home-assistant/brands](https://github.com/home-assistant/brands)
 - [ ] **docs-high-level-description**: Documentation describes what the integration does
 - [ ] **docs-installation-instructions**: Step-by-step setup instructions
@@ -62,22 +68,27 @@ The Integration Quality Scale has **4 tiers** and **52 rules**:
 ## Silver Tier (10 Rules) — Reliability
 
 ### Error Handling
+
 - [ ] **action-exceptions**: Service actions raise `ServiceValidationError` or `HomeAssistantError` on failure
 - [ ] **entity-unavailable**: Entities marked unavailable when device/service unreachable
 - [ ] **log-when-unavailable**: Logs once when unavailable, once when reconnected (DataUpdateCoordinator handles this)
 
 ### Lifecycle
+
 - [ ] **config-entry-unloading**: Implements `async_unload_entry` properly
 - [ ] **reauthentication-flow**: Implements `async_step_reauth` for credential refresh
 
 ### Performance
+
 - [ ] **parallel-updates**: Sets `PARALLEL_UPDATES` constant to limit concurrent entity updates
 
 ### Maintenance
+
 - [ ] **integration-owner**: Has active codeowner in manifest.json
 - [ ] **test-coverage**: ≥95% test coverage
 
 ### Documentation
+
 - [ ] **docs-configuration-parameters**: Documents all options flow parameters
 - [ ] **docs-installation-parameters**: Documents all config flow parameters
 
@@ -86,6 +97,7 @@ The Integration Quality Scale has **4 tiers** and **52 rules**:
 ## Gold Tier (21 Rules) — Best Experience
 
 ### Devices & Entities
+
 - [ ] **devices**: Creates device entries with `DeviceInfo`
 - [ ] **entity-category**: Uses `EntityCategory.CONFIG` or `EntityCategory.DIAGNOSTIC` appropriately
 - [ ] **entity-device-class**: Uses appropriate device classes
@@ -95,21 +107,26 @@ The Integration Quality Scale has **4 tiers** and **52 rules**:
 - [ ] **stale-devices**: Removes devices that are no longer present
 
 ### Discovery
+
 - [ ] **discovery**: Supports Zeroconf/SSDP/DHCP/USB/Bluetooth discovery
 - [ ] **discovery-update-info**: Updates device network info from discovery
 
 ### Advanced Flows
+
 - [ ] **reconfiguration-flow**: Implements `async_step_reconfigure` for changing settings
 - [ ] **repair-issues**: Uses repair registry for actionable user notifications
 
 ### Diagnostics
+
 - [ ] **diagnostics**: Implements `diagnostics.py` with sensitive data redaction
 
 ### Translations
+
 - [ ] **exception-translations**: Exception messages are translatable
 - [ ] **icon-translations**: Uses icon translations in `icons.json`
 
 ### Documentation
+
 - [ ] **docs-data-update**: Documents polling interval and update method
 - [ ] **docs-examples**: Provides automation examples
 - [ ] **docs-known-limitations**: Documents limitations
@@ -151,6 +168,7 @@ mypy .
 ## Integration Quality Review: {domain}
 
 ### Tier Assessment
+
 - Bronze: {X}/18 ✓/✗
 - Silver: {X}/10 ✓/✗
 - Gold: {X}/21 ✓/✗
@@ -159,16 +177,19 @@ mypy .
 **Current Tier:** {highest fully passing tier}
 
 ### Critical Issues (Must Fix for Bronze)
-1. [Rule]: [Issue] — [File:line]
-   Fix: [code example]
+
+1. [Rule]: [Issue] — [File:line] Fix: [code example]
 
 ### Warnings (Should Fix)
+
 1. [Rule]: [Issue]
 
 ### Recommendations for Next Tier
+
 1. [Prioritized improvements]
 
 ### Positive Findings
+
 - [What's done well]
 ```
 

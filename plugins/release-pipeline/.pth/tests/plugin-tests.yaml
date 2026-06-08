@@ -91,8 +91,7 @@ expect:
   exit_code: 0
   stdout_contains: pytest
 setup:
-  - exec: mkdir -p /tmp/pth-pytest-ini-fixture && touch
-      /tmp/pth-pytest-ini-fixture/pytest.ini
+  - exec: mkdir -p /tmp/pth-pytest-ini-fixture && touch /tmp/pth-pytest-ini-fixture/pytest.ini
 teardown:
   - exec: rm -rf /tmp/pth-pytest-ini-fixture
 tags:

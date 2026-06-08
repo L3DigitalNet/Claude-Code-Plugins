@@ -2,10 +2,7 @@
 
 ## Overview
 
-This document describes how to test the HA Dev Plugin using Claude Code itself as the
-test harness. The protocol covers 5 test categories: skill triggers, code generation
-quality, validation scripts, agent structure, and MCP server integration (against a
-live Home Assistant instance).
+This document describes how to test the HA Dev Plugin using Claude Code itself as the test harness. The protocol covers 5 test categories: skill triggers, code generation quality, validation scripts, agent structure, and MCP server integration (against a live Home Assistant instance).
 
 **Prerequisites:**
 
@@ -29,9 +26,7 @@ cd ~/ha-plugin-test-workspace
 
 ### Home Assistant Test Server Setup (Required for Category 5)
 
-Category 5 (MCP Server Tests) requires a running Home Assistant instance. The
-recommended approach uses Docker/podman with the `demo` integration, which provides
-~116 test entities across 15+ domains without requiring real hardware.
+Category 5 (MCP Server Tests) requires a running Home Assistant instance. The recommended approach uses Docker/podman with the `demo` integration, which provides ~116 test entities across 15+ domains without requiring real hardware.
 
 #### Step 1: Create Docker Compose Configuration
 
@@ -89,10 +84,7 @@ docker compose up -d
 podman compose up -d
 ```
 
-**Gotcha — Docker IPv6 pull failures:** On some systems, `docker pull` fails with
-connection resets over IPv6. Setting `"ipv6": false` in `/etc/docker/daemon.json` only
-affects container networking, not the daemon's own image pulls. If this happens, use
-podman instead, which handles IPv6 fallback gracefully.
+**Gotcha — Docker IPv6 pull failures:** On some systems, `docker pull` fails with connection resets over IPv6. Setting `"ipv6": false` in `/etc/docker/daemon.json` only affects container networking, not the daemon's own image pulls. If this happens, use podman instead, which handles IPv6 fallback gracefully.
 
 #### Step 4: Complete HA Onboarding (Programmatic)
 
@@ -227,29 +219,28 @@ For each skill, verify it activates on the expected prompts.
 #### Test Cases
 
 | Skill | Test Prompt | Expected Behavior | Pass/Fail |
-|-------|-------------|-------------------|-----------|
-| ha-architecture | "Explain how the Home Assistant event bus works" | Uses event bus terminology from skill | |
-| ha-integration-scaffold | "Create a new integration called test_device" | Generates proper file structure | |
-| ha-config-flow | "Add a reauth flow to my integration" | Includes `async_step_reauth` pattern | |
-| ha-coordinator | "How do I handle errors in DataUpdateCoordinator?" | Mentions UpdateFailed, ConfigEntryAuthFailed | |
-| ha-entity-platforms | "Create a sensor entity for temperature" | Uses modern patterns (_attr_*, has_entity_name) | |
-| ha-service-actions | "Add a custom service to my integration" | Shows async_setup service registration | |
-| ha-async-patterns | "How do I make async HTTP requests in HA?" | Recommends aiohttp, shows executor pattern | |
-| ha-testing | "Write tests for my config flow" | Uses MockConfigEntry, pytest patterns | |
-| ha-debugging | "My integration won't load, help me debug" | Systematic debugging approach | |
-| ha-yaml-automations | "Create an automation that turns on lights at sunset" | Valid YAML automation | |
-| ha-quality-review | "Review this integration for IQS compliance" | Runs through Bronze/Silver/Gold checklist | |
-| ha-hacs | "Prepare my integration for HACS" | Covers hacs.json, manifest requirements | |
-| ha-diagnostics | "Add diagnostics support to my integration" | Shows diagnostics.py pattern with redaction | |
-| ha-migration | "Update my integration for HA 2025" | Mentions runtime_data, ServiceInfo changes | |
-| ha-documentation | "Generate README for my integration" | Creates structured documentation | |
-| ha-repairs | "Add repair issues to my integration" | Shows async_create_issue pattern | |
-| ha-device-triggers | "Add device triggers to my integration" | Shows trigger schema and handler | |
-| ha-websocket-api | "Add a custom websocket command" | Shows websocket_api.async_register_command | |
-| ha-recorder | "Add long-term statistics to my sensor" | Shows state_class, statistics pattern | |
+| --- | --- | --- | --- |
+| ha-architecture | "Explain how the Home Assistant event bus works" | Uses event bus terminology from skill |  |
+| ha-integration-scaffold | "Create a new integration called test_device" | Generates proper file structure |  |
+| ha-config-flow | "Add a reauth flow to my integration" | Includes `async_step_reauth` pattern |  |
+| ha-coordinator | "How do I handle errors in DataUpdateCoordinator?" | Mentions UpdateFailed, ConfigEntryAuthFailed |  |
+| ha-entity-platforms | "Create a sensor entity for temperature" | Uses modern patterns (_attr_\*, has_entity_name) |  |
+| ha-service-actions | "Add a custom service to my integration" | Shows async_setup service registration |  |
+| ha-async-patterns | "How do I make async HTTP requests in HA?" | Recommends aiohttp, shows executor pattern |  |
+| ha-testing | "Write tests for my config flow" | Uses MockConfigEntry, pytest patterns |  |
+| ha-debugging | "My integration won't load, help me debug" | Systematic debugging approach |  |
+| ha-yaml-automations | "Create an automation that turns on lights at sunset" | Valid YAML automation |  |
+| ha-quality-review | "Review this integration for IQS compliance" | Runs through Bronze/Silver/Gold checklist |  |
+| ha-hacs | "Prepare my integration for HACS" | Covers hacs.json, manifest requirements |  |
+| ha-diagnostics | "Add diagnostics support to my integration" | Shows diagnostics.py pattern with redaction |  |
+| ha-migration | "Update my integration for HA 2025" | Mentions runtime_data, ServiceInfo changes |  |
+| ha-documentation | "Generate README for my integration" | Creates structured documentation |  |
+| ha-repairs | "Add repair issues to my integration" | Shows async_create_issue pattern |  |
+| ha-device-triggers | "Add device triggers to my integration" | Shows trigger schema and handler |  |
+| ha-websocket-api | "Add a custom websocket command" | Shows websocket_api.async_register_command |  |
+| ha-recorder | "Add long-term statistics to my sensor" | Shows state_class, statistics pattern |  |
 
-**Note:** `ha-quality-review` has `disable-model-invocation: true` — it requires
-explicit invocation (e.g., via `/ha-quality-review`), which is intentional.
+**Note:** `ha-quality-review` has `disable-model-invocation: true` — it requires explicit invocation (e.g., via `/ha-quality-review`), which is intentional.
 
 ---
 
@@ -270,10 +261,10 @@ Test that generated code is correct and follows best practices.
 ```markdown
 ## Test: Scaffold Integration
 
-**Prompt:** "Create a new Home Assistant integration called my_weather that polls a REST
-API every 5 minutes for weather data"
+**Prompt:** "Create a new Home Assistant integration called my_weather that polls a REST API every 5 minutes for weather data"
 
 **Validation:**
+
 - [ ] Run: `python scripts/validate-manifest.py test_workspace/custom_components/my_weather/manifest.json`
 - [ ] Run: `python scripts/validate-strings.py test_workspace/custom_components/my_weather/strings.json`
 - [ ] Run: `python scripts/check-patterns.py test_workspace/custom_components/my_weather/`
@@ -293,6 +284,7 @@ API every 5 minutes for weather data"
 **Prompt:** "Add a reauthentication flow to handle expired API tokens"
 
 **Validation:**
+
 - [ ] Has `async_step_reauth` method
 - [ ] Has `async_step_reauth_confirm` method
 - [ ] Uses `self._get_reauth_entry()`
@@ -308,6 +300,7 @@ API every 5 minutes for weather data"
 **Prompt:** "Add diagnostics support to my_weather"
 
 **Validation:**
+
 - [ ] Creates `diagnostics.py`
 - [ ] Has `async_get_config_entry_diagnostics` function
 - [ ] Redacts sensitive data (API keys, tokens)
@@ -374,12 +367,13 @@ Test the specialized agents provide appropriate guidance.
 #### Test Cases
 
 | Agent | What to Verify | Expected |
-|-------|---------------|----------|
+| --- | --- | --- |
 | ha-integration-dev | Valid frontmatter, 7+ skills, CRUD tools (Read/Write/Edit/Bash/Grep/Glob) | PROACTIVE trigger, comprehensive development workflow |
 | ha-integration-reviewer | Valid frontmatter, 3 skills, read-focused tools (Read/Grep/Glob/Bash) | PROACTIVE trigger, IQS checklist review output |
 | ha-integration-debugger | Valid frontmatter, 3 skills, debug tools (Read/Edit/Bash/Grep/Glob) | PROACTIVE trigger, systematic debugging approach |
 
 Verify each agent:
+
 1. Has valid YAML frontmatter
 2. Lists appropriate skills
 3. Has correct tool restrictions
@@ -390,8 +384,7 @@ Verify each agent:
 
 ### 5. MCP Server Tests (Requires HA Instance)
 
-**Prerequisites:** Home Assistant running with `demo` integration (see setup above).
-MCP server must be built first:
+**Prerequisites:** Home Assistant running with `demo` integration (see setup above). MCP server must be built first:
 
 ```bash
 cd plugins/home-assistant-dev/mcp-server
@@ -401,11 +394,10 @@ npx tsc
 
 #### 5A. REST API Tests
 
-These tests validate the same capabilities the MCP server tools use, via the HA REST
-API directly. Run with `node test-mcp-tools.mjs` from the test workspace.
+These tests validate the same capabilities the MCP server tools use, via the HA REST API directly. Run with `node test-mcp-tools.mjs` from the test workspace.
 
 | Test | Expected | Validates |
-|------|----------|-----------|
+| --- | --- | --- |
 | HA Connection: version | Returns HA version string | API auth works |
 | HA Connection: location | Returns configured location name | Config accessible |
 | HA Connection: components loaded | >0 components array | System health |
@@ -433,20 +425,18 @@ API directly. Run with `node test-mcp-tools.mjs` from the test workspace.
 
 #### 5B. MCP Server WebSocket Tests
 
-These tests import the compiled `HaClient` and `SafetyChecker` classes directly and
-test them against the live HA WebSocket API. Run with `node test-mcp-server.mjs` from
-the test workspace.
+These tests import the compiled `HaClient` and `SafetyChecker` classes directly and test them against the live HA WebSocket API. Run with `node test-mcp-server.mjs` from the test workspace.
 
 | Test | Expected | Validates |
-|------|----------|-----------|
-| **WS Connect** | | |
+| --- | --- | --- |
+| **WS Connect** |  |  |
 | connected | `connectInfo.connected === true` | WebSocket connection |
 | version | Version string returned | Config retrieval |
 | location | Location name returned | Config retrieval |
 | components | >0 components | Config retrieval |
 | demo loaded | `demo` in components | Test readiness |
 | isConnected() | Returns true | Client state |
-| **getStates** | | |
+| **getStates** |  |  |
 | all entities | >0 states returned | State retrieval |
 | has entity_id | Shape check | Response format |
 | has state | Shape check | Response format |
@@ -456,18 +446,18 @@ the test workspace.
 | domain filter correct | No non-sensor entities | Filter accuracy |
 | entity=light.bed_light | Exactly 1 result | Entity filter |
 | entity attributes | friendly_name present | Attribute access |
-| **getServices** | | |
+| **getServices** |  |  |
 | all | >0 services returned | Service retrieval |
 | light.turn_on found | Service exists | Lookup |
 | has description | Description string (may be empty in HA 2026+) | Shape check |
 | has fields | Fields object present | Shape check |
 | domain=light | turn_on, turn_off, toggle present | Domain filter |
 | domain filter correct | All results have domain=light | Filter accuracy |
-| **validateServiceCall** | | |
+| **validateServiceCall** |  |  |
 | valid call | `valid === true` for light.turn_on on bed_light | Validation logic |
 | invalid entity | `valid === false`, error mentions entity | Negative case |
 | fake service | `valid === false`, error mentions service | Negative case |
-| **SafetyChecker** | | |
+| **SafetyChecker** |  |  |
 | homeassistant.stop blocked | `allowed === false` | Blocked services |
 | light.turn_on allowed (dry_run) | `allowed === true` | Safe services |
 | getSafetyInfo() | Returns config summary | Info method |
@@ -476,21 +466,19 @@ the test workspace.
 | redacts api_key | Value replaced with `**REDACTED**` | Data sanitization |
 | redacts password | Value replaced with `**REDACTED**` | Data sanitization |
 | preserves brightness | Numeric value unchanged | Selective redaction |
-| **getDevices** | | |
+| **getDevices** |  |  |
 | accessible | >0 devices returned | Device registry |
 | has id | Shape check | Response format |
 | has name | Shape check | Response format |
-| **getLogs** | | |
+| **getLogs** |  |  |
 | accessible | Returns log entries (may be empty) | System log access |
-| **getConnectionInfo** | | |
+| **getConnectionInfo** |  |  |
 | returns data | `connected === true` | Cached info |
 | matches connect | Version matches initial connect | Consistency |
-| **Disconnect** | | |
+| **Disconnect** |  |  |
 | clean | `isConnected()` returns false | Cleanup |
 
-**Known issue:** `getServices: has description` may return an empty string in
-HA 2026.2+. Services now use `name` for display purposes. The MCP server correctly
-returns the data as provided by HA — this is a test expectation issue, not a bug.
+**Known issue:** `getServices: has description` may return an empty string in HA 2026.2+. Services now use `name` for display purposes. The MCP server correctly returns the data as provided by HA — this is a test expectation issue, not a bug.
 
 ---
 
@@ -548,52 +536,31 @@ Update SELF_TEST_RESULTS.md with:
 
 ## Lessons Learned
 
-Issues discovered during self-testing sessions. These inform what to watch for on
-future runs.
+Issues discovered during self-testing sessions. These inform what to watch for on future runs.
 
 ### MCP Server
 
-1. **`createLongLivedTokenAuth()` expects HTTP URLs.** The `home-assistant-js-websocket`
-   library converts `http://` to `ws://` internally. Do NOT pre-convert the URL — it
-   will cause `TypeError: Invalid URL`. (Fixed in v2.0.2)
+1. **`createLongLivedTokenAuth()` expects HTTP URLs.** The `home-assistant-js-websocket` library converts `http://` to `ws://` internally. Do NOT pre-convert the URL — it will cause `TypeError: Invalid URL`. (Fixed in v2.0.2)
 
-2. **`home-assistant-js-websocket` ships no TypeScript types.** A custom `ha-ws.d.ts`
-   declaration file is required. If the library API changes, this file must be updated
-   manually. (Added in v2.0.2)
+2. **`home-assistant-js-websocket` ships no TypeScript types.** A custom `ha-ws.d.ts` declaration file is required. If the library API changes, this file must be updated manually. (Added in v2.0.2)
 
-3. **MCP SDK types `args` as `Record<string, unknown>`.** This doesn't overlap with
-   concrete input types. Use the double-cast pattern: `args as unknown as InputType`.
-   (Fixed in v2.0.2)
+3. **MCP SDK types `args` as `Record<string, unknown>`.** This doesn't overlap with concrete input types. Use the double-cast pattern: `args as unknown as InputType`. (Fixed in v2.0.2)
 
-4. **HA 2026.2+ uses `name` instead of `description` for services.** The `description`
-   field may be empty. Tests should check for `name` as the display field.
+4. **HA 2026.2+ uses `name` instead of `description` for services.** The `description` field may be empty. Tests should check for `name` as the display field.
 
 ### Validation Scripts
 
-5. **Per-line regex cannot check file-level imports.** The `missing-future-annotations`
-   pattern used a per-line negative lookahead, but `from __future__ import annotations`
-   is a file-level statement. Use a file-level check (lambda reading entire content)
-   instead. (Fixed in v2.0.1)
+5. **Per-line regex cannot check file-level imports.** The `missing-future-annotations` pattern used a per-line negative lookahead, but `from __future__ import annotations` is a file-level statement. Use a file-level check (lambda reading entire content) instead. (Fixed in v2.0.1)
 
-6. **Entity class regex catches base classes too.** The `missing-unique-id` pattern
-   should only flag concrete entity classes (inheriting from `SensorEntity`, etc.),
-   not base classes (inheriting from `CoordinatorEntity` where unique_id is set in
-   subclasses by design). (Fixed in v2.0.1)
+6. **Entity class regex catches base classes too.** The `missing-unique-id` pattern should only flag concrete entity classes (inheriting from `SensorEntity`, etc.), not base classes (inheriting from `CoordinatorEntity` where unique_id is set in subclasses by design). (Fixed in v2.0.1)
 
 ### Infrastructure
 
-7. **Docker image pulls may fail over IPv6.** On dual-stack systems, Docker daemon may
-   attempt to pull over IPv6 and get connection resets. `daemon.json` IPv6 settings
-   only affect container networking, not pulls. Use **podman** as a drop-in
-   replacement if this occurs.
+7. **Docker image pulls may fail over IPv6.** On dual-stack systems, Docker daemon may attempt to pull over IPv6 and get connection resets. `daemon.json` IPv6 settings only affect container networking, not pulls. Use **podman** as a drop-in replacement if this occurs.
 
-8. **HA onboarding must be completed programmatically.** The integration onboarding
-   step requires a JSON body with `client_id` and `redirect_uri` — an empty POST
-   returns "Invalid JSON".
+8. **HA onboarding must be completed programmatically.** The integration onboarding step requires a JSON body with `client_id` and `redirect_uri` — an empty POST returns "Invalid JSON".
 
-9. **Long-lived access tokens can only be created via WebSocket.** The REST API
-   provides short-lived tokens. For persistent MCP server connections, create an LLAT
-   via the `auth/long_lived_access_token` WebSocket command.
+9. **Long-lived access tokens can only be created via WebSocket.** The REST API provides short-lived tokens. For persistent MCP server connections, create an LLAT via the `auth/long_lived_access_token` WebSocket command.
 
 ---
 
@@ -602,9 +569,7 @@ future runs.
 ```markdown
 # HA Dev Plugin Self-Test Results
 
-**Date:** YYYY-MM-DD
-**Claude Code Model:** Claude Opus X.X
-**Plugin Version:** X.X.X
+**Date:** YYYY-MM-DD **Claude Code Model:** Claude Opus X.X **Plugin Version:** X.X.X
 
 ## Summary
 

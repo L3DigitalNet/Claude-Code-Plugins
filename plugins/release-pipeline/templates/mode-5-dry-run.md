@@ -1,11 +1,12 @@
 # Mode 5: Dry Run
 
 # Loaded by the release command router after the user selects "Dry Run".
+
 # Context variables from Phase 0 are available: suggested_version, feat_count, fix_count,
+
 # other_count, last_tag, is_monorepo, unreleased_plugins.
 
-Simulates a Full Release without committing, tagging, or pushing. Uses --dry-run and --preview
-flags that prevent file writes — no mutations occur and no revert step is needed.
+Simulates a Full Release without committing, tagging, or pushing. Uses --dry-run and --preview flags that prevent file writes — no mutations occur and no revert step is needed.
 
 **First, output this banner:**
 
@@ -17,6 +18,7 @@ flags that prevent file writes — no mutations occur and no revert step is need
 ## Step 0 — Version Selection
 
 If monorepo (`is_monorepo` is true), first ask the dry-run scope using **AskUserQuestion**:
+
 - question: `"Dry run scope?"`
 - header: `"Scope"`
 - options:
@@ -60,6 +62,7 @@ Capture stdout — it contains the full changelog entry that would be added. Dis
 **Step 3 — Show complete simulation summary:**
 
 Display:
+
 - Files that would be updated (from Step 1 output)
 - The changelog entry that would be added (from Step 2 output, already shown above)
 - Tag that would be created: `v<version>` (or `<plugin-name>/v<version>`)

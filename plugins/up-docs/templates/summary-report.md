@@ -11,10 +11,10 @@ Use this template for the final output of every /up-docs command.
 
 **Context:** [1-2 sentence summary of what changed in the session]
 
-| # | Page/File | Action | Summary of Changes |
-|---|-----------|--------|---------------------|
-| 1 | path/or/title | Created/Updated/No change needed/FAILED | Brief description |
-| 2 | ... | ... | ... |
+| #   | Page/File     | Action                                  | Summary of Changes |
+| --- | ------------- | --------------------------------------- | ------------------ |
+| 1   | path/or/title | Created/Updated/No change needed/FAILED | Brief description  |
+| 2   | ...           | ...                                     | ...                |
 
 **Totals:** N updated | N created | N unchanged | N failed
 ```
@@ -36,29 +36,32 @@ Use this template for the final output of every /up-docs command.
 ## Documentation Update: All Layers
 
 ### Repo
+
 **Context:** ...
 
-| # | File | Action | Summary of Changes |
-|---|------|--------|---------------------|
-| ... | ... | ... | ... |
+| #   | File | Action | Summary of Changes |
+| --- | ---- | ------ | ------------------ |
+| ... | ...  | ...    | ...                |
 
 **Totals:** ...
 
 ### Wiki (llm-wiki)
+
 **Context:** ...
 
-| # | Page | Action | Summary of Changes |
-|---|------|--------|---------------------|
-| ... | ... | ... | ... |
+| #   | Page | Action | Summary of Changes |
+| --- | ---- | ------ | ------------------ |
+| ... | ...  | ...    | ...                |
 
 **Totals:** ...
 
 ### Notion
+
 **Context:** ...
 
-| # | Page | Action | Summary of Changes |
-|---|------|--------|---------------------|
-| ... | ... | ... | ... |
+| #   | Page | Action | Summary of Changes |
+| --- | ---- | ------ | ------------------ |
+| ... | ...  | ...    | ...                |
 
 **Totals:** ...
 ```

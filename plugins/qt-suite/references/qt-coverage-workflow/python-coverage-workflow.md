@@ -154,6 +154,7 @@ coverage report
 ```
 
 Add to `.coveragerc`:
+
 ```ini
 [run]
 parallel = True

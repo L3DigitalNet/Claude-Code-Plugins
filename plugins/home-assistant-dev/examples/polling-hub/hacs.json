@@ -1,4 +1,1 @@
-{
-  "name": "Example Hub",
-  "homeassistant": "2024.1.0"
-}
+{ "name": "Example Hub", "homeassistant": "2024.1.0" }

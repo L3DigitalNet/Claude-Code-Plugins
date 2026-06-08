@@ -6,41 +6,38 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 
 ```json
 {
-  "findings": [
-    {
-      "id": 1,
-      "layer": "wiki",
-      "page": "<page title or file path>",
-      "page_id": "<wiki page path or Notion page id; null for repo>",
-      "stale_line": "<exact text as it currently appears>",
-      "should_say": "<what it should be, based on live state or session summary>",
-      "confidence": "low | medium | high | unverifiable",
-      "destructive_fix": false,
-      "evidence": {
-        "command": "<exact tool_input.command you ran to verify this finding>",
-        "expected_output_signature": "<distinctive substring literally observed in tool_response.output>",
-        "source_tool_use_id": "<tool_use_id of that call, if identifiable — optional>"
-      }
-    }
-  ],
-  "escalation": {
-    "triggered": false,
-    "reasons": []
-  },
-  "stats": {
-    "total_findings": 0,
-    "by_layer": {"repo": 0, "wiki": 0, "notion": 0, "layout": 0},
-    "high_confidence": 0,
-    "unverifiable": 0,
-    "destructive_fixes_required": 0
-  }
+	"findings": [
+		{
+			"id": 1,
+			"layer": "wiki",
+			"page": "<page title or file path>",
+			"page_id": "<wiki page path or Notion page id; null for repo>",
+			"stale_line": "<exact text as it currently appears>",
+			"should_say": "<what it should be, based on live state or session summary>",
+			"confidence": "low | medium | high | unverifiable",
+			"destructive_fix": false,
+			"evidence": {
+				"command": "<exact tool_input.command you ran to verify this finding>",
+				"expected_output_signature": "<distinctive substring literally observed in tool_response.output>",
+				"source_tool_use_id": "<tool_use_id of that call, if identifiable — optional>"
+			}
+		}
+	],
+	"escalation": { "triggered": false, "reasons": [] },
+	"stats": {
+		"total_findings": 0,
+		"by_layer": { "repo": 0, "wiki": 0, "notion": 0, "layout": 0 },
+		"high_confidence": 0,
+		"unverifiable": 0,
+		"destructive_fixes_required": 0
+	}
 }
 ```
 
 ## Field Rules
 
 | Field | Rule |
-|-------|------|
+| --- | --- |
 | `id` | Sequential from 1. Stable across JSON + markdown so a user can cross-reference. |
 | `layer` | Exactly one of: `"repo"`, `"wiki"`, `"notion"`, `"layout"`. Use `"layout"` only for findings from the step-3b handoff-conformance phase (validator failures), never for content drift. |
 | `page` | Human-readable page title (llm-wiki path, Notion) or file path (repo). |
@@ -59,7 +56,7 @@ Canonical format for findings emitted by the `up-docs-audit-drift` sub-agent. Em
 **Context:** <1-2 sentences about what was scanned and why>
 
 | # | Layer | Page | Stale Content | Should Say | Confidence |
-|---|-------|------|---------------|------------|------------|
+| --- | --- | --- | --- | --- | --- |
 | 1 | Wiki | OpenBao — CT 111 | `BAO_ADDR=127.0.0.1:8200` | `BAO_ADDR=100.90.121.89:8200` | high |
 | 2 | Notion | Homelab / Backup | Backup uses 127.0.0.1 | Backup uses 100.90.121.89 | medium |
 | 3 | Repo | docs/handoff/deployed.md | Old `MAXAGE=20` | `MAXAGE=30` | high |
@@ -86,6 +83,7 @@ Escalation does not change the findings — it just adds an advisory block to th
 ## ⚠ ESCALATION RECOMMENDED
 
 Reasons:
+
 - <trigger 1>
 - <trigger 2>
 

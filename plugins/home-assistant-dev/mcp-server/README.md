@@ -5,28 +5,31 @@ An MCP (Model Context Protocol) server that connects Claude to Home Assistant in
 ## Features
 
 ### 🏠 Home Assistant Tools
-| Tool | Description |
-|------|-------------|
-| `ha_connect` | Connect to a Home Assistant instance |
-| `ha_get_states` | Query entity states with filtering |
-| `ha_get_services` | List available services |
+
+| Tool              | Description                          |
+| ----------------- | ------------------------------------ |
+| `ha_connect`      | Connect to a Home Assistant instance |
+| `ha_get_states`   | Query entity states with filtering   |
+| `ha_get_services` | List available services              |
 | `ha_call_service` | Call services (with safety controls) |
-| `ha_get_devices` | Query device registry |
-| `ha_get_logs` | Fetch and analyze logs |
+| `ha_get_devices`  | Query device registry                |
+| `ha_get_logs`     | Fetch and analyze logs               |
 
 ### 📚 Documentation Tools
-| Tool | Description |
-|------|-------------|
-| `docs_search` | Full-text search HA developer docs |
-| `docs_fetch` | Fetch specific documentation pages |
+
+| Tool            | Description                           |
+| --------------- | ------------------------------------- |
+| `docs_search`   | Full-text search HA developer docs    |
+| `docs_fetch`    | Fetch specific documentation pages    |
 | `docs_examples` | Get code examples for common patterns |
 
 ### ✅ Validation Tools
-| Tool | Description |
-|------|-------------|
-| `validate_manifest` | Validate manifest.json for Core/HACS |
-| `validate_strings` | Sync strings.json with config_flow.py |
-| `check_patterns` | Detect 20+ anti-patterns and deprecations |
+
+| Tool                | Description                               |
+| ------------------- | ----------------------------------------- |
+| `validate_manifest` | Validate manifest.json for Core/HACS      |
+| `validate_strings`  | Sync strings.json with config_flow.py     |
+| `check_patterns`    | Detect 20+ anti-patterns and deprecations |
 
 ## Installation
 
@@ -35,6 +38,7 @@ npm install -g @anthropic/ha-dev-mcp-server
 ```
 
 Or run directly with npx:
+
 ```bash
 npx @anthropic/ha-dev-mcp-server
 ```
@@ -45,22 +49,20 @@ npx @anthropic/ha-dev-mcp-server
 
 Add to your Claude Desktop configuration:
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-**Linux**: `~/.config/claude/claude_desktop_config.json`
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json` **Windows**: `%APPDATA%\Claude\claude_desktop_config.json` **Linux**: `~/.config/claude/claude_desktop_config.json`
 
 ```json
 {
-  "mcpServers": {
-    "ha-dev": {
-      "command": "npx",
-      "args": ["-y", "@anthropic/ha-dev-mcp-server"],
-      "env": {
-        "HA_DEV_MCP_URL": "http://192.168.1.100:8123",
-        "HA_DEV_MCP_TOKEN": "your-long-lived-access-token"
-      }
-    }
-  }
+	"mcpServers": {
+		"ha-dev": {
+			"command": "npx",
+			"args": ["-y", "@anthropic/ha-dev-mcp-server"],
+			"env": {
+				"HA_DEV_MCP_URL": "http://192.168.1.100:8123",
+				"HA_DEV_MCP_TOKEN": "your-long-lived-access-token"
+			}
+		}
+	}
 }
 ```
 
@@ -79,24 +81,21 @@ For more control, create `~/.config/ha-dev-mcp/config.json`:
 
 ```json
 {
-  "homeAssistant": {
-    "url": "http://192.168.1.100:8123",
-    "token": "your-token-here",
-    "verifySsl": true
-  },
-  "safety": {
-    "allowServiceCalls": false,
-    "blockedServices": [
-      "homeassistant.restart",
-      "homeassistant.stop"
-    ],
-    "requireDryRun": true
-  },
-  "features": {
-    "enableDocsTools": true,
-    "enableHaTools": true,
-    "enableValidationTools": true
-  }
+	"homeAssistant": {
+		"url": "http://192.168.1.100:8123",
+		"token": "your-token-here",
+		"verifySsl": true
+	},
+	"safety": {
+		"allowServiceCalls": false,
+		"blockedServices": ["homeassistant.restart", "homeassistant.stop"],
+		"requireDryRun": true
+	},
+	"features": {
+		"enableDocsTools": true,
+		"enableHaTools": true,
+		"enableValidationTools": true
+	}
 }
 ```
 
@@ -155,14 +154,16 @@ The server includes multiple layers of protection for service calls:
 1. **Disabled by Default**: `allowServiceCalls: false`
 2. **Dry-Run Mode**: Validates without executing (default)
 3. **Blocklist**: Dangerous services are always blocked
-4. **Safe Domains**: Helper entities (input_*, counter, timer) bypass dry-run
+4. **Safe Domains**: Helper entities (input\_\*, counter, timer) bypass dry-run
 
 #### Always Blocked Services
+
 - `homeassistant.stop`
 - `hassio.host_shutdown`
 - `hassio.host_reboot`
 
 #### Blocked by Default
+
 - `homeassistant.restart`
 - `homeassistant.reload_all`
 - `recorder.purge`
@@ -170,16 +171,13 @@ The server includes multiple layers of protection for service calls:
 ### To Enable Service Calls
 
 Set in config file:
+
 ```json
-{
-  "safety": {
-    "allowServiceCalls": true,
-    "requireDryRun": false
-  }
-}
+{ "safety": { "allowServiceCalls": true, "requireDryRun": false } }
 ```
 
 Or via environment:
+
 ```bash
 HA_DEV_MCP_ALLOW_SERVICE_CALLS=true
 ```

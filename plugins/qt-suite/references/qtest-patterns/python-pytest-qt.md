@@ -9,6 +9,7 @@ pip install pytest pytest-qt PySide6
 ```
 
 Specify the Qt binding in config:
+
 ```ini
 # pytest.ini
 [pytest]
@@ -180,7 +181,7 @@ def test_model_data(qtbot):
 # .github/workflows/test.yml
 env:
   QT_QPA_PLATFORM: offscreen
-  DISPLAY: ":99"
+  DISPLAY: ':99'
 ```
 
 ## Parametrize Pattern

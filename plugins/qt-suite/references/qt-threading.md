@@ -1,5 +1,5 @@
-  Trigger phrases: "QThread", "worker", "background task", "thread safety", "UI freezing", "long operation", "QRunnable", "QThreadPool", "thread pool", "concurrent", "responsive UI", "blocking the event loop"
-version: 1.0.0
+Trigger phrases: "QThread", "worker", "background task", "thread safety", "UI freezing", "long operation", "QRunnable", "QThreadPool", "thread pool", "concurrent", "responsive UI", "blocking the event loop" version: 1.0.0
+
 ---
 
 ## Qt Threading

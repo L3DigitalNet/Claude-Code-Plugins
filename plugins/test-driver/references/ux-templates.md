@@ -4,11 +4,11 @@ All output templates for test-driver. These ensure consistent formatting when re
 
 ## Visual Grammar
 
-| Symbol | Meaning |
-|--------|---------|
-| ✅ | Tests passing, coverage met |
-| ❌ | Tests failing, coverage below target |
-| ⚠️ | Stale status, approaching threshold |
+| Symbol | Meaning                              |
+| ------ | ------------------------------------ |
+| ✅     | Tests passing, coverage met          |
+| ❌     | Tests failing, coverage below target |
+| ⚠️     | Stale status, approaching threshold  |
 
 ---
 
@@ -44,6 +44,7 @@ All output templates for test-driver. These ensure consistent formatting when re
 ```
 
 Follow with `AskUserQuestion`:
+
 - **"Fill all gaps"** — enter convergence-loop for all identified gaps
 - **"Fill specific files only"** — follow up with file selection
 - **"Record gaps only"** — update TEST_STATUS.json without generating tests

@@ -22,7 +22,7 @@ View: Settings → System → Logs, or `tail -f config/home-assistant.log`
 ## Step 2: Identify Error Category
 
 | Symptom | Likely Cause | Check |
-|---|---|---|
+| --- | --- | --- |
 | Integration won't load | Import/manifest error | `__init__.py`, `manifest.json` |
 | "Config flow could not be loaded" | Syntax error | `config_flow.py`, `strings.json` |
 | "Unexpected exception" in setup | Unhandled error | Config flow validation |

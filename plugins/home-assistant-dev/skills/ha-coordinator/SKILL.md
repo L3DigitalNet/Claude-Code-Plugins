@@ -86,7 +86,7 @@ class {Name}Coordinator(DataUpdateCoordinator[dict[str, Any]]):
 ## Error Handling Reference
 
 | Exception | Effect | When to Use |
-|---|---|---|
+| --- | --- | --- |
 | `UpdateFailed` | Entities unavailable, logs once, retries on schedule | Device offline, timeout, temporary error |
 | `ConfigEntryAuthFailed` | Triggers reauth flow, stops polling | Expired token, invalid credentials |
 | `ConfigEntryError` | Permanently fails config entry | Unrecoverable configuration error |
@@ -125,7 +125,7 @@ For rate-limited APIs, the coordinator respects `Retry-After` headers automatica
 
 If `async_request_refresh()` is called during an update, a new update is queued after the current one completes — no more dropped refresh requests.
 
-## Using in __init__.py
+## Using in **init**.py
 
 ```python
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -183,7 +183,7 @@ async def test_setup_entry_not_ready(
 ) -> None:
     """Test setup fails when cannot connect."""
     mock_client.async_get_data.side_effect = ConnectionError
-    
+
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

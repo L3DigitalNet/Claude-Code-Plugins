@@ -1,6 +1,5 @@
-  "QML test", "QtQuickTest", "write a test case", "test this class", or "generate a test file".
-  Covers C++ QTest, Python pytest-qt, and QML TestCase patterns with CMake integration.
-  Also activates for "write a C++ Qt test", "add a CMake test target", or "set up testlib".
+"QML test", "QtQuickTest", "write a test case", "test this class", or "generate a test file". Covers C++ QTest, Python pytest-qt, and QML TestCase patterns with CMake integration. Also activates for "write a C++ Qt test", "add a CMake test target", or "set up testlib".
+
 ---
 
 # Qt Test Patterns
@@ -9,18 +8,19 @@ Qt testing spans three ecosystems: **C++ QTest** (native, zero dependencies), **
 
 ## Choosing a Test Framework
 
-| Scenario | Framework |
-|---|---|
+| Scenario                        | Framework                                     |
+| ------------------------------- | --------------------------------------------- |
 | C++ Qt classes / business logic | C++ QTest (`QObject` subclass + `QTEST_MAIN`) |
-| PySide6 GUI application | pytest + pytest-qt (`qtbot` fixture) |
-| QML component behavior | QtQuickTest (`TestCase` QML type) |
-| PySide6 non-GUI logic | pytest (no pytest-qt needed) |
+| PySide6 GUI application         | pytest + pytest-qt (`qtbot` fixture)          |
+| QML component behavior          | QtQuickTest (`TestCase` QML type)             |
+| PySide6 non-GUI logic           | pytest (no pytest-qt needed)                  |
 
 ## Python / PySide6 with pytest-qt
 
 **Complete pytest-qt patterns** — see [qtest-patterns/python-pytest-qt.md](qtest-patterns/python-pytest-qt.md) for the full `qtbot` fixture API, signal waiting, conftest patterns, model testing, parametrize, async tests, and common gotchas.
 
 Key config:
+
 ```ini
 # pytest.ini
 [pytest]
@@ -49,5 +49,6 @@ Consult reference files in this directory for detailed patterns:
 - **`qtest-patterns/qml-testcase.md`** — QML TestCase full API, async signal testing, component creation patterns
 
 Working examples:
+
 - **`examples/test_calculator.py`** — Complete pytest-qt example with fixtures
 - **`examples/calculator_test.cpp`** — Complete C++ QTest example with data-driven tests

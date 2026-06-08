@@ -51,6 +51,7 @@ The narrowing rule is **owned by the auditor task step** (`agents/up-docs-audit-
 An oscillation occurs when the same finding appears, gets fixed, and reappears. Track the last 3 iterations of findings. If a finding (identified by page + discrepancy type) appears in iteration N, disappears in N+1, and reappears in N+2, flag it as oscillating.
 
 When oscillation is detected:
+
 1. Stop the phase immediately
 2. Report the oscillating findings with context
 3. These likely require human judgment to resolve (ambiguous ground truth, competing conventions, etc.)

@@ -92,33 +92,29 @@ class InvalidAuth(Exception):
 
 ```json
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Connect to {Name}",
-        "description": "Enter the connection details.",
-        "data": {
-          "host": "Host",
-          "username": "Username",
-          "password": "Password"
-        },
-        "data_description": {
-          "host": "The IP address or hostname of your device",
-          "username": "Username for authentication",
-          "password": "Password for authentication"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Unable to connect. Check the host.",
-      "invalid_auth": "Authentication failed.",
-      "unknown": "Unexpected error occurred."
-    },
-    "abort": {
-      "already_configured": "This device is already configured.",
-      "reauth_successful": "Re-authentication successful."
-    }
-  }
+	"config": {
+		"step": {
+			"user": {
+				"title": "Connect to {Name}",
+				"description": "Enter the connection details.",
+				"data": { "host": "Host", "username": "Username", "password": "Password" },
+				"data_description": {
+					"host": "The IP address or hostname of your device",
+					"username": "Username for authentication",
+					"password": "Password for authentication"
+				}
+			}
+		},
+		"error": {
+			"cannot_connect": "Unable to connect. Check the host.",
+			"invalid_auth": "Authentication failed.",
+			"unknown": "Unexpected error occurred."
+		},
+		"abort": {
+			"already_configured": "This device is already configured.",
+			"reauth_successful": "Re-authentication successful."
+		}
+	}
 }
 ```
 

@@ -3,7 +3,7 @@
 When a failure occurs, identify which phase failed and display ONLY the matching row from the table below — not the full table.
 
 | Phase | What happened | Rollback command |
-|-------|--------------|-----------------|
+| --- | --- | --- |
 | Phase 0 (Detection) | Context gathering failed | Nothing to roll back. Check script paths and retry. |
 | Phase 1 (Pre-flight) | Checks failed before any changes | Nothing to roll back. Fix the reported issues and retry. |
 | Phase 2 (Preparation) | Version bump or changelog failed | `git checkout -- .` |

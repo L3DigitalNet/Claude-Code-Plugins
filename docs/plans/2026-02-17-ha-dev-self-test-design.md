@@ -1,7 +1,6 @@
 # HA Dev Plugin Self-Test with Docker HA Instance
 
-**Date:** 2026-02-17
-**Status:** Approved
+**Date:** 2026-02-17 **Status:** Approved
 
 ## Goal
 
@@ -22,6 +21,7 @@ Run the full self-test protocol for the home-assistant-dev plugin, specifically 
 ### Phase 2: MCP Server Tests
 
 Build the TypeScript MCP server, then test:
+
 1. HA Connection — version, location, components
 2. Entity Query — list sensor entities from demo platform
 3. Service Discovery — light domain services

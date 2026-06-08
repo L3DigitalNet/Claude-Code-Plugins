@@ -1,13 +1,14 @@
 ---
 bug_id: 2
 date: 2026-04-20
-title: "plugin-test-harness TypeScript config missing @types/jest in tsconfig types array; jest transform po"
+title: 'plugin-test-harness TypeScript config missing @types/jest in tsconfig types array; jest transform po'
 services: [claude-code-plugins]
 tags: []
 status: fixed
 supersedes: null
 superseded_by: null
 ---
+
 # Bug 2: plugin-test-harness TypeScript config missing @types/jest in tsconfig types array; jest transform po
 
 ## Cause

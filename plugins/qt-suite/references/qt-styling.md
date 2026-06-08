@@ -1,5 +1,5 @@
-  Trigger phrases: "stylesheet", "QSS", "theme", "dark mode", "custom widget appearance", "style widget", "QPalette", "widget color", "hover style", "disabled style", "app theme", "visual style"
-version: 1.0.0
+Trigger phrases: "stylesheet", "QSS", "theme", "dark mode", "custom widget appearance", "style widget", "QPalette", "widget color", "hover style", "disabled style", "app theme", "visual style" version: 1.0.0
+
 ---
 
 ## Qt Stylesheets (QSS)
@@ -68,6 +68,7 @@ QScrollBar::handle:vertical { background: #888; border-radius: 4px; }
 ### Dark/Light Mode
 
 **Detect system preference:**
+
 ```python
 from PySide6.QtGui import QPalette
 from PySide6.QtCore import Qt
@@ -79,6 +80,7 @@ def is_dark_mode(app: QApplication) -> bool:
 ```
 
 **Programmatic dark theme via QPalette (no stylesheet needed):**
+
 ```python
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtCore import Qt
@@ -99,6 +101,7 @@ def apply_dark_palette(app: QApplication) -> None:
 ```
 
 **QSS-based theme switching:**
+
 ```python
 class ThemeManager:
     def __init__(self, app: QApplication) -> None:
@@ -140,6 +143,7 @@ Always call `unpolish` + `polish` after changing a property — Qt caches style 
 ### Platform Fusion Style
 
 For consistent cross-platform appearance, force the Fusion style:
+
 ```python
 from PySide6.QtWidgets import QStyleFactory
 app.setStyle(QStyleFactory.create("Fusion"))

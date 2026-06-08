@@ -1,6 +1,5 @@
-  criteria are met. Includes oscillation detection, bug fix boundaries, and convergence reporting.
-  Triggers on: convergence loop, test loop, generate and fix tests, iterate tests, fill test gaps,
-  run tests until green, test convergence.
+criteria are met. Includes oscillation detection, bug fix boundaries, and convergence reporting. Triggers on: convergence loop, test loop, generate and fix tests, iterate tests, fill test gaps, run tests until green, test convergence.
+
 ---
 
 # Convergence Loop: Iterative Test Generation Engine
@@ -44,7 +43,7 @@ Read the gap report produced by gap-analysis. Sort gaps by priority (high first)
 Scale batch size to the total gap count to avoid hitting the 10-iteration ceiling with many gaps unfilled:
 
 | Total Gaps | Tests per Batch | Rationale |
-|------------|-----------------|-----------|
+| --- | --- | --- |
 | ≤15 | 3-5 | Focused iteration, room for fixes |
 | 16-30 | 5-8 | Moderate throughput |
 | 31+ | 8-12 | High throughput; 31+ gaps with 3-5/batch would exhaust iterations |
@@ -61,7 +60,7 @@ Target the highest-priority unfilled gaps within each batch.
 When generating tests for non-unit gaps, adapt the test approach to match the category:
 
 | Category | Approach |
-|----------|----------|
+| --- | --- |
 | **Unit** | Mock external dependencies. Test isolated function/class behavior. One function per test. |
 | **Integration** | Use real components (test database, actual HTTP client, real service instances). Assert on observable outcomes across component boundaries, not internal state. |
 | **E2E** | Full request lifecycle through the actual app stack with minimal mocking. Test critical user-facing workflows (e.g., authenticate, perform action, verify result). Accept slower execution. |
@@ -83,6 +82,7 @@ Within each category, follow the gap report's priority ordering (high before med
 ### RUN
 
 Execute the test suite using the command from the stack profile:
+
 - Python: `pytest tests/ -v`
 - Swift: `swift test`
 - Use the specific command for the test category being filled
@@ -100,6 +100,7 @@ For each failing test, classify the failure:
 ## Bug Fix Boundary
 
 **Fix autonomously (simple bugs):**
+
 - Typos in variable names, strings, or comments
 - Off-by-one errors in loops or comparisons
 - Missing null/None checks that cause crashes
@@ -108,6 +109,7 @@ For each failing test, classify the failure:
 - Missing import statements
 
 **Stop and surface to user (behavioral changes):**
+
 - Changed function signatures (different parameters, return types)
 - Altered business logic (different calculation, different flow)
 - Modified API contracts (changed response shape, status codes)
@@ -132,6 +134,7 @@ The loop exits when any of these conditions are met:
 **Heuristic:** If any test that was previously green turns red after a fix, that counts as a **regression**. Two regressions within the same convergence run equals **oscillation**.
 
 When oscillation is detected:
+
 1. **Stop immediately.** Do not attempt further fixes.
 2. **List the involved tests and fixes:** which test went red, what fix caused it, and what the relationship is.
 3. **Surface the pattern to the user** with a clear explanation of the cycle.
@@ -145,6 +148,7 @@ After the loop exits (for any reason), produce a summary and update `TEST_STATUS
 **Summary format:** Use Template 2 (Convergence Loop Results) from `${CLAUDE_PLUGIN_ROOT}/references/ux-templates.md`.
 
 **TEST_STATUS.json updates** (defer to the `test-status` skill for schema details):
+
 - Update `categories` with new test counts and pass/fail status
 - Update `coverage` if coverage was measured during the run
 - Record any source bugs fixed in `source_bugs_fixed`
@@ -154,6 +158,7 @@ After the loop exits (for any reason), produce a summary and update `TEST_STATUS
 ## Source Modification Tracking
 
 Every autonomous source fix must be recorded. For each fix, track:
+
 - **Date** of the fix
 - **File** that was modified
 - **Description** of what changed and why

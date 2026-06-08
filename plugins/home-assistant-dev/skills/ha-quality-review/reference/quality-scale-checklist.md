@@ -3,6 +3,7 @@
 ## Bronze Tier Implementation Examples
 
 ### action-setup
+
 Register services in `async_setup`, not `async_setup_entry`:
 
 ```python
@@ -18,12 +19,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 ```
 
 ### common-modules
+
 Organize code into logical modules:
+
 - `coordinator.py` — DataUpdateCoordinator subclass
 - `entity.py` — Base entity class with shared logic
 - `const.py` — Constants and configuration keys
 
 ### runtime-data
+
 ```python
 # Modern pattern (use this)
 entry.runtime_data = coordinator
@@ -33,24 +37,24 @@ hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 ```
 
 ### config-flow with data_description
+
 ```json
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "host": "Host"
-        },
-        "data_description": {
-          "host": "The IP address or hostname of your device (e.g., 192.168.1.100)"
-        }
-      }
-    }
-  }
+	"config": {
+		"step": {
+			"user": {
+				"data": { "host": "Host" },
+				"data_description": {
+					"host": "The IP address or hostname of your device (e.g., 192.168.1.100)"
+				}
+			}
+		}
+	}
 }
 ```
 
 ### entity-unique-id
+
 ```python
 class MySensor(SensorEntity):
     def __init__(self, device_id: str, sensor_type: str) -> None:
@@ -59,6 +63,7 @@ class MySensor(SensorEntity):
 ```
 
 ### has-entity-name
+
 ```python
 class MySensor(SensorEntity):
     _attr_has_entity_name = True  # Required
@@ -70,13 +75,14 @@ class MySensor(SensorEntity):
 ```
 
 ### test-before-setup
+
 ```python
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = MyCoordinator(hass, entry)
-    
+
     # This validates connection - raises ConfigEntryNotReady on failure
     await coordinator.async_config_entry_first_refresh()
-    
+
     entry.runtime_data = coordinator
     return True
 ```
@@ -86,13 +92,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 ## Silver Tier Implementation Examples
 
 ### action-exceptions
+
 ```python
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 async def handle_my_action(call: ServiceCall) -> None:
     if not call.data.get("target"):
         raise ServiceValidationError("Target is required")
-    
+
     try:
         await client.do_action(call.data["target"])
     except DeviceOfflineError as err:
@@ -100,24 +107,27 @@ async def handle_my_action(call: ServiceCall) -> None:
 ```
 
 ### entity-unavailable
+
 ```python
 class MySensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         # Include coordinator availability AND device-specific checks
         return (
-            super().available 
+            super().available
             and self._device_id in self.coordinator.data
         )
 ```
 
 ### parallel-updates
+
 ```python
 # In sensor.py (or any platform file)
 PARALLEL_UPDATES = 1  # Limit concurrent updates to 1
 ```
 
 ### reauthentication-flow
+
 ```python
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
@@ -144,6 +154,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
 ## Gold Tier Implementation Examples
 
 ### diagnostics
+
 ```python
 # diagnostics.py
 from homeassistant.components.diagnostics import async_redact_data
@@ -161,6 +172,7 @@ async def async_get_config_entry_diagnostics(
 ```
 
 ### entity-category
+
 ```python
 from homeassistant.const import EntityCategory
 
@@ -172,12 +184,14 @@ class MyConfigSwitch(SwitchEntity):
 ```
 
 ### entity-disabled-by-default
+
 ```python
 class MyVerboseSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False  # Disabled by default
 ```
 
 ### reconfiguration-flow
+
 ```python
 async def async_step_reconfigure(
     self, user_input: dict[str, Any] | None = None
@@ -196,6 +210,7 @@ async def async_step_reconfigure(
 ```
 
 ### repair-issues
+
 ```python
 from homeassistant.helpers import issue_registry as ir
 
@@ -215,6 +230,7 @@ ir.async_delete_issue(hass, DOMAIN, "firmware_update_required")
 ```
 
 ### dynamic-devices
+
 ```python
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = entry.runtime_data
@@ -232,16 +248,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 ```
 
 ### stale-devices
+
 ```python
 from homeassistant.helpers import device_registry as dr
 
 async def async_setup_entry(hass, entry):
     device_registry = dr.async_get(hass)
     coordinator = entry.runtime_data
-    
+
     # Get current device IDs from API
     current_devices = set(coordinator.data.keys())
-    
+
     # Get registered devices
     for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         # Check if device still exists
@@ -255,7 +272,9 @@ async def async_setup_entry(hass, entry):
 ## Platinum Tier Requirements
 
 ### async-dependency
+
 The third-party library must be natively async:
+
 ```python
 # Good - native async
 data = await client.async_get_data()
@@ -265,7 +284,9 @@ data = await hass.async_add_executor_job(client.get_data)
 ```
 
 ### inject-websession
+
 Library should accept aiohttp ClientSession:
+
 ```python
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -275,7 +296,9 @@ async def async_setup_entry(hass, entry):
 ```
 
 ### strict-typing
+
 All code must pass `mypy --strict`:
+
 - All function signatures have type hints
 - No `Any` types without explicit annotation
 - All return types specified

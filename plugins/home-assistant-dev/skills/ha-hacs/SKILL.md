@@ -31,20 +31,21 @@ HACS requires these fields in `manifest.json`:
 
 ```json
 {
-  "domain": "my_integration",
-  "name": "My Integration",
-  "version": "1.0.0",
-  "codeowners": ["@your-github-username"],
-  "documentation": "https://github.com/user/repo",
-  "issue_tracker": "https://github.com/user/repo/issues",
-  "config_flow": true,
-  "integration_type": "hub",
-  "iot_class": "local_polling",
-  "requirements": ["my-library==1.0.0"]
+	"domain": "my_integration",
+	"name": "My Integration",
+	"version": "1.0.0",
+	"codeowners": ["@your-github-username"],
+	"documentation": "https://github.com/user/repo",
+	"issue_tracker": "https://github.com/user/repo/issues",
+	"config_flow": true,
+	"integration_type": "hub",
+	"iot_class": "local_polling",
+	"requirements": ["my-library==1.0.0"]
 }
 ```
 
 **Required for HACS:**
+
 - `domain` — Must match folder name
 - `name` — Display name
 - `version` — Valid semver (X.Y.Z)
@@ -57,16 +58,13 @@ HACS requires these fields in `manifest.json`:
 Create `hacs.json` in repository root:
 
 ```json
-{
-  "name": "My Integration",
-  "homeassistant": "2024.1.0"
-}
+{ "name": "My Integration", "homeassistant": "2024.1.0" }
 ```
 
 ### All hacs.json Options
 
 | Key | Type | Required | Description |
-|-----|------|----------|-------------|
+| --- | --- | --- | --- |
 | `name` | string | **Yes** | Display name in HACS |
 | `homeassistant` | string | No | Minimum HA version (e.g., "2024.1.0") |
 | `hacs` | string | No | Minimum HACS version |

@@ -15,6 +15,7 @@
 Compares local vs remote tag state and outputs a status string. Called by Phase 3 of mode-2 and mode-3 before `git tag -a`.
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/reconcile-tags.sh`
 - Create: `plugins/release-pipeline/tests/test-reconcile-tags.sh`
 
@@ -91,6 +92,7 @@ echo "Results: $PASS passed, $FAIL failed"
 ```bash
 bash plugins/release-pipeline/tests/test-reconcile-tags.sh
 ```
+
 Expected: error "No such file or directory" for the script path.
 
 **Step 3: Create `reconcile-tags.sh`**
@@ -170,6 +172,7 @@ fi
 chmod +x plugins/release-pipeline/scripts/reconcile-tags.sh
 bash plugins/release-pipeline/tests/test-reconcile-tags.sh
 ```
+
 Expected: `4 passed, 0 failed`
 
 **Step 5: Commit**
@@ -187,6 +190,7 @@ git commit -m "feat(release-pipeline): add reconcile-tags.sh for local/remote ta
 Exponential backoff + jitter wrapper for `gh` CLI calls. Treats "already exists" as success (idempotent re-runs).
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/api-retry.sh`
 - Create: `plugins/release-pipeline/tests/test-api-retry.sh`
 
@@ -255,6 +259,7 @@ echo "Results: $PASS passed, $FAIL failed"
 ```bash
 bash plugins/release-pipeline/tests/test-api-retry.sh
 ```
+
 Expected: error "No such file or directory"
 
 **Step 3: Create `api-retry.sh`**
@@ -330,6 +335,7 @@ done
 chmod +x plugins/release-pipeline/scripts/api-retry.sh
 bash plugins/release-pipeline/tests/test-api-retry.sh
 ```
+
 Expected: `4 passed, 0 failed`
 
 **Step 5: Commit**
@@ -347,6 +353,7 @@ git commit -m "feat(release-pipeline): add api-retry.sh with exponential backoff
 Looks up whether a named pre-flight check is waived for a given plugin in `.release-waivers.json`.
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/check-waivers.sh`
 - Create: `plugins/release-pipeline/tests/test-check-waivers.sh`
 
@@ -416,6 +423,7 @@ echo "Results: $PASS passed, $FAIL failed"
 ```bash
 bash plugins/release-pipeline/tests/test-check-waivers.sh
 ```
+
 Expected: error "No such file or directory"
 
 **Step 3: Create `check-waivers.sh`**
@@ -482,6 +490,7 @@ PYEOF
 chmod +x plugins/release-pipeline/scripts/check-waivers.sh
 bash plugins/release-pipeline/tests/test-check-waivers.sh
 ```
+
 Expected: `5 passed, 0 failed`
 
 **Step 5: Commit**
@@ -499,17 +508,20 @@ git commit -m "feat(release-pipeline): add check-waivers.sh for pre-flight check
 Wrap both `gh release view` calls with `api-retry.sh`.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/scripts/verify-release.sh`
 
 **Step 1: Identify the two `gh release view` calls**
 
 In `verify-release.sh`:
+
 - Line 88: `gh release view "$TAG" --json tagName ...` (GitHub release exists check)
 - Line 97: `gh release view "$TAG" --json body ...` (release notes check)
 
 **Step 2: Update the file — wrap both calls**
 
 Replace the GitHub release exists check (lines 88-92):
+
 ```bash
 # Old:
 if gh release view "$TAG" --json tagName -q '.tagName' -R "$(git -C "$REPO" remote get-url origin 2>/dev/null)" &>/dev/null; then
@@ -520,6 +532,7 @@ if bash "$(dirname "$0")/api-retry.sh" 3 1000 -- \
 ```
 
 Replace the release notes fetch (line 97):
+
 ```bash
 # Old:
 release_body=$(gh release view "$TAG" --json body -q '.body' -R "$(git -C "$REPO" remote get-url origin 2>/dev/null)" 2>/dev/null || true)
@@ -534,6 +547,7 @@ release_body=$(bash "$(dirname "$0")/api-retry.sh" 3 1000 -- \
 ```bash
 bash -n plugins/release-pipeline/scripts/verify-release.sh
 ```
+
 Expected: no output (no errors)
 
 **Step 4: Commit**
@@ -550,16 +564,18 @@ git commit -m "feat(release-pipeline): wrap gh release view calls with api-retry
 Add (a) remote tag check using `reconcile-tags.sh` output, and (b) waiver support for all 4 git checks. Also add `tag_exists` to the check list.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/agents/git-preflight.md`
 
 **Step 1: Rewrite the file**
 
 The updated file adds:
+
 1. A 6th check: **Remote tag status** — runs `reconcile-tags.sh` and reports the status
 2. Waiver lookups: before marking ANY check FAIL, call `check-waivers.sh` (if `.release-waivers.json` exists at the repo root). If waived, print `⊘ <check> WAIVED — <reason>` and count as PASS.
 3. The waiver file path is `.release-waivers.json` in the current working directory.
 
-```markdown
+````markdown
 ---
 name: git-preflight
 description: Verify clean git state, noreply email, and tag availability. Used by release pipeline Phase 1.
@@ -581,6 +597,7 @@ Run these checks and report results. Before marking any check FAIL, run the waiv
 6. **Tag available (remote)**: Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . <target-tag>` and capture output
 
 For check 6, interpret the output:
+
 - `MISSING` or `LOCAL_ONLY` → PASS (tag not on remote yet)
 - `BOTH` or `REMOTE_ONLY` → check waiver for `tag_exists`; if not waived → FAIL with "tag already exists on remote"
 - Script exit 1 → FAIL with "could not determine remote tag state"
@@ -592,16 +609,17 @@ Before marking any check FAIL, look for `.release-waivers.json` in the current d
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json <check-name> [plugin-name]
 ```
+````
 
 Check name mapping:
+
 - Check 1 (clean tree) → `dirty_working_tree`
 - Check 2 (dev branch) → `protected_branch`
 - Check 3 (noreply email) → `noreply_email`
 - Check 5 (local tag) → `tag_exists`
 - Check 6 (remote tag) → `tag_exists`
 
-If `check-waivers.sh` exits 0 (waived): print `⊘ <check> WAIVED — <reason>` and count as PASS.
-If `check-waivers.sh` exits 1 (not waived) or the file doesn't exist: proceed with original FAIL behavior.
+If `check-waivers.sh` exits 0 (waived): print `⊘ <check> WAIVED — <reason>` and count as PASS. If `check-waivers.sh` exits 1 (not waived) or the file doesn't exist: proceed with original FAIL behavior.
 
 The plugin-name argument is the scoped plugin being released, or omit it for full-repo releases.
 
@@ -624,14 +642,16 @@ Tag (remote): MISSING | LOCAL_ONLY | BOTH | REMOTE_ONLY — <OK | FAIL | ⊘ WAI
 - Any single unwaived FAIL = overall FAIL
 - Do not modify any files or git state.
 - Run checks in order, report all results even if one fails early.
-```
+
+````
 
 **Step 2: Verify the file was written correctly (check for key phrases)**
 
 ```bash
 grep -c "reconcile-tags.sh\|check-waivers.sh\|tag_exists\|WAIVED" \
   plugins/release-pipeline/agents/git-preflight.md
-```
+````
+
 Expected: 4 or more (each term appears at least once)
 
 **Step 3: Commit**
@@ -648,13 +668,14 @@ git commit -m "feat(release-pipeline): add remote tag check and waiver support t
 Add waiver support for `missing_tests`.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/agents/test-runner.md`
 
 **Step 1: Rewrite the file**
 
 Add a "Waiver Lookup" section before the Rules section. When no test runner is detected (the `missing_tests` condition), run `check-waivers.sh` first.
 
-```markdown
+````markdown
 ---
 name: test-runner
 description: Run full test suite and report pass/fail count with coverage. Used by release pipeline Phase 1.
@@ -679,9 +700,9 @@ When no test runner is detected (step 2 fails and CLAUDE.md has no test command)
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json missing_tests [plugin-name]
 ```
+````
 
-If exit 0 (waived): report `⊘ missing_tests WAIVED — <reason>` and set status to PASS.
-If exit 1 (not waived): proceed with original FAIL behavior ("No test runner found").
+If exit 0 (waived): report `⊘ missing_tests WAIVED — <reason>` and set status to PASS. If exit 1 (not waived): proceed with original FAIL behavior ("No test runner found").
 
 ## Output Format
 
@@ -700,14 +721,16 @@ Details: [any failure messages, truncated to 20 lines max]
 - If tests fail, still report the full summary — do not stop at the first failure.
 - If no test runner is detected and CLAUDE.md has no test command, check waiver before reporting FAIL.
 - Do not modify any files. You are read-only except for running the test command.
-```
+
+````
 
 **Step 2: Verify**
 
 ```bash
 grep -c "check-waivers.sh\|missing_tests\|WAIVED" \
   plugins/release-pipeline/agents/test-runner.md
-```
+````
+
 Expected: 3 or more
 
 **Step 3: Commit**
@@ -724,13 +747,14 @@ git commit -m "feat(release-pipeline): add missing_tests waiver support to test-
 Add waiver support for `stale_docs`.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/agents/docs-auditor.md`
 
 **Step 1: Rewrite the file**
 
 Add a "Waiver Lookup" section. The `stale_docs` waiver applies when the status would be FAIL due to stale version references.
 
-```markdown
+````markdown
 ---
 name: docs-auditor
 description: Audit documentation for stale versions, broken links, and tone. Used by release pipeline Phase 1.
@@ -774,9 +798,9 @@ When the audit would result in FAIL status (stale versions or broken links found
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json stale_docs [plugin-name]
 ```
+````
 
-If exit 0 (waived): downgrade FAIL to WARN and annotate `⊘ stale_docs WAIVED — <reason>`.
-If exit 1 (not waived): proceed with original FAIL behavior.
+If exit 0 (waived): downgrade FAIL to WARN and annotate `⊘ stale_docs WAIVED — <reason>`. If exit 1 (not waived): proceed with original FAIL behavior.
 
 Note: broken links are NOT waivable — only stale version references are covered by `stale_docs`.
 
@@ -799,14 +823,16 @@ Details: [specific issues, one per line]
 - WARN = only warnings (tone flags or missing files, but no stale versions or broken links; or stale_docs waived)
 - FAIL = stale version references or broken links found (and not waived)
 - Do not modify any files.
-```
+
+````
 
 **Step 2: Verify**
 
 ```bash
 grep -c "check-waivers.sh\|stale_docs\|WAIVED" \
   plugins/release-pipeline/agents/docs-auditor.md
-```
+````
+
 Expected: 3 or more
 
 **Step 3: Commit**
@@ -823,31 +849,37 @@ git commit -m "feat(release-pipeline): add stale_docs waiver support to docs-aud
 Add tag reconciliation (before `git tag -a`) and retry wrapper (for `gh release create`) in Phase 3.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/templates/mode-2-full-release.md`
 
 **Step 1: Add tag reconciliation block before `git tag -a`**
 
 In Phase 3, before the `git tag -a "v<version>"` command, add:
 
-```markdown
+````markdown
 **Tag reconciliation:**
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "v<version>"
 ```
+````
 
 Capture the first line of stdout as `tag_status`. Branch based on value:
+
 - `MISSING` or `LOCAL_ONLY`: proceed to `git tag -a` step normally
 - `BOTH` or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists; proceed to `git push origin main --tags` (will be a no-op for that tag) and then the GitHub release step
-```
+
+````
 
 **Step 2: Wrap `gh release create` with retry**
 
 Replace:
 ```bash
 gh release create "v<version>" --title "v<version>" --notes "<changelog entry>"
-```
+````
+
 With:
+
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/api-retry.sh 3 1000 -- \
   gh release create "v<version>" --title "v<version>" --notes "<changelog entry>"
@@ -859,6 +891,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/api-retry.sh 3 1000 -- \
 grep -c "reconcile-tags.sh\|api-retry.sh" \
   plugins/release-pipeline/templates/mode-2-full-release.md
 ```
+
 Expected: 2
 
 **Step 4: Commit**
@@ -875,29 +908,35 @@ git commit -m "feat(release-pipeline): add tag reconciliation and retry to mode-
 Same changes as Task 8 but for scoped plugin release (tag format is `<plugin>/v<version>`).
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/templates/mode-3-plugin-release.md`
 
 **Step 1: Add tag reconciliation before `git tag -a`**
 
-```markdown
+````markdown
 **Tag reconciliation:**
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "<plugin-name>/v<version>"
 ```
+````
 
 Capture the first line of stdout as `tag_status`. Same branching logic as Mode 2:
+
 - `MISSING` or `LOCAL_ONLY`: create tag normally
 - `BOTH` or `REMOTE_ONLY`: skip `git tag -a`, proceed to push and GitHub release
-```
+
+````
 
 **Step 2: Wrap `gh release create` with retry**
 
 Replace:
 ```bash
 gh release create "<plugin-name>/v<version>" --title "<plugin-name> v<version>" --notes "<changelog entry>"
-```
+````
+
 With:
+
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/api-retry.sh 3 1000 -- \
   gh release create "<plugin-name>/v<version>" --title "<plugin-name> v<version>" --notes "<changelog entry>"
@@ -909,6 +948,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/api-retry.sh 3 1000 -- \
 grep -c "reconcile-tags.sh\|api-retry.sh" \
   plugins/release-pipeline/templates/mode-3-plugin-release.md
 ```
+
 Expected: 2
 
 **Step 4: Commit**
@@ -925,18 +965,24 @@ git commit -m "feat(release-pipeline): add tag reconciliation and retry to mode-
 New batch release template. Iterates all unreleased plugins, quarantines failures, emits summary report.
 
 **Files:**
+
 - Create: `plugins/release-pipeline/templates/mode-7-batch-release.md`
 
 **Step 1: Write the template**
 
-```markdown
+````markdown
 # Mode 7: Batch Release All Plugins
 
 # Loaded by the release command router after the user selects "Batch Release All Plugins".
+
 # Context from Phase 0: is_monorepo=true, unreleased_plugins (TSV list), current_branch.
+
 #
+
 # Quarantine semantics: on any FAIL during pre-flight, prep, or release phases,
+
 # add the plugin to the failed list and continue to the next plugin WITHOUT stopping.
+
 # Phase 4 (verification) failures are recorded as warnings but do NOT quarantine.
 
 ## Step 0 — Release Plan Presentation
@@ -946,6 +992,7 @@ For each plugin in `unreleased_plugins`, run in parallel:
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-version.sh . --plugin <plugin-name>
 ```
+````
 
 Collect `suggested_version` for each plugin. Then display the plan:
 
@@ -958,6 +1005,7 @@ Plugin              Current    →  Proposed
 ```
 
 Use **AskUserQuestion**:
+
 - question: `"Proceed with batch release of <N> plugins?"`
 - header: `"Batch Release"`
 - options:
@@ -975,6 +1023,7 @@ Initialize: `succeeded=[]`, `failed=[]`
 Repeat the following block for each plugin in `unreleased_plugins` in order.
 
 **Output a header at the start of each plugin:**
+
 ```
 ── Releasing <plugin-name> v<proposed-version> (<N> of <total>) ──
 ```
@@ -983,29 +1032,27 @@ Repeat the following block for each plugin in `unreleased_plugins` in order.
 
 Launch THREE Task agents simultaneously (same as Mode 3 Phase 1):
 
-**Agent A — Test Runner (scoped):**
-Follow Mode 3 Phase 1 Agent A prompt exactly.
+**Agent A — Test Runner (scoped):** Follow Mode 3 Phase 1 Agent A prompt exactly.
 
-**Agent B — Docs Auditor (scoped):**
-Follow Mode 3 Phase 1 Agent B prompt exactly.
+**Agent B — Docs Auditor (scoped):** Follow Mode 3 Phase 1 Agent B prompt exactly.
 
-**Agent C — Git Pre-flight (scoped):**
-Follow Mode 3 Phase 1 Agent C prompt exactly.
+**Agent C — Git Pre-flight (scoped):** Follow Mode 3 Phase 1 Agent C prompt exactly.
 
 After all return, check results:
+
 - If ALL PASS or WARN → continue to Phase 2
 - If ANY FAIL → **quarantine**: append `"<plugin-name> v<version> — Phase 1: <failing check>"` to `failed[]`, output `"⚠ Quarantined <plugin-name>: Phase 1 failure"`, and **skip to the next plugin**
 
 ### Phase 2 — Scoped Preparation
 
 Follow Mode 3 Phase 2 exactly, with these differences:
+
 - **No approval gate** — batch consent was given at Step 0
 - If any step fails: revert changes (`git checkout -- plugins/<plugin-name>/`), append to `failed[]`, output `"⚠ Quarantined <plugin-name>: Phase 2 failure — <error>"`, and skip to next plugin
 
 ### Phase 3 — Scoped Release
 
-Follow Mode 3 Phase 3 exactly (including tag reconciliation and retry).
-If any step fails: append to `failed[]`, output `"⚠ Quarantined <plugin-name>: Phase 3 failure — <error>"`, and skip to next plugin.
+Follow Mode 3 Phase 3 exactly (including tag reconciliation and retry). If any step fails: append to `failed[]`, output `"⚠ Quarantined <plugin-name>: Phase 3 failure — <error>"`, and skip to next plugin.
 
 **Do NOT attempt rollback of git operations already committed** — report the state in the summary.
 
@@ -1033,17 +1080,20 @@ Skipped   (<N>): —
 ```
 
 If `failed` is non-empty, append:
+
 ```
 ⚠ <N> plugin(s) require attention. See failures above. Re-run `/release` for each to retry.
 ```
-```
+
+````
 
 **Step 2: Verify the file was created**
 
 ```bash
 grep -c "Batch Release\|quarantine\|succeeded\|failed\[\]" \
   plugins/release-pipeline/templates/mode-7-batch-release.md
-```
+````
+
 Expected: 4 or more
 
 **Step 3: Commit**
@@ -1060,6 +1110,7 @@ git commit -m "feat(release-pipeline): add mode-7-batch-release.md template"
 Add Mode 7 (Batch Release) to the menu and route it to `mode-7-batch-release.md`.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/commands/release.md`
 
 **Step 1: Add menu entry after Plugin Release (monorepo-only section)**
@@ -1086,6 +1137,7 @@ In the `| Selection | Template |` table, add the row:
 ```bash
 grep -c "Batch Release\|mode-7" plugins/release-pipeline/commands/release.md
 ```
+
 Expected: 2
 
 **Step 4: Commit**
@@ -1102,6 +1154,7 @@ git commit -m "feat(release-pipeline): add Batch Release option to /release menu
 Bump plugin to v1.6.0, update marketplace.json, write CHANGELOG entry.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/.claude-plugin/plugin.json`
 - Modify: `.claude-plugin/marketplace.json`
 - Modify: `plugins/release-pipeline/CHANGELOG.md`
@@ -1122,6 +1175,7 @@ Find the `release-pipeline` entry and update `"version": "1.6.0"`.
 ## [1.6.0] - 2026-02-20
 
 ### Added
+
 - `scripts/reconcile-tags.sh` — compare local/remote tag state; auto-fetch REMOTE_ONLY tags before push
 - `scripts/api-retry.sh` — exponential backoff + jitter retry wrapper (3 attempts) for `gh` CLI calls
 - `scripts/check-waivers.sh` — look up pre-flight check waivers from `.release-waivers.json`
@@ -1132,6 +1186,7 @@ Find the `release-pipeline` entry and update `"version": "1.6.0"`.
 - `agents/docs-auditor.md`: waiver support for `stale_docs`
 
 ### Changed
+
 - `templates/mode-2-full-release.md` Phase 3: tag reconciliation before push, retry on `gh release create`
 - `templates/mode-3-plugin-release.md` Phase 3: same as mode-2
 - `scripts/verify-release.sh`: `gh release view` calls now use retry wrapper
@@ -1142,6 +1197,7 @@ Find the `release-pipeline` entry and update `"version": "1.6.0"`.
 ```bash
 bash scripts/validate-marketplace.sh
 ```
+
 Expected: `✓ Marketplace validation passed`
 
 **Step 5: Final commit**

@@ -1,7 +1,7 @@
 ---
 name: scaffold
 description: Scaffold a new Python/PySide6 application with pyproject.toml, src layout, and qt-suite config.
-argument-hint: "[app-name] [optional: description]"
+argument-hint: '[app-name] [optional: description]'
 allowed-tools:
   - Read
   - Write
@@ -18,6 +18,7 @@ Create a complete Python/PySide6 project structure. Default layout: `pyproject.t
 If an argument was provided (e.g., `/qt-suite:scaffold my-music-app`), use it as the app name.
 
 If no argument was provided, check the current directory:
+
 - If it's an empty or new directory, scaffold here using the directory name as the app name
 - Otherwise, ask the user for a name using `AskUserQuestion`
 
@@ -38,6 +39,7 @@ mkdir -p <app-name>/tests
 ## Step 3: Write Project Files
 
 ### `pyproject.toml`
+
 ```toml
 [build-system]
 requires = ["hatchling"]
@@ -66,9 +68,11 @@ include = ["src"]
 ```
 
 ### `src/<package_name>/__init__.py`
+
 Empty file.
 
 ### `src/<package_name>/__main__.py`
+
 ```python
 import sys
 from PySide6.QtWidgets import QApplication
@@ -90,9 +94,11 @@ if __name__ == "__main__":
 ```
 
 ### `src/<package_name>/ui/__init__.py`
+
 Empty file.
 
 ### `src/<package_name>/ui/main_window.py`
+
 ```python
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
@@ -132,18 +138,23 @@ class MainWindow(QMainWindow):
 ```
 
 ### `src/<package_name>/ui/widgets/__init__.py` and `dialogs/__init__.py`
+
 Empty files.
 
 ### `src/<package_name>/models/__init__.py` and `services/__init__.py`
+
 Empty files.
 
 ### `src/<package_name>/resources/__init__.py`
+
 Empty file.
 
 ### `tests/__init__.py`
+
 Empty file.
 
 ### `tests/conftest.py`
+
 ```python
 import pytest
 from PySide6.QtWidgets import QApplication
@@ -157,16 +168,18 @@ def qapp():
 ```
 
 ### `.qt-test.json`
+
 ```json
 {
-  "project_type": "python",
-  "app_entry": "src/<package_name>/__main__.py",
-  "test_dir": "tests/",
-  "coverage_source": ["src/<package_name>"]
+	"project_type": "python",
+	"app_entry": "src/<package_name>/__main__.py",
+	"test_dir": "tests/",
+	"coverage_source": ["src/<package_name>"]
 }
 ```
 
 ### `.gitignore`
+
 ```
 __pycache__/
 *.pyc
@@ -183,11 +196,13 @@ src/<package_name>/resources/rc_*.py
 ## Step 4: Install Dependencies
 
 If `uv` is available:
+
 ```bash
 cd <app-name> && uv venv && uv pip install -e . PySide6 pytest pytest-qt
 ```
 
 Otherwise:
+
 ```bash
 cd <app-name> && python -m venv .venv && .venv/bin/pip install -e . PySide6 pytest pytest-qt
 ```
@@ -201,6 +216,7 @@ Initialized <app-name>/ — <N> files across <M> directories.
 ```
 
 Then:
+
 - List the directory tree (1 level deep)
 - Show how to run: `python -m <package_name>` or `uv run <app-name>`
 - Show how to run tests: `QT_QPA_PLATFORM=offscreen pytest tests/`

@@ -104,6 +104,7 @@ ssh <host> "stat <config-path>"  # check last modified time
 ```
 
 Compare the actual file content against what the wiki documents. Look for:
+
 - Changed values (ports, paths, credentials references, feature flags)
 - New directives not in the wiki
 - Removed directives still documented in the wiki

@@ -57,8 +57,7 @@ When no test runner is detected (step 2 fails and CLAUDE.md has no test command)
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json missing_tests [plugin-name]
 ```
 
-If exit 0 (waived): report `⊘ missing_tests WAIVED — <reason>` and set status to PASS.
-If exit 1 (not waived): proceed with original FAIL behavior ("No test runner found").
+If exit 0 (waived): report `⊘ missing_tests WAIVED — <reason>` and set status to PASS. If exit 1 (not waived): proceed with original FAIL behavior ("No test runner found").
 
 ## Output Format
 

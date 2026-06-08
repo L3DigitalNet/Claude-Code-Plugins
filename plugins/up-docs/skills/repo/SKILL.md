@@ -27,11 +27,7 @@ If the output is **non-empty**, STOP immediately:
 
 If the output is empty, continue.
 
-**Capture commit baseline** (for the Step 5 commit offer): BEFORE propagation, snapshot the
-repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would
-collide, CR-004) and remember the generated path:
-`BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"`.
-Thread `$BASELINE_REPO` to Step 5 — do not hardcode the baseline filename there.
+**Capture commit baseline** (for the Step 5 commit offer): BEFORE propagation, snapshot the repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated path: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"`. Thread `$BASELINE_REPO` to Step 5 — do not hardcode the baseline filename there.
 
 ### 1. Gather Session Context
 

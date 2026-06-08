@@ -1,19 +1,14 @@
 ---
 name: testing-mindset
 description: >
-  Always-on testing awareness driver. MUST consult during any implementation task to evaluate
-  whether testing is needed at this point. Applies to every task involving code changes.
-  Governs: when to suggest gap analysis, how to assess test coverage needs, delegation to
-  framework-specific testing plugins, and non-intrusive suggestion cadence.
-  Triggers on: test, implement, feature, fix, bug, refactor, build, create, modify, change,
-  add, update, debug, complete, finish, deploy, merge, PR, commit.
+  Always-on testing awareness driver. MUST consult during any implementation task to evaluate whether testing is needed at this point. Applies to every task involving code changes. Governs: when to suggest gap analysis, how to assess test coverage needs, delegation to framework-specific testing plugins, and non-intrusive suggestion cadence. Triggers on: test, implement, feature, fix, bug, refactor, build, create, modify, change, add, update, debug, complete, finish, deploy, merge, PR, commit.
 ---
 
 # Testing Mindset: Proactive Testing Awareness
 
-You have a testing-aware mindset installed. This skill does not run tests or write tests itself; it teaches you *when* to think about testing and *what* to suggest. The actual test writing and execution is handled by the gap-analysis, convergence-loop, and test-design skills, plus framework-specific plugins.
+You have a testing-aware mindset installed. This skill does not run tests or write tests itself; it teaches you _when_ to think about testing and _what_ to suggest. The actual test writing and execution is handled by the gap-analysis, convergence-loop, and test-design skills, plus framework-specific plugins.
 
-*Intentionally always-on.* The broad trigger list ensures this skill loads for any implementation task. The cadence rules below prevent noise.
+_Intentionally always-on._ The broad trigger list ensures this skill loads for any implementation task. The cadence rules below prevent noise.
 
 ## 1. Proactive Testing Moments
 
@@ -40,7 +35,7 @@ Before suggesting a gap analysis, check these three conditions:
 When writing tests, do not reinvent framework-specific patterns. Consult the matching plugin:
 
 | Project Type | Consult |
-|-------------|---------|
+| --- | --- |
 | Python (general) | `python-dev:python-testing-patterns` for pytest fixtures, mocking, parametrize |
 | PySide6/PyQt6 | `qt-suite:qtest-patterns` for widget tests, `qt-suite:qt-pilot-usage` for GUI testing |
 | Home Assistant | `home-assistant-dev:ha-testing` for hass fixtures, config flow tests |
@@ -48,7 +43,7 @@ When writing tests, do not reinvent framework-specific patterns. Consult the mat
 
 **Graceful degradation:** If the delegated plugin is not installed, proceed using general knowledge. The framework plugin enhances accuracy but is not required.
 
-**test-driver drives the *when* and *what*. Framework plugins provide the *how*.**
+**test-driver drives the _when_ and _what_. Framework plugins provide the _how_.**
 
 ## 4. Cadence Rules
 
@@ -60,6 +55,7 @@ When writing tests, do not reinvent framework-specific patterns. Consult the mat
 ## 5. Scope Boundaries
 
 This skill does **not**:
+
 - Run tests (that's the convergence-loop skill and stack profile commands)
 - Write tests (that's the convergence-loop skill using test-design principles)
 - Manage test infrastructure (Docker, databases, CI pipelines)

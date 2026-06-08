@@ -1,5 +1,5 @@
-  Trigger phrases: "Qt error", "crash", "segfault", "widget not showing", "event loop", "app exits unexpectedly", "Qt warning", "QPainter error", "assertion failed", "QObject destroyed", "application not responding"
-version: 1.0.0
+Trigger phrases: "Qt error", "crash", "segfault", "widget not showing", "event loop", "app exits unexpectedly", "Qt warning", "QPainter error", "assertion failed", "QObject destroyed", "application not responding" version: 1.0.0
+
 ---
 
 ## Qt Debugging
@@ -40,6 +40,7 @@ qInstallMessageHandler(qt_message_handler)
 ### Common Failure Categories
 
 #### Widget Never Appears
+
 - `show()` not called on top-level widget
 - Parent widget not shown (child inherits visibility)
 - `setFixedSize(0, 0)` or zero content margins collapsing it
@@ -52,6 +53,7 @@ print(widget.isVisible(), widget.size(), widget.parentWidget())
 ```
 
 #### Crash / Segfault on Widget Access
+
 - Widget garbage-collected (Python deleted the QWidget before Qt finished with it)
 - Common cause: widget stored only in a local variable, not `self._widget`
 - Fix: always assign widgets to `self` attributes in `__init__`
@@ -67,19 +69,23 @@ def setup(self):
 ```
 
 #### "QObject: Cannot create children for a parent in a different thread"
+
 - A `QObject` with a parent is being created in a non-main thread
 - Fix: create the object parentless, then use `moveToThread` or `deleteLater` for cleanup
 
 #### "QPixmap: Must construct a QGuiApplication before a QPaintDevice"
+
 - `QPixmap`, `QImage`, or `QIcon` created before `QApplication` exists
 - Fix: move all Qt object construction after `app = QApplication(sys.argv)`
 
 #### "RuntimeError: Internal C++ object (QWidget) already deleted"
+
 - Accessing a Python wrapper after Qt deleted the underlying C++ object
 - Common with `deleteLater()` — the deletion happens asynchronously
 - Fix: check `sip.isdeleted(widget)` (PyQt6) or use `QPointer` pattern
 
 #### Event Loop Frozen / UI Unresponsive
+
 - Blocking call on main thread (I/O, `time.sleep`, heavy computation)
 - Fix: move to `QRunnable`/`QThread` (see `qt-threading` skill)
 
@@ -90,6 +96,7 @@ QCoreApplication.processEvents()  # temporarily unblocks — confirms event loop
 ```
 
 #### Signal Connected But Never Fires
+
 1. Verify the sender object is still alive
 2. Add debug connection: `signal.connect(lambda *a: print("FIRED", a))`
 3. Check signal type signature matches — `Signal(int)` will not fire if you emit `Signal(str)` equivalent

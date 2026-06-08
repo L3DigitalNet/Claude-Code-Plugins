@@ -1,6 +1,5 @@
-  "coverage threshold", "coverage-driven test generation", or "what code isn't tested".
-  Covers the full coverage feedback loop for both Python/PySide6 (coverage.py) and C++/Qt (gcov + lcov).
-  Also activates for "pytest-cov", "run coverage on my Qt project", or "CI coverage report".
+"coverage threshold", "coverage-driven test generation", or "what code isn't tested". Covers the full coverage feedback loop for both Python/PySide6 (coverage.py) and C++/Qt (gcov + lcov). Also activates for "pytest-cov", "run coverage on my Qt project", or "CI coverage report".
+
 ---
 
 # Qt Coverage Workflow
@@ -30,6 +29,7 @@ Use `/qt:coverage` to execute this loop. The `test-generator` agent activates au
 **Full Python coverage walkthrough** — see [qt-coverage-workflow/python-coverage-workflow.md](qt-coverage-workflow/python-coverage-workflow.md) for installation, all report formats, branch coverage, CI integration, and agent-handoff parsing patterns.
 
 Key CI step pattern:
+
 ```yaml
 - name: Run coverage
   run: pytest --cov=myapp --cov-report=xml --cov-fail-under=80 tests/
@@ -44,18 +44,15 @@ Key CI step pattern:
 Configure thresholds in `.qt-test.json`:
 
 ```json
-{
-  "coverage_threshold": 80,
-  "coverage_exclude": ["tests/*", "*/migrations/*"]
-}
+{ "coverage_threshold": 80, "coverage_exclude": ["tests/*", "*/migrations/*"] }
 ```
 
-| Threshold | When appropriate |
-|---|---|
-| 60–70% | Early-stage projects, rapid prototyping |
-| 80% | General production code (recommended default) |
-| 90%+ | Safety-critical components |
-| 100% MC/DC | Aerospace/automotive (requires Coco) |
+| Threshold  | When appropriate                              |
+| ---------- | --------------------------------------------- |
+| 60–70%     | Early-stage projects, rapid prototyping       |
+| 80%        | General production code (recommended default) |
+| 90%+       | Safety-critical components                    |
+| 100% MC/DC | Aerospace/automotive (requires Coco)          |
 
 ## Identifying High-Value Coverage Gaps
 

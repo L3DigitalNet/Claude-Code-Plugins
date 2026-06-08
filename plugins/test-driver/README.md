@@ -21,6 +21,7 @@ Claude doesn't systematically think about testing unless asked. This plugin inst
 None beyond Claude Code.
 
 Enhanced by (optional):
+
 - `python-dev` plugin for pytest patterns
 - `qt-suite` plugin for Qt/PySide6 testing
 - `home-assistant-dev` plugin for HA integration testing
@@ -77,14 +78,14 @@ When working on code changes, always consult the `test-driver:testing-mindset` s
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `/test-driver:analyze` | Force a gap analysis. Detects project type, identifies missing tests, offers to fill gaps via convergence loop. |
 | `/test-driver:status` | View current test posture from TEST_STATUS.json without running tests. |
 
 ## Skills
 
 | Skill | Loaded when |
-|-------|-------------|
+| --- | --- |
 | `testing-mindset` | Always, via broad description matching. Drives when to suggest testing. |
 
 ## References
@@ -92,7 +93,7 @@ When working on code changes, always consult the `test-driver:testing-mindset` s
 Domain knowledge loaded on demand by the commands. These files are never auto-loaded into context.
 
 | Reference | Purpose |
-|-----------|---------|
+| --- | --- |
 | `gap-analysis.md` | Full gap detection methodology across six test categories |
 | `convergence-loop.md` | Iterative test generation and fix engine with oscillation detection |
 | `test-design.md` | Universal test design principles (isolation, boundaries, assertions) |
@@ -109,7 +110,7 @@ Domain knowledge loaded on demand by the commands. These files are never auto-lo
 
 - **No hooks:** A behavioral skill (testing-mindset) handles proactive triggers more flexibly than a PostToolUse hook counting file edits. Hooks are mechanical; the mindset skill understands breakpoints.
 
-- **Delegates framework knowledge:** Rather than duplicating pytest patterns from python-dev or Qt test patterns from qt-suite, test-driver identifies *what* to test and *when*, then consults existing plugins for *how*.
+- **Delegates framework knowledge:** Rather than duplicating pytest patterns from python-dev or Qt test patterns from qt-suite, test-driver identifies _what_ to test and _when_, then consults existing plugins for _how_.
 
 ## Planned Features
 

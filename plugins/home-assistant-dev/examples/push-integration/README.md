@@ -11,13 +11,14 @@ A **Silver-tier** example demonstrating push-based (non-polling) integrations.
 
 ### Configuration Parameters
 
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| **Host** | IP address or hostname of your push device | ✓ |
+| Parameter | Description                                | Required |
+| --------- | ------------------------------------------ | -------- |
+| **Host**  | IP address or hostname of your push device | ✓        |
 
 ## When to Use Push Pattern
 
 Use this pattern when your device:
+
 - Sends updates proactively (WebSocket, MQTT, callbacks)
 - Has real-time state changes (motion sensors, doorbell events)
 - Should not be polled (API rate limits, battery devices)
@@ -54,6 +55,7 @@ def _handle_update(self) -> None:
 ### Reconnection Handling
 
 The coordinator handles:
+
 - Initial connection
 - Automatic reconnection on disconnect
 - Graceful shutdown on unload
@@ -73,12 +75,12 @@ push_example/
 
 ## Differences from Polling
 
-| Aspect | Polling (DataUpdateCoordinator) | Push |
-|--------|--------------------------------|------|
-| Updates | Interval-based | Event-driven |
-| iot_class | `local_polling` | `local_push` |
-| Coordinator | DataUpdateCoordinator | Custom |
-| Entity base | CoordinatorEntity | SensorEntity + dispatcher |
+| Aspect      | Polling (DataUpdateCoordinator) | Push                      |
+| ----------- | ------------------------------- | ------------------------- |
+| Updates     | Interval-based                  | Event-driven              |
+| iot_class   | `local_polling`                 | `local_push`              |
+| Coordinator | DataUpdateCoordinator           | Custom                    |
+| Entity base | CoordinatorEntity               | SensorEntity + dispatcher |
 
 ## License
 

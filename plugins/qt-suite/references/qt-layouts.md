@@ -1,5 +1,5 @@
-  Trigger phrases: "arrange widgets", "layout", "resize behavior", "QSplitter", "center widget", "widget not visible", "expand to fill", "fixed size", "stretch factor", "form layout", "grid layout", "spacing", "margins"
-version: 1.0.0
+Trigger phrases: "arrange widgets", "layout", "resize behavior", "QSplitter", "center widget", "widget not visible", "expand to fill", "fixed size", "stretch factor", "form layout", "grid layout", "spacing", "margins" version: 1.0.0
+
 ---
 
 ## Qt Layout Managers
@@ -20,12 +20,12 @@ QWidget (parent)
 
 ### Core Layout Types
 
-| Layout | Use case |
-|--------|----------|
-| `QVBoxLayout` | Stack items vertically |
-| `QHBoxLayout` | Stack items horizontally |
-| `QGridLayout` | Row/column grid |
-| `QFormLayout` | Label + field pairs |
+| Layout           | Use case                    |
+| ---------------- | --------------------------- |
+| `QVBoxLayout`    | Stack items vertically      |
+| `QHBoxLayout`    | Stack items horizontally    |
+| `QGridLayout`    | Row/column grid             |
+| `QFormLayout`    | Label + field pairs         |
 | `QStackedLayout` | Multiple pages, one visible |
 
 ### Basic Usage
@@ -58,12 +58,14 @@ Pass the parent widget to the layout constructor (`QVBoxLayout(self)`) — this 
 ### Stretch and Size Policy
 
 **Stretch factors** distribute extra space when the window resizes:
+
 ```python
 layout.addWidget(sidebar, stretch=1)    # gets 1/4 of extra space
 layout.addWidget(main_area, stretch=3)  # gets 3/4 of extra space
 ```
 
 **Size policy** controls how individual widgets resize:
+
 ```python
 # Expand to fill available horizontal space
 widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -76,6 +78,7 @@ widget.setFixedSize(200, 40)
 Common policies: `Fixed`, `Minimum`, `Maximum`, `Preferred`, `Expanding`, `MinimumExpanding`.
 
 **Spacers:**
+
 ```python
 from PySide6.QtWidgets import QSpacerItem, QSizePolicy
 
@@ -105,6 +108,7 @@ grid.setColumnStretch(1, 1)
 ### QFormLayout
 
 Use for settings dialogs and data entry forms — automatically handles label alignment:
+
 ```python
 from PySide6.QtWidgets import QFormLayout
 
@@ -145,18 +149,22 @@ layout.addStretch()
 ### Debugging Layout Issues
 
 **Widget appears but is zero-size:**
+
 - Set a size hint: `widget.setMinimumSize(100, 40)` or override `sizeHint()`
 - Check that the parent layout is actually attached (`self.layout()` returns non-None)
 
 **Widget not visible at all:**
+
 - Confirm `show()` was called (or parent is visible)
 - Check `isHidden()` and `isVisible()`
 - Ensure no `setFixedSize(0, 0)` or zero margins collapsing the widget
 
 **Layout ignoring size changes:**
+
 - Call `layout.invalidate()` after programmatic geometry changes
 - Verify size policy is not `Fixed` when you want expansion
 
 **Margins and spacing defaults:**
+
 - Default content margins: 9px on all sides (varies by style)
 - Reset to zero: `layout.setContentsMargins(0, 0, 0, 0)` and `layout.setSpacing(0)`

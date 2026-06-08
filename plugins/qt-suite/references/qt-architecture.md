@@ -1,5 +1,5 @@
-  Trigger phrases: "structure my Qt app", "QApplication setup", "app entry point", "Qt project layout", "organize Qt code", "Qt MVC", "Qt MVP", "main window architecture", "new Qt project"
-version: "1.0.0"
+Trigger phrases: "structure my Qt app", "QApplication setup", "app entry point", "Qt project layout", "organize Qt code", "Qt MVC", "Qt MVP", "main window architecture", "new Qt project" version: "1.0.0"
+
 ---
 
 ## Qt Application Architecture
@@ -9,6 +9,7 @@ version: "1.0.0"
 Every Qt application requires exactly one `QApplication` (widgets) or `QGuiApplication` (QML-only) instance. Create it before any widgets.
 
 **Python/PySide6 canonical entry point:**
+
 ```python
 # src/myapp/__main__.py
 import sys
@@ -31,6 +32,7 @@ if __name__ == "__main__":
 Using `__main__.py` enables `python -m myapp` invocation. Set `applicationName` and `organizationName` before creating any widgets — these values seed `QSettings`.
 
 **C++/Qt canonical main.cpp:**
+
 ```cpp
 #include <QApplication>
 #include "mainwindow.h"
@@ -112,6 +114,7 @@ Separate `_setup_ui`, `_setup_menu`, and `_connect_signals` into distinct method
 ### Architectural Patterns
 
 **MVP (Model-View-Presenter)** — preferred for testable Qt applications:
+
 - **Model**: Pure Python classes, no Qt imports. Holds data and business logic.
 - **View**: QWidget subclasses. Emits signals for user actions; receives data to display.
 - **Presenter**: Mediates between Model and View. Contains decision logic. Testable without Qt.
@@ -167,10 +170,10 @@ Always create this at project root for `qt-test-suite` compatibility:
 
 ```json
 {
-  "project_type": "python",
-  "app_entry": "src/myapp/__main__.py",
-  "test_dir": "tests/",
-  "coverage_source": ["src/myapp"]
+	"project_type": "python",
+	"app_entry": "src/myapp/__main__.py",
+	"test_dir": "tests/",
+	"coverage_source": ["src/myapp"]
 }
 ```
 

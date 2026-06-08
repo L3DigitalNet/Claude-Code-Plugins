@@ -1,8 +1,6 @@
 # Design: linux-sysadmin — ansible + restic Skills
 
-**Date:** 2026-03-02
-**Plugin:** `linux-sysadmin` (currently v1.0.0, 95 skills)
-**Scope:** Add 2 new Tier 1 skills identified in the gap analysis
+**Date:** 2026-03-02 **Plugin:** `linux-sysadmin` (currently v1.0.0, 95 skills) **Scope:** Add 2 new Tier 1 skills identified in the gap analysis
 
 ---
 
@@ -46,7 +44,7 @@ plugins/linux-sysadmin/skills/
 **Identity table:**
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | Binaries | `ansible`, `ansible-playbook`, `ansible-vault`, `ansible-galaxy`, `ansible-inventory`, `ansible-lint` |
 | System config | `/etc/ansible/ansible.cfg` |
 | User config | `~/.ansible.cfg` |
@@ -61,7 +59,7 @@ plugins/linux-sysadmin/skills/
 **Common Failures:**
 
 | Symptom | Cause | Fix |
-|---------|-------|-----|
+| --- | --- | --- |
 | `UNREACHABLE` | SSH key not accepted or wrong user | Check `ansible_user`, `ansible_ssh_private_key_file`; test with `ssh -i key user@host` |
 | `MODULE FAILURE` with Python path error | `/usr/bin/python` missing on target | Set `ansible_python_interpreter=/usr/bin/python3` or `auto_silent` in `ansible.cfg` |
 | `Missing sudo password` | `become: yes` but no NOPASSWD and no `--ask-become-pass` | Add `-K` flag or configure `NOPASSWD` in sudoers |
@@ -85,12 +83,14 @@ plugins/linux-sysadmin/skills/
 ### References
 
 **`ansible.cfg.annotated`** — annotated configuration covering:
+
 - `[defaults]`: `inventory`, `roles_path`, `remote_user`, `private_key_file`, `host_key_checking`, `forks`, `timeout`, `log_path`, `interpreter_python`
 - `[privilege_escalation]`: `become`, `become_method`, `become_user`, `become_ask_pass`
 - `[ssh_connection]`: `pipelining`, `ssh_args` (ControlMaster/ControlPersist), `scp_if_ssh`
 - `[diff]`: `always`, `context`
 
 **`playbook.yml.annotated`** — a single annotated example playbook covering:
+
 - Play-level: `hosts`, `become`, `gather_facts`, `vars`, `vars_files`
 - Task structures: `name`, `module`, `register`, `debug`, `when`, `loop`
 - `block` / `rescue` / `always` for error handling
@@ -100,6 +100,7 @@ plugins/linux-sysadmin/skills/
 - `pre_tasks` / `post_tasks`
 
 **`common-patterns.md`** — organized by task:
+
 - Static inventory (INI and YAML formats), dynamic inventory scripts
 - Ad-hoc commands (ping, copy files, run commands, manage packages)
 - Running playbooks (dry-run, tags, limits, verbosity levels)
@@ -123,7 +124,7 @@ plugins/linux-sysadmin/skills/
 **Identity table:**
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | Binary | `restic` |
 | Unit | No daemon — run via cron or systemd timer |
 | Config | No fixed path — driven by env vars (`RESTIC_REPOSITORY`, `RESTIC_PASSWORD_FILE`) or CLI flags |
@@ -136,7 +137,7 @@ plugins/linux-sysadmin/skills/
 **Common Failures:**
 
 | Symptom | Cause | Fix |
-|---------|-------|-----|
+| --- | --- | --- |
 | `wrong password or no key found` | Incorrect password or wrong repo | Verify `RESTIC_REPOSITORY` and `RESTIC_PASSWORD`/`RESTIC_PASSWORD_FILE` |
 | `Fatal: unable to open config file: ...is already locked` | Previous backup died holding a lock | `restic unlock` — verify no other backup is actually running first |
 | `FUSE mount fails` | `fusermount` not available or permissions | `apt install fuse` / `dnf install fuse`; user must be in `fuse` group or run as root |
@@ -160,6 +161,7 @@ plugins/linux-sysadmin/skills/
 ### References
 
 **`cheatsheet.md`** — task-organized patterns:
+
 - Initializing and configuring repos (local, SFTP, S3, REST)
 - Backup with common exclude patterns
 - Listing and filtering snapshots
@@ -171,6 +173,7 @@ plugins/linux-sysadmin/skills/
 - Environment variable reference (`RESTIC_REPOSITORY`, `RESTIC_PASSWORD`, `RESTIC_PASSWORD_FILE`, `RESTIC_COMPRESSION`, backend-specific vars)
 
 **`common-patterns.md`** — organized by backend and use case:
+
 - **Local backend**: init, backup, restore, forget+prune, systemd timer
 - **SFTP backend**: SSH key setup, connection string format, jump hosts
 - **S3-compatible** (MinIO, Wasabi, AWS S3): credentials, endpoint override, bucket creation

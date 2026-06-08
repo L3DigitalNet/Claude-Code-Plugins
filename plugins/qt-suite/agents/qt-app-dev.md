@@ -2,44 +2,17 @@
 name: qt-app-dev
 description: >
   Qt application development specialist. Use PROACTIVELY when creating a new Qt project, implementing Qt widgets or windows, building new features in a PySide6/PyQt6 application, or designing the architecture of a Qt GUI app.
-
+  
   Examples:
+  
+  <example> Context: The user is starting a new PySide6 application. user: "I want to build a desktop app for managing my music library" assistant: "I'll use the qt-app-dev agent to help architect and scaffold the application." <commentary> A new Qt application needs architecture decisions, project layout, and initial scaffolding — the qt-app-dev agent's primary use case. </commentary> </example>
+  
+  <example> Context: The user is adding a new feature to an existing Qt app. user: "Add a settings panel to my PySide6 application" assistant: "I'll use the qt-app-dev agent to implement the settings panel with the correct Qt patterns." <commentary> Implementing a settings panel requires knowledge of QSettings, QDialog, and layout patterns — the qt-app-dev agent has these as preloaded skills. </commentary> </example>
+  
+  <example> Context: A new .py file importing PySide6 was just created. user: "I've created main_window.py — implement the main window" assistant: "I'll use the qt-app-dev agent to implement the main window with proper QMainWindow structure." <commentary> A new Qt file being created is a trigger for proactive qt-app-dev involvement. </commentary> </example>
+  
+  <example> Context: The user wants to display data in a table. user: "I need to show a list of products in a table" assistant: "I'll use the qt-app-dev agent to implement this with QAbstractTableModel and QTableView." <commentary> Qt Model/View is a non-trivial pattern — the qt-app-dev agent knows when and how to use it. </commentary> </example>
 
-  <example>
-  Context: The user is starting a new PySide6 application.
-  user: "I want to build a desktop app for managing my music library"
-  assistant: "I'll use the qt-app-dev agent to help architect and scaffold the application."
-  <commentary>
-  A new Qt application needs architecture decisions, project layout, and initial scaffolding — the qt-app-dev agent's primary use case.
-  </commentary>
-  </example>
-
-  <example>
-  Context: The user is adding a new feature to an existing Qt app.
-  user: "Add a settings panel to my PySide6 application"
-  assistant: "I'll use the qt-app-dev agent to implement the settings panel with the correct Qt patterns."
-  <commentary>
-  Implementing a settings panel requires knowledge of QSettings, QDialog, and layout patterns — the qt-app-dev agent has these as preloaded skills.
-  </commentary>
-  </example>
-
-  <example>
-  Context: A new .py file importing PySide6 was just created.
-  user: "I've created main_window.py — implement the main window"
-  assistant: "I'll use the qt-app-dev agent to implement the main window with proper QMainWindow structure."
-  <commentary>
-  A new Qt file being created is a trigger for proactive qt-app-dev involvement.
-  </commentary>
-  </example>
-
-  <example>
-  Context: The user wants to display data in a table.
-  user: "I need to show a list of products in a table"
-  assistant: "I'll use the qt-app-dev agent to implement this with QAbstractTableModel and QTableView."
-  <commentary>
-  Qt Model/View is a non-trivial pattern — the qt-app-dev agent knows when and how to use it.
-  </commentary>
-  </example>
 
 model: sonnet
 color: blue
@@ -47,6 +20,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
 Read these references at the start of the session for domain knowledge:
+
 - `${CLAUDE_PLUGIN_ROOT}/references/qt-architecture.md`
 - `${CLAUDE_PLUGIN_ROOT}/references/qt-signals-slots.md`
 - `${CLAUDE_PLUGIN_ROOT}/references/qt-layouts.md`

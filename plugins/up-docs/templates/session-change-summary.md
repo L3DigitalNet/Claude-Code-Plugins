@@ -12,12 +12,14 @@ This is the **critical artifact** of the orchestrator-dispatch architecture. Gar
 **Session scope:** <1 sentence describing the session's overall goal or theme>
 
 **Source signals:**
+
 - context-gather.sh: <branch, N commits, M files touched>
 - Conversation: <brief characterization of the work done in-conversation>
 
 ## Changes
 
 ### 1. <Short descriptive title>
+
 - **Change:** <the concrete what — config key rebind, file added, service replaced, etc.>
 - **Reason:** <the why — incident, compliance, optimization, user ask>
 - **Affected area:** <system / stack / host / repo scope>
@@ -25,6 +27,7 @@ This is the **critical artifact** of the orchestrator-dispatch architecture. Gar
 - **Verifiable against:** <how a reader could confirm this — SSH command, file to read, API call>
 
 ### 2. <Short descriptive title>
+
 - **Change:** ...
 - **Reason:** ...
 - **Affected area:** ...
@@ -37,7 +40,7 @@ This is the **critical artifact** of the orchestrator-dispatch architecture. Gar
 ## Field Rules
 
 | Field | Rule |
-|-------|------|
+| --- | --- |
 | Session scope | One sentence. Helps sub-agents filter what's worth propagating to Notion vs Wiki. |
 | Source signals | Always names both `context-gather.sh` and "Conversation". Sub-agents use this to calibrate how much signal to trust. |
 | Change title | Imperative or noun phrase. Short enough to fit in a table row. |

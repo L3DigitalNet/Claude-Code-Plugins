@@ -10,6 +10,7 @@ Create custom WebSocket API commands for frontend integration, custom panels, or
 ## When to Use WebSocket API
 
 Use WebSocket API for:
+
 - Custom frontend panels needing real-time data
 - Complex queries not covered by standard APIs
 - Integration-specific configuration UIs
@@ -209,27 +210,25 @@ From a custom panel or card:
 
 ```javascript
 // JavaScript example
-const conn = await hass.connection;
+const conn = await hass.connection
 
 // Simple command
-const result = await conn.sendMessagePromise({
-  type: "my_integration/devices",
-});
-console.log(result.devices);
+const result = await conn.sendMessagePromise({ type: 'my_integration/devices' })
+console.log(result.devices)
 
 // Command with parameters
 const deviceData = await conn.sendMessagePromise({
-  type: "my_integration/device/data",
-  device_id: "device_123",
-});
+	type: 'my_integration/device/data',
+	device_id: 'device_123',
+})
 
 // Subscription
 const unsub = conn.subscribeMessage(
-  (message) => {
-    console.log("Update received:", message);
-  },
-  { type: "my_integration/subscribe" }
-);
+	(message) => {
+		console.log('Update received:', message)
+	},
+	{ type: 'my_integration/subscribe' }
+)
 
 // Later: unsub() to stop subscription
 ```

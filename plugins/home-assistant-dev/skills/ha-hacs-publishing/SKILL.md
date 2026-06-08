@@ -16,7 +16,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -42,8 +42,7 @@ jobs:
 ```markdown
 # My Integration
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/user/repo.svg)](https://github.com/user/repo/releases)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration) [![GitHub Release](https://img.shields.io/github/release/user/repo.svg)](https://github.com/user/repo/releases)
 
 Home Assistant integration for My Device.
 

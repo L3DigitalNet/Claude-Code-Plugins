@@ -1,7 +1,7 @@
 ---
 name: visual
 description: Launch the Qt/PySide6 application headlessly and run visual GUI tests using the bundled Qt Pilot MCP server. Claude interacts with the live UI via screenshots, clicks, and text input.
-argument-hint: "[optional: test scenario description or app entry point]"
+argument-hint: '[optional: test scenario description or app entry point]'
 allowed-tools:
   - Read
   - Write
@@ -16,6 +16,7 @@ Launch the application headlessly and run visual tests using the Qt Pilot MCP se
 ## Step 1: Prerequisites Check
 
 Run the prerequisites check before attempting to launch:
+
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-prerequisites.sh"
 ```
@@ -40,11 +41,13 @@ Call the Qt Pilot `get_app_status` MCP tool. If `running: true`, attach to the e
 ## Step 4: Launch the App
 
 Call `launch_app` with the resolved entry point:
+
 ```
 launch_app(script_path="/abs/path/to/main.py")
 ```
 
 Or for module-based apps:
+
 ```
 launch_app(module="myapp.main", working_dir="/abs/path/to/project")
 ```
@@ -54,6 +57,7 @@ Wait for `success: true`. If launch fails, call `get_app_status` to retrieve std
 ## Step 5: Discover the UI
 
 Before testing, always discover available widgets:
+
 ```
 find_widgets("*")        → lists all named widgets
 list_actions()           → lists all menu/toolbar actions
@@ -64,12 +68,14 @@ If the argument provided describes a specific UI scenario (e.g., "test the file 
 ## Step 6: Execute the Test Scenario
 
 **If a scenario was provided in the argument**, execute it. For example, if the user says `/qt-suite:visual test the save workflow`:
+
 1. Click the "Save" button or trigger the `action_save` action
 2. Verify the save dialog appears
 3. Interact with the dialog
 4. Verify the file was saved (check for status label update or file existence)
 
 **If no scenario was specified**, run a general smoke test:
+
 1. Take a screenshot of the initial state
 2. Interact with each primary widget (buttons, inputs, menus)
 3. Verify the app doesn't crash after each interaction (`get_app_status`)
@@ -80,6 +86,7 @@ After every click or input action that may trigger async behavior, call `wait_fo
 ## Step 7: Capture Screenshots
 
 Capture screenshots at key moments:
+
 ```
 capture_screenshot(output_path="tests/reports/visual_<timestamp>_initial.png")
 capture_screenshot(output_path="tests/reports/visual_<timestamp>_final.png")
@@ -100,17 +107,15 @@ Write a markdown report to `tests/reports/gui-<timestamp>.md` (create the `tests
 ```markdown
 # GUI Test Report — <date> <time>
 
-**App:** <entry_point>
-**Scenario:** <description or "smoke test">
-**Result:** PASS / FAIL (N/M interactions succeeded)
+**App:** <entry_point> **Scenario:** <description or "smoke test"> **Result:** PASS / FAIL (N/M interactions succeeded)
 
 ## Test Steps
 
-| Step | Action | Expected | Result | Notes |
-|------|--------|----------|--------|-------|
-| 1 | launch_app | Window appears | ✅ PASS | |
-| 2 | click calculate_btn | Display updates | ✅ PASS | |
-| 3 | type "abc" in input | Validation error | ✅ PASS | |
+| Step | Action              | Expected         | Result  | Notes |
+| ---- | ------------------- | ---------------- | ------- | ----- |
+| 1    | launch_app          | Window appears   | ✅ PASS |       |
+| 2    | click calculate_btn | Display updates  | ✅ PASS |       |
+| 3    | type "abc" in input | Validation error | ✅ PASS |       |
 
 ## Failures
 

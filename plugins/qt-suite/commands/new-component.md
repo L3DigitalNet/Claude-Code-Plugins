@@ -1,7 +1,7 @@
 ---
 name: new-component
 description: Generate a new Qt widget, dialog, or window class with correct boilerplate and object names.
-argument-hint: "<component-name> [widget|dialog|window]"
+argument-hint: '<component-name> [widget|dialog|window]'
 allowed-tools:
   - Read
   - Write
@@ -16,6 +16,7 @@ Create a new PySide6 widget, dialog, or window class with correct boilerplate, l
 ## Step 1: Parse Arguments
 
 Extract from the argument string:
+
 - **name**: CamelCase class name (e.g., `UserProfileWidget`, `ConfirmDeleteDialog`, `DocumentWindow`)
 - **type**: one of `widget`, `dialog`, or `window`
   - If not specified, infer from name suffix: `*Widget` → widget, `*Dialog` → dialog, `*Window` → window
@@ -26,6 +27,7 @@ Derive the file name: `snake_case` of the class name (e.g., `UserProfileWidget` 
 ## Step 2: Find Destination Directory
 
 Read `.qt-test.json` to find `app_entry` and derive the package root. Then:
+
 - For `widget`: write to `src/<package>/ui/widgets/<filename>.py`
 - For `dialog`: write to `src/<package>/ui/dialogs/<filename>.py`
 - For `window`: write to `src/<package>/ui/<filename>.py`
@@ -144,6 +146,7 @@ class <ClassName>(QMainWindow):
 ## Step 4: Report
 
 After writing the file:
+
 - Show the full path created
 - Show the class header (first 10 lines — enough to confirm class name and constructor signature)
 - Remind: run `pyside6-rcc` if adding icons, and set `setObjectName()` on all interactive child widgets

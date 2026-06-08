@@ -7,19 +7,19 @@ The `gui-tester` agent saves reports to `tests/reports/gui-YYYY-MM-DD-HH-MM.md`.
 ```markdown
 # GUI Test Report — YYYY-MM-DD HH:MM
 
-**App:** main.py
-**Result:** PASS (4/4 interactions succeeded)
+**App:** main.py **Result:** PASS (4/4 interactions succeeded)
 
 ## Test Steps
 
-| Step | Action | Expected | Result |
-|------|--------|----------|--------|
-| 1 | Click calculate_btn | result_label updates | ✅ PASS |
-| 2 | Type "abc" in amount_input | Validation error shown | ✅ PASS |
-| 3 | Press Escape | Dialog closes | ✅ PASS |
-| 4 | Trigger save_action | File saved message | ✅ PASS |
+| Step | Action                     | Expected               | Result  |
+| ---- | -------------------------- | ---------------------- | ------- |
+| 1    | Click calculate_btn        | result_label updates   | ✅ PASS |
+| 2    | Type "abc" in amount_input | Validation error shown | ✅ PASS |
+| 3    | Press Escape               | Dialog closes          | ✅ PASS |
+| 4    | Trigger save_action        | File saved message     | ✅ PASS |
 
 ## Screenshots
+
 - [Before](screenshot_before.png)
 - [After](screenshot_after.png)
 ```
@@ -51,6 +51,7 @@ When a step fails, include the actual vs expected in the Result column and appen
 ## Failures
 
 ### Step 3 — result_label empty after click
+
 - **Action**: click_widget("calculate_btn") → wait_for_idle() → get_widget_info("result_label")
 - **Expected**: text = "42.0"
 - **Actual**: text = "" (empty)

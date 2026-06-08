@@ -1,8 +1,6 @@
 # Release Pipeline Plugin — Design Document
 
-**Date:** 2026-02-17
-**Status:** Approved
-**Plugin:** `plugins/release-pipeline/`
+**Date:** 2026-02-17 **Status:** Approved **Plugin:** `plugins/release-pipeline/`
 
 ## Problem
 
@@ -15,6 +13,7 @@ Releasing software involves a repetitive sequence of checks, version bumps, chan
 Commit all staged/unstaged changes, merge `testing` to `main`, push. No tagging, no changelog, no GitHub release.
 
 **Steps:**
+
 1. Pre-flight: clean tree check, confirm on `testing`, verify noreply email
 2. Stage and commit all changes (generate commit message from diff)
 3. Show diff summary, wait for "GO" approval
@@ -33,6 +32,7 @@ Four-phase pipeline with parallel pre-flight agents, version bumping, changelog 
 Three `Task` agents run simultaneously. Any failure stops the pipeline.
 
 **Agent A: test-runner** (sonnet)
+
 - Tools: Bash, Read, Glob, Grep
 - Auto-detects test framework via `detect-test-runner.sh`:
   - `pyproject.toml` with `[tool.pytest]` -> pytest
@@ -44,6 +44,7 @@ Three `Task` agents run simultaneously. Any failure stops the pipeline.
 - Returns: pass/fail, test count, coverage %, failure details
 
 **Agent B: docs-auditor** (sonnet)
+
 - Tools: Read, Glob, Grep, WebFetch
 - Checks:
   - README.md exists and references current version
@@ -54,6 +55,7 @@ Three `Task` agents run simultaneously. Any failure stops the pipeline.
 - Returns: pass/fail, list of issues
 
 **Agent C: git-preflight** (haiku)
+
 - Tools: Bash, Read, Grep
 - Checks:
   - Working tree clean (`git status --porcelain` empty)
@@ -98,6 +100,7 @@ Three `Task` agents run simultaneously. Any failure stops the pipeline.
 ### Phase 4 — Verification
 
 Via `verify-release.sh`:
+
 - Tag exists on remote: `git ls-remote --tags origin vX.Y.Z`
 - GitHub release page is live: `gh release view vX.Y.Z`
 - Release notes not empty
@@ -106,7 +109,7 @@ Via `verify-release.sh`:
 ## Fail-Fast Behavior
 
 | Failure Point | Action | Rollback Suggestion |
-|---------------|--------|---------------------|
+| --- | --- | --- |
 | Phase 1 agent fails | Stop immediately | Nothing to roll back (no changes made) |
 | Phase 2 script fails | Stop immediately | `git checkout -- .` to discard version bumps |
 | Phase 3 push fails | Stop immediately | `git tag -d vX.Y.Z && git reset HEAD~1` |
@@ -139,18 +142,18 @@ plugins/release-pipeline/
 
 ## Component Context Cost
 
-| Component | Loads into context? | When? |
-|-----------|---------------------|-------|
-| `release.md` command | Yes | On `/release` invocation |
-| `SKILL.md` skill | Conditionally | When AI detects release intent |
-| Agent definitions | No (parent context) | Loaded by spawned agent |
-| Scripts | No | Run externally, stdout returns |
-| Template | No | Read by script, not by AI |
+| Component            | Loads into context? | When?                          |
+| -------------------- | ------------------- | ------------------------------ |
+| `release.md` command | Yes                 | On `/release` invocation       |
+| `SKILL.md` skill     | Conditionally       | When AI detects release intent |
+| Agent definitions    | No (parent context) | Loaded by spawned agent        |
+| Scripts              | No                  | Run externally, stdout returns |
+| Template             | No                  | Read by script, not by AI      |
 
 ## Design Decisions
 
 | Decision | Choice | Rationale |
-|----------|--------|-----------|
+| --- | --- | --- |
 | Plugin home | Standalone `release-pipeline/` | Clean separation, independent versioning |
 | Invocation | Skill + Command | Works via `/release` or natural language |
 | Test runner | Auto-detect | Supports Python, Node, Rust, Make without config |

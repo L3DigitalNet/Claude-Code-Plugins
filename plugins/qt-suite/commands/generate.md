@@ -1,7 +1,7 @@
 ---
 name: generate
 description: Generate unit tests for Qt/PySide6 source files. Claude scans the project, identifies files that need better test coverage, and writes test files following the project's testing conventions.
-argument-hint: "[optional: specific file or class to generate tests for]"
+argument-hint: '[optional: specific file or class to generate tests for]'
 allowed-tools:
   - Read
   - Write
@@ -17,10 +17,12 @@ Generate unit tests for this Qt project. When an argument is provided, generate 
 ## Step 1: Identify Targets
 
 **If an argument was provided** (e.g., `/qt-suite:generate src/calculator.py`):
+
 - Use the argument as the target file or class name
 - Find the file with Glob if only a filename was given
 
 **If no argument was provided**:
+
 1. Read `.qt-test.json` if present to determine `project_type` and `test_dir`
 2. Detect project type by checking for `CMakeLists.txt` (C++) or `pyproject.toml`/`setup.cfg` (Python)
 3. Use Glob to find all source files:
@@ -35,6 +37,7 @@ Generate unit tests for this Qt project. When an argument is provided, generate 
 ## Step 2: Read and Analyze the Source File
 
 Read the target source file completely. Identify:
+
 - Class names and their public interface
 - Methods and their signatures, parameters, return types
 - Side effects: file I/O, signals emitted, state mutations
@@ -44,6 +47,7 @@ Read the target source file completely. Identify:
 ## Step 3: Check Existing Tests
 
 If a test file already exists for this source:
+
 - Read it to understand existing coverage
 - Focus generated tests on uncovered methods and edge cases
 - Do not duplicate tests that already exist
@@ -51,23 +55,27 @@ If a test file already exists for this source:
 ## Step 4: Determine Test File Location and Framework
 
 **Python projects:**
+
 - Test file: `tests/test_<module_name>.py`
 - Framework: pytest + pytest-qt (for GUI classes), plain pytest (for non-GUI)
 - Detect if class inherits from `QWidget`/`QDialog`/etc. → use `qtbot` fixture
 
 **C++ projects:**
+
 - Test file: `tests/<ClassName>Test.cpp` (or `tests/test_<name>.cpp`)
 - Framework: QTest
 - Each test class is a `QObject` subclass with `Q_OBJECT` macro
 - End file with `QTEST_MAIN(TestClassName)` and `#include "<file>.moc"`
 
 **QML:**
+
 - Test file: `tests/tst_<ComponentName>.qml`
 - Framework: QtQuickTest `TestCase` item
 
 ## Step 5: Generate Tests
 
 Write comprehensive tests targeting:
+
 1. **Happy path** — each public method with valid inputs
 2. **Edge cases** — empty input, null/None, boundary values, max values
 3. **Error paths** — invalid input, exceptions thrown, signals emitted on error
@@ -76,8 +84,7 @@ Write comprehensive tests targeting:
 
 Reference the `qtest-patterns` skill for correct syntax and patterns.
 
-For pytest-qt tests, always use `qtbot.addWidget()` for any widget created in a test.
-For QTest C++ tests, use `init()` / `cleanup()` slots for per-test setup/teardown.
+For pytest-qt tests, always use `qtbot.addWidget()` for any widget created in a test. For QTest C++ tests, use `init()` / `cleanup()` slots for per-test setup/teardown.
 
 ## Step 6: Write the Test File
 
@@ -86,6 +93,7 @@ Write the test file to the determined location. If the file already exists, appe
 ## Step 7: Report
 
 Report concisely:
+
 - File generated: `tests/test_calculator.py`
 - Tests written: N test functions / N test cases
 - Coverage targets: list the methods/paths covered

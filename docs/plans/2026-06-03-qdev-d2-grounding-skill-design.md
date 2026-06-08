@@ -1,18 +1,12 @@
 # qdev D2 — Escalating Grounding Skill + Programmatic Egress Sanitizer (Design)
 
-**Status:** Design approved (brainstorm 2026-06-03); **revised after spec audit rounds 1–2 (SA-001…SA-007 + SA-NEW-001 all resolved — see §12)**; ready for `superpowers:writing-plans`.
-**Created:** 2026-06-03
-**Owner harness:** Claude Code (Opus)
-**Scope:** Deliverable 2 only — the auto-trigger grounding skill plus the programmatic egress sanitizer it depends on. Adjacent items remain deferred (see §8).
-**Source brief:** [`docs/research/qdev/qdev-expansion-brief.md`](../research/qdev/qdev-expansion-brief.md) — "Deliverable 2 — The escalating grounding skill" + "Triggering reference".
-**Backing research:** `docs/research/qdev/` — `qdev-research-backlog-resolution.md` (§9 External Content Safety), `qdev-research-backlog-resolution-2.md` (§2.3–2.4 sanitizer spec, §3.6–3.7 routing thresholds).
-**Builds on:** D1 — [`docs/plans/2026-06-03-qdev-research-reporting-design.md`](2026-06-03-qdev-research-reporting-design.md) (shipped; reporting cycle + `qdev-researcher` routing). D2 reuses D1's engine **unchanged**.
+**Status:** Design approved (brainstorm 2026-06-03); **revised after spec audit rounds 1–2 (SA-001…SA-007 + SA-NEW-001 all resolved — see §12)**; ready for `superpowers:writing-plans`. **Created:** 2026-06-03 **Owner harness:** Claude Code (Opus) **Scope:** Deliverable 2 only — the auto-trigger grounding skill plus the programmatic egress sanitizer it depends on. Adjacent items remain deferred (see §8). **Source brief:** [`docs/research/qdev/qdev-expansion-brief.md`](../research/qdev/qdev-expansion-brief.md) — "Deliverable 2 — The escalating grounding skill" + "Triggering reference". **Backing research:** `docs/research/qdev/` — `qdev-research-backlog-resolution.md` (§9 External Content Safety), `qdev-research-backlog-resolution-2.md` (§2.3–2.4 sanitizer spec, §3.6–3.7 routing thresholds). **Builds on:** D1 — [`docs/plans/2026-06-03-qdev-research-reporting-design.md`](2026-06-03-qdev-research-reporting-design.md) (shipped; reporting cycle + `qdev-researcher` routing). D2 reuses D1's engine **unchanged**.
 
 ---
 
 ## 1. Goal
 
-Claude Code often fails to search when it should — it loops on a broken approach or trusts stale training data for fast-moving libraries/APIs. `/qdev:research` covers *deliberate* research, but nothing fires *automatically* mid-task. D2 fills that gap cheaply: one auto-invoked skill that starts with an inline lookup and escalates to the full `qdev-researcher` sweep only when the cheap path fails. Because the skill auto-fires on raw error text (the most likely place for a secret or internal hostname to appear), the **inline skill is the egress choke point**: it sanitizes every outbound payload — its own light-path queries *and* the stuck-context handoff it passes to the medium subagent — before anything leaves the machine.
+Claude Code often fails to search when it should — it loops on a broken approach or trusts stale training data for fast-moving libraries/APIs. `/qdev:research` covers _deliberate_ research, but nothing fires _automatically_ mid-task. D2 fills that gap cheaply: one auto-invoked skill that starts with an inline lookup and escalates to the full `qdev-researcher` sweep only when the cheap path fails. Because the skill auto-fires on raw error text (the most likely place for a secret or internal hostname to appear), the **inline skill is the egress choke point**: it sanitizes every outbound payload — its own light-path queries _and_ the stuck-context handoff it passes to the medium subagent — before anything leaves the machine.
 
 **Success criteria:**
 
@@ -20,7 +14,7 @@ Claude Code often fails to search when it should — it loops on a broken approa
 - **G2.** The light path is genuinely cheap: no subagent, no report, output-capped, escalating to medium only on failure.
 - **G3.** Category-A "already stuck" enters the medium path directly (a full sweep + persisted report is warranted) — **after** the inline skill sanitizes the handoff.
 - **G4.** Every auto-fired outbound payload — light-path query **and** medium-path handoff — is sanitized deterministically by the skill before it leaves the machine; flagged payloads pause for human approval, and a rejected payload aborts the auto-research (never leaks, never silently proceeds).
-- **G5.** The medium path reuses D1's `qdev-researcher` + reporting cycle **unchanged**; the only D2-side gates are sanitization-before-dispatch and, on *auto-fired* runs, **approval-before-dispatch** (`qdev-researcher` persists internally before it returns, so the gate must precede dispatch — SA-NEW-001).
+- **G5.** The medium path reuses D1's `qdev-researcher` + reporting cycle **unchanged**; the only D2-side gates are sanitization-before-dispatch and, on _auto-fired_ runs, **approval-before-dispatch** (`qdev-researcher` persists internally before it returns, so the gate must precede dispatch — SA-NEW-001).
 
 ---
 
@@ -30,13 +24,13 @@ Claude Code often fails to search when it should — it loops on a broken approa
 | --- | --- | --- |
 | D2-1 | **Scope = skill + programmatic sanitizer.** `qdev doctor`, the `brave_llm_context` light-primary benchmark, the empirical benchmark harness, and the meta-doc retrofit are all deferred (§8). | Q1 |
 | D2-2 | **`requires_human_approval` → surface to user.** On a flagged payload the skill pauses and shows `safe_query` + `dropped_fields` (redacted labels only). **Approve → send; reject → abort the auto-research and proceed ungrounded** (one-line notice; the main agent continues without external grounding). The flag only trips on the risky subset, so friction is rare. | Q2 + audit |
-| D2-3 | **Sanitizer enforcement lives in the inline skill, not in `qdev-researcher`.** The skill sanitizes both its own light-path queries and the medium-path handoff *before* any MCP call or `Agent` dispatch. `qdev-researcher` (a subagent that cannot call `Agent`/`AskUserQuestion`) is **not modified** — it keeps its D1 prose guardrail and receives an already-sanitized handoff (defense in depth). This honors "don't retouch D1" while closing the Category-A gap (SA-001). | Q3 + audit |
+| D2-3 | **Sanitizer enforcement lives in the inline skill, not in `qdev-researcher`.** The skill sanitizes both its own light-path queries and the medium-path handoff _before_ any MCP call or `Agent` dispatch. `qdev-researcher` (a subagent that cannot call `Agent`/`AskUserQuestion`) is **not modified** — it keeps its D1 prose guardrail and receives an already-sanitized handoff (defense in depth). This honors "don't retouch D1" while closing the Category-A gap (SA-001). | Q3 + audit |
 | D2-4 | **Skill shape C — skill + reference (progressive disclosure).** Lean `SKILL.md` (frontmatter + entry routing + escalation tree + medium dispatch); a `references/` file holds the verbose Category catalog, Category-B note, per-provider egress verdicts, dedup pointer, and the trigger matrix. Keeps the invoked body small — the light path's whole point is context economy. | Q4 |
 | D2-5 | **One inline skill, escalating.** Not `context: fork` — a forked skill runs as a subagent and loses the `Agent` tool, so it could never dispatch `qdev-researcher` (and could not run the sanitizer gate or ask for approval). The single auto-trigger lives on the inline entry; the medium path never self-triggers. | Brief (locked) |
 | D2-6 | **Light primary = `brave_web_search` + targeted `tavily_extract`**, not `brave_llm_context`. The brief's decision rule (resolution-2 §3.6) adopts `brave_llm_context` only if it stays under ~5k serialized tokens; its 8,192-token default busts the <3,000-token light-path budget. Ship the conservative default; the benchmark that could flip this is deferred. | resolution-2 §3.6 |
-| D2-7 | **Auto-fired medium runs require approval *before dispatch*.** `qdev-researcher` persists the report (write + index regen) internally *before* it returns and has no `AskUserQuestion`, so the gate cannot sit "before persist" without modifying D1. Instead, on an *auto-fired* medium run (Category-A or escalation) the skill confirms first — "run a full research sweep and persist a report to `docs/research/` on `<topic>`?" — and only dispatches on approval; reject → never dispatched, nothing written. This keeps `qdev-researcher` unchanged, gates before token spend, and still prevents an unrequested auto-trigger from dirtying the tree. Trade-off: the prompt shows the topic, not the final report summary. (Manual `/qdev:research` is unaffected — no extra gate.) | audit r1 + r2 (SA-NEW-001) |
+| D2-7 | **Auto-fired medium runs require approval _before dispatch_.** `qdev-researcher` persists the report (write + index regen) internally _before_ it returns and has no `AskUserQuestion`, so the gate cannot sit "before persist" without modifying D1. Instead, on an _auto-fired_ medium run (Category-A or escalation) the skill confirms first — "run a full research sweep and persist a report to `docs/research/` on `<topic>`?" — and only dispatches on approval; reject → never dispatched, nothing written. This keeps `qdev-researcher` unchanged, gates before token spend, and still prevents an unrequested auto-trigger from dirtying the tree. Trade-off: the prompt shows the topic, not the final report summary. (Manual `/qdev:research` is unaffected — no extra gate.) | audit r1 + r2 (SA-NEW-001) |
 | D2-8 | **Fail-closed egress; Brave ZDR assumed absent.** No provider is treated as "safe enough to auto-send a borderline-sensitive query." Brave's lowest-risk ranking applies only with enterprise Zero-Data-Retention, which this environment does not document — so ZDR is assumed absent and any payload that would be flagged requires approval regardless of provider. Sanitizer-unavailable / malformed-output / missing-`uv` all fail closed (no external call). | audit (SA-003) |
-| D2-9 | **Reword README [P2] to scope it to commands + carve out the grounding skill.** D2 is the plugin's first auto-trigger; [P2] "Explicit Invocation Only" is rewritten to state that the five *commands* never load contextually and that the single grounding skill is the deliberate, sole auto-trigger exception (sanitizer-gated, approval-on-risk). Stale "all three" → current command count. | audit (SA-007) |
+| D2-9 | **Reword README [P2] to scope it to commands + carve out the grounding skill.** D2 is the plugin's first auto-trigger; [P2] "Explicit Invocation Only" is rewritten to state that the five _commands_ never load contextually and that the single grounding skill is the deliberate, sole auto-trigger exception (sanitizer-gated, approval-on-risk). Stale "all three" → current command count. | audit (SA-007) |
 
 ---
 
@@ -58,7 +52,7 @@ plugins/qdev/
 
 **Reused from D1 (unchanged):** `agents/qdev-researcher.md` (medium engine), `scripts/build_research_index.py`, `scripts/validate_research_frontmatter.py`, `scripts/dedup.py`, `scripts/_frontmatter.py`.
 
-**Net new in D2:** one skill (2 files) + one script + one test file. No D1 *behavioral* file is modified (README/manifest/marketplace metadata updates per §9 are doc/version changes, not D1 logic).
+**Net new in D2:** one skill (2 files) + one script + one test file. No D1 _behavioral_ file is modified (README/manifest/marketplace metadata updates per §9 are doc/version changes, not D1 logic).
 
 ### 3.1 SKILL.md frontmatter contract (SA-006)
 
@@ -67,8 +61,8 @@ Matches the local convention (up-docs skills: `name` · `description` · `argume
 ```yaml
 ---
 name: qdev-grounding
-description: "<the §4.1 auto-trigger text>"
-argument-hint: "[topic]"
+description: '<the §4.1 auto-trigger text>'
+argument-hint: '[topic]'
 allowed-tools: Bash, Agent, AskUserQuestion, Read, mcp__brave-search__brave_web_search, mcp__serper-search__google_search, mcp__tavily-mcp__tavily_extract, mcp__plugin_context7_context7__resolve-library-id, mcp__plugin_context7_context7__query-docs, mcp__plugin_context7_context7__get-library-docs
 ---
 ```
@@ -87,7 +81,7 @@ allowed-tools: Bash, Agent, AskUserQuestion, Read, mcp__brave-search__brave_web_
 
 The `description` frontmatter is the always-resident matcher. It must (a) fire when stuck or missing current data, (b) not over-fire on routine work, (c) convey "starts cheap, escalates" so Claude invokes it freely. The auto-trigger matching mechanism is undocumented (keyword / embedding / model-judged / hybrid); the text is written to read well under all of them and is verified empirically via the trigger matrix (§7), not assumed reliable.
 
-> *Use when you're stuck or missing current information mid-task — the same command/API/approach failed twice, an error looks like a changed or deprecated API, or you need the current version of something, a fact from after your training cutoff, or to verify something you cannot confirm from the code in context. Starts with a cheap inline lookup and only escalates to a full research sweep if that fails. Do not use for routine pre-emptive checks before ordinary library work — for deliberate research, use `/qdev:research`.*
+> _Use when you're stuck or missing current information mid-task — the same command/API/approach failed twice, an error looks like a changed or deprecated API, or you need the current version of something, a fact from after your training cutoff, or to verify something you cannot confirm from the code in context. Starts with a cheap inline lookup and only escalates to a full research sweep if that fails. Do not use for routine pre-emptive checks before ordinary library work — for deliberate research, use `/qdev:research`._
 
 ### 4.2 Entry routing (the lean decision tree in `SKILL.md`)
 
@@ -103,8 +97,8 @@ The full detection-signal catalog for A/C and the B exclusion note live in `refe
 
 For one-off, low-stakes lookups: a current version, an API signature, "is library X still maintained?"
 
-1. **Sanitize first (mandatory gate — §4.5).** Run `sanitize_query.py` on every outbound query *before* any MCP/Context7 call. `requires_human_approval: true` → pause, show `safe_query` + `dropped_fields`; **approve → send `safe_query`; reject → abort the auto-research, emit a one-line notice, proceed ungrounded** (D2-2). Otherwise send `safe_query`, preferring the lowest-risk allowed provider per `provider_allowed` (subject to D2-8: ZDR assumed absent).
-2. **Docs-or-web gate.** If the lookup is *how to use* a named library/framework/SDK/API/CLI (syntax, config, version behavior) → **Context7 first** (resolve with candidate scoring — never the first match; score by exact-name · official-vs-community · reputation · snippet-count · benchmark · version-match · task-fit). **Bypass straight to the web stack** for latest-release / changelog / CVE / issue / PR / maintainer-status / roadmap / pricing / incident lookups, or when the library is missing / low-reputation / low-snippet / ambiguous.
+1. **Sanitize first (mandatory gate — §4.5).** Run `sanitize_query.py` on every outbound query _before_ any MCP/Context7 call. `requires_human_approval: true` → pause, show `safe_query` + `dropped_fields`; **approve → send `safe_query`; reject → abort the auto-research, emit a one-line notice, proceed ungrounded** (D2-2). Otherwise send `safe_query`, preferring the lowest-risk allowed provider per `provider_allowed` (subject to D2-8: ZDR assumed absent).
+2. **Docs-or-web gate.** If the lookup is _how to use_ a named library/framework/SDK/API/CLI (syntax, config, version behavior) → **Context7 first** (resolve with candidate scoring — never the first match; score by exact-name · official-vs-community · reputation · snippet-count · benchmark · version-match · task-fit). **Bypass straight to the web stack** for latest-release / changelog / CVE / issue / PR / maintainer-status / roadmap / pricing / incident lookups, or when the library is missing / low-reputation / low-snippet / ambiguous.
 3. **Web stack (light-path source rule — SA-004).** On the light path, **`brave_web_search` and `serper` (`google_search`) are both general-recall sources** (this differs from D1's Tavily-first model, which the medium path keeps). `brave_web_search` is primary; add `serper` as the second recall source (pass `gl: us, hl: en`; use its `site:`/`filetype:` operators when helpful). Use `tavily_extract` only to read one specific page in full. Route news/finance angles to Brave (`tavily_search` `topic` is `general`-only in the MCP schema; the light path does not use `tavily_search` for recall — token budget).
 4. **Minimum search:** for any fact that will be acted on, use **≥2 recall sources** = `brave_web_search` + `serper` (never single-source). If only one recall provider is available/allowed, that is an **escalation signal**, not a license to single-source. Prefer the freshest result; include the current year for version/changelog queries.
 5. **Output cap (context economy):** `max_results` 3–5, snippets over raw pages, no raw-content / crawl / base64-images by default. A lookup projected to exceed ~8k tokens of MCP output or need >1 extraction is an **escalation signal**, not light work.
@@ -114,9 +108,9 @@ For one-off, low-stakes lookups: a current version, an API signature, "is librar
 
 Ordered gates — nothing external happens until each clears:
 
-1. **Approval-before-dispatch (auto-fired runs only — D2-7, SA-NEW-001).** Because `qdev-researcher` writes the report and regenerates the index *internally before it returns* ([qdev-researcher.md:91-116]) and has no `AskUserQuestion`, the persist gate must precede dispatch. On a Category-A / escalation (auto) run, the skill confirms via `AskUserQuestion` — "run a full research sweep and persist a report to `docs/research/` on `<topic>`?" — and dispatches only on approval; reject → not dispatched, nothing written. Manual `/qdev:research` skips this gate.
+1. **Approval-before-dispatch (auto-fired runs only — D2-7, SA-NEW-001).** Because `qdev-researcher` writes the report and regenerates the index _internally before it returns_ ([qdev-researcher.md:91-116]) and has no `AskUserQuestion`, the persist gate must precede dispatch. On a Category-A / escalation (auto) run, the skill confirms via `AskUserQuestion` — "run a full research sweep and persist a report to `docs/research/` on `<topic>`?" — and dispatches only on approval; reject → not dispatched, nothing written. Manual `/qdev:research` skips this gate.
 2. **Sanitize the handoff (§4.5).** The stuck-context handoff clears the egress gate before any dispatch.
-3. **Dispatch** **`qdev:qdev-researcher`** (qualified name — repo convention PLUGIN-001; a bare name no-ops) via the `Agent` tool at `depth=quick`. **Cost model = `qdev-researcher`'s existing quick mode as shipped** (≈3–4 queries plus its own deep-read and single follow-up bounds — [qdev-researcher.md:60,75,83]); D2 does **not** assume a lighter variant and does **not** modify the agent (SA-005). The handoff hands over what light found (queries tried, best links, why it stalled) so the subagent does not restart cold — already sanitized (D2-3), plus `qdev-researcher`'s own prose guardrail (defense in depth). It runs D1's **full reporting cycle** unchanged (frontmatter + `## Sources` + dedup + index regen). "Medium" is search *breadth*, not skipping the report.
+3. **Dispatch** **`qdev:qdev-researcher`** (qualified name — repo convention PLUGIN-001; a bare name no-ops) via the `Agent` tool at `depth=quick`. **Cost model = `qdev-researcher`'s existing quick mode as shipped** (≈3–4 queries plus its own deep-read and single follow-up bounds — [qdev-researcher.md:60,75,83]); D2 does **not** assume a lighter variant and does **not** modify the agent (SA-005). The handoff hands over what light found (queries tried, best links, why it stalled) so the subagent does not restart cold — already sanitized (D2-3), plus `qdev-researcher`'s own prose guardrail (defense in depth). It runs D1's **full reporting cycle** unchanged (frontmatter + `## Sources` + dedup + index regen). "Medium" is search _breadth_, not skipping the report.
 4. **Announce before firing:** e.g. `Auto-research: <topic> (escalated after 2 light rounds)`. Return a compact result and hand control back.
 
 ### 4.5 The sanitize gate (shared by light + medium)
@@ -151,15 +145,25 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 ```json
 {
-  "safe_query": "<sanitized, generic task description>",
-  "dropped_fields": ["secret:provider-api-key", "path:home-dir", "host:internal", "pii:email"],
-  "provider_allowed": {"brave": true, "context7": true, "tavily": true, "serper": true},
-  "requires_human_approval": false
+	"safe_query": "<sanitized, generic task description>",
+	"dropped_fields": [
+		"secret:provider-api-key",
+		"path:home-dir",
+		"host:internal",
+		"pii:email"
+	],
+	"provider_allowed": {
+		"brave": true,
+		"context7": true,
+		"tavily": true,
+		"serper": true
+	},
+	"requires_human_approval": false
 }
 ```
 
 - **`dropped_fields` carries redacted CLASS LABELS only — never raw substrings or values** (SA-002 ambiguity). `path:home-dir`, not `path:/home/chris/...`.
-- `provider_allowed` ranks the *sanitized-but-still-external* query against per-provider risk verdicts (Brave lowest **only** with enterprise ZDR — assumed absent per D2-8; Context7 medium; Tavily/Serper high). It is a preference hint; it never overrides the approval gate.
+- `provider_allowed` ranks the _sanitized-but-still-external_ query against per-provider risk verdicts (Brave lowest **only** with enterprise ZDR — assumed absent per D2-8; Context7 medium; Tavily/Serper high). It is a preference hint; it never overrides the approval gate.
 - `requires_human_approval` is set `true` when secrets, regulated/customer data, or more than a tiny proprietary excerpt are detected → triggers the approval pause (D2-2). Ordinary private-identifier stripping (paths, hostnames, emails) is dropped silently and the safe query proceeds **only if** nothing in the higher-sensitivity set was detected; under D2-8 the script does not mark any provider "safe enough" to bypass approval for a flagged payload.
 
 ---
@@ -179,10 +183,10 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 | Layer | What | How |
 | --- | --- | --- |
-| **Deterministic** | `sanitize_query.py` | pytest — one test per pipeline branch (each secret family, identifier strip, stack-trace collapse), both `requires_human_approval` branches, `provider_allowed` ranking, **no-leak assertions** (fake tokens / PEM / signed URLs / paths / hostnames / emails / customer-like ids never appear in `safe_query` *or* `dropped_fields`), stdin handling, malformed-output/fail-closed path, plus a **CLI smoke exercising the real §4.5 transport** (fake-token payload in a mode-`600` tmpfile → `uv run sanitize_query.py < tmpfile` → assert no secret in the JSON **and** the tmpfile is removed on both success and failure). Mirrors D1's `test_dedup.py` + CR-NEW-001 pattern. |
+| **Deterministic** | `sanitize_query.py` | pytest — one test per pipeline branch (each secret family, identifier strip, stack-trace collapse), both `requires_human_approval` branches, `provider_allowed` ranking, **no-leak assertions** (fake tokens / PEM / signed URLs / paths / hostnames / emails / customer-like ids never appear in `safe_query` _or_ `dropped_fields`), stdin handling, malformed-output/fail-closed path, plus a **CLI smoke exercising the real §4.5 transport** (fake-token payload in a mode-`600` tmpfile → `uv run sanitize_query.py < tmpfile` → assert no secret in the JSON **and** the tmpfile is removed on both success and failure). Mirrors D1's `test_dedup.py` + CR-NEW-001 pattern. |
 | **Trigger (manual)** | Fires on A/C, not on B | A documented **trigger matrix** in `references/`: ~5 Category-A prompts, ~5 Category-C, ~5 Category-B negatives; run in a plugin-loaded session, record fire/no-fire. Auto-trigger matching is undocumented and not unit-testable outside a live session — this is honestly manual, not fake-automated. Also confirm every `allowed-tools` name resolves. |
 | **Safety (manual)** | The egress gate actually gates | A **Category-A entry carrying a fake token must pause at the approval prompt before any `Agent` dispatch or MCP call**; verify the **outbound payload sent to the provider** (the actual MCP-call args) and **argv** contain no fake token (egress-safety, not transcript-absence — §5.1 scope); verify reject → abort with no dispatch. |
-| **End-to-end (manual)** | Escalation + dispatch gate | Light path writes nothing, uses ≥2 recall sources, escalates after 2 rounds; an **auto-fired medium run pauses for approval *before dispatch*** — reject → nothing dispatched and `git status --short` stays clean; approve → `qdev-researcher` writes the report + index per the D1 cycle. Manual `/qdev:research` persists with no extra gate. |
+| **End-to-end (manual)** | Escalation + dispatch gate | Light path writes nothing, uses ≥2 recall sources, escalates after 2 rounds; an **auto-fired medium run pauses for approval _before dispatch_** — reject → nothing dispatched and `git status --short` stays clean; approve → `qdev-researcher` writes the report + index per the D1 cycle. Manual `/qdev:research` persists with no extra gate. |
 
 **Testing philosophy (from D1):** deterministic logic gets pytest; judgment gets a documented manual matrix. We deliberately do **not** fake-automate the trigger with a `description`-substring assertion — that would test the static text, not the runtime matcher, and produce a green check that proves nothing.
 
@@ -216,14 +220,14 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 **Prerequisite (gate before D2 ships):**
 
-- **D1 plugin-loaded manual smoke** — `docs/handoff/state.md` records D1's `/qdev:research` dispatch smoke as still pending. D2's medium path *is* that dispatch, so run/confirm the D1 smoke before (or as the first step of) D2 acceptance (SA / missing-consideration).
+- **D1 plugin-loaded manual smoke** — `docs/handoff/state.md` records D1's `/qdev:research` dispatch smoke as still pending. D2's medium path _is_ that dispatch, so run/confirm the D1 smoke before (or as the first step of) D2 acceptance (SA / missing-consideration).
 
 **Open questions (non-blocking):**
 
 - **Skill directory / `name`** — `research-grounding` dir + `qdev-grounding` name are provisional. Note (round-2 audit): for a plugin `skills/<dir>/SKILL.md`, the deliberate slash command derives from the **directory name** (→ `/qdev:research-grounding`), while `name:` is display metadata — so pick the directory name with the intended command in mind. Confirm against any qdev skill-naming convention at plan time.
 - **Trigger `description` final wording** — §4.1 is the proposed text; it is the make-or-break field and may be tuned during the manual trigger-matrix pass.
 
-*(Resolved in audit round 1 and no longer open: the secret/identifier pattern set — now required acceptance criteria, §5.2; sanitizer invocation safety — stdin, §5.1; provider/ZDR posture — fail-closed, D2-8.)*
+_(Resolved in audit round 1 and no longer open: the secret/identifier pattern set — now required acceptance criteria, §5.2; sanitizer invocation safety — stdin, §5.1; provider/ZDR posture — fail-closed, D2-8.)_
 
 ---
 
@@ -237,7 +241,7 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 ## 12. Spec-review audit ledger
 
-**Round 1 (2026-06-03, external adversarial review):** verdict *needs major correction* — 3 blocking + 4 non-blocking. All verified against repo truth (README [P2], `plugin.json`/`marketplace.json` at v1.5.0, `qdev-researcher` quick-mode lines 60/75/83, up-docs skill frontmatter convention) and current external docs (Claude subagent limits, uv PEP 723, Tavily MCP `topic`, Brave ZDR/DPA, OWASP LLM01). All resolved:
+**Round 1 (2026-06-03, external adversarial review):** verdict _needs major correction_ — 3 blocking + 4 non-blocking. All verified against repo truth (README [P2], `plugin.json`/`marketplace.json` at v1.5.0, `qdev-researcher` quick-mode lines 60/75/83, up-docs skill frontmatter convention) and current external docs (Claude subagent limits, uv PEP 723, Tavily MCP `topic`, Brave ZDR/DPA, OWASP LLM01). All resolved:
 
 | ID | Severity | Resolution |
 | --- | --- | --- |
@@ -251,7 +255,7 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 **Decisions taken during the round (user):** reject-flagged-query → abort & proceed ungrounded (D2-2); auto-fired medium → approval-before-persist (D2-7); P2 → reword to scope commands + carve out the grounding skill (D2-9).
 
-**Round 2 (2026-06-03, external adversarial review):** verdict *needs major correction* — 6 of 7 resolved, SA-002 partial, 1 new blocking, 0 regressions. Verified against `qdev-researcher.md` (Write tool, no `AskUserQuestion`, internal persist at lines 91–116) and the workstation security model. Both resolved:
+**Round 2 (2026-06-03, external adversarial review):** verdict _needs major correction_ — 6 of 7 resolved, SA-002 partial, 1 new blocking, 0 regressions. Verified against `qdev-researcher.md` (Write tool, no `AskUserQuestion`, internal persist at lines 91–116) and the workstation security model. Both resolved:
 
 | ID | Severity | Resolution |
 | --- | --- | --- |
@@ -260,7 +264,7 @@ Detection families are **required acceptance criteria**, not an open question (S
 
 **Decisions taken (round 2, user):** SA-NEW-001 → approval-before-dispatch (over modifying `qdev-researcher` or a D2 persistence wrapper). SA-002 egress-scoping applied under the workstation security model (binding rule: don't upload secrets externally).
 
-**Round 3 (2026-06-03, external adversarial review):** verdict *no significant findings remain; the audit/fix loop can stop.* SA-001…007 + SA-NEW-001 all confirmed resolved, 0 regressions. One new low-severity polish, fixed:
+**Round 3 (2026-06-03, external adversarial review):** verdict _no significant findings remain; the audit/fix loop can stop._ SA-001…007 + SA-NEW-001 all confirmed resolved, 0 regressions. One new low-severity polish, fixed:
 
 | ID | Severity | Resolution |
 | --- | --- | --- |

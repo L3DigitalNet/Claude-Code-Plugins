@@ -1,38 +1,27 @@
 # Design: plugin-review Assertion-Driven Convergence Loop
 
-**Date:** 2026-02-20
-**Version target:** 0.3.0
-**Status:** Approved
+**Date:** 2026-02-20 **Version target:** 0.3.0 **Status:** Approved
 
 ## Problem
 
-The current convergence loop in `plugin-review` is human-gated at Phase 4: the orchestrator
-presents findings, proposes fixes, and waits for explicit user approval before implementing.
-This prevents fully automated review runs. Additionally, there is no machine-verifiable
-criterion for convergence — "all findings resolved" is a judgment call by the orchestrator
-with no programmatic verification that fixes actually addressed the root cause.
+The current convergence loop in `plugin-review` is human-gated at Phase 4: the orchestrator presents findings, proposes fixes, and waits for explicit user approval before implementing. This prevents fully automated review runs. Additionally, there is no machine-verifiable criterion for convergence — "all findings resolved" is a judgment call by the orchestrator with no programmatic verification that fixes actually addressed the root cause.
 
 ## Goals
 
-1. **Zero human intervention** — `/review` runs start to finish without prompts. The
-   `--max-passes=N` flag (default 5) is the only human control.
-2. **Machine-verifiable assertions** — each finding is accompanied by an assertion (grep,
-   file existence, TypeScript compilation, etc.) that can be run programmatically.
-3. **Confidence score** — `assertions_passed / total_assertions` reported at each pass and
-   in the final report, giving a quantitative convergence signal.
-4. **Targeted regression fixes** — assertion failures after implementation trigger a
-   write-capable `fix-agent` for just those failing assertions, not a full re-analysis.
+1. **Zero human intervention** — `/review` runs start to finish without prompts. The `--max-passes=N` flag (default 5) is the only human control.
+2. **Machine-verifiable assertions** — each finding is accompanied by an assertion (grep, file existence, TypeScript compilation, etc.) that can be run programmatically.
+3. **Confidence score** — `assertions_passed / total_assertions` reported at each pass and in the final report, giving a quantitative convergence signal.
+4. **Targeted regression fixes** — assertion failures after implementation trigger a write-capable `fix-agent` for just those failing assertions, not a full re-analysis.
 
 ## Non-Goals
 
-- Interactive mode is not being removed — existing Phase 4 gate behavior is replaced, not
-  preserved as an option. The new design is always autonomous.
-- Assertion type coverage is not exhaustive — five types cover the common cases. Arbitrary
-  test execution is not in scope.
+- Interactive mode is not being removed — existing Phase 4 gate behavior is replaced, not preserved as an option. The new design is always autonomous.
+- Assertion type coverage is not exhaustive — five types cover the common cases. Arbitrary test execution is not in scope.
 
 ## Architecture
 
 ### What stays the same
+
 - 6-phase structure in `commands/review.md`
 - Three read-only analyst subagents (principles, UX, docs)
 - Scoped re-audit skill for pass 2+ track selection
@@ -42,7 +31,7 @@ with no programmatic verification that fixes actually addressed the root cause.
 ### What changes
 
 | Component | Change |
-|-----------|--------|
+| --- | --- |
 | `commands/review.md` | Phase 4 drops AskUserQuestion; Phase 5 adds assertion runner; new Phase 5.5 fix-agent loop; Phase 6 adds confidence score; parse `--max-passes=N` |
 | `agents/principles-analyst.md` | Add `## Assertions` block to output format |
 | `agents/ux-analyst.md` | Add `## Assertions` block to output format |
@@ -58,40 +47,36 @@ Location: `.claude/state/review-assertions.json`
 
 ```json
 {
-  "plugin": "<plugin-name>",
-  "max_passes": 5,
-  "current_pass": 1,
-  "assertions": [
-    {
-      "id": "A-001",
-      "finding_id": "<principle or finding ID from analyst output>",
-      "track": "A",
-      "type": "grep_not_match",
-      "description": "Human-readable intent",
-      "command": "grep -n 'pattern' path/to/file",
-      "expected": "no_match",
-      "status": null,
-      "failure_output": null
-    }
-  ],
-  "confidence": {
-    "passed": 0,
-    "total": 0,
-    "score": 0.0
-  }
+	"plugin": "<plugin-name>",
+	"max_passes": 5,
+	"current_pass": 1,
+	"assertions": [
+		{
+			"id": "A-001",
+			"finding_id": "<principle or finding ID from analyst output>",
+			"track": "A",
+			"type": "grep_not_match",
+			"description": "Human-readable intent",
+			"command": "grep -n 'pattern' path/to/file",
+			"expected": "no_match",
+			"status": null,
+			"failure_output": null
+		}
+	],
+	"confidence": { "passed": 0, "total": 0, "score": 0.0 }
 }
 ```
 
 ### Assertion types
 
-| Type | Command | Pass condition |
-|------|---------|----------------|
-| `grep_not_match` | bash command | empty stdout |
-| `grep_match` | bash command | non-empty stdout |
-| `file_exists` | uses `path` field | path exists |
-| `file_content` | uses `path` + `needle` fields | needle found in file |
-| `typescript_compile` | `tsc --noEmit` | exit code 0 |
-| `shell_exit_zero` | bash command | exit code 0 |
+| Type                 | Command                       | Pass condition       |
+| -------------------- | ----------------------------- | -------------------- |
+| `grep_not_match`     | bash command                  | empty stdout         |
+| `grep_match`         | bash command                  | non-empty stdout     |
+| `file_exists`        | uses `path` field             | path exists          |
+| `file_content`       | uses `path` + `needle` fields | needle found in file |
+| `typescript_compile` | `tsc --noEmit`                | exit code 0          |
+| `shell_exit_zero`    | bash command                  | exit code 0          |
 
 ## Revised Loop
 
@@ -112,6 +97,7 @@ CONVERGENCE when: confidence=100% | pass_count >= max_passes | plateau | diverge
 ```
 
 **Notes:**
+
 - Pass budget changes from 3 (hardcoded) to `--max-passes=N` (default 5)
 - Fix-agent is ONE invocation per pass receiving all failing assertions — not N invocations
 - New assertions added each pass; existing assertions carry forward with their last status
@@ -119,6 +105,7 @@ CONVERGENCE when: confidence=100% | pass_count >= max_passes | plateau | diverge
 ## Fix-Agent Contract
 
 **Frontmatter:**
+
 ```yaml
 ---
 name: fix-agent
@@ -128,16 +115,19 @@ tools: Read, Grep, Glob, Edit, Write
 ```
 
 **Input (from orchestrator):**
+
 - List of failing assertions (id, type, command, description, failure_output)
 - The original analyst finding each assertion was generated from
 - Files likely requiring changes
 
 **Constraints:**
+
 - Implement only what is needed to pass the failing assertion
 - Do not refactor unrelated code, add features, or address non-failing assertions
 - Return a structured summary the orchestrator can include in the pass report
 
 **Output format:**
+
 ```
 ## Fix-Agent Results — Pass <N>
 
@@ -150,10 +140,9 @@ Changed: <file>:<line> — <what changed>
 
 ## Analyst Assertion Output Format
 
-Each analyst appends an `## Assertions` block after its existing findings. Example from
-principles-analyst for a P3 violation finding:
+Each analyst appends an `## Assertions` block after its existing findings. Example from principles-analyst for a P3 violation finding:
 
-```markdown
+````markdown
 ## Assertions
 
 ```json
@@ -170,9 +159,9 @@ principles-analyst for a P3 violation finding:
 ]
 ` ` `
 ```
+````
 
-The orchestrator extracts these JSON blocks from each analyst's output and merges them into
-the central assertions file.
+The orchestrator extracts these JSON blocks from each analyst's output and merges them into the central assertions file.
 
 ## Confidence Score
 
@@ -183,6 +172,7 @@ Confidence: 73% (11/15 assertions passing)
 ```
 
 Convergence table column added to `pass-report.md`:
+
 ```
 | Pass | Upheld | ... | Confidence | Trend |
 ```
@@ -193,8 +183,7 @@ Final report adds an Assertions section listing all assertions with their final 
 
 From the trigger line: `"review plugin-name --max-passes=7"` → N=7. Default: 5.
 
-Orchestrator reads the invocation text and extracts `--max-passes=(\d+)` if present,
-otherwise uses 5.
+Orchestrator reads the invocation text and extracts `--max-passes=(\d+)` if present, otherwise uses 5.
 
 ## Files to Create/Modify
 

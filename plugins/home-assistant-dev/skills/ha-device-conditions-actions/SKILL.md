@@ -133,11 +133,7 @@ async def async_call_action_from_config(
 Device automation modules are auto-discovered when present. Ensure the manifest reflects the integration type:
 
 ```json
-{
-  "domain": "my_integration",
-  "name": "My Integration",
-  "integration_type": "device"
-}
+{ "domain": "my_integration", "name": "My Integration", "integration_type": "device" }
 ```
 
 ## Related Skills

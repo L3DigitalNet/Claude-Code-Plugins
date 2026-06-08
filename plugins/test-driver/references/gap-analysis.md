@@ -1,6 +1,5 @@
-  test coverage, identifying untested code, inventorying tests, or when /test-driver:analyze
-  is invoked. Provides the step-by-step process for detecting project type, loading stack
-  profiles, and producing a prioritized gap report.
+test coverage, identifying untested code, inventorying tests, or when /test-driver:analyze is invoked. Provides the step-by-step process for detecting project type, loading stack profiles, and producing a prioritized gap report.
+
 ---
 
 # Gap Analysis: Finding Missing Tests
@@ -12,7 +11,7 @@ A systematic methodology for identifying which source files and functions lack a
 Scan the project root for marker files to determine which stack profile to load:
 
 | Marker | Profile |
-|--------|---------|
+| --- | --- |
 | `pyproject.toml` with `fastapi` or `starlette` in dependencies | `python-fastapi` |
 | `pyproject.toml` with `PySide6` or `PyQt6` in dependencies | `python-pyside6` |
 | `pyproject.toml` with `django` in dependencies | `python-django` |
@@ -42,7 +41,7 @@ Load one primary profile based on the dominant framework. If the project combine
 Load the categories from the matched stack profile. The six categories:
 
 | Category | Scope | Applicability |
-|----------|-------|---------------|
+| --- | --- | --- |
 | **Unit** | Single function/class, mocked dependencies | Always applicable |
 | **Integration** | Multiple components, real dependencies | Always applicable |
 | **E2E** | Full system flow, entry to exit | Profile-determined |
@@ -81,7 +80,7 @@ After identifying source files, **read each one** (full read for files under 400
 - Distinct behaviors per function: happy path, error/exception paths, conditional branches that produce materially different outcomes, loop edge cases where empty or boundary inputs change behavior
 - Component boundaries: functions that call external services, write to databases, or coordinate multiple modules
 
-This enumeration is the foundation of Step 5's function-level mapping. Without it, coverage assessment degrades to file-level detection — checking whether a test file *exists* for a source file rather than whether each function and behavior *within* the file is actually tested.
+This enumeration is the foundation of Step 5's function-level mapping. Without it, coverage assessment degrades to file-level detection — checking whether a test file _exists_ for a source file rather than whether each function and behavior _within_ the file is actually tested.
 
 ## Step 5: Map Coverage Per Category
 
@@ -116,13 +115,13 @@ For each source file, using the function/behavior enumeration from Step 4:
 
 ### Phase 3: Test Quality Assessment
 
-For functions that *do* have tests (identified as "covered" in Phase 2), evaluate whether the tests are substantive. Phase 3 gaps are lower priority than Phase 2 gaps (untested functions) but can mask real bugs just as effectively.
+For functions that _do_ have tests (identified as "covered" in Phase 2), evaluate whether the tests are substantive. Phase 3 gaps are lower priority than Phase 2 gaps (untested functions) but can mask real bugs just as effectively.
 
 1. **Assertion quality:** Check whether tests use specific assertions (`assert result == expected`, `assert response.status_code == 200`, `assert "field" in body`) vs. weak assertions (`assert result`, `assert response`, `assertTrue(output)`). A test with only truthiness assertions for a function that returns structured data would pass even if the function returned wrong data. Flag as a gap.
 
 2. **Boundary coverage:** For functions with numeric, collection, date, or string parameters, check whether tests cover boundary values (zero/empty, single element, boundary threshold, one-past-boundary) or only typical inputs. A function tested once with `amount=50.00` but never with `amount=0`, negative amounts, or `None` has boundary gaps. Functions that would benefit from parametrized tests covering multiple input classes should be flagged.
 
-3. **Mock depth:** Check whether tests mock so aggressively that they only verify wiring rather than behavior. Signs of over-mocking: the test creates >3 mocks for a single function, the only assertions are `mock.assert_called_once_with(...)`, or the test would pass with any implementation. Over-mocked tests provide false coverage confidence — they tell you the function *calls* its dependencies, not that it *works*.
+3. **Mock depth:** Check whether tests mock so aggressively that they only verify wiring rather than behavior. Signs of over-mocking: the test creates >3 mocks for a single function, the only assertions are `mock.assert_called_once_with(...)`, or the test would pass with any implementation. Over-mocked tests provide false coverage confidence — they tell you the function _calls_ its dependencies, not that it _works_.
 
 ## Step 6: Identify and Prioritize Gaps
 

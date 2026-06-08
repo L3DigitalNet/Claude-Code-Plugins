@@ -64,23 +64,23 @@ Define action metadata for the UI:
 
 ```yaml
 set_mode:
-  name: "Set Mode"
-  description: "Set the operating mode."
+  name: 'Set Mode'
+  description: 'Set the operating mode.'
   target:
     entity:
       integration: my_integration
   fields:
     mode:
-      name: "Mode"
-      description: "The operating mode to set."
+      name: 'Mode'
+      description: 'The operating mode to set.'
       required: true
-      example: "auto"
+      example: 'auto'
       selector:
         select:
           options:
-            - "auto"
-            - "manual"
-            - "eco"
+            - 'auto'
+            - 'manual'
+            - 'eco'
 ```
 
 ## Entity-Level Actions
@@ -105,6 +105,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 ## Common Actions Reference
 
 ### Lights
+
 ```python
 await hass.services.async_call("light", "turn_on", {
     "brightness_pct": 80,
@@ -114,6 +115,7 @@ await hass.services.async_call("light", "turn_on", {
 ```
 
 ### Climate
+
 ```python
 await hass.services.async_call("climate", "set_temperature", {
     "temperature": 22,
@@ -122,6 +124,7 @@ await hass.services.async_call("climate", "set_temperature", {
 ```
 
 ### Media Player
+
 ```python
 await hass.services.async_call("media_player", "play_media", {
     "media_content_id": "https://example.com/stream",
@@ -149,6 +152,7 @@ action:
 ## Targeting Guidelines
 
 Target the level the action actually operates on:
+
 - **Entity-level**: Action operates on specific entities → use `entity_id`
 - **Device-level**: Action operates on device → use `device_id`
 - **Config entry-level**: Action operates on connection/account → use `config_entry_id`

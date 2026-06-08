@@ -1,5 +1,5 @@
-  Trigger phrases: "dialog", "QMessageBox", "QFileDialog", "QInputDialog", "modal", "modeless", "settings dialog", "confirm dialog", "custom dialog", "file picker", "wizard", "popup"
-version: 1.0.0
+Trigger phrases: "dialog", "QMessageBox", "QFileDialog", "QInputDialog", "modal", "modeless", "settings dialog", "confirm dialog", "custom dialog", "file picker", "wizard", "popup" version: 1.0.0
+
 ---
 
 ## Qt Dialog Patterns
@@ -148,6 +148,7 @@ dialog.activateWindow()
 ```
 
 For modeless dialogs, keep a reference to prevent garbage collection:
+
 ```python
 self._settings_dialog = SettingsDialog(self)
 self._settings_dialog.show()

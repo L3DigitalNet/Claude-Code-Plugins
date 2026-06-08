@@ -88,7 +88,7 @@ Validation runs on every write via the PostToolUse hook; warnings appear inline 
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `generate-integration` | Fully guided generation of a complete integration. Collects type, IoT class, platforms, optional features (options flow, reauth, diagnostics, discovery), and target quality tier (Bronze/Silver/Gold). Generates all required files plus HACS metadata. |
 | `scaffold-integration` | Faster scaffold targeting Silver tier. Collects domain, integration type, platforms, and GitHub username, then generates the standard file set without tier selection. |
 
@@ -101,7 +101,7 @@ Skills load automatically when conversation content matches their trigger patter
 ### Core Integration Architecture
 
 | Skill | When it activates |
-|-------|-------------------|
+| --- | --- |
 | `ha-architecture` | Questions about the `hass` object, event bus, state machine, service registry, or how integrations load |
 | `ha-integration-scaffold` | Creating a new custom component, scaffolding, or starting an integration |
 | `ha-async-patterns` | Mentioning `async`, `await`, `executor`, blocking code, or performance in HA |
@@ -110,7 +110,7 @@ Skills load automatically when conversation content matches their trigger patter
 ### Data Flow and Polling
 
 | Skill | When it activates |
-|-------|-------------------|
+| --- | --- |
 | `ha-coordinator` | Mentioning coordinator, `DataUpdateCoordinator`, polling, `_async_update_data`, `_async_setup`, `UpdateFailed` |
 | `ha-entity-platforms` | Creating entities, adding platforms, implementing sensors, switches, lights, climate, or any HA entity type |
 | `ha-service-actions` | Calling services, `hass.services.async_call`, `turn_on`, `turn_off`, or service action registration |
@@ -118,7 +118,7 @@ Skills load automatically when conversation content matches their trigger patter
 ### Setup and Configuration
 
 | Skill | When it activates |
-|-------|-------------------|
+| --- | --- |
 | `ha-config-flow` | Creating or debugging `config_flow.py`, the setup wizard, `unique_id` handling, or `strings.json` |
 | `ha-options-flow` | Adding or fixing an options flow or reauth flow after initial setup |
 | `ha-config-migration` | Incrementing `VERSION` or `MINOR_VERSION`, implementing `async_migrate_entry`, migrating entry data |
@@ -128,7 +128,7 @@ Skills load automatically when conversation content matches their trigger patter
 ### Quality, Review, and Compliance
 
 | Skill | When it activates |
-|-------|-------------------|
+| --- | --- |
 | `ha-quality-review` | Reviewing against the IQS, quality check, assessing for core PR or HACS submission (covers all 52 rules across Bronze/Silver/Gold/Platinum) |
 | `ha-hacs` | Preparing or validating HACS metadata files (`hacs.json`, manifest fields, repository structure) |
 | `ha-hacs-publishing` | Publishing to HACS: GitHub Actions validation, release workflow, brand submission |
@@ -138,7 +138,7 @@ Skills load automatically when conversation content matches their trigger patter
 ### Advanced Features
 
 | Skill | When it activates |
-|-------|-------------------|
+| --- | --- |
 | `ha-diagnostics` | Implementing `diagnostics.py`, debug information download, or redacting sensitive data (Gold IQS requirement) |
 | `ha-repairs` | Implementing repair issues, issue registry, user notifications, or actionable alerts (Gold IQS requirement) |
 | `ha-device-triggers` | Implementing `device_trigger.py`, automations triggered by hardware events like button presses or motion |
@@ -149,7 +149,7 @@ Skills load automatically when conversation content matches their trigger patter
 ### YAML Authoring
 
 | Skill | When it activates |
-|-------|-------------------|
+| --- | --- |
 | `ha-yaml-automations` | Writing or fixing YAML automations, choosing trigger types, or structuring automation logic |
 | `ha-scripts` | Creating YAML scripts: reusable, callable action sequences with parameters |
 | `ha-blueprints` | Building blueprints, defining blueprint inputs, or creating shareable automation templates |
@@ -158,7 +158,7 @@ Skills load automatically when conversation content matches their trigger patter
 ## Agents
 
 | Agent | Description |
-|-------|-------------|
+| --- | --- |
 | `ha-integration-dev` | Full integration development specialist. Enforces DataUpdateCoordinator, config flow, `runtime_data`, unique IDs, and device info patterns. Guides architecture decisions and produces working examples. Loaded skills: `ha-architecture`, `ha-integration-scaffold`, `ha-config-flow`, `ha-coordinator`, `ha-entity-platforms`, `ha-service-actions`, `ha-async-patterns`. |
 | `ha-integration-reviewer` | Code reviewer against Integration Quality Scale standards. Runs `ruff` and `mypy` if available, then produces a structured report with Critical Issues, Warnings, and Suggestions, each with specific before/after code examples. Loaded skills: `ha-quality-review`, `ha-testing`, `ha-debugging`. |
 | `ha-integration-debugger` | Systematic debugging specialist. Categorizes issues (config flow, coordinator, entity, async, import), isolates root cause, provides targeted before/after fixes, and suggests regression tests. Loaded skills: `ha-debugging`, `ha-coordinator`, `ha-async-patterns`. |
@@ -166,7 +166,7 @@ Skills load automatically when conversation content matches their trigger patter
 ## Hooks
 
 | Hook | Event | What it does |
-|------|-------|-------------|
+| --- | --- | --- |
 | `post-write-hook.sh` | `PostToolUse` (Write, Edit, MultiEdit, NotebookEdit) | Dispatcher that reads the modified file path from stdin JSON and routes to the appropriate validation script. Validates `manifest.json` only for paths under `custom_components/` or `integrations/`. Runs `validate-strings.py` on `strings.json` and `config_flow.py`. Runs `check-patterns.py` on any `.py` file under `custom_components/`. Validation failures surface as warnings in the agent context; the hook never blocks writes. |
 
 ## MCP Server
@@ -176,7 +176,7 @@ The `ha-dev-mcp` MCP server (`mcp-server/dist/server.bundle.cjs`) provides 12 to
 ### Home Assistant Tools (require `ha_connect` first)
 
 | Tool | Description |
-|------|-------------|
+| --- | --- |
 | `ha_connect` | Connect to a Home Assistant instance via WebSocket using URL and long-lived access token |
 | `ha_get_states` | Query entity states, filterable by domain, entity ID, or area |
 | `ha_get_services` | List available services, filterable by domain |
@@ -187,7 +187,7 @@ The `ha-dev-mcp` MCP server (`mcp-server/dist/server.bundle.cjs`) provides 12 to
 ### Documentation Tools
 
 | Tool | Description |
-|------|-------------|
+| --- | --- |
 | `docs_search` | Full-text search across pre-indexed HA developer documentation (core, frontend, architecture, API sections) |
 | `docs_fetch` | Fetch a specific documentation page by path |
 | `docs_examples` | Retrieve canonical code examples for patterns: coordinator, config_flow, entity, service, sensor, switch, binary_sensor, light, climate |
@@ -195,7 +195,7 @@ The `ha-dev-mcp` MCP server (`mcp-server/dist/server.bundle.cjs`) provides 12 to
 ### Validation Tools
 
 | Tool | Description |
-|------|-------------|
+| --- | --- |
 | `validate_manifest` | Validate a `manifest.json` file against HACS or core requirements |
 | `validate_strings` | Validate `strings.json` and check sync with `config_flow.py` step names |
 | `check_patterns` | Scan a file or directory for 20+ known anti-patterns and deprecations |

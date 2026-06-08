@@ -1,5 +1,5 @@
-  Trigger phrases: "package app", "PyInstaller", "distribute", "deploy", "standalone executable", "installer", "bundle app", "briefcase", "Windows build", "macOS build", "AppImage", "one-file"
-version: 1.0.0
+Trigger phrases: "package app", "PyInstaller", "distribute", "deploy", "standalone executable", "installer", "bundle app", "briefcase", "Windows build", "macOS build", "AppImage", "one-file" version: 1.0.0
+
 ---
 
 ## Packaging Qt Python Applications
@@ -22,11 +22,13 @@ python -c "import PySide6; print(PySide6.__file__)"
 **`--onefile` limitation:** For Qt6, `--onefile` bundles cannot deploy Qt plugins automatically. The one-directory (`dist/MyApp/`) approach is reliable. Use `--onefile` only if you understand its limitations and handle Qt plugins manually.
 
 **Installation:**
+
 ```bash
 uv add --dev pyinstaller
 ```
 
 **Basic one-directory build:**
+
 ```bash
 pyinstaller --name MyApp \
   --windowed \
@@ -35,6 +37,7 @@ pyinstaller --name MyApp \
 ```
 
 **Spec file (reproducible builds):**
+
 ```python
 # MyApp.spec
 block_cipher = None
@@ -97,6 +100,7 @@ coll = COLLECT(
 Run: `pyinstaller MyApp.spec`
 
 **Qt plugin detection issues:** PySide6 often needs explicit plugin imports. Add to `hiddenimports`:
+
 ```python
 hiddenimports = [
     "PySide6.QtSvg", "PySide6.QtSvgWidgets",
@@ -120,6 +124,7 @@ briefcase package    # create installer
 ```
 
 **pyproject.toml for Briefcase:**
+
 ```toml
 [tool.briefcase]
 project_name = "MyApp"
@@ -161,6 +166,7 @@ Unsigned Windows executables trigger SmartScreen warnings. For internal distribu
 ### macOS: App Bundle
 
 PyInstaller produces a `.app` bundle. For distribution outside the App Store:
+
 ```bash
 # Ad-hoc signing (no developer ID)
 codesign --force --deep --sign - dist/MyApp.app

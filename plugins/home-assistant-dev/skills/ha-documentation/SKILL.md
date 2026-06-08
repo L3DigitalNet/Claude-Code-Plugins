@@ -9,19 +9,18 @@ Guide for creating comprehensive documentation for custom integrations.
 
 ## Documentation Files
 
-| File | Purpose | Location |
-|------|---------|----------|
-| README.md | GitHub landing page | Repository root |
-| info.md | HACS description | Repository root |
-| docs/*.md | Extended docs | Optional |
+| File       | Purpose             | Location        |
+| ---------- | ------------------- | --------------- |
+| README.md  | GitHub landing page | Repository root |
+| info.md    | HACS description    | Repository root |
+| docs/\*.md | Extended docs       | Optional        |
 
 ## README.md Template
 
-```markdown
+````markdown
 # {Integration Name}
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/{username}/{repo}.svg)](https://github.com/{username}/{repo}/releases)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration) [![GitHub Release](https://img.shields.io/github/release/{username}/{repo}.svg)](https://github.com/{username}/{repo}/releases)
 
 {Brief description of what the integration does.}
 
@@ -57,32 +56,32 @@ Guide for creating comprehensive documentation for custom integrations.
 
 ### Configuration Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| Host | Required | Device IP or hostname |
-| Username | Required | Login username |
-| Password | Required | Login password |
+| Option   | Default  | Description           |
+| -------- | -------- | --------------------- |
+| Host     | Required | Device IP or hostname |
+| Username | Required | Login username        |
+| Password | Required | Login password        |
 
 ### Advanced Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| Scan Interval | 30 | Update frequency in seconds |
+| Option        | Default | Description                 |
+| ------------- | ------- | --------------------------- |
+| Scan Interval | 30      | Update frequency in seconds |
 
 ## Entities
 
 ### Sensors
 
-| Entity | Description |
-|--------|-------------|
-| sensor.{domain}_temperature | Current temperature |
-| sensor.{domain}_humidity | Current humidity |
+| Entity                       | Description         |
+| ---------------------------- | ------------------- |
+| sensor.{domain}\_temperature | Current temperature |
+| sensor.{domain}\_humidity    | Current humidity    |
 
 ### Switches
 
-| Entity | Description |
-|--------|-------------|
-| switch.{domain}_power | Main power switch |
+| Entity                 | Description       |
+| ---------------------- | ----------------- |
+| switch.{domain}\_power | Main power switch |
 
 ## Automation Examples
 
@@ -90,7 +89,7 @@ Guide for creating comprehensive documentation for custom integrations.
 
 ```yaml
 automation:
-  - alias: "Low Temperature Alert"
+  - alias: 'Low Temperature Alert'
     trigger:
       - platform: numeric_state
         entity_id: sensor.{domain}_temperature
@@ -98,8 +97,9 @@ automation:
     action:
       - service: notify.mobile_app
         data:
-          message: "Temperature dropped below 18°C"
+          message: 'Temperature dropped below 18°C'
 ```
+````
 
 ## Troubleshooting
 
@@ -128,7 +128,8 @@ automation:
 ## License
 
 MIT
-```
+
+````
 
 ## HACS info.md Template
 
@@ -152,7 +153,7 @@ MIT
 - ✅ Options flow for settings
 - ✅ Diagnostics support
 - ✅ Automatic reconnection
-```
+````
 
 ## Documentation Best Practices
 
@@ -176,10 +177,7 @@ MIT
 ### Badges to Include
 
 ```markdown
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/user/repo.svg)](https://github.com/user/repo/releases)
-[![GitHub Downloads](https://img.shields.io/github/downloads/user/repo/total.svg)](https://github.com/user/repo/releases)
-[![License](https://img.shields.io/github/license/user/repo.svg)](LICENSE)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration) [![GitHub Release](https://img.shields.io/github/release/user/repo.svg)](https://github.com/user/repo/releases) [![GitHub Downloads](https://img.shields.io/github/downloads/user/repo/total.svg)](https://github.com/user/repo/releases) [![License](https://img.shields.io/github/license/user/repo.svg)](LICENSE)
 ```
 
 ## IQS Documentation Requirements

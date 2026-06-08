@@ -1,7 +1,6 @@
 # python-dev Plugin Design
 
-**Date:** 2026-03-02
-**Status:** Approved
+**Date:** 2026-03-02 **Status:** Approved
 
 ## Problem
 
@@ -45,6 +44,7 @@ After the plugin is committed to the repo, the local copies in `~/.claude/skills
 ## `/python-code-review` Command
 
 **Invocation:** `/python-code-review [path]`
+
 - Path is optional; defaults to the current working directory
 - Accepts a file path, directory path, or glob pattern
 
@@ -75,12 +75,12 @@ New entry added to `.claude-plugin/marketplace.json`:
 
 ```json
 {
-  "name": "python-dev",
-  "description": "11 Python development skills covering async patterns, anti-patterns, type safety, testing, resilience, observability, and more. Includes /python-code-review for comprehensive code audits.",
-  "version": "1.0.0",
-  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-  "source": "./plugins/python-dev",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
+	"name": "python-dev",
+	"description": "11 Python development skills covering async patterns, anti-patterns, type safety, testing, resilience, observability, and more. Includes /python-code-review for comprehensive code audits.",
+	"version": "1.0.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"source": "./plugins/python-dev",
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/python-dev"
 }
 ```
 

@@ -1,8 +1,6 @@
 # Design: autonomous-refactor Plugin
 
-**Date:** 2026-02-21
-**Status:** Approved
-**Author:** L3DigitalNet
+**Date:** 2026-02-21 **Status:** Approved **Author:** L3DigitalNet
 
 ---
 
@@ -22,8 +20,7 @@ A Claude Code plugin (`autonomous-refactor`) that runs a 4-phase test-driven ref
 
 ### Approach Selected
 
-**Command + Agents + Shell Scripts** (Approach A).
-The orchestrator is a markdown command that delegates analysis to read-only subagents and writes to a single write-capable subagent. Shell scripts handle language detection, test running, and worktree lifecycle. A TypeScript metrics helper (`src/metrics.ts`, run via `npx tsx`) provides precise LOC and diff output with graceful fallback to AI estimation.
+**Command + Agents + Shell Scripts** (Approach A). The orchestrator is a markdown command that delegates analysis to read-only subagents and writes to a single write-capable subagent. Shell scripts handle language detection, test running, and worktree lifecycle. A TypeScript metrics helper (`src/metrics.ts`, run via `npx tsx`) provides precise LOC and diff output with graceful fallback to AI estimation.
 
 This mirrors the `plugin-review` pattern which is proven for this style of multi-pass autonomous orchestration in this repository.
 
@@ -63,23 +60,33 @@ plugins/autonomous-refactor/
 
 ```json
 {
-  "target_files": ["src/auth.ts"],
-  "language": "typescript",
-  "test_file": ".claude/state/refactor-tests/auth.test.ts",
-  "baseline": {
-    "loc": 312,
-    "complexity_score": 47,
-    "principles_score": 58,
-    "timestamp": "2026-02-21T10:00:00Z"
-  },
-  "opportunities": [
-    { "id": 1, "description": "Extract shared validation logic", "priority": "high", "status": "pending" },
-    { "id": 2, "description": "Add error handling to async calls", "priority": "medium", "status": "pending" }
-  ],
-  "completed_changes": [],
-  "reverted_changes": [],
-  "max_changes": 10,
-  "current_worktree": null
+	"target_files": ["src/auth.ts"],
+	"language": "typescript",
+	"test_file": ".claude/state/refactor-tests/auth.test.ts",
+	"baseline": {
+		"loc": 312,
+		"complexity_score": 47,
+		"principles_score": 58,
+		"timestamp": "2026-02-21T10:00:00Z"
+	},
+	"opportunities": [
+		{
+			"id": 1,
+			"description": "Extract shared validation logic",
+			"priority": "high",
+			"status": "pending"
+		},
+		{
+			"id": 2,
+			"description": "Add error handling to async calls",
+			"priority": "medium",
+			"status": "pending"
+		}
+	],
+	"completed_changes": [],
+	"reverted_changes": [],
+	"max_changes": 10,
+	"current_worktree": null
 }
 ```
 
@@ -133,24 +140,28 @@ Stop when:
 ## Agent Contracts
 
 ### test-generator
+
 - **Tools:** `Read, Glob, Grep, Bash`
 - **Input:** target file list, language, template path
 - **Output:** test file written to `.claude/state/refactor-tests/`, returns `{test_file, pass_count, fail_count}`
 - **Constraint:** must reach GREEN before returning; fixes its own generated tests if they fail
 
 ### principles-auditor
+
 - **Tools:** `Read, Glob, Grep`
 - **Input:** target file list, project README.md path
 - **Output:** JSON array `[{id, description, priority: "high"|"medium"|"low", rationale, principle_ref}]`
 - **Constraint:** each item must cite the README.md section/principle it violates
 
 ### refactor-agent
+
 - **Tools:** `Read, Write, Edit, Bash, Glob, Grep`
 - **Input:** single opportunity object, worktree path, relevant files
 - **Output:** `{changed_files: [], description: string, test_result: "not_run"}`
 - **Constraint:** touches only files relevant to the single opportunity; does not expand scope; does NOT run tests (orchestrator runs them)
 
 ### report-generator
+
 - **Tools:** `Read, Glob, Bash`
 - **Input:** baseline metrics, final metrics, completed/reverted change list, `templates/final-report.md`
 - **Output:** formatted markdown report (returned to orchestrator, not written to disk)
@@ -161,6 +172,7 @@ Stop when:
 ## Metrics Strategy
 
 **Complexity measurement** (`scripts/measure-complexity.sh`):
+
 1. Attempt external tool: `radon cc` (Python) or `npx --yes ts-complexity` (TypeScript)
 2. If tool missing: prompt user to install (`pip install radon` / `npm i -g ts-complexity`) and offer AI-estimated fallback
 3. Output: `{file, cyclomatic_complexity, loc}` JSON per file
@@ -174,7 +186,7 @@ Stop when:
 ## Convergence & Safety Rules
 
 | Condition | Behaviour |
-|-----------|-----------|
+| --- | --- |
 | All opportunities addressed | Proceed to Phase 4 |
 | `max_changes` reached | Stop loop, note remaining, proceed to Phase 4 |
 | Same opportunity reverted twice | Skip it (oscillation), continue |
@@ -187,6 +199,7 @@ Stop when:
 ## Language Detection
 
 `scripts/run-tests.sh` detects language from:
+
 1. Target file extension (`.ts`/`.tsx` → TypeScript, `.py` → Python)
 2. Presence of `package.json` → check `scripts.test` for test command
 3. Presence of `pyproject.toml` or `pytest.ini` → use `pytest`

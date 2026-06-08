@@ -1,5 +1,5 @@
-  Trigger phrases: "QSettings", "persistent settings", "save preferences", "restore window", "user preferences", "remember state", "save window geometry", "recent files", "app configuration", "settings persistence"
-version: 1.0.0
+Trigger phrases: "QSettings", "persistent settings", "save preferences", "restore window", "user preferences", "remember state", "save window geometry", "recent files", "app configuration", "settings persistence" version: 1.0.0
+
 ---
 
 ## QSettings — Persistent Application Settings
@@ -15,6 +15,7 @@ app.setOrganizationDomain("myorg.com")
 ```
 
 Default storage locations (no path argument needed):
+
 - **Windows**: Registry `HKCU\Software\MyOrg\MyApp`
 - **macOS**: `~/Library/Preferences/com.myorg.myapp.plist`
 - **Linux**: `~/.config/MyOrg/MyApp.ini`

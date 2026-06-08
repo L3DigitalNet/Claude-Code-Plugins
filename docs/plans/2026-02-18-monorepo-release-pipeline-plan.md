@@ -15,6 +15,7 @@
 This new script is the foundation of monorepo support. It scans `marketplace.json` for all plugins, finds the latest `plugin-name/v*` tag for each, and counts unreleased commits.
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/detect-unreleased.sh`
 
 **Step 1: Write the script**
@@ -109,14 +110,11 @@ exit 0
 
 **Step 2: Make executable and verify it runs**
 
-Run: `chmod +x plugins/release-pipeline/scripts/detect-unreleased.sh`
-Run: `bash plugins/release-pipeline/scripts/detect-unreleased.sh /home/chris/projects/Claude-Code-Plugins`
-Expected: TSV output listing plugin(s) with commits since their last `plugin-name/v*` tag (likely `release-pipeline` itself since we're modifying it). If no plugins have unreleased changes, empty output is valid.
+Run: `chmod +x plugins/release-pipeline/scripts/detect-unreleased.sh` Run: `bash plugins/release-pipeline/scripts/detect-unreleased.sh /home/chris/projects/Claude-Code-Plugins` Expected: TSV output listing plugin(s) with commits since their last `plugin-name/v*` tag (likely `release-pipeline` itself since we're modifying it). If no plugins have unreleased changes, empty output is valid.
 
 **Step 3: Verify error handling**
 
-Run: `bash plugins/release-pipeline/scripts/detect-unreleased.sh /tmp`
-Expected: Exit 1 with "no marketplace.json found"
+Run: `bash plugins/release-pipeline/scripts/detect-unreleased.sh /tmp` Expected: Exit 1 with "no marketplace.json found"
 
 **Step 4: Commit**
 
@@ -132,6 +130,7 @@ git commit -m "feat(release-pipeline): add detect-unreleased.sh for monorepo sca
 Extend the existing `bump-version.sh` to accept `--plugin <name>`. When provided, it bumps `plugins/<name>/.claude-plugin/plugin.json` AND the matching entry in `.claude-plugin/marketplace.json`. Skips all other version files.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/scripts/bump-version.sh`
 
 **Step 1: Add --plugin argument parsing after line 26 (after `VERSION="$2"`)**
@@ -195,6 +194,7 @@ fi
 Wrap sections 1–5 (lines 63–100) in an `if [[ -z "$PLUGIN" ]]; then ... fi` block so they only run in single-repo mode.
 
 The full logical structure becomes:
+
 ```
 if PLUGIN is empty:
     bump root pyproject.toml, package.json, Cargo.toml, plugin.json, __init__.py
@@ -205,20 +205,15 @@ fi
 
 **Step 4: Verify plugin mode works**
 
-Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99 --plugin release-pipeline`
-Expected: "Updated: .../plugins/release-pipeline/.claude-plugin/plugin.json" and "Updated: .../.claude-plugin/marketplace.json (plugin: release-pipeline)"
-Verify: `grep '"version"' plugins/release-pipeline/.claude-plugin/plugin.json` shows `"version": "99.99.99"`
+Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99 --plugin release-pipeline` Expected: "Updated: .../plugins/release-pipeline/.claude-plugin/plugin.json" and "Updated: .../.claude-plugin/marketplace.json (plugin: release-pipeline)" Verify: `grep '"version"' plugins/release-pipeline/.claude-plugin/plugin.json` shows `"version": "99.99.99"`
 
 **Step 5: Revert test changes**
 
-Run: `git checkout -- plugins/release-pipeline/.claude-plugin/plugin.json .claude-plugin/marketplace.json`
-Verify: versions restored to 1.0.0
+Run: `git checkout -- plugins/release-pipeline/.claude-plugin/plugin.json .claude-plugin/marketplace.json` Verify: versions restored to 1.0.0
 
 **Step 6: Verify single-repo mode still works**
 
-Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99`
-Expected: bumps the root `.claude-plugin/plugin.json` (marketplace manifest — this is the existing behavior since there's no root pyproject.toml/package.json)
-Revert: `git checkout -- .`
+Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99` Expected: bumps the root `.claude-plugin/plugin.json` (marketplace manifest — this is the existing behavior since there's no root pyproject.toml/package.json) Revert: `git checkout -- .`
 
 **Step 7: Commit**
 
@@ -234,6 +229,7 @@ git commit -m "feat(release-pipeline): add --plugin flag to bump-version.sh"
 Extend `generate-changelog.sh` to accept `--plugin <name>`. When provided: collect only commits touching `plugins/<name>/**` since the last `plugin-name/v*` tag, and write the changelog to `plugins/<name>/CHANGELOG.md`.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/scripts/generate-changelog.sh`
 
 **Step 1: Add --plugin argument parsing after line 25 (after `VERSION="$2"`)**
@@ -249,6 +245,7 @@ fi
 **Step 2: Replace the "Collect commits" section (lines 40-51) with plugin-aware logic**
 
 Replace:
+
 ```bash
 # ---------- Collect commits ----------
 
@@ -266,6 +263,7 @@ fi
 ```
 
 With:
+
 ```bash
 # ---------- Collect commits ----------
 
@@ -297,11 +295,13 @@ fi
 **Step 3: Change the changelog output path for plugin mode**
 
 Replace the line (around line 104):
+
 ```bash
 changelog="$REPO/CHANGELOG.md"
 ```
 
 With:
+
 ```bash
 if [[ -n "$PLUGIN" ]]; then
   changelog="$REPO/plugins/$PLUGIN/CHANGELOG.md"
@@ -312,8 +312,7 @@ fi
 
 **Step 4: Verify plugin mode**
 
-Run: `bash plugins/release-pipeline/scripts/generate-changelog.sh /home/chris/projects/Claude-Code-Plugins 2.2.0 --plugin home-assistant-dev`
-Expected: changelog entry printed to stdout with commits since `home-assistant-dev/v2.1.0` that touch `plugins/home-assistant-dev/`. File created at `plugins/home-assistant-dev/CHANGELOG.md`.
+Run: `bash plugins/release-pipeline/scripts/generate-changelog.sh /home/chris/projects/Claude-Code-Plugins 2.2.0 --plugin home-assistant-dev` Expected: changelog entry printed to stdout with commits since `home-assistant-dev/v2.1.0` that touch `plugins/home-assistant-dev/`. File created at `plugins/home-assistant-dev/CHANGELOG.md`.
 
 **Step 5: Clean up test output**
 
@@ -337,6 +336,7 @@ git commit -m "feat(release-pipeline): add --plugin flag to generate-changelog.s
 Extend `verify-release.sh` to accept `--plugin <name>`. When provided, check for `plugin-name/vX.Y.Z` tag format instead of `vX.Y.Z`.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/scripts/verify-release.sh`
 
 **Step 1: Add --plugin argument parsing after line 21 (after `VERSION="$2"`)**
@@ -352,12 +352,14 @@ fi
 **Step 2: Change the TAG construction (line 28-29)**
 
 Replace:
+
 ```bash
 VERSION="${VERSION#v}"
 TAG="v${VERSION}"
 ```
 
 With:
+
 ```bash
 VERSION="${VERSION#v}"
 if [[ -n "$PLUGIN" ]]; then
@@ -369,13 +371,11 @@ fi
 
 **Step 3: Verify the script parses correctly**
 
-Run: `bash plugins/release-pipeline/scripts/verify-release.sh /home/chris/projects/Claude-Code-Plugins 2.1.0 --plugin home-assistant-dev`
-Expected: checks for tag `home-assistant-dev/v2.1.0` — should show PASS for tag exists, PASS for GitHub release, etc. (these were created earlier in this session)
+Run: `bash plugins/release-pipeline/scripts/verify-release.sh /home/chris/projects/Claude-Code-Plugins 2.1.0 --plugin home-assistant-dev` Expected: checks for tag `home-assistant-dev/v2.1.0` — should show PASS for tag exists, PASS for GitHub release, etc. (these were created earlier in this session)
 
 **Step 4: Verify single-repo mode unchanged**
 
-Run: `bash plugins/release-pipeline/scripts/verify-release.sh /home/chris/projects/Claude-Code-Plugins 999.0.0`
-Expected: FAIL for tag `v999.0.0` not existing — confirms old behavior works
+Run: `bash plugins/release-pipeline/scripts/verify-release.sh /home/chris/projects/Claude-Code-Plugins 999.0.0` Expected: FAIL for tag `v999.0.0` not existing — confirms old behavior works
 
 **Step 5: Commit**
 
@@ -391,11 +391,13 @@ git commit -m "feat(release-pipeline): add --plugin flag to verify-release.sh"
 This is the core command change. Add a third mode that activates in monorepo context with a plugin name.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/commands/release.md`
 
 **Step 1: Update the frontmatter description**
 
 Change the description to:
+
 ```
 description: "Release pipeline — no args for quick merge (testing->main), provide version for full release, or provide plugin name + version for monorepo per-plugin release (e.g., /release home-assistant-dev v2.2.0)."
 ```
@@ -431,15 +433,16 @@ When a version is provided but no plugin name in a monorepo context:
 
 1. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-unreleased.sh .` and capture the output.
 2. Present the results to the user:
-
 ```
-UNRELEASED CHANGES DETECTED
-============================
-  1. home-assistant-dev  v2.1.0  (3 commits since home-assistant-dev/v2.1.0)
-  2. release-pipeline    v1.0.0  (12 commits since release-pipeline/v1.0.0)
-  3. linux-sysadmin-mcp  v1.0.0  (0 unreleased — skip)
+
+# UNRELEASED CHANGES DETECTED
+
+1. home-assistant-dev v2.1.0 (3 commits since home-assistant-dev/v2.1.0)
+2. release-pipeline v1.0.0 (12 commits since release-pipeline/v1.0.0)
+3. linux-sysadmin-mcp v1.0.0 (0 unreleased — skip)
 
 Which plugin are you releasing? Enter the number or name:
+
 ```
 
 3. Wait for user selection. Use the selected plugin name for Mode 3.
@@ -460,6 +463,7 @@ Use this mode when a plugin name is identified (directly or via picker). This ru
 Launch THREE Task agents simultaneously **in a single message**:
 
 **Agent A — Test Runner (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Run test suite for plugin release pre-flight"
@@ -474,6 +478,7 @@ prompt: |
 ```
 
 **Agent B — Docs Auditor (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Audit plugin documentation for release readiness"
@@ -486,6 +491,7 @@ prompt: |
 ```
 
 **Agent C — Git Pre-flight (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Git pre-flight check for plugin release"
@@ -508,6 +514,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/bump-version.sh . <version> --plugin <plugin-
 ```
 
 This bumps:
+
 - `plugins/<plugin-name>/.claude-plugin/plugin.json`
 - The matching entry in `.claude-plugin/marketplace.json`
 
@@ -594,8 +601,7 @@ Branch:    <current branch>
 Add plugin-scoped rollback entries:
 
 ```markdown
-| Phase 3 (Before push, plugin) | Scoped commit/merge/tag failed | `git tag -d <name>/v<version> && git checkout testing && git reset HEAD~1` |
-| Phase 3 (After push, plugin) | Push succeeded | Manual: `git push origin --delete <name>/v<version>`. May need revert commit. |
+| Phase 3 (Before push, plugin) | Scoped commit/merge/tag failed | `git tag -d <name>/v<version> && git checkout testing && git reset HEAD~1` | | Phase 3 (After push, plugin) | Push succeeded | Manual: `git push origin --delete <name>/v<version>`. May need revert commit. |
 ```
 
 **Step 6: Verify the markdown renders correctly**
@@ -616,6 +622,7 @@ git commit -m "feat(release-pipeline): add Mode 3 (Plugin Release) to release co
 Extend the skill to recognize plugin names in natural language (e.g., "Release home-assistant-dev v2.2.0").
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/skills/release-detection/SKILL.md`
 
 **Step 1: Update the Parse the Request section**
@@ -638,6 +645,7 @@ Replace the current content with:
 Follow the exact same workflow as the `/release` command defined in `${CLAUDE_PLUGIN_ROOT}/commands/release.md`.
 
 Read that file and follow its instructions with:
+
 - The parsed version (if any)
 - The plugin name (if any — this triggers Mode 3)
 - The repo context (if any)
@@ -646,12 +654,10 @@ Read that file and follow its instructions with:
 **Step 2: Update the frontmatter description**
 
 Change the triggers description to include plugin-specific phrases:
+
 ```yaml
 description: >
-  Detect release intent in natural language and route to the /release command.
-  Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main",
-  "deploy to production", "push to main", "release for <repo>",
-  "release <plugin-name> vX.Y.Z", "ship <plugin-name>".
+  Detect release intent in natural language and route to the /release command. Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main", "deploy to production", "push to main", "release for <repo>", "release <plugin-name> vX.Y.Z", "ship <plugin-name>".
 ```
 
 **Step 3: Commit**
@@ -668,6 +674,7 @@ git commit -m "feat(release-pipeline): update release-detection skill for plugin
 Add monorepo usage examples to the release-pipeline README.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/README.md`
 
 **Step 1: Add a "Plugin Release (Monorepo)" section after "Full Release"**
@@ -676,9 +683,10 @@ Add monorepo usage examples to the release-pipeline README.
 ## Plugin Release (Monorepo)
 
 Release a single plugin from a marketplace monorepo:
-
 ```
+
 /release home-assistant-dev v2.2.0
+
 ```
 
 Or say: "Release home-assistant-dev v2.2.0", "ship linux-sysadmin-mcp 1.0.1"
@@ -713,6 +721,7 @@ git commit -m "docs(release-pipeline): add monorepo usage to README"
 Update the release-pipeline plugin version in both manifests.
 
 **Files:**
+
 - Modify: `plugins/release-pipeline/.claude-plugin/plugin.json`
 - Modify: `.claude-plugin/marketplace.json`
 
@@ -726,8 +735,7 @@ Change the release-pipeline entry version from `"1.0.0"` to `"1.1.0"` in `.claud
 
 **Step 3: Validate marketplace**
 
-Run: `bash /home/chris/projects/Claude-Code-Plugins/scripts/validate-marketplace.sh`
-Expected: validation passes
+Run: `bash /home/chris/projects/Claude-Code-Plugins/scripts/validate-marketplace.sh` Expected: validation passes
 
 **Step 4: Commit**
 
@@ -744,31 +752,23 @@ Run the full verification suite to ensure everything works.
 
 **Step 1: Verify detect-unreleased.sh output**
 
-Run: `bash plugins/release-pipeline/scripts/detect-unreleased.sh /home/chris/projects/Claude-Code-Plugins`
-Expected: TSV output showing release-pipeline with unreleased commits (the work we just did)
+Run: `bash plugins/release-pipeline/scripts/detect-unreleased.sh /home/chris/projects/Claude-Code-Plugins` Expected: TSV output showing release-pipeline with unreleased commits (the work we just did)
 
 **Step 2: Verify bump-version.sh --plugin mode (dry run)**
 
-Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99 --plugin release-pipeline`
-Expected: "Updated" messages for plugin.json and marketplace.json
-Revert: `git checkout -- .`
+Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99 --plugin release-pipeline` Expected: "Updated" messages for plugin.json and marketplace.json Revert: `git checkout -- .`
 
 **Step 3: Verify generate-changelog.sh --plugin mode (dry run)**
 
-Run: `bash plugins/release-pipeline/scripts/generate-changelog.sh /home/chris/projects/Claude-Code-Plugins 99.99.99 --plugin release-pipeline`
-Expected: changelog entry with recent commits printed to stdout, file created at `plugins/release-pipeline/CHANGELOG.md`
-Revert: `rm -f plugins/release-pipeline/CHANGELOG.md`
+Run: `bash plugins/release-pipeline/scripts/generate-changelog.sh /home/chris/projects/Claude-Code-Plugins 99.99.99 --plugin release-pipeline` Expected: changelog entry with recent commits printed to stdout, file created at `plugins/release-pipeline/CHANGELOG.md` Revert: `rm -f plugins/release-pipeline/CHANGELOG.md`
 
 **Step 4: Verify verify-release.sh --plugin mode**
 
-Run: `bash plugins/release-pipeline/scripts/verify-release.sh /home/chris/projects/Claude-Code-Plugins 2.1.0 --plugin home-assistant-dev`
-Expected: PASS for tag exists, GitHub release exists (created earlier)
+Run: `bash plugins/release-pipeline/scripts/verify-release.sh /home/chris/projects/Claude-Code-Plugins 2.1.0 --plugin home-assistant-dev` Expected: PASS for tag exists, GitHub release exists (created earlier)
 
 **Step 5: Verify single-repo mode unchanged**
 
-Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99`
-Expected: bumps root plugin.json (existing behavior preserved)
-Revert: `git checkout -- .`
+Run: `bash plugins/release-pipeline/scripts/bump-version.sh /home/chris/projects/Claude-Code-Plugins 99.99.99` Expected: bumps root plugin.json (existing behavior preserved) Revert: `git checkout -- .`
 
 **Step 6: Final commit (if any test artifacts remain)**
 
@@ -778,16 +778,16 @@ Clean up any test artifacts: `git checkout -- . && git clean -fd plugins/release
 
 ## Summary
 
-| Task | Files | Type |
-|------|-------|------|
-| 1 | `scripts/detect-unreleased.sh` | New script |
-| 2 | `scripts/bump-version.sh` | Add `--plugin` flag |
-| 3 | `scripts/generate-changelog.sh` | Add `--plugin` flag |
-| 4 | `scripts/verify-release.sh` | Add `--plugin` flag |
-| 5 | `commands/release.md` | Add Mode 3 |
-| 6 | `skills/release-detection/SKILL.md` | Recognize plugin names |
-| 7 | `README.md` | Monorepo docs |
-| 8 | `plugin.json` + `marketplace.json` | Version bump |
-| 9 | (all scripts) | End-to-end verification |
+| Task | Files                               | Type                    |
+| ---- | ----------------------------------- | ----------------------- |
+| 1    | `scripts/detect-unreleased.sh`      | New script              |
+| 2    | `scripts/bump-version.sh`           | Add `--plugin` flag     |
+| 3    | `scripts/generate-changelog.sh`     | Add `--plugin` flag     |
+| 4    | `scripts/verify-release.sh`         | Add `--plugin` flag     |
+| 5    | `commands/release.md`               | Add Mode 3              |
+| 6    | `skills/release-detection/SKILL.md` | Recognize plugin names  |
+| 7    | `README.md`                         | Monorepo docs           |
+| 8    | `plugin.json` + `marketplace.json`  | Version bump            |
+| 9    | (all scripts)                       | End-to-end verification |
 
 **Estimated commits:** 8 (one per task, task 9 is verification only)

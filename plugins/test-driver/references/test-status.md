@@ -1,5 +1,5 @@
-  test results, reading TEST_STATUS.json, writing test reports, tracking test history, or
-  managing deferred test gaps.
+test results, reading TEST_STATUS.json, writing test reports, tracking test history, or managing deferred test gaps.
+
 ---
 
 # Test Status: Persistent State Management
@@ -10,76 +10,53 @@ Governs the `docs/testing/TEST_STATUS.json` file, which tracks a project's testi
 
 ```json
 {
-  "project": "project-name",
-  "stack_profile": "python-fastapi",
-  "last_analysis": {
-    "date": "2026-03-16T14:30:00Z",
-    "source_files_analyzed": 42,
-    "gaps_found": 7,
-    "gaps_filled": 5,
-    "gaps_deferred": 2
-  },
-  "categories": {
-    "unit": {
-      "applicable": true,
-      "test_count": 38,
-      "passing": 38,
-      "failing": 0
-    },
-    "integration": {
-      "applicable": true,
-      "test_count": 12,
-      "passing": 11,
-      "failing": 1
-    },
-    "e2e": {
-      "applicable": true,
-      "test_count": 4,
-      "passing": 4,
-      "failing": 0
-    },
-    "ui": {
-      "applicable": false
-    },
-    "contract": {
-      "applicable": true,
-      "test_count": 0,
-      "passing": 0,
-      "failing": 0
-    },
-    "security": {
-      "applicable": false
-    }
-  },
-  "coverage": {
-    "target_percent": 80,
-    "current_percent": 74,
-    "tool": "coverage.py"
-  },
-  "known_gaps": [
-    {
-      "file": "src/api/auth.py",
-      "category": "integration",
-      "description": "No test for token refresh with expired session",
-      "priority": "high",
-      "reason_deferred": null
-    }
-  ],
-  "source_bugs_fixed": [
-    {
-      "date": "2026-03-16T14:35:00Z",
-      "file": "src/api/auth.py",
-      "description": "Off-by-one in token expiry check: used < instead of <=",
-      "test_that_caught_it": "test_auth_token_expiry_boundary"
-    }
-  ],
-  "history": [
-    {
-      "date": "2026-03-16T14:30:00Z",
-      "action": "gap_analysis",
-      "summary": "7 gaps found across unit and integration categories"
-    }
-  ]
+	"project": "project-name",
+	"stack_profile": "python-fastapi",
+	"last_analysis": {
+		"date": "2026-03-16T14:30:00Z",
+		"source_files_analyzed": 42,
+		"gaps_found": 7,
+		"gaps_filled": 5,
+		"gaps_deferred": 2
+	},
+	"categories": {
+		"unit": { "applicable": true, "test_count": 38, "passing": 38, "failing": 0 },
+		"integration": {
+			"applicable": true,
+			"test_count": 12,
+			"passing": 11,
+			"failing": 1
+		},
+		"e2e": { "applicable": true, "test_count": 4, "passing": 4, "failing": 0 },
+		"ui": { "applicable": false },
+		"contract": { "applicable": true, "test_count": 0, "passing": 0, "failing": 0 },
+		"security": { "applicable": false }
+	},
+	"coverage": { "target_percent": 80, "current_percent": 74, "tool": "coverage.py" },
+	"known_gaps": [
+		{
+			"file": "src/api/auth.py",
+			"category": "integration",
+			"description": "No test for token refresh with expired session",
+			"priority": "high",
+			"reason_deferred": null
+		}
+	],
+	"source_bugs_fixed": [
+		{
+			"date": "2026-03-16T14:35:00Z",
+			"file": "src/api/auth.py",
+			"description": "Off-by-one in token expiry check: used < instead of <=",
+			"test_that_caught_it": "test_auth_token_expiry_boundary"
+		}
+	],
+	"history": [
+		{
+			"date": "2026-03-16T14:30:00Z",
+			"action": "gap_analysis",
+			"summary": "7 gaps found across unit and integration categories"
+		}
+	]
 }
 ```
 
@@ -96,6 +73,7 @@ Governs the `docs/testing/TEST_STATUS.json` file, which tracks a project's testi
 ### Session Start
 
 If `docs/testing/TEST_STATUS.json` exists, read it to understand the project's current testing posture. Note:
+
 - When was the last analysis? (stale if more than 7 days or if significant source changes since)
 - How many known gaps exist?
 - What is the current coverage vs target?
@@ -106,6 +84,7 @@ Use this information to calibrate whether testing should be a priority during th
 ### After Gap Analysis
 
 Update these fields:
+
 - `last_analysis.date` — current ISO-8601 timestamp
 - `last_analysis.source_files_analyzed` — count from the analysis
 - `last_analysis.gaps_found` — total gaps identified
@@ -117,6 +96,7 @@ Update these fields:
 ### After Convergence Loop
 
 Update these fields:
+
 - `last_analysis.gaps_filled` — increment by gaps filled during the loop
 - `last_analysis.gaps_deferred` — count of gaps remaining with reason_deferred set
 - `categories` — update test counts and pass/fail status

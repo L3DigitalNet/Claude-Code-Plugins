@@ -8,6 +8,7 @@ description: Fix Home Assistant deprecation warnings and upgrade integrations to
 ## Deprecation Timeline
 
 Home Assistant deprecations follow a consistent pattern:
+
 - **Deprecated**: Warning logged, feature still works
 - **Removed**: Feature no longer works (usually 1 year later)
 
@@ -71,7 +72,7 @@ class MyOptionsFlow(OptionsFlow):
         current_value = self.config_entry.options.get("key", "default")
 ```
 
-## DataUpdateCoordinator._async_setup (2024.8+)
+## DataUpdateCoordinator.\_async_setup (2024.8+)
 
 ```python
 class MyCoordinator(DataUpdateCoordinator[dict[str, Any]]):

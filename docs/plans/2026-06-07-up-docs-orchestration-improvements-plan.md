@@ -12,15 +12,14 @@
 
 ## Conventions for every task
 
-- Run the bats suite **only** through the hardened wrapper, which forces GNU coreutils (this workstation shims `find`→fd / `grep`→ugrep, which otherwise false-greens bats):
-  `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh <file.bats>`
+- Run the bats suite **only** through the hardened wrapper, which forces GNU coreutils (this workstation shims `find`→fd / `grep`→ugrep, which otherwise false-greens bats): `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh <file.bats>`
 - Commit with a plain signed commit (global hook enforces author email + GPG). Never `git add -A`; stage by explicit name.
 - All paths below are relative to the repo root `/home/chris/projects/Claude-Code-Plugins`.
 
 ## File structure (created / modified)
 
 | File | Responsibility | Task |
-|---|---|---|
+| --- | --- | --- |
 | `plugins/up-docs/scripts/convergence-tracker.sh` | + per-iteration `touched_pages` path list; `pages_touched` = `len`; `touched-pages` subcommand | 1 |
 | `plugins/up-docs/tests/convergence-tracker.bats` | path round-trip + new-semantics tests (replaces the old "max" test) | 1 |
 | `plugins/up-docs/agents/up-docs-audit-drift.md` | pass-1-full / pass-N-narrow task step keyed to `touched_pages` + one-hop `related` | 2 |
@@ -44,19 +43,18 @@
 
 - [ ] **Step 1: Confirm no TRACKED changes + current version**
 
-Run: `git status --porcelain && grep '"version"' plugins/up-docs/.claude-plugin/plugin.json`
-Expected: `"version": "0.10.1"`. The tree may contain **pre-existing user-owned untracked files** (e.g. `?? TODO.md`) — these are OUT OF SCOPE: never stage, move, or delete them. Require only that there are no *tracked* modifications (` M`/`A `/`D ` lines). Every task below stages only explicitly-named files, so untracked user files are never swept (CR-001/CR-004 missing-consideration).
+Run: `git status --porcelain && grep '"version"' plugins/up-docs/.claude-plugin/plugin.json` Expected: `"version": "0.10.1"`. The tree may contain **pre-existing user-owned untracked files** (e.g. `?? TODO.md`) — these are OUT OF SCOPE: never stage, move, or delete them. Require only that there are no _tracked_ modifications (` M`/`A `/`D ` lines). Every task below stages only explicitly-named files, so untracked user files are never swept (CR-001/CR-004 missing-consideration).
 
 - [ ] **Step 2: Confirm the existing suites are green before changing anything**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh && (cd plugins/up-docs/tests && .venv/bin/python -m pytest -q)`
-Expected: all bats `ok`; pytest all pass. If anything fails here, STOP — the baseline is not green.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh && (cd plugins/up-docs/tests && .venv/bin/python -m pytest -q)` Expected: all bats `ok`; pytest all pass. If anything fails here, STOP — the baseline is not green.
 
 ---
 
 ### Task 1: `touched_pages` path contract in the tracker (A1 data source, D6)
 
 **Files:**
+
 - Modify: `plugins/up-docs/scripts/convergence-tracker.sh` (init block ~line 60-65; `cmd_record_iteration` ~line 71-105; add `cmd_touched_pages`)
 - Test: `plugins/up-docs/tests/convergence-tracker.bats`
 
@@ -106,8 +104,7 @@ Replace the existing `@test "record-iteration tracks pages_touched as max"` bloc
 
 - [ ] **Step 2: Run them to verify they fail**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/convergence-tracker.bats`
-Expected: the four new tests FAIL (`touched_pages` absent; `touched-pages` unknown subcommand).
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/convergence-tracker.bats` Expected: the four new tests FAIL (`touched_pages` absent; `touched-pages` unknown subcommand).
 
 - [ ] **Step 3: Add `touched_pages` to the phase template**
 
@@ -170,13 +167,11 @@ Then add `touched-pages) cmd_touched_pages "$@" ;;` to the dispatch `case` (alon
 
 - [ ] **Step 6: Run the tests to verify they pass**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/convergence-tracker.bats`
-Expected: all PASS (including the unchanged init/start/convergence/oscillation tests).
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/convergence-tracker.bats` Expected: all PASS (including the unchanged init/start/convergence/oscillation tests).
 
 - [ ] **Step 7: Lint + commit**
 
-Run: `bash -n plugins/up-docs/scripts/convergence-tracker.sh && shellcheck -S warning plugins/up-docs/scripts/convergence-tracker.sh`
-Expected: clean.
+Run: `bash -n plugins/up-docs/scripts/convergence-tracker.sh && shellcheck -S warning plugins/up-docs/scripts/convergence-tracker.sh` Expected: clean.
 
 ```bash
 git add plugins/up-docs/scripts/convergence-tracker.sh plugins/up-docs/tests/convergence-tracker.bats
@@ -188,6 +183,7 @@ git commit -m "feat(up-docs): tracker persists per-iteration touched_pages path 
 ### Task 2: Auditor narrowing task step (A1 prompt)
 
 **Files:**
+
 - Modify: `plugins/up-docs/agents/up-docs-audit-drift.md` (task step "4. Iterate per phase under convergence")
 - Modify: `plugins/up-docs/skills/drift/references/convergence-tracking.md` ("Narrowing on Re-pass" section)
 - Test: `plugins/up-docs/tests/prompt-conformance.bats`
@@ -216,8 +212,7 @@ AUDIT_DRIFT="$PLUGIN_ROOT/agents/up-docs-audit-drift.md"
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
-Expected: the two new tests FAIL.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats` Expected: the two new tests FAIL.
 
 - [ ] **Step 3: Rewrite the auditor's per-phase convergence step**
 
@@ -227,8 +222,7 @@ In `up-docs-audit-drift.md`, replace the body of task step `4. Iterate per phase
 4. Iterate per phase under convergence. Read `${CLAUDE_PLUGIN_ROOT}/skills/drift/references/convergence-tracking.md` for iteration mechanics and oscillation detection. **Narrowing (authoritative here):**
    - **Pass 1** of a phase: scan the full phase surface.
    - At the end of each pass, record the paths you examined-or-touched via `convergence-tracker.sh record-iteration <phase>` with a `touched_pages` array in the findings JSON.
-   - **Pass N+1**: scan only the union of (i) the immediately prior pass's `touched_pages` (fetch with `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh touched-pages <phase>`) and (ii) pages whose frontmatter `related` references a page in that set (one-hop dependents). Pages outside that union are presumed stable for this phase.
-   This narrowing keys off your OWN per-pass findings, so it applies identically in `/up-docs:all` and standalone `/up-docs:drift`. It never reduces pass-1 coverage.
+   - **Pass N+1**: scan only the union of (i) the immediately prior pass's `touched_pages` (fetch with `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh touched-pages <phase>`) and (ii) pages whose frontmatter `related` references a page in that set (one-hop dependents). Pages outside that union are presumed stable for this phase. This narrowing keys off your OWN per-pass findings, so it applies identically in `/up-docs:all` and standalone `/up-docs:drift`. It never reduces pass-1 coverage.
 ```
 
 - [ ] **Step 4: Point convergence-tracking.md at the task step**
@@ -243,8 +237,7 @@ The narrowing rule is **owned by the auditor task step** (`agents/up-docs-audit-
 
 - [ ] **Step 5: Run conformance to verify pass**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
-Expected: all PASS.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats` Expected: all PASS.
 
 - [ ] **Step 5b: A1 narrowing is a Task 7 acceptance item (CR-003)**
 
@@ -262,6 +255,7 @@ git commit -m "feat(up-docs): auditor narrows pass N+1 to touched_pages + one-ho
 ### Task 3: Fast-path empty-layer skip + routing matrix (B, D1/D9/D11)
 
 **Files:**
+
 - Modify: `plugins/up-docs/skills/all/SKILL.md` (Step 2 add routing matrix; Step 3 conditional dispatch; Step 5 skipped-layer line)
 - Modify: `plugins/up-docs/templates/summary-report.md` (document presentation-only skipped-layer line)
 - Test: `plugins/up-docs/tests/prompt-conformance.bats`
@@ -305,8 +299,7 @@ ALL_SKILL="$PLUGIN_ROOT/skills/all/SKILL.md"
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
-Expected: three new tests FAIL.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats` Expected: three new tests FAIL.
 
 - [ ] **Step 3: Add the routing matrix to Step 2 of `all/SKILL.md`**
 
@@ -316,15 +309,15 @@ At the end of `### 2. Build the Canonical Session-Change Summary`, add:
 **Routing matrix (tag each numbered item with target layer(s)).** Kept in sync with the agents' layer-boundary sections (`agents/up-docs-propagate-{repo,wiki,notion}.md`). Tag, do not drop:
 
 | Item characteristic | Routes to |
-|---|---|
+| --- | --- |
 | Project-repo artifact: README/docs/CLAUDE.md/AGENTS.md, handoff files, CLI flags, repo build/test config | `repo` |
-| Credential **reference** added/rotated/removed (env-var name, OpenBao path — *not* the secret value) | `repo` (handoff/credentials.md) + `wiki` if a page cites it |
+| Credential **reference** added/rotated/removed (env-var name, OpenBao path — _not_ the secret value) | `repo` (handoff/credentials.md) + `wiki` if a page cites it |
 | Implementation reference: config values, env-var names, file paths, service procedures, troubleshooting, command usage, auth/networking wiring (incl. homelab implementation) | `wiki` |
 | Strategic/organizational: new service in the stack, architecture decision, ownership/roadmap, personnel | `notion` |
 | **Secret VALUE or live inventory RECORD only** (a secret's actual value in OpenBao; a device/IP/VLAN row in NetBox; an actual DNS/firewall entry) — owned by its system-of-record | none — no propagator |
 | **Ambiguous / spans concerns** | **all candidate layers (fail-open)** |
 
-**CR-002 — do not over-route to "none".** Only the *value/record itself* is system-of-record-owned. A change *about* such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
+**CR-002 — do not over-route to "none".** Only the _value/record itself_ is system-of-record-owned. A change _about_ such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
 ```
 
 - [ ] **Step 3b: Create the routing fixtures (CR-003 behavioral coverage)**
@@ -335,7 +328,7 @@ Create `plugins/up-docs/tests/fixtures/routing-cases.md` — the canonical worke
 # Routing cases (up-docs fast-path) — expected layer tags
 
 | # | Session item | Expected layers |
-|---|---|---|
+| --- | --- | --- |
 | 1 | CLI flag `--verbose` added to a repo tool | repo |
 | 2 | Service procedure / config path / env-var name documented | wiki |
 | 3 | New monitoring service added to the homelab stack (strategic) | notion |
@@ -367,8 +360,7 @@ In `templates/summary-report.md`, add under the `/up-docs:all` format notes:
 
 - [ ] **Step 6: Run conformance to verify pass**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
-Expected: all PASS.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats` Expected: all PASS.
 
 - [ ] **Step 7: Manual-acceptance note (behavioral, documented — not automated)**
 
@@ -385,14 +377,14 @@ git commit -m "feat(up-docs): fast-path empty-layer skip via routing matrix, fai
 
 A created-but-unstaged fixture passes locally yet fails on a clean checkout. The `git add` in Step 8 includes `routing-cases.md`; confirm it:
 
-Run: `git ls-files plugins/up-docs/tests/fixtures/routing-cases.md`
-Expected: prints the path.
+Run: `git ls-files plugins/up-docs/tests/fixtures/routing-cases.md` Expected: prints the path.
 
 ---
 
 ### Task 4: `commit-candidates.sh` git-ground-truth helper (C code, D8)
 
 **Files:**
+
 - Create: `plugins/up-docs/scripts/commit-candidates.sh`
 - Test: `plugins/up-docs/tests/commit-candidates.bats`
 
@@ -522,8 +514,7 @@ teardown() { teardown_test_env; rm -rf "$REPO" "$BASE"; }
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/commit-candidates.bats`
-Expected: FAIL (script does not exist).
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/commit-candidates.bats` Expected: FAIL (script does not exist).
 
 - [ ] **Step 3: Write the script**
 
@@ -611,13 +602,11 @@ Run: `chmod +x plugins/up-docs/scripts/commit-candidates.sh`
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/commit-candidates.bats`
-Expected: all 6 PASS.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/commit-candidates.bats` Expected: all 6 PASS.
 
 - [ ] **Step 6: Lint + commit**
 
-Run: `bash -n plugins/up-docs/scripts/commit-candidates.sh && shellcheck -S warning plugins/up-docs/scripts/commit-candidates.sh`
-Expected: clean.
+Run: `bash -n plugins/up-docs/scripts/commit-candidates.sh && shellcheck -S warning plugins/up-docs/scripts/commit-candidates.sh` Expected: clean.
 
 ```bash
 git add plugins/up-docs/scripts/commit-candidates.sh plugins/up-docs/tests/commit-candidates.bats
@@ -629,6 +618,7 @@ git commit -m "feat(up-docs): commit-candidates.sh surfaces changed-since-baseli
 ### Task 5: Step 6 commit offer — part (c) (C prompt, D2/D8/D10)
 
 **Files:**
+
 - Modify: `plugins/up-docs/templates/post-propagation-steps.md` (add baseline + part (c))
 - Modify: `plugins/up-docs/skills/all/SKILL.md` and `plugins/up-docs/skills/repo/SKILL.md` (capture baseline before propagation)
 - Test: `plugins/up-docs/tests/prompt-conformance.bats`
@@ -677,8 +667,7 @@ POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
-Expected: the three new tests FAIL.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats` Expected: the three new tests FAIL.
 
 - [ ] **Step 3: Add part (c) to `post-propagation-steps.md`**
 
@@ -687,43 +676,14 @@ After the "**(b) Handoff brief.**" subsection (end of the "Handoff for Next Sess
 ```markdown
 **(c) Commit offer (consent-gated, baseline-safe, no push).**
 
-Prereq — **baseline**: the orchestrator must have captured, BEFORE propagation, a dirty-path
-snapshot per committable repo via `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh
-snapshot <repo> > <baseline-file>` (project repo; and `~/projects/llm-wiki` when the wiki
-layer was in scope). If no baseline was captured (e.g. a code path that skipped it), do NOT
-commit — report dirty trees and stop.
+Prereq — **baseline**: the orchestrator must have captured, BEFORE propagation, a dirty-path snapshot per committable repo via `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot <repo> > <baseline-file>` (project repo; and `~/projects/llm-wiki` when the wiki layer was in scope). If no baseline was captured (e.g. a code path that skipped it), do NOT commit — report dirty trees and stop.
 
-1. For each committable repo, compute candidates:
-   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh candidates <repo> <baseline-file>`.
-   These are paths **changed since baseline** — a candidate *surface*, NOT proof the run wrote
-   them (a hook/editor/other process could have dirtied a clean-baseline path). Ownership is
-   established by your per-path diff disclosure below, not by git.
+1. For each committable repo, compute candidates: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh candidates <repo> <baseline-file>`. These are paths **changed since baseline** — a candidate _surface_, NOT proof the run wrote them (a hook/editor/other process could have dirtied a clean-baseline path). Ownership is established by your per-path diff disclosure below, not by git.
 2. If every repo's candidate set is empty, skip silently.
-3. **Disclose + fingerprint**: show each candidate path's actual content so the user sees exactly
-   what would be staged — `git -C <repo> --literal-pathspecs diff -- <path>` for tracked
-   modifications, and `git -C <repo> --literal-pathspecs diff --no-index -- /dev/null <path>`
-   for **untracked** candidates (plain
-   `git diff` shows NOTHING for untracked files, so an untracked candidate's content would
-   otherwise be approved unseen — CR-001). AND capture that path's content fingerprint now:
-   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh fingerprint <repo> <path>` — record
-   it next to the diff you showed. Baseline-dirty paths are already excluded by the helper;
-   surface them separately as "pre-existing local changes in <repo> — left for you to handle
-   manually."
-4. **Non-interactive guard**: if you cannot ask the user (headless `-p`, no `AskUserQuestion`),
-   **commit nothing** — report the candidate paths and stop. No consent → no commit.
+3. **Disclose + fingerprint**: show each candidate path's actual content so the user sees exactly what would be staged — `git -C <repo> --literal-pathspecs diff -- <path>` for tracked modifications, and `git -C <repo> --literal-pathspecs diff --no-index -- /dev/null <path>` for **untracked** candidates (plain `git diff` shows NOTHING for untracked files, so an untracked candidate's content would otherwise be approved unseen — CR-001). AND capture that path's content fingerprint now: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh fingerprint <repo> <path>` — record it next to the diff you showed. Baseline-dirty paths are already excluded by the helper; surface them separately as "pre-existing local changes in <repo> — left for you to handle manually."
+4. **Non-interactive guard**: if you cannot ask the user (headless `-p`, no `AskUserQuestion`), **commit nothing** — report the candidate paths and stop. No consent → no commit.
 5. Otherwise present ONE `AskUserQuestion` (`multiSelect` over candidate paths/repos).
-6. On approval, per selected repo: **late re-check (content, not just path — CR-001)** —
-   immediately before staging, recompute each approved path's fingerprint
-   (`commit-candidates.sh fingerprint <repo> <path>`) and compare to the value captured at
-   disclosure, AND re-run `commit-candidates.sh candidates` to catch added/removed paths. If any
-   approved path's fingerprint **differs** from what was shown, or a path is gone, or unexpected
-   new paths appeared, **re-disclose and re-confirm** rather than staging blindly — never stage
-   content the user did not see. Then stage only the approved, fingerprint-matched paths by
-   explicit literal pathspec (`git -C <repo> --literal-pathspecs add -- <path>` — so a name with
-   pathspec magic stages only itself, CR-NEW-004), commit under that repo's convention
-   (project repo: signed `docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message,
-   page stays `status: draft`), and **never push**. Report the commit SHA(s) and that nothing
-   was pushed.
+6. On approval, per selected repo: **late re-check (content, not just path — CR-001)** — immediately before staging, recompute each approved path's fingerprint (`commit-candidates.sh fingerprint <repo> <path>`) and compare to the value captured at disclosure, AND re-run `commit-candidates.sh candidates` to catch added/removed paths. If any approved path's fingerprint **differs** from what was shown, or a path is gone, or unexpected new paths appeared, **re-disclose and re-confirm** rather than staging blindly — never stage content the user did not see. Then stage only the approved, fingerprint-matched paths by explicit literal pathspec (`git -C <repo> --literal-pathspecs add -- <path>` — so a name with pathspec magic stages only itself, CR-NEW-004), commit under that repo's convention (project repo: signed `docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message, page stays `status: draft`), and **never push**. Report the commit SHA(s) and that nothing was pushed.
 ```
 
 - [ ] **Step 4: Capture the baseline in the skills**
@@ -731,21 +691,14 @@ commit — report dirty trees and stop.
 In `skills/all/SKILL.md`, in `### 0. Pre-flight` (after the dirty-tree guard passes), add:
 
 ```markdown
-**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot
-each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path —
-concurrent runs would collide, CR-004) and remember the generated paths:
-`BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"`
-and, when the wiki layer is in scope,
-`BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`.
-Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
+**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated paths: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"` and, when the wiki layer is in scope, `BASELINE_WIKI=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot ~/projects/llm-wiki > "$BASELINE_WIKI"`. Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
 ```
 
 In `skills/repo/SKILL.md`, add the same project-repo snapshot line in its pre-flight (it has no wiki layer, so only the repo baseline).
 
 - [ ] **Step 5: Run conformance to verify pass**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
-Expected: all PASS.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats` Expected: all PASS.
 
 - [ ] **Step 6: Commit**
 
@@ -759,6 +712,7 @@ git commit -m "feat(up-docs): Step 6 consent-gated baseline-safe commit offer, n
 ### Task 6: Version bump → 0.11.0
 
 **Files:**
+
 - Modify: `plugins/up-docs/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (up-docs entry), `plugins/up-docs/CHANGELOG.md`
 
 - [ ] **Step 1: Bump both manifests**
@@ -773,18 +727,19 @@ Prepend under the top of `plugins/up-docs/CHANGELOG.md`:
 ## [0.11.0] - 2026-06-07
 
 ### Added
+
 - Auditor narrowing: `convergence-tracker.sh` persists a per-iteration `touched_pages` path list; the drift auditor scans pass 1 in full and narrows pass N+1 to the prior pass's touched pages + one-hop `related` dependents.
 - Fast-path empty-layer skip: `/up-docs:all` routes each session item via a routing matrix and dispatches only propagators with routed items (fail-open on ambiguity); the auditor still covers all three layers.
 - Step 6 commit offer: consent-gated, baseline-safe (`commit-candidates.sh` surfaces changed-since-baseline paths for per-path diff approval + a late re-check), never pushes; degrades to report-only when non-interactive.
 
 ### Changed
+
 - `pages_touched` is now `len(touched_pages)` (was a running max).
 ```
 
 - [ ] **Step 3: Validate the marketplace**
 
-Run: `./scripts/validate-marketplace.sh`
-Expected: PASS (versions consistent).
+Run: `./scripts/validate-marketplace.sh` Expected: PASS (versions consistent).
 
 - [ ] **Step 4: Commit**
 
@@ -798,12 +753,12 @@ git commit -m "chore(up-docs): bump to 0.11.0 — orchestration improvements"
 ### Task 7: Full green + index status
 
 **Files:**
+
 - Modify: `docs/handoff/specs-plans.md` (row status)
 
 - [ ] **Step 1: Run the entire up-docs suite**
 
-Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh && (cd plugins/up-docs/tests && .venv/bin/python -m pytest -q) && ./scripts/validate-marketplace.sh`
-Expected: all bats `ok`, pytest all pass, marketplace PASS.
+Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh && (cd plugins/up-docs/tests && .venv/bin/python -m pytest -q) && ./scripts/validate-marketplace.sh` Expected: all bats `ok`, pytest all pass, marketplace PASS.
 
 - [ ] **Step 1b: Write the behavioral acceptance doc (CR-003 — tracked, concrete)**
 

@@ -45,34 +45,30 @@
 
 - [ ] **Step 1: Confirm the llm-wiki target repo exists**
 
-Run: `ls -d "${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}"/wiki && cat "${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}/AGENTS.md" | sed -n '45,55p'`
-Expected: the `wiki/` dir lists and the "Validate before claiming clean" block prints (the three validator commands). If absent, STOP — the migration target is missing.
+Run: `ls -d "${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}"/wiki && cat "${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}/AGENTS.md" | sed -n '45,55p'` Expected: the `wiki/` dir lists and the "Validate before claiming clean" block prints (the three validator commands). If absent, STOP — the migration target is missing.
 
 - [ ] **Step 2: Run the bats suite (must already pass)**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh`
-Expected: all tests PASS (4 in `prompt-conformance.bats`, 2 in `manifest.bats`, plus the script suites).
+Run: `bash plugins/up-docs/tests/run-bats.sh` Expected: all tests PASS (4 in `prompt-conformance.bats`, 2 in `manifest.bats`, plus the script suites).
 
 - [ ] **Step 3: Run the pytest suite (must already pass)**
 
-Run: `cd plugins/up-docs/tests && (.venv/bin/python -m pytest -q 2>/dev/null || python3 -m pytest -q); cd -`
-Expected: `test_validate_output.py` + `test_verify_evidence_grounded.py` PASS. (If no venv, the plan's later pytest steps use the same fallback.)
+Run: `cd plugins/up-docs/tests && (.venv/bin/python -m pytest -q 2>/dev/null || python3 -m pytest -q); cd -` Expected: `test_validate_output.py` + `test_verify_evidence_grounded.py` PASS. (If no venv, the plan's later pytest steps use the same fallback.)
 
 - [ ] **Step 4: Run the marketplace validator (must already pass)**
 
-Run: `./scripts/validate-marketplace.sh`
-Expected: PASS (no errors). Records the pre-change baseline so a later failure is attributable to this work.
+Run: `./scripts/validate-marketplace.sh` Expected: PASS (no errors). Records the pre-change baseline so a later failure is attributable to this work.
 
 - [ ] **Step 5: Capture the pre-change Outline/Haiku surface (reference snapshot)**
 
-Run: `rg -n -i 'outline|mcp-outline' plugins/up-docs README.md .claude-plugin/marketplace.json | tee /tmp/up-docs-outline-before.txt | wc -l`
-Expected: a non-zero count; the file is the worklist. The `/tmp/...` snapshot is an intentional scratch artifact **outside git** — Task 0 changes no tracked files (verification only, no commit).
+Run: `rg -n -i 'outline|mcp-outline' plugins/up-docs README.md .claude-plugin/marketplace.json | tee /tmp/up-docs-outline-before.txt | wc -l` Expected: a non-zero count; the file is the worklist. The `/tmp/...` snapshot is an intentional scratch artifact **outside git** — Task 0 changes no tracked files (verification only, no commit).
 
 ---
 
 ## Task 1: Rewrite `up-docs-propagate-wiki` (MCP → llm-wiki filesystem)
 
 **Files:**
+
 - Modify (full rewrite of body; preserve block scaffolding): `plugins/up-docs/agents/up-docs-propagate-wiki.md`
 - Reference (read, do not edit): `${LLM_WIKI_ROOT:-$HOME/projects/llm-wiki}/AGENTS.md`, spec §4 + §5
 
@@ -98,6 +94,7 @@ Keep the leading `<!-- … -->` routing comment block and `<role>`, but replace 
 - [ ] **Step 3: Rewrite `<task>` to the llm-wiki contract (spec §4)**
 
 The `<task>` steps become:
+
 1. **Pre-flight (D4).** `Read` `$LLM_WIKI_ROOT/AGENTS.md`, `$LLM_WIKI_ROOT/docs/handoff/conventions.md` (rules C-1..C-12), and `$LLM_WIKI_ROOT/docs/schemas/frontmatter.schema.md`. These are authoritative; the runtime AGENTS.md validation block wins on any version disagreement. Resolve `LLM_WIKI_ROOT` (default `$HOME/projects/llm-wiki`); if the dir is absent, emit the one-row "wiki not checked" table from Step 4's output format and stop (graceful skip — never fail the run).
 2. **Locate targets** with `rg` over `$LLM_WIKI_ROOT/wiki/` (title/aliases/tags/`related`), not `search_documents`.
 3. **Read** each candidate page with `Read` (absolute path under `$LLM_WIKI_ROOT`).
@@ -108,6 +105,7 @@ The `<task>` steps become:
 - [ ] **Step 4: Inline the page-write contract (spec §4.2–4.6)**
 
 Add a `<llm_wiki_contract>` block stating, verbatim intent:
+
 - Writes touch `wiki/` only; never normalize `raw/` (immutable, C-4); never cite `capture/` (ADR-0007).
 - **Session changes are operator testimony** — do NOT fabricate a `raw/` source. Record the claim in the `wiki/` page as operator-asserted, set `confidence: 'unknown'`, keep the page `status: 'draft'`, and flag the missing citation. Never self-promote `draft`→`active`.
 - New pages: `status: 'draft'`, carry the `wiki` tag, and an `id` minted with `(cd "$LLM_WIKI_ROOT" && uv run python -m llm_wiki_tools.lint.frontmatter_ids mint --title "<page title>")` — `--title` is **required** (Typer `...`; see llm-wiki conventions C-11); never hand-authored. Field set / key order from the `markdown-frontmatter` skill + `docs/schemas/`.
@@ -137,9 +135,7 @@ Plus Prettier + markdownlint for changed `md` (never reformat `raw/`/`capture/`/
 
 - [ ] **Step 7: Verify no MCP residue + required elements (acceptance)**
 
-Run: `rg -n -i 'mcp-outline|outline|read_document|create_document|update_document|search_documents' plugins/up-docs/agents/up-docs-propagate-wiki.md`
-Expected: **no matches.**
-Run (per-pattern, so a single hit can't mask a miss — CR-005):
+Run: `rg -n -i 'mcp-outline|outline|read_document|create_document|update_document|search_documents' plugins/up-docs/agents/up-docs-propagate-wiki.md` Expected: **no matches.** Run (per-pattern, so a single hit can't mask a miss — CR-005):
 
 ```bash
 F=plugins/up-docs/agents/up-docs-propagate-wiki.md
@@ -152,8 +148,7 @@ Expected: `all required elements present` (each literal found; exits non-zero na
 
 - [ ] **Step 8: Confirm no bats regression + commit**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh`
-Expected: all PASS (this file isn't asserted, so this confirms no collateral breakage).
+Run: `bash plugins/up-docs/tests/run-bats.sh` Expected: all PASS (this file isn't asserted, so this confirms no collateral breakage).
 
 ```bash
 git add plugins/up-docs/agents/up-docs-propagate-wiki.md
@@ -165,6 +160,7 @@ git commit -m "feat(up-docs): rewrite propagate-wiki for llm-wiki filesystem bac
 ## Task 2: Rewrite `up-docs-audit-drift` wiki phase
 
 **Files:**
+
 - Modify: `plugins/up-docs/agents/up-docs-audit-drift.md`
 - Test: `plugins/up-docs/tests/test_validate_output.py`, `plugins/up-docs/tests/test_verify_evidence_grounded.py` (must stay green — schema unchanged)
 
@@ -201,9 +197,7 @@ In `<examples>`, change wiki-layer example actions from `search_documents`/`read
 
 - [ ] **Step 5: Verify no MCP residue + acceptance**
 
-Run: `rg -n -i 'mcp-outline|read_document|search_documents|get_collection_structure|get_document_backlinks|get_document_id_from_title' plugins/up-docs/agents/up-docs-audit-drift.md`
-Expected: **no matches.**
-Run (per-pattern — CR-005):
+Run: `rg -n -i 'mcp-outline|read_document|search_documents|get_collection_structure|get_document_backlinks|get_document_id_from_title' plugins/up-docs/agents/up-docs-audit-drift.md` Expected: **no matches.** Run (per-pattern — CR-005):
 
 ```bash
 F=plugins/up-docs/agents/up-docs-audit-drift.md
@@ -216,10 +210,7 @@ Expected: `all required elements present` (Notion retained; wiki retargeted with
 
 - [ ] **Step 6: Run pytest + bats, then commit**
 
-Run: `cd plugins/up-docs/tests && (.venv/bin/python -m pytest -q 2>/dev/null || python3 -m pytest -q); cd -`
-Expected: PASS (schema untouched).
-Run: `bash plugins/up-docs/tests/run-bats.sh`
-Expected: PASS.
+Run: `cd plugins/up-docs/tests && (.venv/bin/python -m pytest -q 2>/dev/null || python3 -m pytest -q); cd -` Expected: PASS (schema untouched). Run: `bash plugins/up-docs/tests/run-bats.sh` Expected: PASS.
 
 ```bash
 git add plugins/up-docs/agents/up-docs-audit-drift.md
@@ -231,13 +222,13 @@ git commit -m "feat(up-docs): retarget audit-drift wiki phase to llm-wiki + vali
 ## Task 3: Minor agents — naming only (preserve bats-guarded strings)
 
 **Files:**
+
 - Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md`, `plugins/up-docs/agents/up-docs-propagate-notion.md`
 - Guarded by: `prompt-conformance.bats` (propagate-repo)
 
 - [ ] **Step 1: propagate-repo — retarget the two Outline references**
 
-Edit line ~212 `- Implementation depth beyond what a local contributor needs (→ Outline wiki)` → `(→ llm-wiki)`. Edit the example item (~lines 351–356): `New Outline wiki page created` → `New llm-wiki page created`; `Affected area: Outline wiki` → `Affected area: llm-wiki`; `Verifiable against: Outline search` → `Verifiable against: rg over ~/projects/llm-wiki/wiki/`.
-**Do NOT touch** these bats-asserted strings: `Full conventions reference:`, `Detailed review workflows:`, `## Cause`, `## Fix`, `## Lesson`, `retired V1/V2 layout-detection`, `retired handoff-version label`.
+Edit line ~212 `- Implementation depth beyond what a local contributor needs (→ Outline wiki)` → `(→ llm-wiki)`. Edit the example item (~lines 351–356): `New Outline wiki page created` → `New llm-wiki page created`; `Affected area: Outline wiki` → `Affected area: llm-wiki`; `Verifiable against: Outline search` → `Verifiable against: rg over ~/projects/llm-wiki/wiki/`. **Do NOT touch** these bats-asserted strings: `Full conventions reference:`, `Detailed review workflows:`, `## Cause`, `## Fix`, `## Lesson`, `retired V1/V2 layout-detection`, `retired handoff-version label`.
 
 - [ ] **Step 2: propagate-notion — retarget the Notion↔wiki boundary**
 
@@ -245,10 +236,7 @@ Replace "Outline" with "llm-wiki" in the boundary prose + example pointers (grep
 
 - [ ] **Step 3: Acceptance + bats + commit**
 
-Run: `rg -n -i 'outline' plugins/up-docs/agents/up-docs-propagate-repo.md plugins/up-docs/agents/up-docs-propagate-notion.md`
-Expected: **no matches.**
-Run: `bash plugins/up-docs/tests/run-bats.sh`
-Expected: PASS (propagate-repo guards intact).
+Run: `rg -n -i 'outline' plugins/up-docs/agents/up-docs-propagate-repo.md plugins/up-docs/agents/up-docs-propagate-notion.md` Expected: **no matches.** Run: `bash plugins/up-docs/tests/run-bats.sh` Expected: PASS (propagate-repo guards intact).
 
 ```bash
 git add plugins/up-docs/agents/up-docs-propagate-repo.md plugins/up-docs/agents/up-docs-propagate-notion.md
@@ -275,8 +263,7 @@ Line 12 "scope the analysis to that Outline collection … analyze all collectio
 
 - [ ] **Step 4: Acceptance + commit**
 
-Run: `rg -n -i 'outline' plugins/up-docs/skills`
-Expected: **no matches.**
+Run: `rg -n -i 'outline' plugins/up-docs/skills` Expected: **no matches.**
 
 ```bash
 git add plugins/up-docs/skills
@@ -303,10 +290,7 @@ Line 5 `… the Haiku propagators will miss changes or over-edit.` → `… the 
 
 - [ ] **Step 4: Acceptance + bats + commit**
 
-Run: `rg -n -i 'outline' plugins/up-docs/templates; rg -n '"layout"' plugins/up-docs/templates/drift-finding.md; rg -n 'Haiku propagators' plugins/up-docs/templates/session-change-summary.md`
-Expected: first **no matches**; second **matches** (layout enum preserved); third **no matches** (stale "Haiku propagators" gone).
-Run: `bash plugins/up-docs/tests/run-bats.sh`
-Expected: PASS (the layout-enum test stays green).
+Run: `rg -n -i 'outline' plugins/up-docs/templates; rg -n '"layout"' plugins/up-docs/templates/drift-finding.md; rg -n 'Haiku propagators' plugins/up-docs/templates/session-change-summary.md` Expected: first **no matches**; second **matches** (layout enum preserved); third **no matches** (stale "Haiku propagators" gone). Run: `bash plugins/up-docs/tests/run-bats.sh` Expected: PASS (the layout-enum test stays green).
 
 ```bash
 git add plugins/up-docs/templates
@@ -333,8 +317,7 @@ Mermaid line 108 `Wiki[up-docs-propagate-wiki<br/>Haiku]` → `…<br/>Sonnet`. 
 
 - [ ] **Step 4: Acceptance + commit**
 
-Run: `rg -n -i 'outline' plugins/up-docs/README.md; rg -n 'propagate-wiki.*Haiku|Outline' plugins/up-docs/README.md`
-Expected: **no matches** for either.
+Run: `rg -n -i 'outline' plugins/up-docs/README.md; rg -n 'propagate-wiki.*Haiku|Outline' plugins/up-docs/README.md` Expected: **no matches** for either.
 
 ```bash
 git add plugins/up-docs/README.md
@@ -357,8 +340,7 @@ Update the up-docs entry: version → `0.10.0`; description "Outline wiki" → "
 
 - [ ] **Step 3: Acceptance + commit**
 
-Run: `rg -n -i 'outline' README.md docs/handoff/deployed.md`
-Expected: **no matches.**
+Run: `rg -n -i 'outline' README.md docs/handoff/deployed.md` Expected: **no matches.**
 
 ```bash
 git add README.md docs/handoff/deployed.md
@@ -369,8 +351,7 @@ git commit -m "docs: retarget root README + deployed.md up-docs entry to llm-wik
 
 ## Task 8: Manifests + marketplace + CHANGELOG (version moves together)
 
-**Files:** `plugins/up-docs/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/up-docs/CHANGELOG.md`
-**Guarded by:** `manifest.bats`, `scripts/validate-marketplace.sh`
+**Files:** `plugins/up-docs/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/up-docs/CHANGELOG.md` **Guarded by:** `manifest.bats`, `scripts/validate-marketplace.sh`
 
 - [ ] **Step 1: plugin.json**
 
@@ -386,10 +367,7 @@ Prepend a `## [0.10.0] - 2026-06-07` block (Keep a Changelog format). Changed: w
 
 - [ ] **Step 4: Version-match + validator + manifest bats**
 
-Run: `jq -r '.version' plugins/up-docs/.claude-plugin/plugin.json; jq -r '.plugins[] | select(.name=="up-docs") | .version' .claude-plugin/marketplace.json`
-Expected: both print `0.10.0` (identical).
-Run: `./scripts/validate-marketplace.sh && bash plugins/up-docs/tests/run-bats.sh`
-Expected: both PASS (no version-mismatch error; Zod allow-list intact).
+Run: `jq -r '.version' plugins/up-docs/.claude-plugin/plugin.json; jq -r '.plugins[] | select(.name=="up-docs") | .version' .claude-plugin/marketplace.json` Expected: both print `0.10.0` (identical). Run: `./scripts/validate-marketplace.sh && bash plugins/up-docs/tests/run-bats.sh` Expected: both PASS (no version-mismatch error; Zod allow-list intact).
 
 - [ ] **Step 5: Commit**
 
@@ -406,21 +384,15 @@ git commit -m "chore(up-docs): bump to 0.10.0 — llm-wiki backend (manifest + m
 
 - [ ] **Step 1: Outline retired from runtime surface (CHANGELOG excluded — CR-003)**
 
-Run: `rg -i 'outline' plugins/up-docs .claude-plugin/marketplace.json README.md docs/handoff/deployed.md -g '!CHANGELOG.md'`
-Expected: **no matches.** CHANGELOG.md is a release-note surface (not runtime): it legitimately names "Outline" in both the historical 213/222 entries **and** the new 0.10.0 entry describing the retirement, so it is excluded from this sweep.
-Run (changelog sanity): `rg -c -i 'outline' plugins/up-docs/CHANGELOG.md`
-Expected: a small count (historical entries + the new release-note line) — all legitimate; no other file matched Step 1's sweep.
+Run: `rg -i 'outline' plugins/up-docs .claude-plugin/marketplace.json README.md docs/handoff/deployed.md -g '!CHANGELOG.md'` Expected: **no matches.** CHANGELOG.md is a release-note surface (not runtime): it legitimately names "Outline" in both the historical 213/222 entries **and** the new 0.10.0 entry describing the retirement, so it is excluded from this sweep. Run (changelog sanity): `rg -c -i 'outline' plugins/up-docs/CHANGELOG.md` Expected: a small count (historical entries + the new release-note line) — all legitimate; no other file matched Step 1's sweep.
 
 - [ ] **Step 2: No mcp-outline tool anywhere**
 
-Run: `rg -n 'mcp-outline|mcp__plugin_mcp-outline' plugins/up-docs`
-Expected: **no matches.**
+Run: `rg -n 'mcp-outline|mcp__plugin_mcp-outline' plugins/up-docs` Expected: **no matches.**
 
 - [ ] **Step 3: Model tiers correct**
 
-Run: `rg -n '^model:' plugins/up-docs/agents/up-docs-propagate-wiki.md plugins/up-docs/agents/up-docs-propagate-repo.md plugins/up-docs/agents/up-docs-propagate-notion.md`
-Expected: propagate-wiki `sonnet`; propagate-repo + propagate-notion `haiku`.
-Run (per-pattern absence, CHANGELOG excluded — CR-001/CR-005):
+Run: `rg -n '^model:' plugins/up-docs/agents/up-docs-propagate-wiki.md plugins/up-docs/agents/up-docs-propagate-repo.md plugins/up-docs/agents/up-docs-propagate-notion.md` Expected: propagate-wiki `sonnet`; propagate-repo + propagate-notion `haiku`. Run (per-pattern absence, CHANGELOG excluded — CR-001/CR-005):
 
 ```bash
 for p in 'Haiku propagators' 'propagate-wiki.*Haiku' 'three Haiku' 'all Haiku' 'three propagator sub-agents in parallel \(Haiku\)' 'Single propagator.*Haiku'; do
@@ -433,12 +405,7 @@ Expected: `no stale Haiku model surfaces` (SA-003/CR-001 clean — these pattern
 
 - [ ] **Step 4: Full suites green**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh`
-Expected: ALL PASS.
-Run: `cd plugins/up-docs/tests && (.venv/bin/python -m pytest -q 2>/dev/null || python3 -m pytest -q); cd -`
-Expected: ALL PASS.
-Run: `./scripts/validate-marketplace.sh`
-Expected: PASS.
+Run: `bash plugins/up-docs/tests/run-bats.sh` Expected: ALL PASS. Run: `cd plugins/up-docs/tests && (.venv/bin/python -m pytest -q 2>/dev/null || python3 -m pytest -q); cd -` Expected: ALL PASS. Run: `./scripts/validate-marketplace.sh` Expected: PASS.
 
 - [ ] **Step 5: Update the plan + index status, commit**
 

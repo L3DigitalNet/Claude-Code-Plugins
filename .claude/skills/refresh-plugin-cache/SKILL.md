@@ -21,25 +21,24 @@ Run from the project root (`/home/chris/projects/Claude-Code-Plugins`). The scri
 
 **MARKETPLACE INDEX REFRESH** — One line per marketplace git clone:
 
-| Prefix | Meaning |
-|--------|---------|
-| `OK` | Already at latest `main`; SHA shown for confirmation |
-| `UPDATE` | Pulled new commits; `before → after` SHAs shown |
-| `ERROR` | `git fetch` failed — likely offline; cached data still usable |
-| `SKIP` | Directory exists but is not a git repo |
+| Prefix   | Meaning                                                       |
+| -------- | ------------------------------------------------------------- |
+| `OK`     | Already at latest `main`; SHA shown for confirmation          |
+| `UPDATE` | Pulled new commits; `before → after` SHAs shown               |
+| `ERROR`  | `git fetch` failed — likely offline; cached data still usable |
+| `SKIP`   | Directory exists but is not a git repo                        |
 
 **INSTALLED PLUGIN VERSION CHECK** — Compares installed version (from `installed_plugins.json`) against the freshly-pulled marketplace listing, for `l3digitalnet-plugins` only. Does **not** reflect what is actually running — see LIVE MCP PROCESS CHECK below.
 
-
-| Label | Meaning |
-|-------|---------|
-| `STALE` | Installed version differs from marketplace; reinstall needed |
-| `CURRENT` | Installed version matches marketplace |
+| Label     | Meaning                                                      |
+| --------- | ------------------------------------------------------------ |
+| `STALE`   | Installed version differs from marketplace; reinstall needed |
+| `CURRENT` | Installed version matches marketplace                        |
 
 **LIVE MCP PROCESS CHECK** — Compares the version embedded in the path of each running Node.js MCP process against the version in `installed_plugins.json`:
 
 | Label | Meaning |
-|-------|---------|
+| --- | --- |
 | `LIVE_OK` | Running process path version matches installed version |
 | `LIVE_SKEW` | Running process started from an older path; `installed_plugins.json` was updated mid-session but Claude Code didn't restart the process. **Normal reinstall won't fix this — use the hot-patch procedure below.** |
 | `NOT_RUNNING` | Plugin is installed but no live process found (MCP not started, or non-MCP plugin) |
@@ -79,7 +78,7 @@ claude plugin add-marketplace <marketplace-url>
 
 **Symptom:** The LIVE PROCESS CHECK reports `LIVE_SKEW`: `installed_plugins.json` points to the new version path but the running process started from the old version path.
 
-**Why standard reinstall fails mid-session:** Updating `installed_plugins.json` to point to the new path only affects the *next* session start. The current session's MCP command is already locked in.
+**Why standard reinstall fails mid-session:** Updating `installed_plugins.json` to point to the new path only affects the _next_ session start. The current session's MCP command is already locked in.
 
 **Hot-patch fix (mid-session):**
 
@@ -100,7 +99,7 @@ The hot-patch works because Claude Code restarts crashed MCP processes from the 
 ## Key File Paths
 
 | Path | Purpose |
-|------|---------|
+| --- | --- |
 | `~/.claude/plugins/marketplaces/<name>/` | Git clone of each marketplace repo |
 | `~/.claude/plugins/installed_plugins.json` | Install registry — source of truth for what's loaded |
 | `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` | Installed plugin content snapshots |

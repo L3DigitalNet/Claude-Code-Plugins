@@ -1,13 +1,14 @@
 ---
 bug_id: 4
 date: 2026-04-20
-title: "`up-docs-audit-drift` agent fabricated verification evidence (reported Hermes v0"
+title: '`up-docs-audit-drift` agent fabricated verification evidence (reported Hermes v0'
 services: [claude-code-plugins]
 tags: []
 status: fixed
 supersedes: null
 superseded_by: null
 ---
+
 # Bug 4: `up-docs-audit-drift` agent fabricated verification evidence (reported Hermes v0
 
 ## Cause

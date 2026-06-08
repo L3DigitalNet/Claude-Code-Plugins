@@ -7,31 +7,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.6.2] - 2026-05-30
 
 ### Changed
+
 - Removed references to the deleted `opus-context` plugin from README, `commands/analyze.md`, and `references/gap-analysis.md`. The full-context reading philosophy (read source files fully under 4000 lines, no agent delegation) is preserved verbatim — only the dead plugin name was dropped.
 
 ## [0.6.1] - 2026-05-25
 
 ### Changed
+
 - test-driver: Phase 2 — profile shape + manifest guard (4 cases)
 
 ### Fixed
-- canonicalize TEST-003 — bypass global git config in bats helper
 
+- canonicalize TEST-003 — bypass global git config in bats helper
 
 ## [0.6.0] - 2026-04-09
 
 ### Added
+
 - add 5 scripts for project detection, file inventory, and status management
 
 ### Changed
+
 - pass 3 — close remaining gaps, 293 total tests across 9 plugins
 - close gap analysis findings, 247 total tests across 9 plugins
 - add 166 bats tests across 9 plugins for new scripts
 
-
 ## [0.6.0] - 2026-04-09
 
 ### Added
+
 - `scripts/detect-project.sh` for project type detection with marker file scanning and sub-classification
 - `scripts/inventory-sources.sh` for source file discovery with approximate function counting
 - `scripts/inventory-tests.sh` for test file discovery with category classification and test counting
@@ -39,12 +43,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `scripts/test-status-update.sh` for atomic read-merge-write of TEST_STATUS.json
 
 ### Changed
+
 - `commands/analyze.md` Steps 1-3 and 5 now reference scripts for detection, inventory, and status updates
 - `commands/status.md` Step 1 now reads status via script
 
 ## [0.5.0] - 2026-04-08
 
 ### Added
+
 - Step 5 Phase 3: test quality assessment — flags weak assertions, missing boundary coverage, and over-mocked tests
 - Step 6: git diff integration for recently-changed function priority boost
 - Step 3: conftest.py complexity check — flags complex fixtures as candidates for their own tests
@@ -55,6 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Status command: staleness check now estimates function-level change scope
 
 ### Changed
+
 - Gap analysis now operates at function/behavior level instead of file level
 - Step 4 reads source files to enumerate functions, behaviors, and branches
 - Step 5 Phase 2 maps test functions → source functions instead of test files → source files
@@ -63,31 +70,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Analyze command updated to reflect behavioral (not structural) coverage mapping
 
 ### Fixed
+
 - File-level mapping drastically under-reported gaps: a source file with 15 functions where only 3 were tested reported zero gaps
 
 ## [0.3.0] - 2026-03-27
 
 ### Changed
+
 - Converted 9 skills to on-demand references; testing-mindset kept as sole always-on skill
 - Stack profiles moved to `references/profiles/`
 - Commands updated to read references instead of consulting skills
 
 ### Removed
+
 - Deleted 9 skill directories (4 core + 5 profiles); content preserved in `references/`
 
 ## [0.2.0] - 2026-03-16
 
 ### Added
+
 - add non-unit test design principles
 - add category-specific test generation guidance
 
 ### Fixed
-- make gap analysis category-aware in Step 5
 
+- make gap analysis category-aware in Step 5
 
 ## [0.1.0] - 2026-03-16
 
 ### Added
+
 - add /test-driver:status command
 - add /test-driver:analyze command
 - add swift-swiftui stack profile
@@ -103,5 +115,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - scaffold plugin with plugin.json
 
 ### Changed
+
 - add README.md
 - add CHANGELOG.md

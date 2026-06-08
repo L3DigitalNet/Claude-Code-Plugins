@@ -1,6 +1,5 @@
-  "find a widget", "test UI behavior", "Qt Pilot", "launch app headlessly", or "test what the user sees".
-  Covers the Qt Pilot MCP server's 15 tools for AI-driven headless GUI testing of Qt/PySide6 applications.
-  Also activates for "Xvfb", "automate UI", "visual regression", "capture screenshot of app".
+"find a widget", "test UI behavior", "Qt Pilot", "launch app headlessly", or "test what the user sees". Covers the Qt Pilot MCP server's 15 tools for AI-driven headless GUI testing of Qt/PySide6 applications. Also activates for "Xvfb", "automate UI", "visual regression", "capture screenshot of app".
+
 ---
 
 # Qt Pilot Usage
@@ -56,6 +55,7 @@ btn->setObjectName("calculate_btn");
 **Full argument types, return schemas, and error handling** — see [qt-pilot-usage/mcp-tools-reference.md](qt-pilot-usage/mcp-tools-reference.md).
 
 Quick reference by category:
+
 - **App lifecycle**: `launch_app`, `get_app_status`, `wait_for_idle`, `close_app`
 - **Discovery**: `find_widgets`, `list_all_widgets`, `get_widget_info`, `list_actions`
 - **Named interaction** (requires `setObjectName`): `click_widget`, `hover_widget`, `type_text`, `press_key`, `trigger_action`
@@ -128,7 +128,7 @@ close_app()
 ## Common Failure Modes
 
 | Symptom | Likely Cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | `launch_app` returns `success: false` | Import error in app, missing dependency | Check `stderr` in `get_app_status` |
 | Widget not found by name | `setObjectName()` not called | Add names to widgets; use `list_all_widgets` for coords |
 | Connection refused | App crashed after launch | Call `get_app_status` to see exit code + stderr |

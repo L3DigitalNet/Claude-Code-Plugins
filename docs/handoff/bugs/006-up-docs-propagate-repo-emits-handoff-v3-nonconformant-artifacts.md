@@ -1,13 +1,14 @@
 ---
 bug_id: 6
 date: 2026-05-30
-title: "up-docs propagate-repo emits handoff-v3-nonconformant AGENTS.md pointer and Lesson-less bug bodies"
+title: 'up-docs propagate-repo emits handoff-v3-nonconformant AGENTS.md pointer and Lesson-less bug bodies'
 services: [up-docs, handoff]
 tags: [docs-propagation, handoff, conformance]
 status: fixed
 supersedes: null
 superseded_by: null
 ---
+
 # Bug 6: up-docs propagate-repo emits handoff-v3-nonconformant AGENTS.md pointer and Lesson-less bug bodies
 
 ## Cause

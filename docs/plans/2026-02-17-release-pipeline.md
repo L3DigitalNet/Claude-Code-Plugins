@@ -15,6 +15,7 @@
 ## Task 1: Scaffold Plugin Structure + Manifest
 
 **Files:**
+
 - Create: `plugins/release-pipeline/.claude-plugin/plugin.json`
 - Create: directories `commands/`, `skills/release-detection/`, `agents/`, `scripts/`, `templates/`
 
@@ -31,27 +32,17 @@ Create `plugins/release-pipeline/.claude-plugin/plugin.json`:
 
 ```json
 {
-  "name": "release-pipeline",
-  "description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
-  "version": "1.0.0",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  },
-  "keywords": [
-    "release",
-    "versioning",
-    "changelog",
-    "ci",
-    "deployment"
-  ]
+	"name": "release-pipeline",
+	"description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
+	"version": "1.0.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"keywords": ["release", "versioning", "changelog", "ci", "deployment"]
 }
 ```
 
 **Step 3: Validate manifest**
 
-Run: `jq . plugins/release-pipeline/.claude-plugin/plugin.json`
-Expected: Pretty-printed JSON, exit 0
+Run: `jq . plugins/release-pipeline/.claude-plugin/plugin.json` Expected: Pretty-printed JSON, exit 0
 
 **Step 4: Commit**
 
@@ -65,6 +56,7 @@ git commit -m "feat: scaffold release-pipeline plugin structure"
 ## Task 2: Script — detect-test-runner.sh
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/detect-test-runner.sh`
 
 **Step 1: Write the script**
@@ -141,8 +133,7 @@ exit 1
 
 **Step 2: Validate syntax**
 
-Run: `bash -n plugins/release-pipeline/scripts/detect-test-runner.sh`
-Expected: No output, exit 0
+Run: `bash -n plugins/release-pipeline/scripts/detect-test-runner.sh` Expected: No output, exit 0
 
 **Step 3: Make executable**
 
@@ -150,8 +141,7 @@ Run: `chmod +x plugins/release-pipeline/scripts/detect-test-runner.sh`
 
 **Step 4: Smoke test against a known repo**
 
-Run: `plugins/release-pipeline/scripts/detect-test-runner.sh /home/chris/projects/HA-Light-Controller`
-Expected: A pytest command (since HA-Light-Controller is a Python project)
+Run: `plugins/release-pipeline/scripts/detect-test-runner.sh /home/chris/projects/HA-Light-Controller` Expected: A pytest command (since HA-Light-Controller is a Python project)
 
 **Step 5: Commit**
 
@@ -165,6 +155,7 @@ git commit -m "feat: add test runner auto-detection script"
 ## Task 3: Script — bump-version.sh
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/bump-version.sh`
 
 **Step 1: Write the script**
@@ -248,8 +239,7 @@ exit 0
 
 **Step 2: Validate syntax**
 
-Run: `bash -n plugins/release-pipeline/scripts/bump-version.sh`
-Expected: No output, exit 0
+Run: `bash -n plugins/release-pipeline/scripts/bump-version.sh` Expected: No output, exit 0
 
 **Step 3: Make executable**
 
@@ -267,6 +257,7 @@ git commit -m "feat: add version bump script"
 ## Task 4: Script — generate-changelog.sh + Template
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/generate-changelog.sh`
 - Create: `plugins/release-pipeline/templates/changelog-entry.template`
 
@@ -393,8 +384,7 @@ exit 0
 
 **Step 3: Validate syntax**
 
-Run: `bash -n plugins/release-pipeline/scripts/generate-changelog.sh`
-Expected: No output, exit 0
+Run: `bash -n plugins/release-pipeline/scripts/generate-changelog.sh` Expected: No output, exit 0
 
 **Step 4: Make executable**
 
@@ -412,6 +402,7 @@ git commit -m "feat: add changelog generation script and template"
 ## Task 5: Script — verify-release.sh
 
 **Files:**
+
 - Create: `plugins/release-pipeline/scripts/verify-release.sh`
 
 **Step 1: Write the script**
@@ -492,8 +483,7 @@ exit 0
 
 **Step 2: Validate syntax**
 
-Run: `bash -n plugins/release-pipeline/scripts/verify-release.sh`
-Expected: No output, exit 0
+Run: `bash -n plugins/release-pipeline/scripts/verify-release.sh` Expected: No output, exit 0
 
 **Step 3: Make executable**
 
@@ -511,6 +501,7 @@ git commit -m "feat: add release verification script"
 ## Task 6: Agent Definitions
 
 **Files:**
+
 - Create: `plugins/release-pipeline/agents/test-runner.md`
 - Create: `plugins/release-pipeline/agents/docs-auditor.md`
 - Create: `plugins/release-pipeline/agents/git-preflight.md`
@@ -540,14 +531,12 @@ You are the test runner agent for a release pipeline pre-flight check.
 ## Output Format
 
 Report a structured summary:
-
 ```
-TEST RESULTS
-============
-Status: PASS | FAIL
-Tests: X passed, Y failed, Z skipped (total: N)
-Coverage: XX% (or "not configured")
-Details: [any failure messages, truncated to 20 lines max]
+
+# TEST RESULTS
+
+Status: PASS | FAIL Tests: X passed, Y failed, Z skipped (total: N) Coverage: XX% (or "not configured") Details: [any failure messages, truncated to 20 lines max]
+
 ```
 
 ## Rules
@@ -600,16 +589,12 @@ Audit all documentation files in the repository for release readiness.
 - Warn (don't fail) if CHANGELOG.md is missing
 
 ## Output Format
-
 ```
-DOCS AUDIT
-==========
-Status: PASS | WARN | FAIL
-Version refs: X checked, Y stale
-Broken links: X found
-Tone flags: X found
-Missing files: [list or "none"]
-Details: [specific issues, one per line]
+
+# DOCS AUDIT
+
+Status: PASS | WARN | FAIL Version refs: X checked, Y stale Broken links: X found Tone flags: X found Missing files: [list or "none"] Details: [specific issues, one per line]
+
 ```
 
 ## Rules
@@ -645,16 +630,12 @@ Run these checks and report results:
 5. **Tag available**: If a target version was provided as the first argument, check that `git tag -l "vX.Y.Z"` returns empty (tag doesn't exist yet)
 
 ## Output Format
-
 ```
-GIT PRE-FLIGHT
-==============
-Status: PASS | FAIL
-Clean tree: YES | NO (X files modified)
-Branch: <branch-name> (OK | FAIL — on protected branch)
-Email: <email> (OK | FAIL — not noreply)
-Remote: <url> (OK | FAIL)
-Tag vX.Y.Z: available | ALREADY EXISTS
+
+# GIT PRE-FLIGHT
+
+Status: PASS | FAIL Clean tree: YES | NO (X files modified) Branch: <branch-name> (OK | FAIL — on protected branch) Email: <email> (OK | FAIL — not noreply) Remote: <url> (OK | FAIL) Tag vX.Y.Z: available | ALREADY EXISTS
+
 ```
 
 ## Rules
@@ -678,6 +659,7 @@ git commit -m "feat: add Phase 1 pre-flight agent definitions"
 This is the main orchestrator. It parses arguments, dispatches phases, and gates on user approval.
 
 **Files:**
+
 - Create: `plugins/release-pipeline/commands/release.md`
 
 **Step 1: Write the release command**
@@ -687,7 +669,7 @@ Create `plugins/release-pipeline/commands/release.md`:
 ````markdown
 ---
 name: release
-description: "Release pipeline — no args for quick merge (testing->main), or provide version (e.g., /release v1.2.0) for full release with pre-flight checks, changelog, and GitHub release."
+description: 'Release pipeline — no args for quick merge (testing->main), or provide version (e.g., /release v1.2.0) for full release with pre-flight checks, changelog, and GitHub release.'
 ---
 
 # Release Pipeline
@@ -727,6 +709,7 @@ Use this when no version was provided. This commits all changes and merges testi
    - **Wait for "GO" approval**
 
 3. **Merge to main**:
+
    ```bash
    git checkout main
    git pull origin main
@@ -753,6 +736,7 @@ Launch THREE Task agents simultaneously using the Task tool. All three MUST pass
 **IMPORTANT:** Launch all three in a SINGLE message with three Task tool calls.
 
 **Agent A — Test Runner:**
+
 ```
 Task tool call:
   subagent_type: "general-purpose"
@@ -765,6 +749,7 @@ Task tool call:
 ```
 
 **Agent B — Docs Auditor:**
+
 ```
 Task tool call:
   subagent_type: "general-purpose"
@@ -777,6 +762,7 @@ Task tool call:
 ```
 
 **Agent C — Git Pre-flight:**
+
 ```
 Task tool call:
   subagent_type: "general-purpose"
@@ -789,6 +775,7 @@ Task tool call:
 ```
 
 **After all three return:**
+
 - Display each agent's summary
 - If ANY agent reported FAIL → STOP. Report which failed and why. Suggest fixes. Do NOT proceed.
 - If all PASS (WARN is acceptable) → proceed to Phase 2
@@ -814,6 +801,7 @@ If the script exits non-zero (and it's not just "no previous tag"), STOP and rep
 **Step 3: Show diff summary + approval gate**
 
 Show the user:
+
 - All files modified (from `git diff --stat`)
 - The version bump changes (from `git diff` on versioned files)
 - The changelog entry preview
@@ -822,6 +810,7 @@ Show the user:
 **WAIT for user response.** Do NOT proceed until you receive explicit approval.
 
 If the user says anything other than clear approval (GO, go, yes, proceed, ship it, do it), ABORT cleanly:
+
 - Run `git checkout -- .` to discard changes
 - Report: "Release aborted. All changes discarded."
 
@@ -852,6 +841,7 @@ git checkout testing
 ```
 
 For the GitHub release, use `gh release create`:
+
 ```bash
 gh release create "v<version>" --title "v<version>" --notes "<changelog entry text>"
 ```
@@ -893,11 +883,13 @@ If the pipeline fails, suggest these rollback steps based on where it failed:
 **Phase 1 failed:** Nothing to roll back. Fix the issues and retry.
 
 **Phase 2 failed (version bump/changelog):**
+
 ```bash
 git checkout -- .   # Discard all uncommitted changes
 ```
 
 **Phase 3 failed (after commit, before push):**
+
 ```bash
 git tag -d v<version>              # Delete local tag
 git checkout testing               # Return to testing
@@ -905,6 +897,7 @@ git reset --hard HEAD~1            # Undo the merge commit on main (if on main)
 ```
 
 **Phase 3 failed (after push):**
+
 ```
 Manual intervention needed:
 - Delete the tag: git push origin --delete v<version>
@@ -913,6 +906,7 @@ Manual intervention needed:
 ```
 
 **Phase 4 failed:** Release exists but verification couldn't confirm. Check manually:
+
 ```bash
 gh release view v<version>
 git ls-remote --tags origin v<version>
@@ -931,6 +925,7 @@ git commit -m "feat: add release command — main orchestrator"
 ## Task 8: Release Detection Skill
 
 **Files:**
+
 - Create: `plugins/release-pipeline/skills/release-detection/SKILL.md`
 
 **Step 1: Write the skill**
@@ -941,9 +936,7 @@ Create `plugins/release-pipeline/skills/release-detection/SKILL.md`:
 ---
 name: release-detection
 description: >
-  Detect release intent in natural language and route to the /release command.
-  Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main",
-  "deploy to production", "push to main", "release for <repo>".
+  Detect release intent in natural language and route to the /release command. Triggers on: "Release vX.Y.Z", "cut a release", "ship it", "merge to main", "deploy to production", "push to main", "release for <repo>".
 ---
 
 # Release Detection
@@ -977,6 +970,7 @@ git commit -m "feat: add release detection skill for natural language triggering
 ## Task 9: README.md
 
 **Files:**
+
 - Create: `plugins/release-pipeline/README.md`
 
 **Step 1: Write README**
@@ -991,9 +985,10 @@ Autonomous release pipeline for any repo. Two modes:
 ## Quick Merge
 
 Commit all changes and merge testing to main:
-
 ```
+
 /release
+
 ```
 
 Or say: "ship it", "merge to main"
@@ -1009,7 +1004,9 @@ Or say: "ship it", "merge to main"
 Run the complete release pipeline with a version:
 
 ```
+
 /release v1.2.0
+
 ```
 
 Or say: "Release v1.2.0 for my-project"
@@ -1041,9 +1038,11 @@ Auto-detected from project files:
 ## Installation
 
 ```
-/plugin marketplace add L3DigitalNet/Claude-Code-Plugins
-/plugin install release-pipeline@l3digitalnet-plugins
+
+/plugin marketplace add L3DigitalNet/Claude-Code-Plugins /plugin install release-pipeline@l3digitalnet-plugins
+
 ```
+
 ```
 
 **Step 2: Commit**
@@ -1058,6 +1057,7 @@ git commit -m "docs: add README for release-pipeline plugin"
 ## Task 10: Marketplace Entry + Validation
 
 **Files:**
+
 - Modify: `.claude-plugin/marketplace.json` — add release-pipeline entry to the plugins array
 
 **Step 1: Add marketplace entry**
@@ -1066,32 +1066,26 @@ Add this object to the `plugins` array in `.claude-plugin/marketplace.json`:
 
 ```json
 {
-  "name": "release-pipeline",
-  "description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
-  "version": "1.0.0",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  },
-  "license": "MIT",
-  "keywords": ["release", "versioning", "changelog", "deployment"],
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
-  "source": "./plugins/release-pipeline"
+	"name": "release-pipeline",
+	"description": "Autonomous release pipeline — quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.",
+	"version": "1.0.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"license": "MIT",
+	"keywords": ["release", "versioning", "changelog", "deployment"],
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+	"source": "./plugins/release-pipeline"
 }
 ```
 
 **Step 2: Validate marketplace JSON**
 
-Run: `jq . .claude-plugin/marketplace.json`
-Expected: Valid JSON, exit 0
+Run: `jq . .claude-plugin/marketplace.json` Expected: Valid JSON, exit 0
 
-Run: `jq -e '.plugins[] | select(.name == "release-pipeline") | .name and .version and .author and .source' .claude-plugin/marketplace.json`
-Expected: `true`
+Run: `jq -e '.plugins[] | select(.name == "release-pipeline") | .name and .version and .author and .source' .claude-plugin/marketplace.json` Expected: `true`
 
 **Step 3: Validate plugin manifest**
 
-Run: `jq . plugins/release-pipeline/.claude-plugin/plugin.json`
-Expected: Valid JSON, exit 0
+Run: `jq . plugins/release-pipeline/.claude-plugin/plugin.json` Expected: Valid JSON, exit 0
 
 **Step 4: Commit**
 

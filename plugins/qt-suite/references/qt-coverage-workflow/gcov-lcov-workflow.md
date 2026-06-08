@@ -21,35 +21,28 @@ Note: With Clang on macOS, replace `gcov` references with `llvm-cov gcov`.
 
 ```json
 {
-  "version": 3,
-  "configurePresets": [
-    {
-      "name": "coverage",
-      "displayName": "Coverage Build",
-      "binaryDir": "${sourceDir}/build-coverage",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_COVERAGE": "ON"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "coverage",
-      "configurePreset": "coverage"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "coverage",
-      "configurePreset": "coverage",
-      "output": { "outputOnFailure": true }
-    }
-  ]
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "coverage",
+			"displayName": "Coverage Build",
+			"binaryDir": "${sourceDir}/build-coverage",
+			"cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ENABLE_COVERAGE": "ON" }
+		}
+	],
+	"buildPresets": [{ "name": "coverage", "configurePreset": "coverage" }],
+	"testPresets": [
+		{
+			"name": "coverage",
+			"configurePreset": "coverage",
+			"output": { "outputOnFailure": true }
+		}
+	]
 }
 ```
 
 Usage:
+
 ```bash
 cmake --preset coverage
 cmake --build --preset coverage
@@ -158,6 +151,7 @@ endif()
 ```
 
 Collect:
+
 ```bash
 # After running tests:
 llvm-profdata merge -sparse *.profraw -o coverage.profdata

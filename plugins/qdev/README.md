@@ -71,13 +71,13 @@ flowchart TD
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `/qdev:research` | Dual-source research sweep covering docs, practices, footguns, existing tools, security, and recent changes (dispatches `qdev-researcher`); persists a report under `docs/research/` |
 
 ## Agents
 
 | Agent | Model | Purpose |
-|-------|-------|---------|
+| --- | --- | --- |
 | `qdev-researcher` | Sonnet | Tavily-first research with Brave/Serper cross-checks, Context7 docs gating, footgun corroboration (2+ sources), and a single follow-up pass for thin angles. Persists a structured report under `docs/research/`. |
 
 ### `/qdev:research [topic]`
@@ -85,6 +85,7 @@ flowchart TD
 Research a topic, technology, or problem space before designing or building, by dispatching the `qdev-researcher` subagent. Pass the topic as an argument, or invoke without arguments to have it inferred from project context and conversation history.
 
 **Coverage:**
+
 - Official documentation (current API, recent changes)
 - Community best practices (established patterns, what has replaced older approaches)
 - Footguns and gotchas (2+ source corroboration required; single-source items demoted)
@@ -103,7 +104,7 @@ Research a topic, technology, or problem space before designing or building, by 
 #### When to use `/qdev:research` vs other tools
 
 | You want to | Use |
-|-------------|-----|
+| --- | --- |
 | Research before design — output feeds `superpowers:brainstorming` | `/qdev:research` |
 | A lightweight, in-the-loop web lookup mid-task (no saved report) | `web-search` skill |
 | Compare options or answer a current-events question with citations | global `research` skill |

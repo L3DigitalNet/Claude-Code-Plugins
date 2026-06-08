@@ -70,11 +70,11 @@ class MyEnergySensor(SensorEntity):
 
 ### State Classes
 
-| State Class | Use Case | Example |
-|-------------|----------|---------|
-| `MEASUREMENT` | Instantaneous value | Temperature |
-| `TOTAL` | Resettable counter | Trip odometer |
-| `TOTAL_INCREASING` | Monotonic counter | Energy meter |
+| State Class        | Use Case            | Example       |
+| ------------------ | ------------------- | ------------- |
+| `MEASUREMENT`      | Instantaneous value | Temperature   |
+| `TOTAL`            | Resettable counter  | Trip odometer |
+| `TOTAL_INCREASING` | Monotonic counter   | Energy meter  |
 
 ### Statistics-Compatible Device Classes
 

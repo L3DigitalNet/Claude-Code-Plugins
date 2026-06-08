@@ -11,6 +11,7 @@
 **Design Reference:** `plugins/docs-manager/docs/design.md` — the authoritative specification. Section references (§N) point there.
 
 **Open Questions Resolved:**
+
 - OQ1 (hosted-api migration): Deferred — only `git-markdown` and `json` backends in initial implementation
 - OQ2 (dismiss policy): Reason required before dismiss; items logged to session history file
 
@@ -18,12 +19,12 @@
 
 ## Prerequisites
 
-| Tool | Required | Check | Purpose |
-|------|----------|-------|---------|
-| `jq` | Yes | `jq --version` | JSON manipulation in all scripts |
-| `python3` | Yes | `python3 --version` | YAML frontmatter parsing |
-| `git` | Yes | `git --version` | Index backend (git-markdown) |
-| `bats` | For testing | `bats --version` | Bash script unit tests |
+| Tool      | Required    | Check               | Purpose                          |
+| --------- | ----------- | ------------------- | -------------------------------- |
+| `jq`      | Yes         | `jq --version`      | JSON manipulation in all scripts |
+| `python3` | Yes         | `python3 --version` | YAML frontmatter parsing         |
+| `git`     | Yes         | `git --version`     | Index backend (git-markdown)     |
+| `bats`    | For testing | `bats --version`    | Bash script unit tests           |
 
 If `bats` is not installed: `sudo dnf install bats` (Fedora) or `npm install -g bats`.
 
@@ -34,6 +35,7 @@ If `bats` is not installed: `sudo dnf install bats` (Fedora) or `npm install -g 
 Every file this plan creates, grouped by purpose.
 
 ### Plugin Scaffold
+
 ```
 plugins/docs-manager/.claude-plugin/plugin.json
 plugins/docs-manager/CHANGELOG.md
@@ -41,11 +43,13 @@ plugins/docs-manager/CHANGELOG.md
 ```
 
 ### Hook Configuration
+
 ```
 plugins/docs-manager/hooks/hooks.json
 ```
 
 ### Scripts — Core Engine
+
 ```
 plugins/docs-manager/scripts/bootstrap.sh          State directory init
 plugins/docs-manager/scripts/queue-append.sh        Append item to queue
@@ -59,6 +63,7 @@ plugins/docs-manager/scripts/stop.sh                Stop hook handler
 ```
 
 ### Scripts — Index Operations
+
 ```
 plugins/docs-manager/scripts/index-register.sh      Register doc in index
 plugins/docs-manager/scripts/index-query.sh         Query index
@@ -69,11 +74,13 @@ plugins/docs-manager/scripts/index-source-lookup.sh Check if file is in source-f
 ```
 
 ### Commands
+
 ```
 plugins/docs-manager/commands/docs.md               Main /docs command router
 ```
 
 ### Skills
+
 ```
 plugins/docs-manager/skills/project-entry/SKILL.md      Project-entry freshness
 plugins/docs-manager/skills/doc-creation/SKILL.md        Doc creation awareness
@@ -81,6 +88,7 @@ plugins/docs-manager/skills/session-boundary/SKILL.md    Session-end queue remin
 ```
 
 ### Agents
+
 ```
 plugins/docs-manager/agents/bulk-onboard.md         Bulk import agent
 plugins/docs-manager/agents/full-review.md          Comprehensive review agent
@@ -88,6 +96,7 @@ plugins/docs-manager/agents/upstream-verify.md      Upstream verification agent
 ```
 
 ### Tests
+
 ```
 plugins/docs-manager/tests/helpers.bash             Shared test helpers
 plugins/docs-manager/tests/queue.bats               Queue script tests
@@ -131,6 +140,7 @@ Phase 13: Polish & Release ─────────────────�
 ### Task 1: Create Plugin Manifest and Marketplace Entry
 
 **Files:**
+
 - Create: `plugins/docs-manager/.claude-plugin/plugin.json`
 - Create: `plugins/docs-manager/CHANGELOG.md`
 - Modify: `.claude-plugin/marketplace.json`
@@ -139,13 +149,10 @@ Phase 13: Polish & Release ─────────────────�
 
 ```json
 {
-  "name": "docs-manager",
-  "description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
-  "version": "0.1.0",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  }
+	"name": "docs-manager",
+	"description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
+	"version": "0.1.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" }
 }
 ```
 
@@ -161,28 +168,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+
 - Initial plugin scaffold
 ```
 
 **Step 3: Add marketplace entry**
 
 Add to `.claude-plugin/marketplace.json` `plugins` array:
+
 ```json
 {
-  "name": "docs-manager",
-  "description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
-  "version": "0.1.0",
-  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-  "category": "documentation",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
-  "source": "./plugins/docs-manager"
+	"name": "docs-manager",
+	"description": "Documentation lifecycle management — detects changes, queues tasks silently, surfaces them for batch review at session boundaries.",
+	"version": "0.1.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"category": "documentation",
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/docs-manager",
+	"source": "./plugins/docs-manager"
 }
 ```
 
 **Step 4: Validate marketplace**
 
-Run: `./scripts/validate-marketplace.sh`
-Expected: PASS (no validation errors)
+Run: `./scripts/validate-marketplace.sh` Expected: PASS (no validation errors)
 
 **Step 5: Commit**
 
@@ -196,6 +204,7 @@ git commit -m "feat(docs-manager): add plugin scaffold and marketplace entry"
 ### Task 2: State Directory Bootstrap Script
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/bootstrap.sh`
 - Test: `plugins/docs-manager/tests/helpers.bash` (shared helpers — created here, used by all tests)
 
@@ -219,6 +228,7 @@ teardown_test_env() {
 **Step 2: Write failing test for bootstrap**
 
 Create `tests/queue.bats` (we'll add queue tests to this file in Task 3):
+
 ```bash
 #!/usr/bin/env bats
 
@@ -255,8 +265,7 @@ teardown() { teardown_test_env; }
 
 **Step 3: Verify tests fail**
 
-Run: `bats plugins/docs-manager/tests/queue.bats`
-Expected: FAIL (bootstrap.sh does not exist)
+Run: `bats plugins/docs-manager/tests/queue.bats` Expected: FAIL (bootstrap.sh does not exist)
 
 **Step 4: Implement bootstrap.sh**
 
@@ -288,8 +297,7 @@ fi
 
 **Step 5: Verify tests pass**
 
-Run: `bats plugins/docs-manager/tests/queue.bats`
-Expected: 3 tests, 3 passed
+Run: `bats plugins/docs-manager/tests/queue.bats` Expected: 3 tests, 3 passed
 
 **Step 6: Commit**
 
@@ -305,6 +313,7 @@ git commit -m "feat(docs-manager): add state bootstrap script with tests"
 ### Task 3: Queue Append Script
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/queue-append.sh`
 - Modify: `plugins/docs-manager/tests/queue.bats`
 
@@ -376,8 +385,7 @@ Append to `tests/queue.bats`:
 
 **Step 2: Verify tests fail**
 
-Run: `bats plugins/docs-manager/tests/queue.bats`
-Expected: New tests FAIL (queue-append.sh does not exist)
+Run: `bats plugins/docs-manager/tests/queue.bats` Expected: New tests FAIL (queue-append.sh does not exist)
 
 **Step 3: Implement queue-append.sh**
 
@@ -470,8 +478,7 @@ Make executable: `chmod +x plugins/docs-manager/scripts/queue-append.sh`
 
 **Step 4: Verify tests pass**
 
-Run: `bats plugins/docs-manager/tests/queue.bats`
-Expected: All tests pass
+Run: `bats plugins/docs-manager/tests/queue.bats` Expected: All tests pass
 
 **Step 5: Commit**
 
@@ -485,6 +492,7 @@ git commit -m "feat(docs-manager): add queue append script with dedup and fallba
 ### Task 4: Queue Read Script
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/queue-read.sh`
 - Modify: `plugins/docs-manager/tests/queue.bats`
 
@@ -532,6 +540,7 @@ Append to `tests/queue.bats`:
 **Step 2: Verify fail, implement, verify pass**
 
 `queue-read.sh` specification:
+
 - Reads `$DOCS_MANAGER_HOME/queue.json`
 - If fallback queue exists, merges it into main queue first (then deletes fallback)
 - Default output: human-readable summary (count + table of items)
@@ -553,6 +562,7 @@ git commit -m "feat(docs-manager): add queue read script with fallback merge"
 ### Task 5: Queue Clear and Fallback Merge Scripts
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/queue-clear.sh`
 - Create: `plugins/docs-manager/scripts/queue-merge-fallback.sh`
 - Modify: `plugins/docs-manager/tests/queue.bats`
@@ -599,6 +609,7 @@ git commit -m "feat(docs-manager): add queue read script with fallback merge"
 **Step 2: Verify fail, implement, verify pass**
 
 `queue-clear.sh` specification:
+
 - Requires `--reason "text"` argument (exits 1 without it)
 - Reads current queue items
 - Writes cleared items + reason + timestamp to `$DOCS_MANAGER_HOME/session-history.jsonl` (append, one JSON object per line)
@@ -606,6 +617,7 @@ git commit -m "feat(docs-manager): add queue read script with fallback merge"
 - Outputs count of cleared items
 
 `queue-merge-fallback.sh` specification:
+
 - Checks if `queue.fallback.json` exists; exits 0 if not
 - Reads all items from fallback
 - Appends to main queue (deduplicating by doc-path + type)
@@ -625,6 +637,7 @@ git commit -m "feat(docs-manager): add queue clear and fallback merge scripts"
 ### Task 6: Frontmatter Reader
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/frontmatter-read.sh`
 - Create: `plugins/docs-manager/tests/utilities.bats`
 - Create: `plugins/docs-manager/tests/fixtures/doc-with-frontmatter.md`
@@ -634,6 +647,7 @@ git commit -m "feat(docs-manager): add queue clear and fallback merge scripts"
 **Step 1: Create test fixtures**
 
 `tests/fixtures/doc-with-frontmatter.md`:
+
 ```markdown
 ---
 library: raspi5-homelab
@@ -652,6 +666,7 @@ Content here.
 ```
 
 `tests/fixtures/doc-without-frontmatter.md`:
+
 ```markdown
 # Just a regular file
 
@@ -659,6 +674,7 @@ No frontmatter here.
 ```
 
 `tests/fixtures/doc-ai-audience.md`:
+
 ```markdown
 ---
 library: raspi5-homelab
@@ -718,6 +734,7 @@ teardown() { teardown_test_env; }
 **Step 3: Verify fail, implement, verify pass**
 
 `frontmatter-read.sh` specification:
+
 - Input: `<file-path> [field-name | --has-frontmatter]`
 - Uses Python 3 to parse YAML between `---` delimiters
 - No field argument: outputs all frontmatter as JSON object
@@ -726,6 +743,7 @@ teardown() { teardown_test_env; }
 - Exits 1 if no frontmatter found or file doesn't exist
 
 Implementation uses Python because YAML parsing in pure bash is fragile. The Python snippet:
+
 ```python
 import sys, json, yaml
 
@@ -769,6 +787,7 @@ git commit -m "feat(docs-manager): add frontmatter reader utility with tests"
 ### Task 7: Survival-Context Classifier
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/is-survival-context.sh`
 - Modify: `plugins/docs-manager/tests/utilities.bats`
 
@@ -808,6 +827,7 @@ Append to `tests/utilities.bats`:
 **Step 2: Verify fail, implement, verify pass**
 
 `is-survival-context.sh` specification (implements §6.2 classification rule):
+
 - Input: file path OR `--doc-type TYPE --audience AUDIENCE`
 - If file path: reads frontmatter via `frontmatter-read.sh`
 - Classification rule:
@@ -834,6 +854,7 @@ git commit -m "feat(docs-manager): add survival-context classifier (P5 rule)"
 ### Task 8: PostToolUse Detection Script
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/post-tool-use.sh`
 - Create: `plugins/docs-manager/tests/detection.bats`
 
@@ -900,6 +921,7 @@ Note: Path B detection (source-file association) requires the index system (Phas
 **Step 2: Verify fail, implement, verify pass**
 
 `post-tool-use.sh` specification (§7.2):
+
 - Input: JSON on stdin (Claude Code PostToolUse context)
 - Extracts `file_path` from `tool_input`
 - Quick filters (before any expensive checks):
@@ -990,6 +1012,7 @@ git commit -m "feat(docs-manager): add PostToolUse hook detection (Path A)"
 ### Task 9: Stop Hook Script and hooks.json
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/stop.sh`
 - Create: `plugins/docs-manager/hooks/hooks.json`
 - Modify: `plugins/docs-manager/tests/detection.bats`
@@ -1022,6 +1045,7 @@ Append to `tests/detection.bats`:
 **Step 2: Verify fail, implement, verify pass**
 
 `stop.sh` specification (§7.4):
+
 - Reads queue item count
 - If >0: outputs session-end message to stdout (injected into Claude context)
 - Message format: `"Session ending with N queued documentation items. Run /docs queue review to review, or /docs queue clear --reason '...' to dismiss all."`
@@ -1030,32 +1054,30 @@ Append to `tests/detection.bats`:
 - Always exits 0
 
 `hooks/hooks.json`:
+
 ```json
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/post-tool-use.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/stop.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Write|Edit|MultiEdit",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/post-tool-use.sh"
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"matcher": "*",
+				"hooks": [
+					{ "type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/stop.sh" }
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -1073,6 +1095,7 @@ git commit -m "feat(docs-manager): add Stop hook and hooks.json registration"
 ### Task 10: Main /docs Command Router
 
 **Files:**
+
 - Create: `plugins/docs-manager/commands/docs.md`
 
 This is the single command file that handles all `/docs <subcommand>` invocations. It loads into context on every `/docs` call, so it must be **lean** — detailed workflow instructions belong in skills, not here.
@@ -1080,6 +1103,7 @@ This is the single command file that handles all `/docs <subcommand>` invocation
 **Specification:**
 
 The command file should contain:
+
 1. YAML frontmatter: `name: docs`, `description: Documentation lifecycle management`
 2. Usage summary: `/docs <subcommand> [args]`
 3. Routing table: one section per subcommand with 3-10 lines of instruction
@@ -1089,7 +1113,7 @@ The command file should contain:
 **Subcommands to include in the initial router** (Phase 5 — others added in later phases):
 
 | Subcommand | Behavior | Implementation |
-|------------|----------|----------------|
+| --- | --- | --- |
 | `queue` | Display current queue items | Call `queue-read.sh`, format output |
 | `queue review` | Trigger review flow | Multi-select UI per §5.2 |
 | `queue clear` | Dismiss all with reason | Call `queue-clear.sh` with `--reason` |
@@ -1099,11 +1123,13 @@ The command file should contain:
 | (no arg) | Show brief status summary | Same as `status` but abbreviated |
 
 **Subcommands to add as stubs** (implemented in later phases):
+
 - `new`, `onboard`, `find`, `update`, `review`, `organize`, `library`, `index`, `audit`, `dedupe`, `consistency`, `streamline`, `compress`, `full-review`, `template`, `verify`
 
 Each stub outputs: `"The /docs [subcommand] command will be available in a future update. Current version: 0.1.0"`
 
 **Key patterns for the command file:**
+
 - Parse first argument as subcommand
 - Use `AskUserQuestion` with `multiSelect: true` for queue review (§5.2)
 - Call scripts via `bash ${CLAUDE_PLUGIN_ROOT}/scripts/<script>.sh`
@@ -1150,6 +1176,7 @@ This task fills in the queue review logic within the `/docs` command. The review
 The status command gathers data from scripts and formats the two-section output:
 
 **Operational Health** — calls:
+
 - Check `config.yaml` exists and is valid
 - Read hook last-fired timestamps from `$DOCS_MANAGER_HOME/hooks/`
 - Check queue.json validity
@@ -1157,6 +1184,7 @@ The status command gathers data from scripts and formats the two-section output:
 - Check for pending offline writes
 
 **Library Health** — calls:
+
 - Count registered documents (from index — stub until Phase 6)
 - Count missing recommended fields
 - Count docs without upstream-url
@@ -1199,6 +1227,7 @@ git commit -m "feat(docs-manager): complete MVP — queue, status, help commands
 > ### MVP MILESTONE
 >
 > At this point the core detection → queue → review loop works:
+>
 > 1. User edits a `.md` file with docs-manager frontmatter → PostToolUse hook detects it → queue item appended
 > 2. Session ends → Stop hook injects queue summary
 > 3. `/docs queue` shows pending items
@@ -1214,6 +1243,7 @@ git commit -m "feat(docs-manager): complete MVP — queue, status, help commands
 ### Task 13: Index Schema and Register Script
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/index-register.sh`
 - Create: `plugins/docs-manager/tests/index.bats`
 - Create: `plugins/docs-manager/tests/fixtures/sample-index.json`
@@ -1221,40 +1251,42 @@ git commit -m "feat(docs-manager): complete MVP — queue, status, help commands
 **Specification:**
 
 `docs-index.json` schema (§6.3):
+
 ```json
 {
-  "version": "1.0",
-  "last-updated": "2026-02-20T00:00:00Z",
-  "libraries": [
-    {
-      "name": "raspi5-homelab",
-      "machine": "raspi5",
-      "description": "...",
-      "root-path": "~/projects/homelab/raspi5/"
-    }
-  ],
-  "documents": [
-    {
-      "id": "doc-001",
-      "path": "~/projects/homelab/raspi5/caddy/README.md",
-      "title": "Caddy Reverse Proxy",
-      "library": "raspi5-homelab",
-      "machine": "raspi5",
-      "doc-type": "sysadmin",
-      "status": "active",
-      "last-verified": "2026-02-18",
-      "template": "homelab-service-runbook",
-      "upstream-url": "https://caddyserver.com/docs/",
-      "source-files": ["/etc/caddy/Caddyfile"],
-      "cross-refs": ["../pihole/README.md"],
-      "incoming-refs": ["../README.md"],
-      "summary": "One-line summary of the document"
-    }
-  ]
+	"version": "1.0",
+	"last-updated": "2026-02-20T00:00:00Z",
+	"libraries": [
+		{
+			"name": "raspi5-homelab",
+			"machine": "raspi5",
+			"description": "...",
+			"root-path": "~/projects/homelab/raspi5/"
+		}
+	],
+	"documents": [
+		{
+			"id": "doc-001",
+			"path": "~/projects/homelab/raspi5/caddy/README.md",
+			"title": "Caddy Reverse Proxy",
+			"library": "raspi5-homelab",
+			"machine": "raspi5",
+			"doc-type": "sysadmin",
+			"status": "active",
+			"last-verified": "2026-02-18",
+			"template": "homelab-service-runbook",
+			"upstream-url": "https://caddyserver.com/docs/",
+			"source-files": ["/etc/caddy/Caddyfile"],
+			"cross-refs": ["../pihole/README.md"],
+			"incoming-refs": ["../README.md"],
+			"summary": "One-line summary of the document"
+		}
+	]
 }
 ```
 
 `index-register.sh` interface:
+
 - Input: `--path <doc-path> [--library <name>] [--title <title>]`
 - Reads frontmatter from the document to populate fields
 - If `--library` not provided, reads from frontmatter
@@ -1264,6 +1296,7 @@ git commit -m "feat(docs-manager): complete MVP — queue, status, help commands
 - If library doesn't exist in index, creates it (prompts for description if interactive)
 
 **Tests:**
+
 - Register a doc → verify index entry created
 - Register duplicate path → verify no duplicate entry
 - Register with missing library → verify error
@@ -1281,11 +1314,13 @@ git commit -m "feat(docs-manager): add index register script with schema"
 ### Task 14: Index Query and Rebuild-MD Scripts
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/index-query.sh`
 - Create: `plugins/docs-manager/scripts/index-rebuild-md.sh`
 - Modify: `plugins/docs-manager/tests/index.bats`
 
 **`index-query.sh` specification:**
+
 - Input: `--machine <name>` (default: hostname), plus optional filters:
   - `--library <name>` — filter by library
   - `--doc-type <type>` — filter by doc-type
@@ -1299,12 +1334,14 @@ git commit -m "feat(docs-manager): add index register script with schema"
 - Machine-filtered by default (§6.5)
 
 **`index-rebuild-md.sh` specification:**
+
 - Reads `docs-index.json`
 - Generates `docs-index.md` (human-readable mirror, §6.3)
 - Format: one section per library, with document tables
 - Never edited manually — always regenerated
 
 **Tests:**
+
 - Query by machine returns only matching docs
 - Query by library filters correctly
 - Query `--source-file` returns associated docs
@@ -1322,11 +1359,13 @@ git commit -m "feat(docs-manager): add index query and markdown rebuild scripts"
 ### Task 15: Index Locking Scripts
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/index-lock.sh`
 - Create: `plugins/docs-manager/scripts/index-unlock.sh`
 - Modify: `plugins/docs-manager/tests/index.bats`
 
 **`index-lock.sh` specification (§6.6):**
+
 - Writes `$DOCS_MANAGER_HOME/index.lock` with `{pid, acquired, operation}`
 - Lock acquisition protocol:
   1. If lock exists: read PID, check if process alive (`kill -0`)
@@ -1337,10 +1376,12 @@ git commit -m "feat(docs-manager): add index query and markdown rebuild scripts"
 - Input: `--operation <name>` (for the lock file metadata)
 
 **`index-unlock.sh` specification:**
+
 - Removes `$DOCS_MANAGER_HOME/index.lock`
 - Only removes if current PID matches lock PID (safety check)
 
 **Tests:**
+
 - Lock acquired successfully
 - Lock is idempotent for same PID
 - Stale lock from dead PID is cleaned up
@@ -1360,18 +1401,20 @@ git commit -m "feat(docs-manager): add index locking scripts"
 ### Task 16: Source-Files Lookup and Path B Detection
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/index-source-lookup.sh`
 - Modify: `plugins/docs-manager/scripts/post-tool-use.sh` (add Path B)
 - Modify: `plugins/docs-manager/tests/detection.bats`
 
 **`index-source-lookup.sh` specification:**
+
 - Input: `<file-path>`
 - Queries index for any document whose `source-files` array contains the given path
 - Output: JSON array of matching document entries (empty array if none)
 - Used by PostToolUse hook for Path B detection
 
-**Update to `post-tool-use.sh`:**
-After the existing Path A check, add Path B:
+**Update to `post-tool-use.sh`:** After the existing Path A check, add Path B:
+
 ```bash
 # Path B: source-file association
 local associated
@@ -1390,6 +1433,7 @@ fi
 ```
 
 **Tests:**
+
 - Source-file match triggers `source-file-changed` queue item
 - Non-matching source-file produces no queue item
 - Multiple docs referencing same source-file produce multiple queue items
@@ -1410,23 +1454,27 @@ git commit -m "feat(docs-manager): add Path B detection via source-file lookup"
 Add to `commands/docs.md` the following subcommands (replace stubs):
 
 **`/docs index init`** (§4 failure table):
+
 - Checks if index location exists (from config.yaml)
 - If git-markdown: clones repo or initializes new one
 - Creates empty `docs-index.json` and `docs-index.md` if not present
 - Runs bootstrap.sh if needed
 
 **`/docs index sync`** (§15.2):
+
 - For git-markdown: `git pull` in index location
 - Applies pending offline writes from `cache/pending-writes.json`
 - Checks for merge conflicts → routes to `/docs index repair`
 - Updates local cache snapshot
 
 **`/docs index audit`** (§6.6):
+
 - Orphan detection: check each index entry's file exists
 - Present orphans: remove, update path, or keep
 - Also runs during sync and before cross-ref repair
 
 **`/docs index repair`** (§6.6):
+
 - Union-merge strategy for conflicts
 - Interactive for true conflicts (same doc modified on both machines)
 
@@ -1444,12 +1492,14 @@ git commit -m "feat(docs-manager): add index management subcommands"
 Add to `commands/docs.md`:
 
 **`/docs library`** (§6.1):
+
 - Lists all libraries on current machine
 - `--all-machines` shows all libraries across machines
 - Shows: name, machine, description, document count
 - Filters out `meta` library by default
 
 **`/docs find <query>`** (§5.4):
+
 - Calls `index-query.sh` with search term
 - Displays: title, library, path, last-verified, summary
 - Shows cross-references: "Links to: [X, Y]" and "Linked from: [Z]"
@@ -1473,6 +1523,7 @@ git commit -m "feat(docs-manager): add library and find subcommands"
 The setup flow triggers automatically on first `/docs` invocation when `~/.docs-manager/config.yaml` is absent. It should be added as a check at the top of the `/docs` command router.
 
 **Flow:**
+
 1. Detect missing config.yaml
 2. Conversational questions (not a form):
    - "Where would you like to store your documentation index?" → map response to backend type
@@ -1523,21 +1574,25 @@ git commit -m "feat(docs-manager): add /docs new document creation workflow"
 ### Task 21: Template System
 
 **Files:**
+
 - Create: `plugins/docs-manager/scripts/template-register.sh` (extract template skeleton from existing doc)
 
 **Specification (§8):**
 
 `/docs template register --from <path>`:
+
 - Analyzes document structure (headings, tables, frontmatter, prose ratio)
 - Extracts reusable skeleton with `{{placeholder}}` syntax
 - Saves to index location under `templates/` directory
 - Registers template name in index
 
 `/docs template register --file <path>`:
+
 - Copies template file to `templates/` in index location
 - Registers in index
 
 Template inference (§8.4):
+
 - Check current directory against known library root-paths
 - Check filename patterns (README.md, RUNBOOK.md, etc.)
 - Check library type (sysadmin → service runbook, dev → readme, etc.)
@@ -1557,6 +1612,7 @@ git commit -m "feat(docs-manager): add template registration and inference"
 **Specification (§11.1-11.3):**
 
 **Single document** (`/docs onboard <path>`):
+
 1. Read document, infer library/type/machine/source-files
 2. Present assignments for confirmation
 3. Add frontmatter
@@ -1565,6 +1621,7 @@ git commit -m "feat(docs-manager): add template registration and inference"
 6. Suggest cross-references
 
 **Directory bulk** (`/docs onboard <directory>`):
+
 1. Scan all `.md` files recursively
 2. Group by inferred library, present summary with confidence
 3. User reviews/corrects groupings
@@ -1590,12 +1647,14 @@ git commit -m "feat(docs-manager): add /docs onboard (single and directory)"
 **Specification:**
 
 **`/docs update <path>`:**
+
 - Read the doc and its source-files
 - Check freshness (has associated code changed?)
 - If stale: Claude drafts updates, user confirms
 - Update `last-verified` frontmatter
 
 **`/docs review <path>`:**
+
 - Comprehensive single-doc review:
   - Staleness check
   - P5 compliance (survival-context docs have prose sections)
@@ -1617,6 +1676,7 @@ git commit -m "feat(docs-manager): add /docs update and /docs review"
 **Specification (§5.5):**
 
 `/docs organize <path>`:
+
 1. Analyze content → infer correct library, directory, filename, structure
 2. Present proposed reorganization
 3. On confirm: move/rename file, update frontmatter, update index path
@@ -1637,6 +1697,7 @@ git commit -m "feat(docs-manager): add /docs organize with cross-ref repair"
 **Specification:**
 
 `/docs audit`:
+
 - Missing recommended fields (source-files, upstream-url, template)
 - `--p5`: check survival-context docs for missing prose sections
 - `--p7`: list docs without upstream-url that describe third-party tools
@@ -1682,12 +1743,14 @@ git commit -m "feat(docs-manager): add dedupe, consistency, streamline, compress
 **Specification (§10):**
 
 `/docs verify [path]`:
+
 - Single doc: verify against its `upstream-url`
 - No path: verify all docs due for re-verification (based on `review-frequency`)
 - `--all`: bypass tiered batching, verify everything
 - `--tier <N>`: verify specific tier only
 
 **Verification process (§10.2):**
+
 1. Fetch upstream via `WebFetch` or `WebSearch`
 2. Compare: config keys, version requirements, deprecated options
 3. Confident match → update `last-verified`
@@ -1695,6 +1758,7 @@ git commit -m "feat(docs-manager): add dedupe, consistency, streamline, compress
 5. Uncertain → queue with specific question for user
 
 **Tiered batching (§10.4):**
+
 - Tier 1: critical docs → ask to proceed
 - Tier 2: standard docs → ask to continue or defer
 - Tier 3: reference docs → ask to continue or defer
@@ -1714,6 +1778,7 @@ git commit -m "feat(docs-manager): add /docs verify with tiered batching"
 ### Task 28: Project-Entry Awareness Skill
 
 **Files:**
+
 - Create: `plugins/docs-manager/skills/project-entry/SKILL.md`
 
 **Specification (§7.5):**
@@ -1739,6 +1804,7 @@ git commit -m "feat(docs-manager): add project-entry awareness skill"
 ### Task 29: Doc Creation and Session Boundary Skills
 
 **Files:**
+
 - Create: `plugins/docs-manager/skills/doc-creation/SKILL.md`
 - Create: `plugins/docs-manager/skills/session-boundary/SKILL.md`
 
@@ -1760,11 +1826,13 @@ git commit -m "feat(docs-manager): add doc-creation and session-boundary skills"
 ### Task 30: Bulk Onboard, Full-Review, and Upstream Verify Agents
 
 **Files:**
+
 - Create: `plugins/docs-manager/agents/bulk-onboard.md`
 - Create: `plugins/docs-manager/agents/full-review.md`
 - Create: `plugins/docs-manager/agents/upstream-verify.md`
 
 **Bulk onboard agent:**
+
 ```yaml
 ---
 name: bulk-onboard
@@ -1772,9 +1840,11 @@ description: Imports a directory of existing documents into the docs-manager lib
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 ```
+
 Receives: directory path, target library (optional). Scans all `.md` files, infers groupings, adds frontmatter, registers in index. Returns summary of imported docs.
 
 **Full-review agent:**
+
 ```yaml
 ---
 name: full-review
@@ -1782,9 +1852,11 @@ description: Comprehensive documentation review sweep
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
 ---
 ```
+
 Runs: audit + consistency + upstream verification across all active docs. Returns structured findings report.
 
 **Upstream verify agent:**
+
 ```yaml
 ---
 name: upstream-verify
@@ -1792,6 +1864,7 @@ description: Verifies third-party documentation against upstream sources
 tools: Read, Grep, Glob, WebFetch, WebSearch
 ---
 ```
+
 Receives: list of docs with upstream-urls. Fetches upstream, compares, returns discrepancy report.
 
 **Commit:**
@@ -1808,11 +1881,13 @@ git commit -m "feat(docs-manager): add bulk-onboard, full-review, and upstream-v
 ### Task 31: README.md
 
 **Files:**
+
 - Create: `plugins/docs-manager/README.md`
 
 **Specification:**
 
 Follow the established plugin README pattern:
+
 1. Summary (2-3 sentences)
 2. Design Principles (P1-P7 one-liners)
 3. Installation
@@ -1837,6 +1912,7 @@ git commit -m "docs(docs-manager): add README"
 ### Task 32: Final Validation and Changelog Update
 
 **Steps:**
+
 1. Run `./scripts/validate-marketplace.sh` — must pass
 2. Run `bats plugins/docs-manager/tests/*.bats` — all tests must pass
 3. Update `CHANGELOG.md` with all features added
@@ -1855,6 +1931,7 @@ git commit -m "feat(docs-manager): complete v0.1.0 — documentation lifecycle m
 Run these at each phase boundary:
 
 ### Phase 1-5 (MVP)
+
 ```bash
 bats plugins/docs-manager/tests/queue.bats
 bats plugins/docs-manager/tests/utilities.bats
@@ -1863,12 +1940,14 @@ bats plugins/docs-manager/tests/detection.bats
 ```
 
 ### Phase 6-7 (Index)
+
 ```bash
 bats plugins/docs-manager/tests/index.bats
 # Plus all previous
 ```
 
 ### Phase 13 (Release)
+
 ```bash
 bats plugins/docs-manager/tests/*.bats          # All unit tests
 ./scripts/validate-marketplace.sh               # Marketplace validation
@@ -1876,6 +1955,7 @@ claude --plugin-dir ./plugins/docs-manager      # Manual smoke test
 ```
 
 ### Sandboxed Workflow Tests (§12.4)
+
 ```bash
 # Create throwaway index
 mkdir -p /tmp/docs-manager-sandbox/{index,docs,templates}
@@ -1890,6 +1970,7 @@ EOF
 ```
 
 Test scenarios (manual, one session each):
+
 1. `/docs new` → verify frontmatter + index registration
 2. `/docs onboard <dir>` → verify grouping + batch import
 3. Session-end queue review → verify detection + approval flow

@@ -5,25 +5,26 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ## [2.2.10] - 2026-05-25
 
 ### Changed
-- security: bump fast-uri >=3.1.2 + qs >=6.15.2 (closes Dependabot #88-95, 4 high + 2 medium)
 
+- security: bump fast-uri >=3.1.2 + qs >=6.15.2 (closes Dependabot #88-95, 4 high + 2 medium)
 
 ## [2.2.9] - 2026-05-25
 
 ### Changed
+
 - docs+security: closeout for 2026-05-08 session
 - home-assistant-dev: fix Jest compile by adding tsconfig.test.json
 - home-assistant-dev: Phase 2 — hook dispatcher + manifest guard (11 cases)
 
 ### Fixed
-- add 'types: [node]' to mcp-server tsconfig for TS 6 compatibility
 
+- add 'types: [node]' to mcp-server tsconfig for TS 6 compatibility
 
 ## [2.2.8] - 2026-05-07
 
 ### Changed
-- home-assistant-dev v2.2.8 — drop WebSearch from VALID_AGENT_TOOLS allowlist
 
+- home-assistant-dev v2.2.8 — drop WebSearch from VALID_AGENT_TOOLS allowlist
 
 ## [2.2.8] - 2026-05-07
 
@@ -40,15 +41,17 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ## [2.2.6] - 2026-04-20
 
 ### Changed
+
 - npm audit fix - resolve hono, path-to-regexp CVEs
 
 ### Fixed
-- unblock 3 plugin releases
 
+- unblock 3 plugin releases
 
 ## [2.2.5] - 2026-04-07
 
 ### Changed
+
 - Bump handlebars
 - Bump hono in /plugins/home-assistant-dev/mcp-server
 - Bump picomatch
@@ -58,66 +61,72 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - bump @hono/node-server
 
 ### Fixed
-- bump ts-jest to 29.4.9 in both plugin lock files
 
+- bump ts-jest to 29.4.9 in both plugin lock files
 
 ## [2.2.4] - 2026-03-04
 
 ### Changed
+
 - update remaining L3Digital-Net references
 - update org references from L3Digital-Net to L3DigitalNet
 
 ### Fixed
+
 - apply audit findings — plugin.json, CHANGELOG
 - bump hono to 4.12.4 (CVE-2026-27700)
-
 
 ## [Unreleased]
 
 ## [2.2.3] - 2026-03-02
 
 ### Changed
+
 - Fix structural README issues and docs path
 - Revert: restore original HA skill files, remove extracted references
 - Strengthen skill triggers and extract long content to references
 
 ### Fixed
-- Fix ha-dev skill count in README
 
+- Fix ha-dev skill count in README
 
 ## [2.2.2] - 2026-02-22
 
 ### Fixed
-- `validate_manifest` MCP tool now throws (returns `isError:true`) when `path` argument is missing, consistent with `validate_strings` and `check_patterns` behavior
 
+- `validate_manifest` MCP tool now throws (returns `isError:true`) when `path` argument is missing, consistent with `validate_strings` and `check_patterns` behavior
 
 ## [2.2.1] - 2026-02-20
 
 ### Changed
+
 - Update version numbers in design and testing documents to v2.2.1 and v1.0.5
 
 ### Fixed
-- Update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
 
+- Update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
 
 ## [2.2.0] - 2026-02-19
 
 ### Added
+
 - Audit and split wide-scope skills
 
 ### Fixed
+
 - Update hono 4.11.9 → 4.12.0 in mcp-server lockfiles (GHSA-gq3j-xvxp-8hrf)
 - Fix HA Dev Plugin Tests failures on testing and main
-
 
 ## [2.1.0] - 2026-02-18
 
 ### Added
+
 - MCP server now wired into plugin via `.mcp.json` — registers `ha-dev-mcp` with 12 tools for live HA connection, documentation search, and code validation
 - esbuild bundling for MCP server — single 630KB self-contained `dist/server.bundle.cjs` requires no `npm install` post-plugin-install
 - `.gitignore` for plugin directory — tracks only the distributable bundle, ignores build artifacts and `node_modules/`
 
 ### Fixed
+
 - `commands/scaffold-integration.md` — added missing `name` frontmatter field
 - `plugin.json` — updated author from `Chris/chrisuthe` to `L3DigitalNet` to match marketplace
 - `plugin.json` — fixed `repository` URL to point to `L3DigitalNet/Claude-Code-Plugins`
@@ -131,10 +140,12 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ## [2.0.4] - 2026-02-17
 
 ### Fixed
+
 - `hooks/hooks.json` rewritten to use correct record schema with dispatcher pattern
 - Replaced invalid trigger/action format with proper `PostToolUse` matcher and `${CLAUDE_PLUGIN_ROOT}` path variable
 
 ### Added
+
 - `scripts/post-write-hook.sh` — dispatcher script that routes PostToolUse events to the appropriate validation script based on file path
 
 ## [2.0.0] - 2026-02-17
@@ -142,8 +153,9 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ### Added
 
 #### New Skills (7)
+
 - `ha-hacs` - Complete HACS compliance guide: hacs.json, brands, validation, publishing
-- `ha-diagnostics` - Diagnostics implementation for Gold tier compliance  
+- `ha-diagnostics` - Diagnostics implementation for Gold tier compliance
 - `ha-migration` - Version migration, deprecation fixes, config entry upgrades
 - `ha-documentation` - README and documentation generation
 - `ha-repairs` - Repair issues and fix flows (Gold tier requirement)
@@ -152,6 +164,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - `ha-recorder` - Statistics and history integration
 
 #### Automated Validation (5 scripts)
+
 - `scripts/validate-manifest.py` - Validates manifest.json required fields
 - `scripts/validate-strings.py` - Syncs config_flow.py steps with strings.json
 - `scripts/check-patterns.py` - Detects 20+ anti-patterns and deprecations
@@ -159,11 +172,13 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - `scripts/generate-docs.py` - Generates README and info.md from code
 
 #### Hook Configuration
+
 - `hooks/hooks.json` - PostToolUse hook configuration for automatic validation
 
 #### Example Integrations (3)
+
 - `examples/polling-hub/` - Complete Gold-tier reference integration
-  - DataUpdateCoordinator with _async_setup
+  - DataUpdateCoordinator with \_async_setup
   - entry.runtime_data pattern
   - EntityDescription pattern for sensors
   - Complete config flow (user, reauth, reconfigure, options)
@@ -175,6 +190,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - `examples/push-integration/` - Silver-tier push-based integration with dispatcher
 
 #### Project Templates (9)
+
 - `templates/testing/conftest.py.template` - Test fixtures
 - `templates/testing/test_config_flow.py.template` - Config flow tests
 - `templates/testing/test_init.py.template` - Setup/unload tests
@@ -187,9 +203,11 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - `templates/docs/info.md.template` - HACS info page template
 
 #### Commands
+
 - `generate-integration` - Generate complete integration from prompts
 
 #### MCP Server (Complete Implementation)
+
 - `mcp-server/` - Full TypeScript MCP server implementation
   - 12 tool handlers across 3 categories
   - Home Assistant WebSocket client with state caching
@@ -203,11 +221,13 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ### Changed
 
 #### ha-integration-scaffold
+
 - Added `issue_tracker` to manifest.json template (required for HACS)
 - Added `services.yaml` and `icons.json` to file structure
 - Added HACS repository structure (hacs.json, README.md)
 
 #### ha-quality-review (REWRITTEN)
+
 - Now covers all 52 official IQS rules (was ~30%)
 - Bronze tier: 18 rules
 - Silver tier: 10 rules
@@ -217,20 +237,24 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - Updated reference checklist with implementation examples
 
 #### ha-config-flow
+
 - Added OptionsFlow deprecation note (don't use `__init__`)
 - Clarified `self.config_entry` is automatically available
 
 #### ha-testing
+
 - Fixed missing imports in test_init.py examples
 - Added `MockConfigEntry` import
 - Added `test_setup_entry_not_ready` example
 - Added proper type hints
 
 ### Fixed
+
 - Removed malformed directory artifacts
 - Corrected manifest.json required fields list
 
 ### Statistics
+
 - **19 skills** (up from 11)
 - **5 scripts** for automated validation
 - **3 example integrations**
@@ -242,6 +266,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ### Added
 
 #### Skills (11 total)
+
 - `ha-architecture` - Core HA internals: event bus, state machine, service registry, entity lifecycle
 - `ha-integration-scaffold` - Scaffold new integrations with 2025 file structure
 - `ha-config-flow` - Config flows, options flows, reauth, discovery methods
@@ -255,14 +280,17 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - `ha-quality-review` - Integration Quality Scale assessment
 
 #### Agents (3 total)
+
 - `ha-integration-dev` - Full integration development specialist
 - `ha-integration-reviewer` - Code reviewer against Quality Scale
 - `ha-integration-debugger` - Systematic debugging assistant
 
 #### Commands
+
 - `scaffold-integration` - Interactive integration scaffolding
 
 #### Reference Files
+
 - `ha-config-flow/reference/discovery-methods.md` - Zeroconf, SSDP, DHCP, USB patterns
 - `ha-entity-platforms/reference/device-classes.md` - Complete device class reference
 - `ha-quality-review/reference/quality-scale-checklist.md` - Full tier checklists

@@ -1,17 +1,16 @@
 ---
 name: Bug Report
 about: Report a bug in a plugin or the marketplace
-title: "[Bug] "
+title: '[Bug] '
 labels: bug
-assignees: ""
+assignees: ''
 ---
 
 ## Plugin
 
 <!-- Which plugin is affected? e.g. agent-orchestrator, home-assistant-dev -->
 
-**Plugin:**
-**Version:**
+**Plugin:** **Version:**
 
 ## Description
 

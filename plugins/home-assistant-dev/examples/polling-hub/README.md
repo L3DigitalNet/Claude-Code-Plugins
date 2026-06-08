@@ -38,9 +38,9 @@ A **Gold-tier** reference implementation for Home Assistant custom integrations.
 
 ## Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| Scan interval | 30 | Polling interval in seconds (10-300) |
+| Option        | Default | Description                          |
+| ------------- | ------- | ------------------------------------ |
+| Scan interval | 30      | Polling interval in seconds (10-300) |
 
 ## Troubleshooting
 

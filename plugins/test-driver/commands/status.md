@@ -20,6 +20,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/test-status-update.sh read
 ```
 
 If the output shows `last_analysis: null` or the file does not exist:
+
 > "No test status file found. Run `/test-driver:analyze` to create one."
 
 Stop here.

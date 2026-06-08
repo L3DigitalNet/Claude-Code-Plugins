@@ -54,6 +54,7 @@ Run these checks and report results. Before marking any check FAIL, run the waiv
 6. **Tag available (remote)**: Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . <target-tag>` and capture output
 
 For check 6, interpret the output:
+
 - `MISSING` or `LOCAL_ONLY` → PASS (tag not on remote yet)
 - `BOTH` or `REMOTE_ONLY` → check waiver for `tag_exists`; if not waived → FAIL with "tag already exists on remote"
 - Script exit 1 → FAIL with "could not determine remote tag state"
@@ -67,14 +68,14 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-waivers.sh .release-waivers.json <check
 ```
 
 Check name mapping:
+
 - Check 1 (clean tree) → `dirty_working_tree`
 - Check 2 (dev branch) → `protected_branch`
 - Check 3 (noreply email) → `noreply_email`
 - Check 5 (local tag) → `tag_exists`
 - Check 6 (remote tag) → `tag_exists`
 
-If `check-waivers.sh` exits 0 (waived): print `⊘ <check> WAIVED — <reason>` and count as PASS.
-If `check-waivers.sh` exits 1 (not waived) or the file doesn't exist: proceed with original FAIL behavior.
+If `check-waivers.sh` exits 0 (waived): print `⊘ <check> WAIVED — <reason>` and count as PASS. If `check-waivers.sh` exits 1 (not waived) or the file doesn't exist: proceed with original FAIL behavior.
 
 The plugin-name argument is the scoped plugin being released, or omit it for full-repo releases.
 

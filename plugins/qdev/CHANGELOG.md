@@ -9,19 +9,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [2.0.0] - 2026-06-07
 
 ### Removed (BREAKING)
+
 - Removed `/qdev:quality-review`, `/qdev:deps-audit`, `/qdev:doc-sync`, and `/qdev:spec-update` commands and their agents (`qdev-quality-reviewer`, `qdev-deps-auditor`, `qdev-doc-syncer`). qdev is now research-only: `/qdev:research` is the single remaining command.
 - Removed the `qdev-grounding` (`research-grounding`) auto-trigger skill and its egress sanitizer `scripts/sanitize_query.py` (+ `tests/test_sanitize_query.py`). Routine, agent-initiated web search is decoupled to the standalone Claude Code `web-search` skill (in the agent-configs repo); it does not persist reports or tier search depth.
 
 ### Changed
+
 - `/qdev:research` and `qdev-researcher` no longer reference the removed `/qdev:quality-review` in their downstream-chaining text (output text only; research behavior unchanged).
 - Manifest + marketplace description rewritten to research-only; structural test (`test_plugin_structure.py`) updated for the skill-less, single-dispatcher surface.
 
 ### Fixed
+
 - Corrected the Tavily MCP server key in `qdev-researcher` (`mcp__tavily-mcp__*` → `mcp__tavily__*`) to match this host's configured server name; the wrong key silently dropped the Tavily grant and forced a `WebFetch` fallback on every deep-read. (Lands via precursor commit `56494ad`.)
 
 ## [1.6.0] - 2026-06-05
 
 ### Added
+
 - add inline grounding skill (sanitize gate + light/medium escalation)
 - add deterministic egress sanitizer for the grounding skill
 - per-path routing, Context7 gate, reporting cycle + guardrails in qdev-researcher
@@ -31,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - add shared frontmatter parser for research-KB scripts
 
 ### Changed
+
 - record D2 grounding skill + sanitizer in repo docs
 - reword P2 for the auto-trigger skill; describe grounding skill in manifest/marketplace
 - grounding-skill reference (category catalog, egress verdicts, trigger matrix)
@@ -39,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - scaffold research-KB tests dir + vendor frontmatter schema
 
 ### Fixed
+
 - resolve code-review findings — 5 sanitizer/reader bugs + test hardening
 - close 3 egress/index bugs + expand test coverage 75→133
 - qualified subagent_type + pass scripts path; relay reporting cycle
@@ -48,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.5.0] - 2026-05-08
 
 ### Changed
+
 - qdev: bump to v1.5.0 — qdev-researcher subagent
 - qdev(README): fix mermaid label, prune-cmd safety, prose polish
 - qdev: README — document qdev-researcher and handoff protocol
@@ -55,7 +62,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - qdev: rewrite /qdev:research as thin orchestrator
 - qdev(researcher): drop dead Glob/Grep permissions; fix Step 8 ordering
 - qdev: add qdev-researcher subagent (Sonnet)
-
 
 ## [1.5.0] - 2026-05-08
 
@@ -78,12 +84,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `find` invocation in `/qdev:research` topic inference no longer scans `node_modules`, `__pycache__`, and `.venv` (matches `/qdev:spec-update`).
 - Design spec at `docs/superpowers/specs/2026-04-13-qdev-design.md` updated via `/qdev:spec-update` to reflect commands and agents added since 2026-04-13.
 
-
 ## [1.4.0] - 2026-05-07
 
 ### Changed
-- qdev v1.4.0 — add Tavily MCP support across all commands and agents
 
+- qdev v1.4.0 — add Tavily MCP support across all commands and agents
 
 ## [1.4.0] - 2026-05-07
 
@@ -118,21 +123,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.2.1] - 2026-04-13
 
 ### Changed
+
 - `/qdev:quality-review` finding classification now uses a principled decision test instead of type-based lists: a fix is auto-applied when exactly one correct answer exists, no design decision is required, no dependency action is involved, and no non-trivial logic is removed. GAP findings with derivable answers, naming violations, weak requirement words, and dead imports now auto-fix without prompting.
 
 ## [1.2.0] - 2026-04-13
 
 ### Added
+
 - `/qdev:deps-audit` command: dependency security and freshness audit across all package manifests; researches CVEs and version lag using both search tools; optionally generates upgrade commands for critical and high findings
 - `/qdev:doc-sync` command: sync inline code documentation (docstrings, JSDoc, Go doc comments, etc.) with current function signatures; proposes additions for undocumented functions and updates for stale docs before writing anything
 
 ## [1.1.0] - 2026-04-13
 
 ### Added
+
 - `/qdev:research` command: dual-source internet research sweep covering official docs, community best practices, footguns, and existing tools before designing or building
 
 ## [1.0.0] - 2026-04-13
 
 ### Added
+
 - `/qdev:quality-review` command: research-first iterative quality review for spec, plan, and code artifacts
 - `/qdev:spec-update` command: one-shot sync of a spec file to match current implementation

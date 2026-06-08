@@ -16,25 +16,25 @@ Blueprints are reusable automation templates with configurable inputs — users 
 
 ```yaml
 blueprint:
-  name: "Motion-Activated Light"
-  description: "Turn on light when motion detected, turn off after delay"
+  name: 'Motion-Activated Light'
+  description: 'Turn on light when motion detected, turn off after delay'
   domain: automation
   input:
     motion_entity:
-      name: "Motion Sensor"
+      name: 'Motion Sensor'
       selector:
         entity:
           filter:
             domain: binary_sensor
             device_class: motion
     light_target:
-      name: "Light"
+      name: 'Light'
       selector:
         target:
           entity:
             domain: light
     no_motion_wait:
-      name: "Wait time after motion stops"
+      name: 'Wait time after motion stops'
       default: 120
       selector:
         number:
@@ -45,7 +45,7 @@ blueprint:
 trigger:
   - trigger: state
     entity_id: !input motion_entity
-    to: "on"
+    to: 'on'
 
 action:
   - action: light.turn_on
@@ -53,7 +53,7 @@ action:
   - wait_for_trigger:
       - trigger: state
         entity_id: !input motion_entity
-        to: "off"
+        to: 'off'
   - delay:
       seconds: !input no_motion_wait
   - action: light.turn_off

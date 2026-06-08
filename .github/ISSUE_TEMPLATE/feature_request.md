@@ -1,9 +1,9 @@
 ---
 name: Feature Request
 about: Suggest an improvement to an existing plugin or a new plugin idea
-title: "[Feature] "
+title: '[Feature] '
 labels: enhancement
-assignees: ""
+assignees: ''
 ---
 
 ## Plugin (or "New Plugin")

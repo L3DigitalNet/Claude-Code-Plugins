@@ -1,13 +1,14 @@
 ---
 bug_id: 7
 date: 2026-06-07
-title: "up-docs run-bats.sh silently passed everything — find/grep shimmed to fd/ugrep broke bats test discovery"
+title: 'up-docs run-bats.sh silently passed everything — find/grep shimmed to fd/ugrep broke bats test discovery'
 services: [up-docs]
 tags: [testing, bats, tooling, false-green, environment]
 status: fixed
 supersedes: null
 superseded_by: null
 ---
+
 # Bug 7: up-docs run-bats.sh silently passed everything (find/grep shims broke bats discovery)
 
 ## Cause

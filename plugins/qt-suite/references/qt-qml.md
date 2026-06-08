@@ -1,18 +1,18 @@
-  Trigger phrases: "QML", "Qt Quick", "declarative UI", "QQmlApplicationEngine", "expose to QML", "QML component", "QML signal", "pyqtProperty", "QML vs widgets", "QtQuick.Controls", "Item", "Rectangle"
-version: 1.0.0
+Trigger phrases: "QML", "Qt Quick", "declarative UI", "QQmlApplicationEngine", "expose to QML", "QML component", "QML signal", "pyqtProperty", "QML vs widgets", "QtQuick.Controls", "Item", "Rectangle" version: 1.0.0
+
 ---
 
 ## QML and Qt Quick
 
 ### QML vs Widgets: When to Choose QML
 
-| Use QML when... | Use Widgets when... |
-|-----------------|---------------------|
-| Building modern, animated, fluid UIs | Building traditional desktop tools |
-| Targeting mobile or embedded | Heavy data tables and forms |
-| Designers are involved in the UI | Rich text editing required |
-| GPU-accelerated rendering needed | Complex platform widget integration |
-| Writing a new app from scratch | Extending an existing widget app |
+| Use QML when...                      | Use Widgets when...                 |
+| ------------------------------------ | ----------------------------------- |
+| Building modern, animated, fluid UIs | Building traditional desktop tools  |
+| Targeting mobile or embedded         | Heavy data tables and forms         |
+| Designers are involved in the UI     | Rich text editing required          |
+| GPU-accelerated rendering needed     | Complex platform widget integration |
+| Writing a new app from scratch       | Extending an existing widget app    |
 
 For new Python/PySide6 desktop applications, QML offers better visual results with less code. For data-heavy enterprise tools, widgets remain the pragmatic choice.
 
@@ -21,6 +21,7 @@ For new Python/PySide6 desktop applications, QML offers better visual results wi
 ### Official Best Practices (Qt Quick)
 
 **1. Type-safe property declarations** — Always use explicit types, not `var`:
+
 ```qml
 // WRONG — prevents static analysis, unclear errors
 property var name
@@ -32,6 +33,7 @@ property MyModel optionsModel
 ```
 
 **2. Prefer declarative bindings over imperative assignments:**
+
 ```qml
 // WRONG — imperative assignment overwrites bindings, breaks Qt Design Studio
 Rectangle {
@@ -45,6 +47,7 @@ Rectangle {
 ```
 
 **3. Interaction signals over value-change signals:**
+
 ```qml
 // WRONG — valueChanged fires on clamping/rounding, causes event cascades
 Slider { onValueChanged: model.update(value) }
@@ -54,6 +57,7 @@ Slider { onMoved: model.update(value) }
 ```
 
 **4. Don't anchor the immediate children of Layouts:**
+
 ```qml
 // WRONG — anchors on direct Layout children cause binding loops
 RowLayout {
@@ -70,12 +74,14 @@ RowLayout {
 ```
 
 **5. Don't customize native styles** — Windows and macOS native styles ignore QSS. Base all custom styling on cross-platform styles: `Basic`, `Fusion`, `Material`, or `Universal`:
+
 ```qml
 // In main() — must be set before QGuiApplication
 QQuickStyle.setStyle("Material")
 ```
 
 **6. Make all user-visible strings translatable from the start:**
+
 ```qml
 Label { text: qsTr("Save File") }
 Button { text: qsTr("Cancel") }

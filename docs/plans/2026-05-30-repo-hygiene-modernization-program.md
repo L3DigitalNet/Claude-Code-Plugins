@@ -1,10 +1,6 @@
 # Repo-Hygiene Modernization Program — Session Handoff & Plan
 
-**Status:** Brainstorm in progress (design not yet written/approved). Resume-ready handoff.
-**Created:** 2026-05-30
-**Owner harness:** Claude Code (Opus)
-**Plugin baseline at handoff:** `repo-hygiene` **v1.4.3** (committed `3ca0d10`, local `main`, **unpushed**).
-**Supersedes/extends:** [`docs/plans/2026-02-20-repo-hygiene-design.md`](2026-02-20-repo-hygiene-design.md) + [`...-implementation.md`](2026-02-20-repo-hygiene-implementation.md).
+**Status:** Brainstorm in progress (design not yet written/approved). Resume-ready handoff. **Created:** 2026-05-30 **Owner harness:** Claude Code (Opus) **Plugin baseline at handoff:** `repo-hygiene` **v1.4.3** (committed `3ca0d10`, local `main`, **unpushed**). **Supersedes/extends:** [`docs/plans/2026-02-20-repo-hygiene-design.md`](2026-02-20-repo-hygiene-design.md) + [`...-implementation.md`](2026-02-20-repo-hygiene-implementation.md).
 
 ---
 
@@ -44,13 +40,15 @@
 Sources: `code.claude.com/docs/en/skills`, `/plugins`, `/plugins-reference`; `agentskills.io`; `~/projects/agent-configs/docs/handoff/agent-handoff-system.md`. (Full URLs in §12.)
 
 ### 3.1 Commands → skills convergence (current, official)
+
 - "**Custom commands have been merged into skills.** `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy`." Existing `commands/` keep working.
 - Plugin dir table: `commands/` = "Skills as flat Markdown files. **Use `skills/` for new plugins**." → `skills/` is the modern form.
 - Skills add: a supporting-files directory, invocation-control frontmatter, auto-load-when-relevant.
 
 ### 3.2 Skill `SKILL.md` frontmatter (verified field set)
+
 | Field | Meaning |
-|---|---|
+| --- | --- |
 | `name` | Display label in listings. For a plugin-root `SKILL.md` it sets the command; otherwise the **directory name** sets the command, not `name`. |
 | `description` | When Claude should load it (matched during discovery). |
 | `disable-model-invocation: true` | **Only the user** can invoke (`/name`). Description kept out of context until invoked. Also blocks preload into subagents. Default `false`. |
@@ -60,38 +58,42 @@ Sources: `code.claude.com/docs/en/skills`, `/plugins`, `/plugins-reference`; `ag
 | `context: fork` | Run the skill in a forked subagent; SKILL.md becomes the task prompt; no conversation history. Pair with `agent:` type. |
 | `model` | Model to use while the skill is active. |
 | `arguments` / `$ARGUMENTS` / `$N` / `$name` | Argument passing. `$ARGUMENTS` = all; `$0/$1…` or `$ARGUMENTS[N]` positional; named via `arguments:` list. |
+
 - Invocation matrix: default = both can invoke (description always in context). `disable-model-invocation:true` = user-only. `user-invocable:false` = Claude-only.
 - **Skill content lifecycle:** invoked SKILL.md enters the conversation once and persists; not re-read each turn. Re-attached after compaction (first 5k tokens each, 25k combined budget). → write standing instructions, not one-time steps.
 - `skillOverrides` in settings can control visibility without editing SKILL.md.
 
 ### 3.3 Plugin structure (verified)
+
 - Plugin root dirs: `.claude-plugin/plugin.json` (manifest ONLY), `skills/`, `commands/` (legacy), `agents/`, `hooks/hooks.json`, `.mcp.json`, `.lsp.json`, `monitors/monitors.json`, `bin/` (PATH while enabled), `settings.json` (only `agent` + `subagentStatusLine` keys honored). **Never** nest component dirs inside `.claude-plugin/`.
 - Plugin skills are always namespaced `/<plugin-name>:<skill>`.
 - `plugin.json` fields seen: `name`, `description`, `version` (optional; omit → commit SHA used), `author`, plus `homepage`/`repository`/`license` per full schema. (NB local memory: our marketplace validator is Zod-strict — confirm field validity before adding.)
 - `${CLAUDE_PLUGIN_ROOT}` = plugin install dir. `/reload-plugins` to hot-reload. `--plugin-dir ./path` to dev-test.
 
 ### 3.4 Agent Skills open standard (`agentskills.io`)
+
 - A skill = a folder with `SKILL.md` (metadata `name`+`description` minimum) + optional `scripts/`, `references/`, `assets/`.
 - Progressive disclosure: discovery (name+desc) → activation (full SKILL.md) → execution (bundled files on demand).
 - Broadly adopted (Cursor, Codex, Gemini CLI, Copilot, Roo, etc.) — relevant to Phase 1 multi-harness detection.
 
 ### 3.5 v3 agent-handoff system (key facts + ownership boundary)
+
 - Canonical spec: `~/projects/agent-configs/docs/handoff/agent-handoff-system.md` (Schema 3.0, 2026-05-29).
 - Layout: `docs/{state,deployed,architecture,credentials,conventions,specs-plans}.md` + `docs/handoff/sessions/<YYYY-MM>.md` + `docs/handoff/bugs/<NNN>-<slug>.md` + `docs/superpowers/{specs,plans}/` (repos may record another location in `docs/handoff/specs-plans.md` — **this repo uses `docs/specs/` + `docs/plans/`**).
 - Byte caps: repo `CLAUDE.md` ≤2048 (target ≤1024); `docs/handoff/state.md` ≤2048; Claude hook output ≤4096; `AGENTS.md` ≤4096.
 - `docs/handoff.md` is **retired** — its presence = migration target.
 - SessionStart hook is a tracked, hash-verified installed copy (`global/claude/hooks/session_start.py`); `${CLAUDE_PROJECT_DIR}`-anchored.
-- **Ownership boundary (critical):** conformance validation (byte caps, hook hash, AGENTS.md three-line block, required files) is owned by `scripts/validate-layout.sh` + the up-docs drift auditor. **repo-hygiene must NOT re-implement this** — it aligns, cleans up, and (deep tier) *calls* the canonical script. See §4.
+- **Ownership boundary (critical):** conformance validation (byte caps, hook hash, AGENTS.md three-line block, required files) is owned by `scripts/validate-layout.sh` + the up-docs drift auditor. **repo-hygiene must NOT re-implement this** — it aligns, cleans up, and (deep tier) _calls_ the canonical script. See §4.
 
 ---
 
 ## 4. Locked decisions (with rationale)
 
 | # | Decision | Choice | Rationale |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | D1 | Decompose work | **5 dependency-ordered phases**, each its own spec→plan→build | Keeps each spec focused/reviewable; bounds blast radius. |
 | D2 | **First spec to write** | **Phase 0 — skills migration** | Structural foundation; low-risk; everything new lands as skills. (An earlier batch briefly leaned Phase 1; the consolidated pick is Phase 0. If ambiguous next session, confirm before writing.) |
-| D3 | Handoff scope | **Align + cleanup; deep tier *calls* `validate-layout.sh` and folds results in** | Preserves the existing defer-to-canonical boundary; **no parallel reimplementation** to drift. Plugin stays self-contained but compatible — never *depends* on agent-configs (script absent ⇒ skip that check). |
+| D3 | Handoff scope | **Align + cleanup; deep tier _calls_ `validate-layout.sh` and folds results in** | Preserves the existing defer-to-canonical boundary; **no parallel reimplementation** to drift. Plugin stays self-contained but compatible — never _depends_ on agent-configs (script absent ⇒ skip that check). |
 | D4 | Tier shape | **Two skills:** `hygiene` (light) + `audit` (deep) | Each tier sets its own invocation control + tool perms. |
 | D5 | Invocation control | **Both skills `disable-model-invocation: true` (manual-only)** | User controls timing; deep audit is expensive, light sweep should not auto-fire. Deep audit is also read-only, so doubly safe. |
 | D6 | Audit report location | **Repo root `CLEANUP-AUDIT.md`, git-ignored** | Matches the Appendix-A prompt verbatim; easy to find; never committed. Overwrite-in-place ⇒ only ever one. (Cleanup lifecycle: §9.) |
@@ -118,7 +120,7 @@ Phase 0  Skills migration / structure modernization      (foundation; low risk)
 - **Phase 0 — Skills migration:** `commands/hygiene.md` → `skills/hygiene/SKILL.md` (modern form); both target skills `disable-model-invocation: true`; update manifest/README/marketplace/tests; **behavior unchanged**. (Detail in §6.)
 - **Phase 1 — Detection primitive:** unified repo-profile detector + declarative JSON registry + conformance check script (gated). (Design in §7.)
 - **Phase 2 — Light tier upgrade:** `/repo-hygiene:hygiene` slimmed + handoff/agentic-conformance via detection + stale-`CLEANUP-AUDIT.md` reaping; keeps existing approval/commit safety (P1–P4).
-- **Phase 3 — Deep audit:** new read-only skill `/repo-hygiene:audit` + a dedicated auditor subagent; implements Appendix A; Step 0 = Phase 1 detection; deep tier *calls* `validate-layout.sh` when present.
+- **Phase 3 — Deep audit:** new read-only skill `/repo-hygiene:audit` + a dedicated auditor subagent; implements Appendix A; Step 0 = Phase 1 detection; deep tier _calls_ `validate-layout.sh` when present.
 - **Phase 4 — Gated remediation:** `/repo-hygiene:remediate` consumes the audit report; plan/apply with re-validation + tiered gating (§9).
 
 ---
@@ -144,6 +146,7 @@ Write `docs/plans/2026-05-30-repo-hygiene-phase0-skills-migration-{design,plan}.
 **Goal:** one reliable, standalone, zero-dependency primitive that profiles a repo (which agent harnesses are present + repo type/conventions) and emits conformance findings, consumed identically by the light tier and the deep audit.
 
 **Proposed layout (new under `plugins/repo-hygiene/`):**
+
 ```
 registry/
   harnesses.json     # marker → harness identity + per-harness conformance rules (+ notes)
@@ -158,6 +161,7 @@ tests/  detect-profile.bats, check-conformance.bats, fixtures/<per-harness|multi
 ```
 
 **Repo-profile contract (v1):**
+
 ```json
 { "schema":"repo-profile/v1", "repo_root":"...",
   "harnesses":[{"id":"claude-code","name":"Claude Code","confidence":"high","markers_found":[...]}],
@@ -168,6 +172,7 @@ tests/  detect-profile.bats, check-conformance.bats, fixtures/<per-harness|multi
 **Registry entry shape (harnesses.json):** `{id, name, notes, markers:{any:[...], strong:[...]}, conformance:[{id,type,path,severity,detail,notes}]}`.
 
 **Detection reliability (user's core worry):**
+
 - **Presence-based, not heuristic** — detected iff marker files/dirs exist.
 - **Multi-valued** — returns a SET; many harnesses can coexist.
 - **Confidence** — `high` if a `strong` marker present, else `medium` (ambiguous markers like a bare `AGENTS.md` shared by several tools).
@@ -190,6 +195,7 @@ tests/  detect-profile.bats, check-conformance.bats, fixtures/<per-harness|multi
 ## 9. Professional guidance captured (for later phases)
 
 **Audit ↔ remediation coupling (plan/apply pattern):**
+
 - Audit emits human `CLEANUP-AUDIT.md` **and** a machine-readable findings block/sidecar (stable schema: type, path, action, risk-tier, confidence, evidence refs).
 - Remediation **re-validates every precondition at apply time** (file still exists, still unreferenced, hash matches what the audit saw) — never blindly trusts a possibly-stale audit. This is the key safety property.
 - **Staleness guard:** audit stamps commit SHA + timestamp; remediation refuses / requires re-confirm if HEAD moved or report is old.
@@ -242,31 +248,40 @@ tests/  detect-profile.bats, check-conformance.bats, fixtures/<per-harness|multi
 
 ```markdown
 ## Objective
+
 Conduct a read-only, full-repo cleanup audit and produce a single categorized, risk-tiered, confidence-tagged recommendation report. Make no changes to any existing file.
 
 ## Context
+
 - Repo: `[REPO_PATH]` (run from repo root). Local working copy.
 - This is the audit-and-recommend pass only. Remediation (deletes, moves, renames, untracking, gitignore edits, history rewrites) happens in a separate later pass after you review the report — change nothing now.
 - "Cleanup" means file- and structure-level hygiene: superseded docs, cruft, naming, layout, `.gitignore`, committed secrets, and git bloat. It does not include dead-code analysis or dependency work.
 
 ## Step 0 — Detect repo type before judging anything
+
 Inspect manifests (`pyproject.toml`, `package.json`, `Cargo.toml`, `go.mod`, Terraform/Ansible files, etc.), the README, and the layout to determine the repo's language(s), purpose, and dominant conventions. If no manifest exists (e.g. an IaC, homelab, or docs repo), infer type from the file mix and layout instead. If the repo is a monorepo, detect sub-packages and evaluate naming, structure, and ignore conventions per package. Every structure/naming/`.gitignore` judgment below is relative to the conventions for the detected type. State the detected type and conventions at the top of the report.
 
 ## Keep-reason definition (governs DELETE recommendations for deprecated/superseded material)
+
 A deprecated or superseded document is deleted by default. Recommend KEEP only if at least one real reason applies: referenced by current code, config, docs, or CI; required for license/compliance/legal reasons; an architecture decision record (ADR) or rationale still governing the current design; or explicitly marked as intentionally retained. Historical or archival interest alone is not sufficient. This default applies to deprecated/superseded material only — completed plans are governed by the PLAN rule below and are retained.
 
 ## Protected set — never recommend deletion
+
 `LICENSE`/`COPYING`/`NOTICE`, `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `CODEOWNERS`, `CITATION*`, `.github/` (workflows, issue/PR templates), CI/CD config, `.gitignore`, `.gitattributes`, `.pre-commit-config.yaml`, build runners (`Makefile`/`justfile`/`Taskfile`), container files (`Dockerfile`/`compose.yaml`/`docker-compose.yml`), dependency lockfiles, language package markers (`__init__.py`, `py.typed`, `MANIFEST.in`), and example/template env files (`*.example`, `*.template`, `*.sample`, `.env.example`). List any of these only if they would otherwise be mistaken for cruft.
 
 ## Off-limits & role-aware exclusions
+
 Do not recommend deleting, renaming, moving, or untracking files whose presence is explained by their role. Note them only if genuinely problematic, and say why the role does not excuse it:
+
 - Test assets — files under `test/`, `tests/`, `fixtures/`, `__fixtures__/`, `golden/`, `testdata/`, or sample-data paths are not CRUFT/DUPLICATE/BLOAT merely for looking redundant, large, or "old".
 - Vendored code — `vendor/`, `third_party/`, bundled libraries.
 - Generated-by-convention files — protobuf outputs (`*_pb2.py`), generated API clients, files with a "generated by" / "do not edit" header, a committed built site for GitHub Pages.
 - Submodules — any path under `.gitmodules`; treat as off-limits and never descend into or recommend changes to submodule contents.
 
 ## Findings taxonomy
+
 A file may have more than one issue. Record one primary finding chosen by action precedence — delete > untrack > move > rename > update > keep — and note any additional issues inline in the rationale. A file recommended for deletion is not also flagged for a cosmetic rename or move. Types:
+
 - SUPERSEDED-DOC — deprecated or superseded doc, including a spec for a feature/service no longer implemented or in service; delete unless a keep-reason applies.
 - PLAN — a planning/roadmap/design-plan doc; action follows its spec:
   - completed → keep; record the spec it implemented when one exists (pair them). Completed is not the same as superseded. If no separate spec exists, keep as a standalone completed record.
@@ -286,11 +301,11 @@ A file may have more than one issue. Record one primary finding chosen by action
 - STRUCTURE — directory-structure issue (missing or extra standard dirs for the repo type).
 
 ## Actions, risk tiers, and confidence
-Valid actions: delete, untrack, move, rename, consolidate, edit-gitignore, update, rotate+purge, keep, flag-for-decision.
-Risk tiers: R1 — safe delete, recoverable via git history. R2 — move/rename/consolidate; may break references. R3 — untrack, `.gitignore` edit, or content update; in-repo, reversible. R4 — history rewrite (secrets, history bloat); dangerous, requires rotation/coordination, never automatic. `keep` and `flag-for-decision` carry no tier (`—`).
-Confidence on every finding: high — direct evidence (explicit marker, missing live config, git-confirmed completion); medium — strong but circumstantial; low — judgment call worth a second look. When confidence is low, use `flag-for-decision` rather than a destructive action.
+
+Valid actions: delete, untrack, move, rename, consolidate, edit-gitignore, update, rotate+purge, keep, flag-for-decision. Risk tiers: R1 — safe delete, recoverable via git history. R2 — move/rename/consolidate; may break references. R3 — untrack, `.gitignore` edit, or content update; in-repo, reversible. R4 — history rewrite (secrets, history bloat); dangerous, requires rotation/coordination, never automatic. `keep` and `flag-for-decision` carry no tier (`—`). Confidence on every finding: high — direct evidence (explicit marker, missing live config, git-confirmed completion); medium — strong but circumstantial; low — judgment call worth a second look. When confidence is low, use `flag-for-decision` rather than a destructive action.
 
 ## Constraints
+
 - Read-only on every existing file: no edits, moves, renames, deletions, untracking, or history operations this pass. The only permitted write is the audit report. If a `CLEANUP-AUDIT.md` from a prior run exists, overwrite it; never flag the report itself. Do not `git add`, `git commit`, or stage anything.
 - Read any file you make a finding about before describing it; never assert a file is superseded, deprecated, unused, completed, generated, or duplicate without opening it and citing evidence. For files you are not flagging, a stat and quick scan to confirm no issue is enough — you need not read every byte of every file.
 - Before recommending any delete, untrack, move, rename, or consolidate, search the repo for inbound references (other docs, README, code imports, CI paths) and record what you find. In-repo reference search establishes repo-local linkage only — a doc may be linked from an external wiki (Outline), Notion, or deploy scripts outside this repo. Treat in-repo absence as raising confidence, not proof; for any doc plausibly referenced externally, cap confidence at medium and prefer `flag-for-decision` over delete.
@@ -300,6 +315,7 @@ Confidence on every finding: high — direct evidence (explicit marker, missing 
 - When in doubt, use `flag-for-decision` rather than recommending a destructive or reference-breaking action.
 
 ## Steps
+
 1. Detect repo type and conventions (Step 0).
 2. Enumerate files: `git ls-files` for tracked, plus untracked-but-not-ignored (`git ls-files --others --exclude-standard`). Do not descend into ignored or dependency directories (`.git/`, `node_modules/`, `.venv/`, `dist/`, `build/`, `target/`); if such a directory is itself tracked, record it as one TRACKED-IGNORABLE finding. Always exclude `.git/`.
 3. For each file you flag, gather evidence: read it; `git log` for last-modified date and supersession/deprecation/completion commit messages; scan for in-file markers (deprecated, superseded, archived, completed, generated, "old", TODO); find newer files on the same topic; `git grep`/search for inbound references; cross-reference specs/docs against current code and config for in-service status. For plans, determine completion state and the spec they implemented.
@@ -308,13 +324,14 @@ Confidence on every finding: high — direct evidence (explicit marker, missing 
 6. Build the coverage ledger and write the report.
 
 ## Tools
+
 - Filesystem + git (`git ls-files`, `git log`, `git grep`, `git cat-file`, `git rev-list --all --objects`) are the primary toolset.
 - If a dedicated secret scanner (`gitleaks`, `trufflehog`) is already available, it is more reliable than manual entropy scanning — use it; otherwise scan by pattern. Do not install tooling.
 - No GitHub MCP, web search, or browser automation needed. If remediation would require `git-filter-repo`/BFG (R4 items), note it in the report — do not run it.
 
 ## Report format
-Write to `[REPO_PATH]/CLEANUP-AUDIT.md`. Open with: (a) detected repo type + conventions (per-package for a monorepo); (b) a coverage ledger — total files scanned, count of findings by type, and per top-level directory an "N files evaluated, no action" line so completeness is verifiable without a row per clean file; (c) counts by risk tier; (d) a "handle with care" callout listing every R4 item. Then group entries by finding type. Only files with a finding or a deliberate-keep decision (retained research, retained completed plans) get an entry. One entry per file:
-`type · path · action · risk-tier · confidence · rationale · evidence · inbound-references`
+
+Write to `[REPO_PATH]/CLEANUP-AUDIT.md`. Open with: (a) detected repo type + conventions (per-package for a monorepo); (b) a coverage ledger — total files scanned, count of findings by type, and per top-level directory an "N files evaluated, no action" line so completeness is verifiable without a row per clean file; (c) counts by risk tier; (d) a "handle with care" callout listing every R4 item. Then group entries by finding type. Only files with a finding or a deliberate-keep decision (retained research, retained completed plans) get an entry. One entry per file: `type · path · action · risk-tier · confidence · rationale · evidence · inbound-references`
 
 <example>
 SUPERSEDED-DOC · `docs/old-deploy-guide.md` · delete · R1 · high · replaced by current guide, no keep-reason · git mod 2024-09; `docs/deploy.md` (2025-11) supersedes; no in-repo refs found
@@ -327,6 +344,7 @@ BLOAT · `assets/demo.mov` (history) · flag for LFS + history rewrite · R4 · 
 </example>
 
 ## Success criteria
+
 - Detected repo type and conventions stated at the top (per-package for a monorepo).
 - Coverage ledger accounts for all scanned files; every file with a finding or deliberate-keep decision is listed, with no per-file row for clean files.
 - Every entry carries type, action, risk tier (or `—`), and confidence.
@@ -339,8 +357,10 @@ BLOAT · `assets/demo.mov` (history) · flag for LFS + history rewrite · R4 · 
 - Chat output is a brief summary only: ledger headline counts, the R4 callout, and notable judgment calls — pointing to the report for detail.
 
 ## Mode
+
 Read-only audit. Produce the report and stop for review. No deletions, moves, untracking, edits, commits, or history operations.
 
 ## Out of scope
+
 Executing any change; deep dead-code or static analysis; dependency upgrades; branch/tag cleanup; running history rewrites or `git-filter-repo`/BFG.
 ```

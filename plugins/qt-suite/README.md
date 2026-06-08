@@ -25,7 +25,7 @@ Qt GUI development involves many interacting systems (signals and slots, layout 
 ## Requirements
 
 | Requirement | Purpose | Install |
-|-------------|---------|---------|
+| --- | --- | --- |
 | Python 3.11+ | Qt development + Qt Pilot MCP | System package |
 | PySide6 6.6+ or PyQt6 6.6+ | Qt bindings | `pip install PySide6` |
 | Xvfb | Virtual display for headless GUI testing | `apt install xvfb` / `dnf install xorg-x11-server-Xvfb` |
@@ -75,7 +75,7 @@ Run `/qt-suite:scaffold <app-name>` to initialize a new project with the standar
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `/qt-suite:scaffold [app-name]` | Scaffold a new PySide6 project with pyproject.toml, src layout, QMainWindow boilerplate, and `.qt-test.json` |
 | `/qt-suite:new-component <name> [widget\|dialog\|window]` | Generate a Qt component class with correct boilerplate and object names |
 | `/qt-suite:generate` | Scan the project and generate unit tests for untested files |
@@ -88,7 +88,7 @@ Run `/qt-suite:scaffold <app-name>` to initialize a new project with the standar
 Domain knowledge loaded on demand by agents. These files are never auto-loaded into context; they enter the conversation only when an agent or the user explicitly reads them.
 
 | Reference | Binding | Purpose |
-|-----------|---------|---------|
+| --- | --- | --- |
 | `qt-architecture.md` | Both | Structuring a Qt app, QApplication setup, project layout |
 | `qt-signals-slots.md` | Both | Connecting signals, defining custom signals, cross-thread communication |
 | `qt-layouts.md` | Both | Arranging widgets, resize behavior, QSplitter, layout debugging |
@@ -109,7 +109,7 @@ Domain knowledge loaded on demand by agents. These files are never auto-loaded i
 ## Agents
 
 | Agent | Description |
-|-------|-------------|
+| --- | --- |
 | `qt-app-dev` | Proactive Qt development specialist. Triggers when creating new Qt projects, implementing widgets/windows, or building new features. |
 | `qt-debugger` | Proactive diagnostics for Qt errors and crashes. Triggers on error messages, crashes, frozen UIs, or unexpected widget behavior. |
 | `qt-app-reviewer` | Proactive code quality reviewer. Triggers after writing or modifying Qt code. Checks for GC risks, threading violations, missing object names, layout anti-patterns. |
@@ -123,12 +123,12 @@ Create `.qt-test.json` in your project root (copy from `templates/qt-test.json`)
 
 ```json
 {
-  "project_type": "python",
-  "build_dir": "build",
-  "test_dir": "tests",
-  "app_entry": "main.py",
-  "coverage_threshold": 80,
-  "coverage_exclude": ["tests/*"]
+	"project_type": "python",
+	"build_dir": "build",
+	"test_dir": "tests",
+	"app_entry": "main.py",
+	"coverage_threshold": 80,
+	"coverage_exclude": ["tests/*"]
 }
 ```
 
@@ -136,8 +136,8 @@ For personal overrides, create `.claude/qt-test.local.md` (Claude Code loads `.l
 
 ```markdown
 # Qt Suite local overrides
-My app entry is src/app.py (not main.py).
-Coverage threshold for this machine: 70%.
+
+My app entry is src/app.py (not main.py). Coverage threshold for this machine: 70%.
 ```
 
 ## CI Integration

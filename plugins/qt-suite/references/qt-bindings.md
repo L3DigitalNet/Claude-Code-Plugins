@@ -1,27 +1,28 @@
-  Trigger phrases: "PySide6 vs PyQt6", "PyQt5 migration", "binding difference", "migrate from PyQt5", "PyQt6 migration", "PySide6 or PyQt6", "binding compatibility", "porting Qt Python", "LGPL vs GPL"
-version: 1.0.0
+Trigger phrases: "PySide6 vs PyQt6", "PyQt5 migration", "binding difference", "migrate from PyQt5", "PyQt6 migration", "PySide6 or PyQt6", "binding compatibility", "porting Qt Python", "LGPL vs GPL" version: 1.0.0
+
 ---
 
 ## Python Qt Bindings
 
 ### Choosing a Binding
 
-| Criteria | PySide6 | PyQt6 |
-|----------|---------|-------|
-| Maintainer | Qt Company (official) | Riverbank Computing |
-| License | LGPL v3 | GPL v3 / commercial |
-| Commercial use | Free (LGPL) | Requires commercial license |
-| QML/Qt Quick support | Excellent | Good |
-| Type stubs | Built-in | `PyQt6-stubs` (third-party) |
-| `pyqtSignal` / `Signal` | `Signal` | `pySignal` |
-| `pyqtSlot` / `Slot` | `Slot` | `pyqtSlot` |
-| Availability | pip | pip |
+| Criteria                | PySide6               | PyQt6                       |
+| ----------------------- | --------------------- | --------------------------- |
+| Maintainer              | Qt Company (official) | Riverbank Computing         |
+| License                 | LGPL v3               | GPL v3 / commercial         |
+| Commercial use          | Free (LGPL)           | Requires commercial license |
+| QML/Qt Quick support    | Excellent             | Good                        |
+| Type stubs              | Built-in              | `PyQt6-stubs` (third-party) |
+| `pyqtSignal` / `Signal` | `Signal`              | `pySignal`                  |
+| `pyqtSlot` / `Slot`     | `Slot`                | `pyqtSlot`                  |
+| Availability            | pip                   | pip                         |
 
 **Default recommendation: PySide6** — official binding, LGPL, ships with complete type stubs, better QML tooling.
 
 ### API Compatibility Layer
 
 For code that must support both:
+
 ```python
 try:
     from PySide6.QtWidgets import QApplication, QPushButton
@@ -34,6 +35,7 @@ except ImportError:
 ```
 
 Or use **`qtpy`** — an abstraction layer maintained by the community:
+
 ```python
 from qtpy.QtWidgets import QApplication, QPushButton
 from qtpy.QtCore import Signal, Slot
@@ -43,6 +45,7 @@ from qtpy.QtCore import Signal, Slot
 ### PySide6 vs PyQt6: Key Differences
 
 #### Signals and Slots
+
 ```python
 # PySide6
 from PySide6.QtCore import Signal, Slot
@@ -62,7 +65,9 @@ class Foo(QObject):
 ```
 
 #### Enum Access
+
 Both require fully-qualified enum access (breaking change from Qt5):
+
 ```python
 # CORRECT (both bindings)
 Qt.AlignmentFlag.AlignLeft
@@ -74,6 +79,7 @@ Qt.AlignLeft
 ```
 
 #### Exec Method (PyQt6 breaking change)
+
 ```python
 # PySide6
 app.exec()
@@ -87,6 +93,7 @@ dialog.exec()
 Both use `exec()` — the old `exec_()` workaround is no longer needed or available in PyQt6.
 
 #### Property Decorator
+
 ```python
 # PySide6
 from PySide6.QtCore import Property
@@ -102,6 +109,7 @@ def value(self) -> int: return self._value
 ### Migrating PyQt5 → PySide6
 
 **Step 1: Update imports**
+
 ```bash
 # Mass replace with sed
 sed -i 's/from PyQt5\./from PySide6./g' src/**/*.py
@@ -109,6 +117,7 @@ sed -i 's/import PyQt5\./import PySide6./g' src/**/*.py
 ```
 
 **Step 2: Replace signal/slot decorators**
+
 ```python
 # PyQt5 → PySide6
 pyqtSignal → Signal
@@ -117,6 +126,7 @@ pyqtProperty → Property
 ```
 
 **Step 3: Fix enum usage** (most common PyQt5→PySide6 breakage)
+
 ```python
 # PyQt5 (short form)
 Qt.AlignLeft          → Qt.AlignmentFlag.AlignLeft
@@ -126,12 +136,14 @@ Qt.WindowModal        → Qt.WindowModality.WindowModal
 ```
 
 **Step 4: Fix exec() calls** — remove `exec_()` suffix:
+
 ```python
 app.exec_()   → app.exec()
 dialog.exec_() → dialog.exec()
 ```
 
 **Step 5: Remove deprecated Qt5 API**
+
 ```python
 # Removed in Qt6
 QWidget.show() — still works
@@ -142,6 +154,7 @@ QFontDatabase.addApplicationFont() — still works
 ### Migrating PyQt5 → PyQt6
 
 Same steps as PySide6 migration, but:
+
 ```python
 # PyQt5 → PyQt6 signals (keep pyqt prefix)
 pyqtSignal → pyqtSignal  (unchanged)

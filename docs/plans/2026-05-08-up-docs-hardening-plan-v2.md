@@ -11,6 +11,7 @@
 **Tech Stack:** bash + bats (existing test harness), Python 3.11+ with Pydantic v2 (discriminated-union validators), FastMCP (stdio MCP stubs), `claude --print --plugin-dir --mcp-config --strict-mcp-config --agent` (integration test driver), DeepEval ≥1.4 with `AnthropicModel` (optional opt-in prose-quality grader), GitHub `gh` CLI (smoke-test verification).
 
 **Research baseline:** [`docs/research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md`](../research/2026-05-08-up-docs-plugin-security-eval-infrastructure.md). Authoritative facts that drive specific tasks:
+
 - Plugin `settings.json` only supports `agent` and `subagentStatusLine` keys — `permissions.deny` and `hooks` blocks there are silently ignored. Plugin hooks ship via `hooks/hooks.json` (Task 9, Task 14).
 - PostToolUse hook is the only programmatic path to Bash output from a plugin (`stream-json` does NOT emit tool results). Capture must be opt-in, redacted, and `chmod 600` (Task 13, Task 14).
 - `--plugin-dir <path> --strict-mcp-config --mcp-config <file>` is the canonical headless test wiring; FastMCP `Client(server)` in-memory transport does NOT work for an external `claude -p` subprocess — stubs must be stdio FastMCP servers (Task 22).
@@ -18,6 +19,7 @@
 - DeepEval renamed `LLMTestCaseParams` → `SingleTurnParams` in 2025; `AnthropicModel` works without an OpenAI key; cloud telemetry is opt-out via `DEEPEVAL_TELEMETRY_OPT_OUT=YES` (Task 28).
 
 **Reference implementations to study before Phase 2:**
+
 - `plugins/release-pipeline/scripts/force-push-guard.sh` — canonical PreToolUse exit-2 deny pattern with `hookSpecificOutput.permissionDecision` JSON.
 - `plugins/release-pipeline/hooks/hooks.json` — canonical plugin `hooks.json` schema.
 - `plugins/github-repo-manager/scripts/gh-manager-guard.sh` — canonical PreToolUse + PostToolUse audit-log capture pattern with stdin JSON parsing.
@@ -31,7 +33,7 @@
 **Release sequencing:**
 
 | Version | Phases included | Estimated effort |
-|---|---|---|
+| --- | --- | --- |
 | 0.7.2 (patch) | Phase 0 (Tasks 1–5) | ~1h |
 | 0.8.0 (minor) | Phase 1 (Tasks 6–7) + Phase 2 (Tasks 8–11) + Phase 3 hooks/validators (Tasks 12–19) + Bats wrapper fix (Task 20) | 7–9h |
 | 0.8.1 (patch) | Phase 3 integration surface (Tasks 21–24) | 3–4h |
@@ -39,6 +41,7 @@
 | 0.9.1 (optional) | Phase 4 DeepEval (Task 28) | 1–2h |
 
 **Task numbering (28 total):**
+
 - Phase 0: T1–T5
 - Phase 1: T6–T7
 - Phase 2: T8–T11
@@ -51,6 +54,7 @@
 ## File structure
 
 **New files:**
+
 - `plugins/up-docs/hooks/hooks.json` — plugin hook component file (PreToolUse + PostToolUse) [Task 9, Task 14]
 - `plugins/up-docs/scripts/deny-guard.sh` — PreToolUse validator that exits 2 on forbidden commands [Task 10]
 - `plugins/up-docs/scripts/capture-transcript.sh` — PostToolUse opt-in capture with redaction [Task 13]
@@ -72,6 +76,7 @@
 - `plugins/up-docs/docs/phase-2-smoke-result.txt` — Task 8 outcome record [Task 8]
 
 **Modified files:**
+
 - `plugins/up-docs/README.md` — drop Opus claim (Task 1); document Python 3 prereq (Task 4); document **consumer-side** `permissions.deny` requirement (Task 11); document `docs/.up-docs.json` layout config (Task 25)
 - `plugins/up-docs/CHANGELOG.md` — dedupe `0.3.0` entry (Task 2); add release entries
 - `plugins/up-docs/.claude-plugin/plugin.json` — version bumps (4 times)
@@ -89,6 +94,7 @@
 - `plugins/up-docs/agents/up-docs-propagate-notion.md` — fuzzy fallback (Task 27)
 
 **Deliberately NOT created in v2 (deviations from v1):**
+
 - `plugins/up-docs/.claude/settings.json` — invalid plugin component path per the v1 audit's CR-001 finding and the Plugins Reference. Plugin-shipped `permissions.deny` is **not** a thing; the consuming-project `permissions.deny` is documented in README via Task 11.
 - A single `PropagatorReport` schema accepting any layer — replaced by a Pydantic v2 discriminated union (Task 15) per CR-008.
 
@@ -103,12 +109,12 @@ Five small, independently-revertible edits. Each is one task. After all five, bu
 The `up-docs-audit-drift` agent has `model: sonnet` in its frontmatter. README §Known Issues says "Drift analysis is designed for Opus 4.6 with 1M context" — direct contradiction. Replace with truthful text.
 
 **Files:**
+
 - Modify: `plugins/up-docs/README.md` line 140
 
 - [ ] **Step 1: Read the current line for context**
 
-Run: `sed -n '138,142p' plugins/up-docs/README.md`
-Expected: shows the bullet starting `- Drift analysis is designed for Opus 4.6 with 1M context.`
+Run: `sed -n '138,142p' plugins/up-docs/README.md` Expected: shows the bullet starting `- Drift analysis is designed for Opus 4.6 with 1M context.`
 
 - [ ] **Step 2: Replace the bullet**
 
@@ -126,8 +132,7 @@ with:
 
 - [ ] **Step 3: Verify the change**
 
-Run: `grep -n "Opus" plugins/up-docs/README.md`
-Expected: only references in escalation context (not the "designed for Opus" claim).
+Run: `grep -n "Opus" plugins/up-docs/README.md` Expected: only references in escalation context (not the "designed for Opus" claim).
 
 - [ ] **Step 4: Commit**
 
@@ -143,12 +148,12 @@ git commit -m "docs(up-docs): correct Opus claim in Known Issues — auditor run
 `grep -n "^## \[" plugins/up-docs/CHANGELOG.md` shows two `## [0.3.0] - 2026-04-09` headers (lines 107 and 121). Each has different bullets. Merge them into a single section preserving every bullet.
 
 **Files:**
+
 - Modify: `plugins/up-docs/CHANGELOG.md` lines 107–133
 
 - [ ] **Step 1: Read both blocks for context**
 
-Run: `sed -n '107,133p' plugins/up-docs/CHANGELOG.md`
-Expected: shows two `## [0.3.0] - 2026-04-09` headers with different bullet sets.
+Run: `sed -n '107,133p' plugins/up-docs/CHANGELOG.md` Expected: shows two `## [0.3.0] - 2026-04-09` headers with different bullet sets.
 
 - [ ] **Step 2: Replace both blocks with a single merged block**
 
@@ -158,12 +163,14 @@ In `plugins/up-docs/CHANGELOG.md`, replace lines 107–133 (both 0.3.0 blocks) w
 ## [0.3.0] - 2026-04-09
 
 ### Added
+
 - `scripts/context-gather.sh` consolidating git context assessment for all 5 skills
 - `scripts/server-inspect.sh` batching 5-15 SSH commands per host into a single session
 - `scripts/link-audit.sh` for markdown link extraction and verification
 - `scripts/convergence-tracker.sh` for managing iteration state across drift analysis phases
 
 ### Changed
+
 - All 5 skill files (repo, wiki, notion, all, drift) now use context-gather.sh for session context
 - `skills/drift/SKILL.md` Phase 1 uses server-inspect.sh and convergence-tracker.sh
 - `skills/drift/SKILL.md` Phase 3 uses link-audit.sh for external link verification
@@ -172,14 +179,13 @@ In `plugins/up-docs/CHANGELOG.md`, replace lines 107–133 (both 0.3.0 blocks) w
 - Add 166 bats tests across 9 plugins for new scripts
 
 ### Fixed
-- Add handoff to root README, fix up-docs skill names
 
+- Add handoff to root README, fix up-docs skill names
 ```
 
 - [ ] **Step 3: Verify only one 0.3.0 header remains**
 
-Run: `grep -c "^## \[0.3.0\]" plugins/up-docs/CHANGELOG.md`
-Expected: `1`
+Run: `grep -c "^## \[0.3.0\]" plugins/up-docs/CHANGELOG.md` Expected: `1`
 
 - [ ] **Step 4: Commit**
 
@@ -195,12 +201,12 @@ git commit -m "docs(up-docs): dedupe duplicate 0.3.0 CHANGELOG entry"
 > **CR-011 resolution:** v1's task title said "move to Resolved subsection" but its steps deleted the bullet outright. v2 picks deletion — the bug is fixed three releases ago, the mitigation is no longer actionable for any current user, and a Resolved subsection adds documentation surface that has to be maintained for no reader benefit. Title and steps now agree on deletion.
 
 **Files:**
+
 - Modify: `plugins/up-docs/README.md` lines 134–141
 
 - [ ] **Step 1: Read the Known Issues block**
 
-Run: `sed -n '134,141p' plugins/up-docs/README.md`
-Expected: shows the `- **Claude Code version sensitivity (MCP + Haiku):**` bullet.
+Run: `sed -n '134,141p' plugins/up-docs/README.md` Expected: shows the `- **Claude Code version sensitivity (MCP + Haiku):**` bullet.
 
 - [ ] **Step 2: Delete the v2.1.92 bullet**
 
@@ -214,8 +220,7 @@ and remove the entire bullet (including the surrounding blank line if removing t
 
 - [ ] **Step 3: Verify removal**
 
-Run: `grep -c "v2.1.92" plugins/up-docs/README.md`
-Expected: `0`
+Run: `grep -c "v2.1.92" plugins/up-docs/README.md` Expected: `0`
 
 - [ ] **Step 4: Commit**
 
@@ -231,12 +236,12 @@ git commit -m "docs(up-docs): delete stale v2.1.92 MCP-loading mitigation note"
 All four helper scripts shell out to `python3` and exit 1 with a JSON error when missing. README §Requirements doesn't mention Python.
 
 **Files:**
+
 - Modify: `plugins/up-docs/README.md` lines 19–24
 
 - [ ] **Step 1: Read the Requirements block**
 
-Run: `sed -n '19,24p' plugins/up-docs/README.md`
-Expected:
+Run: `sed -n '19,24p' plugins/up-docs/README.md` Expected:
 
 ```
 ## Requirements
@@ -263,8 +268,7 @@ In `plugins/up-docs/README.md`, in §Requirements, add a new bullet at the top o
 
 - [ ] **Step 3: Verify**
 
-Run: `grep -A 6 "^## Requirements" plugins/up-docs/README.md`
-Expected: includes the Python 3 bullet.
+Run: `grep -A 6 "^## Requirements" plugins/up-docs/README.md` Expected: includes the Python 3 bullet.
 
 - [ ] **Step 4: Commit**
 
@@ -282,6 +286,7 @@ git commit -m "docs(up-docs): document Python 3.11+ as a hard requirement"
 > **CR-010 resolution:** v1 wrote the regression test using the new safe pattern from the start, so it never failed before the fix — there was no red-then-green signal. v2 writes the regression test using the OLD `bash -c "echo '$md'"` invocation first, runs it to confirm it FAILS on the single-quote input, THEN rewrites the entire suite to the safe pattern, THEN runs again to confirm green. Real TDD.
 
 **Files:**
+
 - Modify: `plugins/up-docs/tests/link-audit.bats`
 
 - [ ] **Step 1: Write the regression test using the OLD unsafe pattern**
@@ -302,8 +307,7 @@ Append to `plugins/up-docs/tests/link-audit.bats`:
 
 - [ ] **Step 2: Run the test, confirm it FAILS (red)**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | grep -A 1 "single-quote"`
-Expected: `not ok N single-quote inputs do not break link extraction (regression)` — the embedded `'` in `O'Reilly` terminates the outer single-quoted shell string and the rest of `Reilly](...)` is parsed as separate shell tokens, so either the script gets the wrong stdin or the test fails the `jq` assertion.
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | grep -A 1 "single-quote"` Expected: `not ok N single-quote inputs do not break link extraction (regression)` — the embedded `'` in `O'Reilly` terminates the outer single-quoted shell string and the rest of `Reilly](...)` is parsed as separate shell tokens, so either the script gets the wrong stdin or the test fails the `jq` assertion.
 
 If the test PASSES, the bug isn't reproducing — re-read the existing tests and check that `$md` is being interpolated through the `bash -c` like the existing tests do, not wrapped in some other quoting that escapes the issue. Do NOT proceed to Step 3 until the regression test demonstrates RED.
 
@@ -323,6 +327,7 @@ In `plugins/up-docs/tests/link-audit.bats`, replace the test body added in Step 
 ```
 
 The change is the `run bash -c` invocation:
+
 - old: `run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"`
 - new: `run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"`
 
@@ -330,19 +335,16 @@ The new form uses single quotes around the `bash -c` body so `$1` is NOT expande
 
 - [ ] **Step 4: Rewrite every other unsafe test in the file**
 
-Run: `grep -n "bash -c \"echo '" plugins/up-docs/tests/link-audit.bats`
-Expected: lists every test still using the old pattern. For each match, rewrite the same way:
+Run: `grep -n "bash -c \"echo '" plugins/up-docs/tests/link-audit.bats` Expected: lists every test still using the old pattern. For each match, rewrite the same way:
 
 - old: `run bash -c "echo '$md' | bash \"$SCRIPTS_DIR/link-audit.sh\" -"`
 - new: `run bash -c 'printf "%s\n" "$1" | bash "$SCRIPTS_DIR/link-audit.sh" -' _ "$md"`
 
-After rewrite, run: `grep -c "bash -c \"echo '" plugins/up-docs/tests/link-audit.bats`
-Expected: `0`
+After rewrite, run: `grep -c "bash -c \"echo '" plugins/up-docs/tests/link-audit.bats` Expected: `0`
 
 - [ ] **Step 5: Run the full bats suite to confirm green**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -5`
-Expected: all tests pass (35 total — 34 existing + 1 regression).
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -5` Expected: all tests pass (35 total — 34 existing + 1 regression).
 
 - [ ] **Step 6: Commit**
 
@@ -357,8 +359,7 @@ git commit -m "test(up-docs): quote-safe link-audit invocations; red-first singl
 
 - [ ] **Run the full bats suite**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -5`
-Expected: 35 of 35 tests pass.
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -5` Expected: 35 of 35 tests pass.
 
 - [ ] **Bump plugin.json version**
 
@@ -376,14 +377,15 @@ In `plugins/up-docs/CHANGELOG.md`, prepend after the `# Changelog` header (above
 ## [0.7.2] - 2026-05-08
 
 ### Fixed
+
 - README "Known Issues" no longer claims drift analysis is "designed for Opus 4.6" — auditor runs Sonnet by frontmatter; Opus is opt-in via the escalation block.
 - Stale Claude Code v2.1.92 MCP-loading mitigation note removed.
 - Duplicate `## [0.3.0]` CHANGELOG entry merged into one block.
 - `tests/link-audit.bats` no longer breaks on inputs containing single quotes; added red-first regression test.
 
 ### Added
-- README §Requirements now lists Python 3.11+ as a hard prerequisite (used by all four helper scripts and the test suite).
 
+- README §Requirements now lists Python 3.11+ as a hard prerequisite (used by all four helper scripts and the test suite).
 ```
 
 - [ ] **Tag and release**
@@ -406,6 +408,7 @@ Run `/release-pipeline:release` to push the tag and GitHub release. Verify the r
 `scripts/convergence-tracker.sh` hardcodes `/tmp/up-docs-drift-tracker.json` on line 20. Two repos in concurrent `/up-docs:drift` runs collide. Replace with the env-overridable + session-id-based default.
 
 **Files:**
+
 - Modify: `plugins/up-docs/scripts/convergence-tracker.sh` line 20
 - Modify: `plugins/up-docs/tests/convergence-tracker.bats` setup/teardown
 
@@ -462,8 +465,7 @@ Append to `plugins/up-docs/tests/convergence-tracker.bats`:
 
 - [ ] **Step 2: Run the tests, confirm they FAIL**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | grep -E "session-scoped|concurrent sessions|UP_DOCS_TRACKER_STATE wins"`
-Expected: every new test reports `not ok` because the script ignores both env vars and uses the hardcoded `/tmp/up-docs-drift-tracker.json`.
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | grep -E "session-scoped|concurrent sessions|UP_DOCS_TRACKER_STATE wins"` Expected: every new test reports `not ok` because the script ignores both env vars and uses the hardcoded `/tmp/up-docs-drift-tracker.json`.
 
 - [ ] **Step 3: Modify the script to honor both env vars**
 
@@ -507,8 +509,7 @@ teardown() {
 
 - [ ] **Step 5: Run the suite to confirm everything passes**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -5`
-Expected: 38 of 38 tests passed (35 from Phase 0 + 3 new).
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -5` Expected: 38 of 38 tests passed (35 from Phase 0 + 3 new).
 
 - [ ] **Step 6: Update skills/drift/SKILL.md notes section**
 
@@ -535,6 +536,7 @@ git commit -m "fix(up-docs): tracker state defaults to CLAUDE_CODE_SESSION_ID; p
 Each skill's Step 1 invokes `bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh`. If python3 is missing, the script emits an opaque JSON error to stderr and exits 1 — the skill doesn't notice. Add an early check.
 
 **Files:**
+
 - Modify: `plugins/up-docs/skills/all/SKILL.md` Step 1
 - Modify: `plugins/up-docs/skills/repo/SKILL.md` Step 1
 - Modify: `plugins/up-docs/skills/wiki/SKILL.md` Step 1
@@ -543,8 +545,7 @@ Each skill's Step 1 invokes `bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.s
 
 - [ ] **Step 1: Read one skill's Step 1 for context**
 
-Run: `sed -n '1,30p' plugins/up-docs/skills/all/SKILL.md`
-Expected: shows a `### 1. Gather Session Context` heading followed by a `bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh` code block.
+Run: `sed -n '1,30p' plugins/up-docs/skills/all/SKILL.md` Expected: shows a `### 1. Gather Session Context` heading followed by a `bash ${CLAUDE_PLUGIN_ROOT}/scripts/context-gather.sh` code block.
 
 - [ ] **Step 2: Apply the change to skills/all/SKILL.md**
 
@@ -612,8 +613,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh init
 
 - [ ] **Step 7: Verify all five skills got the check**
 
-Run: `grep -l "command -v python3" plugins/up-docs/skills/*/SKILL.md`
-Expected: lists all five SKILL.md files (all, repo, wiki, notion, drift).
+Run: `grep -l "command -v python3" plugins/up-docs/skills/*/SKILL.md` Expected: lists all five SKILL.md files (all, repo, wiki, notion, drift).
 
 - [ ] **Step 8: Commit**
 
@@ -629,7 +629,7 @@ git commit -m "feat(up-docs): explicit python3 prereq check at skill Step 1 acro
 > **CR-001/CR-002 resolution architecture.** v1 tried to ship `permissions.deny` inside `plugins/up-docs/.claude/settings.json`. That path is not a valid plugin component — plugin `settings.json` (at plugin root, not under `.claude/`) supports only `agent` and `subagentStatusLine`. v1's deny block would have been silently ignored. v2 ships defense-in-depth in three layers, only one of which can live inside the plugin:
 >
 > 1. **Plugin-shipped PreToolUse `deny-guard.sh`** (Task 9 + Task 10). Mirrors `force-push-guard.sh`. Parses the full command line including pipes, redirects, and `&&` chains. Issues `exit 2` with `hookSpecificOutput.permissionDecision: "deny"` JSON. Defense-in-depth, NOT a security boundary — `grep`-based deny matching is inherently incomplete.
-> 2. **Consumer-side `permissions.deny`** (Task 11). Documented in README as a recommended addition to the *consuming project's* `.claude/settings.json`. This is the only definitively-enforced layer per current Claude Code permission docs.
+> 2. **Consumer-side `permissions.deny`** (Task 11). Documented in README as a recommended addition to the _consuming project's_ `.claude/settings.json`. This is the only definitively-enforced layer per current Claude Code permission docs.
 > 3. **Agent-frontmatter `disallowedTools:`** — defense-in-depth at model-context level. Not added in this plan because all four agents already declare narrow tool lists, the field is best-effort by design (not engine-enforced), and the v1 audit's CR-002 surfaced that the deny list mirroring problem dwarfed any incremental benefit. Reconsider in a future release if `deny-guard.sh` proves too noisy in practice.
 
 ### Task 8: Smoke-test `hooks/hooks.json` actually fires (gate task)
@@ -637,6 +637,7 @@ git commit -m "feat(up-docs): explicit python3 prereq check at skill Step 1 acro
 > **Open Question 1 resolution as a gate.** GH-34573 is closed-not-planned but contradicted by the five sibling plugins in this repo using PreToolUse/PostToolUse command hooks in production. Before Tasks 9 and 13 invest in `deny-guard.sh` and `capture-transcript.sh`, prove that a minimal plugin hook actually fires under `claude --plugin-dir`. If it does not, the entire Phase 2/3 hook surface is dead-on-arrival and tasks below need rethinking via a different route (project-level `.claude/settings.json` only).
 
 **Files:**
+
 - Create: `plugins/up-docs/hooks/hooks.json` (minimal smoke-test version, replaced by Task 9)
 - Create: `plugins/up-docs/scripts/hook-smoke.sh` (transient — kept until smoke test passes, removed in Task 9)
 - Create: `plugins/up-docs/docs/phase-2-smoke-result.txt` (outcome record)
@@ -673,30 +674,30 @@ Create `plugins/up-docs/hooks/hooks.json`:
 
 ```json
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/hook-smoke.sh pre"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/hook-smoke.sh post"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/hook-smoke.sh pre"
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/hook-smoke.sh post"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -717,6 +718,7 @@ grep -iE "hook|plugin" /tmp/up-docs-hook-smoke-stderr.log | head -20
 ```
 
 Expected outcomes:
+
 - **PASS:** `/tmp/up-docs-hook-smoke.log` contains at least one `fired ...` line, AND the `--debug "hooks"` stderr shows the up-docs hook source-tagged as a plugin hook firing for the Bash tool.
 - **FAIL:** the log file is empty or absent, AND no plugin-hook firing appears in the stderr debug. This means GH-34573 is still active and plugin command hooks are silently dropped.
 
@@ -755,6 +757,7 @@ git commit -m "test(up-docs): Task 8 hook-firing smoke test outcome recorded"
 - [ ] **Step 9: Decision point**
 
 Read `plugins/up-docs/docs/phase-2-smoke-result.txt` and either:
+
 - **PASS:** Continue to Task 9. The smoke `hooks.json` and `hook-smoke.sh` get replaced by the real `deny-guard.sh` and `capture-transcript.sh` wiring.
 - **FAIL:** STOP. Open a follow-up plan to re-route Phase 2 to a documented consumer-side approach. Do not execute Tasks 9–11 or 13–14 as written.
 
@@ -767,6 +770,7 @@ Read `plugins/up-docs/docs/phase-2-smoke-result.txt` and either:
 This task replaces the smoke-test `hooks.json` from Task 8 with the real PreToolUse wiring. The PostToolUse capture wiring is added later in Task 14.
 
 **Files:**
+
 - Modify: `plugins/up-docs/hooks/hooks.json` (replace smoke wiring)
 - Delete: `plugins/up-docs/scripts/hook-smoke.sh` (no longer needed)
 
@@ -784,19 +788,19 @@ Overwrite `plugins/up-docs/hooks/hooks.json`:
 
 ```json
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/deny-guard.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/deny-guard.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -804,8 +808,7 @@ Overwrite `plugins/up-docs/hooks/hooks.json`:
 
 - [ ] **Step 3: Validate JSON**
 
-Run: `python3 -c "import json; json.load(open('plugins/up-docs/hooks/hooks.json'))" && echo "valid"`
-Expected: `valid`
+Run: `python3 -c "import json; json.load(open('plugins/up-docs/hooks/hooks.json'))" && echo "valid"` Expected: `valid`
 
 - [ ] **Step 4: Delete the no-longer-needed smoke-test script**
 
@@ -829,13 +832,13 @@ git commit -m "feat(up-docs): plugin hooks/hooks.json wires PreToolUse deny-guar
 > **CR-002 resolution.** v1 expressed all denies as `Bash(...)` glob patterns inside `permissions.deny`, with no parsing of pipes, redirects, or `&&` chains — so e.g. `cat /etc/foo > /tmp/bar.sh && bash /tmp/bar.sh` would have evaded a `Bash(rm *)`-style entry, and `cp` overwrites, `tee`-redirected writes, and SQL-write commands were all uncovered. v2 implements a real parser-aware validator that scans the full command string. Patterned on `force-push-guard.sh`. Documents remaining gaps consumer-side in Task 11.
 
 **Files:**
+
 - Create: `plugins/up-docs/scripts/deny-guard.sh`
 - Modify: `plugins/up-docs/agents/up-docs-audit-drift.md` — verify the auditor's `<forbidden_commands>` table matches the deny patterns below; add new patterns if absent. (The auditor's table is the spec; the script is the enforcement.)
 
 - [ ] **Step 1: Read the auditor's forbidden_commands table for context**
 
-Run: `grep -A 60 "<forbidden_commands>" plugins/up-docs/agents/up-docs-audit-drift.md | head -80`
-Expected: shows the seven categories the auditor must avoid. Note any missing from the script below.
+Run: `grep -A 60 "<forbidden_commands>" plugins/up-docs/agents/up-docs-audit-drift.md | head -80` Expected: shows the seven categories the auditor must avoid. Note any missing from the script below.
 
 - [ ] **Step 2: Write the deny-guard script**
 
@@ -1106,8 +1109,7 @@ export GUARD  # required: bash -c subshells in tests below need GUARD in their e
 
 - [ ] **Step 10: Run the new bats tests**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -8`
-Expected: 51 of 51 tests passed (38 from Phase 0+1 + 13 new).
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -8` Expected: 51 of 51 tests passed (38 from Phase 0+1 + 13 new).
 
 - [ ] **Step 11: Commit**
 
@@ -1123,13 +1125,14 @@ git commit -m "feat(up-docs): PreToolUse deny-guard.sh blocks forbidden commands
 > **CR-001 follow-on.** Plugin-shipped `permissions.deny` is not a supported feature. The actually-enforced layer is the consuming project's `.claude/settings.json` `permissions.deny`. v2 documents this as a recommended addition for users who want a hard security boundary, while making clear that the plugin's `deny-guard.sh` is defense-in-depth that catches a different (and overlapping) failure mode. Users who don't add the consumer-side block still get the plugin-shipped guard.
 
 **Files:**
+
 - Modify: `plugins/up-docs/README.md`
 
 - [ ] **Step 1: Add a Security section to README**
 
 In `plugins/up-docs/README.md`, after the existing §Requirements section and before any §Usage / §Commands section (or at an appropriate position the file's structure supports — typically after §Requirements), add:
 
-```markdown
+````markdown
 ## Security
 
 up-docs ships with a defense-in-depth `PreToolUse` validator (`scripts/deny-guard.sh`) that blocks Bash commands matching the auditor's forbidden categories: filesystem destruction (rm, mv, cp -f, sed -i, redirect into /etc), container lifecycle (pct stop/destroy/restore/migrate, qm stop/destroy, docker stop/rm), service control (systemctl stop/restart/disable/mask, kill, killall, pkill), network/permissions (iptables, nft, ip route add/del, chmod, chown, chattr, setfacl), package edits (apt install/remove, dnf install/remove, pip install, npm install --save), git destructive (git rm, git push --force, git reset --hard), and SQL writes (INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE).
@@ -1138,57 +1141,59 @@ The PreToolUse guard is grep-based and inherently incomplete — sufficiently cr
 
 ```json
 {
-  "permissions": {
-    "deny": [
-      "Bash(rm *)",
-      "Bash(rmdir *)",
-      "Bash(shred *)",
-      "Bash(mv * *)",
-      "Bash(cp -f *)",
-      "Bash(sed -i *)",
-      "Bash(git rm *)",
-      "Bash(git push --force *)",
-      "Bash(git push -f *)",
-      "Bash(git reset --hard *)",
-      "Bash(pct stop *)",
-      "Bash(pct shutdown *)",
-      "Bash(pct destroy *)",
-      "Bash(pct restore *)",
-      "Bash(pct migrate *)",
-      "Bash(qm stop *)",
-      "Bash(qm destroy *)",
-      "Bash(docker stop *)",
-      "Bash(docker rm *)",
-      "Bash(docker-compose down *)",
-      "Bash(systemctl stop *)",
-      "Bash(systemctl restart *)",
-      "Bash(systemctl disable *)",
-      "Bash(systemctl mask *)",
-      "Bash(kill *)",
-      "Bash(killall *)",
-      "Bash(pkill *)",
-      "Bash(iptables *)",
-      "Bash(nft *)",
-      "Bash(chmod *)",
-      "Bash(chown *)",
-      "Bash(chgrp *)",
-      "Bash(chattr *)",
-      "Bash(setfacl *)",
-      "Bash(apt install *)",
-      "Bash(apt remove *)",
-      "Bash(dnf install *)",
-      "Bash(dnf remove *)",
-      "Bash(pip install *)",
-      "Bash(npm install --save *)"
-    ]
-  }
+	"permissions": {
+		"deny": [
+			"Bash(rm *)",
+			"Bash(rmdir *)",
+			"Bash(shred *)",
+			"Bash(mv * *)",
+			"Bash(cp -f *)",
+			"Bash(sed -i *)",
+			"Bash(git rm *)",
+			"Bash(git push --force *)",
+			"Bash(git push -f *)",
+			"Bash(git reset --hard *)",
+			"Bash(pct stop *)",
+			"Bash(pct shutdown *)",
+			"Bash(pct destroy *)",
+			"Bash(pct restore *)",
+			"Bash(pct migrate *)",
+			"Bash(qm stop *)",
+			"Bash(qm destroy *)",
+			"Bash(docker stop *)",
+			"Bash(docker rm *)",
+			"Bash(docker-compose down *)",
+			"Bash(systemctl stop *)",
+			"Bash(systemctl restart *)",
+			"Bash(systemctl disable *)",
+			"Bash(systemctl mask *)",
+			"Bash(kill *)",
+			"Bash(killall *)",
+			"Bash(pkill *)",
+			"Bash(iptables *)",
+			"Bash(nft *)",
+			"Bash(chmod *)",
+			"Bash(chown *)",
+			"Bash(chgrp *)",
+			"Bash(chattr *)",
+			"Bash(setfacl *)",
+			"Bash(apt install *)",
+			"Bash(apt remove *)",
+			"Bash(dnf install *)",
+			"Bash(dnf remove *)",
+			"Bash(pip install *)",
+			"Bash(npm install --save *)"
+		]
+	}
 }
 ```
+````
 
 The consumer-side `permissions.deny` is enforced by Claude Code's permission engine regardless of which agent is running. See [Claude Code permission docs](https://code.claude.com/docs/en/settings) for the full deny-pattern syntax.
 
 > Why both layers? The PreToolUse guard parses the full command line (including pipes, redirects, and `&&` chains) so it catches patterns the consumer-side `Bash(* * *)` glob misses. The consumer-side `permissions.deny` is engine-enforced and catches what the guard misses. Defense-in-depth.
-```
+
+````
 
 - [ ] **Step 2: Verify README structure**
 
@@ -1200,7 +1205,7 @@ Expected: shows `## Security` between `## Requirements` and the next `## ` headi
 ```bash
 git add plugins/up-docs/README.md
 git commit -m "docs(up-docs): document plugin deny-guard + consumer-side permissions.deny"
-```
+````
 
 ---
 
@@ -1213,6 +1218,7 @@ Phase 2 ships as part of v0.8.0 alongside Phase 1 and Phase 3 Tasks 12–20. The
 ## Phase 3 — Eval infrastructure (Tasks 12–20)
 
 The highest-leverage phase. Provides:
+
 - Pinned, reproducible Python test deps (Task 12 — fixes CR-007).
 - An opt-in PostToolUse capture hook with redaction and `chmod 600` (Task 13 — fixes CR-006).
 - Wiring of the capture hook into the existing `hooks/hooks.json` (Task 14).
@@ -1228,6 +1234,7 @@ The highest-leverage phase. Provides:
 > **CR-007 resolution.** v1 used `pip install --user pydantic` fallbacks, which (a) mutate the user environment, (b) don't repair already-broken installs (the audit's environment had `pydantic` shadowed by a typing_extensions import error), and (c) make release gates workstation-dependent. v2 ships a plugin-local `tests/pyproject.toml` with pinned deps; tests run inside an isolated venv.
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/pyproject.toml`
 - Create: `plugins/up-docs/tests/.gitignore`
 
@@ -1295,7 +1302,7 @@ Expected: prints a Pydantic version `>=2.5`. The `import` line confirms all thre
 
 Create `plugins/up-docs/tests/README.md`:
 
-```markdown
+````markdown
 # up-docs test suite
 
 ## Setup (one-time per worktree)
@@ -1305,6 +1312,7 @@ cd plugins/up-docs/tests
 python3 -m venv .venv
 .venv/bin/pip install -e ".[test]"
 ```
+````
 
 For DeepEval LLM-judge tests (Task 28, optional):
 
@@ -1341,7 +1349,7 @@ cd plugins/up-docs/tests && \
   .venv/bin/python -m pytest test_agent_prose.py -v
 ```
 
-Note: env-var prefix in POSIX shell binds to the next *single* simple command. Putting the prefix before `cd` would set the variables for `cd` only, not `pytest`. The `cd` must run first, then the prefix-and-pytest command is a single simple command in the shell's view.
+Note: env-var prefix in POSIX shell binds to the next _single_ simple command. Putting the prefix before `cd` would set the variables for `cd` only, not `pytest`. The `cd` must run first, then the prefix-and-pytest command is a single simple command in the shell's view.
 
 - [ ] **Step 5: Commit**
 
@@ -1357,6 +1365,7 @@ git commit -m "feat(up-docs): pinned Python test deps via tests/pyproject.toml; 
 > **CR-006 resolution.** v1's hook captured every Bash and Read tool_input/tool_response to `/tmp` whenever the plugin was loaded — turning a testing utility into a passive data-leak sink that captured SSH output, env dumps, GitHub PATs, BAO_TOKEN values, and any `.env` file Claude reads. v2 makes capture opt-in via `UP_DOCS_TRANSCRIPT_LOG`, sets `umask 077` before file creation, follows up with `chmod 600` for already-existing files, redacts known secret patterns BEFORE writing, and only captures Bash (not Read — which would expose entire file contents per CR-006's "PostToolBatch docs explicitly note Read output can include file content"). Cites CVE-2025-59536 / GH-44868 in the script header so future readers understand why the guards exist.
 
 **Files:**
+
 - Create: `plugins/up-docs/scripts/capture-transcript.sh`
 
 - [ ] **Step 1: Write the capture script**
@@ -1636,8 +1645,7 @@ teardown() {
 
 - [ ] **Step 8: Run the bats suite**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -8`
-Expected: 61 of 61 tests passed (51 existing + 10 new capture tests).
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -8` Expected: 61 of 61 tests passed (51 existing + 10 new capture tests).
 
 - [ ] **Step 9: Commit**
 
@@ -1653,12 +1661,12 @@ git commit -m "feat(up-docs): opt-in PostToolUse capture-transcript.sh with reda
 Add the PostToolUse stanza alongside the PreToolUse stanza shipped in Task 9.
 
 **Files:**
+
 - Modify: `plugins/up-docs/hooks/hooks.json`
 
 - [ ] **Step 1: Read the current hooks.json**
 
-Run: `cat plugins/up-docs/hooks/hooks.json`
-Expected: shows the PreToolUse → deny-guard.sh wiring from Task 9.
+Run: `cat plugins/up-docs/hooks/hooks.json` Expected: shows the PreToolUse → deny-guard.sh wiring from Task 9.
 
 - [ ] **Step 2: Replace with the full PreToolUse + PostToolUse wiring**
 
@@ -1666,30 +1674,30 @@ Overwrite `plugins/up-docs/hooks/hooks.json`:
 
 ```json
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/deny-guard.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/capture-transcript.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/deny-guard.sh"
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/capture-transcript.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -1697,8 +1705,7 @@ Note: only `Bash` is captured. `Read` is intentionally excluded — its `tool_re
 
 - [ ] **Step 3: Validate JSON**
 
-Run: `python3 -c "import json; json.load(open('plugins/up-docs/hooks/hooks.json'))" && echo "valid"`
-Expected: `valid`
+Run: `python3 -c "import json; json.load(open('plugins/up-docs/hooks/hooks.json'))" && echo "valid"` Expected: `valid`
 
 - [ ] **Step 4: Commit**
 
@@ -1716,6 +1723,7 @@ git commit -m "feat(up-docs): hooks.json wires PostToolUse capture-transcript.sh
 > **CR-003 resolution (validator side).** Evidence is changed from a free-form string to a structured object: `{command, expected_output_signature, source_tool_use_id}`. The `Finding` validator rejects evidence values that aren't objects with all three fields, so an auditor that fabricates evidence from prose can't even pass schema validation.
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/validate_output.py`
 
 - [ ] **Step 1: Confirm pydantic v2 is installed in the venv**
@@ -2063,6 +2071,7 @@ git commit -m "feat(up-docs): Pydantic v2 discriminated-union validators (CR-008
 ### Task 16: Pytest self-tests for the validators
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/test_validate_output.py`
 
 - [ ] **Step 1: Write the test module**
@@ -2294,6 +2303,7 @@ git commit -m "test(up-docs): self-tests for validators incl. discriminator + st
 > **CR-003 resolution (verifier side).** v1's `evidence_signature()` extracted 40 chars after the first colon and searched the union of `tool_input` + `tool_response`. So `ssh host 'cat version.txt' returned 1.0.0` matched the transcript whenever the command appeared, even if the actual output said `0.8.0`. v2 reads structured `Evidence` objects (per Task 15's schema): the verifier requires `expected_output_signature` to appear specifically in the `tool_response.output` of a transcript record whose `tool_input.command` matches `evidence.command`. Optional `source_tool_use_id` narrows further to a single call.
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/verify_evidence_grounded.py`
 
 - [ ] **Step 1: Write the verifier**
@@ -2528,6 +2538,7 @@ git commit -m "feat(up-docs): structured-evidence transcript verifier (CR-003 fi
 ### Task 18: Pytest self-tests for the evidence verifier
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/test_verify_evidence_grounded.py`
 
 - [ ] **Step 1: Write the test module**
@@ -2760,12 +2771,12 @@ git commit -m "test(up-docs): self-tests for structured-evidence verifier (incl.
 > **CR-003 prompt-side resolution.** The validator and verifier expect `evidence` to be an object with `command`, `expected_output_signature`, and optional `source_tool_use_id`. The auditor's prompt currently asks for free-form evidence strings. The prompt has to change so the auditor produces what the verifier checks.
 
 **Files:**
+
 - Modify: `plugins/up-docs/agents/up-docs-audit-drift.md` — output-format / examples / forbidden_strings sections
 
 - [ ] **Step 1: Find the existing evidence specification in the prompt**
 
-Run: `grep -n -E '"evidence":|<evidence>|^- \*\*evidence\*\*' plugins/up-docs/agents/up-docs-audit-drift.md`
-Expected: shows the lines where the prompt describes the `evidence` field. Note the line numbers — you'll edit each location.
+Run: `grep -n -E '"evidence":|<evidence>|^- \*\*evidence\*\*' plugins/up-docs/agents/up-docs-audit-drift.md` Expected: shows the lines where the prompt describes the `evidence` field. Note the line numbers — you'll edit each location.
 
 - [ ] **Step 2: Replace the evidence specification block**
 
@@ -2776,9 +2787,9 @@ In `plugins/up-docs/agents/up-docs-audit-drift.md`, find the section describing 
 
 ```json
 {
-  "command": "<exact tool_input.command you ran to verify this finding>",
-  "expected_output_signature": "<distinctive substring you observed in the tool_response.output>",
-  "source_tool_use_id": "<the tool_use_id of the call, if you can identify it>"
+	"command": "<exact tool_input.command you ran to verify this finding>",
+	"expected_output_signature": "<distinctive substring you observed in the tool_response.output>",
+	"source_tool_use_id": "<the tool_use_id of the call, if you can identify it>"
 }
 ```
 
@@ -2804,16 +2815,15 @@ Find every example finding in the agent prompt (typically inside `<examples>` or
   ```
 
 For unverifiable examples:
+
 - old: `"evidence": "Command failed: ssh: connect to host kismet port 22: Connection refused"`
 - new: `"evidence": null`
 
 (The error text is no longer tracked in evidence — it lives in conversation logs anyway, and the validator now permits `null` only when `confidence: "unverifiable"`.)
 
-Run after editing: `grep -c '"evidence": "' plugins/up-docs/agents/up-docs-audit-drift.md`
-Expected: `0` (no string-form evidence remaining).
+Run after editing: `grep -c '"evidence": "' plugins/up-docs/agents/up-docs-audit-drift.md` Expected: `0` (no string-form evidence remaining).
 
-Run: `grep -c '"command":' plugins/up-docs/agents/up-docs-audit-drift.md`
-Expected: ≥1 (every example has been updated).
+Run: `grep -c '"command":' plugins/up-docs/agents/up-docs-audit-drift.md` Expected: ≥1 (every example has been updated).
 
 - [ ] **Step 4: Add a "no fabrication" reminder in the agent's `<rules>` block**
 
@@ -2837,12 +2847,12 @@ git commit -m "feat(up-docs): auditor prompt emits structured Evidence; no-fabri
 > **CR-004 wrapper-side resolution.** v1's `run-bats.sh` always runs `"$TESTS_DIR"/*.bats`, ignoring any path arguments the caller passes. So the v1 plan's `bash run-bats.sh tests/integration/` runs the SAME files as a bare `bash run-bats.sh` and never executes the integration suite. v2 fixes the wrapper to run `"$@"` when args are present, and falls back to the existing top-level glob otherwise.
 
 **Files:**
+
 - Modify: `plugins/up-docs/tests/run-bats.sh`
 
 - [ ] **Step 1: Read the current wrapper**
 
-Run: `cat plugins/up-docs/tests/run-bats.sh`
-Expected: shows the 10-line script that always runs `"$TESTS_DIR"/*.bats`.
+Run: `cat plugins/up-docs/tests/run-bats.sh` Expected: shows the 10-line script that always runs `"$TESTS_DIR"/*.bats`.
 
 - [ ] **Step 2: Rewrite the wrapper**
 
@@ -2887,13 +2897,11 @@ PATH="$BATS_LIBEXEC:$PATH" exec bash "$BATS_LIBEXEC/bats" "${TARGETS[@]}"
 
 - [ ] **Step 3: Smoke-test no-arg invocation still works**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -3`
-Expected: same number of tests as before (61 after Task 13).
+Run: `bash plugins/up-docs/tests/run-bats.sh 2>&1 | tail -3` Expected: same number of tests as before (61 after Task 13).
 
 - [ ] **Step 4: Smoke-test single-file invocation works**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/deny-guard.bats 2>&1 | tail -3`
-Expected: 13 tests run (only deny-guard.bats), all pass.
+Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/deny-guard.bats 2>&1 | tail -3` Expected: 13 tests run (only deny-guard.bats), all pass.
 
 - [ ] **Step 5: Smoke-test directory invocation works**
 
@@ -2943,6 +2951,7 @@ In `plugins/up-docs/CHANGELOG.md`, prepend below `# Changelog`:
 ## [0.8.0] - 2026-MM-DD
 
 ### Added
+
 - `hooks/hooks.json` — plugin-shipped hook component (PreToolUse + PostToolUse) following Plugins Reference table; replaces the v1 plan's invalid `.claude/settings.json` packaging.
 - `scripts/deny-guard.sh` — PreToolUse forbidden-command validator. Parses pipes, redirects, and `&&` chains; mirrors the auditor's `<forbidden_commands>` table; defense-in-depth, NOT an enforced security boundary.
 - `scripts/capture-transcript.sh` — opt-in PostToolUse capture hook. No-op unless `UP_DOCS_TRANSCRIPT_LOG` is set; uses `umask 077`; redacts Bearer/ghp/ghs/AKIA/BAO_TOKEN/password/token/sk-ant-/aws_secret patterns; truncates output at 4 KiB; Bash only (Read excluded — file contents leak per GH-44868).
@@ -2955,14 +2964,17 @@ In `plugins/up-docs/CHANGELOG.md`, prepend below `# Changelog`:
 - README §Requirements — Python 3.11+ as a hard prerequisite (helper scripts and test suite).
 
 ### Changed
+
 - Auditor (`up-docs-audit-drift`) prompt: `evidence` is now a structured object `{command, expected_output_signature, source_tool_use_id?}` instead of a free-form string. New no-fabrication rule in `<rules>`: when `expected_output_signature` was not literally observed in tool output, the auditor MUST set `confidence: "unverifiable"` and `evidence: null` rather than inventing a signature.
 - `tests/run-bats.sh` honors explicit path arguments (single files, directories, multiple files), falling back to the top-level glob when called bare.
 - All five skill files now check for `python3` in PATH at Step 1 and exit with a clear message if missing.
 
 ### Fixed
+
 - v1 plan's CR-001 through CR-008 audit findings — see [`docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md`](../../docs/plans/2026-05-08-up-docs-hardening-plan-v1-audit.md) for the full list of structural defects this release closes.
 
 ### Notes
+
 - Phase 2 hook-firing smoke test (Task 8) result: see `plugins/up-docs/docs/phase-2-smoke-result.txt`.
 ```
 
@@ -2984,6 +2996,7 @@ Run `/release-pipeline:release` to tag and publish.
 Canned session-summary inputs for the integration tests in Task 23–24.
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/integration/fixtures/session-summary-config-rebind.md`
 - Create: `plugins/up-docs/tests/integration/fixtures/session-summary-bug-fix.md`
 - Create: `plugins/up-docs/tests/integration/fixtures/fabricated-evidence-finding.json`
@@ -3004,12 +3017,14 @@ Create `plugins/up-docs/tests/integration/fixtures/session-summary-config-rebind
 **Session scope:** OpenBao listener rebind for Tailscale reachability.
 
 **Source signals:**
+
 - context-gather.sh: branch=main, 1 commit, 1 file touched
 - Conversation: rebound BAO_ADDR on CT 111
 
 ## Changes
 
 ### 1. OpenBao listener rebind
+
 - **Change:** `BAO_ADDR=127.0.0.1` → `100.90.121.89` in `/usr/local/bin/backup-dumps.sh` on CT 111
 - **Reason:** listener reconfigured for Tailscale reachability (incident 2026-04-17)
 - **Affected area:** GMK OpenBao
@@ -3027,12 +3042,14 @@ Create `plugins/up-docs/tests/integration/fixtures/session-summary-bug-fix.md`:
 **Session scope:** Off-by-one fix in sync state machine.
 
 **Source signals:**
+
 - context-gather.sh: branch=main, 1 commit, 1 file touched
 - Conversation: fixed sync_repo() ahead-count bug
 
 ## Changes
 
 ### 1. Bug fix: off-by-one in sync state machine
+
 - **Change:** fixed `sync_repo()` state transition at line 142 in `projects.sh`
 - **Reason:** ahead-count was off by 1 on divergent branches
 - **Affected area:** sync subcommand
@@ -3046,30 +3063,30 @@ Create `plugins/up-docs/tests/integration/fixtures/fabricated-evidence-finding.j
 
 ```json
 {
-  "findings": [
-    {
-      "id": 1,
-      "layer": "wiki",
-      "page": "LLM Infrastructure",
-      "page_id": "jkl-012",
-      "stale_line": "Hermes v0.8.0",
-      "should_say": "Hermes v1.0.0",
-      "confidence": "high",
-      "destructive_fix": false,
-      "evidence": {
-        "command": "ssh hetzner 'pct exec 113 -- cat /home/hermes/hermes-agent/version.txt'",
-        "expected_output_signature": "1.0.0"
-      }
-    }
-  ],
-  "escalation": { "triggered": false, "reasons": [] },
-  "stats": {
-    "total_findings": 1,
-    "by_layer": { "repo": 0, "wiki": 1, "notion": 0 },
-    "high_confidence": 1,
-    "unverifiable": 0,
-    "destructive_fixes_required": 0
-  }
+	"findings": [
+		{
+			"id": 1,
+			"layer": "wiki",
+			"page": "LLM Infrastructure",
+			"page_id": "jkl-012",
+			"stale_line": "Hermes v0.8.0",
+			"should_say": "Hermes v1.0.0",
+			"confidence": "high",
+			"destructive_fix": false,
+			"evidence": {
+				"command": "ssh hetzner 'pct exec 113 -- cat /home/hermes/hermes-agent/version.txt'",
+				"expected_output_signature": "1.0.0"
+			}
+		}
+	],
+	"escalation": { "triggered": false, "reasons": [] },
+	"stats": {
+		"total_findings": 1,
+		"by_layer": { "repo": 0, "wiki": 1, "notion": 0 },
+		"high_confidence": 1,
+		"unverifiable": 0,
+		"destructive_fixes_required": 0
+	}
 }
 ```
 
@@ -3087,6 +3104,7 @@ git commit -m "test(up-docs): integration test fixtures (incl. Bug #4 structured
 > **CR-004 MCP-wiring resolution.** v1's stubs were created without a corresponding `--mcp-config` file and without keys matching the plugin's `.mcp.json` server keys, so the agents under test never connected to them. v2 ships a stdio FastMCP stub for each MCP server, plus a `test-mcp-config.json` that registers the stubs under exactly the keys the agent tools resolve to (`mcp-outline`, `Notion`).
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/stubs/mcp_outline_stub.py`
 - Create: `plugins/up-docs/tests/stubs/mcp_notion_stub.py`
 - Create: `plugins/up-docs/tests/integration/fixtures/test-mcp-config.json`
@@ -3288,22 +3306,18 @@ Create `plugins/up-docs/tests/integration/fixtures/test-mcp-config.json`:
 
 ```json
 {
-  "mcpServers": {
-    "mcp-outline": {
-      "command": "python3",
-      "args": ["${UP_DOCS_REPO_ROOT}/plugins/up-docs/tests/stubs/mcp_outline_stub.py"],
-      "env": {
-        "OUTLINE_FIXTURE": "${OUTLINE_FIXTURE}"
-      }
-    },
-    "Notion": {
-      "command": "python3",
-      "args": ["${UP_DOCS_REPO_ROOT}/plugins/up-docs/tests/stubs/mcp_notion_stub.py"],
-      "env": {
-        "NOTION_FIXTURE": "${NOTION_FIXTURE}"
-      }
-    }
-  }
+	"mcpServers": {
+		"mcp-outline": {
+			"command": "python3",
+			"args": ["${UP_DOCS_REPO_ROOT}/plugins/up-docs/tests/stubs/mcp_outline_stub.py"],
+			"env": { "OUTLINE_FIXTURE": "${OUTLINE_FIXTURE}" }
+		},
+		"Notion": {
+			"command": "python3",
+			"args": ["${UP_DOCS_REPO_ROOT}/plugins/up-docs/tests/stubs/mcp_notion_stub.py"],
+			"env": { "NOTION_FIXTURE": "${NOTION_FIXTURE}" }
+		}
+	}
 }
 ```
 
@@ -3325,6 +3339,7 @@ End-to-end tests driving each propagator via `claude --print --plugin-dir --stri
 > **CR-004 wiring resolution (test-side).** Tests pass `--plugin-dir "$UP_DOCS_REPO_ROOT/plugins/up-docs"`, `--strict-mcp-config --mcp-config "$test_mcp_config"`, and `--agent up-docs:up-docs-propagate-...`. The first integration test (Step 5 below) prints the `system/init` event so `plugin_errors` and unresolved-agent failures are visible — addresses Open Question 3 (`--agent <plugin>:<agent>` syntax for `--plugin-dir`-loaded plugins) at execution time.
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/integration/propagate-notion.bats`
 - Create: `plugins/up-docs/tests/integration/propagate-repo.bats`
 
@@ -3359,7 +3374,7 @@ setup_integration_env() {
 
 Create `plugins/up-docs/tests/integration/propagate-notion.bats`:
 
-```bash
+````bash
 #!/usr/bin/env bats
 # Integration: drives up-docs-propagate-notion end-to-end with stdio MCP stubs.
 # Gated behind RUN_INTEGRATION=1 (real Claude API calls).
@@ -3412,7 +3427,7 @@ PYEOF
     # Validate against the discriminated-union schema (rejects IPv4 leak)
     echo "$report" | python3 "$BATS_TEST_DIRNAME/../validate_output.py" up-docs-propagate-notion
 }
-```
+````
 
 - [ ] **Step 3: Write propagate-repo.bats**
 
@@ -3459,14 +3474,14 @@ teardown() { teardown_test_env; }
 
 - [ ] **Step 4: Run with RUN_INTEGRATION unset (everything skips)**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/integration/propagate-notion.bats plugins/up-docs/tests/integration/propagate-repo.bats 2>&1 | tail -10`
-Expected: every test reports `# skip set RUN_INTEGRATION=1 to enable (real API calls)`.
+Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/integration/propagate-notion.bats plugins/up-docs/tests/integration/propagate-repo.bats 2>&1 | tail -10` Expected: every test reports `# skip set RUN_INTEGRATION=1 to enable (real API calls)`.
 
 - [ ] **Step 5: Run with RUN_INTEGRATION=1 (manual, requires API key)**
 
 This step is run manually by the engineer once with `RUN_INTEGRATION=1 ANTHROPIC_API_KEY=sk-ant-... bash run-bats.sh ...`. Capture and review the printed `system/init` events for any `plugin_errors` array — that's the early-warning signal for Open Questions 1–3 (hook firing, strict-mcp-config behavior, --agent namespacing).
 
 If `plugin_errors` is non-empty, re-read the error message and either:
+
 - adjust the agent name format (try `up-docs-propagate-notion` without the `up-docs:` prefix)
 - adjust the MCP server keys in `test-mcp-config.json`
 - file an issue with the empirical findings before declaring the integration suite green.
@@ -3485,13 +3500,14 @@ git commit -m "test(up-docs): integration bats for propagate-notion and propagat
 > **CR-004 setup-gating resolution.** v1's `audit-drift.bats` had `[ -n "${RUN_INTEGRATION:-}" ] || skip ...` in `setup()` — so even the no-API Bug #4 regression test (which only exercises `verify_evidence_grounded.py`) was silently skipped without `RUN_INTEGRATION=1`. v2 splits the file: the no-API regression runs unconditionally; the API-gated test has its skip in its own body.
 
 **Files:**
+
 - Create: `plugins/up-docs/tests/integration/audit-drift.bats`
 
 - [ ] **Step 1: Write audit-drift.bats**
 
 Create `plugins/up-docs/tests/integration/audit-drift.bats`:
 
-```bash
+````bash
 #!/usr/bin/env bats
 # Integration tests for up-docs-audit-drift.
 #
@@ -3596,17 +3612,15 @@ PYEOF
     python3 "$BATS_TEST_DIRNAME/../verify_evidence_grounded.py" \
             "$report" "$UP_DOCS_TRANSCRIPT_LOG"
 }
-```
+````
 
 - [ ] **Step 2: Run the suite without RUN_INTEGRATION**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/integration/audit-drift.bats 2>&1 | tail -10`
-Expected: 2 of 3 tests pass (the two no-API regressions); 1 skip (`# skip set RUN_INTEGRATION=1 to enable (real API calls)`).
+Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/integration/audit-drift.bats 2>&1 | tail -10` Expected: 2 of 3 tests pass (the two no-API regressions); 1 skip (`# skip set RUN_INTEGRATION=1 to enable (real API calls)`).
 
 - [ ] **Step 3: Verify the Bug #4 + CR-003 regressions specifically pass**
 
-Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/integration/audit-drift.bats 2>&1 | grep -E "Bug #4|CR-003"`
-Expected: both `ok N Bug #4 regression: fabricated evidence is rejected (no API needed)` and `ok N CR-003 regression: command-ran-but-output-contradicts is rejected (no API needed)`.
+Run: `bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/integration/audit-drift.bats 2>&1 | grep -E "Bug #4|CR-003"` Expected: both `ok N Bug #4 regression: fabricated evidence is rejected (no API needed)` and `ok N CR-003 regression: command-ran-but-output-contradicts is rejected (no API needed)`.
 
 - [ ] **Step 4: Commit**
 
@@ -3641,14 +3655,15 @@ Prepend to `plugins/up-docs/CHANGELOG.md`:
 ## [0.8.1] - 2026-MM-DD
 
 ### Added
+
 - `tests/integration/` end-to-end bats tests driven via `claude --plugin-dir --strict-mcp-config --mcp-config --agent`. Gated behind `RUN_INTEGRATION=1` (default suite remains free of API costs). Includes a non-API Bug #4 fabrication regression AND a CR-003 contradiction regression that run unconditionally (they only need `verify_evidence_grounded.py`).
 - `tests/stubs/mcp_outline_stub.py` and `tests/stubs/mcp_notion_stub.py` — FastMCP stdio MCP servers with fixture-keyed responses for reproducible CI. All logging routed to stderr per JSON-RPC stream-safety footgun.
 - `tests/integration/fixtures/test-mcp-config.json` — registers the stubs under server keys `mcp-outline` and `Notion` so MCP tool name resolution matches the agent frontmatter.
 - Three integration fixtures: config-rebind, bug-fix (Notion-out-of-scope), and the canonical fabricated-evidence-finding.json (Bug #4 input, structured-evidence form).
 
 ### Fixed
-- v1 plan's CR-004 audit finding — integration tests pass `--plugin-dir`, `--strict-mcp-config`, and `--mcp-config`; `run-bats.sh` honors path arguments; the no-API Bug #4 regression test runs without API gating.
 
+- v1 plan's CR-004 audit finding — integration tests pass `--plugin-dir`, `--strict-mcp-config`, and `--mcp-config`; `run-bats.sh` honors path arguments; the no-API Bug #4 regression test runs without API gating.
 ```
 
 - [ ] **Tag and release**
@@ -3677,6 +3692,7 @@ Run `/release-pipeline:release`.
 > **CR-009 resolution.** v1 documented six values (`auto`, `v1`, `v2`, `simple`, `diataxis`, `none`) but only implemented behavior for `simple` and `diataxis`. Users with `auto` would fall through to a hidden default; `v1`/`v2`/`none` config values would be ignored. v2 specs an explicit branch for every documented value plus an explicit error for unknown values.
 
 **Files:**
+
 - Modify: `plugins/up-docs/agents/up-docs-propagate-repo.md` `<task>` step 3 (layout detection block)
 - Modify: `plugins/up-docs/README.md` §Project Setup
 
@@ -3685,53 +3701,53 @@ Run `/release-pipeline:release`.
 In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 layout-detection block (the current bash that does `[ -f docs/handoff/state.md ] && echo V2`). Replace with:
 
 ````markdown
-   First, detect which layout this repo uses. The `docs/.up-docs.json` config (if present) overrides any auto-detection:
+First, detect which layout this repo uses. The `docs/.up-docs.json` config (if present) overrides any auto-detection:
 
-   ```bash
-   if [ -f docs/.up-docs.json ]; then
-     CFG_LAYOUT=$(python3 -c "import json,sys; print(json.load(open('docs/.up-docs.json')).get('layout','auto').lower())")
-   else
-     CFG_LAYOUT="auto"
-   fi
+```bash
+if [ -f docs/.up-docs.json ]; then
+  CFG_LAYOUT=$(python3 -c "import json,sys; print(json.load(open('docs/.up-docs.json')).get('layout','auto').lower())")
+else
+  CFG_LAYOUT="auto"
+fi
 
-   case "$CFG_LAYOUT" in
-     auto)
-       # Probe for v1/v2; fall through to NONE if neither marker file exists.
-       if   [ -f docs/handoff/state.md ];   then echo V2
-       elif [ -f docs/handoff.md ]; then echo V1
-       else                              echo NONE
-       fi
-       ;;
-     v2|v1|simple|diataxis|none)
-       echo "${CFG_LAYOUT^^}"
-       ;;
-     *)
-       echo "ERROR: unknown layout='$CFG_LAYOUT' in docs/.up-docs.json. Valid: auto, v1, v2, simple, diataxis, none." >&2
-       exit 1
-       ;;
-   esac
-   ```
+case "$CFG_LAYOUT" in
+  auto)
+    # Probe for v1/v2; fall through to NONE if neither marker file exists.
+    if   [ -f docs/handoff/state.md ];   then echo V2
+    elif [ -f docs/handoff.md ]; then echo V1
+    else                              echo NONE
+    fi
+    ;;
+  v2|v1|simple|diataxis|none)
+    echo "${CFG_LAYOUT^^}"
+    ;;
+  *)
+    echo "ERROR: unknown layout='$CFG_LAYOUT' in docs/.up-docs.json. Valid: auto, v1, v2, simple, diataxis, none." >&2
+    exit 1
+    ;;
+esac
+```
 
-   Each layout value branches the audit scope:
+Each layout value branches the audit scope:
 
-   | Layout value | Audit scope |
-   |---|---|
-   | `AUTO` (default) | Probe for `docs/handoff/state.md` (V2) → `docs/handoff.md` (V1) → fall through to NONE. |
-   | `V2` (forced or detected) | Full handoff-system-v2 audit: `state.md`, `deployed.md`, `sessions/`, `bugs/`, `conventions.md`, `.claude/rules/`. |
-   | `V1` (forced or detected) | Legacy single-file audit of `docs/handoff.md`. |
-   | `SIMPLE` (config-only) | Audit only files listed in the config's `audit_targets` array. No state-tracking, no bugs/, no sessions/. If `audit_targets` is missing or empty, error out. |
-   | `DIATAXIS` (config-only) | Audit `tutorials/`, `how-to/`, `reference/`, `explanation/` directories at the file-list level. No state-tracking machinery. |
-   | `NONE` | Skip the mandatory layout audit entirely. Still propagate the session-change-summary items into whatever files the summary names. |
+| Layout value | Audit scope |
+| --- | --- |
+| `AUTO` (default) | Probe for `docs/handoff/state.md` (V2) → `docs/handoff.md` (V1) → fall through to NONE. |
+| `V2` (forced or detected) | Full handoff-system-v2 audit: `state.md`, `deployed.md`, `sessions/`, `bugs/`, `conventions.md`, `.claude/rules/`. |
+| `V1` (forced or detected) | Legacy single-file audit of `docs/handoff.md`. |
+| `SIMPLE` (config-only) | Audit only files listed in the config's `audit_targets` array. No state-tracking, no bugs/, no sessions/. If `audit_targets` is missing or empty, error out. |
+| `DIATAXIS` (config-only) | Audit `tutorials/`, `how-to/`, `reference/`, `explanation/` directories at the file-list level. No state-tracking machinery. |
+| `NONE` | Skip the mandatory layout audit entirely. Still propagate the session-change-summary items into whatever files the summary names. |
 
-   **Specific behaviors:**
+**Specific behaviors:**
 
-   - **AUTO with both markers present** (rare — a repo migrating from v1 to v2 may have both temporarily): prefer V2 (newer marker wins).
-   - **Forced `V2` when `docs/handoff/state.md` is absent**: emit a single advisory row `"V2 layout requested but docs/handoff/state.md not found — initialize handoff-system-v2 before re-running"` and stop.
-   - **Forced `V1` when `docs/handoff.md` is absent**: emit `"V1 layout requested but docs/handoff.md not found"` and stop.
-   - **`SIMPLE` with missing `audit_targets`**: emit `"SIMPLE layout requested but audit_targets is missing or empty in docs/.up-docs.json"` and stop.
-   - **`DIATAXIS` with no canonical dirs**: emit one advisory row per missing directory, then proceed with whatever exists.
-   - **`NONE`**: do not perform any layout-driven file scanning. Process only the items in the session-change summary.
-   - **Unknown layout value**: the bash above exits 1 with stderr explaining valid options. The skill caller treats this as a user error and reports the message verbatim to the user.
+- **AUTO with both markers present** (rare — a repo migrating from v1 to v2 may have both temporarily): prefer V2 (newer marker wins).
+- **Forced `V2` when `docs/handoff/state.md` is absent**: emit a single advisory row `"V2 layout requested but docs/handoff/state.md not found — initialize handoff-system-v2 before re-running"` and stop.
+- **Forced `V1` when `docs/handoff.md` is absent**: emit `"V1 layout requested but docs/handoff.md not found"` and stop.
+- **`SIMPLE` with missing `audit_targets`**: emit `"SIMPLE layout requested but audit_targets is missing or empty in docs/.up-docs.json"` and stop.
+- **`DIATAXIS` with no canonical dirs**: emit one advisory row per missing directory, then proceed with whatever exists.
+- **`NONE`**: do not perform any layout-driven file scanning. Process only the items in the session-change summary.
+- **Unknown layout value**: the bash above exits 1 with stderr explaining valid options. The skill caller treats this as a user error and reports the message verbatim to the user.
 ````
 
 - [ ] **Step 2: Add SIMPLE / DIATAXIS / NONE handling subsections to the prompt**
@@ -3739,36 +3755,37 @@ In `plugins/up-docs/agents/up-docs-propagate-repo.md`, find the `<task>` step 3 
 Append to `<task>` step 3 in `up-docs-propagate-repo.md`, after the existing V2/V1 branches:
 
 ````markdown
-   **If SIMPLE (`docs/.up-docs.json` `layout: simple`):**
+**If SIMPLE (`docs/.up-docs.json` `layout: simple`):**
 
-   Read the `audit_targets` array from the config:
+Read the `audit_targets` array from the config:
 
-   ```bash
-   python3 -c "import json; print('\n'.join(json.load(open('docs/.up-docs.json'))['audit_targets']))"
-   ```
+```bash
+python3 -c "import json; print('\n'.join(json.load(open('docs/.up-docs.json'))['audit_targets']))"
+```
 
-   For each path in the list:
-   - If it exists, audit it against the session-change summary using the same targeted-edit discipline as V2.
-   - If it does not exist, emit a row `"No change needed — file does not exist"`.
+For each path in the list:
 
-   Do not audit any file outside `audit_targets`. Do not perform stale-file scans, bug-KB updates, or session log appends in SIMPLE mode.
+- If it exists, audit it against the session-change summary using the same targeted-edit discipline as V2.
+- If it does not exist, emit a row `"No change needed — file does not exist"`.
 
-   **If DIATAXIS (`docs/.up-docs.json` `layout: diataxis`):**
+Do not audit any file outside `audit_targets`. Do not perform stale-file scans, bug-KB updates, or session log appends in SIMPLE mode.
 
-   Glob the four canonical Diátaxis directories for `*.md`:
+**If DIATAXIS (`docs/.up-docs.json` `layout: diataxis`):**
 
-   ```bash
-   for d in tutorials how-to reference explanation; do
-     [ -d "$d" ] || echo "[advisory] missing canonical dir: $d"
-     find "$d" -name '*.md' 2>/dev/null
-   done
-   ```
+Glob the four canonical Diátaxis directories for `*.md`:
 
-   Audit each found file against the session-change summary. Skip the V2-specific machinery (no state.md, no bugs/, no sessions/).
+```bash
+for d in tutorials how-to reference explanation; do
+  [ -d "$d" ] || echo "[advisory] missing canonical dir: $d"
+  find "$d" -name '*.md' 2>/dev/null
+done
+```
 
-   **If NONE:**
+Audit each found file against the session-change summary. Skip the V2-specific machinery (no state.md, no bugs/, no sessions/).
 
-   Skip the layout audit entirely. Process only the session-change-summary items, applying targeted edits to the files the summary explicitly names. Emit one row per item plus a single advisory row noting "No layout audit performed (layout=none)".
+**If NONE:**
+
+Skip the layout audit entirely. Process only the session-change-summary items, applying targeted edits to the files the summary explicitly names. Emit one row per item plus a single advisory row noting "No layout audit performed (layout=none)".
 ````
 
 - [ ] **Step 3: Document the config in README**
@@ -3782,15 +3799,15 @@ By default, `up-docs-propagate-repo` auto-detects the v1 (`docs/handoff.md`) or 
 
 ```json
 {
-  "layout": "simple",
-  "audit_targets": ["README.md", "CHANGELOG.md", "docs/CHANGELOG.md"]
+	"layout": "simple",
+	"audit_targets": ["README.md", "CHANGELOG.md", "docs/CHANGELOG.md"]
 }
 ```
 
 Recognized `layout` values:
 
 | Value | Audit scope |
-|---|---|
+| --- | --- |
 | `auto` | Default — probe for `docs/handoff/state.md` then `docs/handoff.md`; fall through to `none` if neither exists. |
 | `v1` | Force the legacy single-file `docs/handoff.md` audit even if other markers are present. |
 | `v2` | Force the handoff-system-v2 audit (state.md, deployed.md, sessions/, bugs/, conventions.md, .claude/rules/). |
@@ -3815,12 +3832,12 @@ git commit -m "feat(up-docs): docs/.up-docs.json layout config with explicit bra
 Rewrite `skills/drift/SKILL.md` so the skill walks phases 1–4 explicitly, dispatching the auditor scoped to one phase per call. The convergence machinery becomes load-bearing.
 
 **Files:**
+
 - Modify: `plugins/up-docs/skills/drift/SKILL.md` Workflow section
 
 - [ ] **Step 1: Read the current Workflow section for context**
 
-Run: `sed -n '24,80p' plugins/up-docs/skills/drift/SKILL.md`
-Expected: shows the current Steps 1–5 (single dispatch, no phase loop).
+Run: `sed -n '24,80p' plugins/up-docs/skills/drift/SKILL.md` Expected: shows the current Steps 1–5 (single dispatch, no phase loop).
 
 - [ ] **Step 2: Replace Steps 3–4 with an explicit phase loop**
 
@@ -3864,7 +3881,7 @@ For phase in 1, 2, 3, 4:
 Phase definitions (scope hint sent in the agent prompt for each phase):
 
 | Phase | Scope sent to auditor |
-|---|---|
+| --- | --- |
 | 1 | Infrastructure → Wiki: SSH/pct/curl every host claim in the wiki against live state. |
 | 2 | Wiki internal consistency: cross-page contradictions, broken inter-wiki refs. |
 | 3 | Link integrity: external URLs (use link-audit.sh), internal anchors. |
@@ -3908,13 +3925,14 @@ git commit -m "feat(up-docs): explicit per-phase orchestration in /up-docs:drift
 When `notion-search(query: "<exact name>")` returns zero hits, retry with broadened keyword OR-queries derived from the session summary's "Affected area" fields.
 
 **Files:**
+
 - Modify: `plugins/up-docs/agents/up-docs-propagate-notion.md` `<task>` step 1
 
 - [ ] **Step 1: Update step 1 of the agent prompt**
 
 In `plugins/up-docs/agents/up-docs-propagate-notion.md`, replace the existing `<task>` step 1 (the `Locate Notion targets.` block) with:
 
-````markdown
+```markdown
 1. Locate Notion targets.
    - Read the project CLAUDE.md for a `## Documentation` section that names the Notion area (page, database, or section).
    - **Primary search:** `notion-search(query: "<exact extractable name from session summary>")` for each name.
@@ -3924,13 +3942,13 @@ In `plugins/up-docs/agents/up-docs-propagate-notion.md`, replace the existing `<
      3. The parent collection name from CLAUDE.md `## Documentation` if specified.
    - Stop at the first fallback that returns hits. Record the search depth used in the output table's `Summary of Changes` column (e.g. `"primary 0 hits → fuzzy 1 hit on 'wireless OR security'"`).
    - If all four queries return 0 hits, record the page as `No change needed — no relevant Notion page found after fuzzy search`.
-````
+```
 
 - [ ] **Step 2: Add a new example demonstrating the fuzzy fallback**
 
 In `plugins/up-docs/agents/up-docs-propagate-notion.md`, add this example block to the `<examples>` section, after the existing "New service — new Notion page created" example (or at the end of the existing `<examples>` block if that example doesn't exist):
 
-````markdown
+```markdown
 <example>
   <scenario>Fuzzy fallback finds the right page when the exact name doesn't match.</scenario>
   <session_item>
@@ -3952,7 +3970,7 @@ In `plugins/up-docs/agents/up-docs-propagate-notion.md`, add this example block 
   </output_rows>
   <lesson>The exact-name search misses pages titled differently from the service name. The Affected area field is the primary signal for fuzzy fallback — extract its nouns and OR-query before giving up.</lesson>
 </example>
-````
+```
 
 - [ ] **Step 3: Commit**
 
@@ -3987,16 +4005,18 @@ Prepend to `plugins/up-docs/CHANGELOG.md`:
 ## [0.9.0] - 2026-MM-DD
 
 ### Added
+
 - `docs/.up-docs.json` layout config — supports `auto`, `v1`, `v2`, `simple`, `diataxis`, and `none`. Each value has an explicit branch in `up-docs-propagate-repo`; unknown values produce an error naming the valid options. Loosens previous hardcoding to one user's preferred handoff-system-v2 layout. Documented in README §Project Setup.
 - `/up-docs:drift` now walks phases 1–4 explicitly at the skill level; auditor sub-agent dispatched once per phase. Convergence + oscillation detection becomes load-bearing. Findings JSON is validated against the Pydantic v2 schema (Task 15) before recording.
 - `up-docs-propagate-notion` fuzzy fallback: when `notion-search(query: "<exact name>")` returns 0 hits, retry up to 3 broadened OR-queries derived from the session summary's `Affected area` field. Search depth recorded in output table.
 
 ### Changed
+
 - Default repo-layout detection probe now reads `docs/.up-docs.json` first; falls back to `docs/handoff/state.md` (V2) → `docs/handoff.md` (V1) → NONE.
 
 ### Fixed
-- v1 plan's CR-009 finding — every documented `layout` value now branches; previously `auto`, `v1`, `v2`, `none` were documented but unimplemented in the agent prompt.
 
+- v1 plan's CR-009 finding — every documented `layout` value now branches; previously `auto`, `v1`, `v2`, `none` were documented but unimplemented in the agent prompt.
 ```
 
 - [ ] **Tag and release**
@@ -4026,6 +4046,7 @@ Run `/release-pipeline:release`.
 Opt-in deeper grader for layer-boundary semantic violations Pydantic can't catch (e.g., "this paragraph contains a shell command disguised as prose"). Gated behind `RUN_LLMJUDGE=1` — separate cost layer from `RUN_INTEGRATION`.
 
 **Files:** (only if v0.9.1 is being shipped)
+
 - Create: `plugins/up-docs/tests/test_agent_prose.py`
 
 - [ ] **Step 1: Install the DeepEval extra in the venv**
@@ -4178,9 +4199,11 @@ Prepend to `plugins/up-docs/CHANGELOG.md`:
 ## [0.9.1] - 2026-MM-DD
 
 ### Added
+
 - Optional `tests/test_agent_prose.py` — DeepEval LLM-judge for layer-boundary prose violations and no-fabrication semantic checks. Gated behind `RUN_LLMJUDGE=1` AND `ANTHROPIC_API_KEY`. Routes through `AnthropicModel` (no OpenAI key required); telemetry opt-out via `DEEPEVAL_TELEMETRY_OPT_OUT=YES`. Pinned via the `tests/pyproject.toml [deepeval]` extra.
 
 ### Fixed
+
 - v1 plan's CR-012 finding — DeepEval `SingleTurnParams` (not deprecated `LLMTestCaseParams`); explicit `AnthropicModel`; opt-out of cloud telemetry.
 ```
 
@@ -4202,9 +4225,9 @@ Run `/release-pipeline:release`.
 Every CR-NNN finding from `2026-05-08-up-docs-hardening-plan-v1-audit.md` resolves to one or more concrete v2 tasks. No finding is silently skipped:
 
 | CR # | Severity | v1 defect | v2 resolution |
-|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | CR-001 | Critical | Plugin `.claude/settings.json` is not a supported component path. | T9 ships `plugins/up-docs/hooks/hooks.json` (the supported plugin hook path). T11 documents consumer-side `permissions.deny` as the actually-enforced security layer. T8 smoke-tests that the hook actually fires before T9–T14 depend on it (Open Question 1 mitigation). |
-| CR-002 | High | Deny list as `Bash(...)` glob patterns missed pipes, redirects, `&&` chains, `cp -f`, `tee`, SQL writes, etc. | T10 ships `scripts/deny-guard.sh` — a real PreToolUse parser-aware validator that splits on `|`, `&&`, `;`, `$()`, backticks and matches every segment against the auditor's full forbidden table. T11 also documents consumer-side `Bash(...)` denies as the engine-enforced complement. |
+| CR-002 | High | Deny list as `Bash(...)` glob patterns missed pipes, redirects, `&&` chains, `cp -f`, `tee`, SQL writes, etc. | T10 ships `scripts/deny-guard.sh` — a real PreToolUse parser-aware validator that splits on ` | `, `&&`, `;`, `$()`, backticks and matches every segment against the auditor's full forbidden table. T11 also documents consumer-side `Bash(...)` denies as the engine-enforced complement. |
 | CR-003 | High | `evidence_signature()` matched the command in `tool_input` not the output — verifier passed when output contradicted the claim. | T15 restructures `evidence` to a Pydantic object `{command, expected_output_signature, source_tool_use_id?}`. T17 verifier requires `expected_output_signature` to literally appear in `tool_response.output` of a transcript record matching `command`. T19 updates the auditor prompt to emit the structured form. |
 | CR-004 | High | Integration tests didn't pass `--plugin-dir`, didn't wire `--mcp-config` to FastMCP stubs; `run-bats.sh` ignored path args; the no-API Bug #4 test was inside `setup()` gating. | T20 fixes `run-bats.sh` to honor `"$@"`. T22 ships stdio FastMCP stubs + `test-mcp-config.json` with key-matched server names. T23 invokes `claude --plugin-dir --strict-mcp-config --mcp-config --agent up-docs:...`. T24 splits `audit-drift.bats` so the no-API Bug #4 + CR-003 regressions run unconditionally outside the API-gated `setup()`. |
 | CR-005 | High | Default `${TMPDIR}/up-docs-drift-tracker-$$.json` had a different PID per separate invocation, so the 6+ tracker calls per session each used a different file. | T6 changes the default to `${TMPDIR:-/tmp}/up-docs-tracker-${CLAUDE_CODE_SESSION_ID:-default}.json`. The May 2026 `CLAUDE_CODE_SESSION_ID` is stable across all hook subprocesses and tool calls in one session. Bats tests cover the persistence + isolation invariants. |
@@ -4221,7 +4244,7 @@ Every CR-NNN finding from `2026-05-08-up-docs-hardening-plan-v1-audit.md` resolv
 The three live-system questions from the research report are all addressed at execution time as smoke-test gates rather than blocking design unknowns:
 
 | Open Q | v2 task addressing it |
-|---|---|
+| --- | --- |
 | Q1 — GH-34573 plugin command-hook silent-drop. | **RESOLVED PASS (2026-05-08).** T8 executed; hook fired under claude 2.1.133 (`--plugin-dir`) — two `fired` lines captured (pre + post). GH-34573 empirically inactive. Tasks 9–14 may proceed as written. |
 | Q2 — `--strict-mcp-config` behavior on missing tools. | T23 Step 5's manual run captures the `system/init` event for diagnostic visibility on first failure; the printed `plugin_errors` and missing-tool errors are the empirical answer. |
 | Q3 — `--agent <plugin>:<agent>` syntax for path-loaded plugins. | T23 Step 5 prints raw claude output including `system/init`, so unresolved-agent errors are immediately visible; T23 Step 6 lists alternative agent-name formats to try if the first run fails. |
@@ -4230,21 +4253,22 @@ The three live-system questions from the research report are all addressed at ex
 
 Eleven actions from the original assessment, mapped to v2 tasks:
 
-| Action | v2 task(s) | Phase |
-|---|---|---|
-| 1. Stale Opus claim | T1 | 0 |
-| 2. CHANGELOG dedupe | T2 | 0 |
-| 3. Stale v2.1.92 note | T3 | 0 |
-| 4. Python 3 hard-prereq doc | T4, T7 | 0, 1 |
-| 5. Link-audit quoting | T5 | 0 |
-| 6. Tracker state collision | T6 | 1 |
-| 7. Security boundary | T8, T9, T10, T11 | 2 |
-| 8. PostToolUse capture hook | T13, T14 | 3 |
-| 9. Pydantic schema validation | T15, T16 | 3 |
-| 10. Transcript-grounded evidence | T17, T18, T19 | 3 |
-| 11. Layout coupling | T25 | 4 |
+| Action                           | v2 task(s)       | Phase |
+| -------------------------------- | ---------------- | ----- |
+| 1. Stale Opus claim              | T1               | 0     |
+| 2. CHANGELOG dedupe              | T2               | 0     |
+| 3. Stale v2.1.92 note            | T3               | 0     |
+| 4. Python 3 hard-prereq doc      | T4, T7           | 0, 1  |
+| 5. Link-audit quoting            | T5               | 0     |
+| 6. Tracker state collision       | T6               | 1     |
+| 7. Security boundary             | T8, T9, T10, T11 | 2     |
+| 8. PostToolUse capture hook      | T13, T14         | 3     |
+| 9. Pydantic schema validation    | T15, T16         | 3     |
+| 10. Transcript-grounded evidence | T17, T18, T19    | 3     |
+| 11. Layout coupling              | T25              | 4     |
 
 Plus three plan-internal tasks not directly in the original eleven actions but required by the audit:
+
 - T12 (pinned Python deps) addresses CR-007.
 - T20 (run-bats.sh fix) addresses CR-004 wrapper side.
 - T26 (drift orchestration) and T27 (Notion fuzzy fallback) preserve v1's Phase 4 behavioral hardening.

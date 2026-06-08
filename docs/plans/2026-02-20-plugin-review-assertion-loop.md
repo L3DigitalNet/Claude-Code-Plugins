@@ -27,6 +27,7 @@
 ### Task 1: Create `scripts/run-assertions.sh`
 
 **Files:**
+
 - Create: `plugins/plugin-review/scripts/run-assertions.sh`
 - Create (test): `plugins/plugin-review/scripts/test-run-assertions.sh`
 
@@ -272,6 +273,7 @@ bash plugins/plugin-review/scripts/test-run-assertions.sh
 ```
 
 Expected output:
+
 ```
 Running run-assertions.sh...
   ✅ T-001: grep_not_match — empty echo has no output
@@ -317,6 +319,7 @@ git commit -m "feat(plugin-review): add run-assertions.sh with smoke tests"
 ### Task 2: Create `agents/fix-agent.md`
 
 **Files:**
+
 - Create: `plugins/plugin-review/agents/fix-agent.md`
 
 **Step 1: Create the file**
@@ -324,9 +327,7 @@ git commit -m "feat(plugin-review): add run-assertions.sh with smoke tests"
 ```markdown
 ---
 name: fix-agent
-description: Targeted implementation agent for assertion-driven fixes. Receives a list of
-  failing assertions with context and implements the minimal fix for each. Called by the
-  orchestrator after run-assertions.sh finds failures.
+description: Targeted implementation agent for assertion-driven fixes. Receives a list of failing assertions with context and implements the minimal fix for each. Called by the orchestrator after run-assertions.sh finds failures.
 tools: Read, Grep, Glob, Edit, Write
 ---
 
@@ -347,19 +348,16 @@ tools: Read, Grep, Glob, Edit, Write
     agent by name and expects the structured output format below.
 -->
 
-You are a targeted fix implementation agent. Your sole job is to make failing assertions
-pass by implementing the minimum necessary change. You do not analyze broadly, refactor,
-or implement changes beyond what the assertion explicitly requires.
+You are a targeted fix implementation agent. Your sole job is to make failing assertions pass by implementing the minimum necessary change. You do not analyze broadly, refactor, or implement changes beyond what the assertion explicitly requires.
 
 ## Role Boundaries
 
-**You may:** Read files, implement targeted fixes, write minimal changes to make assertions pass.
-**You may not:** Refactor unrelated code, add features, address non-failing assertions,
-interact with the user.
+**You may:** Read files, implement targeted fixes, write minimal changes to make assertions pass. **You may not:** Refactor unrelated code, add features, address non-failing assertions, interact with the user.
 
 ## Input
 
 The orchestrator provides:
+
 1. A list of failing assertion objects (id, type, command/path, description, failure_output)
 2. The original analyst finding each assertion was generated from (for context)
 3. Which files are likely relevant for each fix
@@ -367,34 +365,41 @@ The orchestrator provides:
 ## Process
 
 For each failing assertion:
+
 1. Read the relevant files to understand the current state
 2. Determine the minimal change needed to make the assertion pass
 3. Implement the change
 4. Return a one-line summary of what changed
 
-**Scope discipline:** Fix only what the assertion requires. If fixing one assertion would
-naturally fix another, note it — do not expand scope without noting the overlap.
+**Scope discipline:** Fix only what the assertion requires. If fixing one assertion would naturally fix another, note it — do not expand scope without noting the overlap.
 
 ## Output Format
-
 ```
+
 ## Fix-Agent Results — Pass <N>
 
 ### <assertion-id> — <description>
+
 Changed: <file-path>:<line-range> — <what changed in one sentence>
 
 ### <assertion-id> — <description>
+
 Changed: <file-path>:<line-range> — <what changed in one sentence>
 
 ### Summary
+
 Fixed: <N> assertions | Unchanged: <N> (already passing or out of scope)
+
 ```
 
 If an assertion cannot be fixed (the required change is architectural or out of scope),
 report it as:
 ```
+
 ### <assertion-id> — <description>
+
 Unresolvable: <reason in one sentence>
+
 ```
 
 Do not deviate from this format. The orchestrator embeds this summary in the pass report.
@@ -407,6 +412,7 @@ head -6 plugins/plugin-review/agents/fix-agent.md
 ```
 
 Expected:
+
 ```
 ---
 name: fix-agent
@@ -427,39 +433,26 @@ git commit -m "feat(plugin-review): add fix-agent for assertion-driven targeted 
 ### Task 3: Update `agents/principles-analyst.md` — Add Assertions block
 
 **Files:**
+
 - Modify: `plugins/plugin-review/agents/principles-analyst.md`
 
 **Step 1: Add the Assertions section to the output format**
 
 After the closing ` ``` ` of the current output format block, add:
 
-```markdown
+````markdown
 ## Assertions Output
 
-After your findings, append an `## Assertions` section containing a JSON array of
-machine-verifiable checks, one per open finding:
+After your findings, append an `## Assertions` section containing a JSON array of machine-verifiable checks, one per open finding:
 
 \```
+
 ## Assertions
 
-\```json
-[
-  {
-    "id": "A-<track>-<number>",
-    "finding_id": "<principle or checkpoint ID, e.g. P3 or C1>",
-    "track": "A",
-    "type": "<grep_not_match | grep_match | file_exists | file_content | typescript_compile | shell_exit_zero>",
-    "description": "One sentence: what this assertion verifies",
-    "command": "<bash command to run — use full relative paths from repo root>",
-    "expected": "<no_match | match | exists | contains | no_output | exit_zero>",
-    "path": "<file path — only for file_exists and file_content types>",
-    "needle": "<search string — only for file_content type>"
-  }
-]
-\```
-\```
+\```json [ { "id": "A-<track>-<number>", "finding_id": "<principle or checkpoint ID, e.g. P3 or C1>", "track": "A", "type": "<grep_not_match | grep_match | file_exists | file_content | typescript_compile | shell_exit_zero>", "description": "One sentence: what this assertion verifies", "command": "<bash command to run — use full relative paths from repo root>", "expected": "<no_match | match | exists | contains | no_output | exit_zero>", "path": "<file path — only for file_exists and file_content types>", "needle": "<search string — only for file_content type>" } ] \``` \```
 
 **Assertion type guide:**
+
 - `grep_not_match`: the finding is a pattern that should NOT appear (e.g., banned keyword, disallowed construct). Command should grep for the bad pattern; expect empty output.
 - `grep_match`: the finding is a pattern that SHOULD appear (e.g., required comment header). Command greps for it; expect non-empty output.
 - `file_exists`: the finding is a missing file. Use `path` field (no `command`).
@@ -470,7 +463,7 @@ machine-verifiable checks, one per open finding:
 **Write one assertion per open finding.** If a finding has no machine-verifiable check (e.g., pure judgment calls), omit it — do not invent synthetic assertions. Assertions for upheld principles should NOT be included (only open findings get assertions).
 
 Do not include assertions for upheld/clean items. Only include assertions that will currently FAIL (because the finding represents a current gap).
-```
+````
 
 **Step 2: Verify the file structure is intact**
 
@@ -492,15 +485,18 @@ git commit -m "feat(plugin-review): add Assertions block to principles-analyst o
 ### Task 4: Update `agents/ux-analyst.md` — Add Assertions block
 
 **Files:**
+
 - Modify: `plugins/plugin-review/agents/ux-analyst.md`
 
 **Step 1: Add the same Assertions Output section** (same content as Task 3) after the closing ` ``` ` of the output format block. Replace `"track": "A"` with `"track": "B"` and update the ID prefix to `"id": "A-B-<number>"`.
 
 Paste the same Assertions Output section from Task 3, but change:
+
 - `"track": "A"` → `"track": "B"`
 - `"id": "A-<track>-<number>"` → `"id": "A-B-<number>"`
 
 Also update the guidance to be UX-specific:
+
 ```
 **UX assertion guidance:**
 - UX findings typically yield `grep_not_match` (pattern that indicates bad UX, e.g., an open-ended prompt instead of AskUserQuestion) or `grep_match` (required pattern, e.g., structured output keyword).
@@ -525,6 +521,7 @@ git commit -m "feat(plugin-review): add Assertions block to ux-analyst output fo
 ### Task 5: Update `agents/docs-analyst.md` — Add Assertions block
 
 **Files:**
+
 - Modify: `plugins/plugin-review/agents/docs-analyst.md`
 
 **Step 1: Add the Assertions Output section** (same pattern, track C). Unique docs guidance:
@@ -557,6 +554,7 @@ git commit -m "feat(plugin-review): add Assertions block to docs-analyst output 
 This is the largest change. Apply the following modifications in order.
 
 **Files:**
+
 - Modify: `plugins/plugin-review/commands/review.md`
 
 **Step 1: Read the full current file to understand context**
@@ -613,6 +611,7 @@ Replace the current Phase 4 text entirely with:
 For each open finding, propose and immediately implement a concrete fix. Do not use `AskUserQuestion` — all proposals are auto-implemented.
 
 For each fix:
+
 1. State the plan — files, changes, gap closure.
 2. Load `<CLAUDE_PLUGIN_ROOT>/templates/cross-track-impact.md` and note which other tracks are affected.
 3. Implement the code change.
@@ -626,7 +625,7 @@ If zero open findings remain, skip to Phase 5.5 (run assertions to verify).
 
 After the current Phase 5 text (which ends with "loop back to Phase 2"), replace the last paragraph with:
 
-```markdown
+````markdown
 After all changes, increment `pass_number`:
 
 ```bash
@@ -637,6 +636,7 @@ d['pass_number'] = d.get('pass_number', 1) + 1
 json.dump(d, open('.claude/state/plugin-review-writes.json', 'w'), indent=2)
 "
 ```
+````
 
 ### Phase 5.5 — Run Assertions
 
@@ -665,6 +665,7 @@ for a in fails:
 **If confidence is 100%**, proceed to Phase 6 (convergence).
 
 **If any assertions fail**, spawn the fix-agent (`agents/fix-agent.md`) with:
+
 - The list of failing assertion objects (full JSON from `.claude/state/review-assertions.json` filtered to `status == "fail"`)
 - The original analyst finding context for each (from the analyst summaries collected in Phase 2)
 - The specific files likely needing changes per assertion
@@ -698,7 +699,8 @@ if pass_num >= max_passes and review['confidence']['score'] < 1.0:
 If `pass_number >= max_passes` and confidence < 100%, proceed to Phase 6 with convergence reason "Budget reached."
 
 Otherwise, if open findings remain from the analyst reports, loop back to Phase 2 (scoped re-audit).
-```
+
+````
 
 **Step 6: Update Phase 6 — Add confidence score to final report**
 
@@ -720,10 +722,11 @@ for a in d['assertions']:
     icon = '✅' if a['status'] == 'pass' else '❌'
     print(f'  {icon} {a[\"id\"]} ({a[\"track\"]}): {a[\"description\"]}')
 "
-```
+````
 
 Include confidence in the final report output (see `templates/final-report.md` format).
-```
+
+````
 
 Also add `review-assertions.json` cleanup to the session cleanup block:
 
@@ -731,7 +734,7 @@ Also add `review-assertions.json` cleanup to the session cleanup block:
 unset PLUGIN_REVIEW_ACTIVE
 rm -f .claude/state/plugin-review-writes.json .claude/state/review-assertions.json
 echo "✓ Plugin review session ended"
-```
+````
 
 **Step 7: Update the Hard Rules section**
 
@@ -746,6 +749,7 @@ Remove the old 3-pass budget rule and replace with:
 **Step 8: Verify the file looks correct**
 
 Read `plugins/plugin-review/commands/review.md` in full and check:
+
 - Phase 1 has `--max-passes` parsing and assertions file init
 - Phase 2.5 exists with assertion collection instructions
 - Phase 4 has no `AskUserQuestion`
@@ -764,17 +768,21 @@ git commit -m "feat(plugin-review): refactor convergence loop — auto-implement
 ### Task 7: Update `templates/pass-report.md` — Add Confidence Column
 
 **Files:**
+
 - Modify: `plugins/plugin-review/templates/pass-report.md`
 
 **Step 1: Update the convergence table header in both the Pass 1 and Pass 2+ formats**
 
 In the Pass 1 format, replace:
+
 ```
 | Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Trend |
 |------|--------|---------|----------|-------------|-----------|------------|-------|
 | 1    | ...    | ...     | ...      | ...         | ...       | ...        | —     |
 ```
+
 With:
+
 ```
 | Pass | Upheld | Partial | Violated | Checkpoints | UX Issues | Stale Docs | Confidence | Trend |
 |------|--------|---------|----------|-------------|-----------|------------|------------|-------|
@@ -795,6 +803,7 @@ git commit -m "feat(plugin-review): add Confidence column to pass report converg
 ### Task 8: Update `templates/final-report.md` — Add Assertions Section
 
 **Files:**
+
 - Modify: `plugins/plugin-review/templates/final-report.md`
 
 **Step 1: Add Assertions Coverage section**
@@ -803,13 +812,13 @@ After the `### Documentation Status` table and before `### Accepted Gaps`, add:
 
 ```markdown
 ### Assertion Coverage
-Confidence: N% (N/N assertions passing)
-(omit if no assertions were generated — target plugin had no machine-verifiable findings)
 
-| ID    | Track | Type             | Status | Description                        |
-|-------|-------|------------------|--------|------------------------------------|
-| A-001 | A     | grep_not_match   | ✅     | <description>                      |
-| A-002 | C     | file_content     | ❌     | <description> — <failure note>     |
+Confidence: N% (N/N assertions passing) (omit if no assertions were generated — target plugin had no machine-verifiable findings)
+
+| ID    | Track | Type           | Status | Description                    |
+| ----- | ----- | -------------- | ------ | ------------------------------ |
+| A-001 | A     | grep_not_match | ✅     | <description>                  |
+| A-002 | C     | file_content   | ❌     | <description> — <failure note> |
 ```
 
 **Step 2: Update the Rules section** to add:
@@ -830,6 +839,7 @@ git commit -m "feat(plugin-review): add Assertions Coverage section to final rep
 ### Task 9: Version Bump + CHANGELOG
 
 **Files:**
+
 - Modify: `plugins/plugin-review/.claude-plugin/plugin.json`
 - Modify: `plugins/plugin-review/CHANGELOG.md`
 - Modify: `.claude-plugin/marketplace.json`
@@ -838,13 +848,10 @@ git commit -m "feat(plugin-review): add Assertions Coverage section to final rep
 
 ```json
 {
-  "name": "plugin-review",
-  "description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
-  "version": "0.3.0",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  }
+	"name": "plugin-review",
+	"description": "Comprehensive plugin review covering principles alignment, terminal UX quality, and documentation freshness via orchestrator-subagent architecture.",
+	"version": "0.3.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" }
 }
 ```
 
@@ -856,6 +863,7 @@ Prepend to `CHANGELOG.md` (before the `## [0.2.0]` line):
 ## [0.3.0] - 2026-02-20
 
 ### Added
+
 - `scripts/run-assertions.sh` — machine-verifiable assertion runner; reads `.review-assertions.json`, executes all assertions by type (grep_not_match, grep_match, file_exists, file_content, typescript_compile, shell_exit_zero), updates pass/fail status, computes confidence score
 - `scripts/test-run-assertions.sh` — smoke test for the assertion runner
 - `agents/fix-agent.md` — write-capable targeted fix agent for assertion-driven regressions; one invocation per pass, receives all failing assertions and implements minimal fixes
@@ -868,12 +876,14 @@ Prepend to `CHANGELOG.md` (before the `## [0.2.0]` line):
 - Assertion Coverage section in final-report.md
 
 ### Changed
+
 - Phase 4 is now fully automated — `AskUserQuestion` gate removed; all proposals auto-implemented
 - Pass budget changed from hardcoded 3 to `--max-passes=N` (default 5)
 - Session cleanup now removes both `plugin-review-writes.json` and `review-assertions.json`
 - State file initialization includes `max_passes` field
 
 ### Fixed
+
 - CHANGELOG duplicate `### Added` section header in 0.2.0 entry (pre-existing drift)
 ```
 
@@ -915,6 +925,7 @@ Expected: all assertions pass.
 ```
 
 Observe:
+
 - The loop runs without human gates
 - Analysts generate `## Assertions` blocks
 - Phase 2.5 collects assertions into `.claude/state/review-assertions.json`
@@ -953,7 +964,7 @@ git commit -m "test(plugin-review): integration test against plugin-review — a
 ## Sequence Summary
 
 | Task | File(s) | Commit |
-|------|---------|--------|
+| --- | --- | --- |
 | 1 | `scripts/run-assertions.sh` + test | `feat: add run-assertions.sh with smoke tests` |
 | 2 | `agents/fix-agent.md` | `feat: add fix-agent` |
 | 3 | `agents/principles-analyst.md` | `feat: add Assertions block to principles-analyst` |

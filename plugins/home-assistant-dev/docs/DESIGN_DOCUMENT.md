@@ -2,9 +2,7 @@
 
 ## Design Document v2.2
 
-**Document Version:** 2.2
-**Plugin Version:** 2.2.6
-**Last Updated:** February 2026  
+**Document Version:** 2.2 **Plugin Version:** 2.2.6 **Last Updated:** February 2026  
 **Status:** Complete
 
 ---
@@ -37,6 +35,7 @@ The Home Assistant Development Plugin is a comprehensive Claude Code plugin that
 ### 1.2 Problem Statement
 
 Developing Home Assistant integrations is complex:
+
 - Steep learning curve with evolving APIs
 - 52 quality rules across 4 tiers (IQS)
 - Deprecated patterns change with each HA release
@@ -49,6 +48,7 @@ Developers need contextual guidance, automated validation, and reference impleme
 ### 1.3 Solution
 
 A Claude Code plugin providing:
+
 - **19 specialized skills** covering all development aspects
 - **3 workflow agents** for end-to-end tasks
 - **5 validation scripts** with real-time feedback
@@ -58,14 +58,14 @@ A Claude Code plugin providing:
 
 ### 1.4 Key Metrics
 
-| Metric | Value |
-|--------|-------|
-| Total Files | 116 |
-| Skills | 19 |
-| IQS Coverage | 100% (52/52 rules) |
+| Metric        | Value                |
+| ------------- | -------------------- |
+| Total Files   | 116                  |
+| Skills        | 19                   |
+| IQS Coverage  | 100% (52/52 rules)   |
 | Example Tiers | Bronze, Silver, Gold |
-| MCP Tools | 12 |
-| Test Cases | 42 |
+| MCP Tools     | 12                   |
+| Test Cases    | 42                   |
 
 ---
 
@@ -80,13 +80,13 @@ A Claude Code plugin providing:
 
 ### 2.2 Success Criteria
 
-| Criterion | Target | Measurement |
-|-----------|--------|-------------|
-| IQS Rule Coverage | 100% | All 52 rules documented with examples |
-| Pattern Detection | 20+ | Anti-patterns caught by validators |
-| Example Quality | Gold tier | At least one Gold-tier reference |
-| Test Coverage | 90%+ | Automated tests for core components |
-| Documentation | Complete | Every component documented |
+| Criterion         | Target    | Measurement                           |
+| ----------------- | --------- | ------------------------------------- |
+| IQS Rule Coverage | 100%      | All 52 rules documented with examples |
+| Pattern Detection | 20+       | Anti-patterns caught by validators    |
+| Example Quality   | Gold tier | At least one Gold-tier reference      |
+| Test Coverage     | 90%+      | Automated tests for core components   |
+| Documentation     | Complete  | Every component documented            |
 
 ### 2.3 Non-Goals
 
@@ -335,14 +335,14 @@ User Query
 
 ```json
 {
-  "name": "home-assistant-dev",
-  "version": "2.2.6",
-  "description": "Comprehensive Home Assistant integration development toolkit...",
-  "author": "Anthropic",
-  "skills": "skills/",
-  "agents": "agents/",
-  "commands": "commands/",
-  "hooks": "hooks/hooks.json"
+	"name": "home-assistant-dev",
+	"version": "2.2.6",
+	"description": "Comprehensive Home Assistant integration development toolkit...",
+	"author": "Anthropic",
+	"skills": "skills/",
+	"agents": "agents/",
+	"commands": "commands/",
+	"hooks": "hooks/hooks.json"
 }
 ```
 
@@ -351,7 +351,7 @@ User Query
 **File:** `hooks/hooks.json`
 
 | Hook | Trigger | Files | Action |
-|------|---------|-------|--------|
+| --- | --- | --- | --- |
 | validate-manifest | PostToolUse | `**/manifest.json` | Run manifest validator |
 | validate-strings | PostToolUse | `**/strings.json`, `**/config_flow.py` | Sync check |
 | check-patterns | PostToolUse | `**/custom_components/**/*.py` | Anti-pattern detection |
@@ -381,7 +381,7 @@ disable-model-invocation: true
 #### Core Development Skills
 
 | Skill | Purpose | Key Content |
-|-------|---------|-------------|
+| --- | --- | --- |
 | `ha-architecture` | HA internals understanding | Event bus, state machine, entity lifecycle |
 | `ha-integration-scaffold` | Create new integrations | File structure, manifest, modern patterns |
 | `ha-coordinator` | Data management | DataUpdateCoordinator, error handling, runtime_data |
@@ -391,31 +391,31 @@ disable-model-invocation: true
 #### Configuration Skills
 
 | Skill | Purpose | Key Content |
-|-------|---------|-------------|
+| --- | --- | --- |
 | `ha-config-flow` | User configuration | Config flows, options, reauth, reconfigure, discovery |
 | `ha-service-actions` | Custom services | Registration, validation, entity targeting |
 | `ha-yaml-automations` | YAML automation | Triggers, conditions, actions, blueprints |
 
 #### Quality & Compliance Skills
 
-| Skill | Purpose | Key Content |
-|-------|---------|-------------|
-| `ha-quality-review` | IQS compliance | All 52 rules with examples |
-| `ha-hacs` | HACS submission | hacs.json, brands, repository structure |
-| `ha-testing` | Test implementation | pytest patterns, MockConfigEntry |
-| `ha-diagnostics` | Diagnostics support | Data collection, redaction |
+| Skill               | Purpose             | Key Content                             |
+| ------------------- | ------------------- | --------------------------------------- |
+| `ha-quality-review` | IQS compliance      | All 52 rules with examples              |
+| `ha-hacs`           | HACS submission     | hacs.json, brands, repository structure |
+| `ha-testing`        | Test implementation | pytest patterns, MockConfigEntry        |
+| `ha-diagnostics`    | Diagnostics support | Data collection, redaction              |
 
 #### Advanced Skills
 
-| Skill | Purpose | Key Content |
-|-------|---------|-------------|
-| `ha-repairs` | Repair issues | Issue registry, fix flows |
-| `ha-device-triggers` | Device automation | Trigger schemas, handlers |
-| `ha-websocket-api` | Custom WS commands | Command registration, subscriptions |
-| `ha-recorder` | Statistics/history | Long-term statistics, state classes |
-| `ha-migration` | Version updates | Deprecation fixes, pattern updates |
-| `ha-debugging` | Troubleshooting | Logging, common issues |
-| `ha-documentation` | Doc generation | README templates, HACS info.md |
+| Skill                | Purpose            | Key Content                         |
+| -------------------- | ------------------ | ----------------------------------- |
+| `ha-repairs`         | Repair issues      | Issue registry, fix flows           |
+| `ha-device-triggers` | Device automation  | Trigger schemas, handlers           |
+| `ha-websocket-api`   | Custom WS commands | Command registration, subscriptions |
+| `ha-recorder`        | Statistics/history | Long-term statistics, state classes |
+| `ha-migration`       | Version updates    | Deprecation fixes, pattern updates  |
+| `ha-debugging`       | Troubleshooting    | Logging, common issues              |
+| `ha-documentation`   | Doc generation     | README templates, HACS info.md      |
 
 ### 5.3 Skill Triggering
 
@@ -423,9 +423,7 @@ Skills are triggered by keyword matching in the `description` field:
 
 ```yaml
 # Example: ha-config-flow triggers on these patterns
-description: Config flows, options flows, reauth, reconfigure, 
-  discovery (zeroconf, ssdp, dhcp, usb, bluetooth), 
-  user input validation, multi-step flows
+description: Config flows, options flows, reauth, reconfigure, discovery (zeroconf, ssdp, dhcp, usb, bluetooth), user input validation, multi-step flows
 ```
 
 ### 5.4 Progressive Disclosure
@@ -446,6 +444,7 @@ skills/ha-entity-platforms/
 ### 6.1 Overview
 
 The MCP (Model Context Protocol) server provides live connectivity to Home Assistant instances, enabling:
+
 - Real-time entity state queries
 - Service discovery and validation
 - Documentation search
@@ -455,30 +454,30 @@ The MCP (Model Context Protocol) server provides live connectivity to Home Assis
 
 #### Home Assistant Tools
 
-| Tool | Purpose | Safety Level |
-|------|---------|--------------|
-| `ha_connect` | Establish connection | Safe |
-| `ha_get_states` | Query entity states | Safe (read-only) |
-| `ha_get_services` | List available services | Safe (read-only) |
-| `ha_call_service` | Execute service calls | Restricted (safety layer) |
-| `ha_get_devices` | Query device registry | Safe (read-only) |
-| `ha_get_logs` | Fetch HA logs | Safe (read-only) |
+| Tool              | Purpose                 | Safety Level              |
+| ----------------- | ----------------------- | ------------------------- |
+| `ha_connect`      | Establish connection    | Safe                      |
+| `ha_get_states`   | Query entity states     | Safe (read-only)          |
+| `ha_get_services` | List available services | Safe (read-only)          |
+| `ha_call_service` | Execute service calls   | Restricted (safety layer) |
+| `ha_get_devices`  | Query device registry   | Safe (read-only)          |
+| `ha_get_logs`     | Fetch HA logs           | Safe (read-only)          |
 
 #### Documentation Tools
 
-| Tool | Purpose |
-|------|---------|
-| `docs_search` | Full-text search of HA developer docs |
-| `docs_fetch` | Retrieve specific documentation pages |
-| `docs_examples` | Get code templates for patterns |
+| Tool            | Purpose                               |
+| --------------- | ------------------------------------- |
+| `docs_search`   | Full-text search of HA developer docs |
+| `docs_fetch`    | Retrieve specific documentation pages |
+| `docs_examples` | Get code templates for patterns       |
 
 #### Validation Tools
 
-| Tool | Purpose |
-|------|---------|
-| `validate_manifest` | Validate manifest.json |
-| `validate_strings` | Check strings.json sync |
-| `check_patterns` | Detect anti-patterns |
+| Tool                | Purpose                 |
+| ------------------- | ----------------------- |
+| `validate_manifest` | Validate manifest.json  |
+| `validate_strings`  | Check strings.json sync |
+| `check_patterns`    | Detect anti-patterns    |
 
 ### 6.3 Safety Architecture
 
@@ -529,20 +528,20 @@ The MCP (Model Context Protocol) server provides live connectivity to Home Assis
 
 ```typescript
 interface MCPConfig {
-  homeAssistant: {
-    url: string;           // HA WebSocket URL
-    token: string;         // Long-lived access token
-  };
-  safety: {
-    allowServiceCalls: boolean;    // Default: false
-    requireDryRun: boolean;        // Default: true
-    blockedServices: string[];     // Additional blocks
-    safeDomains: string[];         // Bypass dry-run
-  };
-  cache: {
-    statesTtlSeconds: number;      // Default: 30
-    docsTtlHours: number;          // Default: 24
-  };
+	homeAssistant: {
+		url: string // HA WebSocket URL
+		token: string // Long-lived access token
+	}
+	safety: {
+		allowServiceCalls: boolean // Default: false
+		requireDryRun: boolean // Default: true
+		blockedServices: string[] // Additional blocks
+		safeDomains: string[] // Bypass dry-run
+	}
+	cache: {
+		statesTtlSeconds: number // Default: 30
+		docsTtlHours: number // Default: 24
+	}
 }
 ```
 
@@ -555,6 +554,7 @@ interface MCPConfig {
 **Purpose:** Validate manifest.json for Core and HACS compliance
 
 **Checks:**
+
 - Required fields (domain, name, codeowners, etc.)
 - HACS-specific fields (version, issue_tracker)
 - Field formats (semver, URLs, domain pattern)
@@ -563,6 +563,7 @@ interface MCPConfig {
 - config_flow.py existence when config_flow: true
 
 **Output:**
+
 ```
 Validating: custom_components/my_integration/manifest.json
 Mode: Custom Integration (HACS)
@@ -578,6 +579,7 @@ Mode: Custom Integration (HACS)
 **Purpose:** Ensure strings.json and config_flow.py are synchronized
 
 **Checks:**
+
 - All config flow steps have string entries
 - No orphaned string entries
 - data_description presence (IQS requirement)
@@ -589,25 +591,26 @@ Mode: Custom Integration (HACS)
 
 **Patterns Detected (23 total):**
 
-| Category | Pattern | Severity |
-|----------|---------|----------|
-| Storage | `hass.data[DOMAIN]` | Warning |
-| Storage | `hass.data.setdefault` | Warning |
-| Imports | Old ServiceInfo locations | Warning |
-| Blocking | `requests.get/post` | Error |
-| Blocking | `time.sleep` | Error |
-| Blocking | `urllib.request.urlopen` | Error |
-| Typing | `List[]`, `Dict[]`, `Optional[]`, `Union[]` | Warning |
-| Async | `@asyncio.coroutine` | Warning |
-| Async | `yield from` | Warning |
-| Coordinator | Missing generic type | Warning |
-| OptionsFlow | `__init__` with config_entry | Warning |
+| Category    | Pattern                                     | Severity |
+| ----------- | ------------------------------------------- | -------- |
+| Storage     | `hass.data[DOMAIN]`                         | Warning  |
+| Storage     | `hass.data.setdefault`                      | Warning  |
+| Imports     | Old ServiceInfo locations                   | Warning  |
+| Blocking    | `requests.get/post`                         | Error    |
+| Blocking    | `time.sleep`                                | Error    |
+| Blocking    | `urllib.request.urlopen`                    | Error    |
+| Typing      | `List[]`, `Dict[]`, `Optional[]`, `Union[]` | Warning  |
+| Async       | `@asyncio.coroutine`                        | Warning  |
+| Async       | `yield from`                                | Warning  |
+| Coordinator | Missing generic type                        | Warning  |
+| OptionsFlow | `__init__` with config_entry                | Warning  |
 
 ### 7.4 lint-integration.sh
 
 **Purpose:** Run all linters on an integration
 
 **Tools:**
+
 - ruff (lint + format check)
 - mypy (type checking)
 - validate-manifest.py
@@ -619,8 +622,9 @@ Mode: Custom Integration (HACS)
 **Purpose:** Generate README.md and info.md from code
 
 **Analysis:**
+
 - Reads manifest.json for metadata
-- Extracts PLATFORMS from __init__.py
+- Extracts PLATFORMS from **init**.py
 - Parses config flow for features (reauth, reconfigure, options)
 - Extracts entity translations from strings.json
 
@@ -630,17 +634,18 @@ Mode: Custom Integration (HACS)
 
 ### 8.1 Tier Definitions
 
-| Tier | Requirements | Example |
-|------|--------------|---------|
-| **Bronze** | Basic IQS compliance, config flow, unique IDs | minimal-sensor |
-| **Silver** | + Reauth, error handling, unload | push-integration |
-| **Gold** | + Diagnostics, reconfigure, full tests | polling-hub |
+| Tier       | Requirements                                  | Example          |
+| ---------- | --------------------------------------------- | ---------------- |
+| **Bronze** | Basic IQS compliance, config flow, unique IDs | minimal-sensor   |
+| **Silver** | + Reauth, error handling, unload              | push-integration |
+| **Gold**   | + Diagnostics, reconfigure, full tests        | polling-hub      |
 
 ### 8.2 minimal-sensor (Bronze)
 
 **Purpose:** Simplest possible integration for learning
 
 **Files:**
+
 ```
 custom_components/minimal_sensor/
 ├── __init__.py      # Simple setup, no coordinator
@@ -651,6 +656,7 @@ custom_components/minimal_sensor/
 ```
 
 **Key Characteristics:**
+
 - No DataUpdateCoordinator (deliberate simplicity)
 - No options flow
 - No reauth
@@ -661,6 +667,7 @@ custom_components/minimal_sensor/
 **Purpose:** Demonstrate push-based (event-driven) updates
 
 **Files:**
+
 ```
 custom_components/push_example/
 ├── __init__.py
@@ -673,6 +680,7 @@ custom_components/push_example/
 ```
 
 **Key Characteristics:**
+
 - `iot_class: local_push`
 - PushCoordinator (not DataUpdateCoordinator)
 - `async_dispatcher_connect` pattern
@@ -683,6 +691,7 @@ custom_components/push_example/
 **Purpose:** Complete reference implementation
 
 **Files:**
+
 ```
 custom_components/example_hub/
 ├── __init__.py
@@ -700,6 +709,7 @@ custom_components/example_hub/
 ```
 
 **Key Characteristics:**
+
 - DataUpdateCoordinator with generic type
 - `entry.runtime_data` pattern
 - Complete config flows (user, reauth, reconfigure, options)
@@ -723,20 +733,21 @@ tests/
 
 ### 9.2 Test Matrix
 
-| Component | Test Type | Tool | Tests |
-|-----------|-----------|------|-------|
-| validate-manifest.py | Unit | pytest | 9 |
-| check-patterns.py | Unit | pytest | 10 |
-| IQS documentation | Validation | pytest | 14 |
-| Scripts vs examples | Integration | bash | 9 |
-| MCP safety.ts | Unit | Jest | 12 |
-| **Total** | | | **54** |
+| Component            | Test Type   | Tool   | Tests  |
+| -------------------- | ----------- | ------ | ------ |
+| validate-manifest.py | Unit        | pytest | 9      |
+| check-patterns.py    | Unit        | pytest | 10     |
+| IQS documentation    | Validation  | pytest | 14     |
+| Scripts vs examples  | Integration | bash   | 9      |
+| MCP safety.ts        | Unit        | Jest   | 12     |
+| **Total**            |             |        | **54** |
 
 ### 9.3 CI/CD Pipeline
 
 **File:** `.github/workflows/test.yml`
 
 **Jobs:**
+
 1. `python-unit-tests` - pytest on scripts/validation
 2. `typescript-tests` - Jest + typecheck + build
 3. `integration-tests` - Scripts against examples
@@ -766,6 +777,7 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 **Decision:** 19 separate skills instead of one monolithic document
 
 **Rationale:**
+
 - Context window efficiency (load only relevant content)
 - Focused triggers (better matching)
 - Maintainability (update independently)
@@ -776,6 +788,7 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 **Decision:** All examples use `entry.runtime_data`
 
 **Rationale:**
+
 - Modern pattern (HA 2024.8+)
 - Type safety with generics
 - Automatic cleanup on unload
@@ -786,6 +799,7 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 **Decision:** TypeScript instead of Python
 
 **Rationale:**
+
 - Official MCP SDK is TypeScript-first
 - Better async patterns for WebSocket
 - Type safety for tool interfaces
@@ -796,9 +810,10 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 **Decision:** Multi-level safety with dry-run default
 
 **Rationale:**
+
 - Prevent accidental system damage
 - Always block destructive operations
-- Allow safe domains (input_* helpers)
+- Allow safe domains (input\_\* helpers)
 - Require explicit dry-run bypass
 
 ### 10.5 Why Three Example Tiers?
@@ -806,6 +821,7 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 **Decision:** Bronze, Silver, Gold examples
 
 **Rationale:**
+
 - Learning progression
 - Copy-paste starting points
 - Demonstrate IQS compliance
@@ -819,27 +835,28 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 
 All 52 IQS rules are documented in `ha-quality-review`:
 
-| Tier | Rules | Coverage |
-|------|-------|----------|
-| Bronze | 18 | 18/18 ✓ |
-| Silver | 10 | 10/10 ✓ |
-| Gold | 21 | 21/21 ✓ |
-| Platinum | 3 | 3/3 ✓ |
+| Tier     | Rules | Coverage |
+| -------- | ----- | -------- |
+| Bronze   | 18    | 18/18 ✓  |
+| Silver   | 10    | 10/10 ✓  |
+| Gold     | 21    | 21/21 ✓  |
+| Platinum | 3     | 3/3 ✓    |
 
 ### 11.2 Deprecation Tracking
 
 Tracked deprecations with versions:
 
-| Pattern | Deprecated | Removed | Replacement |
-|---------|------------|---------|-------------|
-| ServiceInfo imports | 2025.1 | 2026.2 | helpers.service_info.* |
-| OptionsFlow.__init__ | 2025.12 | TBD | self.config_entry property |
-| hass.data[DOMAIN] | 2024.8 | TBD | entry.runtime_data |
-| _async_setup | 2024.8 | N/A | Coordinator method |
+| Pattern              | Deprecated | Removed | Replacement                |
+| -------------------- | ---------- | ------- | -------------------------- |
+| ServiceInfo imports  | 2025.1     | 2026.2  | helpers.service_info.\*    |
+| OptionsFlow.**init** | 2025.12    | TBD     | self.config_entry property |
+| hass.data[DOMAIN]    | 2024.8     | TBD     | entry.runtime_data         |
+| \_async_setup        | 2024.8     | N/A     | Coordinator method         |
 
 ### 11.3 Cross-Reference Integrity
 
 Automated tests verify:
+
 - All skill references exist
 - README skill count matches directories
 - Example manifests pass validators
@@ -887,18 +904,21 @@ npm install -g .
 ### 12.3 Usage Examples
 
 **Scaffold Integration:**
+
 ```
 User: Create a new integration for my Acme thermostat
 Claude: [Uses ha-integration-scaffold skill to generate files]
 ```
 
 **Quality Review:**
+
 ```
 User: Review my integration for IQS compliance
 Claude: [Uses ha-quality-review skill, runs validators]
 ```
 
 **Live HA Queries:**
+
 ```
 User: What sensors are available in my Home Assistant?
 Claude: [Uses MCP ha_get_states tool to query live HA]
@@ -935,14 +955,14 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ### 14.1 Glossary
 
-| Term | Definition |
-|------|------------|
-| **IQS** | Integration Quality Scale - HA's official quality standard |
-| **HACS** | Home Assistant Community Store |
-| **MCP** | Model Context Protocol - Claude's tool interface |
-| **Config Entry** | HA's configuration storage for integrations |
-| **Coordinator** | DataUpdateCoordinator - centralized data fetching |
-| **runtime_data** | Type-safe storage on config entries |
+| Term             | Definition                                                 |
+| ---------------- | ---------------------------------------------------------- |
+| **IQS**          | Integration Quality Scale - HA's official quality standard |
+| **HACS**         | Home Assistant Community Store                             |
+| **MCP**          | Model Context Protocol - Claude's tool interface           |
+| **Config Entry** | HA's configuration storage for integrations                |
+| **Coordinator**  | DataUpdateCoordinator - centralized data fetching          |
+| **runtime_data** | Type-safe storage on config entries                        |
 
 ### 14.2 External References
 
@@ -955,9 +975,11 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 ### 14.3 Changelog Summary
 
 **v2.2.2**
+
 - Incremental improvements and fixes since v2.2.1
 
 **v2.0.0**
+
 - 19 skills (up from 11)
 - MCP server with 12 tools
 - 3 example integrations
@@ -965,6 +987,7 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 - 100% IQS coverage
 
 **v1.0.0** (Initial)
+
 - 11 skills
 - 3 agents
 - 1 command
@@ -974,8 +997,8 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 2.2 | Feb 2026 | Claude | Version sync to v2.2.1 |
-| 2.0 | Feb 2026 | Claude | Complete rewrite for v2.0 |
-| 1.0 | Feb 2026 | Claude | Initial design |
+| Version | Date     | Author | Changes                   |
+| ------- | -------- | ------ | ------------------------- |
+| 2.2     | Feb 2026 | Claude | Version sync to v2.2.1    |
+| 2.0     | Feb 2026 | Claude | Complete rewrite for v2.0 |
+| 1.0     | Feb 2026 | Claude | Initial design            |

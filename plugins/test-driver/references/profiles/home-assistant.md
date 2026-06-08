@@ -1,5 +1,5 @@
-  test categories, discovery conventions, execution commands, and coverage tools for HA
-  custom components.
+test categories, discovery conventions, execution commands, and coverage tools for HA custom components.
+
 ---
 
 # Stack Profile: Home Assistant Custom Integration
@@ -21,7 +21,7 @@
 **Key test files for an HA integration:**
 
 | File | What it tests |
-|------|--------------|
+| --- | --- |
 | `tests/conftest.py` | Shared fixtures (hass instance, mock config entries) |
 | `tests/test_config_flow.py` | Setup wizard steps (success, connection failure, auth failure) |
 | `tests/test_init.py` | Integration loading, unloading, and setup |
@@ -61,15 +61,18 @@ Not applicable. The Home Assistant frontend is a separate JavaScript project. Cu
 Per the Home Assistant Integration Quality Scale (IQS):
 
 **Bronze tier (minimum for HACS):**
+
 - Config flow: test success path
 - Config flow: test connection failure
 - Config flow: test authentication failure
 
 **Silver tier:**
+
 - All Bronze tests plus entity tests
 - Coordinator tests (data fetch, error handling)
 
 **Gold tier:**
+
 - All Silver tests plus diagnostics, repair issues
 - Full coverage of all entity platforms
 

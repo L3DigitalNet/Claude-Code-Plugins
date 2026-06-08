@@ -1,7 +1,9 @@
 # Mode 3: Plugin Release
 
 # Loaded by the release command router after the user selects "Plugin Release".
+
 # Context variables from Phase 0 are available: is_monorepo, unreleased_plugins,
+
 # current_branch, last_tag, commit_count.
 
 Scoped release for a single plugin. Uses scoped tags, scoped changelog, and only stages plugin files.
@@ -29,21 +31,22 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-version.sh . --plugin <plugin-name>
 Also read `plugins/<plugin-name>/.claude-plugin/plugin.json` to get `current_version`.
 
 Build options for **AskUserQuestion**:
+
 - If `suggested_version != current_version` AND `current_version` is semver-greater: use `current_version` as option 1 (Recommended) and `suggested_version` as option 2.
 - Otherwise: use `suggested_version` as option 1 (Recommended).
 - Always include `"Custom version"` as the last option.
 
 Use **AskUserQuestion**:
+
 - question: `"Which version for <plugin-name>?"`
 - header: `"Version"`
 - options (up to 3):
-  1. If recommended is commit-based: label: `"v<suggested_version> (Recommended)"`, description: `"Commit-based: <feat_count> feat, <fix_count> fix, <other_count> other since <last_tag>"`
-     If recommended is plugin.json: label: `"v<current_version> (Recommended)"`, description: `"Current plugin.json — already set to this value"`
-  2. *(only if both versions differ)* If other is commit-based: label: `"v<suggested_version>"`, description: `"Commit-based: <feat_count> feat, <fix_count> fix since last tag"`
-     If other is plugin.json: label: `"v<current_version>"`, description: `"Current plugin.json version — already set to this value"`
+  1. If recommended is commit-based: label: `"v<suggested_version> (Recommended)"`, description: `"Commit-based: <feat_count> feat, <fix_count> fix, <other_count> other since <last_tag>"` If recommended is plugin.json: label: `"v<current_version> (Recommended)"`, description: `"Current plugin.json — already set to this value"`
+  2. _(only if both versions differ)_ If other is commit-based: label: `"v<suggested_version>"`, description: `"Commit-based: <feat_count> feat, <fix_count> fix since last tag"` If other is plugin.json: label: `"v<current_version>"`, description: `"Current plugin.json version — already set to this value"`
   3. label: `"Custom version"`, description: `"Enter a specific version number"`
 
 If "Custom version" selected:
+
 1. Ask: `"Enter the version (e.g., 1.2.0 or v1.2.0):"`
 2. Validate the input matches `X.Y.Z` format (with optional leading `v`, where X/Y/Z are non-negative integers).
 3. If invalid, say: `"That doesn't look like a valid version (expected X.Y.Z, e.g. 1.2.3). Please try again:"` and re-ask once.
@@ -53,8 +56,7 @@ Normalize the version to `X.Y.Z` without leading `v` for scripts. Use `<plugin-n
 
 ## Phase 0.5 — Auto-Heal
 
-Before launching pre-flight checks, apply automatic recovery for the two most common failure
-modes. Set `auto_stash_pending=false` before starting.
+Before launching pre-flight checks, apply automatic recovery for the two most common failure modes. Set `auto_stash_pending=false` before starting.
 
 **IMPORTANT:** Before any script calls, output: `"Applying auto-heal checks..."`
 
@@ -90,6 +92,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/fix-git-email.sh . --auto-fix
 Then launch THREE Task agents simultaneously **in a single message** (all three tool calls in one response):
 
 **Agent A — Test Runner (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Run test suite for plugin release pre-flight"
@@ -104,6 +107,7 @@ prompt: |
 ```
 
 **Agent B — Docs Auditor (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Audit plugin documentation for release readiness"
@@ -116,6 +120,7 @@ prompt: |
 ```
 
 **Agent C — Git Pre-flight (scoped):**
+
 ```
 subagent_type: "general-purpose"
 description: "Git pre-flight check for plugin release"
@@ -132,6 +137,7 @@ prompt: |
 Display consolidated pre-flight report (same format as Mode 2).
 
 **Before proceeding, verify each agent's status explicitly:**
+
 - Locate the `TEST RESULTS`, `DOCS AUDIT`, and `GIT PRE-FLIGHT` blocks in each agent's output.
 - If any block is missing, incomplete, or ambiguous → treat it as FAIL.
 - If **ANY agent reports FAIL** → STOP immediately. Display the failure details and suggest: "Fix the issues above and re-run `/release`." Do NOT proceed to Phase 2.
@@ -162,18 +168,19 @@ git diff --stat
 ```
 
 Display both in a single pre-gate summary (matching Mode 2 format):
+
 - "Version files updated:" — from the diff (plugin.json, marketplace.json)
 - "Changelog entry that will be added:" — from the preview output, in a fenced block
 
 **Step 3 — Approval gate:**
 
 Use **AskUserQuestion**:
+
 - question: `"Proceed with the <plugin-name> v<version> release?"`
 - header: `"Release"`
 - options:
   1. label: `"Proceed"`, description: `"Write changelog, commit, tag, merge to main, and push"`
-  2. label: `"Abort"`, description: `"Cancel — revert version bumps (git checkout -- .)"`
-If "Abort" → run `git checkout -- .` and report "Release aborted. Version bumps reverted." and stop.
+  2. label: `"Abort"`, description: `"Cancel — revert version bumps (git checkout -- .)"` If "Abort" → run `git checkout -- .` and report "Release aborted. Version bumps reverted." and stop.
 
 **Step 4 — Write changelog (after approval):**
 
@@ -205,6 +212,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/reconcile-tags.sh . "<plugin-name>/v<version>
 ```
 
 Capture the first line of stdout as `tag_status`. Branch based on value:
+
 - `MISSING`: proceed to `git tag -a` step normally
 - `LOCAL_ONLY`, `BOTH`, or `REMOTE_ONLY`: skip `git tag -a` entirely — tag already exists; note: `"⚡ Tag <plugin-name>/v<version> already found (<tag_status>) — skipping local tag creation"`; proceed directly to `git push origin main --tags`
 
@@ -218,8 +226,7 @@ git push origin main --tags
 
 ## Phase 3.5 — Stash Restore
 
-If `auto_stash_pending` is true, restore auto-stashed changes now. All git operations are
-complete — the stash can safely be restored before the GitHub API call:
+If `auto_stash_pending` is true, restore auto-stashed changes now. All git operations are complete — the stash can safely be restored before the GitHub API call:
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/auto-stash.sh . pop
@@ -242,6 +249,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/verify-release.sh . <version> --plugin <plugi
 ## Final Summary
 
 Use the verification outcome from Phase 4 to determine the header (same rule as Mode 2):
+
 - Exit 0: `RELEASE COMPLETE: <plugin-name> v<version>`
 - Exit 1: `RELEASE COMPLETE ⚠: <plugin-name> v<version>` with post-block note
 

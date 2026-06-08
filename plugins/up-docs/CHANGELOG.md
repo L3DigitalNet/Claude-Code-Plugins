@@ -7,19 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.11.0] - 2026-06-07
 
 ### Added
+
 - Auditor narrowing: `convergence-tracker.sh` persists a per-iteration `touched_pages` path list; the drift auditor scans pass 1 in full and narrows pass N+1 to the prior pass's touched pages + one-hop `related` dependents.
 - Fast-path empty-layer skip: `/up-docs:all` routes each session item via a routing matrix and dispatches only propagators with routed items (fail-open on ambiguity); the auditor still covers all three layers.
 - Step 6 commit offer: consent-gated, baseline-safe (`commit-candidates.sh` surfaces changed-since-baseline paths for per-path diff approval + a late re-check), never pushes; degrades to report-only when non-interactive.
 
 ### Changed
+
 - `pages_touched` is now `len(touched_pages)` (was a running max).
 
 ## [0.10.1] - 2026-06-07
 
 ### Changed
+
 - parallelize link-audit curls + drop redundant tracker re-read
 - retire final Outline "collection" vocabulary stragglers
-
 
 ## [0.10.0] - 2026-06-07
 

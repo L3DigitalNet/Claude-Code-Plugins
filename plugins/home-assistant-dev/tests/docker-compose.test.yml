@@ -19,7 +19,7 @@ services:
     volumes:
       - ha-test-config:/config
     ports:
-      - "18123:8123"  # Use non-standard port to avoid conflicts
+      - "18123:8123" # Use non-standard port to avoid conflicts
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8123/api/"]
       interval: 5s
@@ -52,6 +52,8 @@ services:
         EOF
         echo "HA config written"
       '
+
+
     restart: "no"
 
   test-runner:
@@ -73,17 +75,17 @@ services:
         echo "  HA Dev Plugin - Containerized Tests"
         echo "========================================="
         echo ""
-
+      
         HA_HOST="homeassistant"
         HA_PORT="8123"
         HA_BASE="http://$${HA_HOST}:$${HA_PORT}"
-
+      
         # Install test dependencies
         apt-get update -qq && apt-get install -y -qq curl python3 python3-pip > /dev/null 2>&1
         pip3 install aiohttp --break-system-packages -q 2>/dev/null || pip3 install aiohttp -q
-
+      
         echo "=== Step 1: Complete HA Onboarding ==="
-
+      
         # Create owner account
         echo -n "Creating owner account... "
         ONBOARD_RESP=$$(curl -sf -X POST "$${HA_BASE}/api/onboarding/users" \
@@ -91,14 +93,14 @@ services:
           -d "{\"client_id\":\"$${HA_BASE}/\",\"name\":\"Test\",\"username\":\"test\",\"password\":\"test1234\",\"language\":\"en\"}")
         AUTH_CODE=$$(echo "$$ONBOARD_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"auth_code\"])")
         echo "done"
-
+      
         # Exchange auth code for tokens
         echo -n "Exchanging auth code... "
         TOKEN_RESP=$$(curl -sf -X POST "$${HA_BASE}/auth/token" \
           -d "grant_type=authorization_code&code=$${AUTH_CODE}&client_id=$${HA_BASE}/")
         ACCESS_TOKEN=$$(echo "$$TOKEN_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"access_token\"])")
         echo "done"
-
+      
         # Complete remaining onboarding steps
         echo -n "Completing onboarding... "
         curl -sf -X POST "$${HA_BASE}/api/onboarding/core_config" \
@@ -112,7 +114,7 @@ services:
           -H "Content-Type: application/json" \
           -d "{\"client_id\":\"$${HA_BASE}/\",\"redirect_uri\":\"$${HA_BASE}/\"}" > /dev/null
         echo "done"
-
+      
         # Create LLAT via WebSocket
         echo -n "Creating long-lived access token... "
         LLAT=$$(python3 -c "
@@ -134,7 +136,7 @@ services:
         asyncio.run(create_llat())
         ")
         echo "done"
-
+      
         # Write MCP config
         mkdir -p /root/.config/ha-dev-mcp
         cat > /root/.config/ha-dev-mcp/config.json << EOF
@@ -159,37 +161,37 @@ services:
           }
         }
         EOF
-
+      
         # Verify setup
         echo -n "Verifying HA connection... "
         HA_VER=$$(curl -sf "$${HA_BASE}/api/config" \
           -H "Authorization: Bearer $${LLAT}" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"version\"])")
         echo "HA v$${HA_VER}"
-
+      
         # Wait for entity subscription to populate
         echo "Waiting for demo entities to load..."
         sleep 3
-
+      
         echo ""
         echo "=== Step 2: Install MCP Server Dependencies ==="
         cd /plugin/mcp-server
         npm ci --ignore-scripts 2>&1 | tail -1
-
+      
         echo ""
         echo "=== Step 3: Run MCP Unit Tests ==="
         npm test 2>&1 || true
-
+      
         echo ""
         echo "=== Step 4: Run MCP E2E Tests ==="
         cd /plugin
-
+      
         echo "--- REST API Tests ---"
         node tests/e2e/test-mcp-rest.mjs 2>&1 || REST_FAIL=1
-
+      
         echo ""
         echo "--- WebSocket Tests ---"
         node tests/e2e/test-mcp-websocket.mjs 2>&1 || WS_FAIL=1
-
+      
         echo ""
         echo "========================================="
         if [ "$${REST_FAIL:-0}" = "1" ] || [ "$${WS_FAIL:-0}" = "1" ]; then
@@ -200,6 +202,8 @@ services:
           exit 0
         fi
       '
+
+
     restart: "no"
 
 volumes:

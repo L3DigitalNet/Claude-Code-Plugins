@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview."
+description: 'Release pipeline — interactive menu for quick merge, full release, plugin release, status, dry run, or changelog preview.'
 ---
 
 # Release Pipeline
@@ -28,6 +28,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-unreleased.sh .
 ```
 
 Capture result:
+
 - Exit code 0 with output → `is_monorepo = true`, parse TSV output into `unreleased_plugins` list
 - Exit code 0 with "No plugins with unreleased changes" on stderr → `is_monorepo = true`, `unreleased_plugins = []`
 - Exit code 1 → `is_monorepo = false`
@@ -63,9 +64,11 @@ Capture: `last_tag`.
 **Step 5 — Commit count since last tag:**
 
 If `last_tag` is not "(none)":
+
 ```bash
 git log <last_tag>..HEAD --oneline | wc -l
 ```
+
 Capture: `commit_count`.
 
 If `last_tag` is "(none)", set `commit_count` to total commit count.
@@ -119,20 +122,19 @@ Branch: <current_branch>  |  Last tag: <last_tag>  |  <commit_count> commits sin
 
 Omit the `⚠ uncommitted changes` segment when `is_dirty` is false.
 
-**Question text:** `"What would you like to do?"`
-**Header:** `"Release"`
+**Question text:** `"What would you like to do?"` **Header:** `"Release"`
 
 After the user selects, load the corresponding mode template and follow it exactly. All Phase 0 context variables are available to the template.
 
-| Selection | Template to load |
-|-----------|-----------------|
-| Quick Push | `${CLAUDE_PLUGIN_ROOT}/templates/mode-1-quick-merge.md` |
-| Full Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-2-full-release.md` |
-| Plugin Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-3-plugin-release.md` |
-| Batch Release | `${CLAUDE_PLUGIN_ROOT}/templates/mode-7-batch-release.md` |
-| Release Status | `${CLAUDE_PLUGIN_ROOT}/templates/mode-4-status.md` |
-| Dry Run | `${CLAUDE_PLUGIN_ROOT}/templates/mode-5-dry-run.md` |
-| Changelog Preview | `${CLAUDE_PLUGIN_ROOT}/templates/mode-6-changelog.md` |
+| Selection         | Template to load                                           |
+| ----------------- | ---------------------------------------------------------- |
+| Quick Push        | `${CLAUDE_PLUGIN_ROOT}/templates/mode-1-quick-merge.md`    |
+| Full Release      | `${CLAUDE_PLUGIN_ROOT}/templates/mode-2-full-release.md`   |
+| Plugin Release    | `${CLAUDE_PLUGIN_ROOT}/templates/mode-3-plugin-release.md` |
+| Batch Release     | `${CLAUDE_PLUGIN_ROOT}/templates/mode-7-batch-release.md`  |
+| Release Status    | `${CLAUDE_PLUGIN_ROOT}/templates/mode-4-status.md`         |
+| Dry Run           | `${CLAUDE_PLUGIN_ROOT}/templates/mode-5-dry-run.md`        |
+| Changelog Preview | `${CLAUDE_PLUGIN_ROOT}/templates/mode-6-changelog.md`      |
 
 ---
 

@@ -1,5 +1,4 @@
-  conventions, execution commands, coverage tools, and key testing patterns for FastAPI APIs.
----
+## conventions, execution commands, coverage tools, and key testing patterns for FastAPI APIs.
 
 # Stack Profile: Python / FastAPI
 
@@ -18,13 +17,13 @@
 - **Naming:** files matching `test_*.py`
 - **Categorization:** by directory or pytest markers
 
-| Category | Directory | Marker |
-|----------|-----------|--------|
-| Unit | `tests/unit/` | `@pytest.mark.unit` |
+| Category    | Directory            | Marker                     |
+| ----------- | -------------------- | -------------------------- |
+| Unit        | `tests/unit/`        | `@pytest.mark.unit`        |
 | Integration | `tests/integration/` | `@pytest.mark.integration` |
-| E2E | `tests/e2e/` | `@pytest.mark.e2e` |
-| Contract | `tests/contract/` | `@pytest.mark.contract` |
-| Security | `tests/security/` | `@pytest.mark.security` |
+| E2E         | `tests/e2e/`         | `@pytest.mark.e2e`         |
+| Contract    | `tests/contract/`    | `@pytest.mark.contract`    |
+| Security    | `tests/security/`    | `@pytest.mark.security`    |
 
 Projects may use directories, markers, or both. Check `pyproject.toml` for `[tool.pytest.ini_options]` marker definitions.
 

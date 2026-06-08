@@ -4,8 +4,7 @@ Three methods, listed newest-to-oldest. Prefer Method 1 for new code.
 
 ## Method 1: Required Properties (preferred — Qt 6 idiomatic)
 
-`setInitialProperties` + `required property` gives type-checked, scoped injection.
-`setContextProperty` is untyped and global — avoid for new code.
+`setInitialProperties` + `required property` gives type-checked, scoped injection. `setContextProperty` is untyped and global — avoid for new code.
 
 ```python
 # Python — set before engine.load()

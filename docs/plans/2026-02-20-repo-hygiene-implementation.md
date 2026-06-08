@@ -13,6 +13,7 @@
 ## Task 1: Plugin scaffold
 
 **Files:**
+
 - Create: `plugins/repo-hygiene/.claude-plugin/plugin.json`
 - Create: `plugins/repo-hygiene/commands/hygiene.md` (stub — full content in Task 6)
 - Create: `plugins/repo-hygiene/scripts/` (empty dir via .gitkeep)
@@ -31,13 +32,10 @@ mkdir -p plugins/repo-hygiene/scripts
 
 ```json
 {
-  "name": "repo-hygiene",
-  "version": "1.0.0",
-  "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  }
+	"name": "repo-hygiene",
+	"version": "1.0.0",
+	"description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" }
 }
 ```
 
@@ -51,6 +49,7 @@ Save to `plugins/repo-hygiene/.claude-plugin/plugin.json`.
 ## [1.0.0] - 2026-02-20
 
 ### Added
+
 - `/hygiene` command with `--dry-run` flag
 - Check 1: `.gitignore` stale pattern detection and missing-pattern suggestions
 - Check 2: Marketplace manifest `source` path cross-reference
@@ -68,9 +67,10 @@ Save to `plugins/repo-hygiene/.claude-plugin/plugin.json`.
 Autonomous maintenance sweep for the Claude-Code-Plugins monorepo.
 
 ## Usage
-
 ```
+
 /hygiene [--dry-run]
+
 ```
 
 Runs five checks and auto-fixes safe items. Risky changes are presented for approval.
@@ -111,6 +111,7 @@ find plugins/repo-hygiene -type f | sort
 ```
 
 Expected output:
+
 ```
 plugins/repo-hygiene/.claude-plugin/plugin.json
 plugins/repo-hygiene/CHANGELOG.md
@@ -130,14 +131,15 @@ git commit -m "feat(repo-hygiene): scaffold plugin structure v1.0.0"
 ## Task 2: check-gitignore.sh
 
 **Files:**
+
 - Create: `plugins/repo-hygiene/scripts/check-gitignore.sh`
 
 **Overview:** Finds all non-auto-generated `.gitignore` files in the repo. For each file:
+
 - Checks if well-known patterns are present (per-plugin scope): `node_modules/` when `package.json` exists, `__pycache__/`/`*.pyc` when `*.py` files exist
 - Checks for potentially stale patterns using `git ls-files -i`
 
-Auto-fixable: append missing well-known patterns.
-Needs-approval: patterns that appear to match nothing in the working tree.
+Auto-fixable: append missing well-known patterns. Needs-approval: patterns that appear to match nothing in the working tree.
 
 **Step 1: Write check-gitignore.sh**
 
@@ -277,17 +279,18 @@ git commit -m "feat(repo-hygiene): add check-gitignore.sh"
 ## Task 3: check-manifests.sh
 
 **Files:**
+
 - Create: `plugins/repo-hygiene/scripts/check-manifests.sh`
 
 **Overview:** Reads `.claude-plugin/marketplace.json` at repo root. For each plugin entry, verifies:
+
 - `source` directory exists (`./plugins/<name>`)
 - `source` directory contains `.claude-plugin/plugin.json`
 - Version in marketplace entry matches version in plugin's `plugin.json`
 
 Also reads `~/.claude/plugins/installed_plugins.json` and verifies each `installPath` exists on the filesystem.
 
-Auto-fixable: trailing slash mismatches in source paths (normalize).
-Needs-approval: path not found, version mismatch.
+Auto-fixable: trailing slash mismatches in source paths (normalize). Needs-approval: path not found, version mismatch.
 
 **Step 1: Write check-manifests.sh**
 
@@ -405,6 +408,7 @@ The script uses `REPO_ROOT` as an env var — it's set via `set -a` in the calli
 Replace the Python heredoc opener line with passing REPO_ROOT explicitly:
 
 After `cd "$REPO_ROOT"`, add:
+
 ```bash
 export REPO_ROOT
 ```
@@ -431,16 +435,19 @@ git commit -m "feat(repo-hygiene): add check-manifests.sh"
 ## Task 4: check-orphans.sh
 
 **Files:**
+
 - Create: `plugins/repo-hygiene/scripts/check-orphans.sh`
 
 **Overview:** Compares three plugin state sources. All findings are needs-approval (removal is destructive).
 
 Sources:
+
 - `~/.claude/plugins/installed_plugins.json` → `plugins` key → keys are `name@marketplace`
 - `~/.claude/settings.json` → `enabledPlugins` key → keys are `name@marketplace`
 - `~/.claude/plugins/cache/` → directories
 
 Findings:
+
 1. `installed_plugins.json` entry whose `installPath` dir doesn't exist
 2. `settings.json` `enabledPlugins` key not present in `installed_plugins.json`
 3. `installed_plugins.json` entry not present in `settings.json` `enabledPlugins`
@@ -556,6 +563,7 @@ git commit -m "feat(repo-hygiene): add check-orphans.sh"
 ## Task 5: check-stale-commits.sh
 
 **Files:**
+
 - Create: `plugins/repo-hygiene/scripts/check-stale-commits.sh`
 
 **Overview:** Uses `git status --porcelain` to find modified/untracked files. For each, checks file mtime with `stat`. Files modified > 24 hours ago are flagged. All findings are needs-approval.
@@ -662,39 +670,38 @@ git commit -m "feat(repo-hygiene): add check-stale-commits.sh"
 ## Task 6: commands/hygiene.md (main command)
 
 **Files:**
+
 - Modify: `plugins/repo-hygiene/commands/hygiene.md` (replace stub)
 
 **Overview:** The orchestrating command. Parses `--dry-run`, runs four scripts in parallel, performs semantic README analysis inline (Check 3), classifies all findings, applies auto-fixes, presents needs-approval items.
 
 **Step 1: Write the full commands/hygiene.md**
 
-```markdown
+````markdown
 ---
 description: Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.
 ---
 
 # /hygiene [--dry-run]
 
-Autonomous maintenance sweep for the Claude-Code-Plugins monorepo. Runs five checks,
-auto-fixes safe issues immediately (unless `--dry-run`), then presents risky changes
-for explicit approval.
+Autonomous maintenance sweep for the Claude-Code-Plugins monorepo. Runs five checks, auto-fixes safe issues immediately (unless `--dry-run`), then presents risky changes for explicit approval.
 
 ## Step 0: Setup
 
 Parse the invocation for `--dry-run` flag. Store as `DRY_RUN=true|false`.
 
 Resolve the plugin root:
+
 ```bash
 echo $CLAUDE_PLUGIN_ROOT
 ```
+````
 
 Store as `PLUGIN_ROOT`.
 
 ## Step 1: Mechanical Scans (Run all four in parallel)
 
-Run these four scripts and capture their JSON output. Execute them concurrently — they
-are independent. Capture stdout from each; if any exits non-zero, surface the stderr
-output as a critical failure and stop.
+Run these four scripts and capture their JSON output. Execute them concurrently — they are independent. Capture stdout from each; if any exits non-zero, surface the stderr output as a critical failure and stop.
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-gitignore.sh
@@ -703,8 +710,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-orphans.sh
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-stale-commits.sh
 ```
 
-Parse each output as JSON. Collect all findings arrays into a unified `all_findings` list,
-tagging each finding with its `check` source.
+Parse each output as JSON. Collect all findings arrays into a unified `all_findings` list, tagging each finding with its `check` source.
 
 ## Step 2: Semantic Scan — README Freshness (Check 3)
 
@@ -712,32 +718,29 @@ For each plugin directory in `plugins/`:
 
 **2a. Read the plugin's README.md.** If it has no README, skip.
 
-**2b. Extract the `Known Issues` section** (look for `## Known Issues` or `### Known Issues`
-heading). If present, for each bullet item, scan the plugin's scripts, hooks, and commands
-for evidence it is still true. If the issue appears to have been resolved in code, add:
+**2b. Extract the `Known Issues` section** (look for `## Known Issues` or `### Known Issues` heading). If present, for each bullet item, scan the plugin's scripts, hooks, and commands for evidence it is still true. If the issue appears to have been resolved in code, add:
+
 ```json
 {
-  "check": "readme-freshness",
-  "severity": "warn",
-  "path": "plugins/<name>/README.md",
-  "detail": "Known Issue '<issue text truncated to 80 chars>' may be stale — code suggests it is resolved",
-  "auto_fix": false,
-  "fix_cmd": null
+	"check": "readme-freshness",
+	"severity": "warn",
+	"path": "plugins/<name>/README.md",
+	"detail": "Known Issue '<issue text truncated to 80 chars>' may be stale — code suggests it is resolved",
+	"auto_fix": false,
+	"fix_cmd": null
 }
 ```
 
-**2c. Extract the `Principles` or `Design Principles` section.** For each principle listed,
-check if it is still reflected in the implementation. Look for obvious contradictions only
-(e.g., a principle claims "no external dependencies" but `package.json` has deps). If a
-principle appears contradicted:
+**2c. Extract the `Principles` or `Design Principles` section.** For each principle listed, check if it is still reflected in the implementation. Look for obvious contradictions only (e.g., a principle claims "no external dependencies" but `package.json` has deps). If a principle appears contradicted:
+
 ```json
 {
-  "check": "readme-freshness",
-  "severity": "warn",
-  "path": "plugins/<name>/README.md",
-  "detail": "Principle '<text truncated>' appears contradicted by current codebase",
-  "auto_fix": false,
-  "fix_cmd": null
+	"check": "readme-freshness",
+	"severity": "warn",
+	"path": "plugins/<name>/README.md",
+	"detail": "Principle '<text truncated>' appears contradicted by current codebase",
+	"auto_fix": false,
+	"fix_cmd": null
 }
 ```
 
@@ -746,26 +749,29 @@ Add all findings to `all_findings`.
 ## Step 3: Classify Findings
 
 Partition `all_findings` into two lists:
+
 - `auto_fixable`: findings where `auto_fix == true` and `fix_cmd` is not null
 - `needs_approval`: all others with `severity == "warn"` (skip `severity == "info"` from approval queue — surface as notes only)
 
 Build a severity-sorted report using 🔴/🟡/🟢 prefixes:
+
 - `warn` → 🔴
 - `info` → 🟢
 
 ## Step 4: Apply Auto-fixes
 
-**If DRY_RUN is true:** Display all auto-fixable findings with `[DRY RUN — would apply]` prefix.
-Do not execute any `fix_cmd`. Continue to Step 5 but also mark needs-approval items as
-`[DRY RUN — would present for approval]`.
+**If DRY_RUN is true:** Display all auto-fixable findings with `[DRY RUN — would apply]` prefix. Do not execute any `fix_cmd`. Continue to Step 5 but also mark needs-approval items as `[DRY RUN — would present for approval]`.
 
 **If DRY_RUN is false:** For each auto-fixable finding, execute its `fix_cmd` in a bash subshell:
+
 ```bash
 bash -c "<fix_cmd>"
 ```
+
 If any fix command fails, surface the error and continue — do not abort the sweep.
 
 After applying, output:
+
 ```
 ✅ Auto-fixed N items:
   • plugins/foo/.gitignore — appended missing '__pycache__/' pattern
@@ -775,9 +781,11 @@ After applying, output:
 ## Step 5: Present Needs-Approval Items
 
 If there are no needs-approval findings, output:
+
 ```
 ✅ No risky changes found. Sweep complete.
 ```
+
 and stop.
 
 Otherwise, present all needs-approval items as a numbered list grouped by check:
@@ -800,6 +808,7 @@ Otherwise, present all needs-approval items as a numbered list grouped by check:
 ```
 
 Use `AskUserQuestion` with multi-select to let the user choose which to apply:
+
 - Options: each item numbered (up to 4 shown; if more than 4, offer "All", "None", "Other (specify numbers)")
 - For orphaned temp directories, the "fix" is: "Delete `<path>`?" — surface the exact path
 - For stale commits, the "fix" is: "Stage `<file>` for commit?"
@@ -811,6 +820,7 @@ Use `AskUserQuestion` with multi-select to let the user choose which to apply:
 ## Step 6: Apply Approved Changes
 
 For each approved item:
+
 - **orphaned temp dir**: `rm -rf <path>` — confirm the path starts with `~/.claude/plugins/cache/temp_` before executing (safety guard)
 - **stale commit file**: `git add <filepath>` — do NOT commit automatically; let user commit with their own message
 - **README freshness**: Open the file in a Read and display the flagged section — no automated change
@@ -819,6 +829,7 @@ For each approved item:
 ## Step 7: Final Summary
 
 Output a compact summary:
+
 ```
 Hygiene sweep complete.
   Auto-fixed:   N items
@@ -828,14 +839,15 @@ Hygiene sweep complete.
 ```
 
 If DRY_RUN was active, prefix all counts with `[DRY RUN]`.
-```
+
+````
 
 **Step 2: Verify the file was written correctly**
 
 ```bash
 head -5 plugins/repo-hygiene/commands/hygiene.md
 wc -l plugins/repo-hygiene/commands/hygiene.md
-```
+````
 
 Expected: frontmatter present, ~160 lines.
 
@@ -851,6 +863,7 @@ git commit -m "feat(repo-hygiene): add /hygiene command orchestrator"
 ## Task 7: Marketplace registration + validation
 
 **Files:**
+
 - Modify: `.claude-plugin/marketplace.json`
 
 **Step 1: Add repo-hygiene entry to marketplace.json**
@@ -859,15 +872,12 @@ Open `.claude-plugin/marketplace.json`. Append to the `plugins` array:
 
 ```json
 {
-  "name": "repo-hygiene",
-  "description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
-  "version": "1.0.0",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  },
-  "source": "./plugins/repo-hygiene",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
+	"name": "repo-hygiene",
+	"description": "Autonomous maintenance sweep — validates .gitignore patterns, manifest paths, README freshness, plugin state consistency, and stale uncommitted changes.",
+	"version": "1.0.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"source": "./plugins/repo-hygiene",
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/repo-hygiene"
 }
 ```
 
@@ -903,7 +913,7 @@ bash plugins/repo-hygiene/scripts/check-orphans.sh   | python3 -m json.tool
 bash plugins/repo-hygiene/scripts/check-stale-commits.sh | python3 -m json.tool
 ```
 
-Expected for each: valid JSON with `findings` array. For check-orphans, expect at minimum 8 findings (temp_* dirs). For check-stale-commits, expect findings matching the M files in gitStatus.
+Expected for each: valid JSON with `findings` array. For check-orphans, expect at minimum 8 findings (temp\_\* dirs). For check-stale-commits, expect findings matching the M files in gitStatus.
 
 **Step 2: Run the full sweep via Claude Code**
 
@@ -912,11 +922,13 @@ claude --plugin-dir ./plugins/repo-hygiene
 ```
 
 Then invoke `/hygiene --dry-run` and verify:
+
 - Report appears with all five checks
 - `[DRY RUN — would apply]` labels present
 - No files modified
 
 Then invoke `/hygiene` (without dry-run) and verify:
+
 - Auto-fixable items are applied
 - Needs-approval items appear in `AskUserQuestion` multi-select
 - Final summary shows correct counts
@@ -937,13 +949,13 @@ git commit -m "test(repo-hygiene): verify end-to-end sweep against monorepo"
 
 ## Summary
 
-| Task | Component | Action |
-|------|-----------|--------|
-| 1 | Plugin scaffold | Create dirs, plugin.json, CHANGELOG, README |
-| 2 | check-gitignore.sh | Missing/stale .gitignore patterns |
-| 3 | check-manifests.sh | Source path + installPath cross-reference |
-| 4 | check-orphans.sh | installed_plugins.json vs settings.json vs FS |
-| 5 | check-stale-commits.sh | Uncommitted changes >24h |
-| 6 | commands/hygiene.md | Orchestrating command |
-| 7 | marketplace.json | Register plugin |
-| 8 | End-to-end test | Run against this repo, verify findings |
+| Task | Component              | Action                                        |
+| ---- | ---------------------- | --------------------------------------------- |
+| 1    | Plugin scaffold        | Create dirs, plugin.json, CHANGELOG, README   |
+| 2    | check-gitignore.sh     | Missing/stale .gitignore patterns             |
+| 3    | check-manifests.sh     | Source path + installPath cross-reference     |
+| 4    | check-orphans.sh       | installed_plugins.json vs settings.json vs FS |
+| 5    | check-stale-commits.sh | Uncommitted changes >24h                      |
+| 6    | commands/hygiene.md    | Orchestrating command                         |
+| 7    | marketplace.json       | Register plugin                               |
+| 8    | End-to-end test        | Run against this repo, verify findings        |

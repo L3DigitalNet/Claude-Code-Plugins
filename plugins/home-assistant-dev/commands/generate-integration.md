@@ -117,6 +117,7 @@ If Abort: stop with "Generation cancelled."
 ## Step 6: Generate Files
 
 ### Bronze tier (always generated)
+
 ```
 custom_components/{domain}/
 ├── __init__.py
@@ -131,16 +132,19 @@ custom_components/{domain}/
 ```
 
 ### Silver additions (if Silver or Gold)
+
 - Options flow in `config_flow.py`
 - Reauth flow in `config_flow.py`
 
 ### Gold additions (if Gold)
+
 - `diagnostics.py` (if Diagnostics selected)
 - `translations/en.json` with full entity translation keys
 - `icons.json`
 - Discovery step in `config_flow.py` (if discovery selected)
 
 ### HACS ready (always)
+
 ```
 hacs.json
 README.md

@@ -54,19 +54,17 @@ class {Name}ConfigFlow(ConfigFlow, domain=DOMAIN):
 
 ```json
 {
-  "options": {
-    "step": {
-      "init": {
-        "title": "Settings",
-        "data": {
-          "scan_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "scan_interval": "How often to poll the device (10-300 seconds)"
-        }
-      }
-    }
-  }
+	"options": {
+		"step": {
+			"init": {
+				"title": "Settings",
+				"data": { "scan_interval": "Update interval (seconds)" },
+				"data_description": {
+					"scan_interval": "How often to poll the device (10-300 seconds)"
+				}
+			}
+		}
+	}
 }
 ```
 

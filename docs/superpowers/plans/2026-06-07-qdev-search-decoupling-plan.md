@@ -30,20 +30,22 @@
 - [ ] **Step 1: Confirm the qdev surface matches the spec's delete/keep list**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 ls plugins/qdev/commands plugins/qdev/agents plugins/qdev/skills plugins/qdev/scripts plugins/qdev/tests
 ```
+
 Expected: commands `deps-audit.md doc-sync.md quality-review.md research.md spec-update.md`; agents `qdev-deps-auditor.md qdev-doc-syncer.md qdev-quality-reviewer.md qdev-researcher.md`; skills `research-grounding/`; scripts include `sanitize_query.py`; tests include `test_sanitize_query.py` and `test_plugin_structure.py`. If any differ, stop and reconcile against the spec before continuing.
 
 - [ ] **Step 2: Record the working-tree state to protect unrelated changes**
 
-Run: `git status --short`
-Note every pre-existing modified/untracked path (e.g. `TODO.md`, `.claude/settings.json`, `docs/codex-reviews/**`). None of these may be staged in Task A9.
+Run: `git status --short` Note every pre-existing modified/untracked path (e.g. `TODO.md`, `.claude/settings.json`, `docs/codex-reviews/**`). None of these may be staged in Task A9.
 
 ### Task A2: Delete the deprecated command, agent, skill, and sanitizer files
 
 **Files:**
+
 - Delete: `plugins/qdev/commands/deps-audit.md`, `plugins/qdev/commands/doc-sync.md`, `plugins/qdev/commands/quality-review.md`, `plugins/qdev/commands/spec-update.md`
 - Delete: `plugins/qdev/agents/qdev-deps-auditor.md`, `plugins/qdev/agents/qdev-doc-syncer.md`, `plugins/qdev/agents/qdev-quality-reviewer.md`
 - Delete: `plugins/qdev/skills/research-grounding/` (whole dir)
@@ -70,28 +72,29 @@ git rm -r plugins/qdev/skills/research-grounding
 
 - [ ] **Step 2: Confirm the kept files survive**
 
-Run: `ls plugins/qdev/commands plugins/qdev/agents plugins/qdev/scripts`
-Expected: commands = `research.md` only; agents = `qdev-researcher.md` only; scripts still contain `build_research_index.py`, `dedup.py`, `_frontmatter.py`, `validate_research_frontmatter.py`, `markdown-frontmatter.schema.json`, `README.md`.
+Run: `ls plugins/qdev/commands plugins/qdev/agents plugins/qdev/scripts` Expected: commands = `research.md` only; agents = `qdev-researcher.md` only; scripts still contain `build_research_index.py`, `dedup.py`, `_frontmatter.py`, `validate_research_frontmatter.py`, `markdown-frontmatter.schema.json`, `README.md`.
 
 - [ ] **Step 3: Confirm the skills directory is now empty of skills**
 
-Run: `find plugins/qdev/skills -name SKILL.md -print 2>/dev/null`
-Expected: **no path printed.** (The `skills/` dir may be gone entirely after `git rm -r`, in which case `find` prints nothing and may emit a "No such file or directory" on stderr — both are fine. The point is that no `SKILL.md` path appears; do not treat a removed directory as an error.)
+Run: `find plugins/qdev/skills -name SKILL.md -print 2>/dev/null` Expected: **no path printed.** (The `skills/` dir may be gone entirely after `git rm -r`, in which case `find` prints nothing and may emit a "No such file or directory" on stderr — both are fine. The point is that no `SKILL.md` path appears; do not treat a removed directory as an error.)
 
 ### Task A3: Fix the structural test for the new (skill-less) surface
 
 The structural test hard-codes two now-false assumptions: that qdev ships at least one skill, and that ≥5 files are dispatchers. After Task A2 only `research.md` dispatches and there are zero skills.
 
 **Files:**
+
 - Modify: `plugins/qdev/tests/test_plugin_structure.py` (lines ~48-50 and ~97-101)
 
 - [ ] **Step 1: Run the structural test to see it fail post-deletion**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins/plugins/qdev
 PATH=/usr/bin:/bin:$PATH python -m pytest tests/test_plugin_structure.py -q
 ```
+
 Expected: FAIL — `test_discovery_found_the_expected_surface` fails its `assert AGENTS and COMMANDS and SKILLS` (SKILLS now empty), and `test_dispatch_markers_present_so_guard_is_not_vacuous` fails `assert len(marked) >= 5` (only 1 dispatcher remains).
 
 > The `PATH=/usr/bin:/bin` prefix is the repo's bats/pytest hardening against `find`/`grep` shims — harmless for pytest, keep it for consistency.
@@ -99,12 +102,15 @@ Expected: FAIL — `test_discovery_found_the_expected_surface` fails its `assert
 - [ ] **Step 2: Update the discovery assertion to not require a skill**
 
 In `test_discovery_found_the_expected_surface` (around line 48-50), replace:
+
 ```python
 def test_discovery_found_the_expected_surface():
     # Guards against a glob that silently matches nothing (vacuous pass).
     assert AGENTS and COMMANDS and SKILLS
 ```
+
 with:
+
 ```python
 def test_discovery_found_the_expected_surface():
     # Guards against a glob that silently matches nothing (vacuous pass).
@@ -116,6 +122,7 @@ def test_discovery_found_the_expected_surface():
 - [ ] **Step 3: Update the dispatcher-marker count guard**
 
 In `test_dispatch_markers_present_so_guard_is_not_vacuous` (around line 97-101), replace:
+
 ```python
 def test_dispatch_markers_present_so_guard_is_not_vacuous():
     # Pin that the per-file guard actually runs against real dispatchers; the 4
@@ -123,7 +130,9 @@ def test_dispatch_markers_present_so_guard_is_not_vacuous():
     marked = [p for p in DISPATCHERS if _DISPATCH_MARKER.search(p.read_text(encoding="utf-8"))]
     assert len(marked) >= 5
 ```
+
 with:
+
 ```python
 def test_dispatch_markers_present_so_guard_is_not_vacuous():
     # Pin that the per-file guard actually runs against a real dispatcher. Since
@@ -136,10 +145,12 @@ def test_dispatch_markers_present_so_guard_is_not_vacuous():
 - [ ] **Step 4: Run the structural test to verify it passes**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins/plugins/qdev
 PATH=/usr/bin:/bin:$PATH python -m pytest tests/test_plugin_structure.py -q
 ```
+
 Expected: PASS (all parametrized cases over the remaining 1 command + 1 agent green).
 
 ### Task A4: Scrub dangling `/qdev:quality-review` references (spec SA-003)
@@ -147,41 +158,47 @@ Expected: PASS (all parametrized cases over the remaining 1 command + 1 agent gr
 The only surviving command and agent both point at the now-deleted `/qdev:quality-review`. Text-only edits — no behavior change.
 
 **Files:**
+
 - Modify: `plugins/qdev/commands/research.md` (the post-research `AskUserQuestion` option ~line 81; the historical prose ~line 23)
 - Modify: `plugins/qdev/agents/qdev-researcher.md` (the Handoff list ~line 197)
 
 - [ ] **Step 1: Remove the quality-review chaining option in `research.md`**
 
 In `plugins/qdev/commands/research.md`, the downstream-chaining `AskUserQuestion` currently offers three options. Replace this block:
+
 ```markdown
-   - options:
-     1. label: `"Brainstorm next"`, description: `"Feed Open Questions into superpowers:brainstorming"`
-     2. label: `"Quality-review related artifact"`, description: `"Run /qdev:quality-review with this research as context"`
-     3. label: `"Just save and exit"`, description: `"No follow-up"`
+- options:
+  1.  label: `"Brainstorm next"`, description: `"Feed Open Questions into superpowers:brainstorming"`
+  2.  label: `"Quality-review related artifact"`, description: `"Run /qdev:quality-review with this research as context"`
+  3.  label: `"Just save and exit"`, description: `"No follow-up"`
 ```
+
 with:
+
 ```markdown
-   - options:
-     1. label: `"Brainstorm next"`, description: `"Feed Open Questions into superpowers:brainstorming"`
-     2. label: `"Just save and exit"`, description: `"No follow-up"`
+- options:
+  1.  label: `"Brainstorm next"`, description: `"Feed Open Questions into superpowers:brainstorming"`
+  2.  label: `"Just save and exit"`, description: `"No follow-up"`
 ```
 
 - [ ] **Step 2: Soften the historical quality-review prose in `research.md`**
 
 In `plugins/qdev/commands/research.md` (~line 23), replace:
+
 ```markdown
-structured report. This matches the v1.3.0 extraction pattern used for `quality-review`,
-`deps-audit`, and `doc-sync`.
+structured report. This matches the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-sync`.
 ```
+
 with:
+
 ```markdown
-structured report. This is the v1.3.0 subagent-extraction pattern: the orchestrator stays
-out of raw search results and receives only the compact structured report.
+structured report. This is the v1.3.0 subagent-extraction pattern: the orchestrator stays out of raw search results and receives only the compact structured report.
 ```
 
 - [ ] **Step 3: Remove the quality-review line from the researcher's Handoff section**
 
 In `plugins/qdev/agents/qdev-researcher.md` (~line 197), the output-format Handoff list reads:
+
 ```markdown
 Persisted at `<path>`. Downstream commands that may consume it:
 
@@ -189,7 +206,9 @@ Persisted at `<path>`. Downstream commands that may consume it:
 - `superpowers:brainstorming` — feed Open Questions into a design conversation
 - `feature-dev:feature-dev` — start architecture work with this background
 ```
+
 Replace it with (drop the first bullet only — research behavior and the rest of the report machinery are unchanged):
+
 ```markdown
 Persisted at `<path>`. Downstream skills that may consume it:
 
@@ -200,53 +219,58 @@ Persisted at `<path>`. Downstream skills that may consume it:
 - [ ] **Step 4: Verify no `/qdev:quality-review` (or other removed-command) refs remain on the live qdev surface**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 grep -rn 'qdev:quality-review\|qdev:deps-audit\|qdev:doc-sync\|qdev:spec-update\|research-grounding\|qdev-grounding\|sanitize_query' \
   plugins/qdev/commands plugins/qdev/agents plugins/qdev/README.md plugins/qdev/.claude-plugin \
   2>/dev/null
 ```
+
 Expected: no output. (CHANGELOG.md is intentionally excluded — its historical entries legitimately name the removed commands; see Task A7.)
 
 ### Task A5: Bump manifest + marketplace to 2.0.0 with research-only descriptions (spec SA-002)
 
 **Files:**
+
 - Modify: `plugins/qdev/.claude-plugin/plugin.json` (`description`, `version`)
 - Modify: `.claude-plugin/marketplace.json` (qdev `description` ~line 100, `version` ~line 102)
 
 - [ ] **Step 1: Rewrite `plugin.json`**
 
 Replace the `description` and `version` fields in `plugins/qdev/.claude-plugin/plugin.json` so the file reads:
+
 ```json
 {
-  "name": "qdev",
-  "version": "2.0.0",
-  "description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
-  "author": {
-    "name": "L3DigitalNet",
-    "url": "https://github.com/L3DigitalNet"
-  },
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
+	"name": "qdev",
+	"version": "2.0.0",
+	"description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
 }
 ```
 
 - [ ] **Step 2: Update the qdev entry in `.claude-plugin/marketplace.json`**
 
 In the qdev object, set `version` to `"2.0.0"` and replace `description` to match the manifest's intent:
+
 ```json
       "name": "qdev",
       "description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
       "version": "2.0.0",
 ```
+
 Leave `author`, `source`, and `homepage` unchanged.
 
 - [ ] **Step 3: Validate the marketplace (catches the version-equality check)**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 bash scripts/validate-marketplace.sh
 ```
+
 Expected: PASS, including a line like `OK Versions match: 2.0.0` for qdev and no `Version mismatch` error.
 
 ### Task A6: Rewrite the qdev plugin README to research-only
@@ -254,12 +278,14 @@ Expected: PASS, including a line like `OK Versions match: 2.0.0` for qdev and no
 The current README is pervasively five-command. Replace it wholesale with a research-only version.
 
 **Files:**
+
 - Modify: `plugins/qdev/README.md` (full replacement)
 
 - [ ] **Step 1: Replace the entire file contents**
 
 Write `plugins/qdev/README.md` as:
-```markdown
+
+````markdown
 # qdev
 
 Deep web research before you design or build.
@@ -290,6 +316,7 @@ The enemy of a good design decision is stale or incorrect knowledge. `qdev` addr
 /plugin marketplace add L3DigitalNet/Claude-Code-Plugins
 /plugin install qdev@l3digitalnet-plugins
 ```
+````
 
 For local development:
 
@@ -333,13 +360,13 @@ flowchart TD
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `/qdev:research` | Dual-source research sweep covering docs, practices, footguns, existing tools, security, and recent changes (dispatches `qdev-researcher`); persists a report under `docs/research/` |
 
 ## Agents
 
 | Agent | Model | Purpose |
-|-------|-------|---------|
+| --- | --- | --- |
 | `qdev-researcher` | Sonnet | Tavily-first research with Brave/Serper cross-checks, Context7 docs gating, footgun corroboration (2+ sources), and a single follow-up pass for thin angles. Persists a structured report under `docs/research/`. |
 
 ### `/qdev:research [topic]`
@@ -347,6 +374,7 @@ flowchart TD
 Research a topic, technology, or problem space before designing or building, by dispatching the `qdev-researcher` subagent. Pass the topic as an argument, or invoke without arguments to have it inferred from project context and conversation history.
 
 **Coverage:**
+
 - Official documentation (current API, recent changes)
 - Community best practices (established patterns, what has replaced older approaches)
 - Footguns and gotchas (2+ source corroboration required; single-source items demoted)
@@ -365,7 +393,7 @@ Research a topic, technology, or problem space before designing or building, by 
 #### When to use `/qdev:research` vs other tools
 
 | You want to | Use |
-|-------------|-----|
+| --- | --- |
 | Research before design — output feeds `superpowers:brainstorming` | `/qdev:research` |
 | A lightweight, in-the-loop web lookup mid-task (no saved report) | `web-search` skill |
 | Compare options or answer a current-events question with citations | global `research` skill |
@@ -397,7 +425,8 @@ None.
 - [Design spec](https://github.com/L3DigitalNet/Claude-Code-Plugins/blob/main/docs/superpowers/specs/2026-04-13-qdev-design.md)
 - [Search decoupling spec](https://github.com/L3DigitalNet/Claude-Code-Plugins/blob/main/docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md)
 - [Source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev)
-```
+
+````
 
 ### Task A7: Normalize the CHANGELOG — add 2.0.0, clear the stale Unreleased block (CR-001)
 
@@ -435,7 +464,8 @@ Immediately after the intro (after the `The format is based on [Keep a Changelog
 ### Fixed
 - Corrected the Tavily MCP server key in `qdev-researcher` (`mcp__tavily-mcp__*` → `mcp__tavily__*`) to match this host's configured server name; the wrong key silently dropped the Tavily grant and forced a `WebFetch` fallback on every deep-read. (Lands via precursor commit `56494ad`.)
 
-```
+````
+
 > Implementation note: the tavily-key fix is already committed (`56494ad`); this `### Fixed` line just documents it in the 2.0.0 notes. Do not re-edit `qdev-researcher.md`'s tool list — only its Handoff text (Task A4 Step 3).
 
 - [ ] **Step 3: Delete the stale post-1.6.0 `## [Unreleased]` block**
@@ -445,6 +475,7 @@ Remove the entire orphaned section that sits between `## [1.6.0]`'s content and 
 - [ ] **Step 4: Verify the `## [Unreleased]` block is empty and the stale block is gone**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 # (a) The [Unreleased] section (between its heading and the next ## heading) must
@@ -454,11 +485,13 @@ awk '/^## \[Unreleased\]/{f=1;next} /^## \[/{f=0} f' plugins/qdev/CHANGELOG.md |
 # (b) There must be exactly ONE [Unreleased] heading (the stale duplicate is deleted):
 echo "Unreleased headings: $(grep -c '^## \[Unreleased\]' plugins/qdev/CHANGELOG.md)"
 ```
+
 Expected: `OK: Unreleased empty` and `Unreleased headings: 1`. (The 2.0.0 `### Removed` lines naming `qdev-grounding`/`sanitize_query.py` are correct and live under `## [2.0.0]`, not under Unreleased — they are not flagged by check (a).)
 
 ### Task A8: Update root README + handoff current-truth docs
 
 **Files:**
+
 - Modify: root `README.md` (line ~52 table row; lines ~221-239 qdev section; line ~355 tree comment)
 - Modify: `docs/handoff/state.md` (close the grounding incident, line ~13)
 - Modify: `docs/handoff/architecture.md` (lines ~31 and ~74)
@@ -469,10 +502,13 @@ Expected: `OK: Unreleased empty` and `Unreleased headings: 1`. (The 2.0.0 `### R
 - [ ] **Step 1: Root README — overview table row (line ~52)**
 
 Replace:
+
 ```markdown
 | [qdev](#qdev) | Skills | `/research`, `/quality-review`, `/deps-audit`, `/doc-sync`, `/spec-update` | Development quality toolkit: pre-build research sweeps, convergence-loop quality reviews, CVE dependency audits, and inline doc sync |
 ```
+
 with:
+
 ```markdown
 | [qdev](#qdev) | Commands + Agents | `/research` | Deep web research for development decisions: dual-source sweeps with Context7 docs gating, persisted as cited reports under `docs/research/` |
 ```
@@ -480,6 +516,7 @@ with:
 - [ ] **Step 2: Root README — qdev section (lines ~221-239)**
 
 Replace the block:
+
 ```markdown
 ### qdev
 
@@ -495,7 +532,9 @@ Replace the block:
 
 **Install:**
 ```
+
 with:
+
 ```markdown
 ### qdev
 
@@ -507,55 +546,71 @@ with:
 
 **Install:**
 ```
+
 (Leave the `/plugin install qdev@l3digitalnet-plugins` block and the `**Learn more:**` line that follow unchanged.)
 
 - [ ] **Step 3: Root README — tree comment (line ~355)**
 
 Replace:
+
 ```markdown
-│   ├── qdev/                    # Development quality toolkit (research, reviews, dep audits, doc-sync, spec-update)
+│ ├── qdev/ # Development quality toolkit (research, reviews, dep audits, doc-sync, spec-update)
 ```
+
 with:
+
 ```markdown
-│   ├── qdev/                    # Deep web research (research sweeps via qdev-researcher)
+│ ├── qdev/ # Deep web research (research sweeps via qdev-researcher)
 ```
 
 - [ ] **Step 4: `docs/handoff/state.md` — close the grounding incident (line ~13)**
 
 The Active Incidents list has:
+
 ```markdown
 - **qdev D2 (grounding skill) Task 7 — manual matrix pending.** Feature released v1.6.0 (commit `efe90b8`). Remaining: auto-trigger rules, fake-token approval-before-egress, reject/approve persist gate. (Implementation detail: `f24d690`..`d627a0c` + hardening; 144 pytest green.)
 ```
+
 Remove this bullet from **Active Incidents** (the grounding skill is deleted, so the pending manual matrix is moot — superseded by this decoupling). Add a one-line note under the "Recently closed" section instead:
+
 ```markdown
 - **qdev grounding skill removed (search decoupling).** The D2 grounding skill + `sanitize_query.py` were deleted; routine search moved to the agent-configs `web-search` skill. This supersedes the pending D2 Task-7 manual matrix (no longer applicable). qdev bumped to 2.0.0 (research-only). See `docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md`.
 ```
+
 (If the "Recently closed" block is near its size cap, follow the file's own convention — move older closes to `docs/handoff/sessions/2026-06.md` — but keep this close on `state.md` for the current session.)
 
 - [ ] **Step 5: `docs/handoff/architecture.md` — lines ~31 and ~74**
 
 Line ~31 currently reads:
+
 ```markdown
 - In scope: 9 plugins with qdev's research-KB + grounding-sanitizer scripts (qdev is no longer pure-markdown). Was 8 before qdev gained Python tests; ...
 ```
+
 Replace the parenthetical so it no longer claims a grounding-sanitizer:
+
 ```markdown
 - In scope: 9 plugins with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; ...
 ```
+
 (keep the rest of the line — the "Was 8 …" history — verbatim.)
 
 Line ~74 (the tree comment) currently reads:
+
 ```markdown
-│   ├── qdev/                         # Development quality toolkit (commands + `skills/research-grounding`; research-KB scripts + `scripts/sanitize_query.py`)
+│ ├── qdev/ # Development quality toolkit (commands + `skills/research-grounding`; research-KB scripts + `scripts/sanitize_query.py`)
 ```
+
 Replace with:
+
 ```markdown
-│   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
+│ ├── qdev/ # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
 ```
 
 - [ ] **Step 6: `docs/handoff/deployed.md` — qdev row (line ~7)**
 
 Replace the qdev table row with a 2.0.0 row that preserves the release-history tail:
+
 ```markdown
 | qdev | 2.0.0 | Research-only as of 2026-06-07 (search decoupling): removed `/quality-review`, `/deps-audit`, `/doc-sync`, `/spec-update` + their agents and the grounding skill + `sanitize_query.py`; routine search moved to the agent-configs `web-search` skill. `/qdev:research` (qdev-researcher, Sonnet) + research-KB scripts retained. Tag pending: `qdev/v2.0.0`. Prior 1.6.0 (2026-06-05): D2 grounding skill + sanitizer (now removed). Prior 1.5.0 (2026-05-08): `/qdev:research` extracted to subagent. |
 ```
@@ -563,27 +618,35 @@ Replace the qdev table row with a 2.0.0 row that preserves the release-history t
 - [ ] **Step 7: `docs/handoff/conventions.md` — repoint the thin/fat example + fix the qdev test count**
 
 The thin-command/fat-agent example (lines ~50-67) cites qdev's removed `quality-review` / `deps-audit` files. Repoint it to the surviving qdev pair. Replace the example block:
+
 ```markdown
 # commands/qdev-review.md — thin dispatcher (30 lines)
-/qdev:quality-review target.py
-├─ Call Agent: qdev:qdev-quality-reviewer
+
+/qdev:quality-review target.py ├─ Call Agent: qdev:qdev-quality-reviewer
 ```
+
 with:
+
 ```markdown
 # commands/research.md — thin dispatcher
-/qdev:research "topic"
-├─ Call Agent: qdev:qdev-researcher
+
+/qdev:research "topic" ├─ Call Agent: qdev:qdev-researcher
 ```
+
 and the example file list (lines ~66-67):
+
 ```markdown
 - `plugins/qdev/commands/deps-audit.md` (thin orchestrator, 40 lines)
 - `plugins/qdev/agents/qdev-deps-auditor.md` (haiku agent, 180 lines)
 ```
+
 with:
+
 ```markdown
 - `plugins/qdev/commands/research.md` (thin orchestrator)
 - `plugins/qdev/agents/qdev-researcher.md` (sonnet agent)
 ```
+
 (The line-57 reference to `agents/qdev-quality-reviewer.md` is inside the same illustrative diagram — update it in the same pass to `agents/qdev-researcher.md` so the example is internally consistent.)
 
 For the qdev pytest count (line ~138, currently "qdev 144 pytest"): do **not** hardcode a guessed number. After Task A9's full pytest run, read the actual collected qdev count and update that figure, annotating it `(was 144; −N from removing the grounding sanitizer suite)`.
@@ -591,10 +654,11 @@ For the qdev pytest count (line ~138, currently "qdev 144 pytest"): do **not** h
 - [ ] **Step 8: `docs/handoff/specs-plans.md` — add rows for this work**
 
 Add two new rows to the pointer table (dated `2026-06-07`), leaving all existing historical rows intact:
+
 ```markdown
-| 2026-06-07 | [`docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md`](../superpowers/specs/2026-06-07-qdev-search-decoupling-design.md) | Done — codex-converged (r5) | Decouple implicit search from qdev: qdev → research-only (2.0.0), routine search → agent-configs `web-search` skill. |
-| 2026-06-07 | [`docs/superpowers/plans/2026-06-07-qdev-search-decoupling-plan.md`](../superpowers/plans/2026-06-07-qdev-search-decoupling-plan.md) | (status) | Implementation plan for the search decoupling. |
+| 2026-06-07 | [`docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md`](../superpowers/specs/2026-06-07-qdev-search-decoupling-design.md) | Done — codex-converged (r5) | Decouple implicit search from qdev: qdev → research-only (2.0.0), routine search → agent-configs `web-search` skill. | | 2026-06-07 | [`docs/superpowers/plans/2026-06-07-qdev-search-decoupling-plan.md`](../superpowers/plans/2026-06-07-qdev-search-decoupling-plan.md) | (status) | Implementation plan for the search decoupling. |
 ```
+
 (Set the plan-row status to match reality when committing — e.g. `Active — implementing` or `Done`.)
 
 ### Task A9: Verify and commit Part A (one atomic commit)
@@ -604,35 +668,42 @@ Add two new rows to the pointer table (dated `2026-06-07`), leaving all existing
 - [ ] **Step 1: Full qdev pytest suite**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins/plugins/qdev
 PATH=/usr/bin:/bin:$PATH python -m pytest -q
 ```
+
 Expected: all collected tests PASS. Record the **collected test count** printed in the summary line — feed it back into Task A8 Step 7 (the conventions.md qdev count) if you haven't already.
 
 - [ ] **Step 2: Marketplace validation**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 bash scripts/validate-marketplace.sh
 ```
+
 Expected: PASS, `OK Versions match: 2.0.0` for qdev.
 
 - [ ] **Step 3: Dangling-reference grep over the live qdev surface**
 
 Run:
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 grep -rn 'qdev:quality-review\|qdev:deps-audit\|qdev:doc-sync\|qdev:spec-update\|research-grounding\|qdev-grounding\|sanitize_query' \
   plugins/qdev/commands plugins/qdev/agents plugins/qdev/README.md plugins/qdev/.claude-plugin \
   README.md .claude-plugin/marketplace.json 2>/dev/null
 ```
+
 Expected: no output.
 
 - [ ] **Step 4: Stage only the spec-owned paths (commit-safety guard)**
 
 First inspect: `git status --short`. Then stage explicitly (the deletions from Task A2 are already staged via `git rm`; add the edited/created files by name):
+
 ```bash
 cd /home/chris/projects/Claude-Code-Plugins
 git add plugins/qdev/tests/test_plugin_structure.py \
@@ -651,12 +722,12 @@ git add plugins/qdev/tests/test_plugin_structure.py \
         docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md \
         docs/superpowers/plans/2026-06-07-qdev-search-decoupling-plan.md
 ```
+
 > The spec + plan docs are already committed (commits `b1edbaf`…`2f596f1`); if `git add` of them is a no-op that is fine. If the codex-review audit files under `docs/codex-reviews/` are untracked and you want them in history, add them explicitly too — otherwise leave them out. They are NOT required for this commit.
 
 - [ ] **Step 5: Confirm the staged set contains only intended paths**
 
-Run: `git diff --name-only --cached`
-Expected: only the paths from Step 4 plus the Task A2 deletions (the 4 commands, 3 agents, `skills/research-grounding/**`, `scripts/sanitize_query.py`, `tests/test_sanitize_query.py`). **No** `TODO.md`, **no** `.claude/settings.json`, **no** unrelated files. If anything unrelated is staged, `git restore --staged <path>` it before committing.
+Run: `git diff --name-only --cached` Expected: only the paths from Step 4 plus the Task A2 deletions (the 4 commands, 3 agents, `skills/research-grounding/**`, `scripts/sanitize_query.py`, `tests/test_sanitize_query.py`). **No** `TODO.md`, **no** `.claude/settings.json`, **no** unrelated files. If anything unrelated is staged, `git restore --staged <path>` it before committing.
 
 - [ ] **Step 6: Commit**
 
@@ -674,6 +745,7 @@ manifest + marketplace bumped to 2.0.0; README/CHANGELOG/handoff docs refreshed.
 
 Spec: docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md"
 ```
+
 Expected: commit succeeds, GPG-signed by the global hook. Run `git log --oneline -1` to confirm.
 
 ---
@@ -689,6 +761,7 @@ The skill names MCP tools verbatim; the installed server keys have drifted histo
 - [ ] **Step 1: Enumerate the live search-tool schema**
 
 Use `ToolSearch` (in this Claude Code session) for queries `tavily`, `brave search`, and `serper` and record the exact tool names exposed. Expected as of 2026-06-08 (use the live values if they differ):
+
 - `mcp__brave-search__brave_web_search`, `mcp__brave-search__brave_news_search`, `mcp__brave-search__brave_summarizer`, `mcp__brave-search__brave_image_search`
 - `mcp__serper-search__google_search`, `mcp__serper-search__scrape`
 - `mcp__tavily__tavily_search` (with `topic` = `const "general"`), `mcp__tavily__tavily_extract`, `mcp__tavily__tavily_map`, `mcp__tavily__tavily_crawl`, `mcp__tavily__tavily_research`
@@ -698,6 +771,7 @@ If the live names differ from the above (e.g. a `tavily-mcp` server key), use th
 ### Task B2: Create the web-search SKILL.md
 
 **Files:**
+
 - Create: `skills/.claude/skills/web-search/SKILL.md` (in the `agent-configs` repo)
 
 - [ ] **Step 1: Confirm the target directory and the shape to mirror**
@@ -706,11 +780,13 @@ If the live names differ from the above (e.g. a `tavily-mcp` server key), use th
 cd /home/chris/projects/agent-configs
 ls skills/.claude/skills/populate-config/SKILL.md   # the Claude-only, MCP-naming skill to mirror
 ```
+
 Expected: the populate-config SKILL.md exists. Note its frontmatter shape (name/description/compatibility/license/metadata). Our skill is **model-invocable**, so do NOT copy populate-config's `disable-model-invocation: true`.
 
 - [ ] **Step 2: Write the skill**
 
 Create `skills/.claude/skills/web-search/SKILL.md` with exactly (substitute live tool names from Task B1 if they changed):
+
 ```markdown
 ---
 name: web-search
@@ -744,7 +820,7 @@ Run a routine web lookup using the three search MCP servers installed in this en
 ## Routing — pick by task
 
 | Task | Use |
-|------|-----|
+| --- | --- |
 | General web search | `brave_web_search` **and** `google_search` (dual-source; 10+ results each) |
 | Recent news / events | `brave_news_search` (Brave owns the news vertical here; Tavily has no news topic) |
 | Search and read the page contents in one call | `tavily_search` with `include_raw_content: true` |
@@ -773,24 +849,29 @@ If a lookup seems to require sensitive context, rephrase it generically (search 
 ### Task B3: Add the inventory row (spec SA-007)
 
 **Files:**
+
 - Modify: `agent-configs/skills/README.md` (the `.claude/skills/ — Claude Code only` table)
 
 - [ ] **Step 1: Check whether README.md is already dirty (same-file guard)**
 
 Run:
+
 ```bash
 cd /home/chris/projects/agent-configs
 git status --short skills/README.md
 git diff -- skills/README.md
 ```
+
 If it shows unrelated pre-existing hunks, you must isolate your one-row change at commit time (Task B4) — note that now.
 
 - [ ] **Step 2: Insert the web-search row**
 
 In `agent-configs/skills/README.md`, in the **`.claude/skills/` — Claude Code only** table (the one whose header row is `| Skill | What it does | Coupling |`), add a row (alphabetical placement, before `populate-config`, is fine):
+
 ```markdown
 | `web-search` | Routine in-the-loop web lookups via the three installed search MCP servers (brave-search, serper-search, tavily): which tool for which job, dual-source discipline, and an egress guardrail. No saved reports, no depth tiers. | **Gate 2** — names `mcp__brave-search__…`, `mcp__serper-search__…`, `mcp__tavily__…` |
 ```
+
 Do **not** add a row to the `.agents/skills/ — shared` table — naming MCP tools forecloses `.agents/` placement (Gate 2).
 
 ### Task B4: Validate deployment in an isolated HOME, then commit Part B
@@ -800,21 +881,26 @@ Do **not** add a row to the `.agents/skills/ — shared` table — naming MCP to
 - [ ] **Step 1: Frontmatter/shape parity check**
 
 Run:
+
 ```bash
 cd /home/chris/projects/agent-configs
 head -12 skills/.claude/skills/web-search/SKILL.md
 head -12 skills/.claude/skills/populate-config/SKILL.md
 ```
+
 Expected: web-search frontmatter has `name`, `description`, `compatibility: Claude Code`, `license: MIT`, `metadata.author`, `metadata.version: '1.0'` — and (unlike populate-config) **no** `disable-model-invocation` line.
 
 - [ ] **Step 2: Isolated-HOME deploy routing check (no live skill roots touched)**
 
 Run:
+
 ```bash
 cd /home/chris/projects/agent-configs
 HOME="$(mktemp -d)" bash scripts/skills/deploy-skill.sh
 ```
+
 Then verify the routing landed web-search as a Claude-only copy:
+
 ```bash
 # reuse the same temp HOME printed/used above; or re-run capturing it:
 TMPH="$(mktemp -d)"; HOME="$TMPH" bash scripts/skills/deploy-skill.sh >/dev/null 2>&1
@@ -822,20 +908,24 @@ ls -l "$TMPH/.claude/skills/web-search/SKILL.md"   # expect a regular file (copy
 test -L "$TMPH/.claude/skills/web-search" && echo "UNEXPECTED symlink" || echo "OK: copy, not symlink"
 ls "$TMPH/.agents/skills/web-search" 2>/dev/null && echo "UNEXPECTED in .agents" || echo "OK: not in .agents"
 ```
+
 Expected: `SKILL.md` present as a regular file under `$TMPH/.claude/skills/web-search/`; `OK: copy, not symlink`; `OK: not in .agents`.
 
 - [ ] **Step 3: Deploy regression suite**
 
 Run:
+
 ```bash
 cd /home/chris/projects/agent-configs
 bash scripts/tests/run.sh
 ```
+
 Expected: deploy.bats green (no regressions from the new skill).
 
 - [ ] **Step 4: Stage only Part B paths (same-file guard for README.md)**
 
 `skills/.claude/skills/web-search/SKILL.md` is new — `git add` it directly. For `skills/README.md`, if Task B3 Step 1 showed it clean, a direct `git add` is safe. If it was already dirty with unrelated hunks, isolate first — e.g.:
+
 ```bash
 cd /home/chris/projects/agent-configs
 # clean case:
@@ -850,10 +940,12 @@ git add skills/.claude/skills/web-search/SKILL.md skills/README.md
 - [ ] **Step 5: Confirm staged set, reviewing content not just names**
 
 Run:
+
 ```bash
 git diff --name-only --cached
 git diff --cached -- skills/README.md
 ```
+
 Expected: only `skills/.claude/skills/web-search/SKILL.md` and `skills/README.md` staged; the README cached diff shows **only** the one added web-search row — no unrelated reformatting/removals. If unrelated hunks are staged, unstage and isolate before committing.
 
 - [ ] **Step 6: Commit**
@@ -871,6 +963,7 @@ removed qdev grounding skill.
 
 Spec: Claude-Code-Plugins docs/superpowers/specs/2026-06-07-qdev-search-decoupling-design.md"
 ```
+
 Expected: commit succeeds, GPG-signed. `git log --oneline -1` to confirm.
 
 ---
@@ -884,6 +977,7 @@ cd /home/chris/projects/Claude-Code-Plugins/plugins/qdev \
   && PATH=/usr/bin:/bin:$PATH python -m pytest -q \
   && ls commands agents   # expect: research.md ; qdev-researcher.md
 ```
+
 Expected: tests pass **and then** the `ls` shows only the one command + one agent. The `&&` chain means a pytest failure aborts before `ls`, so a green-looking `ls` can't mask a red suite.
 
 - [ ] **Step 2: web-search deployable in isolation**
@@ -891,6 +985,7 @@ Expected: tests pass **and then** the `ls` shows only the one command + one agen
 ```bash
 cd /home/chris/projects/agent-configs && TMPH="$(mktemp -d)"; HOME="$TMPH" bash scripts/skills/deploy-skill.sh >/dev/null 2>&1 && ls "$TMPH/.claude/skills/web-search/SKILL.md"
 ```
+
 Expected: the copied skill file exists.
 
 - [ ] **Step 3: Both commits present AND no plan-owned path left behind**
@@ -903,6 +998,7 @@ for r in /home/chris/projects/Claude-Code-Plugins /home/chris/projects/agent-con
   echo "-- staged (should be empty post-commit) --"; git -C "$r" diff --name-only --cached
 done
 ```
+
 Expected: each repo's HEAD is the commit from Task A9 / B4; **no staged paths remain** (the commit consumed them). In the `status --short` output, cross-check every path against the pre-existing unrelated set recorded in Task A1 Step 2 — **none of this plan's target files** (qdev surface, manifests, READMEs, CHANGELOG, handoff docs, the new SKILL.md, `agent-configs/skills/README.md`) may appear as modified or untracked. If a plan-owned file is still dirty, it was missed in staging — stage and amend/commit it before declaring done.
 
 ---

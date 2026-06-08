@@ -1,21 +1,21 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume|clear|compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_start.py\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  },
-  "enabledPlugins": {
-    "skill-creator@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": true,
-    "release-pipeline@l3digitalnet-plugins": true
-  }
+	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "startup|resume|clear|compact",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_start.py\"",
+						"timeout": 30
+					}
+				]
+			}
+		]
+	},
+	"enabledPlugins": {
+		"skill-creator@claude-plugins-official": true,
+		"plugin-dev@claude-plugins-official": true,
+		"release-pipeline@l3digitalnet-plugins": true
+	}
 }

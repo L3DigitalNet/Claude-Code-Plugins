@@ -1,7 +1,9 @@
 # Mode 4: Release Status
 
 # Loaded by the release command router after the user selects "Release Status".
+
 # Context variables from Phase 0 are available: current_branch, last_tag, commit_count,
+
 # suggested_version, feat_count, fix_count, other_count, is_dirty, is_monorepo, unreleased_plugins.
 
 Shows the current release state without making any changes.
@@ -50,8 +52,7 @@ Check if CHANGELOG.md exists. If it does, compare the latest version header in C
 head -20 CHANGELOG.md
 ```
 
-If the latest `## [X.Y.Z]` in CHANGELOG.md matches the last tag version → "Changelog is up to date."
-If it doesn't → "⚠ Changelog may be out of date — last entry is vA.B.C but last tag is vX.Y.Z."
+If the latest `## [X.Y.Z]` in CHANGELOG.md matches the last tag version → "Changelog is up to date." If it doesn't → "⚠ Changelog may be out of date — last entry is vA.B.C but last tag is vX.Y.Z."
 
 ## Done
 
@@ -66,5 +67,4 @@ Use **AskUserQuestion** to offer a follow-up action rather than forcing the user
     3. label: `"Done"`, description: `"Exit — no further action needed"`
   - If `is_monorepo`: insert after Full Release: label: `"Plugin Release"`, description: `"Release a single plugin with scoped tag"`
 
-If "Done" → display: "Status check complete." and stop.
-Otherwise → load the corresponding mode template from `${CLAUDE_PLUGIN_ROOT}/templates/` and follow it.
+If "Done" → display: "Status check complete." and stop. Otherwise → load the corresponding mode template from `${CLAUDE_PLUGIN_ROOT}/templates/` and follow it.

@@ -1,8 +1,6 @@
 # Design: `linux-sysadmin` Plugin
 
-**Date:** 2026-03-01
-**Replaces:** `linux-sysadmin-mcp` (TypeScript MCP server)
-**Approach:** Pure markdown skills — no build step, no MCP server
+**Date:** 2026-03-01 **Replaces:** `linux-sysadmin-mcp` (TypeScript MCP server) **Approach:** Pure markdown skills — no build step, no MCP server
 
 ## Motivation
 
@@ -13,7 +11,7 @@ The existing `linux-sysadmin-mcp` plugin wraps shell commands in an MCP server t
 One plugin containing:
 
 | Component | Count | Purpose |
-|-----------|-------|---------|
+| --- | --- | --- |
 | Discovery skill | 1 | `linux-overview`: broad triggers, categorized index of all tools/services |
 | Service skills | ~30 | nginx, sshd, Docker, PostgreSQL, etc. |
 | CLI tool skills | ~25 | nmap, btop, strace, tcpdump, etc. |
@@ -125,63 +123,83 @@ The command does not execute setup. It consults, recommends, and hands off to in
 ## Service/Tool/Filesystem Inventory
 
 ### Web / Proxy
+
 nginx, Apache (httpd), Caddy, Traefik, HAProxy
 
 ### Containers / Virtualization
+
 Docker, Docker Compose, Podman, Proxmox VE, LXC/LXD
 
 ### DNS
+
 unbound, Pi-hole, BIND9, dnsmasq, CoreDNS
 
 ### Security / Firewall
+
 ufw, firewalld/nftables, fail2ban, CrowdSec, WireGuard, OpenVPN, Tailscale
 
 ### Databases
+
 PostgreSQL, MariaDB/MySQL, Redis, SQLite
 
 ### Monitoring
+
 Prometheus, Grafana, Node Exporter, Loki, Netdata
 
 ### System Services
+
 systemd, journald/journalctl, cron + systemd-timers, logrotate, chrony/NTP, OpenSSH (sshd)
 
 ### Storage / Backup
+
 rsync, Borg, Rclone
 
 ### Filesystems
+
 ZFS, Btrfs, ext4, XFS, LVM, mdadm/RAID, exFAT/NTFS
 
 ### Network Services
+
 NFS, Samba (SMB), DHCP (isc-dhcp-server), Avahi (mDNS)
 
 ### Mail
+
 Postfix, Dovecot, OpenDKIM
 
 ### Self-Hosted Apps
+
 Nextcloud, Gitea/Forgejo, Vaultwarden, Jellyfin, Immich
 
 ### IoT / Home Automation
+
 Mosquitto (MQTT), Zigbee2MQTT, Z-Wave JS, Node-RED
 
 ### Certificates
+
 Certbot (Let's Encrypt), step-ca
 
 ### System Monitoring Tools
+
 btop, htop/top, glances, iotop, vmstat, iostat
 
 ### Network Diagnostics
+
 nmap, iperf3, ss/netstat, tcpdump, mtr, dig/bind-utils (nslookup, host)
 
 ### Disk Tools
+
 df, ncdu, lsblk, smartctl, fdisk/parted
 
 ### Process / Debug
+
 strace, lsof, perf, dmesg
 
 ### Text / Data
+
 jq, ripgrep, awk/sed, column
 
 ### Misc Utilities
+
 curl/wget, tmux, openssl (CLI), age, ssh-keygen
 
 **Total: ~75 skills + 1 discovery skill + 1 command**

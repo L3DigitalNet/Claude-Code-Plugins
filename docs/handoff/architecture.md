@@ -3,6 +3,7 @@
 ## From handoff.md
 
 **up-docs 0.4.0 (new architecture):**
+
 - Orchestrator (main agent) receives session-change summary and dispatches three Haiku propagators in parallel: repo, wiki, notion.
 - Each propagator runs in isolated context window with `model: haiku` frontmatter override; reads pages, applies targeted edits, returns markdown summary.
 - Drift auditor (Sonnet) receives session-change summary after propagators complete; checks for contradictions in propagator output; emits convergence loop phases.
@@ -22,10 +23,10 @@
 
 ## Test Coverage Snapshot (2026-06-03)
 
-Marketplace-wide tests use canonical frameworks and plugin-local suites. Keep
-counts in `docs/handoff/conventions.md` TEST-001 current when adding tests.
+Marketplace-wide tests use canonical frameworks and plugin-local suites. Keep counts in `docs/handoff/conventions.md` TEST-001 current when adding tests.
 
 **Quick reference:**
+
 - Strategic overview: `docs/handoff/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
 - Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/handoff/sessions/`
 - In scope: 6 plugins (github-repo-manager, plugin-test-harness, repo-hygiene de-listed 2026-06-08). Was 9 with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
@@ -37,9 +38,7 @@ counts in `docs/handoff/conventions.md` TEST-001 current when adding tests.
 
 # CLAUDE.md detail (pre-extracted 2026-04-24)
 
-The "Plugin Design Principles" [P1]–[P6] are behavioral cross-cutting rules and
-are Phase 5 candidates for migration to `.claude/rules/global.md`. Deferred
-with the rest of this repo's Phase 5 for batch-dispatch reasons.
+The "Plugin Design Principles" [P1]–[P6] are behavioral cross-cutting rules and are Phase 5 candidates for migration to `.claude/rules/global.md`. Deferred with the rest of this repo's Phase 5 for batch-dispatch reasons.
 
 ## Repository Purpose
 
@@ -81,11 +80,18 @@ Claude-Code-Plugins/
 ## Plugin Structure
 
 Every plugin requires `.claude-plugin/plugin.json`:
+
 ```json
-{ "name": "plugin-name", "version": "1.0.0", "description": "...", "author": { "name": "...", "url": "..." } }
+{
+	"name": "plugin-name",
+	"version": "1.0.0",
+	"description": "...",
+	"author": { "name": "...", "url": "..." }
+}
 ```
 
 Optional components:
+
 - **`commands/`** — User-invocable slash commands
 - **`skills/`** — AI-invoked domain knowledge (loads when contextually relevant)
 - **`agents/`** — Custom subagent definitions with tool restrictions
@@ -113,6 +119,7 @@ CI runs the full matrix automatically on push to `main`.
 ## Development Workflow
 
 **New plugin checklist:**
+
 1. Create `plugins/my-plugin/.claude-plugin/plugin.json` (name, version, description, author)
 2. Add entry to `.claude-plugin/marketplace.json`
 3. Add `CHANGELOG.md` (Keep a Changelog format: Added, Changed, Fixed, Removed, Security)
@@ -121,12 +128,14 @@ CI runs the full matrix automatically on push to `main`.
 6. Commit + push directly to `main`. For tagged releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`.
 
 **Updating a plugin — both files must change together:**
+
 1. Bump version in `plugins/<name>/.claude-plugin/plugin.json`
 2. Update matching version in `.claude-plugin/marketplace.json`
 3. Update `CHANGELOG.md`
 4. Run `./scripts/validate-marketplace.sh`
 
 **Commit + push to main:**
+
 ```bash
 git add <specific files> && git commit -m "..." && git push origin main
 ```
@@ -144,13 +153,13 @@ For tagged plugin releases (with version bump + changelog + GitHub release), use
 
 ### Context Footprint
 
-| Component | Enters context? | When? |
-|-----------|-----------------|-------|
-| Command markdown | Yes | On `/command` invocation |
-| Skill markdown | Conditionally | When AI deems relevant |
-| Agent definitions | No (for parent) | Loaded by spawned agent |
-| Hook scripts | No | Run externally; only stdout returns |
-| Templates | No | Copied to disk, read independently |
+| Component         | Enters context? | When?                               |
+| ----------------- | --------------- | ----------------------------------- |
+| Command markdown  | Yes             | On `/command` invocation            |
+| Skill markdown    | Conditionally   | When AI deems relevant              |
+| Agent definitions | No (for parent) | Loaded by spawned agent             |
+| Hook scripts      | No              | Run externally; only stdout returns |
+| Templates         | No              | Copied to disk, read independently  |
 
 Keep inline command/skill content minimal. Move large instruction sets to templates. Use hooks for enforcement rather than lengthy behavioral instructions.
 
@@ -163,15 +172,24 @@ Keep inline command/skill content minimal. Move large instruction sets to templa
 ### Hooks Reference
 
 `hooks.json` — `hooks` must be a **record keyed by event name**, not an array:
+
 ```json
 {
-  "hooks": {
-    "PostToolUse": [{ "matcher": "Write|Edit|MultiEdit", "hooks": [{ "type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/hook.sh" }] }]
-  }
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Write|Edit|MultiEdit",
+				"hooks": [
+					{ "type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/hook.sh" }
+				]
+			}
+		]
+	}
 }
 ```
 
 Hook scripts receive tool context as JSON on stdin (`${CLAUDE_PLUGIN_ROOT}` is the only available variable):
+
 ```bash
 FILE_PATH=$(python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))")
 ```
@@ -193,14 +211,15 @@ Validator uses Zod strict mode — unknown fields are rejected.
 **`plugin.json` manifests** — valid fields: `name`, `version`, `description`, `author`. Optional: `homepage`. **INVALID (rejected):** `category`, `keywords`, `repository`, `license`. Note: `validate-marketplace.sh` only validates `marketplace.json` entries — it does **not** catch invalid `plugin.json` fields, so violations are silent locally but rejected on install.
 
 Canonical entry template:
+
 ```json
 {
-  "name": "plugin-name",
-  "description": "One or two sentences.",
-  "version": "1.0.0",
-  "author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-  "source": "./plugins/plugin-name",
-  "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name"
+	"name": "plugin-name",
+	"description": "One or two sentences.",
+	"version": "1.0.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"source": "./plugins/plugin-name",
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/plugin-name"
 }
 ```
 

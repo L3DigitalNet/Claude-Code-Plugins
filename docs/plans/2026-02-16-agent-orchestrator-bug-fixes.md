@@ -9,6 +9,7 @@
 **Tech Stack:** Bash scripts, JSON configuration, Markdown documentation
 
 **Bug Summary:**
+
 - **High**: read-counter.sh PID tracking broken (counter never increments)
 - **High**: Worktree paths in spawn template incorrect (teammates can't find shared state)
 - **Medium**: lead-write-guard.sh fails to match absolute paths
@@ -23,6 +24,7 @@
 **Problem:** `$$` returns the hook script's PID (new process each invocation), not the parent session PID. Counter file name changes every call, so count never increments above 1.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/scripts/read-counter.sh`
 
 **Step 1: Understand the current implementation**
@@ -136,10 +138,10 @@ Modify `plugins/agent-orchestrator/DESIGN.md` in the "Known Limitations & Open Q
 Find the line about "Read counter keyed by PID" and update it to:
 
 ```markdown
-~~Unresolved:~~
-~~- Read counter keyed by PID (may reuse across sessions)~~
+~~Unresolved:~~ ~~- Read counter keyed by PID (may reuse across sessions)~~
 
 Fixed (2026-02-16):
+
 - Read counter now uses PPID (parent process ID) which remains stable across hook invocations within a session
 - Note: Counter files persist in `.claude/state/.read-count-*` and should be cleaned up by cleanup-state.sh
 ```
@@ -180,6 +182,7 @@ git commit -m "fix(agent-orchestrator): use PPID for read counter session tracki
 **Problem:** The spawn template in `orchestrate.md` references `.claude/state/` with project-root-relative paths. When teammates `cd` into `.worktrees/<name>/`, these paths resolve incorrectly to `.worktrees/<name>/.claude/state/` which doesn't exist.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/commands/orchestrate.md:226-228`
 - Modify: `plugins/agent-orchestrator/skills/orchestration/SKILL.md:66-71` (documentation already correct)
 
@@ -330,6 +333,7 @@ git commit -m "fix(agent-orchestrator): use correct relative paths for worktree 
 **Problem:** The `case` statement in lead-write-guard.sh matches relative paths like `.claude/state/*` but Claude Code tools may pass absolute paths like `/home/user/project/.claude/state/ledger.md`. The whitelist won't match, incorrectly blocking legitimate writes.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/scripts/lead-write-guard.sh`
 
 **Step 1: Review current implementation**
@@ -527,6 +531,7 @@ git commit -m "fix(agent-orchestrator): handle absolute paths in lead-write-guar
 **Problem:** The orchestration plan is created in Plan mode (Phase 1) and lives only in the lead's context. If the lead compacts between user approval and Phase 2 execution, the plan details are lost. The ledger template has placeholders but not the full team roster, waves, or worktree strategy.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/commands/orchestrate.md:108-151` (Phase 1.5 Present Plan section)
 - Modify: `plugins/agent-orchestrator/commands/orchestrate.md:160-174` (Phase 2.1 Initialize section)
 
@@ -552,7 +557,7 @@ Find section 1.5 "Present Plan" and modify the instructions after the plan templ
 
 Before the **STOP** line, add:
 
-```markdown
+````markdown
 **Write the plan to disk:**
 
 ```bash
@@ -560,11 +565,13 @@ cat > .claude/state/orchestration-plan.md << 'EOF'
 [paste your full plan here - the entire output from Task Summary through Estimated Scope]
 EOF
 ```
+````
 
 This ensures the plan survives any context loss between approval and execution.
 
 **STOP. Wait for explicit user approval before proceeding.**
-```
+
+````
 
 **Step 4: Update Phase 2.1 to restore plan from disk**
 
@@ -575,10 +582,11 @@ After "Exit plan mode now" and before running bootstrap.sh, add:
 
 ```bash
 cat .claude/state/orchestration-plan.md
-```
+````
 
 Read this carefully to refresh your memory of the team roster, waves, worktree strategy, and dependencies.
-```
+
+````
 
 **Step 5: Update cleanup-state.sh to document plan file**
 
@@ -586,7 +594,7 @@ Verify the plan file will be cleaned up:
 
 ```bash
 grep -A 5 "rm -rf" plugins/agent-orchestrator/scripts/cleanup-state.sh
-```
+````
 
 Expected: `rm -rf .claude/state/` already covers orchestration-plan.md (no change needed)
 
@@ -666,6 +674,7 @@ git commit -m "fix(agent-orchestrator): persist plan to disk between Phase 1 and
 **Problem:** The PreToolUse hook only matches `Write|Edit|MultiEdit` but doesn't cover `NotebookEdit` or MCP filesystem write tools like `mcp__filesystem__write_file` or `mcp__filesystem__edit_file`. Lead could bypass write guard through these tools.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/hooks/hooks.json`
 - Modify: `plugins/agent-orchestrator/scripts/lead-write-guard.sh` (add tool name detection)
 
@@ -699,41 +708,41 @@ Modify `plugins/agent-orchestrator/hooks/hooks.json`:
 
 ```json
 {
-  "hooks": {
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/on-pre-compact.sh"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit|mcp__.*__write.*|mcp__.*__edit.*|mcp__.*__create_file|mcp__.*__update_file",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/lead-write-guard.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Read|View",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/read-counter.sh"
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreCompact": [
+			{
+				"matcher": "auto",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/on-pre-compact.sh"
+					}
+				]
+			}
+		],
+		"PreToolUse": [
+			{
+				"matcher": "Write|Edit|MultiEdit|NotebookEdit|mcp__.*__write.*|mcp__.*__edit.*|mcp__.*__create_file|mcp__.*__update_file",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/lead-write-guard.sh"
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Read|View",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/read-counter.sh"
+					}
+				]
+			}
+		]
+	}
 }
 ```
 
@@ -808,6 +817,7 @@ Add note in "Known Limitations" section:
 
 ```markdown
 Fixed (2026-02-16):
+
 - Hook matchers now cover NotebookEdit and MCP filesystem tools (write/edit/create/update patterns)
 - Regex pattern `mcp__.*__write.*|mcp__.*__edit.*` catches MCP server write operations
 - Script now checks multiple field names (file_path, path, notebook_path) for path extraction
@@ -835,6 +845,7 @@ git commit -m "fix(agent-orchestrator): expand write hook matchers to cover all 
 **Problem:** Small improvements to code quality that don't affect functionality but improve robustness.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/scripts/merge-branches.sh` (whitespace trimming)
 - Modify: `plugins/agent-orchestrator/scripts/bootstrap.sh` (.gitignore explicit creation)
 
@@ -901,6 +912,7 @@ git commit -m "refactor(agent-orchestrator): minor robustness improvements
 **Problem:** After fixing bugs, the plugin version should be bumped and marketplace catalog updated.
 
 **Files:**
+
 - Modify: `plugins/agent-orchestrator/.claude-plugin/plugin.json`
 - Modify: `.claude-plugin/marketplace.json`
 
@@ -910,19 +922,17 @@ Modify `plugins/agent-orchestrator/.claude-plugin/plugin.json`:
 
 ```json
 {
-  "name": "agent-orchestrator",
-  "description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks.",
-  "version": "1.0.1",
-  "author": {
-    "name": "Agent Orchestrator"
-  },
-  "keywords": [
-    "orchestration",
-    "agent-teams",
-    "subagents",
-    "context-management",
-    "worktrees"
-  ]
+	"name": "agent-orchestrator",
+	"description": "General-purpose agent team orchestration with automatic context management, file isolation via git worktrees, and mechanical enforcement hooks.",
+	"version": "1.0.1",
+	"author": { "name": "Agent Orchestrator" },
+	"keywords": [
+		"orchestration",
+		"agent-teams",
+		"subagents",
+		"context-management",
+		"worktrees"
+	]
 }
 ```
 
@@ -993,6 +1003,7 @@ echo "✓ All validations passed"
 **Step 2: Verify hooks don't conflict**
 
 Check that:
+
 - PreToolUse hook (lead-write-guard) runs for write tools only
 - PostToolUse hook (read-counter) runs for read tools only
 - PreCompact hook (on-pre-compact) runs on auto compaction
@@ -1013,34 +1024,40 @@ Create `.claude/state/test-checklist.md`:
 # Agent-Orchestrator Integration Test Checklist
 
 ## Pre-flight Checks
+
 - [ ] All scripts have execute permissions
 - [ ] All JSON files validate
 - [ ] DESIGN.md documents all fixes
 
 ## Hook Tests
+
 - [ ] read-counter increments correctly (multiple invocations)
 - [ ] lead-write-guard blocks source files (relative paths)
 - [ ] lead-write-guard blocks source files (absolute paths)
-- [ ] lead-write-guard allows .claude/state/* (relative)
-- [ ] lead-write-guard allows .claude/state/* (absolute)
+- [ ] lead-write-guard allows .claude/state/\* (relative)
+- [ ] lead-write-guard allows .claude/state/\* (absolute)
 - [ ] on-pre-compact logs to compaction-events.log
 
 ## Path Resolution Tests
+
 - [ ] Worktree spawn template uses ../.claude/state/
 - [ ] Teammates can read ledger from worktree
 - [ ] Teammates can write status files from worktree
 
 ## Plan Persistence Tests
+
 - [ ] Plan written to .claude/state/orchestration-plan.md
 - [ ] Plan readable after "exiting" plan mode
 - [ ] cleanup-state.sh removes plan file
 
 ## Version Tests
+
 - [ ] plugin.json shows 1.0.1
 - [ ] marketplace.json shows 1.0.1 for agent-orchestrator
 - [ ] Both files validate with jq
 
 ## Regression Tests
+
 - [ ] No fix broke another fix
 - [ ] Scripts still work without ORCHESTRATOR_LEAD=1
 - [ ] Cleanup scripts remove all artifacts
@@ -1080,11 +1097,10 @@ Comprehensive plan covering all fixes:
 
 ## Summary
 
-**Total Tasks:** 8
-**Estimated Time:** 2-3 hours (following each step carefully)
-**Risk Level:** Low (each fix is isolated and tested)
+**Total Tasks:** 8 **Estimated Time:** 2-3 hours (following each step carefully) **Risk Level:** Low (each fix is isolated and tested)
 
 **Execution Order Rationale:**
+
 1. **read-counter** - Most isolated, no dependencies
 2. **worktree-paths** - Affects spawn template only
 3. **lead-write-guard** - Isolated to one script
@@ -1095,6 +1111,7 @@ Comprehensive plan covering all fixes:
 8. **verification** - Confirms no regressions
 
 **Success Criteria:**
+
 - All commits apply cleanly
 - All validation scripts pass
 - No script errors when run individually

@@ -80,14 +80,14 @@ Natural language triggers also route to the menu: "merge to main", "cut a releas
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
+| Command    | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
 | `/release` | Open the interactive release menu with context-aware options |
 
 ## Release Options
 
 | Option | When available | Description |
-|--------|---------------|-------------|
+| --- | --- | --- |
 | Quick Push | Always | Stage uncommitted changes (if any), commit, and push to `main`. No version bump or tag. |
 | Full Release | Always | Semver release with parallel pre-flight, version bump, changelog, annotated tag, and GitHub release. |
 | Plugin Release | Monorepos only | Scoped release for a single plugin. Uses `<plugin-name>/vX.Y.Z` tags, scoped changelog, and stages only that plugin's files. |
@@ -101,7 +101,7 @@ Natural language triggers also route to the menu: "merge to main", "cut a releas
 Three pre-flight agents run in parallel before any release operation (Phase 1). All three must report PASS or WARN to proceed.
 
 | Agent | Model | Role |
-|-------|-------|------|
+| --- | --- | --- |
 | `git-preflight` | haiku | Verifies clean working tree, dev branch, noreply git email, remote URL, and local/remote tag availability via `reconcile-tags.sh`. |
 | `test-runner` | sonnet | Auto-detects and runs the full test suite; reports pass/fail/skip counts and coverage percentage when available. |
 | `docs-auditor` | sonnet | Checks version consistency across `.md` files, broken relative links, and corporate tone flags. Warns on missing README or CHANGELOG. |
@@ -111,7 +111,7 @@ Each agent supports per-check waivers via `.release-waivers.json` in the repo ro
 ## Hooks
 
 | Hook | Event | What it does |
-|------|-------|-------------|
+| --- | --- | --- |
 | `sync-local-plugins.sh` | SessionStart | Rsyncs the local plugin development repo to the Claude Code plugin cache so in-session edits take effect without reinstalling. Discovery order: `$CLAUDE_PROJECT_DIR` first, then `$HOME/projects/Claude-Code-Plugins`. Silent when no files changed. |
 | `force-push-guard.sh` | PreToolUse / Bash | Blocks any `git push --force` or `git push -f` command before it executes. Returns a JSON block decision so the reason surfaces in Claude's context. |
 | `auto-build-plugins.sh` | PreToolUse / Bash | On `git commit`, checks whether any staged TypeScript files (`plugins/*/src/**/*.ts`) belong to a plugin with a `build` npm script. If so, runs `npm run build`, stages `dist/`, then allows the commit. Blocks with exit 2 if the build fails. |
@@ -143,12 +143,12 @@ Both recoveries are noted inline. If either cannot be resolved, the pipeline sto
 
 Before creating a local tag in Phase 3, `reconcile-tags.sh` compares local and remote tag state:
 
-| State | Meaning | Action |
-|-------|---------|--------|
-| `MISSING` | Tag does not exist anywhere | Proceed to `git tag -a` |
-| `LOCAL_ONLY` | Tag exists locally only | Skip `git tag -a`, proceed to push |
-| `REMOTE_ONLY` | Tag exists on remote only | Auto-fetch, then treat as `BOTH` |
-| `BOTH` | Tag exists on local and remote | Check `tag_exists` waiver or stop |
+| State         | Meaning                        | Action                             |
+| ------------- | ------------------------------ | ---------------------------------- |
+| `MISSING`     | Tag does not exist anywhere    | Proceed to `git tag -a`            |
+| `LOCAL_ONLY`  | Tag exists locally only        | Skip `git tag -a`, proceed to push |
+| `REMOTE_ONLY` | Tag exists on remote only      | Auto-fetch, then treat as `BOTH`   |
+| `BOTH`        | Tag exists on local and remote | Check `tag_exists` waiver or stop  |
 
 This prevents duplicate-tag push failures on retry after a partial release.
 

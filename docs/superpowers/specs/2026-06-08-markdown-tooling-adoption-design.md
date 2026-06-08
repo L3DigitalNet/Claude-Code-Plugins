@@ -1,10 +1,6 @@
 # Markdown Tooling Standard — Adoption Design
 
-**Date:** 2026-06-08
-**Status:** Approved (brainstorm) — ready for implementation plan
-**Standard:** [`L3DigitalNet/project-standards` → `standards/markdown-tooling`](https://github.com/L3DigitalNet/project-standards/tree/main/standards/markdown-tooling) (contract version `1.0`)
-**Reference implementation:** the standards repo itself dogfoods this standard (`~/projects/project-standards`) — copy-adopt from there.
-**TODO item closed by this work:** `TODO.md` → "Adopt markdown-tooling".
+**Date:** 2026-06-08 **Status:** Approved (brainstorm) — ready for implementation plan **Standard:** [`L3DigitalNet/project-standards` → `standards/markdown-tooling`](https://github.com/L3DigitalNet/project-standards/tree/main/standards/markdown-tooling) (contract version `1.0`) **Reference implementation:** the standards repo itself dogfoods this standard (`~/projects/project-standards`) — copy-adopt from there. **TODO item closed by this work:** `TODO.md` → "Adopt markdown-tooling".
 
 This is the **first of two independent adoption cycles**. The sibling "Adopt python-tooling" item is deferred to its own later spec/plan cycle and is **out of scope** here.
 
@@ -24,18 +20,18 @@ The repo mirrors the standards repo's own dogfood: Prettier owns physical format
 ## 2. Locked scope decisions
 
 | # | Decision | Choice | Rationale |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | D1 | Cycle structure | Two independent cycles; **Markdown first**, Python deferred | The standards are independent (different file types, tooling, enforcement). Markdown is the clean, high-value win; Python needs heavier scoping. |
-| D2 | **Markdown** carve-outs | **None** — every tracked, non-gitignored `.md` is linted/formatted | Repo markdown is ~all first-party (143 `plugins/`, 102 `docs/`, 10 root, 10 hidden); no vendored/foreign bucket worth excluding. (Scope of this decision is *Markdown files only*; the separate JS/TS source decision is D5.) The exact touched-set is confirmed by the post-fix-pass diff, not an a-priori count — see §3. |
+| D2 | **Markdown** carve-outs | **None** — every tracked, non-gitignored `.md` is linted/formatted | Repo markdown is ~all first-party (143 `plugins/`, 102 `docs/`, 10 root, 10 hidden); no vendored/foreign bucket worth excluding. (Scope of this decision is _Markdown files only_; the separate JS/TS source decision is D5.) The exact touched-set is confirmed by the post-fix-pass diff, not an a-priori count — see §3. |
 | D3 | Toolchain pinning | **Committed root `package.json`** (`prettier` pinned as devDep) + `package-lock.json`; `node_modules/` gitignored; `markdownlint-cli2` via npx/CI action | Exact mirror of the reference repo's dogfood (`package.json` pins only Prettier; markdownlint runs via the action in CI and npx locally). |
 | D4 | Prettier scope (structured-text) | **Faithful** — Prettier formats `md` + `json`/`jsonc` + `yaml`/`yml` + `.code-workspace` repo-wide | This is exactly the surface the reference repo's own `format.yml` enforces. JSON reformatting (2-space → tabs) is semantically inert for the Zod-validated manifests (validation keys off field names/values, not whitespace). YAML is normalized in-place by Prettier **with spaces** (YAML forbids tab indentation) while preserving valid structure — workflow behavior is unchanged and CI parses them. |
-| D5 | JS/TS source | **Out of scope** — excluded via `.prettierignore`; recorded as a **deliberate repo-specific exception** (ADR, §4) | 27 tracked `.ts`/`.js`/`.mjs`/`.cjs` files (the `home-assistant-dev` MCP server + e2e tests + a bundled `dist/*.cjs`) are a self-contained sub-project with its **own** `eslint.config.js` + `tsconfig.json` and no Prettier. **Honest framing:** Prettier *does* support JS/TS, and the standard says Prettier governs every supported type a repo contains — so excluding them is a **repo-specific exception**, not merely "matching the reference" (the reference simply had no JS/TS). The exception is justified — the MCP server's own ESLint/tsc stays authoritative, root Prettier never fights it, and the standard's §2 already scopes source code (`.py`) out — and is recorded as an ADR per standard §14. |
+| D5 | JS/TS source | **Out of scope** — excluded via `.prettierignore`; recorded as a **deliberate repo-specific exception** (ADR, §4) | 27 tracked `.ts`/`.js`/`.mjs`/`.cjs` files (the `home-assistant-dev` MCP server + e2e tests + a bundled `dist/*.cjs`) are a self-contained sub-project with its **own** `eslint.config.js` + `tsconfig.json` and no Prettier. **Honest framing:** Prettier _does_ support JS/TS, and the standard says Prettier governs every supported type a repo contains — so excluding them is a **repo-specific exception**, not merely "matching the reference" (the reference simply had no JS/TS). The exception is justified — the MCP server's own ESLint/tsc stays authoritative, root Prettier never fights it, and the standard's §2 already scopes source code (`.py`) out — and is recorded as an ADR per standard §14. |
 
 ## 3. Blast radius (measured — `git ls-files`, tracked files)
 
 Counts are from `git ls-files` (the **tracked** surface), **not** `fd` (which hides dot-dirs and may include untracked files). The earlier `fd`-based "254" undercounted by omitting 10 hidden tracked docs and 1 doc.
 
-**Authoritative touched-set = the post-fix-pass `git diff`, not an a-priori count.** Both tools honor only the **root** `.gitignore`/`.prettierignore` from the run directory (a root `prettier .` does *not* reliably honor nested `.gitignore` files — verified: `git check-ignore` from root returns no match for the nested `plugins/home-assistant-dev/mcp-server/package-lock.json` or `.claude/state/test-checklist.md`). So rather than claim an exact "enforced" count, the spec treats the numbers above as the **expected blast radius** and makes §6's `git diff --name-only` classification the ground truth: it must contain only `md`/`json`/`yaml`/`code-workspace` and **zero** `js/ts/jsx/tsx/mjs/cjs`. Reformatting the nested generated `package-lock.json` (JSON, inert) is acceptable if it occurs; the only *principled* exclusion is the D5 JS/TS set.
+**Authoritative touched-set = the post-fix-pass `git diff`, not an a-priori count.** Both tools honor only the **root** `.gitignore`/`.prettierignore` from the run directory (a root `prettier .` does _not_ reliably honor nested `.gitignore` files — verified: `git check-ignore` from root returns no match for the nested `plugins/home-assistant-dev/mcp-server/package-lock.json` or `.claude/state/test-checklist.md`). So rather than claim an exact "enforced" count, the spec treats the numbers above as the **expected blast radius** and makes §6's `git diff --name-only` classification the ground truth: it must contain only `md`/`json`/`yaml`/`code-workspace` and **zero** `js/ts/jsx/tsx/mjs/cjs`. Reformatting the nested generated `package-lock.json` (JSON, inert) is acceptable if it occurs; the only _principled_ exclusion is the D5 JS/TS set.
 
 - **265 `.md`** files — 143 `plugins/`, 102 `docs/`, 10 root, **5 `.github/`**, **5 `.claude/`** (the hidden dot-dir docs ARE tracked and in scope, consistent with D2 "no carve-outs"). Reflowed by Prettier (`proseWrap: never` puts each prose block on one line) and structurally normalized by markdownlint.
 - **31 `.json`** files — **retabbed from 2-space to tabs** (`useTabs: true`), including all 6 `plugins/*/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and both `.mcp.json`. Field names/values unchanged → no install or Zod-validation impact.
@@ -46,7 +42,7 @@ Counts are from `git ls-files` (the **tracked** surface), **not** `fd` (which hi
 ## 4. Artifacts added (copy-adopt from the standards repo, verbatim unless noted)
 
 | File | Purpose | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `.prettierrc.json` | Prettier config | **Verbatim.** `proseWrap: never` + `useTabs: true` are load-bearing; copy explicitly. |
 | `.markdownlint.json` | markdownlint rule set (`default: true` + 53 rules explicit, 13 deviations, MD043 inert via `true`) | **Verbatim** — this is the seedable artifact. |
 | `.markdownlint-cli2.jsonc` | Repo-local runner config (`globs`, honors `.gitignore`) | So a bare local `npx markdownlint-cli2` matches CI (same files). |
@@ -65,7 +61,7 @@ Counts are from `git ls-files` (the **tracked** surface), **not** `fd` (which hi
 
 ## 5. Rollout approach
 
-**Direct commits to `main`** (repo convention — `BRANCH_PROTECTION.md`; single-developer, no PR required). A short-lived topic branch is *permitted* but not required; the staged commit sequence below is the unit of review either way. **CI sealed last; mechanical reformat isolated from hand edits.**
+**Direct commits to `main`** (repo convention — `BRANCH_PROTECTION.md`; single-developer, no PR required). A short-lived topic branch is _permitted_ but not required; the staged commit sequence below is the unit of review either way. **CI sealed last; mechanical reformat isolated from hand edits.**
 
 ### Step 0 — Preflight (SA-003: protect the dirty `TODO.md`)
 
@@ -74,7 +70,7 @@ Before any file changes, run `git status --short`. **`TODO.md` currently carries
 - The plan must **stop and ask the user to commit (or set aside) their `TODO.md` edits first**, OR get explicit consent, before running the bulk reformat.
 - The "Adopt markdown-tooling" checkbox flip (`- [ ]` → `- [x]`) is a **separate, hunk-isolated `Edit`** at the very end (Step 4) — never a wholesale `git add TODO.md`. Verify with `git diff --cached -- TODO.md` that only the checkbox hunk is staged.
 
-**Broader preflight (SA-NEW-003): the fix pass writes the whole working tree, not just tracked files.** `prettier --write .` and `markdownlint-cli2 --fix "**/*.md"` rewrite *every* supported file under the root, **including untracked, non-ignored ones**. Right now that includes the 3 untracked `docs/codex-reviews/*spec-review*.md` audit files. So before Step 2 the plan must enumerate `git ls-files -o --exclude-standard` (untracked) and `git status --short` (dirty), filter to supported extensions (`md/json/jsonc/yml/yaml/code-workspace`), and for each either **commit it, gitignore it, or get explicit user approval to reformat it** — otherwise the bulk pass silently mutates it. Concretely: **commit the codex-review audit trail (and this spec) first**, so the working tree is clean before the reformat and the reformat diff is purely the mechanical change to already-committed content.
+**Broader preflight (SA-NEW-003): the fix pass writes the whole working tree, not just tracked files.** `prettier --write .` and `markdownlint-cli2 --fix "**/*.md"` rewrite _every_ supported file under the root, **including untracked, non-ignored ones**. Right now that includes the 3 untracked `docs/codex-reviews/*spec-review*.md` audit files. So before Step 2 the plan must enumerate `git ls-files -o --exclude-standard` (untracked) and `git status --short` (dirty), filter to supported extensions (`md/json/jsonc/yml/yaml/code-workspace`), and for each either **commit it, gitignore it, or get explicit user approval to reformat it** — otherwise the bulk pass silently mutates it. Concretely: **commit the codex-review audit trail (and this spec) first**, so the working tree is clean before the reformat and the reformat diff is purely the mechanical change to already-committed content.
 
 ### Commit sequence
 
@@ -85,7 +81,7 @@ Before any file changes, run `git status --short`. **`TODO.md` currently carries
 
 **Why CI last:** wiring the enforcing workflows before the fix pass would make the first CI run red on 265 legacy files. Ordering keeps `main` green throughout.
 
-*Alternatives rejected:* a single mega-commit (un-reviewable ~306-file diff: 265 md + 31 json + 9 yaml + 1 code-workspace); separate PRs per file-type (defeats the standard's "they move together" intent).
+_Alternatives rejected:_ a single mega-commit (un-reviewable ~306-file diff: 265 md + 31 json + 9 yaml + 1 code-workspace); separate PRs per file-type (defeats the standard's "they move together" intent).
 
 ## 6. Verification (completion gate)
 
@@ -96,7 +92,7 @@ npx prettier --check .
 npx markdownlint-cli2 "**/*.md"
 ```
 
-Plus post-fix-pass sanity before the sealing commit. **Negative checks must be written with inverted exit handling** — `grep`/`git check-ignore` exit non-zero when they find nothing, which is the *success* state here (SA-NEW-002), so a bare command under `set -e` would falsely fail:
+Plus post-fix-pass sanity before the sealing commit. **Negative checks must be written with inverted exit handling** — `grep`/`git check-ignore` exit non-zero when they find nothing, which is the _success_ state here (SA-NEW-002), so a bare command under `set -e` would falsely fail:
 
 - **Scope guard (D5):** `if git diff --name-only | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$'; then echo "JS/TS leaked into diff"; exit 1; fi` — must find nothing.
 - **VS Code artifacts un-ignored:** `if git check-ignore -q .vscode/settings.json .vscode/extensions.json; then echo "still ignored"; exit 1; fi`, **and** `git ls-files .vscode/settings.json .vscode/extensions.json` lists **both** files.
@@ -108,7 +104,7 @@ Plus post-fix-pass sanity before the sealing commit. **Negative checks must be w
 - The nested `pyproject.toml`-bearing suites and the MCP server `.ts`/`.js` are untouched (`.prettierignore` excludes them; Prettier never processes `.py`/`.toml`).
 - **CI acceptance:** both new workflows (`lint-markdown`, `format`) are green, **and** any pre-existing workflow re-triggered by the changed paths (e.g. `ha-dev-plugin-tests`, `plugin-test-harness-ci`, `codeql`) still passes.
 
-**Residual-violation expectation:** the rule set is tuned so the formatter and linter do not conflict, so the fix pass is expected to yield a clean tree. The check contract is the confirmation. Any stray content-rule hit (e.g. a bare URL under MD034, a missing code-fence language under MD040) is treated as a **fix-the-markdown** content bug per the standard — not a config change. An ADR exception (standard §14) is opened only if a rule proves *systemically* incompatible with house conventions; none is anticipated.
+**Residual-violation expectation:** the rule set is tuned so the formatter and linter do not conflict, so the fix pass is expected to yield a clean tree. The check contract is the confirmation. Any stray content-rule hit (e.g. a bare URL under MD034, a missing code-fence language under MD040) is treated as a **fix-the-markdown** content bug per the standard — not a config change. An ADR exception (standard §14) is opened only if a rule proves _systemically_ incompatible with house conventions; none is anticipated.
 
 ## 7. Known follow-up (flagged, out of scope this cycle)
 
@@ -120,7 +116,7 @@ Plus post-fix-pass sanity before the sealing commit. **Negative checks must be w
 - The **markdown-frontmatter** standard (a different standard; the 82 frontmatter-bearing files are not validated against its schema here).
 - Fixing the `state.md` generator (§7).
 - The 15 pre-existing failing pytest tests (unrelated to Markdown tooling).
-- The `home-assistant-dev/mcp-server` TypeScript source — its `.ts`/`.js` are excluded by `.prettierignore` (D5) and stay owned by its own ESLint/tsc. Its `.json` config (`package.json`, `tsconfig*.json`) *is* reformatted (inert whitespace) along with all other JSON; nested `pyproject.toml`/`.py` are never processed by Prettier.
+- The `home-assistant-dev/mcp-server` TypeScript source — its `.ts`/`.js` are excluded by `.prettierignore` (D5) and stay owned by its own ESLint/tsc. Its `.json` config (`package.json`, `tsconfig*.json`) _is_ reformatted (inert whitespace) along with all other JSON; nested `pyproject.toml`/`.py` are never processed by Prettier.
 
 ## 9. Success criteria
 

@@ -24,6 +24,7 @@ custom_components/{domain}/
 ```
 
 **For HACS distribution, also include at repository root:**
+
 ```
 /
 ├── custom_components/{domain}/   # Integration files
@@ -36,21 +37,22 @@ custom_components/{domain}/
 
 ```json
 {
-  "domain": "{domain_name}",
-  "name": "{Human Readable Name}",
-  "version": "1.0.0",
-  "codeowners": ["@{github_username}"],
-  "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/{user}/{repo}",
-  "integration_type": "hub",
-  "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/{user}/{repo}/issues",
-  "requirements": []
+	"domain": "{domain_name}",
+	"name": "{Human Readable Name}",
+	"version": "1.0.0",
+	"codeowners": ["@{github_username}"],
+	"config_flow": true,
+	"dependencies": [],
+	"documentation": "https://github.com/{user}/{repo}",
+	"integration_type": "hub",
+	"iot_class": "local_polling",
+	"issue_tracker": "https://github.com/{user}/{repo}/issues",
+	"requirements": []
 }
 ```
 
 **Required fields (Core + HACS):**
+
 - `domain`: lowercase, underscores only, matches folder name
 - `name`: human-readable (omit for core integrations)
 - `version`: SemVer (required for custom integrations)
@@ -61,7 +63,7 @@ custom_components/{domain}/
 - `iot_class`: `local_polling`, `local_push`, `cloud_polling`, `cloud_push`, `calculated`
 - `issue_tracker`: URL for bug reports (**required for HACS**)
 
-## __init__.py Template (2025 Pattern)
+## **init**.py Template (2025 Pattern)
 
 ```python
 """The {Name} integration."""

@@ -18,11 +18,11 @@ Scripts are reusable, callable action sequences — unlike automations they have
 ```yaml
 script:
   morning_routine:
-    alias: "Morning Routine"
-    mode: single  # single | restart | queued | parallel
+    alias: 'Morning Routine'
+    mode: single # single | restart | queued | parallel
     fields:
       brightness:
-        description: "Light brightness percentage"
+        description: 'Light brightness percentage'
         default: 100
         selector:
           number:
@@ -33,15 +33,15 @@ script:
         target:
           area_id: kitchen
         data:
-          brightness_pct: "{{ brightness }}"
+          brightness_pct: '{{ brightness }}'
       - delay:
           seconds: 2
       - action: media_player.play_media
         target:
           entity_id: media_player.kitchen_speaker
         data:
-          media_content_id: "good_morning_playlist"
-          media_content_type: "playlist"
+          media_content_id: 'good_morning_playlist'
+          media_content_type: 'playlist'
 ```
 
 ## Calling a Script
@@ -51,18 +51,17 @@ script:
 - action: script.morning_routine
   data:
     brightness: 80
-
 # From the UI: Developer Tools → Actions → script.morning_routine
 ```
 
 ## When to Use Scripts vs Automations
 
-| Use Case | Choose |
-|----------|--------|
+| Use Case                              | Choose     |
+| ------------------------------------- | ---------- |
 | Triggered by an event or state change | Automation |
-| Called by multiple automations | Script |
-| Complex reusable logic | Script |
-| One-off response to a trigger | Automation |
+| Called by multiple automations        | Script     |
+| Complex reusable logic                | Script     |
+| One-off response to a trigger         | Automation |
 
 ## Related Skills
 
