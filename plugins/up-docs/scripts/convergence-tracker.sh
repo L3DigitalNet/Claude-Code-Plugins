@@ -100,7 +100,9 @@ p['changes_applied'] += fixes
 
 # touched_pages is the per-iteration PATH set that drives auditor narrowing (D6).
 # De-dupe preserving first-seen order; pages_touched is now its length, not a max.
-raw = findings.get('touched_pages', [])
+raw = findings.get('touched_pages')
+if not isinstance(raw, list):
+    raw = []
 seen = set()
 touched = [x for x in raw if not (x in seen or seen.add(x))]
 p['touched_pages'] = touched

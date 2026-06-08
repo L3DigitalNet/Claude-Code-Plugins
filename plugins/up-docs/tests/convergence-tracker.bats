@@ -160,6 +160,7 @@ teardown() {
 }
 
 @test "record-iteration stores touched_pages as a path list (round-trip)" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" init
   bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
   echo '{"fixes_applied":1,"touched_pages":["wiki/a.md","wiki/b.md"]}' \
     | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
@@ -171,6 +172,7 @@ teardown() {
 }
 
 @test "pages_touched is len of the latest touched_pages (not a running max)" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" init
   bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
   echo '{"touched_pages":["wiki/a.md","wiki/b.md","wiki/c.md"]}' \
     | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
@@ -181,6 +183,7 @@ teardown() {
 }
 
 @test "record-iteration de-duplicates touched_pages preserving order" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" init
   bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 1
   echo '{"touched_pages":["wiki/a.md","wiki/a.md","wiki/b.md"]}' \
     | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 1
@@ -189,6 +192,7 @@ teardown() {
 }
 
 @test "touched-pages subcommand emits the latest set for a phase" {
+  bash "$SCRIPTS_DIR/convergence-tracker.sh" init
   bash "$SCRIPTS_DIR/convergence-tracker.sh" start-phase 2
   echo '{"touched_pages":["wiki/x.md"]}' \
     | bash "$SCRIPTS_DIR/convergence-tracker.sh" record-iteration 2
