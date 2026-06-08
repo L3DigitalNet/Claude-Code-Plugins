@@ -1,7 +1,7 @@
 # up-docs — Orchestration Efficiency & Completeness Improvements (Design)
 
 **Date:** 2026-06-07
-**Status:** Draft — awaiting user review, then `writing-plans` + Codex `$spec-review` gate
+**Status:** Draft — Codex `spec-review` round 1 applied (3 High + 3 Medium addressed); re-audit pending
 **Target version:** up-docs `0.10.1` → `0.11.0`
 **Topic owner:** documentation-propagation plugin (`plugins/up-docs/`)
 
@@ -13,150 +13,187 @@ state.md byte count exact, VS Code-fix host attribution correct, drift audit's z
 findings legitimate). But it exposed a **cost-to-outcome** problem and one **design gap**:
 
 - **~188k subagent tokens + 103 tool calls → 4 file edits** for a small patch session
-  (up-docs v0.10.1 + a workstation editor-config fix; no infrastructure changes).
+  (up-docs v0.10.1 + a workstation editor-config fix; no infrastructure changes). _Note: these
+  per-run figures come from this session's live subagent telemetry, not committed repo
+  artifacts; they motivate the work but are not themselves acceptance criteria (see §6)._
 - **Drift auditor: 39 tool calls → 0 findings.** It scanned 258 wiki pages + ran the
   validator gate + Notion searches even though (a) the session touched no infrastructure
-  and (b) the propagators had already reported exactly what they changed. This is live
-  confirmation of two findings from the 2026-06-07 efficiency review:
+  and (b) the propagators had already reported what they changed. Live confirmation of two
+  findings from the 2026-06-07 efficiency review:
   - **narrowing-on-re-pass is prose-only** in `convergence-tracking.md` and never enforced;
   - the auditor's already-fixed **dedup runs after the expensive scan**, not before.
 - **Notion propagator: 7 tool calls to conclude "no page exists"** — paid every run.
 - **Step 6 leaves dirty trees.** `post-propagation-steps.md` is read-only by contract, so
   `/up-docs:all` ends with uncommitted writes across **two** repos (the project repo and
-  `~/projects/llm-wiki`) and relies on a separate user prompt to land them. The run's
-  output is not self-contained.
+  `~/projects/llm-wiki`) and relies on a separate user prompt to land them.
 
-The framework pays near-full orchestration freight regardless of session size: a 4-file
-patch session and a 40-file infra session cost roughly the same.
+## 2. Locked decisions
 
-## 2. Locked decisions (from brainstorming Q&A, 2026-06-07)
+From brainstorming Q&A + Codex round-1 corrections (2026-06-07):
 
 | # | Decision | Choice |
 | --- | --- | --- |
-| D1 | Risk posture for cost-cutting | **Balanced.** Skip a propagator only when zero summary items route to its layer, and log the skip loudly. Auditor: first pass always full; 2nd+ convergence passes narrow to touched pages + dependents. Never silently drops a check. |
-| D2 | Step 6 commit behavior | **Offer → commit on approval → no push.** One `AskUserQuestion`; on approval commit each dirty repo under its own convention. Never auto-pushes. Skip silently if clean. |
-| D3 | Version bump | **Minor: `0.11.0`** (adds orchestration behavior). |
-| D4 | Spec/plan location | `docs/plans/` (this repo's convention), not the superpowers default. |
-| D5 | Review gate | `writing-plans` → Codex adversarial `$spec-review`/`$plan-review` to convergence **before** implementation. |
+| D1 | Risk posture | **Balanced.** Skip a propagator only when zero summary items route to its layer, logged loudly. Auditor: first pass always full; 2nd+ passes narrow to touched pages + one-hop dependents. Never silently drops a check. |
+| D2 | Step 6 commit behavior | **Offer → commit on approval → no push.** Skip silently if clean. |
+| D3 | Version bump | **Minor: `0.11.0`.** |
+| D4 | Spec/plan location | `docs/plans/`. |
+| D5 | Review gate | `writing-plans` → Codex adversarial review to convergence before implementation. |
+| **D6** | **A1 data source** *(SA-001)* | **New machine-readable path contract.** Introduce a per-phase `touched_pages` path list in the tracker — the existing numeric `pages_touched` is a count and cannot drive narrowing. |
+| **D7** | **A2 dedup granularity** *(SA-003)* | **Dedup exact finding *signatures*, never whole pages.** Touched pages remain fully eligible for validator/draft/link/contradiction checks. |
+| **D8** | **Commit safety** *(SA-002)* | **Pre-propagation dirty baseline per committable repo.** Only offer to commit paths clean at baseline AND written this run; pre-existing dirty paths are excluded and disclosed separately. |
+| **D9** | **`Skipped` representation** *(SA-004)* | **Not a new agent action.** Skipped layers appear only as an orchestrator-level line in the combined report; the agent-output enum (`validate_output.py`) is untouched. |
+| **D10** | **Non-interactive contexts** | In `-p`/headless runs where `AskUserQuestion` cannot be answered, the commit step degrades to "report dirty trees, commit nothing." Consent is mandatory. |
 
 ## 3. Design
 
 Three independent changes (A/B/C), each implementable and testable on its own.
 
-### A. Auditor scoping — path-aware narrowing + pre-filter
+### A. Auditor scoping — path-aware narrowing + signature dedup
 
-The auditor (`agents/up-docs-audit-drift.md`) runs two cost sinks. Both are fixed by
-promoting existing-but-unused state into **explicit numbered task steps**, made
-**path-aware** so standalone `/up-docs:drift` (which has no propagator reports) stays
-self-sufficient.
+**A1 — Convergence narrowing (BOTH paths). [D6]**
+Add an explicit per-phase **path contract** to `scripts/convergence-tracker.sh`:
+`record-iteration` accepts a `touched_pages` array (repo-relative paths / wiki page paths)
+in its findings JSON and stores the per-phase **deduplicated union** as
+`state.phases[N].touched_pages`. The legacy numeric `pages_touched` is retained but
+redefined as `len(touched_pages)` (so existing count semantics survive). The auditor's
+per-phase loop then becomes:
 
-**A1 — Convergence narrowing (applies in BOTH paths).**
-`scripts/convergence-tracker.sh` already persists `pages_touched` per phase; the value is
-computed and never consumed. Change the auditor's per-phase loop (current task step 4 +
-`convergence-tracking.md` "Narrowing on Re-pass") so that:
+- **Pass 1**: full scan of the phase surface (unchanged).
+- **Pass N+1**: scan only the union of (i) `touched_pages` from the prior pass and (ii)
+  pages whose frontmatter `related` references a page in that set (one-hop dependents).
 
-- **Pass 1** of each phase: full scan of the phase's surface (unchanged).
-- **Pass N+1**: scan only the union of (i) the pages in the prior pass's `pages_touched`
-  set and (ii) pages whose frontmatter `related` references a page in that set
-  (one-hop dependents). Other pages are presumed stable for this phase.
+Keyed off the auditor's **own** per-pass findings, so it works identically in `/all` and
+standalone `/up-docs:drift`. `convergence-tracking.md` stops being the rule's authority and
+points to the auditor task step (single source of truth).
 
-This is keyed off the auditor's **own** per-pass findings (not propagator reports), so it
-works identically in `/all` and standalone. `convergence-tracking.md` stops being the
-authority for the rule and instead points to the auditor task step (single source of truth).
+**A2 — Pre-emptive signature dedup (`/all` path only). [D7]**
+Replace the current post-scan dedup with a **finding-signature** dedup that still audits
+touched pages. New task step: *"If propagator reports were provided, build the set of
+already-fixed finding signatures `(page, discrepancy_type)` from their `Updated`/`Created`
+rows. Continue to scan and run all validator / draft-status / link / cross-page
+contradiction checks on every page — including touched pages — but suppress emitting a
+finding whose signature exactly matches an already-fixed one. If no reports were provided
+(standalone `/up-docs:drift`), report normally."*
 
-**A2 — Propagator-report pre-filter (applies in the `/all` path ONLY).**
-Add an explicit early task step: *"If propagator reports were provided in your prompt,
-build the set of pages they marked `Updated`/`Created` this run and exclude those pages
-from your scan-candidate set **before** scanning — not merely before reporting. If no
-reports were provided (standalone `/up-docs:drift`), scan normally."* This moves the
-existing dedup (current guardrail at task lines ~99–100) from post-scan to pre-scan in the
-`/all` path while preserving full standalone behavior.
+This deliberately does **not** skip touched pages — their independent validation is the
+auditor's core value (a page a propagator just `Updated` is the most likely to carry a
+fresh frontmatter/link/contradiction error). The token win here is modest (suppressed
+duplicate findings, not skipped scans); the real scan reduction is A1.
 
-**Files:** `agents/up-docs-audit-drift.md` (task steps 2/4 + the dedup guardrail),
-`skills/drift/references/convergence-tracking.md` (defer to the task step).
+**Files:** `agents/up-docs-audit-drift.md` (task steps + dedup guardrail), `scripts/convergence-tracker.sh`
+(+ schema), `skills/drift/references/convergence-tracking.md` (defer to the task step),
+`tests/convergence-tracker.bats` (path round-trip).
 
-**Verifiable against:** a bats/prompt-conformance assertion that the auditor prompt
-contains a pass-1-full / pass-N-narrow instruction referencing `pages_touched`, and a
-path-aware pre-filter instruction gated on "reports provided".
-
-### B. Fast-path empty-layer skip
+### B. Fast-path empty-layer skip [D1, D9]
 
 In `skills/all/SKILL.md` Step 2 the orchestrator already enumerates summary items. Extend
-Step 2 to **tag each item with its target layer(s)** (`repo` / `wiki` / `notion`) using the
+Step 2 to **tag each item with its target layer(s)** (`repo`/`wiki`/`notion`) via the
 existing Layer Boundaries table. In Step 3, **dispatch only propagators with ≥1 routed
-item**. For each skipped layer, emit an explicit combined-report row, e.g.
-`| Notion | Skipped | 0 items routed to this layer |`.
+item**. **Fail-open:** an item whose layer is ambiguous routes to *all* candidate layers; a
+layer is skipped only when it provably has zero routed items. The auditor still audits all
+three layers regardless of which propagators ran — skipping a *propagation* never skips the
+*audit* of that layer.
 
-**Fail-open rule (preserves the Balanced posture):** if an item's target layer is
-ambiguous, it routes to **all** candidate layers rather than being dropped. A layer is
-skipped only when it provably has zero routed items. The auditor still audits all three
-layers regardless of which propagators were dispatched — skipping a *propagation* never
-skips the *audit* of that layer.
+A skipped layer is rendered **only** in the orchestrator's combined report as a
+layer-status line, e.g. `Notion — skipped (0 items routed to this layer)`. This is **not** a
+table action row and does **not** pass through `validate_output.py` (which governs each
+agent's JSON output, not the orchestrator's combined markdown). The four-value action enum
+is untouched. [D9]
 
-**Files:** `skills/all/SKILL.md` (Steps 2–3), `templates/summary-report.md` (a `Skipped`
-row variant + totals note).
+**Files:** `skills/all/SKILL.md` (Steps 2–3), `templates/summary-report.md` (document the
+orchestrator-level skipped-layer line; note it is presentation-only).
 
-**Verifiable against:** a prompt-conformance assertion that Step 3 is conditioned on routed
-items and that the skip path is fail-open + logged; a manual scenario (repo-only change ⇒
-notion + wiki skipped, audit still covers all three).
+### C. Step 6 commit offer — consent-gated, baseline-safe, no push [D2, D8, D10]
 
-### C. Step 6 commit offer (consent gate, two repos, no push)
+Add **part (c)** to the "Handoff for Next Session" section of `templates/post-propagation-steps.md`.
 
-Add **part (c)** to the "Handoff for Next Session" section of
-`templates/post-propagation-steps.md`, after the handoff brief:
+**Baseline (new, runs early — [D8]):** before propagation, snapshot `git status --porcelain`
+for every repo the run may commit: the active project repo (already guarded clean at Step 0
+of `/up-docs:all`, but `/up-docs:repo` has no such guard) and `~/projects/llm-wiki` (if the
+wiki layer is in scope). Persist the baseline dirty-path set per repo.
 
-1. Detect dirty trees in (i) the active project repo and (ii) `~/projects/llm-wiki` — the
-   latter only if the wiki propagator reported a write there.
-2. If neither is dirty, skip silently.
-3. If either is dirty, present **one** `AskUserQuestion` (`multiSelect` across the dirty
-   repos) offering to commit. On approval, for each selected repo:
-   - stage **only** the propagation-written paths, by explicit name (never `git add -A`);
-   - commit under that repo's convention — project repo: signed, scoped
-     `docs(handoff): …` message summarizing the session close; `~/projects/llm-wiki`: its
-     draft-contract message (`docs(<area>): …`, the page stays `status: draft`);
-   - **never push.**
-4. Report the resulting commit SHAs (and that nothing was pushed).
+**Written-paths contract ([D8], resolves "propagation-written paths"):** each propagator
+emits, alongside its table, a machine-readable `written_paths` list (the paths it
+`Created`/`Updated`). The commit offer's candidate set = `written_paths` **minus** any path
+dirty at baseline.
 
-This keeps `post-propagation-steps.md` honest about its now-expanded role: it remains
-read-only over the *handoff brief* state files, and only ever commits the
-**propagation-written** paths after explicit consent.
+**Offer:** if the candidate set is non-empty, present **one** `AskUserQuestion`
+(`multiSelect` across the dirty repos). On approval, per selected repo: stage only candidate
+paths by explicit name (`git add -- <path>`; safe because each was clean at baseline, so all
+current hunks are this run's), commit under that repo's convention (project repo: signed
+`docs(handoff): …`; `~/projects/llm-wiki`: its draft-contract message, page stays
+`status: draft`), and **never push**. Report SHAs and that nothing was pushed.
 
-**Files:** `templates/post-propagation-steps.md` (new part (c)), `skills/all/SKILL.md` +
-`skills/repo/SKILL.md` (Step 6 references, since the template is shared by both).
+**Excluded paths:** any path dirty at baseline (including a baseline-dirty path the
+propagator later also wrote — a same-path collision) is **excluded** from auto-staging and
+**disclosed separately** as "pre-existing local changes in `<repo>` — left for you to handle
+manually." Never silently fold them into the up-docs commit.
 
-**Verifiable against:** a scenario test — after a propagation that writes both repos, the
-step surfaces a consent question; declining commits nothing; approving commits only the
-written paths under each convention and pushes nothing.
+**Non-interactive ([D10]):** if `AskUserQuestion` cannot be answered (headless `-p`), skip
+the commit entirely and report the dirty trees. No consent → no commit.
+
+**Files:** `templates/post-propagation-steps.md` (part (c) + baseline), `skills/all/SKILL.md`
++ `skills/repo/SKILL.md` (Step 6 references + baseline capture), the three propagator agents
+(emit `written_paths`).
 
 ## 4. Non-goals
 
-- No change to the three propagators' layer-boundary logic or the auditor's verification
+- No change to the propagators' layer-boundary logic or the auditor's verification
   discipline (`evidence` grounding, unverifiable handling).
-- No auto-push, ever (D2).
-- No "Aggressive" auditor mode that skips the adjacent-infrastructure sweep on small
-  sessions — explicitly rejected in favor of Balanced (D1).
-- No change to standalone `/up-docs:drift` scan completeness (A2 is gated to the `/all`
-  path; A1 narrowing applies but only affects re-passes, not first-pass coverage).
+- No auto-push, ever [D2]. No auto-commit without consent [D10].
+- No "Aggressive" auditor mode that skips the adjacent-infrastructure sweep or skips whole
+  touched pages — explicitly rejected [D1, D7].
+- No change to standalone `/up-docs:drift` completeness: A2 is gated to the `/all` path; A1
+  narrowing affects only re-passes, never first-pass coverage.
 
 ## 5. Risks & mitigations
 
 | Risk | Mitigation |
 | --- | --- |
-| Narrowing (A1) misses drift introduced on a page not touched in the prior pass | First pass is always full; one-hop `related` dependents are included; oscillation detection (already in `convergence-tracking.md`) still applies. |
-| Pre-filter (A2) skips a page that a propagator only *partially* fixed | Pre-filter excludes only pages the propagator marked `Updated`/`Created`; the auditor's mandate is cross-page drift, and any *remaining* drift on a touched page would have been a propagator FAILED row (still scanned). Accept residual risk; document it. |
-| Fast-path (B) wrongly skips a layer with real work | Fail-open on ambiguity; skip only on provably-zero routed items; the audit layer still covers all three regardless. |
-| Commit step (C) stages unintended paths | Stage only propagation-written paths by explicit name; never `-A`; consent-gated. |
-| Cache lag: running skill is one version behind HEAD | Out of scope for this change; note in release notes that a cache refresh is needed post-release. |
+| A1 narrowing misses drift on a page not touched in the prior pass | First pass always full; one-hop `related` dependents included; oscillation detection (existing) still applies. |
+| A2 suppresses a *real* new finding because its signature collides with a fixed one | Signature is `(page, discrepancy_type)`; validators/link/contradiction checks still run on every page, so a *different* defect on a touched page is still reported. Only exact-signature duplicates are suppressed. |
+| Commit step stages pre-existing local work (SA-002) | Pre-propagation baseline per repo; candidate set excludes baseline-dirty paths; same-path collisions excluded + disclosed [D8]. |
+| Fast-path wrongly skips a layer with real work | Fail-open on ambiguity; skip only on provably-zero routed items; audit still covers all three layers. |
+| `Skipped` enum churn breaks `validate_output.py` | Skipped is orchestrator-presentation only, not an agent action; enum untouched [D9]. |
+| Commit offer in headless run blocks or mis-fires | Non-interactive degrades to report-only, no commit [D10]. |
 
 ## 6. Test & rollout
 
-- Extend `tests/prompt-conformance.bats` with assertions for A1/A2 task-step presence and
-  B's conditional dispatch + fail-open language.
-- Add a `post-propagation-steps` template assertion for part (c) (consent-gated, no-push,
-  explicit-path staging).
-- Bump `plugin.json` + `marketplace.json` to `0.11.0`; CHANGELOG `[0.11.0]`.
-- Release via `/release-pipeline:release` (plugin release, scoped tag `up-docs/v0.11.0`).
+Each change gets **prompt-conformance assertions AND at least one behavioral check** (SA-006
+— grep-level conformance alone cannot prove the cost/safety outcome):
 
-## 7. Open questions
+- **A1:** `convergence-tracker.bats` asserts `touched_pages` **paths** round-trip across
+  `record-iteration`/`status` (not a count); an auditor assertion that pass-N+1 reads those
+  paths + one-hop `related` dependents. Behavioral: a tracker-state fixture proving pass-2
+  candidate set ⊂ pass-1 surface.
+- **A2:** false-green regression — a propagator reports `Updated` for a wiki page that still
+  has a broken `related` link or contradiction; the auditor must still report it.
+- **B:** transcript/disposable-smoke check proving a repo-only routed summary dispatches
+  **no** wiki/Notion Agent call while the audit still covers all three layers; a
+  conformance assertion that Step 3 dispatch is conditioned on routed items + fail-open.
+- **C:** negative dirty-baseline scenario — `~/projects/llm-wiki` dirty before `/up-docs:all`
+  (including a same-path pre-existing edit); approving the commit must **not** include the
+  pre-existing change; headless `-p` commits nothing.
 
-None — all design forks resolved in §2.
+**Rollout:**
+- Index this design (and the future plan) in `docs/handoff/specs-plans.md` now, with status
+  updates on spec convergence and plan creation (SA-005; repo convention per
+  `agents/up-docs-propagate-repo.md`).
+- Run after implementation: `bash plugins/up-docs/tests/run-bats.sh …`,
+  `cd plugins/up-docs/tests && .venv/bin/python -m pytest -v`, `./scripts/validate-marketplace.sh`.
+- Bump `plugin.json` + `marketplace.json` to `0.11.0`; CHANGELOG `[0.11.0]`. Release via
+  `/release-pipeline:release` (scoped tag `up-docs/v0.11.0`). Release note: a marketplace
+  **cache refresh** is required for the new behavior to take effect.
+
+## 7. Resolved questions
+
+All Codex round-1 ambiguities are resolved in §2 (D6–D10): `touched_pages` is a per-phase
+path list [D6]; A2 dedups signatures not pages [D7]; pre-existing llm-wiki dirt is
+baseline-excluded [D8]; `Skipped` is presentation-only [D9]; headless runs never commit
+[D10]. `propagation-written paths` is the propagator-emitted `written_paths` artifact [§3C].
+
+## 8. Codex review ledger
+
+| Round | Verdict | Blocking | Resolution |
+| --- | --- | --- | --- |
+| 1 (`…-203332-…round1.md`) | Needs major correction | SA-001, SA-002, SA-003 (High); SA-004, SA-005, SA-006 (Med) | SA-001→D6/§3A1; SA-002→D8/§3C; SA-003→D7/§3A2; SA-004→D9/§3B; SA-005→§6 rollout; SA-006→§6 behavioral tests |
