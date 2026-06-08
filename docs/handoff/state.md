@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-07 (up-docs 0.10.0 Outline→llm-wiki cutover shipped + released; bats false-green fixed)
+**Last updated:** 2026-06-07 (up-docs v0.10.1 efficiency pass shipped — parallel link-audit + convergence-tracker fix + vocabulary retirement)
 
 ## Session Instructions
 
@@ -16,6 +16,6 @@
 
 ## Recently closed (this session, 2026-06-07)
 
-- **Outline→llm-wiki cutover shipped; up-docs 0.10.0 released** (tag `up-docs/v0.10.0` + GitHub release, HEAD `3fadb69`). Wiki layer retargeted Outline MCP → local `~/projects/llm-wiki`: `propagate-wiki` → Sonnet (writes `status:draft` pages under the llm-wiki contract), `audit-drift` reads llm-wiki from disk + runs its validators as drift checks. Spec + plan each Codex-reviewed to convergence (ledgers in `docs/plans/2026-06-07-up-docs-llm-wiki-migration-{design,plan}.md`); executed subagent-driven (`0d73dcb`..`4b84b0a`). Fixed **Bug 7** (bats false-green via find/grep shims → `run-bats.sh` forces GNU coreutils, `d4119ae`). Codex global `AGENTS.md` gained llm-wiki parity (agent-configs `08fd928`).
+- **up-docs v0.10.1 released** (tag `up-docs/v0.10.1` + GitHub release). Efficiency/cleanup pass on link-audit parallelization, convergence-tracker state caching, and final Outline vocabulary retirement. Commits `e30f93c` (link-audit external-check parallelization via ThreadPoolExecutor), `b8b3475` (convergence-tracker in-memory state capture), `c0aff2f` (retire "collection" vocabulary from agents/templates). Shipped as v0.10.1 patch via `/release-pipeline:release`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->
