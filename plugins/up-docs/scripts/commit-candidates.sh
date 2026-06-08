@@ -30,7 +30,7 @@ while i < len(data):
         i += 1; continue
     xy, path = rec[:2], rec[3:]
     i += 2 if xy[:1] in (b"R", b"C") else 1
-    sys.stdout.write(path.decode("utf-8", "surrogateescape") + "\n")
+    sys.stdout.buffer.write(path + b"\n")   # raw bytes: any filename byte sequence survives
 '
 }
 
@@ -41,8 +41,8 @@ case "${1:-}" in
   candidates)
     repo="${2:?usage: candidates <repo> <baseline-file>}"
     baseline="${3:?usage: candidates <repo> <baseline-file>}"
-    # set difference on exact path lines (doc paths do not contain newlines in practice)
-    comm -23 <(dirty_paths "$repo" | sort -u) <(sort -u "$baseline")
+    # set difference on exact path lines (doc paths contain no newlines in practice; non-newline bytes incl. non-UTF-8 survive via raw-byte emission + LC_ALL=C)
+    LC_ALL=C comm -23 <(dirty_paths "$repo" | LC_ALL=C sort -u) <(LC_ALL=C sort -u "$baseline")
     ;;
   fingerprint)
     repo="${2:?usage: fingerprint <repo> <path>}"
