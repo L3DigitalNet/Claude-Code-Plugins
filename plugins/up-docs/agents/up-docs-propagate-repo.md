@@ -362,7 +362,7 @@ Do NOT write in repo docs:
      - Reason: documenting new service
      - Affected area: llm-wiki
      - Files touched: (wiki-only; no repo file)
-     - Verifiable against: rg over ~/projects/llm-wiki/wiki/
+     - Verifiable against: ssh llm-wiki 'cd /srv/workspaces/llm-wiki && rg <term> wiki/'
   </session_item>
   <your_actions>
   Probe: V2 layout.

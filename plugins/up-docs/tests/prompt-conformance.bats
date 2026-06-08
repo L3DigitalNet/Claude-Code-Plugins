@@ -178,6 +178,12 @@ PROPAGATE_WIKI="$PLUGIN_ROOT/agents/up-docs-propagate-wiki.md"
   [ "$status" -eq 0 ]
 }
 
+@test "no up-docs agent/skill/template still names the local ~/projects/llm-wiki path (0.12.0)" {
+  # the wiki repo moved to CT 103; nothing in the prompt surface may address it as a local path
+  run grep -rEl 'projects/llm-wiki' "$PLUGIN_ROOT/agents" "$PLUGIN_ROOT/skills" "$PLUGIN_ROOT/templates"
+  [ "$status" -ne 0 ]
+}
+
 @test "commit offer handles the remote wiki repo over ssh, not a local path (0.12.0)" {
   # post-propagation template: wiki baseline + commit run over ssh on the CT
   run grep -F "ssh llm-wiki 'bash -s'" "$POST_PROP"
