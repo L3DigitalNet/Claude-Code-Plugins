@@ -163,3 +163,17 @@ PROPAGATE_WIKI="$PLUGIN_ROOT/agents/up-docs-propagate-wiki.md"
   run grep -E '^tools:[[:space:]]*Bash[[:space:]]*$' "$PROPAGATE_WIKI"
   [ "$status" -eq 0 ]
 }
+
+@test "audit-drift wiki phase reads over ssh, skips on unreachable host (0.12.0)" {
+  run grep -F 'LLM_WIKI_SSH' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+  run grep -F '/srv/workspaces/llm-wiki' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+  # local default gone, and no local-tool Read against the remote wiki path
+  run grep -F 'projects/llm-wiki' "$AUDIT_DRIFT"
+  [ "$status" -ne 0 ]
+  run grep -E 'Read\("?\$LLM_WIKI_ROOT' "$AUDIT_DRIFT"
+  [ "$status" -ne 0 ]
+  run grep -iF 'unreachable' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+}
