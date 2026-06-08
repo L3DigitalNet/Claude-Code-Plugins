@@ -1,10 +1,11 @@
-Trigger phrases: "arrange widgets", "layout", "resize behavior", "QSplitter", "center widget", "widget not visible", "expand to fill", "fixed size", "stretch factor", "form layout", "grid layout", "spacing", "margins" version: 1.0.0
-
+---
+Trigger phrases: "arrange widgets", "layout", "resize behavior", "QSplitter", "center widget", "widget not visible", "expand to fill", "fixed size", "stretch factor", "form layout", "grid layout", "spacing", "margins"
+version: 1.0.0
 ---
 
-## Qt Layout Managers
+# Qt Layout Managers
 
-### Layout Hierarchy
+## Layout Hierarchy
 
 Qt lays out widgets using layout objects attached to containers. Never call `setGeometry()` manually — use layouts.
 
@@ -18,7 +19,7 @@ QWidget (parent)
     └── QTextEdit
 ```
 
-### Core Layout Types
+## Core Layout Types
 
 | Layout           | Use case                    |
 | ---------------- | --------------------------- |
@@ -28,7 +29,7 @@ QWidget (parent)
 | `QFormLayout`    | Label + field pairs         |
 | `QStackedLayout` | Multiple pages, one visible |
 
-### Basic Usage
+## Basic Usage
 
 ```python
 from PySide6.QtWidgets import (
@@ -55,7 +56,7 @@ class MyWidget(QWidget):
 
 Pass the parent widget to the layout constructor (`QVBoxLayout(self)`) — this is cleaner than calling `self.setLayout(layout)` separately, and prevents forgetting to attach the layout.
 
-### Stretch and Size Policy
+## Stretch and Size Policy
 
 **Stretch factors** distribute extra space when the window resizes:
 
@@ -90,7 +91,7 @@ layout.addItem(QSpacerItem(                  # explicit spacer
 ))
 ```
 
-### QGridLayout
+## QGridLayout
 
 ```python
 grid = QGridLayout(self)
@@ -105,7 +106,7 @@ grid.setColumnStretch(0, 0)
 grid.setColumnStretch(1, 1)
 ```
 
-### QFormLayout
+## QFormLayout
 
 Use for settings dialogs and data entry forms — automatically handles label alignment:
 
@@ -118,7 +119,7 @@ form.addRow("Password:", QLineEdit())
 form.addRow("", QPushButton("Login"))   # empty label for button row
 ```
 
-### QSplitter
+## QSplitter
 
 ```python
 from PySide6.QtWidgets import QSplitter
@@ -136,7 +137,7 @@ settings.setValue("splitter", splitter.saveState())
 splitter.restoreState(settings.value("splitter"))
 ```
 
-### Centering a Widget in Its Parent
+## Centering a Widget in Its Parent
 
 ```python
 # Via layout
@@ -146,7 +147,7 @@ layout.addWidget(target_widget, alignment=Qt.AlignmentFlag.AlignHCenter)
 layout.addStretch()
 ```
 
-### Debugging Layout Issues
+## Debugging Layout Issues
 
 **Widget appears but is zero-size:**
 

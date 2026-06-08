@@ -1,17 +1,18 @@
-Trigger phrases: "Qt error", "crash", "segfault", "widget not showing", "event loop", "app exits unexpectedly", "Qt warning", "QPainter error", "assertion failed", "QObject destroyed", "application not responding" version: 1.0.0
-
+---
+Trigger phrases: "Qt error", "crash", "segfault", "widget not showing", "event loop", "app exits unexpectedly", "Qt warning", "QPainter error", "assertion failed", "QObject destroyed", "application not responding"
+version: 1.0.0
 ---
 
-## Qt Debugging
+# Qt Debugging
 
-### Diagnostic Approach
+## Diagnostic Approach
 
 1. **Read the full Qt warning output** — Qt prints actionable warnings before crashes
 2. **Categorize the failure type** (see categories below)
 3. **Isolate** — reproduce with a minimal test case
 4. **Fix and verify** with `QT_QPA_PLATFORM=offscreen pytest`
 
-### Enabling Verbose Qt Output
+## Enabling Verbose Qt Output
 
 ```bash
 # Show all Qt debug/warning messages
@@ -37,9 +38,9 @@ def qt_message_handler(mode: QtMsgType, context, message: str) -> None:
 qInstallMessageHandler(qt_message_handler)
 ```
 
-### Common Failure Categories
+## Common Failure Categories
 
-#### Widget Never Appears
+### Widget Never Appears
 
 - `show()` not called on top-level widget
 - Parent widget not shown (child inherits visibility)
@@ -52,7 +53,7 @@ qInstallMessageHandler(qt_message_handler)
 print(widget.isVisible(), widget.size(), widget.parentWidget())
 ```
 
-#### Crash / Segfault on Widget Access
+### Crash / Segfault on Widget Access
 
 - Widget garbage-collected (Python deleted the QWidget before Qt finished with it)
 - Common cause: widget stored only in a local variable, not `self._widget`
@@ -68,23 +69,23 @@ def setup(self):
     self._btn = QPushButton("Click")
 ```
 
-#### "QObject: Cannot create children for a parent in a different thread"
+### "QObject: Cannot create children for a parent in a different thread"
 
 - A `QObject` with a parent is being created in a non-main thread
 - Fix: create the object parentless, then use `moveToThread` or `deleteLater` for cleanup
 
-#### "QPixmap: Must construct a QGuiApplication before a QPaintDevice"
+### "QPixmap: Must construct a QGuiApplication before a QPaintDevice"
 
 - `QPixmap`, `QImage`, or `QIcon` created before `QApplication` exists
 - Fix: move all Qt object construction after `app = QApplication(sys.argv)`
 
-#### "RuntimeError: Internal C++ object (QWidget) already deleted"
+### "RuntimeError: Internal C++ object (QWidget) already deleted"
 
 - Accessing a Python wrapper after Qt deleted the underlying C++ object
 - Common with `deleteLater()` — the deletion happens asynchronously
 - Fix: check `sip.isdeleted(widget)` (PyQt6) or use `QPointer` pattern
 
-#### Event Loop Frozen / UI Unresponsive
+### Event Loop Frozen / UI Unresponsive
 
 - Blocking call on main thread (I/O, `time.sleep`, heavy computation)
 - Fix: move to `QRunnable`/`QThread` (see `qt-threading` skill)
@@ -95,14 +96,14 @@ from PySide6.QtCore import QCoreApplication
 QCoreApplication.processEvents()  # temporarily unblocks — confirms event loop is stuck
 ```
 
-#### Signal Connected But Never Fires
+### Signal Connected But Never Fires
 
 1. Verify the sender object is still alive
 2. Add debug connection: `signal.connect(lambda *a: print("FIRED", a))`
 3. Check signal type signature matches — `Signal(int)` will not fire if you emit `Signal(str)` equivalent
 4. For C++: verify `Q_OBJECT` is present and moc ran after last change
 
-### Memory / Resource Leak Detection
+## Memory / Resource Leak Detection
 
 ```python
 # Track live QObject count
@@ -113,7 +114,7 @@ objgraph.show_most_common_types(limit=20)
 objgraph.show_growth()
 ```
 
-### Useful Diagnostic Patterns
+## Useful Diagnostic Patterns
 
 ```python
 # Dump full widget tree
@@ -131,7 +132,7 @@ print(QCoreApplication.instance().loopLevel())  # > 0 if exec() is running
 widget.repaint()  # synchronous vs update() which defers
 ```
 
-### QSS / Style Debugging
+## QSS / Style Debugging
 
 ```python
 # Print effective stylesheet for a widget
@@ -147,7 +148,7 @@ widget.style().polish(widget)
 widget.update()
 ```
 
-### C++ Specific
+## C++ Specific
 
 ```cpp
 // Enable ASAN for memory errors

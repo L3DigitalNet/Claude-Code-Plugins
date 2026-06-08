@@ -5,6 +5,8 @@ tools: Read, Write, Bash, WebFetch, mcp__brave-search__brave_web_search, mcp__se
 model: sonnet
 ---
 
+# QDev Researcher Agent
+
 <!--
   Role: research agent for /qdev:research.
   Called by: plugins/qdev/commands/research.md via Agent dispatch.

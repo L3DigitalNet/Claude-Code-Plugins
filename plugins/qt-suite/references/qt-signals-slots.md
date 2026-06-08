@@ -1,10 +1,11 @@
-Trigger phrases: "connect signal", "custom signal", "slot not firing", "disconnect signal", "cross-thread signal", "signal not working", "emit signal", "define signal", "QObject signal" version: 1.0.0
-
+---
+Trigger phrases: "connect signal", "custom signal", "slot not firing", "disconnect signal", "cross-thread signal", "signal not working", "emit signal", "define signal", "QObject signal"
+version: 1.0.0
 ---
 
-## Signals and Slots
+# Signals and Slots
 
-### Defining Custom Signals
+## Defining Custom Signals
 
 **Python/PySide6 and PyQt6:**
 
@@ -45,7 +46,7 @@ signals:
 
 `Q_OBJECT` macro is mandatory in every `QObject` subclass that uses signals/slots. Missing it causes runtime failures without a compile error in some configurations.
 
-### Connecting Signals
+## Connecting Signals
 
 **New-style syntax (use this):**
 
@@ -72,7 +73,7 @@ connect(slider, &QSlider::valueChanged, this, [this](int v) {
 
 Never use old-style `SIGNAL()`/`SLOT()` macros in new C++ code — they bypass type checking and fail silently on name mismatches.
 
-### @Slot Decorator (Required for PySide6)
+## @Slot Decorator (Required for PySide6)
 
 Always mark slot methods with `@Slot`. The official Qt for Python docs state that omitting it:
 
@@ -111,7 +112,7 @@ Enable the warning to catch missing decorators during development:
 QT_LOGGING_RULES="qt.pyside.libpyside.warning=true" python -m myapp
 ```
 
-### Connection Types
+## Connection Types
 
 | Type | When to use |
 | --- | --- |
@@ -125,7 +126,7 @@ QT_LOGGING_RULES="qt.pyside.libpyside.warning=true" python -m myapp
 worker.result_ready.connect(self._on_result, Qt.QueuedConnection)
 ```
 
-### Cross-Thread Signals (Safe Pattern)
+## Cross-Thread Signals (Safe Pattern)
 
 Qt signals are the only safe way to communicate from a worker thread to the UI thread.
 
@@ -164,7 +165,7 @@ class MainWindow(QMainWindow):
 
 `moveToThread` + `AutoConnection` means `result_ready` automatically becomes a queued connection, making it safe to update UI widgets from the slot.
 
-### Disconnecting
+## Disconnecting
 
 ```python
 # Disconnect specific connection
@@ -179,7 +180,7 @@ button.clicked.disconnect()
 
 In Python, connections to methods of live objects are automatically cleaned up when the receiving object is destroyed. Connections to lambdas and free functions are not — disconnect them explicitly.
 
-### Debugging Disconnected Signals
+## Debugging Disconnected Signals
 
 Checklist when a signal isn't firing:
 
@@ -190,7 +191,7 @@ Checklist when a signal isn't firing:
 5. For cross-thread: verify `moveToThread` happened before the thread started
 6. Add a debug connection: `signal.connect(lambda *args: print("FIRED", args))`
 
-### Overloaded Signals (PyQt6 / C++)
+## Overloaded Signals (PyQt6 / C++)
 
 When a signal has multiple overloads, use the subscript syntax:
 

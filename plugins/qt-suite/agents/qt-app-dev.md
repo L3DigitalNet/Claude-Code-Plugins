@@ -19,6 +19,8 @@ color: blue
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
+# Qt Application Development
+
 Read these references at the start of the session for domain knowledge:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/qt-architecture.md`

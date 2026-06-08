@@ -30,6 +30,8 @@ whenToUse: |
   </example>
 ---
 
+# Test Runner Agent
+
 <!--
   Role: test suite runner for the release-pipeline orchestrator.
   Called by: release command → mode-2-full-release.md, mode-3-plugin-release.md,

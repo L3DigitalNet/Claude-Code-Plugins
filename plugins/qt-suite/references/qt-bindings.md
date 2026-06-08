@@ -1,10 +1,11 @@
-Trigger phrases: "PySide6 vs PyQt6", "PyQt5 migration", "binding difference", "migrate from PyQt5", "PyQt6 migration", "PySide6 or PyQt6", "binding compatibility", "porting Qt Python", "LGPL vs GPL" version: 1.0.0
-
+---
+Trigger phrases: "PySide6 vs PyQt6", "PyQt5 migration", "binding difference", "migrate from PyQt5", "PyQt6 migration", "PySide6 or PyQt6", "binding compatibility", "porting Qt Python", "LGPL vs GPL"
+version: 1.0.0
 ---
 
-## Python Qt Bindings
+# Python Qt Bindings
 
-### Choosing a Binding
+## Choosing a Binding
 
 | Criteria                | PySide6               | PyQt6                       |
 | ----------------------- | --------------------- | --------------------------- |
@@ -19,7 +20,7 @@ Trigger phrases: "PySide6 vs PyQt6", "PyQt5 migration", "binding difference", "m
 
 **Default recommendation: PySide6** — official binding, LGPL, ships with complete type stubs, better QML tooling.
 
-### API Compatibility Layer
+## API Compatibility Layer
 
 For code that must support both:
 
@@ -42,9 +43,9 @@ from qtpy.QtCore import Signal, Slot
 # Works with PySide6, PyQt6, PySide2, PyQt5 — set QT_API env var to select
 ```
 
-### PySide6 vs PyQt6: Key Differences
+## PySide6 vs PyQt6: Key Differences
 
-#### Signals and Slots
+### Signals and Slots
 
 ```python
 # PySide6
@@ -64,7 +65,7 @@ class Foo(QObject):
     def my_slot(self, value: int): ...
 ```
 
-#### Enum Access
+### Enum Access
 
 Both require fully-qualified enum access (breaking change from Qt5):
 
@@ -78,7 +79,7 @@ QPushButton.setCheckable(True)
 Qt.AlignLeft
 ```
 
-#### Exec Method (PyQt6 breaking change)
+### Exec Method (PyQt6 breaking change)
 
 ```python
 # PySide6
@@ -92,7 +93,7 @@ dialog.exec()
 
 Both use `exec()` — the old `exec_()` workaround is no longer needed or available in PyQt6.
 
-#### Property Decorator
+### Property Decorator
 
 ```python
 # PySide6
@@ -106,9 +107,9 @@ from PyQt6.QtCore import pyqtProperty
 def value(self) -> int: return self._value
 ```
 
-### Migrating PyQt5 → PySide6
+## Migrating PyQt5 → PySide6
 
-#### Step 1: Update imports
+### Step 1: Update imports
 
 ```bash
 # Mass replace with sed
@@ -151,7 +152,7 @@ QApplication.setDesktopSettingsAware() — removed
 QFontDatabase.addApplicationFont() — still works
 ```
 
-### Migrating PyQt5 → PyQt6
+## Migrating PyQt5 → PyQt6
 
 Same steps as PySide6 migration, but:
 
@@ -166,7 +167,7 @@ from PyQt5.QtWidgets import ... → from PyQt6.QtWidgets import ...
 
 Enum changes are identical to PySide6 — both Qt6 bindings enforce fully-qualified enums.
 
-### Migrating PySide2 → PySide6
+## Migrating PySide2 → PySide6
 
 ```python
 # Imports
@@ -180,7 +181,7 @@ from PySide2. → from PySide6.
 
 PySide6 also drops Python 3.6/3.7 support — minimum is Python 3.8 (3.11 recommended).
 
-### Type Stubs
+## Type Stubs
 
 ```bash
 # PySide6 ships stubs — no extra install

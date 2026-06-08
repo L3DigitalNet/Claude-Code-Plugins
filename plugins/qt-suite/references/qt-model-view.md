@@ -1,10 +1,11 @@
-Trigger phrases: "QAbstractItemModel", "table view", "list model", "QTableView", "QListView", "tree view", "item delegate", "sort table", "filter model", "QSortFilterProxyModel", "custom model", "model data" version: 1.0.0
-
+---
+Trigger phrases: "QAbstractItemModel", "table view", "list model", "QTableView", "QListView", "tree view", "item delegate", "sort table", "filter model", "QSortFilterProxyModel", "custom model", "model data"
+version: 1.0.0
 ---
 
-## Qt Model/View Architecture
+# Qt Model/View Architecture
 
-### Architecture Overview
+## Architecture Overview
 
 ```text
 Data Source ──→ Model ──→ [Proxy Model] ──→ View ──→ Delegate (renders cells)
@@ -14,7 +15,7 @@ Data Source ──→ Model ──→ [Proxy Model] ──→ View ──→ Del
 
 Separate data (model) from presentation (view). The delegate handles painting and editing per-cell. Proxy models layer transformations (sort, filter) without modifying the source model.
 
-### Choosing a Model Base Class
+## Choosing a Model Base Class
 
 | Base class            | When to use                       |
 | --------------------- | --------------------------------- |
@@ -26,7 +27,7 @@ Separate data (model) from presentation (view). The delegate handles painting an
 
 For anything non-trivial, subclass `QAbstractTableModel` or `QAbstractListModel` — `QStandardItemModel` has poor performance with large datasets and poor testability.
 
-### Custom Table Model
+## Custom Table Model
 
 ```python
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
@@ -97,7 +98,7 @@ class PersonTableModel(QAbstractTableModel):
 
 Always bracket mutations with `begin*/end*` methods (`beginInsertRows`, `beginRemoveRows`, `beginResetModel`). Skipping them causes views to lose sync with the model.
 
-### Connecting Model to View
+## Connecting Model to View
 
 ```python
 from PySide6.QtWidgets import QTableView
@@ -113,7 +114,7 @@ view.setSortingEnabled(True)   # requires QSortFilterProxyModel for custom model
 view.resizeColumnsToContents()
 ```
 
-### Sort and Filter with QSortFilterProxyModel
+## Sort and Filter with QSortFilterProxyModel
 
 ```python
 from PySide6.QtCore import QSortFilterProxyModel, Qt
@@ -137,7 +138,7 @@ search_box.textChanged.connect(proxy.setFilterRegularExpression)
 
 For custom filter logic, subclass `QSortFilterProxyModel` and override `filterAcceptsRow`.
 
-### Custom Item Delegate
+## Custom Item Delegate
 
 Use delegates to render non-text data (progress bars, icons, custom widgets):
 
@@ -165,7 +166,7 @@ class ProgressDelegate(QStyledItemDelegate):
 view.setItemDelegateForColumn(2, ProgressDelegate(view))
 ```
 
-### Key Rules
+## Key Rules
 
 - Never access `self._data` directly from outside the model — always go through the model API
 - `rowCount()` and `columnCount()` must return 0 when `parent.isValid()` (Qt tree contract, even for tables)

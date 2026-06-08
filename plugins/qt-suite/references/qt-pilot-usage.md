@@ -1,5 +1,6 @@
-"find a widget", "test UI behavior", "Qt Pilot", "launch app headlessly", or "test what the user sees". Covers the Qt Pilot MCP server's 15 tools for AI-driven headless GUI testing of Qt/PySide6 applications. Also activates for "Xvfb", "automate UI", "visual regression", "capture screenshot of app".
-
+---
+Trigger phrases: "find a widget", "test UI behavior", "Qt Pilot", "launch app headlessly", "test what the user sees", "Xvfb", "automate UI", "visual regression", "capture screenshot of app"
+version: "1.0.0"
 ---
 
 # Qt Pilot Usage

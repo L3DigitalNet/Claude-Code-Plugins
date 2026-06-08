@@ -31,6 +31,8 @@ whenToUse: |
   </example>
 ---
 
+# Git Pre-Flight Checker
+
 <!--
   Role: pre-flight git state verifier for the release-pipeline orchestrator.
   Called by: release command → mode-2-full-release.md, mode-3-plugin-release.md,

@@ -1,10 +1,11 @@
-Trigger phrases: "stylesheet", "QSS", "theme", "dark mode", "custom widget appearance", "style widget", "QPalette", "widget color", "hover style", "disabled style", "app theme", "visual style" version: 1.0.0
-
+---
+Trigger phrases: "stylesheet", "QSS", "theme", "dark mode", "custom widget appearance", "style widget", "QPalette", "widget color", "hover style", "disabled style", "app theme", "visual style"
+version: 1.0.0
 ---
 
-## Qt Stylesheets (QSS)
+# Qt Stylesheets (QSS)
 
-### Applying Stylesheets
+## Applying Stylesheets
 
 ```python
 # Application-wide (affects all widgets)
@@ -37,7 +38,7 @@ app.setStyleSheet("""
 my_button.setStyleSheet("background-color: #e74c3c; color: white;")
 ```
 
-### QSS Selector Syntax
+## QSS Selector Syntax
 
 ```css
 /* Type selector */
@@ -65,7 +66,7 @@ QComboBox::drop-down { border: none; width: 20px; }
 QScrollBar::handle:vertical { background: #888; border-radius: 4px; }
 ```
 
-### Dark/Light Mode
+## Dark/Light Mode
 
 **Detect system preference:**
 
@@ -114,7 +115,7 @@ class ThemeManager:
 
 Load QSS from files for maintainability — inline strings become unwieldy beyond a few rules.
 
-### Dynamic Property-Based Styling
+## Dynamic Property-Based Styling
 
 Set custom properties to switch styles without subclassing:
 
@@ -140,7 +141,7 @@ QPushButton[variant="danger"] {
 
 Always call `unpolish` + `polish` after changing a property — Qt caches style results and won't re-evaluate otherwise.
 
-### Platform Fusion Style
+## Platform Fusion Style
 
 For consistent cross-platform appearance, force the Fusion style:
 
@@ -151,7 +152,7 @@ app.setStyle(QStyleFactory.create("Fusion"))
 
 Fusion renders identically on Windows, macOS, and Linux. Use it as the base when applying custom QSS, because native styles (Windows11, macOS) partially ignore QSS rules.
 
-### QSS Limitations
+## QSS Limitations
 
 - QSS has no variables or inheritance — use Python to template the stylesheet string
 - Not all sub-controls are styleable — some complex widgets (QCalendarWidget, QMdiArea) have limited QSS support

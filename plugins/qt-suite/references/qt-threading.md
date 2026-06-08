@@ -1,14 +1,15 @@
-Trigger phrases: "QThread", "worker", "background task", "thread safety", "UI freezing", "long operation", "QRunnable", "QThreadPool", "thread pool", "concurrent", "responsive UI", "blocking the event loop" version: 1.0.0
-
+---
+Trigger phrases: "QThread", "worker", "background task", "thread safety", "UI freezing", "long operation", "QRunnable", "QThreadPool", "thread pool", "concurrent", "responsive UI", "blocking the event loop"
+version: 1.0.0
 ---
 
-## Qt Threading
+# Qt Threading
 
-### The Golden Rule
+## The Golden Rule
 
 **Never update UI widgets from a non-main thread.** All widget operations must happen on the main (GUI) thread. Use signals to marshal results back from worker threads.
 
-### Pattern 1: Worker Object + QThread (preferred for stateful workers)
+## Pattern 1: Worker Object + QThread (preferred for stateful workers)
 
 Move a `QObject` subclass to a `QThread`. The worker's slots execute in the thread's event loop.
 
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
 
 The `finished → deleteLater` chain ensures Qt cleans up the worker and thread objects when done, preventing memory leaks.
 
-### Pattern 2: QRunnable + QThreadPool (fire-and-forget tasks)
+## Pattern 2: QRunnable + QThreadPool (fire-and-forget tasks)
 
 For tasks that don't need cancellation or per-instance state:
 
@@ -111,7 +112,7 @@ pool.start(task)
 pool.setMaxThreadCount(4)
 ```
 
-### Pattern 3: Simple Background Task with QTimer
+## Pattern 3: Simple Background Task with QTimer
 
 For periodic, lightweight tasks that don't need a separate thread:
 
@@ -127,7 +128,7 @@ self._timer.start(500)
 QTimer.singleShot(2000, self._delayed_init)
 ```
 
-### Thread Safety: Shared Data
+## Thread Safety: Shared Data
 
 Qt containers and Python objects are not thread-safe. Use a mutex or queue:
 
@@ -154,7 +155,7 @@ class SafeDataStore(QObject):
 
 **Emitting signals is thread-safe.** `AutoConnection` automatically queues the slot call when emitter and receiver are in different threads.
 
-### Debugging Thread Issues
+## Debugging Thread Issues
 
 **UI freezes (janky response):** A blocking call is running on the main thread. Common culprits: `requests.get()`, `time.sleep()`, large file I/O, heavy computation. Move to `QRunnable` or worker `QThread`.
 

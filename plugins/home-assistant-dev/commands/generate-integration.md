@@ -4,6 +4,8 @@ description: Generate a complete Home Assistant integration from scratch with al
 allowed-tools: Write, Read, Glob, Grep, AskUserQuestion
 ---
 
+# Generate Home Assistant Integration
+
 Generate a complete Home Assistant custom integration. Collects requirements, then produces all files for the selected quality tier.
 
 ## Step 1: Collect Core Details

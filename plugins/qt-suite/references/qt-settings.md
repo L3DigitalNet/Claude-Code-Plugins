@@ -1,10 +1,11 @@
-Trigger phrases: "QSettings", "persistent settings", "save preferences", "restore window", "user preferences", "remember state", "save window geometry", "recent files", "app configuration", "settings persistence" version: 1.0.0
-
+---
+Trigger phrases: "QSettings", "persistent settings", "save preferences", "restore window", "user preferences", "remember state", "save window geometry", "recent files", "app configuration", "settings persistence"
+version: 1.0.0
 ---
 
-## QSettings — Persistent Application Settings
+# QSettings — Persistent Application Settings
 
-### Setup and Initialization
+## Setup and Initialization
 
 Set application metadata before first `QSettings` use — these seed the default storage path:
 
@@ -20,7 +21,7 @@ Default storage locations (no path argument needed):
 - **macOS**: `~/Library/Preferences/com.myorg.myapp.plist`
 - **Linux**: `~/.config/MyOrg/MyApp.ini`
 
-### Basic Usage
+## Basic Usage
 
 ```python
 from PySide6.QtCore import QSettings
@@ -51,7 +52,7 @@ settings.sync()
 
 Always provide a default in `settings.value()` — returns `None` otherwise, which causes type errors when passed to Qt methods expecting a specific type.
 
-### Groups (Namespacing)
+## Groups (Namespacing)
 
 ```python
 settings = QSettings()
@@ -73,7 +74,7 @@ settings.setValue("window/width", 1200)
 width = settings.value("window/width", 800, type=int)
 ```
 
-### Window Geometry (Common Pattern)
+## Window Geometry (Common Pattern)
 
 ```python
 class MainWindow(QMainWindow):
@@ -103,7 +104,7 @@ class MainWindow(QMainWindow):
 
 `saveGeometry()` and `restoreGeometry()` handle multi-monitor setups correctly.
 
-### Recent Files List
+## Recent Files List
 
 ```python
 class RecentFilesManager:
@@ -127,7 +128,7 @@ class RecentFilesManager:
         self._settings.remove(self.KEY)
 ```
 
-### Settings Dialog Integration
+## Settings Dialog Integration
 
 ```python
 class SettingsDialog(QDialog):
@@ -142,7 +143,7 @@ class SettingsDialog(QDialog):
         s.setValue("font_size", self._font_spin.value())
 ```
 
-### INI File (Portable / Version-Controlled Config)
+## INI File (Portable / Version-Controlled Config)
 
 For config files that should be next to the executable or in a known location:
 
@@ -155,7 +156,7 @@ config_path.parent.mkdir(parents=True, exist_ok=True)
 settings = QSettings(str(config_path), QSettings.Format.IniFormat)
 ```
 
-### QStandardPaths — Platform-Correct File Locations
+## QStandardPaths — Platform-Correct File Locations
 
 ```python
 from PySide6.QtCore import QStandardPaths

@@ -6,6 +6,8 @@ pattern: git\s+push\s+.*--force|git\s+push\s+.*-f\b
 action: warn
 ---
 
+# Force Push Warning
+
 ⚠️ **Force push detected**
 
 Force-pushing rewrites remote history and can destroy teammates' work.

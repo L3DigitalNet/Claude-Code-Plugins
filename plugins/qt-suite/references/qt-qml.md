@@ -1,10 +1,11 @@
-Trigger phrases: "QML", "Qt Quick", "declarative UI", "QQmlApplicationEngine", "expose to QML", "QML component", "QML signal", "pyqtProperty", "QML vs widgets", "QtQuick.Controls", "Item", "Rectangle" version: 1.0.0
-
+---
+Trigger phrases: "QML", "Qt Quick", "declarative UI", "QQmlApplicationEngine", "expose to QML", "QML component", "QML signal", "pyqtProperty", "QML vs widgets", "QtQuick.Controls", "Item", "Rectangle"
+version: 1.0.0
 ---
 
-## QML and Qt Quick
+# QML and Qt Quick
 
-### QML vs Widgets: When to Choose QML
+## QML vs Widgets: When to Choose QML
 
 | Use QML when...                      | Use Widgets when...                 |
 | ------------------------------------ | ----------------------------------- |
@@ -18,7 +19,7 @@ For new Python/PySide6 desktop applications, QML offers better visual results wi
 
 **Bootstrap and architecture** — see [qt-qml/qml-architecture.md](qt-qml/qml-architecture.md)
 
-### Official Best Practices (Qt Quick)
+## Official Best Practices (Qt Quick)
 
 **1. Type-safe property declarations** — Always use explicit types, not `var`:
 
@@ -87,7 +88,7 @@ Label { text: qsTr("Save File") }
 Button { text: qsTr("Cancel") }
 ```
 
-### Exposing Python Objects to QML
+## Exposing Python Objects to QML
 
 Three methods: Required Properties (preferred), Context Property, Registered QML Type.
 
@@ -95,10 +96,10 @@ Three methods: Required Properties (preferred), Context Property, Registered QML
 
 **Full patterns** — see [qt-qml/qml-pyside6.md](qt-qml/qml-pyside6.md)
 
-### QML Signals and Connections
+## QML Signals and Connections
 
 **Full patterns** — see [qt-qml/qml-signals-properties.md](qt-qml/qml-signals-properties.md)
 
-### Common QtQuick.Controls Components
+## Common QtQuick.Controls Components
 
 **Full component reference** — see [qt-qml/qml-components.md](qt-qml/qml-components.md)

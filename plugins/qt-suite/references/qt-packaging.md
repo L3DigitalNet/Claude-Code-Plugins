@@ -1,12 +1,13 @@
-Trigger phrases: "package app", "PyInstaller", "distribute", "deploy", "standalone executable", "installer", "bundle app", "briefcase", "Windows build", "macOS build", "AppImage", "one-file" version: 1.0.0
-
+---
+Trigger phrases: "package app", "PyInstaller", "distribute", "deploy", "standalone executable", "installer", "bundle app", "briefcase", "Windows build", "macOS build", "AppImage", "one-file"
+version: 1.0.0
 ---
 
-## Packaging Qt Python Applications
+# Packaging Qt Python Applications
 
-### PyInstaller (most common)
+## PyInstaller (most common)
 
-#### Critical: Virtual Environment Isolation
+### Critical: Virtual Environment Isolation
 
 The official Qt for Python docs document a known PyInstaller gotcha: **if a system-level PySide6 is installed, PyInstaller silently picks it instead of your venv version**. Before building:
 
@@ -111,7 +112,7 @@ hiddenimports = [
 
 **QRC compiled resources:** Include compiled `.py` resource files in `datas` or ensure they're importable. The cleanest approach is importing `rc_resources` in `__init__.py` so PyInstaller detects it automatically.
 
-### Briefcase (cross-platform, preferred for distribution)
+## Briefcase (cross-platform, preferred for distribution)
 
 Briefcase produces native platform installers (`.msi`, `.dmg`, `.AppImage`):
 
@@ -145,7 +146,7 @@ requires = ["PySide6>=6.6"]
 
 Briefcase handles Qt plugin bundling more reliably than PyInstaller for PySide6.
 
-### Windows: windeployqt + Code Signing
+## Windows: windeployqt + Code Signing
 
 After PyInstaller builds the one-directory package, run `windeployqt` from the Qt SDK to copy any missing Qt plugins and translations:
 
@@ -163,7 +164,7 @@ signtool sign /fd SHA256 /a /tr http://timestamp.digicert.com dist/MyApp.exe
 
 Unsigned Windows executables trigger SmartScreen warnings. For internal distribution, instruct users to right-click → Properties → Unblock.
 
-### macOS: App Bundle
+## macOS: App Bundle
 
 PyInstaller produces a `.app` bundle. For distribution outside the App Store:
 
@@ -178,7 +179,7 @@ codesign --force --deep --sign "Developer ID Application: Name (TEAM_ID)" dist/M
 xcrun notarytool submit dist/MyApp.zip --apple-id me@example.com --team-id TEAM_ID
 ```
 
-### Linux: AppImage via PyInstaller
+## Linux: AppImage via PyInstaller
 
 ```bash
 # Build one-directory first, then package as AppImage
@@ -186,7 +187,7 @@ xcrun notarytool submit dist/MyApp.zip --apple-id me@example.com --team-id TEAM_
 appimagetool dist/MyApp/ MyApp-x86_64.AppImage
 ```
 
-### Build Automation (CI)
+## Build Automation (CI)
 
 ```yaml
 # .github/workflows/build.yml
@@ -203,7 +204,7 @@ jobs:
           path: dist/MyApp/
 ```
 
-### Common Packaging Pitfalls
+## Common Packaging Pitfalls
 
 - **Missing Qt platform plugins**: `qt.qpa.plugin: Could not find the Qt platform plugin` — ensure `PySide6/Qt/plugins/platforms/` is included. PyInstaller hooks usually handle this; rebuild if not.
 - **Missing SVG support**: Import `PySide6.QtSvg` in `hiddenimports` or the app will crash loading SVGs silently.

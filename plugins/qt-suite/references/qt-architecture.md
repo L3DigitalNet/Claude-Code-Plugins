@@ -1,10 +1,11 @@
-Trigger phrases: "structure my Qt app", "QApplication setup", "app entry point", "Qt project layout", "organize Qt code", "Qt MVC", "Qt MVP", "main window architecture", "new Qt project" version: "1.0.0"
-
+---
+Trigger phrases: "structure my Qt app", "QApplication setup", "app entry point", "Qt project layout", "organize Qt code", "Qt MVC", "Qt MVP", "main window architecture", "new Qt project"
+version: "1.0.0"
 ---
 
-## Qt Application Architecture
+# Qt Application Architecture
 
-### Entry-Point Pattern
+## Entry-Point Pattern
 
 Every Qt application requires exactly one `QApplication` (widgets) or `QGuiApplication` (QML-only) instance. Create it before any widgets.
 
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-### Project Layout (Python/PySide6)
+## Project Layout (Python/PySide6)
 
 Use `src` layout to prevent accidental imports from the project root:
 
@@ -77,7 +78,7 @@ my-qt-app/
 
 Keep `ui/`, `models/`, and `services/` separate. UI code should never contain business logic.
 
-### QMainWindow Structure
+## QMainWindow Structure
 
 ```python
 # src/myapp/ui/main_window.py
@@ -111,7 +112,7 @@ class MainWindow(QMainWindow):
 
 Separate `_setup_ui`, `_setup_menu`, and `_connect_signals` into distinct methods. This makes each responsibility findable and testable.
 
-### Architectural Patterns
+## Architectural Patterns
 
 **MVP (Model-View-Presenter)** — preferred for testable Qt applications:
 
@@ -136,7 +137,7 @@ class CalculatorPresenter:
 
 **For simple apps**: Direct signal/slot connections are fine. Introduce MVP when you need unit-testable business logic.
 
-### pyproject.toml Configuration
+## pyproject.toml Configuration
 
 ```toml
 [build-system]
@@ -164,7 +165,7 @@ pythonVersion = "3.11"
 include = ["src"]
 ```
 
-### Qt Project Config (.qt-test.json)
+## Qt Project Config (.qt-test.json)
 
 Always create this at project root for `qt-test-suite` compatibility:
 
@@ -177,7 +178,7 @@ Always create this at project root for `qt-test-suite` compatibility:
 }
 ```
 
-### Critical Constraints
+## Critical Constraints
 
 - One `QApplication` per process — never create it twice or inside a function that may be called multiple times
 - All widget creation must happen after `QApplication` is constructed

@@ -390,7 +390,7 @@ def get_settings() -> str:
 
 Claude can read these with:
 
-```
+```text
 Show me the current settings
 ```
 

@@ -1,10 +1,11 @@
-Trigger phrases: ".qrc file", "embed icon", "pyrcc6", "PySide6-rcc", "bundled assets", "resource path", ":/icons/", "QIcon", "QPixmap from resources", "bundle image" version: 1.0.0
-
+---
+Trigger phrases: ".qrc file", "embed icon", "pyrcc6", "PySide6-rcc", "bundled assets", "resource path", ":/icons/", "QIcon", "QPixmap from resources", "bundle image"
+version: 1.0.0
 ---
 
-## Qt Resource System
+# Qt Resource System
 
-### .qrc File Format
+## .qrc File Format
 
 ```xml
 <!-- resources/resources.qrc -->
@@ -27,7 +28,7 @@ Trigger phrases: ".qrc file", "embed icon", "pyrcc6", "PySide6-rcc", "bundled as
 
 File paths in `.qrc` are relative to the `.qrc` file's location. The `alias` attribute sets the name used at runtime.
 
-### Compiling Resources (Python)
+## Compiling Resources (Python)
 
 **PySide6:**
 
@@ -50,7 +51,7 @@ from . import rc_resources  # noqa: F401 — side-effect import registers resour
 
 Import `rc_resources` before any code that uses `:/` paths. The module-level import in `resources/__init__.py` is the cleanest approach — it runs once when the package is first imported.
 
-### Using Resources at Runtime
+## Using Resources at Runtime
 
 ```python
 from PySide6.QtGui import QIcon, QPixmap
@@ -74,7 +75,7 @@ if file.open(QFile.OpenModeFlag.ReadOnly | QFile.OpenModeFlag.Text):
     file.close()
 ```
 
-### Inline Resource Loading (No Compile Step)
+## Inline Resource Loading (No Compile Step)
 
 For small assets during development, embed directly:
 
@@ -90,7 +91,7 @@ def icon_from_base64(data: str) -> QIcon:
     return QIcon(pix)
 ```
 
-### SVG Icons
+## SVG Icons
 
 SVGs are the preferred format — they scale perfectly at all DPIs:
 
@@ -106,7 +107,7 @@ svg.setFixedSize(48, 48)
 self.setWindowIcon(QIcon(":/icons/app.svg"))
 ```
 
-### High-DPI (Retina/4K) Support
+## High-DPI (Retina/4K) Support
 
 ```python
 # In main() — before QApplication
@@ -129,7 +130,7 @@ Use SVG icons wherever possible. For raster icons, provide `@2x` variants:
 
 Qt automatically selects `@2x` variants on high-DPI displays.
 
-### Project Automation
+## Project Automation
 
 Add resource compilation to your build process:
 

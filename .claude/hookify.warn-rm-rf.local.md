@@ -6,6 +6,8 @@ pattern: rm\s+-rf
 action: warn
 ---
 
+# Destructive rm -rf Warning
+
 ⚠️ **Destructive rm -rf detected**
 
 You're about to run a recursive force-delete. Before proceeding:

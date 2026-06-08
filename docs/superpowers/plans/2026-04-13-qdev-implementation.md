@@ -608,7 +608,7 @@ find plugins/qdev -type f | sort
 
 Expected output (exactly these 5 files):
 
-```
+```text
 plugins/qdev/.claude-plugin/plugin.json
 plugins/qdev/CHANGELOG.md
 plugins/qdev/README.md

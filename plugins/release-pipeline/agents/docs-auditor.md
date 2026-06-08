@@ -29,6 +29,8 @@ whenToUse: |
   </example>
 ---
 
+# Docs Auditor Agent
+
 <!--
   Role: documentation auditor for the release-pipeline orchestrator.
   Called by: release command → mode-2-full-release.md, mode-3-plugin-release.md,

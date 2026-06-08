@@ -17,6 +17,8 @@ color: green
 tools: Read, Grep, Glob, Bash
 ---
 
+# Qt Application Code Reviewer
+
 Read these references at the start of the session for domain knowledge:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/qt-architecture.md`

@@ -1,10 +1,11 @@
-Trigger phrases: "dialog", "QMessageBox", "QFileDialog", "QInputDialog", "modal", "modeless", "settings dialog", "confirm dialog", "custom dialog", "file picker", "wizard", "popup" version: 1.0.0
-
+---
+Trigger phrases: "dialog", "QMessageBox", "QFileDialog", "QInputDialog", "modal", "modeless", "settings dialog", "confirm dialog", "custom dialog", "file picker", "wizard", "popup"
+version: 1.0.0
 ---
 
-## Qt Dialog Patterns
+# Qt Dialog Patterns
 
-### QMessageBox — Standard Prompts
+## QMessageBox — Standard Prompts
 
 ```python
 from PySide6.QtWidgets import QMessageBox
@@ -45,7 +46,7 @@ elif msg.clickedButton() is discard_btn:
 # else: Cancel — do nothing
 ```
 
-### QFileDialog — File and Directory Pickers
+## QFileDialog — File and Directory Pickers
 
 ```python
 from PySide6.QtWidgets import QFileDialog
@@ -77,7 +78,7 @@ directory = QFileDialog.getExistingDirectory(parent, "Select Output Folder")
 
 The filter string format is `"Description (*.ext *.ext2);;Description2 (*.ext3)"`.
 
-### Custom QDialog
+## Custom QDialog
 
 ```python
 from PySide6.QtWidgets import (
@@ -133,7 +134,7 @@ if dialog.exec() == QDialog.DialogCode.Accepted:
 
 Use `QDialogButtonBox` for standard buttons — it respects platform button order conventions (OK/Cancel vs Cancel/OK).
 
-### Modal vs Modeless
+## Modal vs Modeless
 
 ```python
 # Modal — blocks input to parent window
@@ -154,7 +155,7 @@ self._settings_dialog = SettingsDialog(self)
 self._settings_dialog.show()
 ```
 
-### Settings Dialog Pattern
+## Settings Dialog Pattern
 
 Settings dialogs should apply changes live (on change) or on explicit OK:
 

@@ -4,9 +4,9 @@
 
 ## Context from Phase 0: is_monorepo=true, unreleased_plugins (TSV list), current_branch
 
-#
+## Quarantine Semantics
 
-## Quarantine semantics: on any FAIL during pre-flight, prep, or release phases
+On any FAIL during pre-flight, prep, or release phases:
 
 ## add the plugin to the failed list and continue to the next plugin WITHOUT stopping
 

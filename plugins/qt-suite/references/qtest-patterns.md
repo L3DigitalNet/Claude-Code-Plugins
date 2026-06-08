@@ -1,5 +1,6 @@
-"QML test", "QtQuickTest", "write a test case", "test this class", or "generate a test file". Covers C++ QTest, Python pytest-qt, and QML TestCase patterns with CMake integration. Also activates for "write a C++ Qt test", "add a CMake test target", or "set up testlib".
-
+---
+Trigger phrases: "QML test", "QtQuickTest", "write a test case", "test this class", "generate a test file", "write a C++ Qt test", "add a CMake test target", "set up testlib"
+version: "1.0.0"
 ---
 
 # Qt Test Patterns

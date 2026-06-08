@@ -19,6 +19,8 @@ color: red
 tools: Read, Edit, Bash, Grep, Glob
 ---
 
+# Qt Application Debugger
+
 Read these references at the start of the session for domain knowledge:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/qt-debugging.md`
