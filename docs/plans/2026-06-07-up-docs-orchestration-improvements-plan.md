@@ -246,9 +246,9 @@ The narrowing rule is **owned by the auditor task step** (`agents/up-docs-audit-
 Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh plugins/up-docs/tests/prompt-conformance.bats`
 Expected: all PASS.
 
-- [ ] **Step 5b: Record the behavioral narrowing smoke (CR-003)**
+- [ ] **Step 5b: A1 narrowing is a Task 7 acceptance item (CR-003)**
 
-The auditor is an LLM prompt, so pass-N narrowing correctness is not unit-testable in bats; the *mechanizable* substrate it keys off (the `touched_pages` round-trip) is already proven by Task 1's tracker tests. Add this acceptance check to the plugin's manual-smoke notes, to run on the next real `/up-docs:drift` whose phase takes ≥2 convergence passes: from the transcript, confirm pass 2's scanned set equals `bash ${CLAUDE_PLUGIN_ROOT}/scripts/convergence-tracker.sh touched-pages <phase>` (the prior pass's set) plus one-hop `related` dependents — not a fresh full scan. **Pass criterion:** pass-2 page count ≤ pass-1, and every pass-2 page ∈ (prior `touched_pages` ∪ their `related`).
+The auditor's LLM narrowing is not bats-testable; Task 1's tracker tests prove the `touched_pages` substrate it keys off. The end-to-end narrowing check is recorded as acceptance item **A1-SMOKE in Task 7 Step 1b** (a concrete, staged post-implementation validation doc), not an unattached instruction. No code in this step.
 
 - [ ] **Step 6: Commit**
 
@@ -485,6 +485,22 @@ teardown() { teardown_test_env; rm -rf "$REPO" "$BASE"; }
   fp2=$(bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" written.md)
   [ "$fp1" = "$fp2" ]
 }
+
+@test "nested untracked file under a new directory is surfaced per-file, not as the dir (CR-001)" {
+  bash "$SCRIPTS_DIR/commit-candidates.sh" snapshot "$REPO" > "$BASE"
+  mkdir -p "$REPO/wiki/newdir"
+  echo page > "$REPO/wiki/newdir/page.md"          # propagator-style new draft page in a new dir
+  run bash "$SCRIPTS_DIR/commit-candidates.sh" candidates "$REPO" "$BASE"
+  [[ "$output" == *"wiki/newdir/page.md"* ]]        # the FILE is the candidate
+  run bash -c "bash '$SCRIPTS_DIR/commit-candidates.sh' candidates '$REPO' '$BASE' | grep -xF 'wiki/newdir/'"
+  [ "$status" -ne 0 ]                                # the bare directory is NOT a candidate line
+}
+
+@test "fingerprint fails closed on a directory candidate (CR-001)" {
+  mkdir -p "$REPO/adir"
+  run bash "$SCRIPTS_DIR/commit-candidates.sh" fingerprint "$REPO" adir
+  [ "$status" -eq 3 ]
+}
 ```
 
 - [ ] **Step 2: Run to verify they fail**
@@ -515,8 +531,11 @@ PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
 # the OLD path in the following NUL field; we keep the NEW path and skip the old one.
 # --no-optional-locks: `git status` may otherwise refresh/write the index; a read-only
 # candidate-surfacing helper must not mutate git metadata before user consent (CR-004).
+# --untracked-files=all: without it git collapses a NEW untracked directory to a single
+# `?? dir/` entry; the wiki propagator can Write a new page into a new dir, and we must
+# surface (and later fingerprint/stage) the individual FILE, not the directory (CR-001).
 dirty_paths() {
-  git --no-optional-locks -C "$1" status --porcelain=v1 -z | "$PYTHON" -c '
+  git --no-optional-locks -C "$1" status --porcelain=v1 -z --untracked-files=all | "$PYTHON" -c '
 import sys
 data = sys.stdin.buffer.read().split(b"\0")
 i = 0
@@ -547,7 +566,11 @@ case "${1:-}" in
     # re-checked immediately before staging (CR-001): if the worktree content changes after
     # the user approved the shown diff — even under the same path/status — the fingerprint
     # differs, and the offer must re-disclose instead of staging undisclosed content.
-    xy=$(git --no-optional-locks -C "$repo" status --porcelain=v1 -- "$path" | cut -c1-2)
+    if [ -d "$repo/$path" ]; then
+      echo "ERROR: candidate '$path' is a directory — candidates must be per-file (re-run with --untracked-files=all)" >&2
+      exit 3   # fail closed: never fingerprint/stage a whole directory (CR-001)
+    fi
+    xy=$(git --no-optional-locks -C "$repo" status --porcelain=v1 --untracked-files=all -- "$path" | cut -c1-2)
     if [ -e "$repo/$path" ]; then blob=$(git -C "$repo" hash-object -- "$path"); else blob="DELETED"; fi
     printf '%s:%s\n' "${xy:-??}" "$blob"
     ;;
@@ -756,6 +779,20 @@ git commit -m "chore(up-docs): bump to 0.11.0 — orchestration improvements"
 Run: `PATH="/usr/bin:/bin:$PATH" bash plugins/up-docs/tests/run-bats.sh && (cd plugins/up-docs/tests && .venv/bin/python -m pytest -q) && ./scripts/validate-marketplace.sh`
 Expected: all bats `ok`, pytest all pass, marketplace PASS.
 
+- [ ] **Step 1b: Write the behavioral acceptance doc (CR-003 — tracked, concrete)**
+
+Create `plugins/up-docs/docs/0.11.0-acceptance.md` with the three behavioral smokes that LLM-driven behavior makes un-unit-testable. Each has an explicit pass/fail criterion to run on the next real invocations:
+
+```markdown
+# up-docs 0.11.0 — behavioral acceptance smokes
+
+- **A1-SMOKE (auditor narrowing):** on a `/up-docs:drift` whose phase takes ≥2 convergence passes, confirm from the transcript that pass 2 scans only `convergence-tracker.sh touched-pages <phase>` (prior pass) + one-hop `related` dependents. PASS = pass-2 page count ≤ pass-1 AND every pass-2 page ∈ (prior `touched_pages` ∪ their `related`); a fresh full re-scan = FAIL.
+- **B-ROUTING (fast-path skip):** on a repo-only routed `/up-docs:all` summary, confirm NO wiki/Notion Agent call is dispatched, the combined report shows their "skipped (0 items routed)" lines, AND the auditor still covers all three layers. FAIL if a layer with a routed item is skipped, or the audit drops a layer.
+- **C-COMMIT (commit offer):** with `~/projects/llm-wiki` dirty before the run (incl. a same-path collision and a post-baseline unrelated edit), confirm the offer discloses each candidate's content (tracked via `git diff`, untracked via `git diff --no-index`), excludes baseline-dirty paths, re-checks fingerprints before staging, never pushes, and commits nothing in headless `-p`. FAIL if any non-approved or baseline-dirty path is staged.
+```
+
+Stage this file in Step 3.
+
 - [ ] **Step 2: Update the specs-plans index row**
 
 In `docs/handoff/specs-plans.md`, change the design row's status to: `Executed — 0.11.0 implemented (all gates green); tagged release pending` and update the plan row likewise (add a plan row if not present, pointing at this file).
@@ -763,7 +800,7 @@ In `docs/handoff/specs-plans.md`, change the design row's status to: `Executed �
 - [ ] **Step 3: Commit**
 
 ```bash
-git add docs/handoff/specs-plans.md
+git add docs/handoff/specs-plans.md plugins/up-docs/docs/0.11.0-acceptance.md
 git commit -m "docs(handoff): mark up-docs 0.11.0 orchestration plan executed"
 ```
 
@@ -784,3 +821,5 @@ Release is a separate `/release-pipeline:release` step (plugin release, scoped t
 **Codex plan-review ledger (round 1 → applied):** CR-001 (late re-check missed content) → `fingerprint` subcommand + disclose/recompare flow + bats mutation test; CR-002 (routing over-routed to "none") → split system-of-record row + worked cases; CR-003 (grep-only validation) → `tests/fixtures/routing-cases.md` + fixtures-coverage conformance + concrete transcript-smoke note; CR-004 (fixed temp paths + git locks) → `mktemp` baselines + `git --no-optional-locks`; CR-005 (double-count) → Task 1 Step 4 replaces the whole `fixes…history` block + `changes_applied` assertion. Pre-existing untracked `TODO.md` flagged out-of-scope in Task 0.
 
 **Round 2 → applied:** CR-002/004/005 resolved. CR-001 (untracked content undisclosed) → `git diff --no-index -- /dev/null <path>` for untracked candidates + conformance grep. CR-003 (behavioral gaps) → Task 2 Step 5b A1 narrowing smoke with pass/fail criterion + repo-skill baseline conformance. CR-NEW-001 (fixture unstaged) → `routing-cases.md` added to Task 3 `git add` + Step 9 `git ls-files` verify. CR-NEW-002 (temp-repo hooks/signing) → `commit-candidates.bats` `load helpers` + `setup_test_env` (TEST-003). CR-NEW-003 (repo-skill baseline untested) → conformance assertion on `skills/repo/SKILL.md`.
+
+**Round 3 → applied:** CR-002/004/005 + CR-NEW-001/002/003 resolved. CR-001 (untracked directory) → `commit-candidates.sh` uses `--untracked-files=all` (per-file, not `?? dir/`) + `fingerprint` fails closed (exit 3) on a directory + two new bats tests (nested-untracked surfaced per-file; directory-fingerprint fails). CR-003 (unattached smoke) → behavioral acceptance moved to a **tracked** `plugins/up-docs/docs/0.11.0-acceptance.md` (A1-SMOKE/B-ROUTING/C-COMMIT, each with pass/fail), staged in Task 7.
