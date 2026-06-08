@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.1] - 2026-06-08
+
+### Changed
+- one-time Prettier normalization
+
+### Fixed
+- final structural fixes — markdownlint now 0
+- MD033 placeholders -> code spans (79) + auto-fix side-effects
+
+
 ## [Unreleased]
 
 ## [2.0.0] - 2026-06-07
