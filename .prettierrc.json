@@ -1,0 +1,29 @@
+{
+	"$schema": "https://json.schemastore.org/prettierrc.json",
+	"printWidth": 88,
+	"tabWidth": 2,
+	"useTabs": true,
+	"endOfLine": "lf",
+	"semi": false,
+	"singleQuote": false,
+	"jsxSingleQuote": false,
+	"quoteProps": "consistent",
+	"trailingComma": "es5",
+	"arrowParens": "always",
+	"bracketSpacing": true,
+	"bracketSameLine": false,
+	"singleAttributePerLine": false,
+	"objectWrap": "collapse",
+	"proseWrap": "never",
+	"htmlWhitespaceSensitivity": "css",
+	"experimentalTernaries": false,
+	"experimentalOperatorPosition": "end",
+	"embeddedLanguageFormatting": "auto",
+	"vueIndentScriptAndStyle": false,
+	"requirePragma": false,
+	"insertPragma": false,
+	"overrides": [
+		{ "files": "**/*.jsonc", "options": { "trailingComma": "none" } },
+		{ "files": "**/*.md", "options": { "singleQuote": true } }
+	]
+}

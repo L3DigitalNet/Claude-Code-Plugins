@@ -1,0 +1,10 @@
+{
+	// Local runner config (CLI + the VS Code markdownlint extension). NOT part of the
+	// published standard — the seedable artifact is .markdownlint.json, which
+	// markdownlint-cli2 auto-merges. This file only controls which files a bare
+	// `npx markdownlint-cli2` lints and that it honors .gitignore, so a local run
+	// matches CI. CI passes `globs` explicitly because the action's own default is
+	// the non-recursive `*.{md,markdown}`.
+	"globs": ["**/*.md"],
+	"gitignore": true
+}

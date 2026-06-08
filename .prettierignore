@@ -1,0 +1,11 @@
+# JS/TS source is owned by each sub-project's own toolchain (the
+# home-assistant-dev MCP server's ESLint + tsc), analogous to how this standard
+# puts .py source out of Prettier's scope. Recorded as ADR-0001.
+# .prettierignore uses gitignore syntax — one pattern per line, no brace expansion.
+# A leading-slash-free pattern matches at any depth; *.cjs covers dist/server.bundle.cjs.
+*.ts
+*.tsx
+*.js
+*.jsx
+*.mjs
+*.cjs

@@ -1,0 +1,13 @@
+{
+	"name": "claude-code-plugins",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Dev tooling only (Prettier). Pins the Markdown/structured-text formatter for this plugins meta-repo; the repo's product is the plugins + docs, not a Node package.",
+	"scripts": {
+		"format": "prettier --write .",
+		"format:check": "prettier --check ."
+	},
+	"devDependencies": {
+		"prettier": "3.8.3"
+	}
+}
