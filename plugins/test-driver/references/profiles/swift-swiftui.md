@@ -2,6 +2,8 @@
 
 discovery conventions, execution commands, coverage tools, and UI testing via XCUITest
 
+---
+
 ## 1. Applicable Test Categories
 
 - **Unit** — always applicable

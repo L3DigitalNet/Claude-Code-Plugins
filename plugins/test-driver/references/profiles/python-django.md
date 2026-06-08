@@ -2,6 +2,8 @@
 
 execution commands, coverage tools, and UI testing via Charlotte or Playwright
 
+---
+
 ## 1. Applicable Test Categories
 
 - **Unit** — always applicable

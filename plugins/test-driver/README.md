@@ -128,4 +128,4 @@ Domain knowledge loaded on demand by the commands. These files are never auto-lo
 - Repository: [L3DigitalNet/Claude-Code-Plugins](https://github.com/L3DigitalNet/Claude-Code-Plugins)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 - Issues and feedback: [GitHub Issues](https://github.com/L3DigitalNet/Claude-Code-Plugins/issues)
-- Design document: [`docs/superpowers/specs/2026-03-16-test-driver-design.md`](../../docs/superpowers/specs/2026-03-16-test-driver-design.md)
+- Design document: `docs/superpowers/specs/2026-03-16-test-driver-design.md`

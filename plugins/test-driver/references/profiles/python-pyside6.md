@@ -2,6 +2,8 @@
 
 conventions, execution commands, coverage tools, and UI testing via pytest-qt and Qt Pilot
 
+---
+
 ## 1. Applicable Test Categories
 
 - **Unit** — always applicable
