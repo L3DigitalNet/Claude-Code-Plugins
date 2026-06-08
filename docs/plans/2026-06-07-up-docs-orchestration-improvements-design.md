@@ -1,7 +1,7 @@
 # up-docs — Orchestration Efficiency & Completeness Improvements (Design)
 
 **Date:** 2026-06-07
-**Status:** Draft — Codex `spec-review` rounds 1–3 applied (6 + 3 + 2 findings); re-audit pending
+**Status:** Reviewed — Codex `spec-review` converged in 4 rounds (round-4 verdict: _No significant findings remain_); ready for `writing-plans`
 **Target version:** up-docs `0.10.1` → `0.11.0`
 **Topic owner:** documentation-propagation plugin (`plugins/up-docs/`)
 
@@ -184,3 +184,4 @@ matrix synced to agent boundaries [D11].
 | 1 (`…-203332-…round1.md`) | Needs major correction | SA-001/002/003 (High); SA-004/005/006 (Med) | SA-001→D6/§3A; SA-002→D8/§3C; SA-003→D7; SA-004→D9/§3B; SA-005→indexed §6; SA-006→§6 behavioral tests |
 | 2 (`…-204348-…round2.md`) | Needs major correction | SA-001..006 **resolved**; new SA-NEW-001/002 (High), SA-NEW-003 (Med) | SA-NEW-001 (coarse finding-key) → **A2 dropped** [D7]; SA-NEW-002 (`written_paths` schema gap) → **commit-safety via git baseline diff** [D8], no schema change; SA-NEW-003 (under-specified routing) → **routing matrix + fixtures** [D11] |
 | 3 (`…-205347-…round3.md`) | Needs major correction | SA-001..006 + SA-NEW-001..003 **resolved**; new SA-NEW-004 (High), SA-NEW-005 (Med) | SA-NEW-004 (git diff ≠ run-ownership) → **D8 downgraded: candidates are "changed since baseline"; per-path diff approval + late re-check is the ownership guard**; SA-NEW-005 (stale index row) → specs-plans.md row updated; also corrected stale `/up-docs:repo`-has-no-guard claim |
+| 4 (`…-210253-…round4.md`) | **No significant findings remain** | SA-NEW-004/005 **resolved**; 0 new, 0 regressions | **Converged.** Ready for `writing-plans`. |
