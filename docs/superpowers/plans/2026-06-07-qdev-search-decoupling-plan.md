@@ -75,8 +75,8 @@ Expected: commands = `research.md` only; agents = `qdev-researcher.md` only; scr
 
 - [ ] **Step 3: Confirm the skills directory is now empty of skills**
 
-Run: `find plugins/qdev/skills -name SKILL.md 2>/dev/null; echo "exit:$?"`
-Expected: no output (no SKILL.md remains). The `skills/` dir may be gone entirely after `git rm -r` — that is expected and fine.
+Run: `find plugins/qdev/skills -name SKILL.md -print 2>/dev/null`
+Expected: **no path printed.** (The `skills/` dir may be gone entirely after `git rm -r`, in which case `find` prints nothing and may emit a "No such file or directory" on stderr — both are fine. The point is that no `SKILL.md` path appears; do not treat a removed directory as an error.)
 
 ### Task A3: Fix the structural test for the new (skill-less) surface
 
@@ -399,15 +399,29 @@ None.
 - [Source](https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev)
 ```
 
-### Task A7: Prepend a 2.0.0 CHANGELOG entry
+### Task A7: Normalize the CHANGELOG — add 2.0.0, clear the stale Unreleased block (CR-001)
+
+The current `CHANGELOG.md` has a defect this task must fix, not preserve: a `## [Unreleased]`
+section sits **below** `## [1.6.0]` and still lists `qdev-grounding`, `sanitize_query.py`, and
+the research reporting cycle as *added* — but `docs/handoff/deployed.md` records those "18 prior
+unreleased commits now shipped" in the 1.6.0 release. So that block is orphaned, already-shipped
+cruft (also mis-ordered: Unreleased belongs at the top). Leaving it would make the 2.0.0
+changelog advertise the very grounding skill + sanitizer that 2.0.0 removes.
 
 **Files:**
-- Modify: `plugins/qdev/CHANGELOG.md` (insert a new section above `## [Unreleased]` / `## [1.6.0]`)
+- Modify: `plugins/qdev/CHANGELOG.md` (add top `## [Unreleased]` + `## [2.0.0]`; delete the stale post-1.6.0 `## [Unreleased]` block)
 
-- [ ] **Step 1: Insert the 2.0.0 entry**
+- [ ] **Step 1: Read the current file to anchor the exact edits**
 
-In `plugins/qdev/CHANGELOG.md`, immediately after the intro lines (the `[Keep a Changelog]` line, before `## [1.6.0] - 2026-06-05`), insert:
+Run: `sed -n '1,60p' plugins/qdev/CHANGELOG.md`
+Confirm: intro lines 1-5, `## [1.6.0] - 2026-06-05` at line 7, the stale `## [Unreleased]` heading at line ~34 with `### Added`/`### Changed`/`### Fixed` content through line ~54, then `## [1.5.0] - 2026-05-08` at line ~56.
+
+- [ ] **Step 2: Insert an empty Unreleased + the 2.0.0 entry at the top**
+
+Immediately after the intro (after the `The format is based on [Keep a Changelog]...` line, **before** `## [1.6.0] - 2026-06-05`), insert:
 ```markdown
+## [Unreleased]
+
 ## [2.0.0] - 2026-06-07
 
 ### Removed (BREAKING)
@@ -419,7 +433,24 @@ In `plugins/qdev/CHANGELOG.md`, immediately after the intro lines (the `[Keep a 
 - Manifest + marketplace description rewritten to research-only; structural test (`test_plugin_structure.py`) updated for the skill-less, single-dispatcher surface.
 
 ```
-Leave every existing section (including `## [Unreleased]` and `## [1.6.0]`) below, untouched.
+
+- [ ] **Step 3: Delete the stale post-1.6.0 `## [Unreleased]` block**
+
+Remove the entire orphaned section that sits between `## [1.6.0]`'s content and `## [1.5.0]` — i.e. the `## [Unreleased]` heading (~line 34) and all of its `### Added` / `### Changed` / `### Fixed` body down to (but not including) `## [1.5.0] - 2026-05-08`. That content shipped in 1.6.0 (whose own section already summarizes the same sanitizer/Tavily-prefix/subagent fixes), so removing the duplicate is correct. Leave `## [1.6.0]`, `## [1.5.0]`, and all older sections intact.
+
+- [ ] **Step 4: Verify the `## [Unreleased]` block is empty and the stale block is gone**
+
+Run:
+```bash
+cd /home/chris/projects/Claude-Code-Plugins
+# (a) The [Unreleased] section (between its heading and the next ## heading) must
+#     contain no entries — no grounding/sanitizer "added" lines:
+awk '/^## \[Unreleased\]/{f=1;next} /^## \[/{f=0} f' plugins/qdev/CHANGELOG.md | grep -n . \
+  && echo "FAIL: Unreleased is not empty" || echo "OK: Unreleased empty"
+# (b) There must be exactly ONE [Unreleased] heading (the stale duplicate is deleted):
+echo "Unreleased headings: $(grep -c '^## \[Unreleased\]' plugins/qdev/CHANGELOG.md)"
+```
+Expected: `OK: Unreleased empty` and `Unreleased headings: 1`. (The 2.0.0 `### Removed` lines naming `qdev-grounding`/`sanitize_query.py` are correct and live under `## [2.0.0]`, not under Unreleased — they are not flagged by check (a).)
 
 ### Task A8: Update root README + handoff current-truth docs
 
@@ -842,13 +873,14 @@ Expected: commit succeeds, GPG-signed. `git log --oneline -1` to confirm.
 
 ## Final verification (both repos)
 
-- [ ] **Step 1: qdev green + slimmed**
+- [ ] **Step 1: qdev green + slimmed (fail-fast — pytest must gate the `ls`)**
 
 ```bash
-cd /home/chris/projects/Claude-Code-Plugins/plugins/qdev && PATH=/usr/bin:/bin:$PATH python -m pytest -q
-ls ../qdev/commands ../qdev/agents   # research.md ; qdev-researcher.md
+cd /home/chris/projects/Claude-Code-Plugins/plugins/qdev \
+  && PATH=/usr/bin:/bin:$PATH python -m pytest -q \
+  && ls commands agents   # expect: research.md ; qdev-researcher.md
 ```
-Expected: tests pass; only the one command + one agent remain.
+Expected: tests pass **and then** the `ls` shows only the one command + one agent. The `&&` chain means a pytest failure aborts before `ls`, so a green-looking `ls` can't mask a red suite.
 
 - [ ] **Step 2: web-search deployable in isolation**
 
@@ -857,13 +889,17 @@ cd /home/chris/projects/agent-configs && TMPH="$(mktemp -d)"; HOME="$TMPH" bash 
 ```
 Expected: the copied skill file exists.
 
-- [ ] **Step 3: Both commits present, working trees clean of plan-owned paths**
+- [ ] **Step 3: Both commits present AND no plan-owned path left behind**
 
 ```bash
-git -C /home/chris/projects/Claude-Code-Plugins log --oneline -1
-git -C /home/chris/projects/agent-configs log --oneline -1
+for r in /home/chris/projects/Claude-Code-Plugins /home/chris/projects/agent-configs; do
+  echo "=== $r ==="
+  git -C "$r" log --oneline -1
+  echo "-- unstaged/untracked --"; git -C "$r" status --short
+  echo "-- staged (should be empty post-commit) --"; git -C "$r" diff --name-only --cached
+done
 ```
-Expected: the two commits from Tasks A9 and B4. Any remaining dirty files are the pre-existing unrelated ones recorded in Task A1 Step 2 — confirm none of this plan's targets are left unstaged/uncommitted.
+Expected: each repo's HEAD is the commit from Task A9 / B4; **no staged paths remain** (the commit consumed them). In the `status --short` output, cross-check every path against the pre-existing unrelated set recorded in Task A1 Step 2 — **none of this plan's target files** (qdev surface, manifests, READMEs, CHANGELOG, handoff docs, the new SKILL.md, `agent-configs/skills/README.md`) may appear as modified or untracked. If a plan-owned file is still dirty, it was missed in staging — stage and amend/commit it before declaring done.
 
 ---
 
