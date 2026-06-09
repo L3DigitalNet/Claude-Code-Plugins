@@ -9,7 +9,7 @@
 - Drift auditor (Sonnet) receives session-change summary after propagators complete; checks for contradictions in propagator output; emits convergence loop phases.
 - Parallel dispatch reduces wall time to `max(repo, wiki, notion)` + drift; sequential phases protect consistency.
 
-**All plugins:** follow plugin-marketplace canonical structure (plugin.json, CHANGELOG.md, README.md from template, optional agents/hooks/skills). 6 plugins total in marketplace as of 2026-06-08 (was 9; github-repo-manager, plugin-test-harness, repo-hygiene de-listed as unused). Was 9 as of 2026-05-30 (was 12; opus-context, handoff, nominal removed). Prior cut 2026-05-08: 17 → 12 (claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev removed in commit 3b8323e).
+**All plugins:** follow plugin-marketplace canonical structure (plugin.json, CHANGELOG.md, README.md from template, optional agents/hooks/skills). 7 plugins total in marketplace as of 2026-06-09 (uv-strict-python v0.1.0 added). Was 6 as of 2026-06-08 (github-repo-manager, plugin-test-harness, repo-hygiene de-listed as unused). Was 9 as of 2026-05-30 (was 12; opus-context, handoff, nominal removed). Prior cut 2026-05-08: 17 → 12 (claude-sync, design-assistant, docs-manager, linux-sysadmin, python-dev removed in commit 3b8323e).
 
 ## Handoff Gotchas
 
@@ -29,7 +29,7 @@ Marketplace-wide tests use canonical frameworks and plugin-local suites. Keep co
 
 - Strategic overview: `docs/handoff/conventions.md` TEST-001/TEST-002 (frameworks, naming, bats wrapper)
 - Per-plugin execution: `plugins/<plugin>/tests/` plus session rows in `docs/handoff/sessions/`
-- In scope: 6 plugins (github-repo-manager, plugin-test-harness, repo-hygiene de-listed 2026-06-08). Was 9 with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
+- In scope: 7 plugins (uv-strict-python added 2026-06-09; github-repo-manager, plugin-test-harness, repo-hygiene de-listed 2026-06-08). Was 9 with qdev's research-KB scripts (qdev is no longer pure-markdown; its grounding-sanitizer was removed in qdev 2.0.0). Was 8 before qdev gained Python tests; was 11 before the 2026-05-30 cut (opus-context, handoff, nominal removed); was 15 before 2026-05-08 cleanup (claude-sync, design-assistant, docs-manager, linux-sysadmin removed from scope alongside their plugin dirs; python-dev, already excluded as pure-markdown, also deleted).
 - Frameworks: bats (bash), pytest (Python), Jest (TypeScript)
 - Enforcement mapping: every test tagged with layer it exercises (Mechanical strongest, Behavioral weakest)
 - Branch workflow: direct commits to `main`.

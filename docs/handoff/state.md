@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-08 (up-docs v0.12.0 released — remote-SSH wiki layer)
+**Last updated:** 2026-06-09 (uv-strict-python v0.1.0 released — initial release)
 
 ## Session Instructions
 
@@ -12,8 +12,8 @@
 
 ### (none)
 
-## Recently closed (this session, 2026-06-08)
+## Recently closed (this session, 2026-06-09)
 
-- **up-docs v0.12.0 released.** Remote-SSH wiki layer (CT 103) implemented in prior session; this session cut the release. Pre-flight found 1 broken link in `CHANGELOG.md` [0.8.0] notes (dead plan-file reference) — de-linked and committed as part of the release. Tag `up-docs/v0.12.0` created, pushed; GitHub release published (`0f07df6`). Detail in `sessions/2026-06.md`.
+- **uv-strict-python v0.1.0 released.** New plugin implementing the Python Tooling SSOT Standard (uv + Ruff + BasedPyright + pytest/coverage + pip-audit). Registered in `marketplace.json` (6→7 plugins). Pre-flight: added `missing_tests` waiver (bats test at `hooks/setup-shims.bats`, non-standard location). Tag `uv-strict-python/v0.1.0` created, pushed; GitHub release published. Detail in `sessions/2026-06.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->
