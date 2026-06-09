@@ -1,0 +1,6 @@
+{
+	"name": "uv-strict-python",
+	"version": "0.1.0",
+	"description": "Python Tooling SSOT Standard: uv + Ruff + BasedPyright (strict) + pytest/coverage + pip-audit. Use when creating Python projects, writing scripts, or migrating an existing project to the standard toolchain.",
+	"author": { "name": "Chris Purcell", "email": "chrisdpurcell@luminous3d.com" }
+}

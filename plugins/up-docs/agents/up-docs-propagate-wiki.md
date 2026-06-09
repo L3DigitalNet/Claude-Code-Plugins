@@ -86,21 +86,21 @@ This depends on `~/.local/bin` being on the LXC's NON-interactive SSH PATH (so `
 </access_model>
 ````
 
-```text
+````text
 <task>
 1. Pre-flight — probe REACHABILITY over SSH (do not test for a local directory):
 
    ```bash
    ssh -o BatchMode=yes -o ConnectTimeout=5 llm-wiki 'test -d /srv/workspaces/llm-wiki/.git'
-   ```
+````
 
-   If this exits non-zero (host unreachable, key/auth failure, or repo absent), emit the single-row "wiki not checked (llm-wiki unreachable)" table from `<output_format>` and stop — a graceful skip, never a failed run.
+If this exits non-zero (host unreachable, key/auth failure, or repo absent), emit the single-row "wiki not checked (llm-wiki unreachable)" table from `<output_format>` and stop — a graceful skip, never a failed run.
 
-   Otherwise read these authoritative contract docs over SSH before touching anything:
-   - `ssh llm-wiki 'cd /srv/workspaces/llm-wiki && cat AGENTS.md'`
-   - `ssh llm-wiki 'cat /srv/workspaces/llm-wiki/docs/handoff/conventions.md'` (rules C-1..C-12)
-   - `ssh llm-wiki 'cat /srv/workspaces/llm-wiki/docs/schemas/frontmatter.schema.md'`
-   These are the source of truth for the rules below; the runtime `AGENTS.md` validation block wins on any version disagreement with this prompt.
+Otherwise read these authoritative contract docs over SSH before touching anything:
+
+- `ssh llm-wiki 'cd /srv/workspaces/llm-wiki && cat AGENTS.md'`
+- `ssh llm-wiki 'cat /srv/workspaces/llm-wiki/docs/handoff/conventions.md'` (rules C-1..C-12)
+- `ssh llm-wiki 'cat /srv/workspaces/llm-wiki/docs/schemas/frontmatter.schema.md'` These are the source of truth for the rules below; the runtime `AGENTS.md` validation block wins on any version disagreement with this prompt.
 
 2. Locate targets. Search over SSH — `ssh llm-wiki 'cd /srv/workspaces/llm-wiki && rg -n -i "<name>" wiki/'` — matching page titles, `aliases`, `tags`, and frontmatter `related` for each extractable name in the session summary. There is no network search verb; the remote filesystem plus `rg` is the entire query surface.
 
@@ -114,7 +114,8 @@ This depends on `~/.local/bin` being on the LXC's NON-interactive SSH PATH (so `
 5. Validate — run the validator gate in `<llm_wiki_contract>` over SSH after writing. If the gate fails, report failure; never claim clean.
 
 6. Report every page examined, including no-change and FAILED rows. </task>
-```
+
+`````
 
 ````text
 <llm_wiki_contract> The page-write rules, summarized from the runtime contract docs (AGENTS.md + conventions C-1..C-12 + frontmatter schema). On any conflict the repo doc wins; re-read it (over SSH) at runtime.
@@ -133,10 +134,11 @@ This depends on `~/.local/bin` being on the LXC's NON-interactive SSH PATH (so `
 ssh llm-wiki 'cd /srv/workspaces/llm-wiki && uvx --from "git+https://github.com/L3DigitalNet/project-standards@v2.0.0" validate-frontmatter --config .project-standards.yml'
 ssh llm-wiki 'cd /srv/workspaces/llm-wiki && uv run python -m llm_wiki_tools.lint.resolve_links'
 ssh llm-wiki 'cd /srv/workspaces/llm-wiki && uv run python -m llm_wiki_tools.lint.frontmatter_ids check'
-```
+`````
 
 Plus the Markdown tooling check for changed `md` files (Prettier + markdownlint, per AGENTS.md). Never reformat `raw/`, `capture/`, or `.claude/`. If any gate command fails, mark the run's affected rows and report the failure — never claim clean. </llm_wiki_contract>
-````
+
+`````
 
 ```text
 <layer_boundary> llm-wiki `wiki/` is the synthesized implementation-reference shelf. Content answers: does this help an implementer execute correctly without guessing?
@@ -295,4 +297,4 @@ If the llm-wiki host is unreachable (SSH pre-flight failed — host down, auth f
 ```
 
 </output_format>
-````
+`````

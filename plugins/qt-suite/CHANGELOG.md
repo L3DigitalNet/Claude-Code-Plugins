@@ -7,13 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.3.3] - 2026-06-08
 
 ### Changed
+
 - one-time Prettier normalization
 - move session-state docs under docs/handoff/ (v3.1)
 
 ### Fixed
+
 - final structural fixes — markdownlint now 0
 - scripted structural fixes (MD036/MD040/MD025)
-
 
 ## [0.3.2] - 2026-05-25
 

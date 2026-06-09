@@ -66,6 +66,11 @@
 			"reason": "Markdown-only plugin — skill and agent collection with no executable code to test"
 		},
 		{
+			"check": "missing_tests",
+			"plugin": "uv-strict-python",
+			"reason": "Tests exist but in a non-standard location (hooks/setup-shims.bats); root-scanning detector only searches tests/ and test/ subdirectories — bats test covers the hook shim setup script"
+		},
+		{
 			"check": "stale_docs",
 			"plugin": "qdev",
 			"reason": "Docs auditor false-positive: marketplace.json and CHANGELOG.md show pre-bump version at Phase 1 time — bump-version.sh and generate-changelog.sh update them in Phase 2. No stale .md refs exist."
