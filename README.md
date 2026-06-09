@@ -2,7 +2,26 @@
 
 A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, Home Assistant integration dev, Qt UI development, deep web research, and three-layer documentation propagation.
 
-## Installation
+## Table of Contents
+
+- [Claude Code Plugins Marketplace](#claude-code-plugins-marketplace)
+  - [Table of Contents](#table-of-contents)
+    - [Staying Up to Date](#staying-up-to-date)
+  - [Available Plugins](#available-plugins)
+  - [Principles](#principles)
+    - [Home Assistant Dev](#home-assistant-dev)
+    - [Release Pipeline](#release-pipeline)
+    - [Qt Suite](#qt-suite)
+    - [qdev](#qdev)
+    - [Test Driver](#test-driver)
+    - [Up Docs](#up-docs)
+  - [Testing \& Validation](#testing--validation)
+  - [Plugin Development](#plugin-development)
+    - [Quick Start](#quick-start)
+    - [Documentation](#documentation)
+  - [Repository Structure](#repository-structure)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 Add this marketplace to your Claude Code installation:
 
