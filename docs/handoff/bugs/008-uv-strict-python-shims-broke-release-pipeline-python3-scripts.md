@@ -22,6 +22,7 @@ release-pipeline scripts parse JSON via bare `python3 -c` inside `$(...)` captur
 Two-sided, both 2026-06-12:
 
 - **Victim hardened** (`4f9fd1c`): all seven python3-invoking release-pipeline scripts now `export PATH="/usr/bin:/bin:$PATH"` immediately after the shebang/`set` line, so the system interpreter always wins. Verified by re-running `detect-unreleased.sh` bare in the still-shimmed session. Unreleased — ships with the next release-pipeline release.
+- **Also applied to up-docs** (`19595e2`): six up-docs scripts (`commit-candidates`, `convergence-tracker`, `context-gather`, `capture-transcript`, `link-audit`, `server-inspect`) received the same guard after `commit-candidates.sh`'s snapshot call failed during a live `/up-docs:all` pre-flight. Unreleased — ships with the next up-docs release.
 - **Source scoped** (`9d5761b`, released in uv-strict-python v0.2.0): the SessionStart hook now installs shims only when the project root has `pyproject.toml`/`.python-version`/`uv.lock` (override via `.claude/uv-strict-python.local.md` `shims:` frontmatter), so non-Python repos never see them. Cache picks this up at next session start.
 
 ## Lesson

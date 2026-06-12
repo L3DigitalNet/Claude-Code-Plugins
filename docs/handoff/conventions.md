@@ -246,7 +246,7 @@ export PATH="/usr/bin:/bin:$PATH"
 
 **Sources:**
 
-- Bug 007 (find/grep shims neutered bats discovery) and Bug 008 (python3 shim broke release-pipeline scripts)
-- release-pipeline commit `4f9fd1c` (all 7 python3-invoking scripts), up-docs `d4119ae` (`run-bats.sh`), uv-strict-python `tests/run.sh`
+- Bug 007 (find/grep shims neutered bats discovery) and Bug 008 (python3 shim broke release-pipeline scripts and up-docs scripts)
+- release-pipeline commit `4f9fd1c` (all 7 python3-invoking scripts), up-docs `d4119ae` (`run-bats.sh`) and `19595e2` (all 6 python3-invoking scripts), uv-strict-python `tests/run.sh`
 
 **Related:** TEST-002, BRANCH-001
