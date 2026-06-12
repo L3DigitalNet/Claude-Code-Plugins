@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- All seven python3-invoking scripts now prepend /usr/bin:/bin to PATH — uv-strict-python's session shims intercepted bare python3, making detect-unreleased.sh misreport "not a monorepo" (and silently breaking bump-version, check-waivers, detect-test-runner, force-push-guard, auto-build-plugins, sync-local-plugins) in shimmed sessions
+
 ## [2.2.2] - 2026-05-25
 
 ### Fixed

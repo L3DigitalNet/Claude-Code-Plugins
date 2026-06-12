@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Shim guard: uv-strict-python's PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win for the JSON helpers.
+export PATH="/usr/bin:/bin:$PATH"
 # PreToolUse hook: block force-push commands in the release pipeline.
 # CRITICAL RULE: never use git push --force or -f. (commands/release.md rule 3)
 #

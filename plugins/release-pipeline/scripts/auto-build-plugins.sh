@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Shim guard: uv-strict-python's PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win for the JSON helpers.
+export PATH="/usr/bin:/bin:$PATH"
 # auto-build-plugins.sh — PreToolUse hook on Bash.
 #
 # When a git commit is about to run, checks if any staged TypeScript source

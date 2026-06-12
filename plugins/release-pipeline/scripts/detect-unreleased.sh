@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Shim guard: uv-strict-python's PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win for the JSON helpers.
+export PATH="/usr/bin:/bin:$PATH"
+
 # detect-unreleased.sh — List plugins with unreleased changes.
 #
 # Usage: detect-unreleased.sh <repo-path>

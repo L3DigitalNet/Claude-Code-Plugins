@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Shim guard: uv-strict-python's PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win for the JSON helpers.
+export PATH="/usr/bin:/bin:$PATH"
 # sync-local-plugins.sh — SessionStart hook.
 #
 # Syncs local plugin source from the development repo to the installed Claude

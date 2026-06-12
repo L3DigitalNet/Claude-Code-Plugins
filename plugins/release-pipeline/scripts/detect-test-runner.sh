@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Shim guard: uv-strict-python's PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win for the JSON helpers.
+export PATH="/usr/bin:/bin:$PATH"
+
 # detect-test-runner.sh — Auto-detect the test runner for a project.
 #
 # Usage: detect-test-runner.sh [repo-path]

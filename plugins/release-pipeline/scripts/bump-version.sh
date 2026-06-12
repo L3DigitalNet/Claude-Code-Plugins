@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Shim guard: uv-strict-python's PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win for the JSON helpers.
+export PATH="/usr/bin:/bin:$PATH"
+
 # bump-version.sh — Find and replace version strings across common project files.
 #
 # Usage: bump-version.sh <repo-path> <new-version> [--plugin <name>] [--dry-run]
