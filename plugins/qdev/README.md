@@ -17,9 +17,9 @@ The enemy of a good design decision is stale or incorrect knowledge. `qdev` addr
 ## Requirements
 
 - Claude Code (any recent version)
-- `brave-search` MCP server (web recall)
-- `serper-search` MCP server (second recall source, Google operators)
-- `tavily` MCP server (recommended; content-heavy queries and JS-rendered page extraction)
+- `tavily` MCP server (primary recall + JS-rendered page extraction; the agent fails soft to Brave/Serper when absent)
+- `brave-search` MCP server (cross-check recall source)
+- `serper-search` MCP server (Google-operator queries: `site:`, `filetype:`)
 - `context7` MCP server (recommended; library/framework documentation gating)
 
 ## Installation
@@ -46,9 +46,10 @@ flowchart TD
     D -->|pattern/topic| F["Skip Context7"]
     D -->|mixed| E
     D -->|mixed| F
-    E --> G["6-8 queries<br/>brave + serper (parallel)"]
+    E --> G["Tavily-first recall<br/>6-8 queries"]
     F --> G
-    G --> H["Tavily extract<br/>3-5 highest-signal pages"]
+    G --> G2["Cross-check claims<br/>brave + serper (Google operators)"]
+    G2 --> H["Tavily extract<br/>3-5 highest-signal pages"]
     H --> I["Corroboration check<br/>(footguns: 2+ sources)"]
     I --> J{"Coverage thin<br/>or open Qs?"}
     J -->|Yes| K["One follow-up pass"]
@@ -125,7 +126,7 @@ Reports are not auto-cleaned. The dedup cycle updates, relates, or supersedes ov
 ## Planned Features
 
 - Support for additional research angles (e.g. licensing/compliance scans)
-- Cross-session research deduplication (skip queries already covered by recent reports in `docs/research/`)
+- Query-level dedup: skip sweep queries already answered by a recent report _before_ searching (the existing dedup cycle reconciles reports only at write time, after the sweep has run)
 
 ## Known Issues
 

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+
+- Re-synced the vendored `scripts/markdown-frontmatter.schema.json` from project-standards (snapshot 2026-06-12): schema v1.1 — adds the optional `consumer` field and accepts `schema_version: "1.1"`.
+- README: mermaid flow and Requirements now reflect the v2.0.0 Tavily-first recall path (Brave cross-checks, Serper for Google operators) instead of the pre-2.0 brave+serper parallel model.
+
+### Fixed
+
+- CHANGELOG structure: moved `[Unreleased]` to the top; merged duplicate `[1.5.0]` and `[1.4.0]` headings (Keep a Changelog / MD024).
+
 ## [2.0.1] - 2026-06-08
 
 ### Changed
@@ -14,8 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 - final structural fixes — markdownlint now 0
 - MD033 placeholders -> code spans (79) + auto-fix side-effects
-
-## [Unreleased]
 
 ## [2.0.0] - 2026-06-07
 
@@ -66,18 +75,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- qdev: bump to v1.5.0 — qdev-researcher subagent
-- qdev(README): fix mermaid label, prune-cmd safety, prose polish
-- qdev: README — document qdev-researcher and handoff protocol
-- qdev(research): fix callout ordering, summary early-exit, hint shape
-- qdev: rewrite /qdev:research as thin orchestrator
-- qdev(researcher): drop dead Glob/Grep permissions; fix Step 8 ordering
-- qdev: add qdev-researcher subagent (Sonnet)
-
-## [1.5.0] - 2026-05-08
-
-### Changed
-
 - `/qdev:research` is now a thin orchestrator that dispatches the new `qdev-researcher` Sonnet subagent. Estimated ~25K tokens saved per invocation when called from Opus. Matches the v1.3.0 extraction pattern used for `quality-review`, `deps-audit`, and `doc-sync`.
 - `/qdev:research` topic prompt collapsed from a two-step `AskUserQuestion` (Describe it now / Cancel → follow-up open question) to a single bounded question with up to 3 inferred candidates plus the implicit Other entry.
 - `/qdev:research` now offers downstream chaining (`superpowers:brainstorming`, `/qdev:quality-review`) after presenting the report, passing the persisted research path as context.
@@ -91,15 +88,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- `/qdev:research`: Existing-solution callout ordering, summary early-exit, and argument-hint shape.
+- `qdev-researcher`: dropped dead Glob/Grep permissions; fixed Step 8 ordering.
 - Stale `2024` literal in the `/qdev:research` example query. The agent now derives the current year via `date +%Y` at sweep time instead of hardcoding it.
 - `find` invocation in `/qdev:research` topic inference no longer scans `node_modules`, `__pycache__`, and `.venv` (matches `/qdev:spec-update`).
 - Design spec at `docs/superpowers/specs/2026-04-13-qdev-design.md` updated via `/qdev:spec-update` to reflect commands and agents added since 2026-04-13.
-
-## [1.4.0] - 2026-05-07
-
-### Changed
-
-- qdev v1.4.0 — add Tavily MCP support across all commands and agents
 
 ## [1.4.0] - 2026-05-07
 

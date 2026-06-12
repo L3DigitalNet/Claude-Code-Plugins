@@ -1,8 +1,8 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://raw.githubusercontent.com/L3DigitalNet/project-standards/main/schemas/markdown-frontmatter.schema.json",
+	"$id": "https://raw.githubusercontent.com/L3DigitalNet/project-standards/main/src/project_standards/schemas/markdown-frontmatter.schema.json",
 	"title": "Markdown Frontmatter Standard",
-	"description": "Canonical metadata profile for project documentation. See standards/markdown-frontmatter.md for the governing standard.",
+	"description": "Canonical metadata profile for project documentation. See standards/markdown-frontmatter/README.md for the governing standard.",
 	"type": "object",
 	"additionalProperties": false,
 	"required": [
@@ -21,7 +21,7 @@
 	"properties": {
 		"schema_version": {
 			"type": "string",
-			"enum": ["1.0"],
+			"enum": ["1.0", "1.1"],
 			"description": "Version of this metadata schema."
 		},
 		"id": {
@@ -83,6 +83,11 @@
 			"type": "string",
 			"description": "Person, team, repo, or role responsible for maintenance."
 		},
+		"consumer": {
+			"type": "string",
+			"enum": ["user", "agent", "mix", "unknown"],
+			"description": "Intended reader/consumer of the document."
+		},
 		"tags": {
 			"type": "array",
 			"items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
@@ -100,26 +105,6 @@
 			"items": { "type": "string" },
 			"uniqueItems": true,
 			"description": "Related document IDs or relative paths."
-		},
-		"source": {
-			"type": "array",
-			"items": { "type": "string" },
-			"uniqueItems": true,
-			"description": "Sources used to create or support the document."
-		},
-		"confidence": {
-			"type": "string",
-			"enum": ["high", "medium", "low", "unknown"],
-			"description": "Reliability signal for LLM and human use."
-		},
-		"visibility": {
-			"type": "string",
-			"enum": ["private", "internal", "public"],
-			"description": "Intended audience or exposure level."
-		},
-		"license": {
-			"anyOf": [{ "type": "string" }, { "type": "null" }],
-			"description": "License or reuse terms, if applicable."
 		},
 		"supersedes": {
 			"type": "array",
@@ -142,6 +127,26 @@
 			"items": { "type": "string" },
 			"uniqueItems": true,
 			"description": "Scopes, services, or components this document applies to."
+		},
+		"source": {
+			"type": "array",
+			"items": { "type": "string" },
+			"uniqueItems": true,
+			"description": "Sources used to create or support the document."
+		},
+		"confidence": {
+			"type": "string",
+			"enum": ["high", "medium", "low", "unknown"],
+			"description": "Reliability signal for LLM and human use."
+		},
+		"visibility": {
+			"type": "string",
+			"enum": ["private", "internal", "public"],
+			"description": "Exposure level."
+		},
+		"license": {
+			"anyOf": [{ "type": "string" }, { "type": "null" }],
+			"description": "License or reuse terms, if applicable."
 		},
 		"publish": {
 			"type": "object",
