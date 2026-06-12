@@ -10,8 +10,10 @@
 # part (c)). git is the candidate surface; the human's diff review is the ownership guard.
 #
 # Subcommands:
-#   snapshot   <repo>                  Print the repo's current dirty path set (one per line).
-#   candidates <repo> <baseline-file>  Print (dirty now) − (baseline paths) = changed since baseline.
+#   snapshot    <repo>                  Print the repo's current dirty path set (one per line).
+#   candidates  <repo> <baseline-file>  Print (dirty now) − (baseline paths) = changed since baseline.
+#   fingerprint <repo> <path>           Stable content+status fingerprint for ONE candidate path
+#                                       (captured at disclosure, re-checked before staging).
 set -euo pipefail
 PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
   || { echo "python3 not found" >&2; exit 1; }

@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- `skills/drift/references/convergence-tracking.md` rewritten for audit-only semantics — the Outline-era `apply_fixes(findings)` loop, "Apply all Notion-relevant changes" Phase 4, and "Changes applied" progress line directly contradicted the read-only auditor that loads the file every drift run. A stable non-empty finding set is now the FINAL terminal state (success), matching `check-convergence`'s zero-findings definition of converged; fixes route through propagators on a user-consented follow-up pass. Guarded by a new prompt-conformance test.
+- `/up-docs:all` now ALWAYS dispatches the repo propagator, even with zero repo-routed items — the 0.11.0 fast-path skip could drop the mandatory live-state audit (`state.md`, `conventions.md`, monthly session-log append) on wiki/notion-only sessions, breaking the session-end handoff guarantee. The zero-item skip applies only to wiki and notion. Test updated + new guard test.
+- Auditor now instructed to run `convergence-tracker.sh start-phase <phase>` before pass 1 — `record-iteration` hard-fails with `phase not started` otherwise, and no prompt surface mentioned it (tests passed by calling it themselves).
+- `up-docs-audit-drift` example 4: prose said to "put the actual error text in evidence", contradicting `<verification_discipline>`'s `evidence: null` rule for unverifiable findings; the example's collapsed markdown structure was also repaired. The hardcoded `@v2.0.0` validator pin is now declared illustrative, deferring to the wiki repo's `AGENTS.md` at runtime (same rule as the wiki propagator).
+- `up-docs-propagate-repo`: incident entries belong in `state.md`'s `## Active Incidents` section, not the `## Session Instructions` block (the v3 shape keeps them separate); examples now model the complete mandatory-audit row set (`specs-plans.md`, conventions, unconditional session-log append) instead of omitting rows the prose forbids omitting.
+- `up-docs-propagate-wiki`: repaired collapsed code-fence nesting that broke markdown rendering from the `<task>` block onward.
+- README: removed the stale "repo and wiki layers read and write offline" claim (wrong since the 0.12.0 SSH retargeting) and the obsolete air-gapped validator-caching caveat; "all four helper scripts" → the actual seven; quoted the Mermaid node label containing parentheses (GitHub render fix).
+- `_capture-redactor.py`: output is now truncated with slack before redaction and cut to the final 4 KiB after — cutting first could split a secret at the boundary, leaving a prefix too short for the patterns to match.
+
+### Added
+
+- `/up-docs:wiki` standalone runs now capture a pre-flight remote baseline and surface the consent-gated, never-push commit offer (part (c), wiki-scoped) — previously draft pages sat uncommitted on CT 103 with nothing disclosing it. `/up-docs:all` captures the wiki baseline unconditionally at pre-flight (layer scope isn't known until Step 2 routing; snapshot failure tolerated, Step 6 guard refuses wiki commits without a baseline).
+- `github_pat_` (GitHub fine-grained PAT) redaction pattern + test.
+- Prompt-conformance guards: repo-propagator-always-dispatched, audit-only convergence reference, start-phase instruction, wiki-skill commit offer.
+
+### Changed
+
+- Skill frontmatter `name:` fields aligned to their directory names (`up-all` → `all`, etc. — the directory form is what `/up-docs:<name>` invocation and all docs use); empty `argument-hint` fields dropped.
+- `up-docs-propagate-notion` tools trimmed to `Read` + the four Notion MCP tools (Bash/Glob/Grep were never used by its task — least privilege).
+- `/up-docs:drift` description now states the read-only contract up front.
+- `server-inspect.sh`: SC2087 shellcheck-disable annotation documenting the intentional client-side heredoc expansion; `commit-candidates.sh` header now documents the `fingerprint` subcommand; dirty-tree guard wording covers staged/unstaged/untracked; `0.11.0-acceptance.md` marked as a dated snapshot of the pre-remote-wiki layout.
+
 ## [0.12.0] - 2026-06-08
 
 ### Changed

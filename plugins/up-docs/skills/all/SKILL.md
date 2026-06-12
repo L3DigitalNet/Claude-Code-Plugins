@@ -1,7 +1,6 @@
 ---
-name: up-all
+name: all
 description: 'Update all three documentation layers (repo, wiki, Notion) via parallel sub-agent propagation, then run drift audit. This skill should be used when the user runs /up-docs:all.'
-argument-hint: ''
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---
 
@@ -30,7 +29,7 @@ This skill (orchestrator, inherits caller model)
 
 ### 0. Pre-flight: Dirty-tree guard
 
-Before doing anything else, check for unstaged changes:
+Before doing anything else, check for uncommitted changes (staged, unstaged, or untracked — `--porcelain` reports all three, and the STOP applies to all three):
 
 ```bash
 git status --porcelain
@@ -39,12 +38,12 @@ git status --porcelain
 If the output is **non-empty**, STOP immediately:
 
 - Emit the list of dirty files to the user.
-- Refuse with: _"Unstaged changes detected — stash or commit them before running `/up-docs:all` to prevent data loss."_
+- Refuse with: _"Uncommitted changes detected — stash or commit them before running `/up-docs:all` to prevent data loss."_
 - Do NOT dispatch any sub-agents. Do NOT read session context. Do NOT proceed to Step 1.
 
 If the output is empty, continue.
 
-**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated paths: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"` and, when the wiki layer is in scope (the wiki repo is REMOTE on CT 103), capture its baseline by piping the same helper to the CT: `BASELINE_WIKI=$(mktemp); ssh llm-wiki 'bash -s' snapshot /srv/workspaces/llm-wiki < ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh > "$BASELINE_WIKI"`. Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
+**Capture commit baselines** (for the Step 6 commit offer): BEFORE any propagation, snapshot each committable repo's dirty set into a freshly **`mktemp`'d** file (NOT a fixed path — concurrent runs would collide, CR-004) and remember the generated paths: `BASELINE_REPO=$(mktemp); bash ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh snapshot . > "$BASELINE_REPO"` and the wiki baseline **unconditionally** (layer scope isn't known until the Step 2 routing matrix runs, and one SSH snapshot is cheap; the wiki repo is REMOTE on CT 103): `BASELINE_WIKI=$(mktemp); ssh llm-wiki 'bash -s' snapshot /srv/workspaces/llm-wiki < ${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh > "$BASELINE_WIKI"`. If the wiki snapshot fails (host unreachable), note it and continue — the Step 6 guard refuses wiki commits without a baseline, and the wiki propagator's own pre-flight handles the unreachable host. Thread `$BASELINE_REPO` / `$BASELINE_WIKI` to Step 6 — do not hardcode baseline filenames there.
 
 ### 1. Gather Session Context (once)
 
@@ -78,11 +77,16 @@ Field rules (from the template):
 | **Secret VALUE or live inventory RECORD only** (a secret's actual value in OpenBao; a device/IP/VLAN row in NetBox; an actual DNS/firewall entry) — owned by its system-of-record | none — no propagator |
 | **Ambiguous / spans concerns** | **all candidate layers (fail-open)** |
 
-**CR-002 — do not over-route to "none".** Only the _value/record itself_ is system-of-record-owned. A change _about_ such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `tests/fixtures/routing-cases.md` (created in the fixtures step below); consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
+**CR-002 — do not over-route to "none".** Only the _value/record itself_ is system-of-record-owned. A change _about_ such a thing (an OpenBao **listener rebind**, a **config path**, a **credential reference**, the **strategic fact** that a service was added) still routes to repo/wiki/notion. Worked cases live in `${CLAUDE_PLUGIN_ROOT}/tests/fixtures/routing-cases.md`; consult them when classifying. An item may route to multiple layers; a layer is "routed-to" if ≥1 item carries its tag.
 
 ### 3. Dispatch Propagators in Parallel
 
-Dispatch **only the propagators with ≥1 routed item** (from the Step 2 routing matrix), still in a single message with one Agent call each so they run concurrently. For every layer with zero routed items, do NOT dispatch its propagator; instead record a combined-report line `<Layer> — skipped (0 items routed to this layer)`. This never applies to the auditor — Step 4 still **audits all three layers** regardless of which propagators ran.
+Dispatch **only the propagators with ≥1 routed item** (from the Step 2 routing matrix), still in a single message with one Agent call each so they run concurrently. For every layer with zero routed items, do NOT dispatch its propagator; instead record a combined-report line `<Layer> — skipped (0 items routed to this layer)`.
+
+**Two exceptions to the zero-item skip:**
+
+- **The repo propagator is ALWAYS dispatched, even with zero routed items.** Its mandatory live-state audit (`docs/handoff/state.md`, `docs/handoff/conventions.md`, the monthly session-log append) and stale-file scan run on every invocation regardless of session scope — skipping it would break the session-end handoff guarantee. With zero routed items, pass it an explicitly empty summary ("no repo-routed items this session — run the mandatory audit and stale scan only"). The skip rule applies only to **wiki** and **notion**.
+- The auditor — Step 4 still **audits all three layers** regardless of which propagators ran.
 
 Invoke each propagator being dispatched (from the ≥1-routed-item set above) **in a single message, one Agent call each,** so they run concurrently (the tool was called `Task` before Claude Code v2.1.63 and still accepts that name as an alias). Each receives the session-change summary as the stable front of its prompt; layer-specific detail goes at the end (cache-friendly structure).
 
@@ -102,7 +106,7 @@ If a propagator returns a FAILED row or errors out entirely, record the failure 
 
 ### 4. Dispatch Drift Auditor (sequentially, after propagators)
 
-Once all three propagators return, invoke the auditor via the Agent tool with `subagent_type: "up-docs:up-docs-audit-drift"`. Pass it the same session-change summary plus the three propagator reports (so the auditor knows what was already fixed and does not re-report those items).
+Once all dispatched propagators return, invoke the auditor via the Agent tool with `subagent_type: "up-docs:up-docs-audit-drift"`. Pass it the same session-change summary plus the dispatched propagators' reports and the skip lines for any layer not dispatched (so the auditor knows what was already fixed and does not re-report those items).
 
 The auditor returns **both** a JSON findings block and a markdown findings table. It is read-only: it does not fix.
 

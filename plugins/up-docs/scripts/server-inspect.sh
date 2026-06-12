@@ -114,7 +114,10 @@ fi"
   done
 fi
 
-# Execute all commands in a single SSH session
+# Execute all commands in a single SSH session. The unquoted heredoc delimiter
+# is intentional: ${SERVICE_CMDS}/${CONFIG_CMDS} are built client-side and must
+# expand here; remote-side expansions are escaped individually (\$(...)).
+# shellcheck disable=SC2087
 RAW_OUTPUT=$(ssh $SSH_OPTS "$HOST" bash << REMOTE_EOF
 echo "###DELIM:hostname###"
 hostname 2>/dev/null || echo "unknown"

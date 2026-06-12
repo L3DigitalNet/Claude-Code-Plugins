@@ -73,6 +73,19 @@ ALL_SKILL="$PLUGIN_ROOT/skills/all/SKILL.md"
   [ "$status" -eq 0 ]
 }
 
+@test "all-skill always dispatches the repo propagator (session-end handoff guarantee)" {
+  # The handoff guarantee (state.md row, conventions.md audit, session-log append)
+  # lives in the repo propagator's mandatory audit. A wiki/notion-only routed
+  # session must still dispatch it, or state.md/conventions.md are never touched.
+  run grep -iF 'repo propagator is ALWAYS dispatched' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  run grep -iF 'applies only to' "$ALL_SKILL"
+  [ "$status" -eq 0 ]
+  # the post-propagation template depends on the repo table always existing
+  run grep -iF 'always dispatched' "$POST_PROP"
+  [ "$status" -eq 0 ]
+}
+
 @test "audit still covers all layers even when a propagator is skipped" {
   run grep -iF 'audits all three layers' "$ALL_SKILL"
   [ "$status" -eq 0 ]
@@ -126,6 +139,32 @@ POST_PROP="$PLUGIN_ROOT/templates/post-propagation-steps.md"
   run grep -iF 'Commit offer (part (c))' "$ALL_SKILL"
   [ "$status" -eq 0 ]
   run grep -iF 'Commit offer (part (c))' "$PLUGIN_ROOT/skills/repo/SKILL.md"
+  [ "$status" -eq 0 ]
+  # standalone /up-docs:wiki must also surface it — otherwise draft pages sit
+  # uncommitted on CT 103 with nothing disclosing that fact
+  run grep -iF 'Commit offer (part (c))' "$PLUGIN_ROOT/skills/wiki/SKILL.md"
+  [ "$status" -eq 0 ]
+  run grep -iF 'commit-candidates.sh' "$PLUGIN_ROOT/skills/wiki/SKILL.md"
+  [ "$status" -eq 0 ]
+}
+
+@test "convergence-tracking reference is audit-only (no fix-applying loop)" {
+  # The 0.10 read-only redesign made the auditor never fix; the reference file
+  # kept Outline-era apply_fixes language until the 2026-06-12 review caught it.
+  CT="$PLUGIN_ROOT/skills/drift/references/convergence-tracking.md"
+  run grep -F 'apply_fixes' "$CT"
+  [ "$status" -ne 0 ]
+  run grep -iF 'Changes applied' "$CT"
+  [ "$status" -ne 0 ]
+  run grep -iF 'read-only' "$CT"
+  [ "$status" -eq 0 ]
+}
+
+@test "audit-drift instructs start-phase before pass 1 (record-iteration hard-fails otherwise)" {
+  run grep -F 'start-phase' "$AUDIT_DRIFT"
+  [ "$status" -eq 0 ]
+  # the reference file documents the same call sequence
+  run grep -F 'start-phase' "$PLUGIN_ROOT/skills/drift/references/convergence-tracking.md"
   [ "$status" -eq 0 ]
 }
 

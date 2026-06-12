@@ -1,6 +1,6 @@
 ---
-name: up-drift
-description: 'Comprehensive documentation drift analysis across infrastructure and wiki by dispatching the up-docs-audit-drift sub-agent. This skill should be used when the user runs /up-docs:drift.'
+name: drift
+description: 'Read-only documentation drift audit across infrastructure, wiki, and Notion by dispatching the up-docs-audit-drift sub-agent; reports findings, never fixes. This skill should be used when the user runs /up-docs:drift.'
 argument-hint: '[wiki-subtree-or-tag]'
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---

@@ -55,6 +55,8 @@ ssh <host> "mysql --version" 2>/dev/null
 ssh <host> "redis-cli info server 2>/dev/null | head -20"
 ```
 
+(Skip the `sudo -u postgres` probe on hosts without passwordless sudo — a sudo password prompt would hang the read-only sweep; treat the version as unverifiable instead.)
+
 ### DNS (Pi-hole, Unbound, dnsmasq)
 
 ```bash

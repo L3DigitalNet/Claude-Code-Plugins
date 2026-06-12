@@ -1,7 +1,6 @@
 ---
-name: up-notion
+name: notion
 description: 'Update Notion pages with strategic and organizational context from the current session by dispatching the up-docs-propagate-notion sub-agent. This skill should be used when the user runs /up-docs:notion.'
-argument-hint: ''
 allowed-tools: Read, Bash, Agent
 ---
 

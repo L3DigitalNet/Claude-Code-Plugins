@@ -18,7 +18,7 @@ Documentation lives in three places with different purposes: repo-local files ca
 
 ## Requirements
 
-- Python 3.x in `$PATH` (used by all four helper scripts under `scripts/`)
+- Python 3.x in `$PATH` (used by the helper scripts under `scripts/`)
 - Claude Code (any recent version)
 - SSH access to the `llm-wiki` host (the wiki repo and its `uv`/`uvx` validators live in CT 103 at `/srv/workspaces/llm-wiki`; nothing is required on the workstation's disk, no MCP)
 - Notion accessible via MCP (Notion MCP server configured) — the only layer that needs a configured MCP server and network
@@ -118,7 +118,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     User([User]) -->|"/up-docs:repo<br/>/up-docs:wiki<br/>/up-docs:notion"| Wrapper[Thin wrapper skill<br/>builds session-change summary]
-    Wrapper --> Agent[Single propagator sub-agent<br/>Haiku (repo/Notion) / Sonnet (wiki), isolated context]
+    Wrapper --> Agent["Single propagator sub-agent<br/>Haiku (repo/Notion) / Sonnet (wiki), isolated context"]
     Agent --> Table((Single-layer<br/>summary table))
 ```
 
@@ -204,7 +204,7 @@ Per-agent `model:` frontmatter overrides the caller's model tier, so the repo an
 
 - Only the Notion layer requires a configured MCP server. The wiki layer needs SSH reachability to the `llm-wiki` host (CT 103, `/srv/workspaces/llm-wiki`) where `uv`/`uvx` run; if a layer's backing system is unavailable, use the individual commands for the layers you have.
 - The session context inference relies on git history; in a fresh repo with no commits, the commands have less signal to work from.
-- The repo and wiki layers read and write **offline** — only `/up-docs:notion` (and the Notion portion of `/up-docs:all` and `/up-docs:drift`) needs network/MCP. The one caveat: the pinned `validate-frontmatter` tool is fetched from git on first use (then cached), so air-gapped systems can run `/up-docs:repo` and `/up-docs:wiki` once that validator is cached.
+- Only the repo layer is fully offline-capable. Since 0.12.0 the wiki layer runs entirely over SSH on CT 103 (including its `uv`/`uvx` validators), so it needs network reachability to that host; the Notion layer needs the Notion MCP server.
 - `/up-docs:drift` requires SSH access to all documented hosts. Unreachable hosts are logged and skipped, not fatal.
 - Drift analysis runs on Sonnet by default (`model: sonnet` in `up-docs-audit-drift` frontmatter). The auditor's `<output_format>` flags escalation when results would benefit from Opus reasoning — large affected docs (>1000 lines), >10 findings, or cross-layer contradictions — leaving the user to opt in.
 

@@ -27,6 +27,8 @@ SECRET_PATTERNS = [
     re.compile(r'(token\s*[=:]\s*)([^\s\'"&;]{8,})', re.IGNORECASE),
     re.compile(r'(api[_-]?key\s*[=:]\s*)([^\s\'"&;]{8,})', re.IGNORECASE),
     re.compile(r'(?<![A-Za-z0-9])(gh[ps]_)([A-Za-z0-9]{36,})'),
+    # GitHub fine-grained PATs: github_pat_<22 chars>_<59 chars>
+    re.compile(r'(?<![A-Za-z0-9])(github_pat_)([A-Za-z0-9_]{30,})'),
     # Anthropic API keys: sk-ant-<version>-<base64url-secret>; separator is hyphen, not underscore.
     # Pattern carried from the research report had `_` as group-1 terminator — would silently
     # miss real keys (verified against documented format: sk-ant-api03-...). Fixed to `-`.
@@ -58,15 +60,18 @@ else:
     output = str(resp)
     is_error = False
 
-# Truncate output to 4 KiB before redaction (cheap; redaction would be slower on huge logs)
-output = output[:4096]
+# Truncate with 4 KiB slack BEFORE redaction (keeps the regexes cheap on huge
+# logs), then cut to the final 4 KiB AFTER redaction (in the entry below) —
+# cutting at the final size first could split a secret at the boundary, leaving
+# a prefix too short for the patterns' minimum lengths, i.e. unredacted.
+output = output[:8192]
 
 entry = {
     "session_id": data.get("session_id", ""),
     "tool_use_id": data.get("tool_use_id", ""),
     "tool_name": data.get("tool_name", ""),
     "command": redact(data.get("tool_input", {}).get("command", "")),
-    "output": redact(output),
+    "output": redact(output)[:4096],
     "is_error": is_error,
     "agent_id": data.get("agent_id", ""),
     "agent_type": data.get("agent_type", ""),

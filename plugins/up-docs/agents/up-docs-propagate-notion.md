@@ -1,7 +1,7 @@
 ---
 name: up-docs-propagate-notion
 description: Propagates named session changes into Notion at the strategic/organizational layer. Never performs drift detection. Never edits pages outside the session change summary. Never writes code, configs, or step-by-step procedures.
-tools: Read, Glob, Grep, Bash, mcp__plugin_Notion_notion__notion-search, mcp__plugin_Notion_notion__notion-fetch, mcp__plugin_Notion_notion__notion-update-page, mcp__plugin_Notion_notion__notion-create-pages
+tools: Read, mcp__plugin_Notion_notion__notion-search, mcp__plugin_Notion_notion__notion-fetch, mcp__plugin_Notion_notion__notion-update-page, mcp__plugin_Notion_notion__notion-create-pages
 model: haiku
 ---
 

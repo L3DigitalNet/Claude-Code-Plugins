@@ -1,6 +1,6 @@
 # Post-Propagation Steps
 
-Shared orchestrator procedures that run AFTER the repo propagator returns. Single source of truth for both `/up-docs:repo` (single-layer) and `/up-docs:all` (combined run). "Propagator output" below means the repo propagator's returned table in either case.
+Shared orchestrator procedures that run after propagation completes. Single source of truth for both `/up-docs:repo` (single-layer) and `/up-docs:all` (combined run); `/up-docs:wiki` runs only the wiki-scoped variant of part (c). "Propagator output" below means the repo propagator's returned table — the repo propagator is **always dispatched** (even with zero routed items, for its mandatory live-state audit), so that table always exists in `/up-docs:repo` and `/up-docs:all` runs.
 
 ## Stale File Candidate Review (conditional)
 

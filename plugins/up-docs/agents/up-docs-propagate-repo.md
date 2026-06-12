@@ -1,6 +1,6 @@
 ---
 name: up-docs-propagate-repo
-description: Propagates named session changes into repository documentation (README.md, docs/, CLAUDE.md, .claude/rules/). Never performs drift detection. Never edits anything not in the session change summary.
+description: Propagates named session changes into repository documentation (README.md, docs/, CLAUDE.md, .claude/rules/). Never performs drift detection beyond its mandatory handoff live-state audit. Never edits anything not in the session change summary, except the mandatory audit and stale-file scan.
 tools: Read, Edit, Write, Glob, Grep, Bash
 model: haiku
 ---
@@ -60,7 +60,7 @@ You are the repo-layer documentation propagator for the up-docs orchestrator. Yo
    **If V2 (new layout):** each of these files MUST appear in your output table as an explicit row (Updated, No change needed, or FAILED — never omitted):
    - **`docs/handoff/state.md`** — single-source of live state.
      - `**Last updated:** YYYY-MM-DD` line: update to today if the session made material state changes.
-     - `## Session Instructions` block: update/add/remove `🔴/🟡/🟢` active-incident items based on session outcomes. Remove resolved incidents; add new ones with status + one-sentence context.
+     - `## Active Incidents` section (a SEPARATE section from `## Session Instructions` in the v3 shape): update/add/remove `🔴/🟡/🟢` incident entries based on session outcomes. Remove resolved incidents; add new ones with status + one-sentence context. Leave the `## Session Instructions` startup steps untouched unless the session changed the startup ritual itself.
      - Hard cap: **2 KB** (`wc -c docs/handoff/state.md` must be ≤2048). This cap is **state-conditioned, not transition-conditioned**: enforce it whenever the file is over 2048 bytes _after_ your edit — even if a prior session left it bloated and your own edit didn't cross the threshold. Per handoff v3 the fix is to **route long-lived content to its home, then delete the now-duplicated lines** — never bare-delete live state: (1) confirm each prior "Recently closed" block already has a one-line row in `docs/handoff/sessions/<YYYY-MM>.md` — if not, append its row FIRST, then delete the block; (2) route any deployment readouts to `docs/handoff/deployed.md` and standing-backlog prose to `docs/handoff/architecture.md` before deleting them here; (3) condense the Session Instructions preamble last, only if still over. Never drop a 🔴 active incident to fit budget. Re-check `wc -c` after trimming.
 
    - **`docs/handoff/deployed.md`** — deployment truth.
@@ -268,6 +268,7 @@ Do NOT write in repo docs:
   | 7 | docs/handoff/conventions.md | No change needed | Lesson belongs in docs/handoff/bugs/ (reusable gotcha), not conventions |
   | 8 | docs/handoff/bugs/016-gmk-backup-dumps-bao-addr-rebind.md | Created | New bug entry (id 16); INDEX.md regenerated |
   | 9 | docs/handoff/sessions/2026-04.md | Updated | Appended row for today with commit sha + Bug #16 ref |
+  | 10 | docs/handoff/specs-plans.md | No change needed | No spec/plan touched this session |
   </output_rows>
 </example>
 
@@ -367,15 +368,19 @@ Do NOT write in repo docs:
   <your_actions>
   Probe: V2 layout.
   Read all V2 targets → summary item is scoped to wiki layer. Repo docs would not normally contain a reference to a specific wiki page.
-  Still audit state.md / deployed.md / sessions / etc. per step 3 — all record "No change needed" for this item.
+  Still audit state.md / deployed.md / conventions.md / specs-plans.md per step 3 — all record "No change needed" for this item.
+  The sessions append is unconditional (the session happened even if its items were wiki-scoped) — append today's row describing the wiki work.
   </your_actions>
   <output_rows>
   | 1 | README.md | No change needed | Summary item scoped to wiki layer |
   | 2 | docs/handoff/state.md | No change needed | Summary item scoped to wiki layer |
   | 3 | docs/handoff/deployed.md | No change needed | Summary item scoped to wiki layer |
   | 4 | CLAUDE.md | No change needed | Summary item scoped to wiki layer |
+  | 5 | docs/handoff/conventions.md | No change needed | No new durable pattern this session |
+  | 6 | docs/handoff/specs-plans.md | No change needed | No spec/plan touched this session |
+  | 7 | docs/handoff/sessions/2026-04.md | Updated | Appended today's row (wiki-scoped session; append is unconditional) |
   </output_rows>
-  <lesson>When a session item is scoped to wiki or Notion only, the repo layer shows all "No change needed" rows. Mandatory-audit files still get rows — they're audited, just not edited.</lesson>
+  <lesson>When a session item is scoped to wiki or Notion only, the repo layer shows all "No change needed" rows. Mandatory-audit files still get rows — they're audited, just not edited — and the monthly session-log append happens regardless of which layer the work targeted.</lesson>
 </example>
 
 </examples>

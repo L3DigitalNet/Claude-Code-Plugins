@@ -1,7 +1,6 @@
 ---
-name: up-repo
+name: repo
 description: 'Update repository documentation (README.md, docs/, CLAUDE.md) based on session changes by dispatching the up-docs-propagate-repo sub-agent. This skill should be used when the user runs /up-docs:repo.'
-argument-hint: ''
 allowed-tools: Read, Bash, Agent, AskUserQuestion
 ---
 
@@ -13,7 +12,7 @@ Update the active repo's docs via the `up-docs-propagate-repo` sub-agent (Haiku)
 
 ### 0. Pre-flight: Dirty-tree guard
 
-Before doing anything else, check for unstaged changes:
+Before doing anything else, check for uncommitted changes (staged, unstaged, or untracked — `--porcelain` reports all three, and the STOP applies to all three):
 
 ```bash
 git status --porcelain
@@ -22,7 +21,7 @@ git status --porcelain
 If the output is **non-empty**, STOP immediately:
 
 - Emit the list of dirty files to the user.
-- Refuse with: _"Unstaged changes detected — stash or commit them before running `/up-docs:repo` to prevent data loss."_
+- Refuse with: _"Uncommitted changes detected — stash or commit them before running `/up-docs:repo` to prevent data loss."_
 - Do NOT dispatch the sub-agent. Do NOT read session context. Do NOT proceed to Step 1.
 
 If the output is empty, continue.

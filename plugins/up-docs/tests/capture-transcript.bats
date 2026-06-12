@@ -70,6 +70,13 @@ teardown() {
     [[ "$output" == *"[REDACTED]"* ]]
 }
 
+@test "capture redacts github_pat_ fine-grained tokens" {
+    run bash -c 'echo "$1" | bash "$CAP"' _ '{"tool_name":"Bash","tool_input":{"command":"echo $GH"},"tool_response":{"output":"github_pat_11ABCDEFG0abcdefghijk_abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVW"}}'
+    run cat "$UP_DOCS_TRANSCRIPT_LOG"
+    [[ "$output" != *"11ABCDEFG0abcdefghijk_abcdefghijklmnopqrstuvwxyz"* ]]
+    [[ "$output" == *"github_pat_[REDACTED]"* ]]
+}
+
 @test "capture truncates very large outputs" {
     local big_input
     big_input='{"tool_name":"Bash","tool_input":{"command":"yes hi"},"tool_response":{"output":"'"$(printf 'a%.0s' $(seq 1 8192))"'"}}'
