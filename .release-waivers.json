@@ -76,6 +76,11 @@
 			"reason": "Docs auditor false-positive: marketplace.json and CHANGELOG.md show pre-bump version at Phase 1 time — bump-version.sh and generate-changelog.sh update them in Phase 2. No stale .md refs exist."
 		},
 		{
+			"check": "stale_docs",
+			"plugin": "up-docs",
+			"reason": "Docs auditor false-positive: plugin.json and marketplace.json show pre-bump version at Phase 1 time — bump-version.sh and generate-changelog.sh update them in Phase 2. No stale .md refs exist."
+		},
+		{
 			"check": "protected_branch",
 			"plugin": "*",
 			"reason": "Repo owner commits directly to main via local branch protection hooks — no PR workflow"

@@ -1,6 +1,6 @@
 {
 	"name": "up-docs",
-	"version": "0.12.0",
+	"version": "0.13.0",
 	"description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation plus drift audit, all on Sonnet. Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
 	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
 	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
