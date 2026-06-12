@@ -9,6 +9,8 @@ Operational guide for the **Python Tooling SSOT Standard**: one small, strict, b
 
 This plugin operationalizes the **Python Tooling** standard — toolchain, layout, and the verification gate. Code _shape_ and agent-behavior rules (error handling, side-effect boundaries, trust boundaries, prohibited behaviors) live in the companion **Python Coding** standard, summarized in [coding-standard.md](./references/coding-standard.md). A green gate on badly shaped code is not done — read both.
 
+> **Sync pin:** mirrors `project-standards` python-tooling (contract v1.0, README at commit `79daeae`, 2026-06-12) and the python-coding draft v0.4 (commit `a14ac7d`). The standards repo is canonical; if it has moved past these commits, prefer it and re-sync this plugin.
+
 ## When to Use This Skill
 
 - Creating a new Python project or package
@@ -74,7 +76,8 @@ uv run ruff check . --fix
 What are you doing?
 │
 ├─ Single-file script with dependencies?
-│   └─ Use PEP 723 inline metadata (./references/pep723-scripts.md)
+│   └─ Use PEP 723 inline metadata (./references/pep723-scripts.md — plugin
+│      extension; the standard governs script *projects*, not single files)
 │
 ├─ New importable project or package?
 │   └─ Full setup with src/ layout (see Full Setup below)
@@ -123,6 +126,15 @@ uv run coverage run -m pytest && uv run coverage report
 
 ## Full Project Setup
 
+**Prefer the adopt CLI when the standards repo is reachable** — it materializes the scaffolds (`.python-version`, `check.yml`, `scripts/check.py`, `AGENTS.md`/`CLAUDE.md`, `.editorconfig`, `.vscode/extensions.json`) and prints the `pyproject.toml` sections to copy:
+
+```bash
+uvx --from 'git+https://github.com/L3DigitalNet/project-standards@v3' \
+  project-standards adopt python-tooling
+```
+
+The steps below produce the same result manually.
+
 ### 1. Create Project Structure
 
 ```bash
@@ -170,7 +182,8 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-dev = ["basedpyright", "coverage[toml]", "pip-audit", "pytest", "pytest-cov", "ruff"]
+# pytest floor backs minversion; ruff floor matches the adopt-CLI bundle
+dev = ["basedpyright", "coverage[toml]", "pip-audit", "pytest>=9.0", "pytest-cov", "ruff>=0.9.0"]
 
 [build-system]
 requires = ["uv_build>=0.11,<0.12"]

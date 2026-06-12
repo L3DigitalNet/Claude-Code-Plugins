@@ -48,7 +48,7 @@ This plugin includes a `SessionStart` hook that prepends PATH shims for `python`
 | `pip install pkg`         | `uv add pkg` or `uv run --with pkg`  |
 | `pip uninstall pkg`       | `uv remove pkg`                      |
 | `pip freeze`              | `uv export`                          |
-| `uv pip ...`              | `uv add`/`uv remove`/`uv sync`       |
+| `uv pip ...` (mutating)   | `uv add`/`uv remove`/`uv sync`/`uv export` |
 | `pipx install <pkg>`      | `uv tool install <pkg>`              |
 | `pipx run <pkg>`          | `uvx <pkg>`                          |
 | `pipx uninstall <pkg>`    | `uv tool uninstall <pkg>`            |
@@ -57,6 +57,8 @@ This plugin includes a `SessionStart` hook that prepends PATH shims for `python`
 | `pipx ensurepath`         | `uv tool update-shell`               |
 | `pipx inject <pkg> <dep>` | `uv tool install --with <dep> <pkg>` |
 | `pipx list`               | `uv tool list`                       |
+
+Read-only `uv pip` introspection (`list`, `show`, `tree`, `check`) passes through to the real uv — the standard only proscribes the legacy install/modify path, and diagnostics should keep working.
 
 Commands like `grep python`, `which python`, and `cat python.txt` work normally because `python` is a shell argument, not the command being invoked.
 

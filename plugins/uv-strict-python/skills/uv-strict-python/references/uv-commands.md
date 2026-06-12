@@ -15,10 +15,9 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 # Homebrew
 brew install uv
-
-# pipx
-pipx install uv
 ```
+
+(Do not bootstrap uv via pip or pipx — this standard replaces both with uv itself.)
 
 ## Project Commands
 
@@ -45,12 +44,13 @@ pipx install uv
 
 uv manages virtual environments automatically. Do not manually create or activate venvs.
 
-| Command                | Description                                   |
-| ---------------------- | --------------------------------------------- |
-| `uv sync`              | Install dependencies (creates venv if needed) |
-| `uv sync --all-groups` | Install all dependency groups                 |
-| `uv sync --group dev`  | Install specific group                        |
-| `uv sync --frozen`     | Install from lock file exactly                |
+| Command                          | Description                                                     |
+| -------------------------------- | --------------------------------------------------------------- |
+| `uv sync`                        | Install dependencies (creates venv if needed)                    |
+| `uv sync --all-groups`           | Install all dependency groups                                    |
+| `uv sync --group dev`            | Install specific group                                           |
+| `uv sync --locked --all-groups`  | CI install — fails if the lockfile is stale (the standard's CI rule) |
+| `uv sync --frozen`               | Install from lockfile without the staleness check (not for CI)  |
 
 ### Running Code
 
@@ -92,18 +92,20 @@ uv tool upgrade ruff
 
 ## Python Version Management
 
+The standard's baseline is **Python 3.14** (`requires-python = ">=3.14"`, `.python-version` = `3.14`). Do not change a project's Python version unless the task explicitly requires it; pinning lower needs a documented exception.
+
 ```bash
 # Install Python version
-uv python install 3.12
+uv python install 3.14
 
 # List available versions
 uv python list
 
 # Pin project to Python version
-uv python pin 3.12
+uv python pin 3.14
 
-# Use specific version
-uv run --python 3.11 pytest
+# Run against a specific interpreter (e.g. verifying a documented lower pin)
+uv run --python 3.14 pytest
 ```
 
 ## Script Commands (PEP 723)
@@ -123,11 +125,13 @@ uv run myscript.py
 
 ### New Application Project
 
+The dev group is always the full standard toolchain — the stack is non-negotiable, only its scope is tunable:
+
 ```bash
-uv init myapp
+uv init --package myapp
 cd myapp
 uv add fastapi uvicorn
-uv add --group dev ruff pytest
+uv add --dev basedpyright "coverage[toml]" pip-audit pytest pytest-cov ruff
 uv sync --all-groups
 uv run uvicorn myapp:app
 ```
@@ -137,7 +141,7 @@ uv run uvicorn myapp:app
 ```bash
 uv init --package mylib
 cd mylib
-uv add --group dev ruff pytest pytest-cov
+uv add --dev basedpyright "coverage[toml]" pip-audit pytest pytest-cov ruff
 uv add --group docs sphinx
 uv sync --all-groups
 uv run pytest
@@ -197,5 +201,5 @@ This avoids rebuilding the venv when switching between host and container (diffe
 ## Performance Tips
 
 - uv caches aggressively; first install may be slower
-- Use `uv sync --frozen` in CI for reproducible builds
+- CI must use `uv sync --locked --all-groups` — it fails when the lockfile is stale, which is the point (do **not** substitute `--frozen`, which skips that check)
 - Use `uv cache clean` if cache grows too large

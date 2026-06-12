@@ -19,6 +19,7 @@ Use `[tool.pytest.ini_options]` (recognized back to pytest 6.0). Do **not** put 
 minversion = "9.0"
 testpaths = ["tests"]
 addopts = ["-ra", "--strict-markers", "--strict-config"]
+# Optional additions beyond the standard baseline (stricter is allowed):
 markers = [
     "slow: marks tests as slow",
     "integration: marks integration tests",
@@ -69,7 +70,11 @@ def test_<unit>__<condition>__<expected_result>() -> None: ...
 def test_parse_config__missing_required_field__raises_validation_error() -> None: ...
 ```
 
-Every feature should have tests for the **happy path, invalid input, a boundary case, expected failure behavior**, and a **regression case** when fixing a bug.
+Coverage expectations (matching the standard):
+
+- Material behavior changes SHOULD cover the **happy path** plus the most relevant **invalid input**, **boundary case**, and **expected failure behavior**.
+- Bug fixes MUST include a **regression test** that fails without the fix.
+- Low-risk mechanical edits MAY rely on existing behavior tests when the final report identifies the coverage relied on.
 
 ## Running tests
 

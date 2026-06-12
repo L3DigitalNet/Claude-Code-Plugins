@@ -1,6 +1,6 @@
 # Security Setup
 
-The universal security baseline is **`pip-audit`** (run in CI) plus **Dependabot** for update PRs. Everything beyond that is **threat-model-driven** — added per project, documented, and run as plain CLI/CI steps. This standard does not use pre-commit/prek; the verification gate is the single entry point.
+The standard's universal scanner baseline is **`pip-audit`** (run in CI). This plugin additionally treats **Dependabot** as baseline for update PRs — the standard's own CI template assumes it (Dependabot bumps the SHA-pinned `setup-uv` action). Everything beyond that is **threat-model-driven** — added per project, documented, and run as plain CLI/CI steps. This standard does not use pre-commit/prek; the verification gate is the single entry point.
 
 ## Baseline: pip-audit
 

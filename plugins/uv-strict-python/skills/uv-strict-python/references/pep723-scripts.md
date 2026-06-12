@@ -2,6 +2,8 @@
 
 PEP 723 allows embedding dependency metadata directly in Python scripts, eliminating the need for separate `requirements.txt` or `pyproject.toml` files for simple scripts.
 
+**Scope note:** the Python Tooling SSOT Standard does not (yet) cover single-file scripts — its §19.4 governs script *projects*, which use uv + `pyproject.toml`. This PEP 723 path is a plugin extension for genuinely single-file scripts. The moment a script grows past one file, gains tests, or needs CI, it becomes a project and follows the full standard.
+
 ## When to Use PEP 723
 
 **Use for:**
@@ -83,6 +85,8 @@ uv run script.py
 
 ## Complete Example
 
+The coding standard applies to scripts too: `argparse` by default (Typer/Click only when the CLI is complex enough to justify them), a typed `main()` that returns an exit code, and parsing kept at the boundary.
+
 ```python
 #!/usr/bin/env -S uv run --script
 # /// script
@@ -90,43 +94,56 @@ uv run script.py
 # dependencies = [
 #     "httpx",
 #     "rich",
-#     "typer",
 # ]
 # ///
 
 """Fetch and display API data with nice formatting."""
 
+import argparse
+import sys
+from collections.abc import Sequence
+
 import httpx
-import typer
 from rich.console import Console
 from rich.table import Table
 
 console = Console()
-app = typer.Typer()
 
 
-@app.command()
-def fetch(url: str, format: str = "table"):
-    """Fetch data from URL and display it."""
-    with httpx.Client() as client:
-        response = client.get(url)
-        response.raise_for_status()
-        data = response.json()
-
-    if format == "table" and isinstance(data, list):
+def render(data: object, output_format: str) -> None:
+    """Render the payload as a table when possible, JSON otherwise."""
+    if output_format == "table" and isinstance(data, list) and data:
         table = Table()
-        if data:
-            for key in data[0].keys():
-                table.add_column(key)
-            for item in data:
-                table.add_row(*[str(v) for v in item.values()])
+        for key in data[0]:
+            table.add_column(str(key))
+        for item in data:
+            table.add_row(*[str(value) for value in item.values()])
         console.print(table)
     else:
         console.print_json(data=data)
 
 
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Fetch and display API data.")
+    parser.add_argument("url")
+    parser.add_argument("--format", dest="output_format", default="table", choices=["table", "json"])
+    args = parser.parse_args(argv)
+
+    try:
+        with httpx.Client() as client:
+            response = client.get(args.url)
+            response.raise_for_status()
+            data = response.json()
+    except httpx.HTTPError as exc:
+        print(f"Request failed: {exc}", file=sys.stderr)
+        return 1
+
+    render(data, args.output_format)
+    return 0
+
+
 if __name__ == "__main__":
-    app()
+    sys.exit(main())
 ```
 
 ## Creating Scripts with uv
@@ -152,8 +169,10 @@ uv remove --script myscript.py requests
 
 ### With specific Python version
 
+Only when the script genuinely needs a non-baseline interpreter — the standard's baseline is 3.14:
+
 ```python
-#!/usr/bin/env -S uv run --python 3.12 --script
+#!/usr/bin/env -S uv run --python 3.14 --script
 ```
 
 ### Quiet mode (suppress uv output)
@@ -199,24 +218,31 @@ print(soup.title.string)
 
 ### CLI Tool Script
 
+`argparse` is the default for small CLIs; reach for Typer/Click only when complexity justifies it (subcommand trees, rich completion):
+
 ```python
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.14"
-# dependencies = ["typer", "rich"]
+# dependencies = ["rich"]
 # ///
 
-import typer
+import argparse
+import sys
+
 from rich import print
 
-app = typer.Typer()
 
-@app.command()
-def greet(name: str):
-    print(f"[green]Hello, {name}![/green]")
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("name")
+    args = parser.parse_args()
+    print(f"[green]Hello, {args.name}![/green]")
+    return 0
+
 
 if __name__ == "__main__":
-    app()
+    sys.exit(main())
 ```
 
 ### Async Script
@@ -231,7 +257,7 @@ if __name__ == "__main__":
 import asyncio
 import httpx
 
-async def main():
+async def main() -> None:
     async with httpx.AsyncClient() as client:
         urls = ["https://api1.example.com", "https://api2.example.com"]
         tasks = [client.get(url) for url in urls]

@@ -2,7 +2,7 @@
 
 Companion to the toolchain in this skill. The **Tooling** standard defines the gate that runs; this **Coding** standard defines how code must be _shaped_ before that gate is meaningful. A green gate on badly shaped code is not done.
 
-This is a compact normative summary. It uses RFC 2119 keywords (**MUST**, **MUST NOT**, **SHOULD**, **MAY**) and **must not be read as weakening** the canonical Python Coding Standard, which holds the rationale, sources, and full detail. Where this summary and the canonical standard disagree, the canonical standard wins.
+This is a compact normative summary of the canonical Python Coding Standard **draft v0.4** (`project-standards` commit `a14ac7d`, 2026-06-12 — a reference-only draft; expect it to evolve). It uses RFC 2119 keywords (**MUST**, **MUST NOT**, **SHOULD**, **MAY**) and **must not be read as weakening** the canonical standard, which holds the rationale, sources, and full detail. Where this summary and the canonical standard disagree, the canonical standard wins.
 
 > Core rule: code is not acceptable merely because it passes the tools. It MUST also be explicit, testable, observable, and easy for a future agent to change safely.
 

@@ -16,13 +16,15 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
+# Floors match the adopt-CLI bundle: pytest>=9.0 backs minversion below;
+# ruff>=0.9.0 guarantees the 2025 stable style the curated select set assumes.
 dev = [
     "basedpyright",
     "coverage[toml]",
     "pip-audit",
-    "pytest",
+    "pytest>=9.0",
     "pytest-cov",
-    "ruff",
+    "ruff>=0.9.0",
 ]
 
 [build-system]
@@ -89,8 +91,8 @@ fail_under = 85
 
 | Project type               | `uv.lock` in Git? | Why                              |
 | -------------------------- | ----------------- | -------------------------------- |
-| Application / internal     | ✅ Commit         | Reproducible deploys             |
-| Library for external reuse | ❌ `.gitignore`   | Consumers resolve their own deps |
+| Application / internal     | ✅ Commit         | Standard policy: reproducible deploys |
+| Library for external reuse | ❌ `.gitignore`   | Plugin recommendation (the standard only mandates the app/internal case); consumers resolve their own deps |
 
 ## .editorconfig
 
@@ -198,6 +200,9 @@ jobs:
       # Dependabot bump it. Re-resolve the SHA when adopting.
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
+          # Pin the reviewed uv version when applying this template (best practice
+          # per the uv GitHub Actions guide); Dependabot keeps it current.
+          version: '0.11.6'
           enable-cache: true
 
       - name: Sync dependencies
