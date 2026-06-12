@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
-Canonical SessionStart hook (handoff system v3.0).
+Canonical SessionStart hook (handoff system v3.2).
 
-Tracked source: agent-configs/global/claude/hooks/session_start.py. Installed into
+Tracked source: agent-configs/global/hooks/session_start.py. Installed into
 each Claude-managed repo as a byte-identical copy by scripts/handoff/install-globals.sh and
 verified by hash by scripts/handoff/validate-layout.sh. Do NOT hand-edit the per-repo copy:
 divergent copies were the 2026-05-29 hook-drift finding this version eliminates.
 
-Emits lean startup context (docs/state.md + git branch/log/status + pointers) via
-hookSpecificOutput.additionalContext. Self-budget <=4096 bytes, well under the
+Emits lean startup context (docs/state.md + git branch/log/status + pointers) as JSON
+`additionalContext` (Claude) or plain text on stdout (Codex — a documented context path
+that avoids render bug #16933; `systemMessage` is rejected per official docs as a UI warning,
+not context). Harness detected by `$CLAUDE_PROJECT_DIR` presence; the root is canonicalized
+via `git rev-parse --show-toplevel`. Self-budget <=4096 bytes, well under the
 platform's 10,000-char output cap.
 
 v3.0 fixes over the drifted per-repo copies:
@@ -19,8 +22,13 @@ v3.0 fixes over the drifted per-repo copies:
   character), not by character count.
 - Truncation is not silent: it appends a one-line note to additionalContext.
 
+v3.2 additions:
+- Harness-branched output: JSON additionalContext for Claude, plain stdout for Codex.
+- git_toplevel() canonicalizes a subdir launch cwd to the worktree root so state.md
+  is always found regardless of which directory Codex was started from.
+
 Exit codes:
-  0 — always. Errors are embedded in additionalContext as "(unavailable)"/"(failed)"
+  0 — always. Errors are embedded in context output as "(unavailable)"/"(failed)"
       markers so a hook bug never blocks session start.
 """
 
@@ -112,6 +120,44 @@ def run(cmd: list[str], root: Path) -> str:
         return ""
 
 
+def git_toplevel(start: Path) -> Path:
+    """Canonicalize a launch dir to its git worktree root.
+
+    Codex passes its launch `cwd` (which may be a subdirectory) on stdin; Claude's
+    $CLAUDE_PROJECT_DIR is already the root. Resolving the worktree root makes the
+    state read correct regardless of which subdir Codex was started from. Falls back
+    to `start` when git is unavailable or `start` is not inside a worktree.
+    """
+    out = run(["git", "rev-parse", "--show-toplevel"], start)
+    return Path(out) if out else start
+
+
+def detect_harness() -> str:
+    """Claude exports $CLAUDE_PROJECT_DIR to the hook; Codex does not (it has no
+    env-var equivalent). Presence is the harness signal that drives the output
+    framing below."""
+    return "claude" if os.environ.get("CLAUDE_PROJECT_DIR") else "codex"
+
+
+def emit(ctx: str, harness: str) -> None:
+    """Print the SessionStart payload in the channel each harness reads as context.
+
+    Claude: JSON hookSpecificOutput.additionalContext (proven, silent). Codex: the
+    raw context text on stdout — a *documented* SessionStart context path that
+    sidesteps the additionalContext-JSON visible-render bug (openai/codex#16933).
+    systemMessage is NOT used: official Codex docs class it as a UI/event warning,
+    not a context channel.
+    """
+    if harness == "codex":
+        print(ctx)
+    else:
+        print(
+            json.dumps(
+                {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": ctx}}
+            )
+        )
+
+
 def working_tree(root: Path) -> str:
     out = run(["git", "status", "--short"], root)
     if not out:
@@ -126,7 +172,7 @@ def working_tree(root: Path) -> str:
 
 
 def build_context() -> str:
-    root = project_root()
+    root = git_toplevel(project_root())
     state_file, base = resolve_state(root)
     branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"], root) or "(unknown)"
     commits = (
@@ -152,18 +198,13 @@ def build_context() -> str:
 
 
 def main() -> None:
+    harness = detect_harness()
     try:
         ctx = build_context()
     except Exception:
         # Last-resort guard so a hook bug never blocks session start.
         ctx = "(session_start.py failed: " + traceback.format_exc(limit=1) + ")"
-    output = {
-        "hookSpecificOutput": {
-            "hookEventName": "SessionStart",
-            "additionalContext": ctx,
-        }
-    }
-    print(json.dumps(output))
+    emit(ctx, harness)
     sys.exit(0)
 
 
