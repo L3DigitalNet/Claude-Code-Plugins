@@ -1,0 +1,10 @@
+{
+	"basedpyright": {
+		"command": "bash",
+		"args": ["${CLAUDE_PLUGIN_ROOT}/scripts/basedpyright-lsp.sh"],
+		"extensionToLanguage": {
+			".py": "python",
+			".pyi": "python"
+		}
+	}
+}

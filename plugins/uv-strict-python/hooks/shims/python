@@ -6,6 +6,21 @@ set -euo pipefail
 cmd="$(basename "$0")"
 
 case "${1:-}" in
+  -V | --version)
+    # Version checks are read-only diagnostics — pass through to the real
+    # interpreter by skipping this shim's directory on PATH.
+    shim_dir="$(cd "$(dirname "$0")" && pwd)"
+    IFS=: read -ra path_entries <<<"${PATH:-}"
+    for dir in "${path_entries[@]}"; do
+      resolved="$(cd "$dir" 2>/dev/null && pwd)" || continue
+      [[ "$resolved" == "$shim_dir" ]] && continue
+      if [[ -x "$dir/$cmd" ]]; then
+        exec "$dir/$cmd" "$1"
+      fi
+    done
+    echo "ERROR: real $cmd binary not found on PATH" >&2
+    exit 127
+    ;;
   -m)
     case "${2:-}" in
       pip)

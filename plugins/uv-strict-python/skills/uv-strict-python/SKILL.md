@@ -1,6 +1,6 @@
 ---
 name: uv-strict-python
-description: Configures Python projects to the Python Tooling SSOT Standard (uv, Ruff, BasedPyright strict, pytest+coverage, pip-audit). Use when creating projects, writing standalone scripts, configuring pyproject.toml, or migrating from pip/Poetry/mypy/black/flake8.
+description: Configures Python projects to the Python Tooling SSOT Standard (uv, Ruff, BasedPyright strict, pytest+coverage, pip-audit). Use when creating projects, writing standalone scripts, configuring pyproject.toml, migrating from pip/Poetry/mypy/black/flake8, or auditing a project for conformance to the standard.
 ---
 
 # uv-strict-python
@@ -248,6 +248,22 @@ uv run python -m scripts.check   # if using the wrapper
 ```
 
 See [pyproject.md](./references/pyproject.md) for VS Code and CI specifics.
+
+**Copy scaffolds from [templates/](./templates/) instead of transcribing fenced blocks** — transcription is where typos and drift creep in:
+
+| Template | Destination | Source |
+| --- | --- | --- |
+| [check.py](./templates/check.py) | `scripts/check.py` | adopt-CLI bundle (byte-identical) |
+| [check.yml](./templates/check.yml) | `.github/workflows/check.yml` | adopt-CLI bundle (byte-identical) |
+| [python-version](./templates/python-version) | `.python-version` | adopt-CLI bundle (byte-identical) |
+| [pyproject.python-tooling.toml](./templates/pyproject.python-tooling.toml) | merge into `pyproject.toml` | adopt-CLI bundle (byte-identical) |
+| [editorconfig](./templates/editorconfig) | `.editorconfig` | shared superset (byte-identical) |
+| [vscode-extensions.json](./templates/vscode-extensions.json) | `.vscode/extensions.json` | shared superset (byte-identical) |
+| [vscode-settings.json](./templates/vscode-settings.json) | `.vscode/settings.json` | standard §13 |
+| [vscode-tasks.json](./templates/vscode-tasks.json) | `.vscode/tasks.json` | standard §13 |
+| [adr-python-tooling-exception.md](./templates/adr-python-tooling-exception.md) | `docs/decisions/adr-NNNN-python-tooling-exception.md` | standard §20 skeleton |
+
+The byte-identical templates are enforced against the standards repo by this plugin's `tests/check-standard-sync.sh`.
 
 ### 5. Agent instruction entry points
 

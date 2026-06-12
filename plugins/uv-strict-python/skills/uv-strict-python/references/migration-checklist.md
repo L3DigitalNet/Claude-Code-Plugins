@@ -41,7 +41,15 @@ uv add --dev basedpyright
 uv run basedpyright
 ```
 
-Configure `[tool.basedpyright]` with `typeCheckingMode = "strict"`. For codebases with many existing errors, adopt strictness in stages using BasedPyright **baselines** rather than lowering the final bar.
+Configure `[tool.basedpyright]` with `typeCheckingMode = "strict"`. For codebases with many existing errors, adopt strictness in stages using BasedPyright **baselines** rather than lowering the final bar:
+
+```bash
+uv run basedpyright --writebaseline   # snapshot existing errors into .basedpyright/baseline.json
+```
+
+- Commit `.basedpyright/baseline.json` — baselined (pre-existing) errors stop failing the gate, while **new** code is held to full strict immediately.
+- Fixing a file removes its entries on the next `--writebaseline`; re-run it after cleanup sessions so the baseline only ever shrinks.
+- Never re-run `--writebaseline` to absorb *new* errors — that is the type-weakening anti-pattern the standard prohibits.
 
 ## Step 5 — Add pip-audit
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 # Tests for python/python3 PATH shim
 
-SHIM="${BATS_TEST_DIRNAME}/python"
+SHIMS_DIR="${BATS_TEST_DIRNAME}/../hooks/shims"
+SHIM="${SHIMS_DIR}/python"
 
 @test "exits non-zero for bare python" {
   run "$SHIM"
@@ -40,14 +41,27 @@ SHIM="${BATS_TEST_DIRNAME}/python"
   [[ "$output" == *"uv run python -m http.server"* ]]
 }
 
+@test "passes through python3 --version to the real interpreter" {
+  # Shims dir first proves the shim itself does the pass-through.
+  run env PATH="${SHIMS_DIR}:/usr/bin:/bin" "${SHIMS_DIR}/python3" --version
+  [[ $status -eq 0 ]]
+  [[ "$output" == Python* ]]
+}
+
+@test "passes through python3 -V to the real interpreter" {
+  run env PATH="${SHIMS_DIR}:/usr/bin:/bin" "${SHIMS_DIR}/python3" -V
+  [[ $status -eq 0 ]]
+  [[ "$output" == Python* ]]
+}
+
 @test "works when invoked as python3 via symlink" {
-  run "${BATS_TEST_DIRNAME}/python3"
+  run "${SHIMS_DIR}/python3"
   [[ $status -ne 0 ]]
   [[ "$output" == *"uv run python3"* ]]
 }
 
 @test "python3 -m pip suggests uv add" {
-  run "${BATS_TEST_DIRNAME}/python3" -m pip install foo
+  run "${SHIMS_DIR}/python3" -m pip install foo
   [[ $status -ne 0 ]]
   [[ "$output" == *"uv add"* ]]
 }

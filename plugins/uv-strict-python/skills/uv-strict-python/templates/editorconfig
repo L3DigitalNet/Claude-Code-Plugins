@@ -1,0 +1,34 @@
+# EditorConfig — editor-agnostic whitespace baseline. https://editorconfig.org
+#
+# This is the floor *under* the formatting stack: it makes every editor agree on
+# charset, line endings, final newlines, and indentation before Prettier or any
+# linter runs. The indent rules below mirror reality in this repo — .prettierrc.json
+# emits tabs (so Markdown/JSON/JSONC are tab-indented), while the language
+# toolchains pin their own: Python/TOML use 4 spaces (PEP 8 / ruff), and YAML uses
+# 2 spaces because the YAML spec forbids tabs for indentation.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+indent_size = 2
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.toml]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Two trailing spaces are a Markdown hard line break, which Prettier preserves —
+# so do not strip them here, or the editor and Prettier would disagree on save.
+[*.md]
+trim_trailing_whitespace = false

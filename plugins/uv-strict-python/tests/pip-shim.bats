@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 # Tests for pip/pip3 PATH shim
 
-SHIM="${BATS_TEST_DIRNAME}/pip"
+SHIMS_DIR="${BATS_TEST_DIRNAME}/../hooks/shims"
+SHIM="${SHIMS_DIR}/pip"
 
 @test "exits non-zero for pip install" {
   run "$SHIM" install requests
@@ -32,14 +33,20 @@ SHIM="${BATS_TEST_DIRNAME}/pip"
   [[ "$output" == *"uv"* ]]
 }
 
-@test "exits non-zero for pip show" {
+@test "pip list suggests uv pip list" {
+  run "$SHIM" list
+  [[ $status -ne 0 ]]
+  [[ "$output" == *"uv pip list"* ]]
+}
+
+@test "pip show suggests uv pip show" {
   run "$SHIM" show requests
   [[ $status -ne 0 ]]
-  [[ "$output" == *"uv"* ]]
+  [[ "$output" == *"uv pip show"* ]]
 }
 
 @test "works when invoked as pip3 via symlink" {
-  run "${BATS_TEST_DIRNAME}/pip3" install foo
+  run "${SHIMS_DIR}/pip3" install foo
   [[ $status -ne 0 ]]
   [[ "$output" == *"uv add"* ]]
 }

@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 # Tests for pipx PATH shim
 
-SHIM="${BATS_TEST_DIRNAME}/pipx"
+SHIMS_DIR="${BATS_TEST_DIRNAME}/../hooks/shims"
+SHIM="${SHIMS_DIR}/pipx"
 
 @test "exits non-zero for pipx install" {
   run "$SHIM" install black

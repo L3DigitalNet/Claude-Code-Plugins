@@ -16,11 +16,16 @@ case "${1:-}" in
   freeze)
     echo "ERROR: Use \`uv export\` instead of \`$cmd freeze\`" >&2
     ;;
+  list | show)
+    echo "ERROR: bare \`$cmd ${1}\` is ambiguous about which environment it inspects." >&2
+    echo "  uv pip ${1}            # inspect the project environment" >&2
+    ;;
   *)
     echo "ERROR: Use \`uv\` commands instead of \`$cmd\`" >&2
     echo "  uv add <package>       # install a dependency" >&2
     echo "  uv remove <package>    # remove a dependency" >&2
     echo "  uv sync                # sync environment" >&2
+    echo "  uv pip list            # inspect the project environment" >&2
     ;;
 esac
 

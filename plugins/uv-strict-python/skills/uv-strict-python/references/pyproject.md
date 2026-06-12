@@ -2,6 +2,8 @@
 
 The complete project configuration for the Python Tooling SSOT Standard: `pyproject.toml`, `.editorconfig`, VS Code workspace, CI, and the local check script. Every surface drives the **same** `uv run` commands so CLI, editor, and CI never diverge.
 
+Copy-ready files for everything below ship in [../templates/](../templates/) — prefer copying those over transcribing the fenced blocks (see the template table in SKILL.md).
+
 **Important**: always use `uv add` / `uv remove` to manage dependencies. Do not hand-edit `dependencies` or `[dependency-groups]`, and do not edit `uv.lock`.
 
 ## Canonical pyproject.toml

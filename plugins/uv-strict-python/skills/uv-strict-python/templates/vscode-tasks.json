@@ -1,0 +1,37 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "uv run ruff format --check . && uv run ruff check . && uv run basedpyright && uv run coverage run -m pytest && uv run coverage report && uv run pip-audit",
+			"group": "test",
+			"problemMatcher": []
+		},
+		{
+			"label": "fix",
+			"type": "shell",
+			"command": "uv run ruff format . && uv run ruff check . --fix",
+			"problemMatcher": []
+		},
+		{
+			"label": "test",
+			"type": "shell",
+			"command": "uv run pytest",
+			"group": "test",
+			"problemMatcher": []
+		},
+		{
+			"label": "typecheck",
+			"type": "shell",
+			"command": "uv run basedpyright",
+			"problemMatcher": []
+		},
+		{
+			"label": "audit",
+			"type": "shell",
+			"command": "uv run pip-audit",
+			"problemMatcher": []
+		}
+	]
+}

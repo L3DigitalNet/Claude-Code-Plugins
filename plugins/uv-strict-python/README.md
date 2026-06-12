@@ -40,6 +40,8 @@ This plugin operationalizes the Python Tooling SSOT Standard. Where a project mu
 
 This plugin includes a `SessionStart` hook that prepends PATH shims for `python`, `pip`, `pipx`, and `uv`. When Claude runs a bare `python`, `pip`, or `pipx` command, the shell resolves to the shim, which prints an error with the correct `uv` alternative and exits non-zero. `uv run` is unaffected because it prepends its managed virtualenv's `bin/` to PATH, shadowing the shims.
 
+**Scope gating:** the standard is repository-scoped, so the shims activate only when the project root looks like a Python project (`pyproject.toml`, `.python-version`, or `uv.lock` present). Override per project in `.claude/uv-strict-python.local.md` frontmatter — `shims: always` forces them on (e.g. a polyglot repo whose Python lives in subdirectories), `shims: never` keeps them off, `shims: auto` (default) lets the markers decide.
+
 | Intercepted Command       | Suggested Alternative                |
 | ------------------------- | ------------------------------------ |
 | `python ...`              | `uv run python ...`                  |
@@ -63,3 +65,19 @@ Read-only `uv pip` introspection (`list`, `show`, `tree`, `check`) passes throug
 Commands like `grep python`, `which python`, and `cat python.txt` work normally because `python` is a shell argument, not the command being invoked.
 
 The shims point only at `uv`/`uv tool` equivalents — they are independent of the type-checker and linter choices, so they enforce the standard's "use uv" rule without touching BasedPyright or Ruff.
+
+Read-only diagnostics pass through to the real binaries: `python --version`/`-V`, and `uv pip list|show|tree|check`.
+
+## LSP: BasedPyright Language Server
+
+The plugin ships an LSP integration (`.lsp.json` → `scripts/basedpyright-lsp.sh`) implementing the standard's §13 CLI-agent language-server policy: **BasedPyright is the single Python semantic/type authority** across editing surfaces. The launcher prefers a `uv tool install basedpyright` install and falls back to `uvx --from basedpyright basedpyright-langserver` (downloads on first use).
+
+Do not enable a second Python language server (Pyright, Pylance, python-lsp-server, Jedi) alongside it — one type authority, per the standard. Run `/reload-plugins` after updating; check the `/plugin` Errors tab if diagnostics don't appear.
+
+## Tests
+
+```bash
+plugins/uv-strict-python/tests/run.sh
+```
+
+The wrapper runs the bats suites (shims, hook gating, LSP launcher), then `check-standard-sync.sh` — which fails when the `project-standards` repo has moved past the sync pin recorded in SKILL.md or a template no longer byte-matches its adopt-bundle artifact — and `validate-fenced-blocks.sh`, which parses every fenced `toml`/`json`/`yaml` block in the skill content. Always use the wrapper, never bare `bats` (it hardens PATH against this workstation's find/grep shims).
