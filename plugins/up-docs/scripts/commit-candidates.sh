@@ -15,6 +15,10 @@
 #   fingerprint <repo> <path>           Stable content+status fingerprint for ONE candidate path
 #                                       (captured at disclosure, re-checked before staging).
 set -euo pipefail
+
+# Shim guard (ENV-001): uv-strict-python PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win. Harmless on the remote LXC.
+export PATH="/usr/bin:/bin:$PATH"
 PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
   || { echo "python3 not found" >&2; exit 1; }
 

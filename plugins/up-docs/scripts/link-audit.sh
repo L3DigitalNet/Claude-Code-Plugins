@@ -8,6 +8,10 @@
 # Exit:   0 on success, 1 if curl not found.
 
 set -euo pipefail
+
+# Shim guard (ENV-001): uv-strict-python PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win. Harmless on the remote LXC.
+export PATH="/usr/bin:/bin:$PATH"
 PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
   || { echo '{"error":"python3 not found"}' >&2; exit 1; }
 

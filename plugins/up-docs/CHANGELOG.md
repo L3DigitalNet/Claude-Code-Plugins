@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- All six python3-invoking scripts now prepend /usr/bin:/bin to PATH (ENV-001) — uv-strict-python's session shims blocked bare python3, breaking commit-candidates.sh snapshot during a live /up-docs:all pre-flight (Bug 8 class)
+
 ## [0.13.0] - 2026-06-12
 
 ### Added

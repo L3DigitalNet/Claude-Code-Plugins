@@ -37,6 +37,10 @@
 [ -z "${UP_DOCS_TRANSCRIPT_LOG:-}" ] && exit 0
 
 set -uo pipefail
+
+# Shim guard (ENV-001): uv-strict-python PATH shims intercept bare python3 in
+# Python-project sessions — system dirs must win.
+export PATH="/usr/bin:/bin:$PATH"
 INPUT=$(cat)
 
 # Extract tool_name and only act on Bash (not Read or other tools)
