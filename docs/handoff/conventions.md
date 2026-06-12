@@ -11,6 +11,7 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | DOC-001 | Doc audience split | editing any repo doc — determines prose style vs LLM-first style |
 | DOC-002 | Session start | starting work in this repo |
 | DOC-003 | Convention changes | adding or revising a repo convention |
+| ENV-001 | PATH-shim guard in plugin scripts | a plugin script invokes bare `python3`/`pip`/coreutils via PATH |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
 | TEST-001 | Canonical test frameworks by language | implementing unit tests for a plugin |
 | TEST-002 | Bats wrapper for gnu env compatibility | running bats-core tests on Fedora 44+ with gnu env |
@@ -229,3 +230,23 @@ export GIT_CONFIG_NOSYSTEM=1
 - up-docs commit `bacf529` (file-level bash reference, helpers.bash lines 8-15)
 
 **Related:** TEST-001, TEST-002
+
+## ENV-001. PATH-shim guard in plugin scripts
+
+**Applies when:** a plugin script (hook, helper, test runner) invokes bare `python3`, `pip`, or coreutils (`find`/`grep`) resolved via PATH. **Rule:** Prepend the system directories to PATH at the top of the script, immediately after the shebang/`set` line, so shims never win:
+
+```bash
+# Shim guard: PATH shims (uv-strict-python python3/pip interceptors,
+# interactive find→fd / grep→ugrep accelerators) must not win over the
+# system binaries this script's logic depends on.
+export PATH="/usr/bin:/bin:$PATH"
+```
+
+**Why:** Two shim families live on this workstation's PATH: interactive search accelerators (`find`→fd, `grep`→ugrep — Bug 7, false-green bats) and uv-strict-python's session shims (`python3`/`pip`/`pipx` exit 1 with a "use uv" message — Bug 8, false-negative `detect-unreleased.sh` during a live release). `$(...)` captures swallow the shim's stderr, so the symptom is a wrong answer, not a visible error. Scripts must self-harden rather than depend on the caller's PATH; uv-strict-python 0.2.0's project-type gating reduces exposure but doesn't eliminate it (Python repos still get shims, and other shims exist).
+
+**Sources:**
+
+- Bug 007 (find/grep shims neutered bats discovery) and Bug 008 (python3 shim broke release-pipeline scripts)
+- release-pipeline commit `4f9fd1c` (all 7 python3-invoking scripts), up-docs `d4119ae` (`run-bats.sh`), uv-strict-python `tests/run.sh`
+
+**Related:** TEST-002, BRANCH-001

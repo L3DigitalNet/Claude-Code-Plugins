@@ -19,11 +19,11 @@ This document is the user's visible task list alongside the v3 handoff system. U
 ## User Tracked Tasks
 
 - From [https://github.com/L3DigitalNet/project-standards/tree/main/standards](https://github.com/L3DigitalNet/project-standards/tree/main/standards):
-  - [x] Adopt markdown-tooling
   - [ ] Adopt python-tooling
 
 ## Repo & Agent Tracked Tasks
 
 - [ ] **project-standards follow-ups from the 2026-06-12 uv-strict-python conformance review** (fixes belong in that repo): (1) python-coding §31 claims "No compact agent summary … exists today" but the plugin ships one at `skills/uv-strict-python/references/coding-standard.md` — acknowledge it or note plugin summaries; (2) README §6 dev group is unpinned while the adopt-CLI bundle pins `pytest>=9.0` / `ruff>=0.9.0` — reconcile the two.
-- [x] **uv-strict-python v0.2.0 released** (2026-06-12, tag `uv-strict-python/v0.2.0`). Remaining follow-up: after the next session start (cache sync), verify the BasedPyright LSP loads — `/reload-plugins`, then check the `/plugin` Errors tab.
+- [ ] **Verify uv-strict-python BasedPyright LSP loads** (after next session's cache sync picks up v0.2.0): `/reload-plugins`, then check the `/plugin` Errors tab. Needs `basedpyright-langserver` on PATH or uvx fallback.
+- [ ] **Release release-pipeline** (5 commits pending, incl. Bug 8 PATH-shim hardening `4f9fd1c`) — `/release-pipeline:release`.
 - [ ] **MCP E2E Tests (HA Container) CI is red** — `HA Dev Plugin Tests` → `MCP E2E Tests` job fails: the HA test container's demo integration loads 0 entities, so e2e assertions for `light.bed_light` / `sensor.outside_temperature` etc. fail (13 pass / 10 fail). Pre-existing, environmental (HA version / container onboarding), NOT a dependency issue — surfaced after the 2026-06-08 `typescript-eslint` bump cleared the `npm ci` ERESOLVE that previously masked it. The other 4 HA jobs pass.

@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-09 (uv-strict-python v0.1.0 released — initial release)
+**Last updated:** 2026-06-12 (uv-strict-python v0.2.0 released; release-pipeline PATH-shim fix committed, release pending)
 
 ## Session Instructions
 
@@ -12,8 +12,11 @@
 
 ### (none)
 
-## Recently closed (this session, 2026-06-09)
+## Recently closed (this session, 2026-06-12)
 
-- **uv-strict-python v0.1.0 released.** New plugin implementing the Python Tooling SSOT Standard (uv + Ruff + BasedPyright + pytest/coverage + pip-audit). Registered in `marketplace.json` (6→7 plugins). Pre-flight: added `missing_tests` waiver (bats test at `hooks/setup-shims.bats`, non-standard location). Tag `uv-strict-python/v0.1.0` created, pushed; GitHub release published. Detail in `sessions/2026-06.md`.
+- **uv-strict-python v0.2.0 released** (tag + GitHub release, `c981da1`). Conformance review vs project-standards found 1 direct conflict + drift → fixed (`e57850f`); features (`9d5761b`): scope-gated shims (Python projects only, `.local.md` override), BasedPyright LSP (`.lsp.json`), standard-sync drift test (byte-parity vs adopt bundle + SKILL.md sync pin), scaffold templates, tests→`tests/` (`missing_tests` waiver removed). 50 bats green.
+- **Bug 8 fixed, unreleased** (`4f9fd1c`): uv-strict-python shims blocked bare `python3` in 7 release-pipeline scripts (`detect-unreleased.sh` misreported "not a monorepo" mid-release) → PATH guard added (ENV-001). Ships with next release-pipeline release.
+
+Detail in `sessions/2026-06.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->
