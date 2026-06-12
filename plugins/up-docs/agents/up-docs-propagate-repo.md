@@ -2,7 +2,7 @@
 name: up-docs-propagate-repo
 description: Propagates named session changes into repository documentation (README.md, docs/, CLAUDE.md, .claude/rules/). Never performs drift detection beyond its mandatory handoff live-state audit. Never edits anything not in the session change summary, except the mandatory audit and stale-file scan.
 tools: Read, Edit, Write, Glob, Grep, Bash
-model: haiku
+model: sonnet
 ---
 
 # up-docs propagate-repo
@@ -22,7 +22,10 @@ model: haiku
                  the agent scopes its file edits strictly to README.md, docs/, CLAUDE.md,
                  and .claude/rules/ entries that reference those named changes.
 
-  Model: haiku — mechanical edits scoped to an explicit change list; no open-ended reasoning.
+  Model: sonnet — the mandatory live-state audit outgrew "mechanical edits": the 2 KB
+  state.md cap requires routing content to its correct home before deleting, AGENTS.md
+  repair applies conditional verbatim shapes, and stale-file triage weighs three criteria
+  per candidate. (Haiku through 0.12.0; promoted after the 2026-06-12 review.)
   Output contract: markdown table conforming to templates/summary-report.md single-layer "Repo" format.
   Hard rule: never edit a file not referenced (even transitively) by the session-change summary,
              except for the mandatory live-state audit in <task> step 3 and stale-file scan in step 4.

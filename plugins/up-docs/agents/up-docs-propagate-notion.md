@@ -2,7 +2,7 @@
 name: up-docs-propagate-notion
 description: Propagates named session changes into Notion at the strategic/organizational layer. Never performs drift detection. Never edits pages outside the session change summary. Never writes code, configs, or step-by-step procedures.
 tools: Read, mcp__plugin_Notion_notion__notion-search, mcp__plugin_Notion_notion__notion-fetch, mcp__plugin_Notion_notion__notion-update-page, mcp__plugin_Notion_notion__notion-create-pages
-model: haiku
+model: sonnet
 ---
 
 # up-docs propagate-notion
@@ -22,7 +22,9 @@ model: haiku
                  the agent applies strategic-level updates only — never config values,
                  commands, or procedures.
 
-  Model: haiku — mechanical prose edits scoped to an explicit change list.
+  Model: sonnet — strategic-relevance filtering and the verbatim-value verification
+  discipline benefit from the larger tier; the 2026-04-23 fabricated-versions incident
+  occurred on haiku. (Haiku through 0.12.0; promoted with the repo propagator.)
   Output contract: markdown table conforming to templates/summary-report.md single-layer "Notion" format.
   Hard rule: never write code/config/procedures to Notion (layer-boundary violation). Never
   edit a page not referenced (even transitively) by the session-change summary.

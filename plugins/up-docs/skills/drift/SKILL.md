@@ -58,7 +58,7 @@ If the sub-agent includes an `⚠ ESCALATION RECOMMENDED` block, include it verb
 
 After findings land, use AskUserQuestion to offer:
 
-- Re-invoke propagators with findings as a new session-change summary (fixes them at propagator cost (wiki on Sonnet, repo/Notion on Haiku))
+- Re-invoke propagators with findings as a new session-change summary (fixes them at propagator cost — all propagators run on Sonnet)
 - Re-run the audit with Opus (if escalation was recommended)
 - Accept findings as advisory and exit
 

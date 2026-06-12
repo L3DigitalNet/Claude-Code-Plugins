@@ -4,7 +4,7 @@ Update documentation across three layers (repo, llm-wiki, Notion) based on what 
 
 ## Summary
 
-Documentation lives in three places with different purposes: repo-local files capture project-specific details, llm-wiki holds implementation-level reference material, and Notion maintains strategic context and organizational knowledge. Keeping all three in sync after a work session means explaining the same layering rules every time. up-docs encodes those rules into five slash commands, each of which dispatches a dedicated sub-agent on the model tier that fits its workload: Haiku for the repo and Notion propagators (mechanical edits scoped to an explicit change list) and Sonnet for the wiki propagator and drift detection (the wiki layer's llm-wiki contract + validators, and search-plus-infer drift work).
+Documentation lives in three places with different purposes: repo-local files capture project-specific details, llm-wiki holds implementation-level reference material, and Notion maintains strategic context and organizational knowledge. Keeping all three in sync after a work session means explaining the same layering rules every time. up-docs encodes those rules into five slash commands, each of which dispatches a dedicated sub-agent, all pinned to Sonnet: the repo propagator's mandatory handoff audit routes content between files, enforces byte caps, and triages stale candidates; the wiki propagator carries the llm-wiki contract + validators; the Notion propagator's strategic filtering and verbatim-value discipline proved too error-prone on a smaller tier; and drift detection is search-plus-infer work throughout.
 
 ## Principles
 
@@ -104,9 +104,9 @@ claude --plugin-dir ./plugins/up-docs
 flowchart TD
     User([User]) -->|"/up-docs:all"| Orchestrator[Orchestrator skill<br/>gather context + build<br/>session-change summary]
     Orchestrator --> Dispatch[Parallel dispatch<br/>via Agent tool]
-    Dispatch --> Repo[up-docs-propagate-repo<br/>Haiku]
+    Dispatch --> Repo[up-docs-propagate-repo<br/>Sonnet]
     Dispatch --> Wiki[up-docs-propagate-wiki<br/>Sonnet]
-    Dispatch --> Notion[up-docs-propagate-notion<br/>Haiku]
+    Dispatch --> Notion[up-docs-propagate-notion<br/>Sonnet]
     Repo --> Audit[up-docs-audit-drift<br/>Sonnet]
     Wiki --> Audit
     Notion --> Audit
@@ -118,7 +118,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     User([User]) -->|"/up-docs:repo<br/>/up-docs:wiki<br/>/up-docs:notion"| Wrapper[Thin wrapper skill<br/>builds session-change summary]
-    Wrapper --> Agent["Single propagator sub-agent<br/>Haiku (repo/Notion) / Sonnet (wiki), isolated context"]
+    Wrapper --> Agent["Single propagator sub-agent<br/>Sonnet, isolated context"]
     Agent --> Table((Single-layer<br/>summary table))
 ```
 
@@ -189,12 +189,12 @@ The mapping is intentionally loose. It points to the general area and lets Claud
 
 | Agent | Model | Role |
 | --- | --- | --- |
-| `up-docs-propagate-repo` | Haiku | Mechanical edits to README.md, docs/, CLAUDE.md scoped to the session-change summary |
+| `up-docs-propagate-repo` | Sonnet | Edits to README.md, docs/, CLAUDE.md scoped to the session-change summary, plus the mandatory handoff live-state audit (byte-cap routing, AGENTS.md repair, stale-file triage) |
 | `up-docs-propagate-wiki` | Sonnet | Edits/creates llm-wiki wiki/ pages at implementation-reference level under the llm-wiki contract |
-| `up-docs-propagate-notion` | Haiku | Mechanical edits to Notion at strategic/organizational level; never writes configs or procedures |
+| `up-docs-propagate-notion` | Sonnet | Edits to Notion at strategic/organizational level; never writes configs or procedures |
 | `up-docs-audit-drift` | Sonnet | Read-only drift scan across all three layers with live-state verification; never auto-fixes |
 
-Per-agent `model:` frontmatter overrides the caller's model tier, so the repo and Notion propagators run on Haiku (≈ 1/10 Opus cost); the wiki propagator runs on Sonnet given its llm-wiki contract — even when the orchestrator was invoked from an Opus session.
+Per-agent `model:` frontmatter overrides the caller's model tier, so all four sub-agents run on Sonnet — cheaper than the Opus session that typically invokes the orchestrator, but with enough reasoning for the handoff audit's judgment work and the Notion layer's verbatim-value discipline (both ran on Haiku through 0.12.0; the repo audit outgrew it and the Notion layer's 2026-04-23 fabricated-versions incident argued against it).
 
 ## Planned Features
 

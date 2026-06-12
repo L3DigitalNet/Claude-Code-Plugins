@@ -6,7 +6,7 @@ allowed-tools: Read, Bash, Agent, AskUserQuestion
 
 # /up-docs:all
 
-Orchestrates up-docs: gather session context, build a canonical session-change summary, dispatch three propagator sub-agents in parallel — repo + Notion on Haiku, wiki on Sonnet — then run the drift auditor (Sonnet), and collate all output into a single combined report.
+Orchestrates up-docs: gather session context, build a canonical session-change summary, dispatch three propagator sub-agents in parallel (all on Sonnet), then run the drift auditor (Sonnet), and collate all output into a single combined report.
 
 ## Architecture
 
@@ -16,9 +16,9 @@ This skill (orchestrator, inherits caller model)
   ├─ run context-gather.sh once
   ├─ assemble canonical session-change summary
   │
-  ├─▶ up-docs-propagate-repo     (Haiku, parallel)
+  ├─▶ up-docs-propagate-repo     (Sonnet, parallel)
   ├─▶ up-docs-propagate-wiki     (Sonnet, parallel)
-  ├─▶ up-docs-propagate-notion   (Haiku, parallel)
+  ├─▶ up-docs-propagate-notion   (Sonnet, parallel)
   │
   ├─▶ up-docs-audit-drift        (Sonnet, after propagators complete)
   │

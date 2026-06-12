@@ -6,7 +6,7 @@ allowed-tools: Read, Bash, Agent, AskUserQuestion
 
 # /up-docs:repo
 
-Update the active repo's docs via the `up-docs-propagate-repo` sub-agent (Haiku).
+Update the active repo's docs via the `up-docs-propagate-repo` sub-agent (Sonnet).
 
 ## Workflow
 

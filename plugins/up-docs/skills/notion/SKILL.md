@@ -6,7 +6,7 @@ allowed-tools: Read, Bash, Agent
 
 # /up-docs:notion
 
-Update Notion via the `up-docs-propagate-notion` sub-agent (Haiku).
+Update Notion via the `up-docs-propagate-notion` sub-agent (Sonnet).
 
 ## Workflow
 

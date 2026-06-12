@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- Repo and Notion propagators promoted Haiku → Sonnet (all four sub-agents now run on Sonnet). The repo propagator's mandatory handoff audit outgrew "mechanical edits" (2 KB cap content-routing, AGENTS.md verbatim-shape repair, three-criteria stale-file triage); the Notion propagator's strategic filtering and verbatim-value discipline argued against the smaller tier (the 2026-04-23 fabricated-versions incident occurred on Haiku). plugin.json/marketplace descriptions, README diagrams + agents table, and skill text updated to match.
 - Skill frontmatter `name:` fields aligned to their directory names (`up-all` → `all`, etc. — the directory form is what `/up-docs:<name>` invocation and all docs use); empty `argument-hint` fields dropped.
 - `up-docs-propagate-notion` tools trimmed to `Read` + the four Notion MCP tools (Bash/Glob/Grep were never used by its task — least privilege).
 - `/up-docs:drift` description now states the read-only contract up front.
