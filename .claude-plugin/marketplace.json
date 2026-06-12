@@ -65,7 +65,7 @@
     {
       "name": "qdev",
       "description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
