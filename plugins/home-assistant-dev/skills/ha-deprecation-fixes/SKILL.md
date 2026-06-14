@@ -20,14 +20,15 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.ssdp import SsdpServiceInfo
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.usb import UsbServiceInfo
-from homeassistant.components.bluetooth import BluetoothServiceInfo
 
 # NEW (use these)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+# Note: Bluetooth ServiceInfo was NOT part of the 2025.1 relocation — it remains
+# at `from homeassistant.components.bluetooth import BluetoothServiceInfo`.
 ```
 
 ## hass.data[DOMAIN] → runtime_data (2024.8+)
