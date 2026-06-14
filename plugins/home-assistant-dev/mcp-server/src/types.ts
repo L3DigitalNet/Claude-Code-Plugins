@@ -213,6 +213,7 @@ export interface ValidateStringsInput {
 
 export interface ValidateStringsOutput {
   valid: boolean;
+  errors?: string[];
   missing_steps: string[];
   orphaned_steps: string[];
   missing_errors: string[];

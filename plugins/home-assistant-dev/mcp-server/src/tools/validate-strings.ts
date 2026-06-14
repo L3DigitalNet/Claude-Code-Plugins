@@ -10,9 +10,20 @@ import type { ValidateStringsInput, ValidateStringsOutput } from "../types.js";
 export async function handleValidateStrings(
   input: ValidateStringsInput
 ): Promise<ValidateStringsOutput> {
+  // Return a structured invalid result for file/JSON errors (matching the Python twin
+  // and validate-manifest), rather than throwing.
+  const failure = (message: string): ValidateStringsOutput => ({
+    valid: false,
+    errors: [message],
+    missing_steps: [],
+    orphaned_steps: [],
+    missing_errors: [],
+    missing_data_descriptions: [],
+  });
+
   // Check file exists
   if (!existsSync(input.path)) {
-    throw new Error(`File not found: ${input.path}`);
+    return failure(`strings.json not found: ${input.path}`);
   }
 
   // Parse strings.json
@@ -22,7 +33,7 @@ export async function handleValidateStrings(
     strings = JSON.parse(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid JSON in strings.json: ${message}`, { cause: err });
+    return failure(`Invalid JSON in strings.json: ${message}`);
   }
 
   // Extract steps, errors, aborts from strings.json
