@@ -11,8 +11,12 @@ It is a standalone CLI: the /generate-integration command produces docs inline a
 not invoke this script — run it manually to (re)generate docs for an existing integration
 (also exercised in tests/e2e/E2E_CHECKLIST.md section 3.4).
 
+Existing README.md/info.md are never silently overwritten: without --force the
+generated content is diverted to README.generated.md / info.generated.md for manual
+merge; with --force the existing file is backed up to <name>.bak first.
+
 Usage:
-    python generate-docs.py <path/to/custom_components/domain>
+    python generate-docs.py [--force] <path/to/custom_components/domain>
     python generate-docs.py  # Auto-detect in current directory
 """
 from __future__ import annotations
@@ -37,6 +41,8 @@ class IntegrationInfo:
     issue_tracker: str = ""
     iot_class: str = ""
     integration_type: str = ""
+    # Minimum supported HA version, read from manifest/hacs.json when present.
+    min_ha_version: str = ""
     codeowners: list[str] = field(default_factory=list)
     requirements: list[str] = field(default_factory=list)
 
@@ -93,14 +99,6 @@ def extract_config_flow_info(integration_path: Path) -> dict[str, Any]:
         "has_options": "OptionsFlow" in content,
     }
 
-    # Extract fields from vol.Schema
-    # This is a simplified extraction - real implementation would use AST
-    schema_matches = re.findall(
-        r"vol\.(Required|Optional)\s*\(\s*([A-Z_]+|[\"'][^\"']+[\"'])",
-        content,
-    )
-    info["fields"] = [m[1].strip("\"'") for m in schema_matches]
-
     return info
 
 
@@ -144,6 +142,19 @@ def analyze_integration(integration_path: Path) -> IntegrationInfo:
     info.codeowners = manifest.get("codeowners", [])
     info.requirements = manifest.get("requirements", [])
 
+    # Minimum HA version: manifest "homeassistant" key takes priority, then
+    # hacs.json's "homeassistant" key (the conventional HACS location) at repo root.
+    info.min_ha_version = str(manifest.get("homeassistant", "") or "")
+    if not info.min_ha_version:
+        hacs_path = integration_path.parent.parent / "hacs.json"
+        if hacs_path.exists():
+            try:
+                with open(hacs_path) as f:
+                    hacs = json.load(f)
+                info.min_ha_version = str(hacs.get("homeassistant", "") or "")
+            except (json.JSONDecodeError, OSError):
+                pass
+
     # Extract platforms
     info.platforms = extract_platforms(integration_path)
 
@@ -162,7 +173,33 @@ def analyze_integration(integration_path: Path) -> IntegrationInfo:
     return info
 
 
-def generate_readme(info: IntegrationInfo, output_path: Path) -> None:
+def write_doc(content: str, output_path: Path, force: bool) -> None:
+    """Write generated doc without silently clobbering a curated file.
+
+    If output_path exists: with force, back it up to <name>.bak before
+    overwriting; without force, divert the write to <stem>.generated<suffix>
+    so the hand-maintained original is left untouched for the user to merge.
+    """
+    if output_path.exists():
+        if force:
+            backup_path = output_path.with_name(output_path.name + ".bak")
+            backup_path.write_text(output_path.read_text())
+            print(f"Backed up existing {output_path.name} to {backup_path.name}")
+            output_path.write_text(content)
+            print(f"Generated: {output_path}")
+        else:
+            diverted = output_path.with_name(f"{output_path.stem}.generated{output_path.suffix}")
+            diverted.write_text(content)
+            print(
+                f"Existing {output_path.name} left untouched; wrote {diverted.name} instead "
+                f"(merge manually, or re-run with --force to overwrite)"
+            )
+    else:
+        output_path.write_text(content)
+        print(f"Generated: {output_path}")
+
+
+def generate_readme(info: IntegrationInfo, output_path: Path, force: bool = False) -> None:
     """Generate README.md."""
     # Build feature list
     features = []
@@ -249,13 +286,16 @@ Home Assistant integration for {info.name}.
 MIT
 """
 
-    output_path.write_text(readme)
-    print(f"Generated: {output_path}")
+    write_doc(readme, output_path, force)
 
 
-def generate_hacs_info(info: IntegrationInfo, output_path: Path) -> None:
+def generate_hacs_info(info: IntegrationInfo, output_path: Path, force: bool = False) -> None:
     """Generate info.md for HACS."""
     platforms_str = "\n".join(f"- {p.title()}" for p in info.platforms) if info.platforms else "- See integration"
+
+    # Prefer the manifest/hacs.json-derived minimum; fall back to the plugin's
+    # modern-HA baseline rather than a stale hardcoded floor.
+    min_ha_version = info.min_ha_version or "2025.1.0"
 
     hacs_info = f"""# {info.name}
 
@@ -263,7 +303,7 @@ Home Assistant integration for {info.name}.
 
 ## Requirements
 
-- Home Assistant 2024.1.0 or later
+- Home Assistant {min_ha_version} or later
 
 ## Features
 
@@ -279,22 +319,25 @@ Home Assistant integration for {info.name}.
 After installation, add the integration through Settings → Devices & Services.
 """
 
-    output_path.write_text(hacs_info)
-    print(f"Generated: {output_path}")
+    write_doc(hacs_info, output_path, force)
 
 
 def main() -> int:
     """Main entry point."""
+    args = sys.argv[1:]
+    force = "--force" in args
+    positional = [a for a in args if not a.startswith("-")]
+
     # Find integration path
-    if len(sys.argv) > 1:
-        integration_path = Path(sys.argv[1])
+    if positional:
+        integration_path = Path(positional[0])
     else:
         # Try to auto-detect
         candidates = list(Path(".").glob("custom_components/*/manifest.json"))
         if candidates:
             integration_path = candidates[0].parent
         else:
-            print("Usage: generate-docs.py <path/to/custom_components/domain>")
+            print("Usage: generate-docs.py [--force] <path/to/custom_components/domain>")
             return 1
 
     if not integration_path.exists():
@@ -315,8 +358,8 @@ def main() -> int:
 
     # Generate documentation
     repo_root = integration_path.parent.parent
-    generate_readme(info, repo_root / "README.md")
-    generate_hacs_info(info, repo_root / "info.md")
+    generate_readme(info, repo_root / "README.md", force=force)
+    generate_hacs_info(info, repo_root / "info.md", force=force)
 
     print()
     print("Documentation generated! Review and customize as needed.")
