@@ -7,6 +7,8 @@ description: Device triggers for Home Assistant automation. Use when implementin
 
 Device triggers allow automations to be triggered by device-specific events, like button presses or motion detection.
 
+> Note: Device triggers/conditions/actions are optional UX features, not Integration Quality Scale (IQS) rules — unlike diagnostics and repairs, they are not among the 52 IQS rules. Don't implement them to advance an IQS tier; only add them when the device genuinely benefits from device-based automation.
+
 ## When to Use Device Triggers
 
 Use device triggers when:
