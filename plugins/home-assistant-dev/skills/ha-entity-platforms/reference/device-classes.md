@@ -71,4 +71,4 @@
 
 ## Button Device Classes
 
-`IDENTIFY` (entity_category must be DIAGNOSTIC), `RESTART`, `UPDATE`
+`IDENTIFY` (commonly paired with entity_category=DIAGNOSTIC), `RESTART`, `UPDATE`
