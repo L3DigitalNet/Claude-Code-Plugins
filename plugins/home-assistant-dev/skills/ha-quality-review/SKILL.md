@@ -1,7 +1,6 @@
 ---
 name: ha-quality-review
 description: Review a Home Assistant integration against the Integration Quality Scale (IQS). Covers all 52 official rules across Bronze, Silver, Gold, and Platinum tiers. Use when asked to review, quality check, assess for core PR, HACS submission, or IQS compliance.
-disable-model-invocation: true
 ---
 
 # Home Assistant Integration Quality Scale Review
@@ -85,7 +84,7 @@ The Integration Quality Scale has **4 tiers** and **52 rules**:
 ### Maintenance
 
 - [ ] **integration-owner**: Has active codeowner in manifest.json
-- [ ] **test-coverage**: ≥95% test coverage
+- [ ] **test-coverage**: Above 95% test coverage across all integration modules (>95%, not ≥95% — exactly 95% fails the official rule)
 
 ### Documentation
 
