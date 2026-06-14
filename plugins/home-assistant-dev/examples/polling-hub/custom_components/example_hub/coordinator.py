@@ -78,10 +78,10 @@ class ExampleHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             _LOGGER.debug("Connected to Example Hub: %s", self.device_info["name"])
 
-        except AuthenticationError as err:
+        except HubAuthError as err:
             # This triggers the reauth flow
             raise ConfigEntryAuthFailed("Invalid credentials") from err
-        except ConnectionError as err:
+        except HubConnectionError as err:
             # This will be caught by async_config_entry_first_refresh
             # and converted to ConfigEntryNotReady
             raise UpdateFailed(f"Error connecting to device: {err}") from err
@@ -118,10 +118,10 @@ class ExampleHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             return data
 
-        except AuthenticationError as err:
+        except HubAuthError as err:
             # Credentials expired - trigger reauth
             raise ConfigEntryAuthFailed("Authentication expired") from err
-        except ConnectionError as err:
+        except HubConnectionError as err:
             # Device offline - will retry on next interval
             # DataUpdateCoordinator logs once when this happens
             raise UpdateFailed(f"Error communicating with device: {err}") from err
@@ -129,9 +129,9 @@ class ExampleHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 # Exception classes for the example
 # In a real integration, these would come from your client library
-class AuthenticationError(Exception):
+class HubAuthError(Exception):
     """Error indicating authentication failure."""
 
 
-class ConnectionError(Exception):
+class HubConnectionError(Exception):
     """Error indicating connection failure."""
