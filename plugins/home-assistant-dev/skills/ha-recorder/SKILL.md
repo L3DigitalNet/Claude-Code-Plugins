@@ -98,7 +98,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
@@ -125,7 +129,7 @@ async def async_import_historical_data(
     statistic_id = f"{DOMAIN}:energy_{entry.entry_id}"
 
     metadata = StatisticMetaData(
-        has_mean=False,
+        mean_type=StatisticMeanType.NONE,
         has_sum=True,
         name="Energy Consumption",
         source=DOMAIN,
@@ -159,6 +163,8 @@ async def async_import_historical_data(
     # Import the statistics
     async_add_external_statistics(hass, metadata, statistics)
 ```
+
+> **Recorder statistics API change (2025-10-16):** `StatisticMetaData` now takes `mean_type` (a `StatisticMeanType`: `NONE` / `ARITHMETIC` / `CIRCULAR`) instead of `has_mean`, and `async_import_statistics` / `async_add_external_statistics` accept an optional `unit_class`. Re-validate any statistics calls against [the breaking-change blog](https://developers.home-assistant.io/blog/2025/10/16/recorder-statistics-api-changes).
 
 ## Querying History
 
