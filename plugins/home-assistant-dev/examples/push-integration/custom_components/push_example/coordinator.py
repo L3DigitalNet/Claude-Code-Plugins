@@ -116,7 +116,7 @@ class PushCoordinator:
                 self.data = {
                     "temperature": round(20 + random.uniform(-2, 2), 1),
                     "motion": random.choice([True, False]),
-                    "last_update": asyncio.get_event_loop().time(),
+                    "last_update": self.hass.loop.time(),
                 }
 
                 # Notify all entities of the update
