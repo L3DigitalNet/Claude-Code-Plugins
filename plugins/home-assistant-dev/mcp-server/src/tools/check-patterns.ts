@@ -2,7 +2,7 @@
  * check_patterns tool - Check for anti-patterns and deprecations
  */
 
-import { readFile, readdir, stat } from "fs/promises";
+import { readFile, readdir, realpath, stat } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
 import type { CheckPatternsInput, CheckPatternsOutput, PatternIssue } from "../types.js";
@@ -35,19 +35,22 @@ const PATTERNS: Pattern[] = [
   {
     name: "old-zeroconf-import",
     pattern: /from homeassistant\.components\.zeroconf import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.zeroconf (changed in 2025.1)",
+    message:
+      "Import ZeroconfServiceInfo from homeassistant.helpers.service_info.zeroconf (changed in 2025.1)",
     severity: "warning",
   },
   {
     name: "old-ssdp-import",
     pattern: /from homeassistant\.components\.ssdp import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.ssdp (changed in 2025.1)",
+    message:
+      "Import SsdpServiceInfo from homeassistant.helpers.service_info.ssdp (changed in 2025.1)",
     severity: "warning",
   },
   {
     name: "old-dhcp-import",
     pattern: /from homeassistant\.components\.dhcp import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.dhcp (changed in 2025.1)",
+    message:
+      "Import DhcpServiceInfo from homeassistant.helpers.service_info.dhcp (changed in 2025.1)",
     severity: "warning",
   },
 
@@ -109,11 +112,15 @@ const PATTERNS: Pattern[] = [
     severity: "warning",
   },
 
-  // Blocking I/O - additional
+  // Blocking I/O - additional.
+  // Regex + message kept in sync with scripts/check-patterns.py blocking-open so
+  // the MCP tool and the script/hook agree: one level of nested parens is allowed
+  // (so open(os.path.join(a, b)).read() matches) and only the chained-on-one-line
+  // open(...).read(...) form is flagged.
   {
     name: "blocking-open",
-    pattern: /\bopen\s*\([^)]*\)\s*\.\s*read\s*\(/g,
-    message: "Use aiofiles for async file operations",
+    pattern: /\bopen\s*\((?:[^()]|\([^()]*\))+\)\.read\s*\(/g,
+    message: "Use aiofiles or hass.async_add_executor_job for file I/O",
     severity: "warning",
   },
 
@@ -121,11 +128,18 @@ const PATTERNS: Pattern[] = [
   {
     name: "old-usb-import",
     pattern: /from homeassistant\.components\.usb import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.usb (changed in 2025.1)",
+    message:
+      "Import UsbServiceInfo from homeassistant.helpers.service_info.usb (changed in 2025.1)",
     severity: "warning",
   },
 
   // Deprecated async patterns
+  {
+    name: "yield-from",
+    pattern: /\byield\s+from\b/g,
+    message: "Use 'await' instead of 'yield from' for coroutines",
+    severity: "warning",
+  },
   {
     name: "asyncio-coroutine",
     pattern: /@asyncio\.coroutine/g,
@@ -162,11 +176,47 @@ const PATTERNS: Pattern[] = [
   },
 ];
 
+// Precompute the byte offset at which each line starts. lineStarts[i] is the
+// index in `content` of the first character of line (i+1). Built once per file so
+// a match offset can be mapped to a line number by binary search instead of
+// re-slicing the whole prefix per match (F148: that was O(matches * filesize)).
+function computeLineStarts(content: string): number[] {
+  const starts = [0];
+  for (let i = 0; i < content.length; i++) {
+    if (content.charCodeAt(i) === 10 /* \n */) {
+      starts.push(i + 1);
+    }
+  }
+  return starts;
+}
+
+// Return the 1-based line number containing `offset`, via binary search over the
+// precomputed line-start offsets.
+function lineNumberAt(lineStarts: number[], offset: number): number {
+  let lo = 0;
+  let hi = lineStarts.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (lineStarts[mid] <= offset) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return lo + 1;
+}
+
+// Inline suppression markers (F154): a flagged line carrying one of these
+// (typically as a trailing comment) is skipped — an escape-hatch so intentional
+// anti-patterns in fixtures/legacy snippets don't recur as errors on every write.
+const IGNORE_MARKER = /#\s*(?:noqa:\s*ha-dev|ha-dev:\s*ignore)\b/;
+
 async function checkFile(filePath: string): Promise<PatternIssue[]> {
   const issues: PatternIssue[] = [];
 
   const content = await readFile(filePath, "utf-8");
   const lines = content.split("\n");
+  const lineStarts = computeLineStarts(content);
 
   for (const pattern of PATTERNS) {
     // Reset regex state
@@ -174,15 +224,18 @@ async function checkFile(filePath: string): Promise<PatternIssue[]> {
 
     let match;
     while ((match = pattern.pattern.exec(content)) !== null) {
-      // Find line number
-      const beforeMatch = content.slice(0, match.index);
-      const lineNum = (beforeMatch.match(/\n/g) || []).length + 1;
+      // Find line number (binary search over precomputed line offsets — see F148)
+      const lineNum = lineNumberAt(lineStarts, match.index);
 
       // Skip if in a comment. This is a regex-based heuristic, not an AST: it does not
       // understand `#` inside string literals or multi-line triple-quoted blocks, so
       // suppression here is best-effort.
       const line = lines[lineNum - 1] || "";
       if (line.trim().startsWith("#")) {
+        continue;
+      }
+      // Honor an inline suppression marker on the matched line (F154).
+      if (IGNORE_MARKER.test(line)) {
         continue;
       }
       // Also skip matches that fall after an inline `#` comment on the same line.
@@ -222,15 +275,73 @@ async function checkFile(filePath: string): Promise<PatternIssue[]> {
     });
   }
 
+  // File-level check: a concrete entity class with no unique_id. Ported from the
+  // Python check-patterns.py FILE_LEVEL_CHECKS missing-unique-id (F158) so the
+  // MCP tool and the script/hook flag the same files. Only concrete platform
+  // entity classes are flagged; base classes (CoordinatorEntity, etc.)
+  // intentionally delegate unique_id to subclasses.
+  if (
+    /class\s+\w+\([^)]*\b(?:Sensor|Switch|BinarySensor|Light|Cover|Climate|Button|Number|Select|Fan|Lock|MediaPlayer|Vacuum|Event|Text|Update|Image|Siren|Lawn[Mm]ower)Entity/.test(
+      content
+    ) &&
+    !/_attr_unique_id\s*=|self\.unique_id\s*=|def\s+unique_id\b|async_set_unique_id\s*\(|unique_id\s*=/.test(
+      content
+    )
+  ) {
+    issues.push({
+      file: filePath,
+      line: 1,
+      pattern: "missing-unique-id",
+      message: "Entity class may be missing unique_id",
+      severity: "warning",
+    });
+  }
+
   return issues;
+}
+
+// Test fixtures intentionally contain anti-patterns, so exclude them by default
+// (F154) to keep the PostToolUse hook from reporting them as real errors.
+const excludeDirs = new Set([
+  ".git",
+  "__pycache__",
+  ".venv",
+  "venv",
+  "node_modules",
+  "tests",
+]);
+
+function isTestFile(name: string): boolean {
+  return name.startsWith("test_") && name.endsWith(".py");
 }
 
 async function checkDirectory(dirPath: string): Promise<PatternIssue[]> {
   const issues: PatternIssue[] = [];
-  const excludeDirs = new Set([".git", "__pycache__", ".venv", "venv", "node_modules"]);
+  // Track resolved real paths so a symlink cycle does not recurse forever (F149).
+  const visited = new Set<string>();
 
   async function walk(dir: string): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true });
+    // Resolve symlinks to a canonical path and skip dirs already visited; on a
+    // realpath failure fall back to the lexical path so the walk still proceeds.
+    let real: string;
+    try {
+      real = await realpath(dir);
+    } catch {
+      real = dir;
+    }
+    if (visited.has(real)) {
+      return;
+    }
+    visited.add(real);
+
+    // F149: an unreadable dir (permissions, broken symlink) must skip and let the
+    // rest of the scan continue, not abort the whole check_patterns call.
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
 
     for (const entry of entries) {
       const fullPath = join(dir, entry.name);
@@ -239,7 +350,7 @@ async function checkDirectory(dirPath: string): Promise<PatternIssue[]> {
         if (!excludeDirs.has(entry.name)) {
           await walk(fullPath);
         }
-      } else if (entry.isFile() && entry.name.endsWith(".py")) {
+      } else if (entry.isFile() && entry.name.endsWith(".py") && !isTestFile(entry.name)) {
         const fileIssues = await checkFile(fullPath);
         issues.push(...fileIssues);
       }
