@@ -80,6 +80,16 @@ export class HaClient {
         components: string[];
       }>({ type: "get_config" });
 
+      // sendMessagePromise casts the response to the generic with no runtime check;
+      // minimally validate the get_config shape before trusting it for connection info.
+      if (
+        !haConfig ||
+        typeof haConfig.version !== "string" ||
+        !Array.isArray(haConfig.components)
+      ) {
+        throw new Error("Unexpected response from Home Assistant get_config");
+      }
+
       this.connectionInfo = {
         connected: true,
         version: haConfig.version,
