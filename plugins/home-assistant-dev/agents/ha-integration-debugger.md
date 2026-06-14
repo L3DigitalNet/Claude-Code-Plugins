@@ -78,7 +78,6 @@ mypy .
 ```python
 [problematic code]
 ```
-````
 
 **After:**
 
@@ -89,7 +88,4 @@ mypy .
 ### Prevention
 
 [Test or pattern to prevent recurrence]
-
-```text
-
-```
+````
