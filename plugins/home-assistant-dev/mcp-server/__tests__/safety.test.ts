@@ -28,6 +28,21 @@ describe('SafetyChecker', () => {
       expect(result.reason).toContain('blocked list');
     });
 
+    it('should block wildcard-matched services without catching other domains', () => {
+      const checker = new SafetyChecker({ ...defaultConfig, blockedServices: ['light.*'] });
+
+      expect(checker.checkServiceCall('light', 'turn_on', true).allowed).toBe(false);
+      expect(checker.checkServiceCall('light', 'turn_off', true).allowed).toBe(false);
+      expect(checker.checkServiceCall('switch', 'turn_on', true).allowed).toBe(true);
+    });
+
+    it('should treat the dot in a wildcard pattern as a literal', () => {
+      const checker = new SafetyChecker({ ...defaultConfig, blockedServices: ['light.*'] });
+
+      // 'lightx' must not match 'light.*' — the escaped dot is literal, not "any char".
+      expect(checker.checkServiceCall('lightx', 'turn_on', true).allowed).toBe(true);
+    });
+
     it('should require dry-run for non-safe domains', () => {
       const checker = new SafetyChecker(defaultConfig);
       const result = checker.checkServiceCall('light', 'turn_on', false);
