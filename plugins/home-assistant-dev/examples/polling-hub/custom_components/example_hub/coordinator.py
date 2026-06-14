@@ -41,6 +41,7 @@ class ExampleHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_interval=timedelta(seconds=scan_interval),
             always_update=False,  # Only notify listeners when data actually changes
         )
