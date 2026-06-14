@@ -49,9 +49,10 @@ class PushMotionBinarySensor(BinarySensorEntity):
         self._coordinator = coordinator
         self._attr_unique_id = f"{entry.entry_id}_motion"
 
-        # Device info for grouping
+        # Device info for grouping — stable entry_id identifier (must match sensor.py so
+        # both entities group under one device even if device_info is initially empty).
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.device_info.get("serial", entry.entry_id))},
+            "identifiers": {(DOMAIN, entry.entry_id)},
             "name": coordinator.device_info.get("name", "Push Device"),
             "manufacturer": MANUFACTURER,
             "model": coordinator.device_info.get("model"),
