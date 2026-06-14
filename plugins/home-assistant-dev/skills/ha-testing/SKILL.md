@@ -78,6 +78,19 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 ## test_config_flow.py (REQUIRED)
 
+These assertions assume the config flow catches client errors and maps them to the `errors["base"]` keys below. Mirror this mapping in `async_step_user` (see the ha-debugging skill for the `errors["base"] = "unknown"` fallback pattern):
+
+```python
+try:
+    await client.async_get_device_info()
+except ConnectionError:
+    errors["base"] = "cannot_connect"
+except InvalidAuth:
+    errors["base"] = "invalid_auth"
+except Exception:  # noqa: BLE001
+    errors["base"] = "unknown"
+```
+
 ```python
 """Test config flow."""
 from unittest.mock import AsyncMock
@@ -201,8 +214,20 @@ async def test_setup_entry_not_ready(
 
 ## Running Tests
 
+`pytest-homeassistant-custom-component` (PHACC) pins its own compatible pytest, pytest-asyncio, and supporting plugin versions, so install only PHACC (pinned to the release matching your target HA version) and let it pull the stack — do not also install `pytest-asyncio` separately, as that invites version conflicts. Pin the version, e.g. `pip install pytest-homeassistant-custom-component==<version-for-your-HA>`.
+
+The bare `async def test_*` examples above only run with PHACC's asyncio config. Add this minimal config so async tests are collected (otherwise pytest skips them with "async def functions are not natively supported"):
+
+```toml
+# pyproject.toml
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+```
+
+(Or the equivalent `[pytest]` / `asyncio_mode = auto` in `pytest.ini`.)
+
 ```bash
-pip install pytest pytest-homeassistant-custom-component pytest-asyncio
+pip install pytest-homeassistant-custom-component==<version-for-your-HA>
 
 pytest tests/ -v
 pytest tests/ --cov=custom_components.{domain} --cov-report=html
