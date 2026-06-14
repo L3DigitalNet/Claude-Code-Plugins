@@ -77,12 +77,17 @@ class MyEnergySensor(SensorEntity):
 
 ### Statistics-Compatible Device Classes
 
+Measurement-type classes (`state_class: MEASUREMENT`) produce mean/min/max statistics — set `mean_type` (e.g. `StatisticMeanType.ARITHMETIC`), leave `has_sum=False`:
+
+- `TEMPERATURE` (°C, °F)
+- `POWER` (W, kW)
+
+Cumulative/sum-type classes (`state_class: TOTAL` / `TOTAL_INCREASING`) produce sum statistics — set `has_sum=True`, leave `mean_type=StatisticMeanType.NONE`:
+
 - `ENERGY` (kWh, Wh, MWh)
 - `GAS` (m³, ft³)
 - `WATER` (L, gal, m³)
-- `MONETARY` (currency)
-- `POWER` (W, kW)
-- `TEMPERATURE` (°C, °F)
+- `MONETARY` (currency) — sum-based, but no unit conversion is applied
 
 ## Importing External Statistics
 
@@ -170,7 +175,10 @@ async def async_import_historical_data(
 For features that need historical data:
 
 ```python
+from datetime import timedelta
+
 from homeassistant.components.recorder import get_instance, history
+from homeassistant.util import dt as dt_util
 
 async def get_entity_history(
     hass: HomeAssistant,
@@ -202,9 +210,12 @@ async def get_entity_history(
 ## Statistics Queries
 
 ```python
+from datetime import timedelta
+
 from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
+from homeassistant.util import dt as dt_util
 
 async def get_energy_statistics(
     hass: HomeAssistant,
