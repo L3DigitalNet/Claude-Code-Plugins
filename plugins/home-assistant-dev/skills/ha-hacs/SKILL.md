@@ -60,7 +60,7 @@ The list above is the HACS-metadata-required set. Separately, `integration_type`
 Create `hacs.json` in repository root:
 
 ```json
-{ "name": "My Integration", "homeassistant": "2024.1.0" }
+{ "name": "My Integration", "homeassistant": "2025.1.0" }
 ```
 
 ### Common hacs.json Options
@@ -68,7 +68,7 @@ Create `hacs.json` in repository root:
 | Key | Type | Required | Description |
 | --- | --- | --- | --- |
 | `name` | string | **Yes** | Display name in HACS |
-| `homeassistant` | string | No | Minimum HA version (e.g., "2024.1.0") |
+| `homeassistant` | string | No | Minimum HA version (e.g., "2025.1.0") |
 | `hacs` | string | No | Minimum HACS version |
 | `content_in_root` | bool | No | Set `true` if files not in custom_components/ |
 | `zip_release` | bool | No | Set `true` if using zipped releases |
