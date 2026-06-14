@@ -228,8 +228,11 @@ export class HaClient {
           (e) => e.area_id === areaId || (e.device_id && devicesInArea.has(e.device_id))
         )
         .map((e) => e.entity_id);
-    } catch {
-      return [];
+    } catch (error) {
+      // Do not fail open to an empty list — a registry error would otherwise look like
+      // "no entities in that area" and silently drop a real area filter.
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Area lookup failed for '${areaId}': ${message}`, { cause: error });
     }
   }
 
