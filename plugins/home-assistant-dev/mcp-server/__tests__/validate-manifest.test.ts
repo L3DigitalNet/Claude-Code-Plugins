@@ -177,17 +177,17 @@ describe('handleValidateManifest', () => {
     expect(ownerErrors[0].message).toContain("'@'");
   });
 
-  it('should warn about domain/directory mismatch', async () => {
+  it('should error on domain/directory mismatch', async () => {
     const manifest = fullHacsManifest({ domain: 'my_integration' });
     // Write into a directory with a different name than the domain
     const filePath = await writeManifest(manifest, 'different_dir_name');
 
     const result = await handleValidateManifest({ path: filePath });
 
-    const domainWarnings = result.warnings.filter((w) => w.field === 'domain');
-    expect(domainWarnings.length).toBeGreaterThanOrEqual(1);
+    const domainErrors = result.errors.filter((e) => e.field === 'domain');
+    expect(domainErrors.length).toBeGreaterThanOrEqual(1);
     expect(
-      domainWarnings.some((w) => w.message.includes('does not match directory'))
+      domainErrors.some((e) => e.message.includes('does not match directory'))
     ).toBe(true);
   });
 

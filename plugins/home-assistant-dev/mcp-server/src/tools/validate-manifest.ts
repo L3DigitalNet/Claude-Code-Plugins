@@ -109,10 +109,12 @@ export async function handleValidateManifest(
     const pathParts = input.path.split(/[/\\]/);
     const dirName = pathParts[pathParts.length - 2];
     if (dirName && manifest.domain !== dirName) {
-      warnings.push({
+      // Core requires the manifest domain to match the directory, so this blocks —
+      // an error here, matching the Python validator (was a warning, drifting from it).
+      errors.push({
         field: "domain",
         message: `Domain '${manifest.domain}' does not match directory name '${dirName}'`,
-        severity: "warning",
+        severity: "error",
       });
     }
   }
