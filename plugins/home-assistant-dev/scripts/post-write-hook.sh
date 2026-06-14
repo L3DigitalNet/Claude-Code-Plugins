@@ -6,6 +6,21 @@ set -euo pipefail
 
 PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
+# The hooks.json matcher includes NotebookEdit (so the hook fires on .ipynb writes via
+# tool_input.notebook_path), but HA integrations are never authored in notebooks and the
+# dispatch case below has no .ipynb branch. Such writes intentionally fall through to a
+# no-op exit 0 — the notebook_path read just keeps FILE_PATH populated for completeness.
+
+# All validation requires python3. If it is missing the FILE_PATH extraction below would
+# silently no-op (a failed command substitution in an assignment does not trip set -e, and
+# stderr is discarded), so a developer could believe validation ran when it never did. Emit
+# one diagnostic instead — the harness can surface it as additionalContext. Still exit 0 to
+# preserve the never-block contract.
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "post-write-hook: python3 not found; HA validation skipped (not failed)." >&2
+    exit 0
+fi
+
 # Extract file path from stdin JSON (tool_input.file_path or tool_input.path)
 FILE_PATH=$(python3 -c "
 import sys, json
