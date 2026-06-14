@@ -64,6 +64,10 @@ export async function handleValidateStrings(
     }
 
     // Extract error keys: errors["base"] = "cannot_connect"
+    // LIMITATION (literal-only): this matches only string-LITERAL assignments. Common
+    // real-world forms — errors["base"] = err_key (variable) or dict comprehensions —
+    // are silently missed, so those error keys cannot be cross-checked against strings.json
+    // and may produce a false 'valid'. Broadening this safely requires real Python parsing.
     const errorMatches = flowContent.matchAll(
       /errors\s*\[\s*["'](\w+)["']\s*\]\s*=\s*["'](\w+)["']/g
     );
@@ -71,9 +75,11 @@ export async function handleValidateStrings(
       flowErrors.add(match[2]);
     }
 
-    // Extract abort reasons
+    // Extract abort reasons: both keyword (async_abort(reason="x")) and positional
+    // (async_abort("x") / self.async_abort('x')) forms. Same literal-only caveat as
+    // errors above — a variable-supplied reason is not captured.
     const abortMatches = flowContent.matchAll(
-      /async_abort\s*\(\s*reason\s*=\s*["'](\w+)["']/g
+      /async_abort\s*\(\s*(?:reason\s*=\s*)?["'](\w+)["']/g
     );
     for (const match of abortMatches) {
       flowAborts.add(match[1]);
@@ -115,14 +121,28 @@ export async function handleValidateStrings(
   }
 
   // Check for missing data_description (IQS Bronze requirement)
-  const steps = (config?.step as Record<string, Record<string, unknown>>) || {};
-  for (const [stepName, stepData] of Object.entries(steps)) {
-    if (stepData.data && !stepData.data_description) {
+  // A hand-edited but still-parseable strings.json can place a non-object under a step
+  // (e.g. "user": null or a string). Object.keys(null) throws, so guard the step entry
+  // and each sub-field with object checks: a malformed step is reported as a structured
+  // error instead of crashing the tool (PURPOSE 3: no crash on malformed input).
+  const malformedSteps: string[] = [];
+  const steps = (config?.step as Record<string, unknown>) || {};
+  const isObject = (v: unknown): v is Record<string, unknown> =>
+    typeof v === "object" && v !== null && !Array.isArray(v);
+  for (const [stepName, rawStepData] of Object.entries(steps)) {
+    if (!isObject(rawStepData)) {
+      malformedSteps.push(`config.step.${stepName} must be an object`);
+      continue;
+    }
+    const stepData = rawStepData;
+    const data = stepData.data;
+    const dataDescription = stepData.data_description;
+    if (isObject(data) && !isObject(dataDescription)) {
       missingDataDescriptions.push(stepName);
-    } else if (stepData.data && stepData.data_description) {
+    } else if (isObject(data) && isObject(dataDescription)) {
       // Check if all data keys have descriptions
-      const dataKeys = new Set(Object.keys(stepData.data as Record<string, unknown>));
-      const descKeys = new Set(Object.keys(stepData.data_description as Record<string, unknown>));
+      const dataKeys = new Set(Object.keys(data));
+      const descKeys = new Set(Object.keys(dataDescription));
       for (const key of dataKeys) {
         if (!descKeys.has(key)) {
           missingDataDescriptions.push(`${stepName}.${key}`);
@@ -140,7 +160,9 @@ export async function handleValidateStrings(
   }
 
   // Aborts are reported under missing_errors, so they must also count toward validity.
-  const allMissingErrors = [...missingErrors, ...missingAborts];
+  // Malformed (non-object) step entries are surfaced here too, so a parseable-but-bad
+  // strings.json yields a structured validation error rather than a thrown exception.
+  const allMissingErrors = [...missingErrors, ...missingAborts, ...malformedSteps];
 
   const valid =
     missingSteps.length === 0 &&
