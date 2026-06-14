@@ -30,7 +30,10 @@ async def async_step_zeroconf(
 ) -> ConfigFlowResult:
     self._host = discovery_info.host
     self._port = discovery_info.port
-    unique_id = discovery_info.properties.get("id")
+    # The TXT key must exist; a missing key yields None, which makes
+    # async_set_unique_id(None) a no-op and defeats the dedup guard below.
+    if (unique_id := discovery_info.properties.get("id")) is None:
+        return self.async_abort(reason="no_unique_id")
 
     await self.async_set_unique_id(unique_id)
     self._abort_if_unique_id_configured(updates={"host": self._host})
@@ -57,6 +60,9 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 async def async_step_ssdp(
     self, discovery_info: SsdpServiceInfo
 ) -> ConfigFlowResult:
+    # The "serialNumber"/"friendlyName" keys are the documented UPnP attribute
+    # constants homeassistant.components.ssdp.ATTR_UPNP_SERIAL /
+    # ATTR_UPNP_FRIENDLY_NAME — prefer the constants to track HA key renames.
     unique_id = discovery_info.upnp.get("serialNumber")
     await self.async_set_unique_id(unique_id)
     self._abort_if_unique_id_configured()
@@ -110,6 +116,29 @@ async def async_step_usb(
     await self.async_set_unique_id(unique_id)
     self._abort_if_unique_id_configured()
     return await self.async_step_confirm()
+```
+
+## Confirmation Step
+
+Every discovery handler above ends with `return await self.async_step_confirm()`, so the flow must define that step. It shows a confirmation form on first display, then creates the entry from the stored `_host`/title placeholders.
+
+```python
+import voluptuous as vol
+
+async def async_step_confirm(
+    self, user_input: dict[str, Any] | None = None
+) -> ConfigFlowResult:
+    if user_input is None:
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders=self.context["title_placeholders"],
+            data_schema=vol.Schema({}),
+        )
+
+    return self.async_create_entry(
+        title=self.context["title_placeholders"]["name"],
+        data={"host": self._host},
+    )
 ```
 
 ## Key Rules
