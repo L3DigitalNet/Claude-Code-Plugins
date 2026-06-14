@@ -82,6 +82,15 @@ push_example/
 | Coordinator | DataUpdateCoordinator           | Custom                    |
 | Entity base | CoordinatorEntity               | SensorEntity + dispatcher |
 
+## Running the tests
+
+The test suite uses [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component), which provides the `hass` and `enable_custom_integrations` fixtures (the latter is enabled automatically by the autouse fixture in `tests/conftest.py`):
+
+```bash
+pip install pytest-homeassistant-custom-component
+pytest tests/ -v
+```
+
 ## License
 
 MIT
