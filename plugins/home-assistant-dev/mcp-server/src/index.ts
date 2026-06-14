@@ -169,7 +169,7 @@ const TOOLS: Tool[] = [
       properties: {
         pattern: {
           type: "string",
-          enum: ["coordinator", "config_flow", "entity", "service", "sensor", "switch", "binary_sensor", "light", "climate"],
+          enum: ["coordinator", "config_flow", "entity", "service", "sensor", "switch"],
           description: "Pattern to get examples for",
         },
         style: { type: "string", enum: ["minimal", "full"], description: "Example complexity" },

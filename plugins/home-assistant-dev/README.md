@@ -190,7 +190,7 @@ The `ha-dev-mcp` MCP server (`mcp-server/dist/server.bundle.cjs`) provides 12 to
 | --- | --- |
 | `docs_search` | Full-text search across pre-indexed HA developer documentation (core docs) |
 | `docs_fetch` | Fetch a specific documentation page by path |
-| `docs_examples` | Retrieve canonical code examples for patterns: coordinator, config_flow, entity, service, sensor, switch, binary_sensor, light, climate |
+| `docs_examples` | Retrieve canonical code examples for patterns: coordinator, config_flow, entity, service, sensor, switch |
 
 ### Validation Tools
 
