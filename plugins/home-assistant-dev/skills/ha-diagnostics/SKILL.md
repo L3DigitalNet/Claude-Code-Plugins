@@ -91,7 +91,12 @@ TO_REDACT = {
     "email",
     "username",
     "serial",
+    "serial_number",
+    "unique_id",
+    "user_id",
+    "credentials",
     "mac",
+    "mac_address",
     "latitude",
     "longitude",
 }
@@ -156,6 +161,9 @@ async def async_get_config_entry_diagnostics(
 For per-device diagnostics (useful for hub integrations):
 
 ```python
+from .const import DOMAIN
+
+
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
