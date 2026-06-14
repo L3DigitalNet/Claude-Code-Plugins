@@ -178,9 +178,18 @@ async function checkFile(filePath: string): Promise<PatternIssue[]> {
       const beforeMatch = content.slice(0, match.index);
       const lineNum = (beforeMatch.match(/\n/g) || []).length + 1;
 
-      // Skip if in comment
+      // Skip if in a comment. This is a regex-based heuristic, not an AST: it does not
+      // understand `#` inside string literals or multi-line triple-quoted blocks, so
+      // suppression here is best-effort.
       const line = lines[lineNum - 1] || "";
       if (line.trim().startsWith("#")) {
+        continue;
+      }
+      // Also skip matches that fall after an inline `#` comment on the same line.
+      const lineStart = content.lastIndexOf("\n", match.index - 1) + 1;
+      const columnInLine = match.index - lineStart;
+      const hashIndex = line.indexOf("#");
+      if (hashIndex !== -1 && hashIndex < columnInLine) {
         continue;
       }
 
