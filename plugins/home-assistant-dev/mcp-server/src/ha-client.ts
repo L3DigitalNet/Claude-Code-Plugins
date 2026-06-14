@@ -36,6 +36,16 @@ export class HaClient {
   private unsubscribe: (() => void) | null = null;
   private servicesCache: HaService[] | null = null;
   private servicesCacheTime: number = 0;
+  // Registry caches for area lookups (getEntitiesInArea). Both registries are fetched
+  // together per area filter; cache them with the states TTL so a dev-loop's repeated
+  // area queries reuse one WS round-trip instead of re-dumping both registries each call.
+  private entityRegistryCache: Array<{
+    entity_id: string;
+    area_id: string | null;
+    device_id: string | null;
+  }> | null = null;
+  private deviceRegistryCache: Array<{ id: string; area_id: string | null }> | null = null;
+  private registryCacheTime: number = 0;
 
   constructor(config: ServerConfig) {
     this.config = config;
@@ -74,6 +84,15 @@ export class HaClient {
 
     try {
       this.connection = await createConnection({ auth });
+
+      // Invalidate cached registries/services from any prior connection — a reconnect
+      // may target a different HA instance, and stale entries would misreport area
+      // membership or available services.
+      this.servicesCache = null;
+      this.servicesCacheTime = 0;
+      this.entityRegistryCache = null;
+      this.deviceRegistryCache = null;
+      this.registryCacheTime = 0;
 
       // Get HA config for connection info
       const haConfig = await this.connection.sendMessagePromise<{
@@ -226,15 +245,26 @@ export class HaClient {
     }
 
     try {
-      // Get entity registry
-      const entityRegistry = await this.connection.sendMessagePromise<
-        Array<{ entity_id: string; area_id: string | null; device_id: string | null }>
-      >({ type: "config/entity_registry/list" });
+      // Reuse cached registries within the TTL; otherwise fetch both and cache them.
+      const cacheAge = (Date.now() - this.registryCacheTime) / 1000;
+      let entityRegistry = this.entityRegistryCache;
+      let deviceRegistry = this.deviceRegistryCache;
 
-      // Get device registry for devices in area
-      const deviceRegistry = await this.connection.sendMessagePromise<
-        Array<{ id: string; area_id: string | null }>
-      >({ type: "config/device_registry/list" });
+      if (!entityRegistry || !deviceRegistry || cacheAge >= this.config.cache.statesTtlSeconds) {
+        // Get entity registry
+        entityRegistry = await this.connection.sendMessagePromise<
+          Array<{ entity_id: string; area_id: string | null; device_id: string | null }>
+        >({ type: "config/entity_registry/list" });
+
+        // Get device registry for devices in area
+        deviceRegistry = await this.connection.sendMessagePromise<
+          Array<{ id: string; area_id: string | null }>
+        >({ type: "config/device_registry/list" });
+
+        this.entityRegistryCache = entityRegistry;
+        this.deviceRegistryCache = deviceRegistry;
+        this.registryCacheTime = Date.now();
+      }
 
       const devicesInArea = new Set(
         deviceRegistry.filter((d) => d.area_id === areaId).map((d) => d.id)
