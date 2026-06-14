@@ -2,7 +2,7 @@ name: HA Dev Plugin Tests
 
 on:
   push:
-    branches: [main, testing]
+    branches: [main]
     paths:
       - "plugins/home-assistant-dev/**"
   pull_request:
