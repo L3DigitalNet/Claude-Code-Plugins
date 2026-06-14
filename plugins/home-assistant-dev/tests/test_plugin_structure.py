@@ -173,12 +173,12 @@ def plugin_root() -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Category 1: Skill Validation (19 skills)
+# Category 1: Skill Validation (skills listed in EXPECTED_SKILLS)
 # ---------------------------------------------------------------------------
 
 @pytest.mark.unit
 class TestSkillValidation:
-    """Validate all 19 skill directories and their SKILL.md files."""
+    """Validate all skill directories listed in EXPECTED_SKILLS and their SKILL.md files."""
 
     def test_skill_count(self, plugin_root: Path) -> None:
         """Exactly 27 skill directories exist."""
@@ -512,7 +512,7 @@ class TestCrossReferenceValidation:
 
         text = readme_path.read_text(encoding="utf-8")
 
-        # Look for patterns like "19 Agent Skills" or "19 skills"
+        # Look for patterns like "27 Agent Skills" or "27 skills"
         match = re.search(r"(\d+)\s+(?:Agent\s+)?Skills?", text, re.IGNORECASE)
         if match is None:
             pytest.skip("README.md does not mention a skill count")
