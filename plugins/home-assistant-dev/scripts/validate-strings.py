@@ -105,6 +105,9 @@ def validate_strings(
         return errors
 
     config = strings.get("config", {})
+    if not isinstance(config, dict):
+        errors.append(ValidationError("config", "Must be an object"))
+        return errors
 
     # Check for step section
     if "step" not in config:
@@ -125,9 +128,12 @@ def validate_strings(
     # If we have config_flow.py, check sync
     if config_flow_path and config_flow_path.exists():
         flow_steps, flow_errors, flow_aborts = extract_flow_steps(config_flow_path)
-        string_steps = set(config.get("step", {}).keys())
-        string_errors = set(config.get("error", {}).keys())
-        string_aborts = set(config.get("abort", {}).keys())
+        step_section = config.get("step", {})
+        error_section = config.get("error", {})
+        abort_section = config.get("abort", {})
+        string_steps = set(step_section.keys()) if isinstance(step_section, dict) else set()
+        string_errors = set(error_section.keys()) if isinstance(error_section, dict) else set()
+        string_aborts = set(abort_section.keys()) if isinstance(abort_section, dict) else set()
 
         # Check for missing step strings
         # Exclude common internal steps that don't need strings
@@ -177,6 +183,9 @@ def validate_strings(
 
     # Validate step structure
     steps = config.get("step", {})
+    if not isinstance(steps, dict):
+        errors.append(ValidationError("config.step", "Must be an object"))
+        steps = {}
     for step_name, step_data in steps.items():
         if not isinstance(step_data, dict):
             errors.append(
@@ -196,34 +205,49 @@ def validate_strings(
 
         # Validate data and data_description keys match
         if "data" in step_data and "data_description" in step_data:
-            data_keys = set(step_data["data"].keys())
-            desc_keys = set(step_data["data_description"].keys())
-
-            missing_desc = data_keys - desc_keys
-            extra_desc = desc_keys - data_keys
-
-            for key in missing_desc:
+            data = step_data["data"]
+            data_description = step_data["data_description"]
+            if not isinstance(data, dict):
+                errors.append(
+                    ValidationError(f"config.step.{step_name}.data", "Must be an object")
+                )
+            elif not isinstance(data_description, dict):
                 errors.append(
                     ValidationError(
-                        f"config.step.{step_name}.data_description.{key}",
-                        f"Missing description for field '{key}'",
-                        "warning",
+                        f"config.step.{step_name}.data_description", "Must be an object"
                     )
                 )
+            else:
+                data_keys = set(data.keys())
+                desc_keys = set(data_description.keys())
 
-            for key in extra_desc:
-                errors.append(
-                    ValidationError(
-                        f"config.step.{step_name}.data_description.{key}",
-                        f"Description for non-existent field '{key}'",
-                        "warning",
+                missing_desc = data_keys - desc_keys
+                extra_desc = desc_keys - data_keys
+
+                for key in missing_desc:
+                    errors.append(
+                        ValidationError(
+                            f"config.step.{step_name}.data_description.{key}",
+                            f"Missing description for field '{key}'",
+                            "warning",
+                        )
                     )
-                )
+
+                for key in extra_desc:
+                    errors.append(
+                        ValidationError(
+                            f"config.step.{step_name}.data_description.{key}",
+                            f"Description for non-existent field '{key}'",
+                            "warning",
+                        )
+                    )
 
     # Check options flow
     if "options" in strings:
         options = strings["options"]
-        if "step" not in options:
+        if not isinstance(options, dict):
+            errors.append(ValidationError("options", "Must be an object"))
+        elif "step" not in options:
             errors.append(
                 ValidationError("options.step", "Missing 'step' section in options")
             )
