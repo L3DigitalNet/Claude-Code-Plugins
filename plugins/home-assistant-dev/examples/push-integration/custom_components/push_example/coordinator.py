@@ -70,11 +70,11 @@ class PushCoordinator:
                 self.hass, self._listen_loop(), name=f"{DOMAIN}_listen"
             )
 
-        except Exception as err:
-            _LOGGER.error("Failed to connect: %s", err)
+        except Exception:
             self.connected = False
-            # Schedule reconnection
-            self._schedule_reconnect()
+            # Re-raise so an initial connect failure surfaces as ConfigEntryNotReady in
+            # async_setup_entry; the reconnect path below handles post-setup failures.
+            raise
 
     async def async_disconnect(self) -> None:
         """Disconnect from the device."""
@@ -144,7 +144,11 @@ class PushCoordinator:
             await asyncio.sleep(self._reconnect_interval)
             if self._should_reconnect and not self.connected:
                 _LOGGER.info("Attempting to reconnect...")
-                await self.async_connect()
+                try:
+                    await self.async_connect()
+                except Exception as err:
+                    _LOGGER.error("Reconnect failed: %s", err)
+                    self._schedule_reconnect()
 
         # Track the reconnect task (and let HA cancel it on unload) so a pending
         # reconnect can't call async_connect after the entry is gone.

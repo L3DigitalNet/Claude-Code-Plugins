@@ -15,6 +15,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import PushCoordinator
@@ -30,8 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushConfigEntry) -> bool
     """Set up Push Example from a config entry."""
     coordinator = PushCoordinator(hass, entry)
 
-    # Start the push connection
-    await coordinator.async_connect()
+    # Start the push connection; a failed initial connect must block setup so HA retries.
+    try:
+        await coordinator.async_connect()
+    except Exception as err:
+        raise ConfigEntryNotReady(f"Failed to connect to push device: {err}") from err
 
     entry.runtime_data = coordinator
 
