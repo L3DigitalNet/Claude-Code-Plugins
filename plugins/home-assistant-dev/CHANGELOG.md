@@ -2,6 +2,8 @@
 
 All notable changes to the Home Assistant Development Plugin are documented here.
 
+## [Unreleased]
+
 ## [2.2.10] - 2026-05-25
 
 ### Changed
@@ -19,12 +21,6 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ### Fixed
 
 - add 'types: [node]' to mcp-server tsconfig for TS 6 compatibility
-
-## [2.2.8] - 2026-05-07
-
-### Changed
-
-- home-assistant-dev v2.2.8 — drop WebSearch from VALID_AGENT_TOOLS allowlist
 
 ## [2.2.8] - 2026-05-07
 
@@ -76,8 +72,6 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - apply audit findings — plugin.json, CHANGELOG
 - bump hono to 4.12.4 (CVE-2026-27700)
 
-## [Unreleased]
-
 ## [2.2.3] - 2026-03-02
 
 ### Changed
@@ -122,7 +116,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ### Added
 
 - MCP server now wired into plugin via `.mcp.json` — registers `ha-dev-mcp` with 12 tools for live HA connection, documentation search, and code validation
-- esbuild bundling for MCP server — single 630KB self-contained `dist/server.bundle.cjs` requires no `npm install` post-plugin-install
+- esbuild bundling for MCP server — single self-contained `dist/server.bundle.cjs` requires no `npm install` post-plugin-install
 - `.gitignore` for plugin directory — tracks only the distributable bundle, ignores build artifacts and `node_modules/`
 
 ### Fixed
