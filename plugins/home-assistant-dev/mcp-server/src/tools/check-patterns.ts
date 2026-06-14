@@ -152,7 +152,11 @@ const PATTERNS: Pattern[] = [
   // Service registration in wrong place
   {
     name: "service-in-setup-entry",
-    pattern: /async_setup_entry[^}]*hass\.services\.async_register/gs,
+    // Bound the gap to the async_setup_entry body by stopping at the next top-level
+    // def — Python has no braces for the old [^}]* to stop on, so it spanned the whole
+    // file and false-matched a register call in any later function.
+    pattern:
+      /async_setup_entry(?:(?!\n(?:async )?def )[\s\S])*?hass\.services\.async_register/g,
     message: "Services should be registered in async_setup, not async_setup_entry",
     severity: "warning",
   },
