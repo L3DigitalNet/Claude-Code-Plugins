@@ -66,18 +66,31 @@ async def async_setup_entry(
     """Set up sensor platform."""
     coordinator = entry.runtime_data
 
-    # Create sensors for each device that has sensor data
-    entities: list[ExampleHubSensor] = []
+    # Track which devices already have entities so the listener only adds new ones
+    added_device_ids: set[str] = set()
 
-    for device_id, device_data in coordinator.devices.items():
-        for description in SENSOR_DESCRIPTIONS:
-            # Only create sensor if device has this data
-            if description.value_fn(device_data) is not None:
-                entities.append(
-                    ExampleHubSensor(coordinator, device_id, description)
-                )
+    def _add_new_entities() -> None:
+        """Create sensors for devices that appeared since the last add.
 
-    async_add_entities(entities)
+        Registered as a coordinator listener so devices discovered on a later
+        poll get entities, not just those present at setup.
+        """
+        new_entities: list[ExampleHubSensor] = []
+        for device_id, device_data in coordinator.devices.items():
+            if device_id in added_device_ids:
+                continue
+            added_device_ids.add(device_id)
+            for description in SENSOR_DESCRIPTIONS:
+                # Only create sensor if device has this data
+                if description.value_fn(device_data) is not None:
+                    new_entities.append(
+                        ExampleHubSensor(coordinator, device_id, description)
+                    )
+        async_add_entities(new_entities)
+
+    # Add entities for the devices present at setup, then keep listening for more
+    _add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
 class ExampleHubSensor(ExampleHubEntity, SensorEntity):
