@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# NOTE: intentionally NOT `set -e`. This is a long-running interactive watcher;
+# a transient non-zero return from a helper (a broken-pipe echo, a guard grep
+# returning 1, a failing test command) must not silently terminate the watch
+# loop. Test pass/fail is tracked explicitly via run_and_track. -u and -o
+# pipefail are kept to catch unset vars and masked pipeline failures.
+set -uo pipefail
 
 # =============================================================================
 # test-watch.sh - File watcher for iterative HA Dev Plugin development
@@ -228,6 +233,18 @@ cleanup() {
     exit 0
 }
 
+# Log why the watch loop ended. Without -e the loop should only end via a
+# signal (cleanup, exit 0) or an explicit error exit elsewhere; any other exit
+# status here means the watcher died unexpectedly and we say so rather than
+# vanishing silently mid-session.
+on_exit() {
+    local rc=$?
+    if (( rc != 0 )); then
+        echo -e "${RED}[$(timestamp)] Watcher exited unexpectedly (status ${rc}).${RESET}" >&2
+    fi
+}
+
+trap on_exit EXIT
 trap cleanup SIGINT SIGTERM
 
 # ---------------------------------------------------------------------------
@@ -396,7 +413,12 @@ watch_poll() {
 # ---------------------------------------------------------------------------
 main() {
     # Ensure we are in the plugin root so relative paths work predictably.
-    cd "$PLUGIN_ROOT"
+    # Guarded explicitly: without `set -e` a failed cd would otherwise let the
+    # watcher run from the wrong directory.
+    cd "$PLUGIN_ROOT" || {
+        echo -e "${RED}Cannot cd to plugin root: ${PLUGIN_ROOT}${RESET}" >&2
+        exit 1
+    }
 
     if command -v inotifywait &>/dev/null; then
         watch_inotify
