@@ -33,14 +33,14 @@ An MCP (Model Context Protocol) server that connects Claude to Home Assistant in
 
 ## Installation
 
-```bash
-npm install -g @anthropic/ha-dev-mcp-server
-```
+This server ships pre-built with the `home-assistant-dev` Claude Code plugin and is registered automatically via the plugin's `.mcp.json` (`node dist/server.bundle.cjs`) — no separate install is required.
 
-Or run directly with npx:
+For standalone development, build and run it from this directory:
 
 ```bash
-npx @anthropic/ha-dev-mcp-server
+npm install
+npm run build
+node dist/server.bundle.cjs
 ```
 
 ## Configuration
@@ -55,8 +55,8 @@ Add to your Claude Desktop configuration:
 {
 	"mcpServers": {
 		"ha-dev": {
-			"command": "npx",
-			"args": ["-y", "@anthropic/ha-dev-mcp-server"],
+			"command": "node",
+			"args": ["/absolute/path/to/mcp-server/dist/server.bundle.cjs"],
 			"env": {
 				"HA_DEV_MCP_URL": "http://192.168.1.100:8123",
 				"HA_DEV_MCP_TOKEN": "your-long-lived-access-token"
