@@ -72,6 +72,78 @@ def extract_flow_steps(config_flow_path: Path) -> tuple[set[str], set[str], set[
     return steps, errors, aborts
 
 
+def validate_step_section(section: dict[str, Any], prefix: str) -> list[ValidationError]:
+    """Validate the step structure (data/data_description sync) for a flow section.
+
+    Shared by both the config flow and the options flow so options-flow strings
+    get the same Bronze data_description coverage. ``prefix`` is the dotted path
+    label of the section (e.g. ``"config"`` or ``"options"``).
+    """
+    errors: list[ValidationError] = []
+
+    steps = section.get("step", {})
+    if not isinstance(steps, dict):
+        errors.append(ValidationError(f"{prefix}.step", "Must be an object"))
+        return errors
+    for step_name, step_data in steps.items():
+        if not isinstance(step_data, dict):
+            errors.append(
+                ValidationError(f"{prefix}.step.{step_name}", "Step must be an object")
+            )
+            continue
+
+        # Check for data_description (Bronze requirement)
+        if "data" in step_data and "data_description" not in step_data:
+            errors.append(
+                ValidationError(
+                    f"{prefix}.step.{step_name}.data_description",
+                    "Missing data_description (required for IQS Bronze)",
+                    "warning",
+                )
+            )
+
+        # Validate data and data_description keys match
+        if "data" in step_data and "data_description" in step_data:
+            data = step_data["data"]
+            data_description = step_data["data_description"]
+            if not isinstance(data, dict):
+                errors.append(
+                    ValidationError(f"{prefix}.step.{step_name}.data", "Must be an object")
+                )
+            elif not isinstance(data_description, dict):
+                errors.append(
+                    ValidationError(
+                        f"{prefix}.step.{step_name}.data_description", "Must be an object"
+                    )
+                )
+            else:
+                data_keys = set(data.keys())
+                desc_keys = set(data_description.keys())
+
+                missing_desc = data_keys - desc_keys
+                extra_desc = desc_keys - data_keys
+
+                for key in missing_desc:
+                    errors.append(
+                        ValidationError(
+                            f"{prefix}.step.{step_name}.data_description.{key}",
+                            f"Missing description for field '{key}'",
+                            "warning",
+                        )
+                    )
+
+                for key in extra_desc:
+                    errors.append(
+                        ValidationError(
+                            f"{prefix}.step.{step_name}.data_description.{key}",
+                            f"Description for non-existent field '{key}'",
+                            "warning",
+                        )
+                    )
+
+    return errors
+
+
 def validate_strings(
     strings_path: Path, config_flow_path: Path | None = None
 ) -> list[ValidationError]:
@@ -181,76 +253,26 @@ def validate_strings(
                     )
                 )
 
-    # Validate step structure
-    steps = config.get("step", {})
-    if not isinstance(steps, dict):
-        errors.append(ValidationError("config.step", "Must be an object"))
-        steps = {}
-    for step_name, step_data in steps.items():
-        if not isinstance(step_data, dict):
-            errors.append(
-                ValidationError(f"config.step.{step_name}", "Step must be an object")
-            )
-            continue
+    # Validate config-flow step structure (data/data_description sync)
+    errors.extend(validate_step_section(config, "config"))
 
-        # Check for data_description (Bronze requirement)
-        if "data" in step_data and "data_description" not in step_data:
-            errors.append(
-                ValidationError(
-                    f"config.step.{step_name}.data_description",
-                    "Missing data_description (required for IQS Bronze)",
-                    "warning",
-                )
-            )
-
-        # Validate data and data_description keys match
-        if "data" in step_data and "data_description" in step_data:
-            data = step_data["data"]
-            data_description = step_data["data_description"]
-            if not isinstance(data, dict):
-                errors.append(
-                    ValidationError(f"config.step.{step_name}.data", "Must be an object")
-                )
-            elif not isinstance(data_description, dict):
-                errors.append(
-                    ValidationError(
-                        f"config.step.{step_name}.data_description", "Must be an object"
-                    )
-                )
-            else:
-                data_keys = set(data.keys())
-                desc_keys = set(data_description.keys())
-
-                missing_desc = data_keys - desc_keys
-                extra_desc = desc_keys - data_keys
-
-                for key in missing_desc:
-                    errors.append(
-                        ValidationError(
-                            f"config.step.{step_name}.data_description.{key}",
-                            f"Missing description for field '{key}'",
-                            "warning",
-                        )
-                    )
-
-                for key in extra_desc:
-                    errors.append(
-                        ValidationError(
-                            f"config.step.{step_name}.data_description.{key}",
-                            f"Description for non-existent field '{key}'",
-                            "warning",
-                        )
-                    )
-
-    # Check options flow
+    # Check options flow — run the same step/data_description sync checks so the
+    # options flow (which has its own async_step_* methods and Bronze
+    # data_description requirements) is not under-covered. NOTE: config_flow.py
+    # step/error/abort sync is intentionally NOT applied to the options section
+    # here, because options and config steps share one config_flow.py and would
+    # cross-flag each other as orphaned; that parity is left to the TS twin / a
+    # follow-up that distinguishes ConfigFlow vs OptionsFlow step ownership.
     if "options" in strings:
         options = strings["options"]
         if not isinstance(options, dict):
             errors.append(ValidationError("options", "Must be an object"))
-        elif "step" not in options:
-            errors.append(
-                ValidationError("options.step", "Missing 'step' section in options")
-            )
+        else:
+            if "step" not in options:
+                errors.append(
+                    ValidationError("options.step", "Missing 'step' section in options")
+                )
+            errors.extend(validate_step_section(options, "options"))
 
     return errors
 
