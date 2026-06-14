@@ -32,6 +32,12 @@ describe('handleValidateManifest', () => {
     await mkdir(dir, { recursive: true });
     const filePath = join(dir, 'manifest.json');
     await writeFile(filePath, JSON.stringify(manifest, null, 2));
+    // A manifest declaring config_flow: true requires a sibling config_flow.py
+    // (validated by the config_flow presence check); create a stub so realistic
+    // fixtures remain valid rather than tripping the missing-file error.
+    if (manifest.config_flow === true) {
+      await writeFile(join(dir, 'config_flow.py'), '# stub config flow for tests\n');
+    }
     return filePath;
   }
 
@@ -73,6 +79,11 @@ describe('handleValidateManifest', () => {
 
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
+    // Lock the matching-directory branch: a dir named after the domain must
+    // emit zero domain issues, so a regression that always flags the
+    // domain/directory mismatch cannot pass unnoticed (F160).
+    expect(result.errors.filter((e) => e.field === 'domain')).toHaveLength(0);
+    expect(result.warnings.filter((w) => w.field === 'domain')).toHaveLength(0);
   });
 
   it('should validate a correct core manifest', async () => {
