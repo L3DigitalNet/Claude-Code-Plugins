@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -103,14 +103,16 @@ class PushCoordinator:
 
         In a real integration, this would be handled by the client library's
         callback mechanism. This simulates periodic push updates.
+
+        This loop only runs while connected: a lost connection breaks out (below)
+        and _schedule_reconnect owns recovery by calling async_connect again, which
+        spawns a fresh listen loop on success. Reconnection lives in
+        _schedule_reconnect, not here.
         """
         while self._should_reconnect:
             try:
                 # Simulate receiving a push update every 10 seconds
                 await asyncio.sleep(10)
-
-                if not self.connected:
-                    continue
 
                 # Simulated push data
                 self.data = {
