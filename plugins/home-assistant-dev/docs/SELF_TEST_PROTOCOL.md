@@ -402,6 +402,8 @@ npm install
 npx tsc
 ```
 
+**Server credentials:** the server reads `HA_DEV_MCP_URL` / `HA_DEV_MCP_TOKEN` first, falls back to `HA_URL` / `HA_TOKEN`, then to `~/.config/ha-dev-mcp/config.json`. The strategy's E2E script (§4.3 of TESTING_STRATEGY.md) exports `HA_URL` / `HA_TOKEN`, which the server accepts through that fallback — both spellings work.
+
 #### 5A. REST API Tests
 
 These tests validate the same capabilities the MCP server tools use, via the HA REST API directly. Run with `node tests/e2e/test-mcp-rest.mjs` from the plugin root (`plugins/home-assistant-dev`).
