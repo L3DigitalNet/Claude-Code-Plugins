@@ -99,7 +99,7 @@ async def async_setup_entry(hass, entry):
 ## Pattern 6: Background Tasks
 
 ```python
-# For fire-and-forget tasks
+# For short tasks tied to setup/teardown (tracked + awaited on unload, prevents GC)
 hass.async_create_task(my_coroutine())
 
 # For long-running background tasks
