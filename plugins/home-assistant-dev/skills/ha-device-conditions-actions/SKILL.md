@@ -20,7 +20,11 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
@@ -57,11 +61,20 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Create a condition from config."""
 
+    condition_type = config[CONF_TYPE]
+    device_id = config[CONF_DEVICE_ID]
+
     @callback
     def test_condition(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test the condition."""
-        # Implement your condition logic
-        # Return True if condition is met
+        # Worked example: resolve the device's entity and check its state.
+        # Replace the always-True placeholder below with logic like this.
+        entity_id = er.async_resolve_entity_id_from_unique_id(hass, ...)
+        if condition_type == "is_on":
+            return condition.state(hass, entity_id, "on")
+        if condition_type == "is_off":
+            return condition.state(hass, entity_id, "off")
+        # Placeholder for unhandled types — always-True is a stub, not correct logic.
         return True
 
     return test_condition
@@ -70,6 +83,8 @@ def async_condition_from_config(
 ## Device Actions
 
 Actions let automations command devices directly.
+
+Each kind carries a different discriminator key in its listed dicts — this asymmetry is intentional, do not "fix" it: triggers set `CONF_PLATFORM: "device"`, conditions set `CONF_CONDITION: "device"` (above), and actions set neither (the `device_action.py` module location is the discriminator).
 
 ```python
 # device_action.py
@@ -80,9 +95,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_TYPE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.core import DOMAIN as HA_DOMAIN, Context, HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -122,19 +144,25 @@ async def async_call_action_from_config(
     action_type = config[CONF_TYPE]
     device_id = config[CONF_DEVICE_ID]
 
-    # Implement your action logic
-    if action_type == "turn_on":
-        # Call your service or method
-        pass
+    # Worked example: resolve the device's entity and call a real service.
+    entity_id = er.async_resolve_entity_id_from_unique_id(hass, ...)
+    service = {"turn_on": SERVICE_TURN_ON, "turn_off": SERVICE_TURN_OFF}.get(action_type)
+    if service is not None:
+        await hass.services.async_call(
+            HA_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+            context=context,
+        )
 ```
 
-## Registering in manifest.json
+## Manifest and discovery
 
-Device automation modules are auto-discovered when present. Ensure the manifest reflects the integration type:
+These are two unrelated concerns — do not conflate them:
 
-```json
-{ "domain": "my_integration", "name": "My Integration", "integration_type": "device" }
-```
+1. **Module discovery.** Home Assistant discovers `device_trigger.py` / `device_condition.py` / `device_action.py` by filename presence in your integration package. No manifest change is needed to enable them.
+2. **`integration_type`.** This is an independent classification field (`device` / `hub` / `service` / `helper` / `system`, defaulting to `hub`) chosen by the integration's actual topology — a single physical device vs. a hub fronting many devices vs. a cloud service. It affects UI grouping and the `dynamic-devices` / `devices` quality-scale rules. Set it to match what the integration really is; do **not** force `"integration_type": "device"` just because the integration ships device automations (a hub integration with device automations is still a hub).
 
 ## Related Skills
 
