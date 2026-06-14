@@ -10,6 +10,8 @@ description: Home Assistant options flow for post-setup user preferences. Use wh
 Options flow lets users adjust integration settings after initial setup (scan interval, feature toggles, etc.).
 
 ```python
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 import voluptuous as vol
 
@@ -72,9 +74,15 @@ class {Name}ConfigFlow(ConfigFlow, domain=DOMAIN):
 
 Reauth handles expired credentials without removing the integration. Add to the `ConfigFlow` class (not `OptionsFlow`):
 
+Assumes `_async_validate_input`, `CannotConnect`, and `InvalidAuth` from ha-config-flow are defined on the same ConfigFlow class.
+
 ```python
+from collections.abc import Mapping
+from typing import Any
+
+
 async def async_step_reauth(
-    self, entry_data: Mapping[str, Any]  # Mapping from collections.abc
+    self, entry_data: Mapping[str, Any]
 ) -> ConfigFlowResult:
     """Handle reauth when credentials expire."""
     return await self.async_step_reauth_confirm()
