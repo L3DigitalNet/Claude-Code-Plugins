@@ -17,8 +17,8 @@ import voluptuous as vol
 class {Name}OptionsFlow(OptionsFlow):
     """Handle options."""
 
-    # NOTE: Do NOT use __init__ to store config_entry - deprecated since 2025.12
-    # Access via self.config_entry (automatically set by HA)
+    # NOTE: Do NOT use __init__ to store config_entry - deprecated since 2024.12,
+    # removed in 2025.12. Access via self.config_entry (automatically set by HA)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -74,7 +74,7 @@ Reauth handles expired credentials without removing the integration. Add to the 
 
 ```python
 async def async_step_reauth(
-    self, entry_data: dict[str, Any]
+    self, entry_data: Mapping[str, Any]  # Mapping from collections.abc
 ) -> ConfigFlowResult:
     """Handle reauth when credentials expire."""
     return await self.async_step_reauth_confirm()
@@ -89,12 +89,15 @@ async def async_step_reauth_confirm(
         reauth_entry = self._get_reauth_entry()
         data = {**reauth_entry.data, **user_input}
         try:
-            await self._async_validate_input(data)
+            info = await self._async_validate_input(data)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         else:
+            # Ensure the re-authenticated account still matches the existing entry.
+            await self.async_set_unique_id(info["unique_id"])
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(reauth_entry, data=data)
 
     return self.async_show_form(

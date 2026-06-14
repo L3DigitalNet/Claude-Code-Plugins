@@ -58,7 +58,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 ```
 
-## OptionsFlow \_\_init\_\_ Deprecation (2025.12)
+## OptionsFlow \_\_init\_\_ Deprecation (deprecated 2024.12, removed 2025.12)
 
 ```python
 # OLD (deprecated)
