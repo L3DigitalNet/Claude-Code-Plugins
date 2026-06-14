@@ -270,6 +270,8 @@ async function main() {
       switch (name) {
         // Home Assistant tools
         case "ha_connect":
+          // Close any prior connection so reconnecting doesn't leak its open WebSocket.
+          await haClient?.disconnect();
           haClient = await handleHaConnect(args as unknown as HaConnectInput, config);
           return { content: [{ type: "text", text: JSON.stringify(haClient.getConnectionInfo()) }] };
 
