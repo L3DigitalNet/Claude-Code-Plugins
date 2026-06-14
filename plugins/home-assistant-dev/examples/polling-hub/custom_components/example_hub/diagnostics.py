@@ -49,6 +49,11 @@ async def async_get_config_entry_diagnostics(
             "update_interval": str(coordinator.update_interval),
         },
         "device_info": async_redact_data(coordinator.device_info, TO_REDACT),
+        # The simulated device payloads here carry only non-sensitive fields
+        # (name/temperature/humidity/online/state), so this redaction pass is a
+        # defensive no-op for now. It stays wired up so that adding a sensitive
+        # field later (e.g. a per-device token or MAC) is automatically redacted
+        # once that key is listed in TO_REDACT.
         "devices": {
             device_id: async_redact_data(data, TO_REDACT)
             for device_id, data in coordinator.devices.items()
