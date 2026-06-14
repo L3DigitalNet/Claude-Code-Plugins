@@ -31599,7 +31599,6 @@ var DEFAULT_CONFIG = {
     requireDryRun: true
   },
   cache: {
-    docsTtlHours: 24,
     statesTtlSeconds: 30
   },
   features: {
@@ -31620,7 +31619,6 @@ var partialConfigSchema = external_exports3.object({
     requireDryRun: external_exports3.boolean()
   }).partial(),
   cache: external_exports3.object({
-    docsTtlHours: external_exports3.number(),
     statesTtlSeconds: external_exports3.number()
   }).partial(),
   features: external_exports3.object({
@@ -31664,8 +31662,18 @@ function loadEnvConfig() {
   if (process.env.HA_DEV_MCP_ALLOW_SERVICE_CALLS === "true") {
     config3.safety = { allowServiceCalls: true };
   }
+  const features = {};
   if (process.env.HA_DEV_MCP_DISABLE_HA_TOOLS === "true") {
-    config3.features = { enableHaTools: false };
+    features.enableHaTools = false;
+  }
+  if (process.env.HA_DEV_MCP_DISABLE_DOCS_TOOLS === "true") {
+    features.enableDocsTools = false;
+  }
+  if (process.env.HA_DEV_MCP_DISABLE_VALIDATION_TOOLS === "true") {
+    features.enableValidationTools = false;
+  }
+  if (Object.keys(features).length > 0) {
+    config3.features = features;
   }
   return config3;
 }
@@ -33516,9 +33524,6 @@ var wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 var SPACE_OR_PUNCTUATION = /[\n\r\p{Z}\p{P}]+/u;
 
 // src/docs-index.ts
-var import_promises2 = require("fs/promises");
-var import_os2 = require("os");
-var import_path2 = require("path");
 var DOCS_INDEX = [
   {
     id: "integration-quality-scale",
@@ -33623,13 +33628,15 @@ var DOCS_INDEX = [
     entry.runtime_data = coordinator. Access in platforms via entry.runtime_data. Cleanup is automatic on unload.`
   }
 ];
-var CACHE_DIR = (0, import_path2.join)((0, import_os2.homedir)(), ".cache", "ha-dev-mcp", "docs");
 var DocsIndex = class {
   searchIndex;
   docs = /* @__PURE__ */ new Map();
-  config;
-  constructor(config3) {
-    this.config = config3;
+  // Secondary index keyed by doc id so getSnippet resolves a search result's
+  // id -> DocPage in O(1) instead of an O(n) DOCS_INDEX scan per result.
+  docsById = /* @__PURE__ */ new Map();
+  // Accepts the cache config block for constructor-signature parity with the other
+  // components, but no longer reads it: offline doc caching (docsTtlHours) was removed.
+  constructor(_config) {
     this.searchIndex = new MiniSearch({
       fields: ["title", "content"],
       storeFields: ["path", "title", "section", "lastUpdated"],
@@ -33641,6 +33648,7 @@ var DocsIndex = class {
     });
     for (const doc of DOCS_INDEX) {
       this.docs.set(doc.path, doc);
+      this.docsById.set(doc.id, doc);
     }
     this.searchIndex.addAll(DOCS_INDEX);
   }
@@ -33665,19 +33673,25 @@ var DocsIndex = class {
    * Get a snippet around the matched query
    */
   getSnippet(docId, query) {
-    const doc = this.docs.get(
-      DOCS_INDEX.find((d) => d.id === docId)?.path || ""
-    );
+    const doc = this.docsById.get(docId);
     if (!doc) return "";
     const content = doc.content;
-    const queryLower = query.toLowerCase();
     const contentLower = content.toLowerCase();
-    const matchIndex = contentLower.indexOf(queryLower);
+    let matchIndex = -1;
+    let matchLength = 0;
+    for (const term of query.toLowerCase().split(/\s+/)) {
+      if (!term) continue;
+      const termIndex = contentLower.indexOf(term);
+      if (termIndex !== -1 && (matchIndex === -1 || termIndex < matchIndex)) {
+        matchIndex = termIndex;
+        matchLength = term.length;
+      }
+    }
     if (matchIndex === -1) {
       return content.slice(0, 200) + "...";
     }
     const start = Math.max(0, matchIndex - 50);
-    const end = Math.min(content.length, matchIndex + query.length + 150);
+    const end = Math.min(content.length, matchIndex + matchLength + 150);
     let snippet = content.slice(start, end);
     if (start > 0) snippet = "..." + snippet;
     if (end < content.length) snippet = snippet + "...";
@@ -33696,10 +33710,6 @@ var DocsIndex = class {
         related: this.getRelatedPages(path)
       };
     }
-    const cached2 = await this.loadFromCache(path);
-    if (cached2) {
-      return cached2;
-    }
     return null;
   }
   /**
@@ -33716,37 +33726,6 @@ var DocsIndex = class {
       if (related.length >= 5) break;
     }
     return related;
-  }
-  /**
-   * Load page from cache
-   */
-  async loadFromCache(path) {
-    try {
-      const cachePath = (0, import_path2.join)(CACHE_DIR, `${path.replace(/\//g, "_")}.json`);
-      const content = await (0, import_promises2.readFile)(cachePath, "utf-8");
-      const cached2 = JSON.parse(content);
-      const cacheAge = (Date.now() - new Date(cached2.cachedAt).getTime()) / (1e3 * 60 * 60);
-      if (cacheAge > this.config.docsTtlHours) {
-        return null;
-      }
-      return cached2.data;
-    } catch {
-      return null;
-    }
-  }
-  /**
-   * Save page to cache
-   */
-  async saveToCache(path, data) {
-    try {
-      await (0, import_promises2.mkdir)(CACHE_DIR, { recursive: true });
-      const cachePath = (0, import_path2.join)(CACHE_DIR, `${path.replace(/\//g, "_")}.json`);
-      await (0, import_promises2.writeFile)(
-        cachePath,
-        JSON.stringify({ cachedAt: (/* @__PURE__ */ new Date()).toISOString(), data })
-      );
-    } catch {
-    }
   }
 };
 
@@ -33843,7 +33822,10 @@ var SafetyChecker = class {
     return {
       serviceCallsEnabled: this.config.allowServiceCalls,
       dryRunRequired: this.config.requireDryRun,
-      blockedCount: this.config.blockedServices.length + this.ALWAYS_BLOCKED.size
+      blockedCount: (/* @__PURE__ */ new Set([
+        ...this.ALWAYS_BLOCKED,
+        ...this.config.blockedServices
+      ])).size
     };
   }
   /**
@@ -33872,6 +33854,10 @@ var SafetyChecker = class {
       );
       if (isSensitive) {
         redacted[key] = "**REDACTED**";
+      } else if (Array.isArray(value)) {
+        redacted[key] = value.map(
+          (v) => typeof v === "object" && v !== null ? this.redactSensitiveData(v) : v
+        );
       } else if (typeof value === "object" && value !== null) {
         redacted[key] = this.redactSensitiveData(value);
       } else {
@@ -34731,6 +34717,15 @@ var HaClient = class {
   connectionInfo = null;
   statesCache = /* @__PURE__ */ new Map();
   statesCacheTime = 0;
+  unsubscribe = null;
+  servicesCache = null;
+  servicesCacheTime = 0;
+  // Registry caches for area lookups (getEntitiesInArea). Both registries are fetched
+  // together per area filter; cache them with the states TTL so a dev-loop's repeated
+  // area queries reuse one WS round-trip instead of re-dumping both registries each call.
+  entityRegistryCache = null;
+  deviceRegistryCache = null;
+  registryCacheTime = 0;
   constructor(config3) {
     this.config = config3;
   }
@@ -34749,14 +34744,22 @@ var HaClient = class {
     };
     try {
       this.connection = await createConnection({ auth: auth2 });
+      this.servicesCache = null;
+      this.servicesCacheTime = 0;
+      this.entityRegistryCache = null;
+      this.deviceRegistryCache = null;
+      this.registryCacheTime = 0;
       const haConfig = await this.connection.sendMessagePromise({ type: "get_config" });
+      if (!haConfig || typeof haConfig.version !== "string" || !Array.isArray(haConfig.components)) {
+        throw new Error("Unexpected response from Home Assistant get_config");
+      }
       this.connectionInfo = {
         connected: true,
         version: haConfig.version,
         location: haConfig.location_name,
         components: haConfig.components
       };
-      subscribeEntities(this.connection, (entities) => {
+      this.unsubscribe = subscribeEntities(this.connection, (entities) => {
         this.updateStatesCache(entities);
       });
       return this.connectionInfo;
@@ -34771,6 +34774,10 @@ var HaClient = class {
    * Disconnect from Home Assistant
    */
   async disconnect() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
     if (this.connection) {
       this.connection.close();
       this.connection = null;
@@ -34856,16 +34863,25 @@ var HaClient = class {
       return [];
     }
     try {
-      const entityRegistry = await this.connection.sendMessagePromise({ type: "config/entity_registry/list" });
-      const deviceRegistry = await this.connection.sendMessagePromise({ type: "config/device_registry/list" });
+      const cacheAge = (Date.now() - this.registryCacheTime) / 1e3;
+      let entityRegistry = this.entityRegistryCache;
+      let deviceRegistry = this.deviceRegistryCache;
+      if (!entityRegistry || !deviceRegistry || cacheAge >= this.config.cache.statesTtlSeconds) {
+        entityRegistry = await this.connection.sendMessagePromise({ type: "config/entity_registry/list" });
+        deviceRegistry = await this.connection.sendMessagePromise({ type: "config/device_registry/list" });
+        this.entityRegistryCache = entityRegistry;
+        this.deviceRegistryCache = deviceRegistry;
+        this.registryCacheTime = Date.now();
+      }
       const devicesInArea = new Set(
         deviceRegistry.filter((d) => d.area_id === areaId).map((d) => d.id)
       );
       return entityRegistry.filter(
         (e) => e.area_id === areaId || e.device_id && devicesInArea.has(e.device_id)
       ).map((e) => e.entity_id);
-    } catch {
-      return [];
+    } catch (error49) {
+      const message = error49 instanceof Error ? error49.message : String(error49);
+      throw new Error(`Area lookup failed for '${areaId}': ${message}`, { cause: error49 });
     }
   }
   /**
@@ -34875,34 +34891,39 @@ var HaClient = class {
     if (!this.connection) {
       throw new Error("Not connected to Home Assistant");
     }
-    const hassServices = await getServices(this.connection);
-    const services2 = [];
-    for (const [serviceDomain, domainServices] of Object.entries(hassServices)) {
-      if (domain2 && serviceDomain !== domain2) {
-        continue;
-      }
-      for (const [serviceName, serviceData] of Object.entries(domainServices)) {
-        const fields = {};
-        for (const [fieldName, fieldData] of Object.entries(serviceData.fields || {})) {
-          fields[fieldName] = {
-            name: fieldData.name || fieldName,
-            description: fieldData.description || "",
-            required: fieldData.required || false,
-            example: fieldData.example,
-            selector: fieldData.selector
-          };
+    const cacheAge = (Date.now() - this.servicesCacheTime) / 1e3;
+    let allServices;
+    if (this.servicesCache && cacheAge < this.config.cache.statesTtlSeconds) {
+      allServices = this.servicesCache;
+    } else {
+      const hassServices = await getServices(this.connection);
+      allServices = [];
+      for (const [serviceDomain, domainServices] of Object.entries(hassServices)) {
+        for (const [serviceName, serviceData] of Object.entries(domainServices)) {
+          const fields = {};
+          for (const [fieldName, fieldData] of Object.entries(serviceData.fields || {})) {
+            fields[fieldName] = {
+              name: fieldData.name || fieldName,
+              description: fieldData.description || "",
+              required: fieldData.required || false,
+              example: fieldData.example,
+              selector: fieldData.selector
+            };
+          }
+          allServices.push({
+            domain: serviceDomain,
+            service: serviceName,
+            name: serviceData.name || serviceName,
+            description: serviceData.description || "",
+            fields,
+            target: serviceData.target
+          });
         }
-        services2.push({
-          domain: serviceDomain,
-          service: serviceName,
-          name: serviceData.name || serviceName,
-          description: serviceData.description || "",
-          fields,
-          target: serviceData.target
-        });
       }
+      this.servicesCache = allServices;
+      this.servicesCacheTime = Date.now();
     }
-    return services2;
+    return domain2 ? allServices.filter((s) => s.domain === domain2) : allServices;
   }
   /**
    * Call a service
@@ -34949,13 +34970,20 @@ var HaClient = class {
       devices = devices.filter((d) => d.model?.toLowerCase().includes(model));
     }
     if (filters?.integration) {
-      const configEntries = await this.connection.sendMessagePromise({ type: "config_entries/get" });
-      const integrationEntries = new Set(
-        configEntries.filter((e) => e.domain === filters.integration).map((e) => e.entry_id)
-      );
-      devices = devices.filter(
-        (d) => d.config_entries.some((e) => integrationEntries.has(e))
-      );
+      try {
+        const configEntries = await this.connection.sendMessagePromise({ type: "config_entries/get" });
+        const integrationEntries = new Set(
+          configEntries.filter((e) => e.domain === filters.integration).map((e) => e.entry_id)
+        );
+        devices = devices.filter(
+          (d) => d.config_entries.some((e) => integrationEntries.has(e))
+        );
+      } catch (error49) {
+        const message = error49 instanceof Error ? error49.message : String(error49);
+        console.error(
+          `ha_get_devices: integration filter skipped (config_entries/get failed, needs admin token): ${message}`
+        );
+      }
     }
     return devices;
   }
@@ -34967,6 +34995,9 @@ var HaClient = class {
       throw new Error("Not connected to Home Assistant");
     }
     const logEntries = await this.connection.sendMessagePromise({ type: "system_log/list" });
+    if (!Array.isArray(logEntries)) {
+      return [];
+    }
     const levelPriority = {
       DEBUG: 0,
       INFO: 1,
@@ -34975,16 +35006,24 @@ var HaClient = class {
       CRITICAL: 4
     };
     const minLevel = filters?.level ? levelPriority[filters.level] : 0;
-    const sinceTimestamp = filters?.since ? new Date(filters.since).getTime() / 1e3 : 0;
+    let sinceTimestamp = 0;
+    if (filters?.since) {
+      const parsed = Date.parse(filters.since);
+      if (Number.isNaN(parsed)) {
+        throw new Error(`Invalid 'since' timestamp: ${filters.since}`);
+      }
+      sinceTimestamp = parsed / 1e3;
+    }
     let logs = logEntries.filter((entry) => {
-      if (levelPriority[entry.level] < minLevel) {
+      const entryPriority = levelPriority[entry.level] ?? levelPriority.INFO;
+      if (entryPriority < minLevel) {
         return false;
       }
       if (entry.timestamp < sinceTimestamp) {
         return false;
       }
       if (filters?.domain) {
-        const source = entry.source[0];
+        const source = entry.source?.[0] ?? "";
         if (!source.includes(filters.domain)) {
           return false;
         }
@@ -34993,7 +35032,7 @@ var HaClient = class {
     }).map((entry) => ({
       timestamp: new Date(entry.timestamp * 1e3).toISOString(),
       level: entry.level,
-      source: entry.source[0],
+      source: entry.source?.[0] ?? "unknown",
       message: entry.message
     }));
     const maxLines = filters?.lines || 100;
@@ -35014,7 +35053,7 @@ var HaClient = class {
       return { valid: false, errors };
     }
     for (const [fieldName, fieldInfo] of Object.entries(serviceInfo.fields)) {
-      if (fieldInfo.required && !data?.[fieldName]) {
+      if (fieldInfo.required && !(fieldName in (data ?? {}))) {
         errors.push(`Required field '${fieldName}' is missing`);
       }
     }
@@ -35123,7 +35162,9 @@ async function handleHaCallService(client, safety, input) {
     return {
       success: true,
       dry_run: false,
-      result: callResult
+      // Redact the real result the same way the dry-run preview redacts would_data,
+      // so the execution path is at least as careful as the preview.
+      result: typeof callResult === "object" && callResult !== null ? safety.redactSensitiveData(callResult) : callResult
     };
   } catch (error49) {
     const message = error49 instanceof Error ? error49.message : String(error49);
@@ -35188,7 +35229,14 @@ async function handleDocsFetch(docsIndex2, input) {
     title: page.title,
     content: page.content,
     last_updated: page.lastUpdated,
-    related: page.related
+    // page.related is a list of internal index paths (e.g. "core/runtime-data").
+    // Normalize to the same developers.home-assistant.io URL form that docs_search
+    // emits so 'related' is consistent across tools. The trailing path segment after
+    // /docs/ is exactly what docs_fetch's `path` input expects, so a consumer can
+    // re-feed it directly.
+    related: page.related.map(
+      (relatedPath) => `https://developers.home-assistant.io/docs/${relatedPath}`
+    )
   };
 }
 
@@ -35559,12 +35607,13 @@ class MySwitch(MyEntity, SwitchEntity):
     }
   }
 };
+var EXAMPLE_PATTERNS = Object.keys(EXAMPLES);
 async function handleDocsExamples(input) {
   const pattern = input.pattern.toLowerCase();
   const style = input.style || "minimal";
   const examples = EXAMPLES[pattern];
   if (!examples) {
-    const available = Object.keys(EXAMPLES).join(", ");
+    const available = EXAMPLE_PATTERNS.join(", ");
     throw new Error(
       `Unknown pattern: ${pattern}. Available patterns: ${available}`
     );
@@ -35573,7 +35622,7 @@ async function handleDocsExamples(input) {
 }
 
 // src/tools/validate-manifest.ts
-var import_promises3 = require("fs/promises");
+var import_promises2 = require("fs/promises");
 var import_fs = require("fs");
 var CORE_REQUIRED = /* @__PURE__ */ new Set([
   "domain",
@@ -35624,7 +35673,7 @@ async function handleValidateManifest(input) {
   }
   let manifest;
   try {
-    const content = await (0, import_promises3.readFile)(input.path, "utf-8");
+    const content = await (0, import_promises2.readFile)(input.path, "utf-8");
     manifest = JSON.parse(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -35655,10 +35704,10 @@ async function handleValidateManifest(input) {
     const pathParts = input.path.split(/[/\\]/);
     const dirName = pathParts[pathParts.length - 2];
     if (dirName && manifest.domain !== dirName) {
-      warnings.push({
+      errors.push({
         field: "domain",
         message: `Domain '${manifest.domain}' does not match directory name '${dirName}'`,
-        severity: "warning"
+        severity: "error"
       });
     }
   }
@@ -35707,6 +35756,12 @@ async function handleValidateManifest(input) {
         }
       }
     }
+  } else if (manifest.codeowners !== void 0) {
+    errors.push({
+      field: "codeowners",
+      message: "codeowners must be a list",
+      severity: "error"
+    });
   }
   for (const urlField of ["documentation", "issue_tracker"]) {
     const url2 = manifest[urlField];
@@ -35720,7 +35775,16 @@ async function handleValidateManifest(input) {
       }
     }
   }
-  if (manifest.config_flow !== true && manifest.integration_type !== "virtual") {
+  if (manifest.config_flow === true) {
+    const configFlowPath = input.path.replace(/[^/\\]+$/, "config_flow.py");
+    if (!(0, import_fs.existsSync)(configFlowPath)) {
+      errors.push({
+        field: "config_flow",
+        message: "config_flow is true but config_flow.py not found",
+        severity: "error"
+      });
+    }
+  } else if (manifest.integration_type !== "virtual") {
     warnings.push({
       field: "config_flow",
       message: "Config flow is not enabled. New integrations require config_flow: true",
@@ -35735,20 +35799,28 @@ async function handleValidateManifest(input) {
 }
 
 // src/tools/validate-strings.ts
-var import_promises4 = require("fs/promises");
+var import_promises3 = require("fs/promises");
 var import_fs2 = require("fs");
-var import_path3 = require("path");
+var import_path2 = require("path");
 async function handleValidateStrings(input) {
+  const failure = (message) => ({
+    valid: false,
+    errors: [message],
+    missing_steps: [],
+    orphaned_steps: [],
+    missing_errors: [],
+    missing_data_descriptions: []
+  });
   if (!(0, import_fs2.existsSync)(input.path)) {
-    throw new Error(`File not found: ${input.path}`);
+    return failure(`strings.json not found: ${input.path}`);
   }
   let strings;
   try {
-    const content = await (0, import_promises4.readFile)(input.path, "utf-8");
+    const content = await (0, import_promises3.readFile)(input.path, "utf-8");
     strings = JSON.parse(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid JSON in strings.json: ${message}`, { cause: err });
+    return failure(`Invalid JSON in strings.json: ${message}`);
   }
   const config3 = strings.config;
   const stringSteps = new Set(
@@ -35760,12 +35832,12 @@ async function handleValidateStrings(input) {
   const stringAborts = new Set(
     Object.keys(config3?.abort || {})
   );
-  const configFlowPath = (0, import_path3.join)((0, import_path3.dirname)(input.path), "config_flow.py");
+  const configFlowPath = (0, import_path2.join)((0, import_path2.dirname)(input.path), "config_flow.py");
   const flowSteps = /* @__PURE__ */ new Set();
   const flowErrors = /* @__PURE__ */ new Set();
   const flowAborts = /* @__PURE__ */ new Set();
   if ((0, import_fs2.existsSync)(configFlowPath)) {
-    const flowContent = await (0, import_promises4.readFile)(configFlowPath, "utf-8");
+    const flowContent = await (0, import_promises3.readFile)(configFlowPath, "utf-8");
     const stepMatches = flowContent.matchAll(/async def async_step_(\w+)\s*\(/g);
     for (const match of stepMatches) {
       flowSteps.add(match[1]);
@@ -35777,7 +35849,7 @@ async function handleValidateStrings(input) {
       flowErrors.add(match[2]);
     }
     const abortMatches = flowContent.matchAll(
-      /async_abort\s*\(\s*reason\s*=\s*["'](\w+)["']/g
+      /async_abort\s*\(\s*(?:reason\s*=\s*)?["'](\w+)["']/g
     );
     for (const match of abortMatches) {
       flowAborts.add(match[1]);
@@ -35806,13 +35878,22 @@ async function handleValidateStrings(input) {
       missingErrors.push(error49);
     }
   }
+  const malformedSteps = [];
   const steps = config3?.step || {};
-  for (const [stepName, stepData] of Object.entries(steps)) {
-    if (stepData.data && !stepData.data_description) {
+  const isObject2 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+  for (const [stepName, rawStepData] of Object.entries(steps)) {
+    if (!isObject2(rawStepData)) {
+      malformedSteps.push(`config.step.${stepName} must be an object`);
+      continue;
+    }
+    const stepData = rawStepData;
+    const data = stepData.data;
+    const dataDescription = stepData.data_description;
+    if (isObject2(data) && !isObject2(dataDescription)) {
       missingDataDescriptions.push(stepName);
-    } else if (stepData.data && stepData.data_description) {
-      const dataKeys = new Set(Object.keys(stepData.data));
-      const descKeys = new Set(Object.keys(stepData.data_description));
+    } else if (isObject2(data) && isObject2(dataDescription)) {
+      const dataKeys = new Set(Object.keys(data));
+      const descKeys = new Set(Object.keys(dataDescription));
       for (const key of dataKeys) {
         if (!descKeys.has(key)) {
           missingDataDescriptions.push(`${stepName}.${key}`);
@@ -35826,20 +35907,21 @@ async function handleValidateStrings(input) {
       missingAborts.push(abort);
     }
   }
-  const valid = missingSteps.length === 0 && missingErrors.length === 0 && missingDataDescriptions.length === 0;
+  const allMissingErrors = [...missingErrors, ...missingAborts, ...malformedSteps];
+  const valid = missingSteps.length === 0 && allMissingErrors.length === 0 && missingDataDescriptions.length === 0;
   return {
     valid,
     missing_steps: missingSteps,
     orphaned_steps: orphanedSteps,
-    missing_errors: [...missingErrors, ...missingAborts],
+    missing_errors: allMissingErrors,
     missing_data_descriptions: missingDataDescriptions
   };
 }
 
 // src/tools/check-patterns.ts
-var import_promises5 = require("fs/promises");
+var import_promises4 = require("fs/promises");
 var import_fs3 = require("fs");
-var import_path4 = require("path");
+var import_path3 = require("path");
 var PATTERNS = [
   // Storage patterns
   {
@@ -35859,19 +35941,19 @@ var PATTERNS = [
   {
     name: "old-zeroconf-import",
     pattern: /from homeassistant\.components\.zeroconf import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.zeroconf (changed in 2025.1)",
+    message: "Import ZeroconfServiceInfo from homeassistant.helpers.service_info.zeroconf (changed in 2025.1)",
     severity: "warning"
   },
   {
     name: "old-ssdp-import",
     pattern: /from homeassistant\.components\.ssdp import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.ssdp (changed in 2025.1)",
+    message: "Import SsdpServiceInfo from homeassistant.helpers.service_info.ssdp (changed in 2025.1)",
     severity: "warning"
   },
   {
     name: "old-dhcp-import",
     pattern: /from homeassistant\.components\.dhcp import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.dhcp (changed in 2025.1)",
+    message: "Import DhcpServiceInfo from homeassistant.helpers.service_info.dhcp (changed in 2025.1)",
     severity: "warning"
   },
   // Blocking I/O
@@ -35930,21 +36012,31 @@ var PATTERNS = [
     message: "Use set[] instead of Set[] (Python 3.9+)",
     severity: "warning"
   },
-  // Blocking I/O - additional
+  // Blocking I/O - additional.
+  // Regex + message kept in sync with scripts/check-patterns.py blocking-open so
+  // the MCP tool and the script/hook agree: one level of nested parens is allowed
+  // (so open(os.path.join(a, b)).read() matches) and only the chained-on-one-line
+  // open(...).read(...) form is flagged.
   {
     name: "blocking-open",
-    pattern: /\bopen\s*\([^)]*\)\s*\.\s*read\s*\(/g,
-    message: "Use aiofiles for async file operations",
+    pattern: /\bopen\s*\((?:[^()]|\([^()]*\))+\)\.read\s*\(/g,
+    message: "Use aiofiles or hass.async_add_executor_job for file I/O",
     severity: "warning"
   },
   // Old USB import
   {
     name: "old-usb-import",
     pattern: /from homeassistant\.components\.usb import.*ServiceInfo/g,
-    message: "Import from homeassistant.helpers.service_info.usb (changed in 2025.1)",
+    message: "Import UsbServiceInfo from homeassistant.helpers.service_info.usb (changed in 2025.1)",
     severity: "warning"
   },
   // Deprecated async patterns
+  {
+    name: "yield-from",
+    pattern: /\byield\s+from\b/g,
+    message: "Use 'await' instead of 'yield from' for coroutines",
+    severity: "warning"
+  },
   {
     name: "asyncio-coroutine",
     pattern: /@asyncio\.coroutine/g,
@@ -35968,23 +36060,58 @@ var PATTERNS = [
   // Service registration in wrong place
   {
     name: "service-in-setup-entry",
-    pattern: /async_setup_entry[^}]*hass\.services\.async_register/gs,
+    // Bound the gap to the async_setup_entry body by stopping at the next top-level
+    // def — Python has no braces for the old [^}]* to stop on, so it spanned the whole
+    // file and false-matched a register call in any later function.
+    pattern: /async_setup_entry(?:(?!\n(?:async )?def )[\s\S])*?hass\.services\.async_register/g,
     message: "Services should be registered in async_setup, not async_setup_entry",
     severity: "warning"
   }
 ];
+function computeLineStarts(content) {
+  const starts = [0];
+  for (let i = 0; i < content.length; i++) {
+    if (content.charCodeAt(i) === 10) {
+      starts.push(i + 1);
+    }
+  }
+  return starts;
+}
+function lineNumberAt(lineStarts, offset) {
+  let lo = 0;
+  let hi = lineStarts.length - 1;
+  while (lo < hi) {
+    const mid = lo + hi + 1 >> 1;
+    if (lineStarts[mid] <= offset) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return lo + 1;
+}
+var IGNORE_MARKER = /#\s*(?:noqa:\s*ha-dev|ha-dev:\s*ignore)\b/;
 async function checkFile(filePath) {
   const issues = [];
-  const content = await (0, import_promises5.readFile)(filePath, "utf-8");
+  const content = await (0, import_promises4.readFile)(filePath, "utf-8");
   const lines = content.split("\n");
+  const lineStarts = computeLineStarts(content);
   for (const pattern of PATTERNS) {
     pattern.pattern.lastIndex = 0;
     let match;
     while ((match = pattern.pattern.exec(content)) !== null) {
-      const beforeMatch = content.slice(0, match.index);
-      const lineNum = (beforeMatch.match(/\n/g) || []).length + 1;
+      const lineNum = lineNumberAt(lineStarts, match.index);
       const line = lines[lineNum - 1] || "";
       if (line.trim().startsWith("#")) {
+        continue;
+      }
+      if (IGNORE_MARKER.test(line)) {
+        continue;
+      }
+      const lineStart = content.lastIndexOf("\n", match.index - 1) + 1;
+      const columnInLine = match.index - lineStart;
+      const hashIndex = line.indexOf("#");
+      if (hashIndex !== -1 && hashIndex < columnInLine) {
         continue;
       }
       issues.push({
@@ -36006,20 +36133,59 @@ async function checkFile(filePath) {
       severity: "warning"
     });
   }
+  if (/class\s+\w+\([^)]*\b(?:Sensor|Switch|BinarySensor|Light|Cover|Climate|Button|Number|Select|Fan|Lock|MediaPlayer|Vacuum|Event|Text|Update|Image|Siren|Lawn[Mm]ower)Entity/.test(
+    content
+  ) && !/_attr_unique_id\s*=|self\.unique_id\s*=|def\s+unique_id\b|async_set_unique_id\s*\(|unique_id\s*=/.test(
+    content
+  )) {
+    issues.push({
+      file: filePath,
+      line: 1,
+      pattern: "missing-unique-id",
+      message: "Entity class may be missing unique_id",
+      severity: "warning"
+    });
+  }
   return issues;
+}
+var excludeDirs = /* @__PURE__ */ new Set([
+  ".git",
+  "__pycache__",
+  ".venv",
+  "venv",
+  "node_modules",
+  "tests"
+]);
+function isTestFile(name) {
+  return name.startsWith("test_") && name.endsWith(".py");
 }
 async function checkDirectory(dirPath) {
   const issues = [];
-  const excludeDirs = /* @__PURE__ */ new Set([".git", "__pycache__", ".venv", "venv", "node_modules"]);
+  const visited = /* @__PURE__ */ new Set();
   async function walk(dir) {
-    const entries = await (0, import_promises5.readdir)(dir, { withFileTypes: true });
+    let real;
+    try {
+      real = await (0, import_promises4.realpath)(dir);
+    } catch {
+      real = dir;
+    }
+    if (visited.has(real)) {
+      return;
+    }
+    visited.add(real);
+    let entries;
+    try {
+      entries = await (0, import_promises4.readdir)(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
     for (const entry of entries) {
-      const fullPath = (0, import_path4.join)(dir, entry.name);
+      const fullPath = (0, import_path3.join)(dir, entry.name);
       if (entry.isDirectory()) {
         if (!excludeDirs.has(entry.name)) {
           await walk(fullPath);
         }
-      } else if (entry.isFile() && entry.name.endsWith(".py")) {
+      } else if (entry.isFile() && entry.name.endsWith(".py") && !isTestFile(entry.name)) {
         const fileIssues = await checkFile(fullPath);
         issues.push(...fileIssues);
       }
@@ -36032,7 +36198,7 @@ async function handleCheckPatterns(input) {
   if (!(0, import_fs3.existsSync)(input.path)) {
     throw new Error(`Path not found: ${input.path}`);
   }
-  const pathStat = await (0, import_promises5.stat)(input.path);
+  const pathStat = await (0, import_promises4.stat)(input.path);
   let issues;
   if (pathStat.isDirectory()) {
     issues = await checkDirectory(input.path);
@@ -36151,7 +36317,7 @@ var TOOLS = [
       type: "object",
       properties: {
         query: { type: "string", description: "Search query" },
-        section: { type: "string", enum: ["core", "frontend", "architecture", "api"], description: "Documentation section" },
+        section: { type: "string", enum: ["core"], description: "Documentation section (only 'core' docs are indexed)" },
         limit: { type: "number", description: "Max results (default: 5)" }
       },
       required: ["query"]
@@ -36176,7 +36342,7 @@ var TOOLS = [
       properties: {
         pattern: {
           type: "string",
-          enum: ["coordinator", "config_flow", "entity", "service", "sensor", "switch", "binary_sensor", "light", "climate"],
+          enum: ["coordinator", "config_flow", "entity", "service", "sensor", "switch"],
           description: "Pattern to get examples for"
         },
         style: { type: "string", enum: ["minimal", "full"], description: "Example complexity" }
@@ -36261,6 +36427,7 @@ async function main() {
       switch (name) {
         // Home Assistant tools
         case "ha_connect":
+          await haClient?.disconnect();
           haClient = await handleHaConnect(args, config3);
           return { content: [{ type: "text", text: JSON.stringify(haClient.getConnectionInfo()) }] };
         case "ha_get_states":
