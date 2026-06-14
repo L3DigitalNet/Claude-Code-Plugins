@@ -88,8 +88,28 @@ class TestValidateManifest:
         fake_path = tmp_path / "nonexistent" / "manifest.json"
         
         returncode, stdout, stderr = run_validator(fake_path, is_custom=True)
-        
+
         assert returncode != 0 or "not found" in stdout.lower() or "error" in stderr.lower()
+
+    @pytest.mark.unit
+    def test_core_mode_reads_manifest_not_flag(self, tmp_path, valid_manifest):
+        """In --core mode the path is parsed as a positional, not the '--core' flag (F18)."""
+        manifest_dir = tmp_path / "test_integration"
+        manifest_dir.mkdir()
+        manifest_path = manifest_dir / "manifest.json"
+        # Core manifests don't require the HACS-only version/issue_tracker fields.
+        core_manifest = {
+            k: v for k, v in valid_manifest.items() if k not in ("version", "issue_tracker")
+        }
+        manifest_path.write_text(json.dumps(core_manifest, indent=2))
+        (manifest_dir / "config_flow.py").write_text("# config flow placeholder")
+
+        returncode, stdout, stderr = run_validator(manifest_path, is_custom=False)
+
+        # The script must read the real file, not try to open the literal "--core".
+        assert "not found" not in stdout.lower(), stdout
+        assert "--core" not in stdout
+        assert "ERROR" not in stdout, f"core manifest should validate: {stdout}"
 
 
 class TestValidateManifestExamples:

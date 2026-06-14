@@ -246,8 +246,15 @@ def main() -> int:
             print("       validate-manifest.py --core <path/to/manifest.json>")
             return 1
     else:
-        is_custom = "--core" not in sys.argv
-        manifest_path = Path(sys.argv[-1])
+        # Resolve the manifest path from the first non-flag positional arg, so
+        # `--core` may appear in any position (e.g. `<path> --core`) without being
+        # mistaken for the path.
+        positional = [a for a in sys.argv[1:] if a != "--core"]
+        if not positional:
+            print("Usage: validate-manifest.py <path/to/manifest.json>")
+            print("       validate-manifest.py --core <path/to/manifest.json>")
+            return 1
+        manifest_path = Path(positional[0])
 
     is_custom = "--core" not in sys.argv
 
