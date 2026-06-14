@@ -111,6 +111,31 @@ describe('SafetyChecker', () => {
       expect((redacted.config as Record<string, unknown>).api_key).toBe('**REDACTED**');
       expect((redacted.config as Record<string, unknown>).host).toBe('example.com');
     });
+
+    it('should preserve array structure while redacting inside object elements', () => {
+      const checker = new SafetyChecker(defaultConfig);
+      const data = { items: [{ password: 'x' }] };
+      const redacted = checker.redactSensitiveData(data);
+
+      // The array must stay an array, not be coerced to an index-keyed object
+      // ({0: ...}) by recursing through Object.entries.
+      expect(Array.isArray(redacted.items)).toBe(true);
+      const items = redacted.items as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(1);
+      expect(items[0].password).toBe('**REDACTED**');
+    });
+  });
+
+  describe('getSafetyInfo', () => {
+    it('should report settings and blockedCount (config blocked + always-blocked)', () => {
+      const checker = new SafetyChecker(defaultConfig);
+      const info = checker.getSafetyInfo();
+
+      expect(info.serviceCallsEnabled).toBe(true);
+      expect(info.dryRunRequired).toBe(true);
+      // defaultConfig has 1 blocked service; ALWAYS_BLOCKED has 3 entries.
+      expect(info.blockedCount).toBe(1 + 3);
+    });
   });
 
   describe('isSafeDomain', () => {
