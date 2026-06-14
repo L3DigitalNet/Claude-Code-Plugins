@@ -2,7 +2,7 @@
 // Tests the actual HaClient and SafetyChecker classes against live HA
 
 import { readFile } from "fs/promises";
-import { writeFileSync, existsSync } from "fs";
+import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
@@ -237,7 +237,9 @@ async function main() {
 |------|--------|--------|
 ${results.map(r => `| ${r.name} | ${r.pass ? "PASS" : "FAIL"} | ${r.detail} |`).join("\n")}
 `;
-  writeFileSync(join(homedir(), "ha-plugin-test-workspace", "MCP_WS_TEST_RESULTS.md"), md);
+  const outDir = join(homedir(), "ha-plugin-test-workspace");
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, "MCP_WS_TEST_RESULTS.md"), md);
   console.log("\nResults saved to ~/ha-plugin-test-workspace/MCP_WS_TEST_RESULTS.md");
 
   process.exit(failed > 0 ? 1 : 0);
