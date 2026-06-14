@@ -52,3 +52,19 @@ def device_info(self) -> DeviceInfo:
 ```
 
 `identifiers` must be stable across restarts — this is how HA knows entities belong together and avoids creating duplicate device entries.
+
+## Entity Registry
+
+The entity registry tracks each entity by its `unique_id` — set it via `_attr_unique_id` (or the `unique_id` property). This value is the entity's permanent identity: it must be stable across restarts and unique within the platform, and it is what lets HA persist user customizations (rename, disable, area) and recognize the same entity on reload. Entities without a `unique_id` are not registered and cannot be customized via the UI.
+
+```python
+class MyEntity(CoordinatorEntity):
+    _attr_has_entity_name = True  # Modern naming: HA composes "<Device name> <entity name>"
+
+    def __init__(self, coordinator, serial: str) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = serial  # Drives entity-registry identity
+        self._attr_name = "Temperature"  # Entity-specific part only, not the device name
+```
+
+HA derives the initial `entity_id` (e.g. `sensor.my_device_temperature`) from the platform and name at first registration. After that the registry owns it: the `entity_id` is persisted and only changes if the user renames it in the UI — your code must not assume a particular `entity_id`, only `unique_id` is stable. To inspect or react to registry entries, use `entity_registry.async_get(hass)`.
