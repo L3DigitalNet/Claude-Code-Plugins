@@ -1,0 +1,3 @@
+# Python bytecode — never commit compiled test/integration artifacts
+__pycache__/
+*.pyc
