@@ -87,6 +87,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.{domain}.const import DOMAIN
+from custom_components.{domain}.exceptions import InvalidAuth
 
 from .conftest import MOCK_CONFIG
 
