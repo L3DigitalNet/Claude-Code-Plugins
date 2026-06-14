@@ -18,6 +18,10 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+# Scaffold substitution is case-sensitive and lowercase-only: it replaces the
+# {domain} / {config_flow_class} placeholders below. The bare `DOMAIN` symbol is
+# the runtime Python const imported here — it is NOT a placeholder and must never
+# be substituted (it has no surrounding braces, so the scaffold leaves it alone).
 from custom_components.{domain}.const import DOMAIN
 from custom_components.{domain}.config_flow import (
     CannotConnect,
