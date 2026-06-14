@@ -1,7 +1,7 @@
 ---
 name: ha-integration-dev
 description: Home Assistant integration development specialist. Use PROACTIVELY when creating, reviewing, or debugging Home Assistant integrations. Expert in DataUpdateCoordinator patterns, config flows, entity platforms, and the Integration Quality Scale.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: [Read, Write, Edit, Bash, Grep, Glob]
 model: sonnet
 ---
 
