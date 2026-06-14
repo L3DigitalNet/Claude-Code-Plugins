@@ -38,6 +38,7 @@ class {Name}Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_interval=timedelta(
                 seconds=entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)
             ),
