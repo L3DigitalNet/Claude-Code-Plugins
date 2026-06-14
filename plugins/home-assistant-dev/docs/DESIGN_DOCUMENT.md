@@ -80,13 +80,13 @@ A Claude Code plugin providing:
 
 ### 2.2 Success Criteria
 
-| Criterion         | Target    | Measurement                           |
-| ----------------- | --------- | ------------------------------------- |
-| IQS Rule Coverage | 100%      | All 52 rules documented with examples |
-| Pattern Detection | 20+       | Anti-patterns caught by validators    |
-| Example Quality   | Gold tier | At least one Gold-tier reference      |
-| Test Coverage     | 90%+      | Automated tests for core components   |
-| Documentation     | Complete  | Every component documented            |
+| Criterion | Target | Measurement |
+| --- | --- | --- |
+| IQS Rule Coverage | 100% | All 52 rules in the checklist; 21 with detailed examples |
+| Pattern Detection | 20+ | Anti-patterns caught by validators |
+| Example Quality | Gold tier | At least one Gold-tier reference |
+| Test Coverage | 90%+ | Automated tests for core components |
+| Documentation | Complete | Every component documented |
 
 ### 2.3 Non-Goals
 
@@ -421,7 +421,7 @@ disable-model-invocation: true
 
 | Skill | Purpose | Key Content |
 | --- | --- | --- |
-| `ha-quality-review` | IQS compliance | All 52 rules with examples |
+| `ha-quality-review` | IQS compliance | All 52 rules; 21 with detailed examples |
 | `ha-hacs` | HACS submission | hacs.json, brands, repository structure |
 | `ha-hacs-publishing` | HACS release | GitHub Actions validation, brand submission |
 | `ha-testing` | Test implementation | pytest patterns, MockConfigEntry |
