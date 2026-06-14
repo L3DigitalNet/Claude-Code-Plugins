@@ -19,15 +19,15 @@ automation:
     alias: 'Descriptive Name'
     description: 'What this does'
     mode: single # single | restart | queued | parallel
-    trigger:
+    triggers:
       - trigger: state
         entity_id: binary_sensor.front_door
         to: 'on'
-    condition:
+    conditions:
       - condition: time
         after: '08:00:00'
         before: '22:00:00'
-    action:
+    actions:
       - action: light.turn_on
         target:
           entity_id: light.hallway
@@ -150,8 +150,8 @@ automation:
 
 ## Key Rules
 
-1. Use `action:` not `service:` (modern syntax)
-2. Use `trigger:` as type key (not `platform:`)
+1. Use the plural block keys `triggers:` / `conditions:` / `actions:` (HA 2024.10+; the singular forms still work as aliases)
+2. Within them use `- trigger:` / `- action:` item keys (not `- platform:` / `- service:`)
 3. Always include `alias` and `description`
 4. Use `target:` for entity/area/device targeting
 5. Templates use Jinja2: `"{{ states('sensor.x') }}"`
