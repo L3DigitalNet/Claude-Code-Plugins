@@ -62,8 +62,9 @@ def test_npm_manifest_json_not_routed_to_HA_validator(tmp_path):
     fake_npm_manifest.write_text('{"name": "x"}')
     result = invoke(str(fake_npm_manifest))
     assert result.returncode == 0
-    # Hook should produce no validation output for a non-HA manifest.
-    assert "manifest" not in result.stderr.lower() or "error" not in result.stderr.lower()
+    # The validator's output is merged into stdout via `2>&1 || true`, so empty
+    # stdout proves the manifest branch's path guard skipped validation entirely.
+    assert result.stdout == ""
 
 
 @pytest.mark.unit
