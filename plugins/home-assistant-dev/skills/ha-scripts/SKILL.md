@@ -40,7 +40,7 @@ script:
         target:
           entity_id: media_player.kitchen_speaker
         data:
-          media_content_id: 'good_morning_playlist'
+          media_content_id: 'media-source://...' # provider-specific media ID (e.g. spotify:playlist:..., media-source://...) — not a free-text name
           media_content_type: 'playlist'
 ```
 
