@@ -203,8 +203,11 @@ FILE_LEVEL_CHECKS: list[tuple[str, Callable[[str], bool], str, str]] = [
                 r"Update|Image|Siren|Lawn[Mm]ower)Entity",
                 content,
             ) is not None
-            and "_attr_unique_id" not in content
-            and "unique_id" not in content
+            and not re.search(
+                r"_attr_unique_id\s*=|self\.unique_id\s*=|def\s+unique_id\b"
+                r"|async_set_unique_id\s*\(|unique_id\s*=",
+                content,
+            )
         ),
         "Entity class may be missing unique_id",
         "warning",
