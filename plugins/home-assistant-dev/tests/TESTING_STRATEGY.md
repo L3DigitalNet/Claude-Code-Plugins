@@ -1,4 +1,4 @@
-# Testing Strategy: Home Assistant Development Plugin v2.2
+# Testing Strategy: Home Assistant Development Plugin
 
 ## Overview
 
@@ -7,6 +7,8 @@ This document outlines a multi-layered testing approach for the HA Dev Plugin, c
 ---
 
 ## Test Categories
+
+> **Implemented vs proposed:** this strategy describes both currently-implemented and proposed test suites. The implemented Python suites are `tests/scripts/test_validate_manifest.py`, `tests/scripts/test_check_patterns.py`, `tests/scripts/test_post_write_hook.py`, `tests/validation/test_iqs_accuracy.py`, `tests/test_manifest_zod_strict.py`, and `tests/test_plugin_structure.py` (plus the `mcp-server/__tests__/` TypeScript suites and the `tests/e2e/` harness). Other test files named in the code blocks below (for example `test_validate_strings.py`, `test_iqs_rules.py`, `test_deprecation_dates.py`) are proposed designs, not yet implemented.
 
 ### 1. Unit Tests (Automated)
 
@@ -684,81 +686,13 @@ addopts = -v --tb=short
 
 #### 5.2 GitHub Actions CI
 
-```yaml
-# .github/workflows/test.yml
-name: Tests
+CI is defined in the repository-root workflow `.github/workflows/ha-dev-plugin-tests.yml` (triggered on changes under `plugins/home-assistant-dev/**`). It runs these jobs:
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  python-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install pytest pytest-asyncio
-          pip install homeassistant  # For type hints
-
-      - name: Run script unit tests
-        run: pytest tests/scripts/ -v -m unit
-
-      - name: Run validation tests
-        run: pytest tests/validation/ -v
-
-  typescript-tests:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mcp-server
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-  example-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        example: [polling-hub, minimal-sensor, push-integration]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install test dependencies
-        run: pip install pytest pytest-homeassistant-custom-component pytest-asyncio
-
-      - name: Run example tests
-        run: |
-          cd examples/${{ matrix.example }}
-          pytest tests/ -v || echo "No tests found"
-```
+- **Python Tests** — script unit tests (`tests/scripts/`), validation tests (`tests/validation/`), and structural tests (`tests/test_plugin_structure.py`).
+- **Script Integration Tests** — runs the scripts against the example integrations and validates the example manifests.
+- **TypeScript Tests** — `npm ci`, `npm run typecheck`, coverage tests, `npm run build`, and a committed-bundle freshness check, in `mcp-server/`.
+- **Plugin Structure** — structural validation, a skill-frontmatter check, and `hooks.json` validation.
+- **MCP E2E Tests (HA Container)** — REST/WebSocket e2e suites against a Home Assistant service container (main branch or the `run-e2e` PR label only).
 
 #### 5.3 Test Coverage Requirements
 
