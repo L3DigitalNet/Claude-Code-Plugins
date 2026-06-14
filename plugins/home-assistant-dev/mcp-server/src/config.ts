@@ -15,7 +15,7 @@ import type { ServerConfig } from "./types.js";
 
 const CONFIG_FILE_PATH = join(homedir(), ".config", "ha-dev-mcp", "config.json");
 
-const DEFAULT_CONFIG: ServerConfig = {
+export const DEFAULT_CONFIG: ServerConfig = {
   homeAssistant: {
     url: "",
     token: "",
@@ -121,33 +121,30 @@ async function loadConfigFile(): Promise<PartialServerConfig> {
 /**
  * Load configuration from environment variables
  */
-function loadEnvConfig(): Partial<ServerConfig> {
-  const config: Partial<ServerConfig> = {};
+export function loadEnvConfig(): PartialServerConfig {
+  const config: PartialServerConfig = {};
 
-  // Home Assistant connection
+  // Home Assistant connection - env sets all three fields together
   if (process.env.HA_DEV_MCP_URL || process.env.HA_URL) {
     config.homeAssistant = {
-      ...DEFAULT_CONFIG.homeAssistant,
       url: process.env.HA_DEV_MCP_URL || process.env.HA_URL || "",
       token: process.env.HA_DEV_MCP_TOKEN || process.env.HA_TOKEN || "",
       verifySsl: process.env.HA_DEV_MCP_VERIFY_SSL !== "false",
     };
   }
 
-  // Safety settings
+  // Safety settings - emit ONLY the field env actually sets, so a file-level
+  // blockedServices customization survives the merge (deepMerge layers this
+  // partial over the file/default safety object field-by-field). Spreading the
+  // defaults here would re-impose the default blocklist and silently drop a
+  // user's additions at the exact moment real service calls are enabled.
   if (process.env.HA_DEV_MCP_ALLOW_SERVICE_CALLS === "true") {
-    config.safety = {
-      ...DEFAULT_CONFIG.safety,
-      allowServiceCalls: true,
-    };
+    config.safety = { allowServiceCalls: true };
   }
 
-  // Feature flags
+  // Feature flags - emit only the field env sets
   if (process.env.HA_DEV_MCP_DISABLE_HA_TOOLS === "true") {
-    config.features = {
-      ...DEFAULT_CONFIG.features,
-      enableHaTools: false,
-    };
+    config.features = { enableHaTools: false };
   }
 
   return config;
@@ -156,7 +153,7 @@ function loadEnvConfig(): Partial<ServerConfig> {
 /**
  * Deep merge two objects
  */
-function deepMerge(target: ServerConfig, source: PartialServerConfig): ServerConfig {
+export function deepMerge(target: ServerConfig, source: PartialServerConfig): ServerConfig {
   const result: Record<string, unknown> = { ...target };
 
   for (const key of Object.keys(source) as Array<keyof ServerConfig>) {
