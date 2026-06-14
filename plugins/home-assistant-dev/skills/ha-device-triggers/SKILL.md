@@ -183,7 +183,8 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
     triggers = await async_get_triggers(hass, device.id)
 
     assert len(triggers) == 3
-    assert triggers[0]["type"] == "button_press"
+    # TRIGGER_TYPES is a set, so trigger order is not guaranteed — assert membership.
+    assert "button_press" in {t["type"] for t in triggers}
 ```
 
 ## Related Skills
