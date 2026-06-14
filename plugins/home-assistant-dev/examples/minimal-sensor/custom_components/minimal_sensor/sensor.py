@@ -27,7 +27,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    async_add_entities([MinimalTemperatureSensor(entry)])
+    # update_before_add=True so HA does an initial async_update before registering the
+    # entity, giving it a value immediately instead of None until the first poll.
+    async_add_entities([MinimalTemperatureSensor(entry)], update_before_add=True)
 
 
 class MinimalTemperatureSensor(SensorEntity):
