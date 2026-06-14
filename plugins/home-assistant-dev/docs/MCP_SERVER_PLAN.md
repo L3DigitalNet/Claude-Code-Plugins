@@ -334,6 +334,8 @@ interface CheckPatternsOutput {
 
 #### Tool: `run_hassfest`
 
+> **Status: Planned — not yet implemented in the shipped MCP server** (requires Docker).
+
 Run hassfest validation (requires Docker).
 
 ```typescript
@@ -349,6 +351,8 @@ interface RunHassfestOutput {
 ```
 
 ### Category 4: Development Utilities
+
+> **Status: Planned — not yet implemented in the shipped MCP server.** The tools in this category (`scaffold_integration`, `compare_with_core`) are design specs for future enhancements; the shipped server registers 12 tools.
 
 #### Tool: `scaffold_integration`
 
@@ -640,7 +644,7 @@ docker run -e HA_DEV_MCP_URL=... -e HA_DEV_MCP_TOKEN=... ha-dev-mcp-server
 
 ### Functionality
 
-- [ ] All 15 tools implemented and working
+- [ ] All 12 shipped tools implemented and working (3 dev utilities — `run_hassfest`, `scaffold_integration`, `compare_with_core` — are planned, not yet implemented)
 - [ ] Connects to HA 2024.x and 2025.x instances
 - [ ] Sub-second response time for cached operations
 
