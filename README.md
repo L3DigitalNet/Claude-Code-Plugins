@@ -1,6 +1,6 @@
 # Claude Code Plugins Marketplace
 
-A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, Home Assistant integration dev, Qt UI development, deep web research, and three-layer documentation propagation.
+A Claude Code plugin marketplace. Plugins cover the full development lifecycle: release automation, Home Assistant integration dev, Qt UI development, deep web research, three-layer documentation propagation, and Python tooling standardization.
 
 ## Table of Contents
 
@@ -15,6 +15,7 @@ A Claude Code plugin marketplace. Plugins cover the full development lifecycle: 
     - [qdev](#qdev)
     - [Test Driver](#test-driver)
     - [Up Docs](#up-docs)
+    - [uv-strict-python](#uv-strict-python)
   - [Testing \& Validation](#testing--validation)
   - [Plugin Development](#plugin-development)
     - [Quick Start](#quick-start)
@@ -70,7 +71,8 @@ When auto-update is enabled, Claude Code refreshes the marketplace catalog and u
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
 | [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
-| [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (Haiku repo/Notion propagators + Sonnet wiki propagator & drift auditor) from session context, plus full infrastructure drift analysis |
+| [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (all Sonnet: repo, wiki, Notion propagators & drift auditor) from session context, plus full infrastructure drift analysis |
+| [uv-strict-python](#uv-strict-python) | Skills | (AI-invoked) | Configures Python projects to the Python Tooling SSOT Standard (uv, Ruff, BasedPyright strict, pytest+coverage, pip-audit) |
 
 ## Principles
 
@@ -120,7 +122,7 @@ These principles apply across all plugins in this collection. Individual plugins
 
 **Features:**
 
-- Two modes: quick merge (testing → main) or full versioned release
+- Seven modes available, from a quick merge to a batch release of all unreleased plugins at once; there is no testing branch (retired 2026-05-07)
 - Parallel pre-flight agents (test runner, docs auditor, git validator)
 - Automatic changelog generation from conventional commits
 - Version bumping across Python, Node.js, Rust, and plugin manifests
@@ -207,7 +209,7 @@ These principles apply across all plugins in this collection. Individual plugins
 
 **Features:**
 
-- Parallel sub-agent architecture: two Haiku propagators (repo, notion) + one Sonnet (wiki) run in isolated context windows for cost efficiency, while Sonnet audit ensures drift detection quality
+- Parallel sub-agent architecture: three Sonnet propagators (repo, wiki, notion) run in isolated context windows; Sonnet audit ensures drift detection quality
 - `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`: dispatch targeted propagators from session context
 - `/up-docs:drift`: four-phase convergence loop that gathers live server state via SSH, syncs llm-wiki, resolves internal contradictions, verifies and enriches links, then updates Notion
 - Wall-clock time to completion reduced to `max(repo, wiki, notion)` via parallel dispatch; sequential drift audit phases protect data integrity
@@ -219,6 +221,26 @@ These principles apply across all plugins in this collection. Individual plugins
 ```
 
 **Learn more:** [plugins/up-docs/README.md](plugins/up-docs/README.md)
+
+---
+
+### uv-strict-python
+
+**Python tooling standard enforcer**: configures Python projects to the Python Tooling SSOT Standard — uv for package/env management, Ruff for linting and formatting, BasedPyright strict for type checking, pytest+coverage for testing, and pip-audit for dependency auditing.
+
+**Features:**
+
+- Skill-driven: AI invokes the skill when creating projects, writing scripts, configuring pyproject.toml, or migrating from pip/Poetry/mypy/black/flake8
+- Covers pyproject.toml setup, lockfile generation, CI integration, Docker patterns, and pre-commit wiring
+- Audits existing projects for conformance to the standard
+
+**Install:**
+
+```bash
+/plugin install uv-strict-python@l3digitalnet-plugins
+```
+
+**Learn more:** [plugins/uv-strict-python/README.md](plugins/uv-strict-python/README.md)
 
 ---
 
@@ -284,13 +306,14 @@ This repository also serves as a development workspace for creating new plugins.
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
-├── plugins/                     # All plugin implementations (6 plugins)
+├── plugins/                     # All plugin implementations (7 plugins)
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── qdev/                    # Deep web research (research sweeps via qdev-researcher)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
 │   ├── release-pipeline/        # Autonomous release pipeline
 │   ├── test-driver/             # Proactive testing via gap analysis and convergence
-│   └── up-docs/                 # Three-layer documentation updater (repo, wiki, Notion)
+│   ├── up-docs/                 # Three-layer documentation updater (repo, wiki, Notion)
+│   └── uv-strict-python/        # Python tooling standard (uv, Ruff, BasedPyright strict)
 ├── scripts/
 │   └── validate-marketplace.sh  # Marketplace validation
 ├── docs/                        # Comprehensive documentation

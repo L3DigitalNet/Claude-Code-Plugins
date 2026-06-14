@@ -4,8 +4,8 @@
 
 **up-docs 0.4.0 (new architecture):**
 
-- Orchestrator (main agent) receives session-change summary and dispatches three Haiku propagators in parallel: repo, wiki, notion.
-- Each propagator runs in isolated context window with `model: haiku` frontmatter override; reads pages, applies targeted edits, returns markdown summary.
+- Orchestrator (main agent) receives session-change summary and dispatches three Sonnet propagators in parallel: repo, wiki, notion.
+- Each propagator runs in isolated context window with `model: sonnet` frontmatter override; reads pages, applies targeted edits, returns markdown summary.
 - Drift auditor (Sonnet) receives session-change summary after propagators complete; checks for contradictions in propagator output; emits convergence loop phases.
 - Parallel dispatch reduces wall time to `max(repo, wiki, notion)` + drift; sequential phases protect consistency.
 
@@ -65,14 +65,15 @@ Evaluate every design decision against these.
 ```text
 Claude-Code-Plugins/
 ├── .claude-plugin/marketplace.json   # Marketplace catalog
-├── .github/workflows/                # CI: codeql, ha-dev-plugin-tests, plugin-test-harness-ci
+├── .github/workflows/                # CI: codeql, format, ha-dev-plugin-tests, lint-markdown, plugin-test-harness-ci
 ├── plugins/
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
 │   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
 │   ├── qt-suite/                     # Qt development and testing toolkit
 │   ├── release-pipeline/             # Autonomous release pipeline
 │   ├── test-driver/                  # Proactive testing via gap analysis and convergence
-│   └── up-docs/                      # Three-layer documentation updater + drift analysis
+│   ├── up-docs/                      # Three-layer documentation updater + drift analysis
+│   └── uv-strict-python/             # Python tooling standard (uv, Ruff, BasedPyright strict; added 2026-06-09)
 ├── scripts/validate-marketplace.sh   # Zod-schema marketplace validation
 └── docs/                             # Plugin development documentation
 ```
