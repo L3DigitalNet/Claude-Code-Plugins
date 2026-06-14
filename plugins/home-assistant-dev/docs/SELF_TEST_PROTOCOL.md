@@ -1,5 +1,7 @@
 # Claude Code Self-Test Protocol
 
+**Targets plugin version:** 2.2.10 — update this stamp when the protocol changes so recorded results can be matched to the protocol version that produced them.
+
 ## Overview
 
 This document describes how to test the HA Dev Plugin using Claude Code itself as the test harness. The protocol covers 5 test categories: skill triggers, code generation quality, validation scripts, agent structure, and MCP server integration (against a live Home Assistant instance).
@@ -185,7 +187,7 @@ EOF
 curl -s http://localhost:8123/api/config \
   -H "Authorization: Bearer <LLAT>" | python3 -m json.tool | head -5
 
-# Expected: {"components": [...], "version": "2026.x.x", ...}
+# Expected: {"components": [...], "version": "2026.<month>.<patch>", ...}  # HA CalVer, e.g. 2026.2.2
 ```
 
 #### Teardown
@@ -239,6 +241,14 @@ For each skill, verify it activates on the expected prompts.
 | ha-device-triggers | "Add device triggers to my integration" | Shows trigger schema and handler |  |
 | ha-websocket-api | "Add a custom websocket command" | Shows websocket_api.async_register_command |  |
 | ha-recorder | "Add long-term statistics to my sensor" | Shows state_class, statistics pattern |  |
+| ha-blueprints | "Create a reusable blueprint for my automation" | Defines blueprint inputs and template |  |
+| ha-config-migration | "Implement async_migrate_entry to bump my config entry version" | Shows VERSION/MINOR_VERSION migration pattern |  |
+| ha-deprecation-fixes | "Fix the deprecation warnings in my integration for HA 2025" | Identifies deprecated imports/patterns and replacements |  |
+| ha-device-conditions-actions | "Add device conditions and actions to my integration" | Shows device_condition.py / device_action.py patterns |  |
+| ha-entity-lifecycle | "How do I restore entity state with async_added_to_hass?" | Mentions registries, async_added_to_hass, device_info |  |
+| ha-hacs-publishing | "Publish my integration to the HACS default repository" | Covers GitHub Actions validation and release workflow |  |
+| ha-options-flow | "Add an options flow so users can change settings after setup" | Shows OptionsFlow with async_step_init |  |
+| ha-scripts | "Create a reusable Home Assistant script with parameters" | Valid YAML script with fields/sequence |  |
 
 **Note:** `ha-quality-review` has `disable-model-invocation: true` — it requires explicit invocation (e.g., via `/ha-quality-review`), which is intentional.
 
@@ -394,7 +404,7 @@ npx tsc
 
 #### 5A. REST API Tests
 
-These tests validate the same capabilities the MCP server tools use, via the HA REST API directly. Run with `node test-mcp-tools.mjs` from the test workspace.
+These tests validate the same capabilities the MCP server tools use, via the HA REST API directly. Run with `node tests/e2e/test-mcp-rest.mjs` from the plugin root (`plugins/home-assistant-dev`).
 
 | Test | Expected | Validates |
 | --- | --- | --- |
@@ -425,7 +435,7 @@ These tests validate the same capabilities the MCP server tools use, via the HA 
 
 #### 5B. MCP Server WebSocket Tests
 
-These tests import the compiled `HaClient` and `SafetyChecker` classes directly and test them against the live HA WebSocket API. Run with `node test-mcp-server.mjs` from the test workspace.
+These tests import the compiled `HaClient` and `SafetyChecker` classes directly and test them against the live HA WebSocket API. Run with `node tests/e2e/test-mcp-websocket.mjs` from the plugin root (`plugins/home-assistant-dev`); the harness imports the per-module build under `mcp-server/dist/`, so run `npm run build` in `mcp-server/` first.
 
 | Test | Expected | Validates |
 | --- | --- | --- |
@@ -532,6 +542,10 @@ Update SELF_TEST_RESULTS.md with:
   - File and line numbers
 ```
 
+### 6. Stop condition (revert and escalate)
+
+If a fix introduces a new failure (a previously-passing test now fails) or the same test fails twice, revert the edit (`git checkout -- <file>`) and escalate rather than iterating. This bounds the self-healing loop, prevents regression accumulation, and matches the "two failed attempts max before researching" rule — important because edits land on live source via the symlink.
+
 ---
 
 ## Lessons Learned
@@ -573,7 +587,7 @@ Issues discovered during self-testing sessions. These inform what to watch for o
 
 ## Summary
 
-- Skill Trigger Tests: X/19 passed
+- Skill Trigger Tests: X/27 passed
 - Code Generation Tests: X/X passed
 - Validation Script Tests: X/X passed
 - Agent Tests: X/3 passed
@@ -610,7 +624,7 @@ I'm going to self-test the HA Dev Plugin. I have:
 - Home Assistant running in Docker/podman at http://localhost:8123
 
 Please run through all 5 test categories:
-1. Skill Trigger Tests (19 skills)
+1. Skill Trigger Tests (27 skills)
 2. Code Generation Quality Tests
 3. Validation Script Tests
 4. Agent Tests (3 agents)
