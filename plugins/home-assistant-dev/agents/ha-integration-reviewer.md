@@ -5,10 +5,6 @@ tools: Read, Grep, Glob, Bash
 model: haiku
 # haiku chosen: review checklist is structural (manifest fields, config_flow presence,
 # coordinator usage, type annotations) — all mechanical pattern-matching, no inference.
-skills:
-  - ha-quality-review
-  - ha-testing
-  - ha-debugging
 ---
 
 # Home Assistant Integration Reviewer

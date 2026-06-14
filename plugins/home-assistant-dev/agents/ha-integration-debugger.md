@@ -3,10 +3,6 @@ name: ha-integration-debugger
 description: Home Assistant integration debugger. Use PROACTIVELY when encountering errors, test failures, or unexpected behavior in HA integrations.
 tools: Read, Edit, Bash, Grep, Glob
 model: sonnet
-skills:
-  - ha-debugging
-  - ha-coordinator
-  - ha-async-patterns
 ---
 
 # Home Assistant Integration Debugger
