@@ -4,6 +4,8 @@
 
 A Model Context Protocol (MCP) server that connects Claude to Home Assistant instances and developer resources for enhanced integration development.
 
+> **As-Built Status (plugin v2.2.10):** This MCP server is **implemented and shipped** — it is no longer a forward-looking proposal. **12 of the 15 planned tools** are registered and working in `mcp-server/`. Phases 1–4 and the implemented portion of Phase 5 are delivered (checked below); the 3 remaining tools (`run_hassfest`, `scaffold_integration`, `compare_with_core`) and the "Future Enhancements" items are deferred. Treat unchecked boxes as outstanding work and the day-by-day estimates below as the original plan-of-record, not current status.
+
 ---
 
 ## Executive Summary
@@ -22,7 +24,7 @@ Enable Claude to interact with live Home Assistant instances during integration 
 
 ### Implementation Complexity
 
-- **Estimated Effort**: 3-5 days
+- **Estimated Effort**: 3-5 days (original plan-of-record; the server is now shipped — see the As-Built Status banner above)
 - **Dependencies**: Node.js 18+, MCP SDK, Home Assistant WebSocket API
 - **Risk Level**: Medium (requires user's HA instance access)
 
@@ -160,10 +162,11 @@ interface HaCallServiceOutput {
 }
 ```
 
-**Safety**:
+**Safety** (two-tier model, matches `mcp-server/src/safety.ts`):
 
 - `dry_run: true` by default
-- Blocked services: `homeassistant.restart`, `*.reload`, destructive actions
+- **Always blocked** (cannot be called even when service calls are enabled): `homeassistant.stop`, `hassio.host_shutdown`, `hassio.host_reboot`
+- **Dangerous (warn-but-allow** when calls are enabled): `homeassistant.restart`, `homeassistant.reload_*`, `recorder.purge*`, `system_log.clear`, `logbook.log` — these are not hard-blocked; the call proceeds with a warning
 - Requires explicit confirmation for state-changing calls
 
 #### Tool: `ha_get_devices`
@@ -409,23 +412,29 @@ interface CompareWithCoreOutput {
 
 Location: `~/.config/ha-dev-mcp/config.json`
 
+The loader (`mcp-server/src/config.ts`) reads **camelCase** keys via a strict Zod schema and does not normalize snake_case — keys must match exactly or they are silently ignored, falling back to the (unsafe-direction) defaults.
+
 ```json
 {
-	"home_assistant": {
+	"homeAssistant": {
 		"url": "http://192.168.1.100:8123",
 		"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-		"verify_ssl": true
+		"verifySsl": true
 	},
 	"safety": {
-		"allow_service_calls": false,
-		"blocked_services": ["homeassistant.restart", "homeassistant.stop", "*.reload"],
-		"require_dry_run": true
+		"allowServiceCalls": false,
+		"blockedServices": [
+			"homeassistant.restart",
+			"homeassistant.stop",
+			"homeassistant.reload_all"
+		],
+		"requireDryRun": true
 	},
-	"cache": { "docs_ttl_hours": 24, "states_ttl_seconds": 30 },
+	"cache": { "docsTtlHours": 24, "statesTtlSeconds": 30 },
 	"features": {
-		"enable_docs_tools": true,
-		"enable_ha_tools": true,
-		"enable_validation_tools": true
+		"enableDocsTools": true,
+		"enableHaTools": true,
+		"enableValidationTools": true
 	}
 }
 ```
@@ -443,14 +452,14 @@ HA_DEV_MCP_VERIFY_SSL=true
 
 ## Implementation Phases
 
-### Phase 1: Core Infrastructure (Day 1)
+### Phase 1: Core Infrastructure (Day 1) — shipped
 
 **Deliverables:**
 
-- [ ] MCP server skeleton with TypeScript
-- [ ] Configuration loading (file + env)
-- [ ] Home Assistant WebSocket connection
-- [ ] Basic error handling and logging
+- [x] MCP server skeleton with TypeScript
+- [x] Configuration loading (file + env)
+- [x] Home Assistant WebSocket connection
+- [x] Basic error handling and logging
 
 **Files:**
 
@@ -465,14 +474,14 @@ mcp-server/
 │   └── types.ts           # TypeScript interfaces
 ```
 
-### Phase 2: HA Tools (Day 2)
+### Phase 2: HA Tools (Day 2) — shipped
 
 **Deliverables:**
 
-- [ ] `ha_connect` tool
-- [ ] `ha_get_states` tool
-- [ ] `ha_get_services` tool
-- [ ] `ha_get_devices` tool
+- [x] `ha_connect` tool
+- [x] `ha_get_states` tool
+- [x] `ha_get_services` tool
+- [x] `ha_get_devices` tool
 
 **Files:**
 
@@ -484,15 +493,15 @@ src/tools/
 └── ha-devices.ts
 ```
 
-### Phase 3: Safety & Service Calls (Day 3)
+### Phase 3: Safety & Service Calls (Day 3) — shipped
 
 **Deliverables:**
 
-- [ ] Service call safety layer
-- [ ] Blocked service list
-- [ ] Dry-run implementation
-- [ ] `ha_call_service` tool
-- [ ] `ha_get_logs` tool
+- [x] Service call safety layer
+- [x] Blocked service list
+- [x] Dry-run implementation
+- [x] `ha_call_service` tool
+- [x] `ha_get_logs` tool
 
 **Files:**
 
@@ -504,15 +513,15 @@ src/
     └── ha-logs.ts
 ```
 
-### Phase 4: Documentation Tools (Day 4)
+### Phase 4: Documentation Tools (Day 4) — shipped
 
 **Deliverables:**
 
-- [ ] Documentation indexing script
-- [ ] `docs_search` tool
-- [ ] `docs_fetch` tool
-- [ ] `docs_examples` tool
-- [ ] Caching layer
+- [x] Documentation indexing script
+- [x] `docs_search` tool
+- [x] `docs_fetch` tool
+- [x] `docs_examples` tool
+- [x] Caching layer
 
 **Files:**
 
@@ -526,14 +535,14 @@ src/
     └── docs-examples.ts
 ```
 
-### Phase 5: Validation Tools (Day 5)
+### Phase 5: Validation Tools (Day 5) — partially shipped
 
 **Deliverables:**
 
-- [ ] `validate_manifest` tool
-- [ ] `validate_strings` tool
-- [ ] `check_patterns` tool
-- [ ] `run_hassfest` tool (Docker integration)
+- [x] `validate_manifest` tool
+- [x] `validate_strings` tool
+- [x] `check_patterns` tool
+- [ ] `run_hassfest` tool (Docker integration) — deferred
 
 **Files:**
 
@@ -545,14 +554,14 @@ src/tools/
 └── run-hassfest.ts
 ```
 
-### Phase 6: Polish & Documentation (Day 6)
+### Phase 6: Polish & Documentation (Day 6) — partially shipped
 
 **Deliverables:**
 
-- [ ] README with setup instructions
-- [ ] Claude Desktop configuration guide
-- [ ] Error messages and user feedback
-- [ ] npm package preparation
+- [x] README with setup instructions
+- [x] Claude Desktop configuration guide
+- [x] Error messages and user feedback
+- [ ] npm package preparation — deferred (ships local-install only, unpublished)
 
 ---
 
@@ -609,20 +618,24 @@ src/tools/
 
 ## Distribution
 
-### npm Package
+### Local Install
+
+The package ships unscoped as `ha-dev-mcp-server` (author: L3DigitalNet) and installs from source — it is not published to a third-party npm scope. This matches DESIGN_DOCUMENT §12.2.
 
 ```bash
-npm install -g @anthropic/ha-dev-mcp-server
+cd mcp-server
+npm install -g .
 ```
 
 ### Claude Desktop Configuration
+
+After `npm install -g .` the `ha-dev-mcp-server` binary is on PATH; reference it directly as the command:
 
 ```json
 {
 	"mcpServers": {
 		"ha-dev": {
-			"command": "npx",
-			"args": ["-y", "@anthropic/ha-dev-mcp-server"],
+			"command": "ha-dev-mcp-server",
 			"env": {
 				"HA_DEV_MCP_URL": "http://192.168.1.100:8123",
 				"HA_DEV_MCP_TOKEN": "your-token-here"
