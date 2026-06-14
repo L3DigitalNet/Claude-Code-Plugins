@@ -154,7 +154,7 @@ The server includes multiple layers of protection for service calls:
 1. **Disabled by Default**: `allowServiceCalls: false`
 2. **Dry-Run Mode**: Validates without executing (default)
 3. **Blocklist**: Always-blocked services and your configured `blockedServices` are refused; other state-changing services execute but return a warning
-4. **Safe Domains**: Helper entities (input\_\*, counter, timer) bypass dry-run
+4. **Safe Domains**: Any service in the helper/notification domains (`input_*`, `counter`, `timer`, `persistent_notification`) bypasses the dry-run requirement for the whole domain — these can execute with `dry_run: false` even when `requireDryRun` is enabled (always-blocked and configured services are still refused)
 
 #### Always Blocked Services
 
