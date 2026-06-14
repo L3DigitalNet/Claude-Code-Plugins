@@ -38,8 +38,9 @@ def _sync_get_data(self) -> dict:
 With arguments:
 
 ```python
-# Positional args after callable
-result = await hass.async_add_executor_job(requests.get, url, {"timeout": 10})
+# Positional args after callable (forwarded positionally — async_add_executor_job
+# cannot pass keyword args, so options like timeout/headers need functools.partial)
+result = await hass.async_add_executor_job(requests.get, url)
 
 # Keyword args with functools.partial
 from functools import partial
