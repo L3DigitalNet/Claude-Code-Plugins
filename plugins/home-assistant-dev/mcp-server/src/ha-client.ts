@@ -48,6 +48,12 @@ export class HaClient {
 
     const auth = createLongLivedTokenAuth(hassUrl, token);
 
+    // home-assistant-js-websocket calls the global `WebSocket`, which Node only
+    // exposes as a stable global from v21+. Polyfill from `ws` so connecting
+    // works on the supported Node 18/20 floor (engines: node >=18).
+    globalThis.WebSocket ??= (await import("ws"))
+      .WebSocket as unknown as typeof globalThis.WebSocket;
+
     try {
       this.connection = await createConnection({ auth });
 
