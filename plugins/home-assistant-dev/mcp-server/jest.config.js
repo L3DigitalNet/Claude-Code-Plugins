@@ -27,6 +27,9 @@ export default {
     '!src/**/*.d.ts',
     // HA API tool files require a live HA instance — covered by E2E tests, not unit tests
     '!src/tools/ha-*.ts',
+    // Unit-testable (read in-memory DOCS_INDEX / parse static JSON, no live HA) — tests TODO.
+    // Until those tests exist these are excluded so the threshold is not skewed by 0% coverage;
+    // once tested, drop them here so the threshold guards them (F167/F170).
     '!src/tools/docs-*.ts',
     '!src/tools/check-patterns.ts',
     '!src/tools/validate-strings.ts',
