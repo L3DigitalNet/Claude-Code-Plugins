@@ -125,12 +125,18 @@ export class SafetyChecker {
   getSafetyInfo(): {
     serviceCallsEnabled: boolean;
     dryRunRequired: boolean;
+    // Count of distinct hard-blocked services (ALWAYS_BLOCKED ∪ config.blockedServices),
+    // de-duplicated across the overlap. Warn-only DANGEROUS_SERVICES are NOT counted —
+    // they are permitted, so they are not "blocked".
     blockedCount: number;
   } {
     return {
       serviceCallsEnabled: this.config.allowServiceCalls,
       dryRunRequired: this.config.requireDryRun,
-      blockedCount: this.config.blockedServices.length + this.ALWAYS_BLOCKED.size,
+      blockedCount: new Set([
+        ...this.ALWAYS_BLOCKED,
+        ...this.config.blockedServices,
+      ]).size,
     };
   }
 
