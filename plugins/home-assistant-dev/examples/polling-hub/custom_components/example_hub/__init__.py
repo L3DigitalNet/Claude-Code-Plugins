@@ -15,8 +15,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import ExampleHubCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +42,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ExampleHubConfigEntry) -
 
     # Store coordinator in runtime_data (modern pattern)
     entry.runtime_data = coordinator
+
+    # Register the hub device so the per-device entities' via_device link resolves.
+    hub = coordinator.device_info
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, hub["serial"])},
+        manufacturer=MANUFACTURER,
+        name=hub["name"],
+        model=hub.get("model"),
+        sw_version=hub.get("sw_version"),
+    )
 
     # Register update listener for options changes
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
