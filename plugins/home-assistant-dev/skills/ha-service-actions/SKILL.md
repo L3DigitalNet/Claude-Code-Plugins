@@ -88,18 +88,24 @@ set_mode:
 For actions that operate on specific entities:
 
 ```python
-from homeassistant.helpers import entity_platform
+from homeassistant.const import Platform
+from homeassistant.helpers import service
+from homeassistant.helpers.typing import ConfigType
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
+# HA 2025.9+: register platform entity services from async_setup via the service
+# helper, not platform.async_register_entity_service during platform setup, so the
+# service does not depend on platform loading ("Improved API for registering
+# platform entity services").
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
         "set_mode",
-        {vol.Required("mode"): vol.In(["auto", "manual", "eco"])},
-        "async_set_mode",  # Method on entity class
+        entity_domain=Platform.CLIMATE,
+        schema={vol.Required("mode"): vol.In(["auto", "manual", "eco"])},
+        func="async_set_mode",  # Method on entity class
     )
-
-    async_add_entities([MyEntity(entry.runtime_data)])
+    return True
 ```
 
 ## Common Actions Reference
