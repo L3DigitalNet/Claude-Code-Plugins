@@ -48,10 +48,12 @@ ir.async_create_issue(
 ```python
 from homeassistant.helpers.issue_registry import IssueSeverity
 
-IssueSeverity.CRITICAL  # Immediate action required
+IssueSeverity.CRITICAL  # Reserved for HA-internal use — do NOT use in custom integrations
 IssueSeverity.ERROR     # Something is broken
 IssueSeverity.WARNING   # Should be addressed soon
 ```
+
+Custom integrations should use `ERROR` or `WARNING`; `CRITICAL` is reserved for Home Assistant core.
 
 ## Issue Types
 
