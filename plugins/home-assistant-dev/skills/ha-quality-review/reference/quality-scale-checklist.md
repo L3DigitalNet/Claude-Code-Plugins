@@ -129,9 +129,12 @@ PARALLEL_UPDATES = 1  # Limit concurrent updates to 1
 ### reauthentication-flow
 
 ```python
+from collections.abc import Mapping
+
+
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
-        self, entry_data: dict[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth when credentials expire."""
         return await self.async_step_reauth_confirm()
