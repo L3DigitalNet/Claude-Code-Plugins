@@ -33,6 +33,7 @@ export class HaClient {
   private connectionInfo: HaConnectOutput | null = null;
   private statesCache: Map<string, HaState> = new Map();
   private statesCacheTime: number = 0;
+  private unsubscribe: (() => void) | null = null;
 
   constructor(config: ServerConfig) {
     this.config = config;
@@ -86,8 +87,9 @@ export class HaClient {
         components: haConfig.components,
       };
 
-      // Subscribe to state changes for caching
-      subscribeEntities(this.connection, (entities: HassEntities) => {
+      // Subscribe to state changes for caching; keep the unsubscribe handle so the
+      // listener can be detached on disconnect.
+      this.unsubscribe = subscribeEntities(this.connection, (entities: HassEntities) => {
         this.updateStatesCache(entities);
       });
 
@@ -104,6 +106,10 @@ export class HaClient {
    * Disconnect from Home Assistant
    */
   async disconnect(): Promise<void> {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
     if (this.connection) {
       this.connection.close();
       this.connection = null;

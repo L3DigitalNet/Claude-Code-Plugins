@@ -76,5 +76,5 @@ declare module "home-assistant-js-websocket" {
   export function subscribeEntities(
     connection: Connection,
     callback: (entities: HassEntities) => void
-  ): Promise<() => void>;
+  ): () => void;
 }
