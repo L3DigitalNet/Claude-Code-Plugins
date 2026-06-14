@@ -18,7 +18,7 @@ automation:
   - id: 'unique_automation_id'
     alias: 'Descriptive Name'
     description: 'What this does'
-    mode: single # single | restart | queued | parallel
+    mode: single # see Run Modes below; defaults to single if omitted
     triggers:
       - trigger: state
         entity_id: binary_sensor.front_door
@@ -34,6 +34,15 @@ automation:
         data:
           brightness_pct: 100
 ```
+
+## Run Modes
+
+`mode:` controls what happens when the automation is triggered again while a previous run is still going. Omitting it defaults to `single`.
+
+- **single** — ignore the new trigger; the in-progress run continues uninterrupted (default).
+- **restart** — cancel the running run and start over from the top.
+- **queued** — run sequentially; each new trigger waits in line and runs after the previous one finishes.
+- **parallel** — run concurrently; each trigger starts its own run immediately.
 
 ## Common Triggers
 
@@ -155,6 +164,14 @@ automation:
 3. Always include `alias` and `description`
 4. Use `target:` for entity/area/device targeting
 5. Templates use Jinja2: `"{{ states('sensor.x') }}"`
+
+## Validate / Troubleshoot
+
+Before deploying, validate the config via **Developer Tools → YAML → Check Configuration** in the UI, or `hass --script check_config` on the CLI. Most common YAML failures:
+
+1. **Indentation** — a tab anywhere (HA requires 2-space indent) or a misaligned list item breaks parsing.
+2. **Unquoted time strings** — `at: 07:30:00` parses as a sexagesimal number; always quote them: `at: '07:30:00'`.
+3. **Misplaced `!input`** — `!input` is only valid inside a blueprint; a referenced entity or input that does not exist fails the run at trigger time, not at parse time.
 
 ## Related Skills
 
