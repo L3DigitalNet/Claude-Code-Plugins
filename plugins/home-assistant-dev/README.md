@@ -104,7 +104,7 @@ Skills load automatically when conversation content matches their trigger patter
 | --- | --- |
 | `ha-architecture` | Questions about the `hass` object, event bus, state machine, service registry, or how integrations load |
 | `ha-integration-scaffold` | Creating a new custom component, scaffolding, or starting an integration |
-| `ha-async-patterns` | Mentioning `async`, `await`, `executor`, blocking code, or performance in HA |
+| `ha-async-patterns` | Mentioning `async`, `await`, `executor`, `event loop`, `coroutine`, `async_add_executor_job`, blocking code, or performance in HA |
 | `ha-entity-lifecycle` | Entity registration, `async_added_to_hass`, `device_info`, identifiers, or restoring state |
 
 ### Data Flow and Polling
@@ -168,6 +168,18 @@ Skills load automatically when conversation content matches their trigger patter
 | Hook | Event | What it does |
 | --- | --- | --- |
 | `post-write-hook.sh` | `PostToolUse` (Write, Edit, MultiEdit) | Dispatcher that reads the modified file path from stdin JSON and routes to the appropriate validation script. Validates `manifest.json` only for paths under `custom_components/` or `integrations/`. Runs `validate-strings.py` on `strings.json` and `config_flow.py`. Runs `check-patterns.py` on any `.py` file under `custom_components/` except `config_flow.py` (which is routed to `validate-strings.py` instead, since the `case` dispatcher matches it first). Validation failures surface as warnings in the agent context; the hook never blocks writes. |
+
+## Local Development Scripts
+
+These helpers under `scripts/` are run manually — only `post-write-hook.sh` is auto-invoked (see Hooks above). They are not exposed as slash commands.
+
+| Script | Purpose |
+| --- | --- |
+| `setup-test-ha.sh` | Manage a disposable local Home Assistant instance for manual integration testing (`setup` / `teardown` / `status` / `reset`). |
+| `lint-integration.sh` | Run `ruff` and `mypy` over an integration directory — the same checks the reviewer agent applies. |
+| `test-watch.sh` | Re-run an integration's `pytest` suite on file changes for a fast local feedback loop. |
+
+**Running tests:** an integration's test suite runs under `pytest` (e.g. `pytest tests/`); `test-watch.sh` wraps this for continuous re-runs. The example integrations under `examples/` ship their own `tests/` directories.
 
 ## MCP Server
 
