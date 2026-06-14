@@ -5,9 +5,6 @@ from typing import Final
 
 DOMAIN: Final = "example_hub"
 
-# Configuration keys
-CONF_DEVICE_ID: Final = "device_id"
-
 # Defaults
 DEFAULT_SCAN_INTERVAL: Final = 30
 
