@@ -2,8 +2,8 @@
 
 ## Design Document v2.2
 
-**Document Version:** 2.2 **Plugin Version:** 2.2.6 **Last Updated:** February 2026  
-**Status:** Complete
+**Document Version:** 2.2 **Plugin Version:** 2.2.10 **Last Updated:** February 2026  
+**Status:** Snapshot as of v2.2.10 — see CHANGELOG.md for current state
 
 ---
 
@@ -90,7 +90,7 @@ A Claude Code plugin providing:
 
 ### 2.3 Non-Goals
 
-- Runtime Home Assistant modifications (read-only MCP)
+- Unrestricted runtime HA modifications — write/service-call path is gated by a dry-run-default safety layer, disabled by default
 - GUI/visual tools (CLI and text-based only)
 - Multi-language support (English only)
 - Legacy HA versions (<2024.1)
@@ -108,7 +108,7 @@ A Claude Code plugin providing:
 │  │                    Plugin Interface                          ││
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    ││
 │  │  │  Skills  │  │  Agents  │  │ Commands │  │  Hooks   │    ││
-│  │  │   (27)   │  │   (3)    │  │   (2)    │  │   (3)    │    ││
+│  │  │   (27)   │  │   (3)    │  │   (2)    │  │   (1)    │    ││
 │  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘    ││
 │  │       │             │             │             │           ││
 │  │       └─────────────┴─────────────┴─────────────┘           ││
@@ -352,13 +352,10 @@ User Query
 ```json
 {
 	"name": "home-assistant-dev",
-	"version": "2.2.6",
+	"version": "2.2.10",
 	"description": "Comprehensive Home Assistant integration development toolkit...",
-	"author": "Anthropic",
-	"skills": "skills/",
-	"agents": "agents/",
-	"commands": "commands/",
-	"hooks": "hooks/hooks.json"
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
+	"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev"
 }
 ```
 
@@ -366,11 +363,11 @@ User Query
 
 **File:** `hooks/hooks.json`
 
-| Hook | Trigger | Files | Action |
+A single PostToolUse hook is registered with matcher `Write|Edit|MultiEdit|NotebookEdit` (matchers match tool names, not file paths). It runs one dispatcher script, `scripts/post-write-hook.sh`, which inspects the written file path and routes internally to the appropriate validator.
+
+| Registered hook | Matcher | Dispatcher | Internal routes (by file path) |
 | --- | --- | --- | --- |
-| validate-manifest | PostToolUse | `**/manifest.json` | Run manifest validator |
-| validate-strings | PostToolUse | `**/strings.json`, `**/config_flow.py` | Sync check |
-| check-patterns | PostToolUse | `**/custom_components/**/*.py` | Anti-pattern detection |
+| PostToolUse | `Write\|Edit\|MultiEdit\|NotebookEdit` | `scripts/post-write-hook.sh` | manifest.json → manifest validator; strings.json / config_flow.py → strings sync check; `custom_components/**/*.py` → anti-pattern detection |
 
 ---
 
@@ -529,7 +526,7 @@ The MCP (Model Context Protocol) server provides live connectivity to Home Assis
                        ▼                     ▼
                 ┌──────────┐         ┌─────────────────┐
                 │  BLOCK   │         │  Safe Domain?   │
-                └──────────┘         │  input_*, etc.  │
+                └──────────┘         │ (SAFE_DOMAINS)  │
                                      └────────┬────────┘
                                               │
                                    ┌──────────┴──────────┐
@@ -547,6 +544,8 @@ The MCP (Model Context Protocol) server provides live connectivity to Home Assis
                                         │  BLOCK   │          │  ALLOW   │
                                         └──────────┘          └──────────┘
 ```
+
+The `SAFE_DOMAINS` set in `safety.ts` (domains that bypass the dry-run requirement) is: `input_boolean`, `input_number`, `input_select`, `input_text`, `input_datetime`, `input_button`, `counter`, `timer`, `persistent_notification`.
 
 ### 6.4 Configuration
 
@@ -613,21 +612,23 @@ Mode: Custom Integration (HACS)
 
 **Purpose:** Detect deprecated and anti-patterns
 
-**Patterns Detected (23 total):**
+**Patterns Detected (21 total):**
 
-| Category    | Pattern                                     | Severity |
-| ----------- | ------------------------------------------- | -------- |
-| Storage     | `hass.data[DOMAIN]`                         | Warning  |
-| Storage     | `hass.data.setdefault`                      | Warning  |
-| Imports     | Old ServiceInfo locations                   | Warning  |
-| Blocking    | `requests.get/post`                         | Error    |
-| Blocking    | `time.sleep`                                | Error    |
-| Blocking    | `urllib.request.urlopen`                    | Error    |
-| Typing      | `List[]`, `Dict[]`, `Optional[]`, `Union[]` | Warning  |
-| Async       | `@asyncio.coroutine`                        | Warning  |
-| Async       | `yield from`                                | Warning  |
-| Coordinator | Missing generic type                        | Warning  |
-| OptionsFlow | `__init__` with config_entry                | Warning  |
+| Category | Pattern | Severity |
+| --- | --- | --- |
+| Storage | `hass.data[DOMAIN]` | Warning |
+| Storage | `hass.data.setdefault` | Warning |
+| Imports | Old ServiceInfo locations (zeroconf, ssdp, dhcp, usb) | Warning |
+| Blocking | `requests.get/post` | Error |
+| Blocking | `time.sleep` | Error |
+| Blocking | `open()` | Error |
+| Blocking | `urllib.request.urlopen` | Error |
+| Typing | `List[]`, `Dict[]`, `Optional[]`, `Union[]`, `Tuple[]`, `Set[]` | Warning |
+| Async | `@asyncio.coroutine` | Warning |
+| Async | `yield from` | Warning |
+| Coordinator | Missing generic type | Warning |
+| OptionsFlow | `__init__` with config_entry | Warning |
+| SetupEntry | Service registration in `async_setup_entry` | Warning |
 
 ### 7.4 lint-integration.sh
 
@@ -998,6 +999,28 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ### 14.3 Changelog Summary
 
+For the authoritative, per-release changelog see `CHANGELOG.md`. Summary of recent releases:
+
+#### v2.2.10
+
+- security: bump fast-uri / qs (closes Dependabot #88-95)
+
+#### v2.2.9
+
+- Phase 2 hook dispatcher + manifest guard; Jest tsconfig fixes
+
+#### v2.2.8
+
+- Removed `WebSearch` from the valid-agent-tools allowlist (MCP search migration)
+
+#### v2.2.7
+
+- `ha-integration-reviewer` agent downgraded Sonnet → Haiku
+
+#### v2.2.6
+
+- npm audit fix (hono, path-to-regexp CVEs); unblock plugin releases
+
 #### v2.2.2
 
 - Incremental improvements and fixes since v2.2.1
@@ -1021,8 +1044,9 @@ Claude: [Uses MCP ha_get_states tool to query live HA]
 
 ## Document History
 
-| Version | Date     | Author | Changes                   |
-| ------- | -------- | ------ | ------------------------- |
-| 2.2     | Feb 2026 | Claude | Version sync to v2.2.1    |
-| 2.0     | Feb 2026 | Claude | Complete rewrite for v2.0 |
-| 1.0     | Feb 2026 | Claude | Initial design            |
+| Version | Date     | Author | Changes                          |
+| ------- | -------- | ------ | -------------------------------- |
+| 2.2     | Jun 2026 | Claude | Re-sync to shipped v2.2.10 state |
+| 2.2     | Feb 2026 | Claude | Version sync to v2.2.1           |
+| 2.0     | Feb 2026 | Claude | Complete rewrite for v2.0        |
+| 1.0     | Feb 2026 | Claude | Initial design                   |
