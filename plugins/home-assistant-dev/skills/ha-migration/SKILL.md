@@ -30,7 +30,7 @@ See `ha-deprecation-fixes` for 2024–2025 deprecation patterns with before/afte
 3. Run `check-patterns.py` to detect common issues:
 
    ```bash
-   python3 scripts/check-patterns.py custom_components/my_integration/
+   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check-patterns.py" custom_components/my_integration/
    ```
 
 4. Update minimum HA version in `hacs.json`
