@@ -32,8 +32,18 @@ case "$BASENAME" in
             python3 "$PLUGIN_DIR/scripts/validate-manifest.py" "$FILE_PATH" 2>&1 || true
         fi
         ;;
-    strings.json|config_flow.py)
+    strings.json)
         python3 "$PLUGIN_DIR/scripts/validate-strings.py" "$FILE_PATH" 2>&1 || true
+        ;;
+    config_flow.py)
+        # validate-strings.py expects the strings.json path (it derives the sibling
+        # config_flow.py itself). For a config_flow.py write, resolve the sibling
+        # strings.json so the sync check runs against real JSON instead of trying to
+        # JSON-parse the .py file and emitting a spurious 'Invalid JSON' error.
+        STRINGS_PATH="$(dirname "$FILE_PATH")/strings.json"
+        if [ -f "$STRINGS_PATH" ]; then
+            python3 "$PLUGIN_DIR/scripts/validate-strings.py" "$STRINGS_PATH" 2>&1 || true
+        fi
         ;;
     *.py)
         if [[ "$FILE_PATH" == *custom_components* ]]; then
