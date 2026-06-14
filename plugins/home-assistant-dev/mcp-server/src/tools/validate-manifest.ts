@@ -171,6 +171,14 @@ export async function handleValidateManifest(
         }
       }
     }
+  } else if (manifest.codeowners !== undefined) {
+    // Parity with validate-manifest.py: a present-but-non-list codeowners (e.g. a bare
+    // string "@me" from a hand-edit) must be rejected, not silently skipped.
+    errors.push({
+      field: "codeowners",
+      message: "codeowners must be a list",
+      severity: "error",
+    });
   }
 
   // Validate URLs
@@ -188,7 +196,18 @@ export async function handleValidateManifest(
   }
 
   // Check config_flow
-  if (manifest.config_flow !== true && manifest.integration_type !== "virtual") {
+  if (manifest.config_flow === true) {
+    // Parity with validate-manifest.py: when config_flow is declared, a sibling
+    // config_flow.py must exist next to manifest.json or the integration is broken.
+    const configFlowPath = input.path.replace(/[^/\\]+$/, "config_flow.py");
+    if (!existsSync(configFlowPath)) {
+      errors.push({
+        field: "config_flow",
+        message: "config_flow is true but config_flow.py not found",
+        severity: "error",
+      });
+    }
+  } else if (manifest.integration_type !== "virtual") {
     warnings.push({
       field: "config_flow",
       message: "Config flow is not enabled. New integrations require config_flow: true",
