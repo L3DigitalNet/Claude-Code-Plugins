@@ -32,7 +32,8 @@ blueprint:
       selector:
         target:
           entity:
-            domain: light
+            filter:
+              domain: light
     no_motion_wait:
       name: 'Wait time after motion stops'
       default: 120
