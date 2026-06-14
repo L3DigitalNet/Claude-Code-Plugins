@@ -35,7 +35,9 @@ async def async_setup_entry(
 class MinimalTemperatureSensor(SensorEntity):
     """A minimal temperature sensor."""
 
-    _attr_has_entity_name = True
+    # This minimal example registers no device, so has_entity_name (which prefixes the
+    # entity name with the device name) is left off — the name stands alone.
+    _attr_has_entity_name = False
     _attr_name = "Temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
