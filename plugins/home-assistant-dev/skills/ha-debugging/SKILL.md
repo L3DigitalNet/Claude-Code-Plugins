@@ -119,12 +119,12 @@ def native_value(self):
 
 ```bash
 # Validate JSON
-python -c "import json; json.load(open('manifest.json'))"
-python -c "import json; json.load(open('strings.json'))"
+python3 -c "import json; json.load(open('manifest.json'))"
+python3 -c "import json; json.load(open('strings.json'))"
 
 # Check syntax
-python -m py_compile __init__.py
-python -m py_compile config_flow.py
+python3 -m py_compile __init__.py
+python3 -m py_compile config_flow.py
 
 # Lint
 ruff check .
