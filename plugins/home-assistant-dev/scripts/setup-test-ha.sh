@@ -149,22 +149,28 @@ ensure_aiohttp() {
 
     substep "Installing aiohttp for Python WebSocket support..."
 
-    # Try pip, pipx, or uv
+    # Try uv, then pip3, then pip. Silence only the exploratory first attempts;
+    # let the final fallback's stderr through so PEP 668
+    # "externally-managed-environment" errors (Fedora/Debian) are visible rather
+    # than hidden behind the generic failure message below.
     if command -v uv &>/dev/null; then
-        uv pip install --system aiohttp 2>/dev/null || uv pip install aiohttp 2>/dev/null
+        uv pip install --system aiohttp 2>/dev/null || uv pip install aiohttp
     elif command -v pip3 &>/dev/null; then
-        pip3 install --user aiohttp 2>/dev/null || pip3 install aiohttp 2>/dev/null
+        pip3 install --user aiohttp 2>/dev/null || pip3 install aiohttp
     elif command -v pip &>/dev/null; then
-        pip install --user aiohttp 2>/dev/null || pip install aiohttp 2>/dev/null
+        pip install --user aiohttp 2>/dev/null || pip install aiohttp
     else
         fail "Cannot install aiohttp: no pip/uv found. Install manually: pip install aiohttp"
         exit 1
-    fi
+    fi || true
 
     if python3 -c "import aiohttp" &>/dev/null 2>&1; then
         pass "aiohttp installed successfully"
     else
-        fail "Failed to install aiohttp. Install manually: pip install aiohttp"
+        fail "Failed to install aiohttp."
+        warn "If you saw an 'externally-managed-environment' (PEP 668) error above,"
+        warn "your system pip is locked. Prefer uv:  uv pip install --system aiohttp"
+        warn "or use a venv, or pass:  pip install --break-system-packages aiohttp"
         exit 1
     fi
 }
@@ -295,7 +301,16 @@ stop_container() {
         return 0
     fi
 
-    $COMPOSE_CMD -f "$WORKSPACE/docker-compose.yml" down 2>/dev/null || true
+    # Prefer compose teardown, but fall back to stopping/removing by container
+    # name when the workspace compose file is gone (e.g. teardown after a manual
+    # rm). Without this fallback the named container survives and the next setup
+    # finds it "already running" and skips re-provisioning with a stale image.
+    if [[ -f "$WORKSPACE/docker-compose.yml" ]]; then
+        $COMPOSE_CMD -f "$WORKSPACE/docker-compose.yml" down 2>/dev/null || true
+    else
+        $CONTAINER_CMD stop "$CONTAINER_NAME" 2>/dev/null || true
+        $CONTAINER_CMD rm -f "$CONTAINER_NAME" 2>/dev/null || true
+    fi
     pass "Container stopped"
 }
 
@@ -548,9 +563,13 @@ create_llat() {
 
     substep "Creating LLAT via WebSocket API..."
 
-    # Use inline Python script to create LLAT via WebSocket
+    # Use inline Python script to create LLAT via WebSocket.
+    # Capture the Python exit status as the authoritative success signal: the
+    # helper exits non-zero on every failure path and prints the token to stdout
+    # only on success. Relying on exit status (not string-matching stdout) avoids
+    # false-rejecting a valid token that happens to begin with "ERROR".
     local llat
-    llat=$(HA_ACCESS_TOKEN="$access_token" HA_PORT="$PORT" python3 <<'PYTHON'
+    if ! llat=$(HA_ACCESS_TOKEN="$access_token" HA_PORT="$PORT" python3 <<'PYTHON'
 import asyncio
 import aiohttp
 import json
@@ -607,11 +626,13 @@ async def create_llat():
 
 asyncio.run(create_llat())
 PYTHON
-    )
+    ); then
+        fail "Failed to create LLAT (token helper exited non-zero)"
+        exit 1
+    fi
 
-    if [[ -z "$llat" || "$llat" == ERROR* ]]; then
-        fail "Failed to create LLAT"
-        fail "${llat}"
+    if [[ -z "$llat" ]]; then
+        fail "Failed to create LLAT (empty token returned)"
         exit 1
     fi
 
@@ -906,12 +927,47 @@ cmd_teardown() {
     echo -e "\n${BOLD}Home Assistant Test Environment Teardown${NC}"
     echo "========================================="
 
+    # Data-removal decision. "" = ask interactively (default), "purge" = remove,
+    # "keep" = preserve. Flags make teardown scriptable from automation that has
+    # no TTY; without them a non-interactive `read` hits EOF and silently picks
+    # the safe default (preserve), invisible to the caller.
+    local data_action=""
+    while (( $# )); do
+        case "$1" in
+            --purge) data_action="purge" ;;
+            --keep)  data_action="keep" ;;
+            *)
+                fail "Unknown teardown option: $1"
+                echo "Usage: $0 teardown [--purge | --keep]"
+                exit 2
+                ;;
+        esac
+        shift
+    done
+
+    # No flag on a non-interactive stdin: prompts would EOF immediately, so use
+    # the safe default explicitly instead of pretending to ask.
+    if [[ -z "$data_action" && ! -t 0 ]]; then
+        data_action="keep"
+        info "Non-interactive stdin and no --purge/--keep flag — preserving data (use --purge to remove)"
+    fi
+
     detect_container_runtime
     stop_container
 
-    echo ""
-    read -r -p "  Remove workspace data (${WORKSPACE}/ha-config)? [y/N] " confirm
-    if [[ "${confirm,,}" == "y" ]]; then
+    local remove_workspace remove_mcp
+    case "$data_action" in
+        purge) remove_workspace="y"; remove_mcp="y" ;;
+        keep)  remove_workspace="n"; remove_mcp="n" ;;
+        *)
+            echo ""
+            read -r -p "  Remove workspace data (${WORKSPACE}/ha-config)? [y/N] " remove_workspace
+            echo ""
+            read -r -p "  Remove MCP config (${MCP_CONFIG_FILE})? [y/N] " remove_mcp
+            ;;
+    esac
+
+    if [[ "${remove_workspace,,}" == "y" ]]; then
         step "Removing HA config data"
         rm -rf "$WORKSPACE/ha-config"
         rm -f "$TOKENS_FILE"
@@ -920,9 +976,7 @@ cmd_teardown() {
         info "Workspace data preserved at ${WORKSPACE}/ha-config"
     fi
 
-    echo ""
-    read -r -p "  Remove MCP config (${MCP_CONFIG_FILE})? [y/N] " confirm
-    if [[ "${confirm,,}" == "y" ]]; then
+    if [[ "${remove_mcp,,}" == "y" ]]; then
         rm -f "$MCP_CONFIG_FILE"
         pass "MCP config removed"
     else
@@ -977,13 +1031,14 @@ cmd_reset() {
 
 main() {
     local cmd="${1:-help}"
+    shift || true
 
     case "$cmd" in
         setup)
             cmd_setup
             ;;
         teardown)
-            cmd_teardown
+            cmd_teardown "$@"
             ;;
         status)
             cmd_status
@@ -995,10 +1050,11 @@ main() {
             echo "Usage: $0 {setup|teardown|status|reset}"
             echo ""
             echo "Commands:"
-            echo "  setup     Full setup: workspace, container, onboarding, LLAT, MCP config"
-            echo "  teardown  Stop container, optionally remove data"
-            echo "  status    Check if HA is running and responding"
-            echo "  reset     Destroy everything and rebuild from scratch"
+            echo "  setup               Full setup: workspace, container, onboarding, LLAT, MCP config"
+            echo "  teardown [--purge|--keep]  Stop container; --purge removes data, --keep preserves it"
+            echo "                      (no flag + non-interactive stdin defaults to --keep)"
+            echo "  status              Check if HA is running and responding"
+            echo "  reset               Destroy everything and rebuild from scratch"
             echo ""
             echo "Environment variables:"
             echo "  HA_TEST_WORKSPACE   Workspace dir    (default: ~/ha-plugin-test-workspace)"
