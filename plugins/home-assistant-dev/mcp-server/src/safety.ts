@@ -164,6 +164,14 @@ export class SafetyChecker {
 
       if (isSensitive) {
         redacted[key] = "**REDACTED**";
+      } else if (Array.isArray(value)) {
+        // Preserve array structure (recursing as Object.entries would turn it into an
+        // index-keyed object), but still redact inside object elements.
+        redacted[key] = value.map((v) =>
+          typeof v === "object" && v !== null
+            ? this.redactSensitiveData(v as Record<string, unknown>)
+            : v
+        );
       } else if (typeof value === "object" && value !== null) {
         redacted[key] = this.redactSensitiveData(value as Record<string, unknown>);
       } else {
