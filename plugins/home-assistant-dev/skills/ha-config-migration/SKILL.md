@@ -24,6 +24,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry to new version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
+    # Downgrade guard: a major version newer than this code supports means the user
+    # rolled HA/the integration back. Fail cleanly — old code cannot read newer-schema
+    # data, and falling through to `return True` would load it anyway (silent corruption).
+    if entry.version > 2:
+        return False
+
     if entry.version == 1:
         # Migration from v1 to v2
         new_data = {**entry.data}
@@ -60,6 +66,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 - **Major VERSION** (`VERSION = 2`): Breaking changes — existing users' data must be transformed
 - **MINOR_VERSION** (`MINOR_VERSION = 1`): Non-breaking additions — safe to add defaults
 - Return `True` on success, `False` to signal migration failure (entry will be disabled)
+- **Guard against downgrades**: if `entry.version` is greater than the latest major VERSION this code supports, `return False` at the top. A higher-major entry means the user rolled HA/the integration back; old code cannot read the newer schema, so fail the migration cleanly (entry is disabled and surfaced) rather than letting it fall through to `return True` and load corrupt data silently
 - Always log migration for debuggability
 - Migrate incrementally through versions (1→2→3), not directly to latest
 
