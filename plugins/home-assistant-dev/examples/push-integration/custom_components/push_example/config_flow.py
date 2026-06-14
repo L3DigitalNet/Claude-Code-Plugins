@@ -63,7 +63,7 @@ class PushExampleConfigFlow(ConfigFlow, domain=DOMAIN):
             reauth_entry: ConfigEntry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 reauth_entry,
-                data_updates=user_input,
+                data={**reauth_entry.data, **user_input},
             )
 
         return self.async_show_form(
