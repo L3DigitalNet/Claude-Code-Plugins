@@ -9,8 +9,39 @@ import { homedir } from "os";
 const CONFIG_PATH = join(homedir(), ".config", "ha-dev-mcp", "config.json");
 
 async function loadConfig() {
-  const content = await readFile(CONFIG_PATH, "utf-8");
-  return JSON.parse(content);
+  // Guard mirrors mcp-server/src/config.ts:218-222: a missing/malformed config or
+  // absent homeAssistant.token must surface the same actionable guidance the server
+  // emits, not an opaque ENOENT / "Cannot read properties of undefined" stack trace.
+  let content;
+  try {
+    content = await readFile(CONFIG_PATH, "utf-8");
+  } catch {
+    console.error(
+      `Could not read ${CONFIG_PATH}.\n` +
+        "Create ~/.config/ha-dev-mcp/config.json with a homeAssistant.token field " +
+        "(or set HA_DEV_MCP_TOKEN) before running this test."
+    );
+    process.exit(1);
+  }
+  let config;
+  try {
+    config = JSON.parse(content);
+  } catch {
+    console.error(
+      `${CONFIG_PATH} is not valid JSON.\n` +
+        "Fix ~/.config/ha-dev-mcp/config.json so it contains a homeAssistant.token field."
+    );
+    process.exit(1);
+  }
+  if (!config?.homeAssistant?.token) {
+    console.error(
+      `${CONFIG_PATH} is missing homeAssistant.token.\n` +
+        "Create ~/.config/ha-dev-mcp/config.json with a homeAssistant.token field " +
+        "(or set HA_DEV_MCP_TOKEN) before running this test."
+    );
+    process.exit(1);
+  }
+  return config;
 }
 
 async function haApi(path, token, method = "GET", body = null) {
