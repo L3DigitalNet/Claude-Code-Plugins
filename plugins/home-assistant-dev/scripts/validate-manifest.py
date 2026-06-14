@@ -214,7 +214,7 @@ def validate_manifest(manifest_path: Path, is_custom: bool = True) -> list[Valid
                 )
 
     # Check for deprecated patterns (warnings)
-    if manifest.get("config_flow") is None and manifest.get("integration_type") != "virtual":
+    if manifest.get("config_flow") is not True and manifest.get("integration_type") != "virtual":
         errors.append(
             ValidationError(
                 "config_flow",
