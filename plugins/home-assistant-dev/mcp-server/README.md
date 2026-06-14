@@ -236,7 +236,7 @@ src/
 
 ## Requirements
 
-- Node.js 18 or later
+- Node.js 20 or later
 - Home Assistant 2024.1.0 or later (for full compatibility)
 
 ## Troubleshooting
