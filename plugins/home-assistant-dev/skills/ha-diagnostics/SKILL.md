@@ -263,10 +263,10 @@ async def async_get_config_entry_diagnostics(
 
 ```python
 """Test diagnostics."""
-from homeassistant.components.diagnostics import async_get_config_entry_diagnostics
 from homeassistant.core import HomeAssistant
 
 from custom_components.{domain} import DOMAIN
+from custom_components.{domain}.diagnostics import async_get_config_entry_diagnostics
 
 
 async def test_diagnostics(hass: HomeAssistant, mock_client) -> None:
