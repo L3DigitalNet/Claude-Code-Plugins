@@ -39,7 +39,7 @@ class PushTemperatureSensor(SensorEntity):
     """Temperature sensor that receives push updates."""
 
     _attr_has_entity_name = True
-    _attr_name = "Temperature"
+    _attr_translation_key = "temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -53,9 +53,11 @@ class PushTemperatureSensor(SensorEntity):
         self._coordinator = coordinator
         self._attr_unique_id = f"{entry.entry_id}_temperature"
 
-        # Device info for grouping
+        # Device info for grouping. Use the always-available entry_id as the stable
+        # identifier — coordinator.device_info may be empty if the initial connect
+        # failed, which would otherwise create a second device once it populates.
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.device_info.get("serial", entry.entry_id))},
+            "identifiers": {(DOMAIN, entry.entry_id)},
             "name": coordinator.device_info.get("name", "Push Device"),
             "manufacturer": MANUFACTURER,
             "model": coordinator.device_info.get("model"),
