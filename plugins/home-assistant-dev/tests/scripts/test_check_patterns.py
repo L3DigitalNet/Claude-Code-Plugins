@@ -103,22 +103,19 @@ class TestCheckPatternsExamples:
         """polling-hub example should have no errors."""
         returncode, stdout, stderr = run_checker(example_polling_hub)
         
-        # May have warnings but should not have blocking errors
-        error_lines = [line for line in stdout.split('\n') if 'ERROR' in line and 'blocking' in line.lower()]
-        assert len(error_lines) == 0, f"polling-hub has blocking errors: {error_lines}"
+        # May have warnings, but must have no error-level findings (script exits 1 iff errors)
+        assert returncode == 0, f"polling-hub has errors:\n{stdout}"
 
     @pytest.mark.unit
     def test_minimal_sensor_clean(self, example_minimal_sensor):
         """minimal-sensor example should have no errors."""
         returncode, stdout, stderr = run_checker(example_minimal_sensor)
         
-        error_lines = [line for line in stdout.split('\n') if 'ERROR' in line and 'blocking' in line.lower()]
-        assert len(error_lines) == 0, f"minimal-sensor has blocking errors: {error_lines}"
+        assert returncode == 0, f"minimal-sensor has errors:\n{stdout}"
 
     @pytest.mark.unit
     def test_push_integration_clean(self, example_push_integration):
         """push-integration example should have no errors."""
         returncode, stdout, stderr = run_checker(example_push_integration)
         
-        error_lines = [line for line in stdout.split('\n') if 'ERROR' in line and 'blocking' in line.lower()]
-        assert len(error_lines) == 0, f"push-integration has blocking errors: {error_lines}"
+        assert returncode == 0, f"push-integration has errors:\n{stdout}"
