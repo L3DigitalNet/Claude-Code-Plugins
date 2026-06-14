@@ -75,6 +75,8 @@ class ExampleHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth when credentials expire."""
+        # entry_data is intentionally unused: the confirm step retrieves the
+        # entry via self._get_reauth_entry() rather than from this argument.
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
