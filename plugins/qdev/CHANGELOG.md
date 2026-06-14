@@ -7,9 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [2.0.2] - 2026-06-12
 
 ### Changed
+
 - fix changelog structure, re-sync vendored schema, update README to v2 search model
 - Add comprehensive references for Python tooling standards
-
 
 ## [Unreleased]
 

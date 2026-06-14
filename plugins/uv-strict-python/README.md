@@ -42,23 +42,23 @@ This plugin includes a `SessionStart` hook that prepends PATH shims for `python`
 
 **Scope gating:** the standard is repository-scoped, so the shims activate only when the project root looks like a Python project (`pyproject.toml`, `.python-version`, or `uv.lock` present). Override per project in `.claude/uv-strict-python.local.md` frontmatter — `shims: always` forces them on (e.g. a polyglot repo whose Python lives in subdirectories), `shims: never` keeps them off, `shims: auto` (default) lets the markers decide.
 
-| Intercepted Command       | Suggested Alternative                |
-| ------------------------- | ------------------------------------ |
-| `python ...`              | `uv run python ...`                  |
-| `python -m module`        | `uv run python -m module`            |
-| `python -m pip`           | `uv add`/`uv remove`                 |
-| `pip install pkg`         | `uv add pkg` or `uv run --with pkg`  |
-| `pip uninstall pkg`       | `uv remove pkg`                      |
-| `pip freeze`              | `uv export`                          |
+| Intercepted Command       | Suggested Alternative                      |
+| ------------------------- | ------------------------------------------ |
+| `python ...`              | `uv run python ...`                        |
+| `python -m module`        | `uv run python -m module`                  |
+| `python -m pip`           | `uv add`/`uv remove`                       |
+| `pip install pkg`         | `uv add pkg` or `uv run --with pkg`        |
+| `pip uninstall pkg`       | `uv remove pkg`                            |
+| `pip freeze`              | `uv export`                                |
 | `uv pip ...` (mutating)   | `uv add`/`uv remove`/`uv sync`/`uv export` |
-| `pipx install <pkg>`      | `uv tool install <pkg>`              |
-| `pipx run <pkg>`          | `uvx <pkg>`                          |
-| `pipx uninstall <pkg>`    | `uv tool uninstall <pkg>`            |
-| `pipx upgrade <pkg>`      | `uv tool upgrade <pkg>`              |
-| `pipx upgrade-all`        | `uv tool upgrade --all`              |
-| `pipx ensurepath`         | `uv tool update-shell`               |
-| `pipx inject <pkg> <dep>` | `uv tool install --with <dep> <pkg>` |
-| `pipx list`               | `uv tool list`                       |
+| `pipx install <pkg>`      | `uv tool install <pkg>`                    |
+| `pipx run <pkg>`          | `uvx <pkg>`                                |
+| `pipx uninstall <pkg>`    | `uv tool uninstall <pkg>`                  |
+| `pipx upgrade <pkg>`      | `uv tool upgrade <pkg>`                    |
+| `pipx upgrade-all`        | `uv tool upgrade --all`                    |
+| `pipx ensurepath`         | `uv tool update-shell`                     |
+| `pipx inject <pkg> <dep>` | `uv tool install --with <dep> <pkg>`       |
+| `pipx list`               | `uv tool list`                             |
 
 Read-only `uv pip` introspection (`list`, `show`, `tree`, `check`) passes through to the real uv — the standard only proscribes the legacy install/modify path, and diagnostics should keep working.
 

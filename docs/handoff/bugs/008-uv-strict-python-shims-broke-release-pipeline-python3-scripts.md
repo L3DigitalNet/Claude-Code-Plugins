@@ -27,4 +27,4 @@ Two-sided, both 2026-06-12:
 
 ## Lesson
 
-A PATH-mutating plugin hook makes every other plugin's subprocess calls part of its blast radius — and `$(...)` captures hide the shim's error message, so the symptom surfaces as a wrong *answer*, not a visible failure. Two standing rules: (1) any plugin script that shells out to `python3`/`pip`/coreutils must self-harden with the `/usr/bin:/bin` PATH prefix (convention ENV-001); (2) hooks that mutate the session environment must be scoped to the project types they serve, with an explicit override, never installed unconditionally.
+A PATH-mutating plugin hook makes every other plugin's subprocess calls part of its blast radius — and `$(...)` captures hide the shim's error message, so the symptom surfaces as a wrong _answer_, not a visible failure. Two standing rules: (1) any plugin script that shells out to `python3`/`pip`/coreutils must self-harden with the `/usr/bin:/bin` PATH prefix (convention ENV-001); (2) hooks that mutate the session environment must be scoped to the project types they serve, with an explicit override, never installed unconditionally.

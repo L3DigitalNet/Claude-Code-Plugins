@@ -38,14 +38,11 @@ the id carries — see the ADR Standard). Fill every CAPS placeholder.
 
 ## Context and Problem Statement
 
-What project constraint requires deviating from the Python Tooling SSOT
-Standard? (Accepted/in-force status lives in the frontmatter `status`
-field, per the ADR Standard.)
+What project constraint requires deviating from the Python Tooling SSOT Standard? (Accepted/in-force status lives in the frontmatter `status` field, per the ADR Standard.)
 
 ## Considered Options
 
-What alternatives were weighed — including conforming to the standard
-unchanged?
+What alternatives were weighed — including conforming to the standard unchanged?
 
 ## Decision Outcome
 
@@ -53,5 +50,4 @@ What exception is allowed, and why this option over the others?
 
 ### Consequences
 
-What does this cost in maintainability, agent reliability, CI complexity,
-or onboarding? Note when this exception should be revisited.
+What does this cost in maintainability, agent reliability, CI complexity, or onboarding? Note when this exception should be revisited.

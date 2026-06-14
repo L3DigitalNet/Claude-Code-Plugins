@@ -44,13 +44,13 @@ brew install uv
 
 uv manages virtual environments automatically. Do not manually create or activate venvs.
 
-| Command                          | Description                                                     |
-| -------------------------------- | --------------------------------------------------------------- |
-| `uv sync`                        | Install dependencies (creates venv if needed)                    |
-| `uv sync --all-groups`           | Install all dependency groups                                    |
-| `uv sync --group dev`            | Install specific group                                           |
-| `uv sync --locked --all-groups`  | CI install — fails if the lockfile is stale (the standard's CI rule) |
-| `uv sync --frozen`               | Install from lockfile without the staleness check (not for CI)  |
+| Command | Description |
+| --- | --- |
+| `uv sync` | Install dependencies (creates venv if needed) |
+| `uv sync --all-groups` | Install all dependency groups |
+| `uv sync --group dev` | Install specific group |
+| `uv sync --locked --all-groups` | CI install — fails if the lockfile is stale (the standard's CI rule) |
+| `uv sync --frozen` | Install from lockfile without the staleness check (not for CI) |
 
 ### Running Code
 
@@ -191,7 +191,7 @@ uv sync  # creates .venv-dev on host
 
 Add both to `.gitignore`:
 
-```
+```gitignore
 .venv/
 .venv-dev/
 ```

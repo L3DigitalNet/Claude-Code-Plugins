@@ -33,14 +33,14 @@ Agents MUST prefer boring, direct code over clever code. Do not optimize for cle
 - Use `T | None` explicitly; MUST NOT use `None` as a silent error value. Use `Sequence`/`Mapping` for read-only inputs, concrete `list`/`dict` when creating/mutating.
 - Validate external input at the boundary, then pass **typed domain objects** through core logic. Keep raw third-party payloads out of business logic.
 
-| Situation | Construct |
-| --- | --- |
+| Situation                             | Construct                                    |
+| ------------------------------------- | -------------------------------------------- |
 | External input / API shape / settings | Pydantic model (settings: pydantic-settings) |
-| Internal immutable / mutable record | `@dataclass(frozen=True)` / `@dataclass` |
-| Intentionally dict-shaped payload | `TypedDict` |
-| Behavior dependency | `Protocol` |
-| Constrained options | `Literal` or `Enum` |
-| Paths | `pathlib.Path` |
+| Internal immutable / mutable record   | `@dataclass(frozen=True)` / `@dataclass`     |
+| Intentionally dict-shaped payload     | `TypedDict`                                  |
+| Behavior dependency                   | `Protocol`                                   |
+| Constrained options                   | `Literal` or `Enum`                          |
+| Paths                                 | `pathlib.Path`                               |
 
 Type-ignore: MUST NOT use broad `# type: ignore`. If unavoidable, use `# pyright: ignore[ruleName]  # reason`. MUST NOT weaken a type or substitute `Any` to silence the checker.
 

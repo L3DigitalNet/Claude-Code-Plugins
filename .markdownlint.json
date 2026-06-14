@@ -63,5 +63,5 @@
 	"MD056": true,
 	"MD058": true,
 	"MD059": { "prohibited_texts": ["click here", "here", "link", "more"] },
-	"MD060": false
+	"MD060": { "style": "leading_and_trailing", "aligned_delimiter": false }
 }

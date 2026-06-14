@@ -164,14 +164,19 @@ Run: `bats tests/prompt-conformance.bats` Expected: FAIL — prompt still uses `
 Replace the local-FS verbs with the SSH idioms from `llm-wiki-remote/SKILL.md`:
 
 - **Search/locate** (was `rg` over `$LLM_WIKI_ROOT/wiki/`):
+
   ```bash
   ssh "$LLM_WIKI_SSH" 'cd "$LLM_WIKI_ROOT" && rg -n -i "<pattern>" wiki/'
   ```
+
 - **Read a page** (was `Read "$LLM_WIKI_ROOT/wiki/...md"`):
+
   ```bash
   ssh "$LLM_WIKI_SSH" 'cat "$LLM_WIKI_ROOT/wiki/<path>.md"'
   ```
+
 - **Edit an existing page** (was `Edit`): structured edit via local-heredoc piped to remote `python3 -` (no nested-quote escaping; `$VARS` stay literal):
+
   ```bash
   ssh "$LLM_WIKI_SSH" 'cd "$LLM_WIKI_ROOT" && python3 -' <<'PY'
   from pathlib import Path
@@ -181,7 +186,9 @@ Replace the local-FS verbs with the SSH idioms from `llm-wiki-remote/SKILL.md`:
   p.write_text(s)
   PY
   ```
+
 - **Write a new draft page** (was `Write`): heredoc to remote file:
+
   ```bash
   ssh "$LLM_WIKI_SSH" 'cat > "$LLM_WIKI_ROOT/wiki/<path>.md"' <<'EOF'
   ---
@@ -190,10 +197,13 @@ Replace the local-FS verbs with the SSH idioms from `llm-wiki-remote/SKILL.md`:
   …body…
   EOF
   ```
+
 - **Contract docs** (was "`Read` AGENTS.md / conventions.md / schemas"): read them over SSH too —
+
   ```bash
   ssh "$LLM_WIKI_SSH" 'cd "$LLM_WIKI_ROOT" && cat AGENTS.md docs/handoff/conventions.md'
   ```
+
 - **id minting** runs on the CT: `ssh "$LLM_WIKI_SSH" 'cd "$LLM_WIKI_ROOT" && uv run python -m llm_wiki_tools.<id-mint-cmd>'` (use the exact command named in the repo's AGENTS.md).
 
 - [ ] **Step 4: Rewrite the validator gate block**
@@ -309,11 +319,13 @@ No new file lands on the CT. `fingerprint`/`candidates` follow the same pattern.
 - [ ] **Step 4: Update `templates/post-propagation-steps.md`**
 
 - Baseline prereq (~line 53): the wiki baseline snapshot is captured on the CT —
+
   ```bash
   BASELINE_WIKI=$(mktemp)
   ssh "$LLM_WIKI_SSH" 'bash -s' snapshot "$LLM_WIKI_ROOT" \
     < "${CLAUDE_PLUGIN_ROOT}/scripts/commit-candidates.sh" > "$BASELINE_WIKI"
   ```
+
 - Staging/commit (~line 60): for the wiki repo, fingerprint/stage/commit run **on the CT**:
 
   ```bash

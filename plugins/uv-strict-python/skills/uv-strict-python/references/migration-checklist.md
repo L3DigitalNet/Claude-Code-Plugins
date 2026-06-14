@@ -49,7 +49,7 @@ uv run basedpyright --writebaseline   # snapshot existing errors into .basedpyri
 
 - Commit `.basedpyright/baseline.json` — baselined (pre-existing) errors stop failing the gate, while **new** code is held to full strict immediately.
 - Fixing a file removes its entries on the next `--writebaseline`; re-run it after cleanup sessions so the baseline only ever shrinks.
-- Never re-run `--writebaseline` to absorb *new* errors — that is the type-weakening anti-pattern the standard prohibits.
+- Never re-run `--writebaseline` to absorb _new_ errors — that is the type-weakening anti-pattern the standard prohibits.
 
 ## Step 5 — Add pip-audit
 

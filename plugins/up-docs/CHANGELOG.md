@@ -13,14 +13,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.13.0] - 2026-06-12
 
 ### Added
+
 - promote repo + Notion propagators Haiku → Sonnet (all sub-agents now Sonnet)
 
 ### Changed
+
 - Add comprehensive references for Python tooling standards
 
 ### Fixed
-- comprehensive-review remediation — audit-only convergence, unconditional repo propagator, prompt/doc drift
 
+- comprehensive-review remediation — audit-only convergence, unconditional repo propagator, prompt/doc drift
 
 ## [Unreleased]
 

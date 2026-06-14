@@ -2,7 +2,7 @@
 
 PEP 723 allows embedding dependency metadata directly in Python scripts, eliminating the need for separate `requirements.txt` or `pyproject.toml` files for simple scripts.
 
-**Scope note:** the Python Tooling SSOT Standard does not (yet) cover single-file scripts — its §19.4 governs script *projects*, which use uv + `pyproject.toml`. This PEP 723 path is a plugin extension for genuinely single-file scripts. The moment a script grows past one file, gains tests, or needs CI, it becomes a project and follows the full standard.
+**Scope note:** the Python Tooling SSOT Standard does not (yet) cover single-file scripts — its §19.4 governs script _projects_, which use uv + `pyproject.toml`. This PEP 723 path is a plugin extension for genuinely single-file scripts. The moment a script grows past one file, gains tests, or needs CI, it becomes a project and follows the full standard.
 
 ## When to Use PEP 723
 

@@ -91,10 +91,10 @@ fail_under = 85
 
 ### uv.lock handling
 
-| Project type               | `uv.lock` in Git? | Why                              |
-| -------------------------- | ----------------- | -------------------------------- |
-| Application / internal     | ✅ Commit         | Standard policy: reproducible deploys |
-| Library for external reuse | ❌ `.gitignore`   | Plugin recommendation (the standard only mandates the app/internal case); consumers resolve their own deps |
+| Project type | `uv.lock` in Git? | Why |
+| --- | --- | --- |
+| Application / internal | ✅ Commit | Standard policy: reproducible deploys |
+| Library for external reuse | ❌ `.gitignore` | Plugin recommendation (the standard only mandates the app/internal case); consumers resolve their own deps |
 
 ## .editorconfig
 
