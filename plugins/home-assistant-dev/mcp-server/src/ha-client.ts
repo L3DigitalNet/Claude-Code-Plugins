@@ -474,9 +474,10 @@ export class HaClient {
       return { valid: false, errors };
     }
 
-    // Check required fields
+    // Check required fields by key presence, not truthiness — a supplied 0/false/""
+    // is a valid value, not a missing field.
     for (const [fieldName, fieldInfo] of Object.entries(serviceInfo.fields)) {
-      if (fieldInfo.required && !data?.[fieldName]) {
+      if (fieldInfo.required && !(fieldName in (data ?? {}))) {
         errors.push(`Required field '${fieldName}' is missing`);
       }
     }
