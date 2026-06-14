@@ -141,7 +141,7 @@ custom_components/{domain}/
 ### Gold additions (if Gold)
 
 - `diagnostics.py` (if Diagnostics selected)
-- `translations/en.json` with full entity translation keys
+- Expand the baseline `translations/en.json` (always generated at Bronze) with full entity translation keys — enriching the existing file, not regenerating a separate one
 - `icons.json`
 - Discovery step in `config_flow.py` (if discovery selected)
 
