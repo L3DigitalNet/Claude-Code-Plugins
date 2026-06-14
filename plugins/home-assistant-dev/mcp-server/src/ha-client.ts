@@ -410,16 +410,28 @@ export class HaClient {
     };
 
     const minLevel = filters?.level ? levelPriority[filters.level] : 0;
-    const sinceTimestamp = filters?.since ? new Date(filters.since).getTime() / 1000 : 0;
+    // Validate `since`: an unparseable timestamp must not silently disable the filter
+    // (NaN comparisons are always false, which would keep everything).
+    let sinceTimestamp = 0;
+    if (filters?.since) {
+      const parsed = Date.parse(filters.since);
+      if (Number.isNaN(parsed)) {
+        throw new Error(`Invalid 'since' timestamp: ${filters.since}`);
+      }
+      // system_log/list reports `timestamp` as epoch seconds.
+      sinceTimestamp = parsed / 1000;
+    }
 
     let logs: HaLogEntry[] = logEntries
       .filter((entry) => {
-        // Level filter
-        if (levelPriority[entry.level] < minLevel) {
+        // Level filter — coerce an unknown level to INFO instead of keeping it blindly
+        // (an undefined priority would slip past a numeric `< minLevel` comparison).
+        const entryPriority = levelPriority[entry.level] ?? levelPriority.INFO;
+        if (entryPriority < minLevel) {
           return false;
         }
 
-        // Time filter
+        // Time filter (epoch seconds, see above)
         if (entry.timestamp < sinceTimestamp) {
           return false;
         }
