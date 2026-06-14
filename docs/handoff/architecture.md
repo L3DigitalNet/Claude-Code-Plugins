@@ -65,7 +65,7 @@ Evaluate every design decision against these.
 ```text
 Claude-Code-Plugins/
 ├── .claude-plugin/marketplace.json   # Marketplace catalog
-├── .github/workflows/                # CI: codeql, format, ha-dev-plugin-tests, lint-markdown, plugin-test-harness-ci
+├── .github/workflows/                # CI: codeql, format, ha-dev-plugin-tests, lint-markdown
 ├── plugins/
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
 │   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
