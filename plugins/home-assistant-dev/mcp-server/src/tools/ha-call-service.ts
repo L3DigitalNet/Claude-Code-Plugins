@@ -76,7 +76,12 @@ export async function handleHaCallService(
     return {
       success: true,
       dry_run: false,
-      result: callResult,
+      // Redact the real result the same way the dry-run preview redacts would_data,
+      // so the execution path is at least as careful as the preview.
+      result:
+        typeof callResult === "object" && callResult !== null
+          ? safety.redactSensitiveData(callResult as Record<string, unknown>)
+          : callResult,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
