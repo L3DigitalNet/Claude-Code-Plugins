@@ -136,6 +136,8 @@ python scripts/generate-docs.py examples/polling-hub/custom_components/example_h
 
 ## 4. MCP Server Tests (Requires Home Assistant)
 
+**Build prerequisite:** the automated e2e harness (`tests/e2e/test-mcp-*.mjs`) imports the per-module build under `mcp-server/dist/`, which is not committed (only `server.bundle.cjs` is). Run `npm run build` in `mcp-server/` first, or the harness exits with a clear "missing built modules" error.
+
 ### 4.1 Connection Test
 
 **Setup:** Configure HA_DEV_MCP_URL and HA_DEV_MCP_TOKEN **Prompt:** "Connect to my Home Assistant" **Expected:** Shows HA version and location

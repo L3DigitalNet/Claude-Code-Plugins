@@ -2,7 +2,7 @@
 // Tests the actual HaClient and SafetyChecker classes against live HA
 
 import { readFile } from "fs/promises";
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
@@ -16,6 +16,19 @@ function record(name, pass, detail = "") {
 }
 
 async function main() {
+  // The harness imports the per-module dist build, which is NOT committed
+  // (only dist/server.bundle.cjs is). Fail with a clear message if the build
+  // hasn't been run, instead of a confusing ERR_MODULE_NOT_FOUND at import.
+  const requiredModules = ["ha-client.js", "safety.js", "config.js"];
+  const missing = requiredModules.filter((f) => !existsSync(join(MCP_DIST, f)));
+  if (missing.length > 0) {
+    console.error(
+      `ERROR: missing built modules in ${MCP_DIST}: ${missing.join(", ")}.\n` +
+        "Run 'npm run build' in mcp-server first (the per-module dist is not committed)."
+    );
+    process.exit(1);
+  }
+
   const { HaClient } = await import(join(MCP_DIST, "ha-client.js"));
   const { SafetyChecker } = await import(join(MCP_DIST, "safety.js"));
   const { loadConfig } = await import(join(MCP_DIST, "config.js"));
