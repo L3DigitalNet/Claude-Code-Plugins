@@ -1,3 +1,10 @@
+<!--
+Reference template for manual / Claude-driven documentation authoring. This file is
+NOT read by scripts/generate-docs.py, which generates info.md programmatically from
+the integration code — edits here do not change generated output. generate-docs.py is
+the source of truth for generated docs.
+-->
+
 # {name}
 
 {description}

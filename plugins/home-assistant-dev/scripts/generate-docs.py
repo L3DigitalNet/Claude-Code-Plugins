@@ -5,6 +5,9 @@ Analyzes the integration code and generates:
 - README.md
 - info.md (for HACS)
 
+This builds output programmatically from the integration code; it does NOT read
+templates/docs/*.template (those are manual-fill reference templates that may differ).
+
 Usage:
     python generate-docs.py <path/to/custom_components/domain>
     python generate-docs.py  # Auto-detect in current directory
