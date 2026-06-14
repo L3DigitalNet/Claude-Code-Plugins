@@ -48,7 +48,7 @@ HACS requires these fields in `manifest.json`:
 
 - `domain` — Must match folder name
 - `name` — Display name
-- `version` — Valid semver (X.Y.Z)
+- `version` — Valid semver (X.Y.Z); required in manifest.json for HACS custom integrations, but must be omitted for HA core integrations
 - `codeowners` — At least one GitHub username
 - `documentation` — URL to docs
 - `issue_tracker` — URL for bug reports
