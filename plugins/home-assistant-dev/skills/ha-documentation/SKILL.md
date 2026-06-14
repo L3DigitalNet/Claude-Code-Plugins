@@ -91,11 +91,11 @@ Guide for creating comprehensive documentation for custom integrations.
 automation:
   - alias: 'Low Temperature Alert'
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.{domain}_temperature
         below: 18
     action:
-      - service: notify.mobile_app
+      - action: notify.mobile_app
         data:
           message: 'Temperature dropped below 18°C'
 ```
