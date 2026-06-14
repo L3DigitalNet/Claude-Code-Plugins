@@ -10,6 +10,7 @@
 import { readFile } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
+import { z } from "zod";
 import type { ServerConfig } from "./types.js";
 
 const CONFIG_FILE_PATH = join(homedir(), ".config", "ha-dev-mcp", "config.json");
@@ -43,17 +44,78 @@ const DEFAULT_CONFIG: ServerConfig = {
   },
 };
 
+// Deep-partial view of ServerConfig: each top-level section optional, and each
+// field within a section optional. Config sources (file, env) supply only the
+// subset they actually set; deepMerge layers them over DEFAULT_CONFIG.
+type PartialServerConfig = {
+  [K in keyof ServerConfig]?: Partial<ServerConfig[K]>;
+};
+
+// Validates the on-disk config file. Malformed structure (e.g. a non-array
+// blockedServices, or a section that is not an object) fails validation and the
+// whole file is ignored rather than corrupting the merged config — the blocklist
+// is a safety boundary, so a typo must not silently disable it.
+const partialConfigSchema = z
+  .object({
+    homeAssistant: z
+      .object({
+        url: z.string(),
+        token: z.string(),
+        verifySsl: z.boolean(),
+      })
+      .partial(),
+    safety: z
+      .object({
+        allowServiceCalls: z.boolean(),
+        blockedServices: z.array(z.string()),
+        requireDryRun: z.boolean(),
+      })
+      .partial(),
+    cache: z
+      .object({
+        docsTtlHours: z.number(),
+        statesTtlSeconds: z.number(),
+      })
+      .partial(),
+    features: z
+      .object({
+        enableDocsTools: z.boolean(),
+        enableHaTools: z.boolean(),
+        enableValidationTools: z.boolean(),
+      })
+      .partial(),
+  })
+  .partial();
+
 /**
  * Load configuration from file
  */
-async function loadConfigFile(): Promise<Partial<ServerConfig>> {
+async function loadConfigFile(): Promise<PartialServerConfig> {
+  let content: string;
   try {
-    const content = await readFile(CONFIG_FILE_PATH, "utf-8");
-    return JSON.parse(content);
+    content = await readFile(CONFIG_FILE_PATH, "utf-8");
   } catch {
-    // Config file doesn't exist or is invalid - that's okay
+    // Config file doesn't exist - that's okay
     return {};
   }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    console.error(`Warning: ${CONFIG_FILE_PATH} is not valid JSON; ignoring it.`);
+    return {};
+  }
+
+  const result = partialConfigSchema.safeParse(parsed);
+  if (!result.success) {
+    console.error(
+      `Warning: ${CONFIG_FILE_PATH} has an invalid structure; ignoring it. ${result.error.message}`
+    );
+    return {};
+  }
+
+  return result.data as PartialServerConfig;
 }
 
 /**
@@ -94,7 +156,7 @@ function loadEnvConfig(): Partial<ServerConfig> {
 /**
  * Deep merge two objects
  */
-function deepMerge(target: ServerConfig, source: Partial<ServerConfig>): ServerConfig {
+function deepMerge(target: ServerConfig, source: PartialServerConfig): ServerConfig {
   const result: Record<string, unknown> = { ...target };
 
   for (const key of Object.keys(source) as Array<keyof ServerConfig>) {
