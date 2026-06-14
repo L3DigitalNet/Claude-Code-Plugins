@@ -49,7 +49,7 @@ Developers need contextual guidance, automated validation, and reference impleme
 
 A Claude Code plugin providing:
 
-- **19 specialized skills** covering all development aspects
+- **27 specialized skills** covering all development aspects
 - **3 workflow agents** for end-to-end tasks
 - **5 validation scripts** with real-time feedback
 - **3 example integrations** at Bronze, Silver, Gold tiers
@@ -61,7 +61,7 @@ A Claude Code plugin providing:
 | Metric        | Value                |
 | ------------- | -------------------- |
 | Total Files   | 116                  |
-| Skills        | 19                   |
+| Skills        | 27                   |
 | IQS Coverage  | 100% (52/52 rules)   |
 | Example Tiers | Bronze, Silver, Gold |
 | MCP Tools     | 12                   |
@@ -108,7 +108,7 @@ A Claude Code plugin providing:
 │  │                    Plugin Interface                          ││
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    ││
 │  │  │  Skills  │  │  Agents  │  │ Commands │  │  Hooks   │    ││
-│  │  │   (19)   │  │   (3)    │  │   (2)    │  │   (3)    │    ││
+│  │  │   (27)   │  │   (3)    │  │   (2)    │  │   (3)    │    ││
 │  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘    ││
 │  │       │             │             │             │           ││
 │  │       └─────────────┴─────────────┴─────────────┘           ││
@@ -149,7 +149,7 @@ ha-dev-plugin-v2/
 ├── .github/
 │   └── workflows/
 │       └── test.yml             # CI/CD pipeline
-├── skills/                      # 19 skill definitions
+├── skills/                      # 27 skill definitions
 │   ├── ha-architecture/
 │   │   └── SKILL.md
 │   ├── ha-integration-scaffold/
@@ -192,7 +192,23 @@ ha-dev-plugin-v2/
 │   │   └── SKILL.md
 │   ├── ha-websocket-api/
 │   │   └── SKILL.md
-│   └── ha-recorder/
+│   ├── ha-recorder/
+│   │   └── SKILL.md
+│   ├── ha-entity-lifecycle/
+│   │   └── SKILL.md
+│   ├── ha-options-flow/
+│   │   └── SKILL.md
+│   ├── ha-config-migration/
+│   │   └── SKILL.md
+│   ├── ha-deprecation-fixes/
+│   │   └── SKILL.md
+│   ├── ha-scripts/
+│   │   └── SKILL.md
+│   ├── ha-blueprints/
+│   │   └── SKILL.md
+│   ├── ha-hacs-publishing/
+│   │   └── SKILL.md
+│   └── ha-device-conditions-actions/
 │       └── SKILL.md
 ├── agents/                      # 3 workflow agents
 │   ├── ha-integration-dev.md
@@ -387,35 +403,43 @@ disable-model-invocation: true
 | `ha-coordinator` | Data management | DataUpdateCoordinator, error handling, runtime_data |
 | `ha-entity-platforms` | Entity implementation | Sensor, switch, light, etc. with device classes |
 | `ha-async-patterns` | Async Python in HA | aiohttp, executors, avoiding blocking |
+| `ha-entity-lifecycle` | Entity registration/restore | async_added_to_hass, device_info, RestoreEntity |
 
 #### Configuration Skills
 
 | Skill | Purpose | Key Content |
 | --- | --- | --- |
 | `ha-config-flow` | User configuration | Config flows, options, reauth, reconfigure, discovery |
+| `ha-options-flow` | Post-setup options | Options flow, reauth/reconfigure entry points |
+| `ha-config-migration` | Entry migration | VERSION/MINOR_VERSION, async_migrate_entry |
 | `ha-service-actions` | Custom services | Registration, validation, entity targeting |
-| `ha-yaml-automations` | YAML automation | Triggers, conditions, actions, blueprints |
+| `ha-yaml-automations` | YAML automation | Triggers, conditions, actions |
+| `ha-scripts` | YAML scripts | Reusable, callable action sequences with fields |
+| `ha-blueprints` | Blueprints | Blueprint inputs, shareable automation templates |
 
 #### Quality & Compliance Skills
 
-| Skill               | Purpose             | Key Content                             |
-| ------------------- | ------------------- | --------------------------------------- |
-| `ha-quality-review` | IQS compliance      | All 52 rules with examples              |
-| `ha-hacs`           | HACS submission     | hacs.json, brands, repository structure |
-| `ha-testing`        | Test implementation | pytest patterns, MockConfigEntry        |
-| `ha-diagnostics`    | Diagnostics support | Data collection, redaction              |
+| Skill | Purpose | Key Content |
+| --- | --- | --- |
+| `ha-quality-review` | IQS compliance | All 52 rules with examples |
+| `ha-hacs` | HACS submission | hacs.json, brands, repository structure |
+| `ha-hacs-publishing` | HACS release | GitHub Actions validation, brand submission |
+| `ha-testing` | Test implementation | pytest patterns, MockConfigEntry |
+| `ha-diagnostics` | Diagnostics support | Data collection, redaction |
 
 #### Advanced Skills
 
-| Skill                | Purpose            | Key Content                         |
-| -------------------- | ------------------ | ----------------------------------- |
-| `ha-repairs`         | Repair issues      | Issue registry, fix flows           |
-| `ha-device-triggers` | Device automation  | Trigger schemas, handlers           |
-| `ha-websocket-api`   | Custom WS commands | Command registration, subscriptions |
-| `ha-recorder`        | Statistics/history | Long-term statistics, state classes |
-| `ha-migration`       | Version updates    | Deprecation fixes, pattern updates  |
-| `ha-debugging`       | Troubleshooting    | Logging, common issues              |
-| `ha-documentation`   | Doc generation     | README templates, HACS info.md      |
+| Skill | Purpose | Key Content |
+| --- | --- | --- |
+| `ha-repairs` | Repair issues | Issue registry, fix flows |
+| `ha-deprecation-fixes` | Deprecation fixes | Updated imports, modern type syntax |
+| `ha-device-triggers` | Device automation | Trigger schemas, handlers |
+| `ha-device-conditions-actions` | Device automation | Condition and action schemas |
+| `ha-websocket-api` | Custom WS commands | Command registration, subscriptions |
+| `ha-recorder` | Statistics/history | Long-term statistics, state classes |
+| `ha-migration` | Version updates | Deprecation fixes, pattern updates |
+| `ha-debugging` | Troubleshooting | Logging, common issues |
+| `ha-documentation` | Doc generation | README templates, HACS info.md |
 
 ### 5.3 Skill Triggering
 
@@ -774,7 +798,7 @@ See `docs/SELF_TEST_PROTOCOL.md` for complete protocol.
 
 ### 10.1 Why Skills Over Single Document?
 
-**Decision:** 19 separate skills instead of one monolithic document
+**Decision:** 27 separate skills instead of one monolithic document
 
 **Rationale:**
 
