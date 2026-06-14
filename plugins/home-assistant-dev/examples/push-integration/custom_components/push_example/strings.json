@@ -7,6 +7,10 @@
 				"data_description": { "host": "The IP address or hostname of your push device" }
 			}
 		},
+		"error": {
+			"cannot_connect": "Unable to connect to the device. Please check the host address.",
+			"invalid_auth": "Authentication failed. Please check your credentials."
+		},
 		"abort": {
 			"already_configured": "This device is already configured.",
 			"reauth_successful": "Reauthentication successful."
