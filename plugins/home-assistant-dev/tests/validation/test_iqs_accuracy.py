@@ -14,9 +14,32 @@ class TestIQSRuleAccuracy:
 
     @pytest.mark.unit
     def test_iqs_total_rule_count(self):
-        """Verify total IQS rules equals 52."""
-        # Official breakdown: Bronze 18, Silver 10, Gold 21, Platinum 3
-        assert 18 + 10 + 21 + 3 == 52
+        """Verify total IQS rules equals 52 by counting documented rules per tier."""
+        # Tie the invariant to actual SKILL.md content: count the checkbox
+        # rule lines in each tier section and require the four counts to sum to
+        # the official total (Bronze 18, Silver 10, Gold 21, Platinum 3 = 52).
+        skill_path = PLUGIN_ROOT / "skills" / "ha-quality-review" / "SKILL.md"
+        content = skill_path.read_text()
+
+        tiers = ["Bronze", "Silver", "Gold", "Platinum"]
+        per_tier = {}
+        for i, tier in enumerate(tiers):
+            next_pat = (
+                rf'##\s*{tiers[i + 1]}\s+Tier' if i + 1 < len(tiers) else r'\Z'
+            )
+            section_match = re.search(
+                rf'##\s*{tier}\s+Tier.*?(?={next_pat})',
+                content,
+                re.DOTALL | re.IGNORECASE,
+            )
+            assert section_match, f"{tier} Tier section not found"
+            section = section_match.group(0)
+            per_tier[tier] = len(
+                re.findall(r'\[\s*\]\s*\*\*[a-z-]+\*\*', section)
+            )
+
+        total = sum(per_tier.values())
+        assert total == 52, f"Expected 52 IQS rules total, found {total}: {per_tier}"
 
     @pytest.mark.unit
     def test_skill_documents_all_tiers(self):
@@ -124,13 +147,19 @@ class TestDeprecationDateAccuracy:
             PLUGIN_ROOT / "skills" / "ha-migration" / "SKILL.md",
             PLUGIN_ROOT / "scripts" / "check-patterns.py",
         ]
-        
-        for file_path in files_to_check:
-            if file_path.exists():
-                content = file_path.read_text()
-                if "ServiceInfo" in content:
-                    assert "2025.1" in content or "2025.01" in content, \
-                        f"{file_path} should mention 2025.1 for ServiceInfo"
+
+        # Require the token to exist somewhere before validating its date, so a
+        # refactor that removes every ServiceInfo mention fails loudly instead
+        # of passing green having checked nothing.
+        mentioning = [
+            f for f in files_to_check if f.exists() and "ServiceInfo" in f.read_text()
+        ]
+        assert mentioning, "ServiceInfo not mentioned in any expected file"
+
+        for file_path in mentioning:
+            content = file_path.read_text()
+            assert "2025.1" in content or "2025.01" in content, \
+                f"{file_path} should mention 2025.1 for ServiceInfo"
 
     @pytest.mark.unit
     def test_runtime_data_introduction_date(self):
@@ -146,19 +175,21 @@ class TestDeprecationDateAccuracy:
         """_async_setup introduced in 2024.8."""
         skill_path = PLUGIN_ROOT / "skills" / "ha-coordinator" / "SKILL.md"
         content = skill_path.read_text()
-        
-        if "_async_setup" in content:
-            assert "2024" in content
+
+        assert "_async_setup" in content, \
+            "ha-coordinator SKILL.md should document _async_setup"
+        assert "2024" in content
 
     @pytest.mark.unit
     def test_options_flow_deprecation_date(self):
         """OptionsFlow __init__ deprecated in 2025.12."""
         patterns_path = PLUGIN_ROOT / "scripts" / "check-patterns.py"
         content = patterns_path.read_text()
-        
-        if "OptionsFlow" in content and "__init__" in content:
-            # Should mention the deprecation version
-            assert "2025" in content
+
+        assert "OptionsFlow" in content and "__init__" in content, \
+            "check-patterns.py should reference OptionsFlow __init__ deprecation"
+        # Should mention the deprecation version
+        assert "2025" in content
 
 
 class TestCodeExampleSyntax:
@@ -199,21 +230,23 @@ class TestCodeExampleSyntax:
                 try:
                     ast.parse(code)
                 except SyntaxError as e:
-                    # Allow certain expected errors for partial examples
+                    # Allow only truncation markers of genuinely partial
+                    # snippets. "invalid syntax" is excluded on purpose: it is
+                    # the message for nearly every real SyntaxError, so allowing
+                    # it would swallow broken examples and make this test
+                    # vacuous for the most common error class.
                     err_str = str(e)
                     if any(x in err_str for x in [
                         "unexpected EOF",
                         "expected an indented block",
-                        "invalid syntax",
                     ]):
                         continue
                     errors.append(f"{skill_file.parent.name} block {i}: {e}")
-        
-        # Report all errors at once (but don't fail for common partial examples)
+
+        # Any unexplained syntax error in a complete, non-template block is a
+        # real defect: report the full set so maintainers see every example.
         if errors:
-            # Only fail if there are many errors (suggests real issues)
-            if len(errors) > 5:
-                pytest.fail(f"Syntax errors in code examples:\n" + "\n".join(errors[:5]))
+            pytest.fail("Syntax errors in code examples:\n" + "\n".join(errors))
 
 
 class TestCrossReferenceConsistency:
