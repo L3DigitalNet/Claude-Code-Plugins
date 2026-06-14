@@ -42,6 +42,7 @@ class PushCoordinator:
 
         # Connection management
         self._connection_task: asyncio.Task | None = None
+        self._reconnect_task: asyncio.Task | None = None
         self._reconnect_interval = 30
         self._should_reconnect = True
 
@@ -61,8 +62,12 @@ class PushCoordinator:
             self.connected = True
             _LOGGER.info("Connected to push device at %s", self._host)
 
-            # Start listening for updates
-            self._connection_task = asyncio.create_task(self._listen_loop())
+            # Start listening for updates as a tracked background task so Home
+            # Assistant cancels it on unload (avoids 'Detected untracked task'
+            # warnings and a post-unload leak).
+            self._connection_task = self.entry.async_create_background_task(
+                self.hass, self._listen_loop(), name=f"{DOMAIN}_listen"
+            )
 
         except Exception as err:
             _LOGGER.error("Failed to connect: %s", err)
@@ -78,6 +83,13 @@ class PushCoordinator:
             self._connection_task.cancel()
             try:
                 await self._connection_task
+            except asyncio.CancelledError:
+                pass
+
+        if self._reconnect_task:
+            self._reconnect_task.cancel()
+            try:
+                await self._reconnect_task
             except asyncio.CancelledError:
                 pass
 
@@ -134,7 +146,11 @@ class PushCoordinator:
                 _LOGGER.info("Attempting to reconnect...")
                 await self.async_connect()
 
-        asyncio.create_task(reconnect())
+        # Track the reconnect task (and let HA cancel it on unload) so a pending
+        # reconnect can't call async_connect after the entry is gone.
+        self._reconnect_task = self.entry.async_create_background_task(
+            self.hass, reconnect(), name=f"{DOMAIN}_reconnect"
+        )
 
     @property
     def available(self) -> bool:
