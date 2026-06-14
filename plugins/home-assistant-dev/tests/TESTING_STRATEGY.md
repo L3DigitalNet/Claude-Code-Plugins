@@ -437,6 +437,8 @@ echo "All integration tests passed!"
 
 Verify documented rules match official HA documentation:
 
+Illustrative — see `tests/validation/test_iqs_accuracy.py` for the implemented version.
+
 ```python
 # tests/validation/test_iqs_rules.py
 """Verify IQS rules match official documentation."""
@@ -450,9 +452,6 @@ def test_iqs_rule_count():
     # Load our documentation
     skill_path = Path("skills/ha-quality-review/SKILL.md")
     our_content = skill_path.read_text()
-
-    # Count rules in each tier
-    bronze_count = our_content.count("- **") in range(15, 25)  # Approximate
 
     # Fetch official docs (when online)
     # response = requests.get(OFFICIAL_IQS_URL)
@@ -684,6 +683,8 @@ markers =
 addopts = -v --tb=short
 ```
 
+CI runs `tests/scripts/` with `pytest ... -m unit`, so every test file under `tests/scripts/` MUST carry `@pytest.mark.unit`. An unmarked test there is silently excluded by the CI invocation (green build, untested code) — mark every new `tests/scripts/` test `unit`.
+
 #### 5.2 GitHub Actions CI
 
 CI is defined in the repository-root workflow `.github/workflows/ha-dev-plugin-tests.yml` (triggered on changes under `plugins/home-assistant-dev/**`). It runs these jobs:
@@ -751,20 +752,23 @@ CI is defined in the repository-root workflow `.github/workflows/ha-dev-plugin-t
 
 #### 8.1 Fixtures Directory Structure
 
+Current state — only the two manifest fixtures below exist on disk. The remaining files are TODO (a test importing them today will hit a missing-file error).
+
 ```text
 tests/
 ├── fixtures/
 │   ├── manifests/
-│   │   ├── valid_full.json
-│   │   ├── valid_minimal.json
-│   │   ├── invalid_missing_domain.json
-│   │   ├── invalid_bad_version.json
-│   │   └── invalid_bad_iot_class.json
-│   ├── strings/
+│   │   ├── valid_full.json            # exists
+│   │   ├── invalid_missing_fields.json # exists
+│   │   ├── valid_minimal.json         # TODO
+│   │   ├── invalid_missing_domain.json # TODO
+│   │   ├── invalid_bad_version.json   # TODO
+│   │   └── invalid_bad_iot_class.json # TODO
+│   ├── strings/                       # TODO — directory does not exist yet
 │   │   ├── valid_with_descriptions.json
 │   │   ├── missing_step.json
 │   │   └── orphaned_step.json
-│   └── python/
+│   └── python/                        # TODO — directory does not exist yet
 │       ├── clean_code.py
 │       ├── has_hass_data.py
 │       ├── has_blocking_io.py
