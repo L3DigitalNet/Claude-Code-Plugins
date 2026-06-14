@@ -11,6 +11,7 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | DOC-001 | Doc audience split | editing any repo doc — determines prose style vs LLM-first style |
 | DOC-002 | Session start | starting work in this repo |
 | DOC-003 | Convention changes | adding or revising a repo convention |
+| DOC-004 | MD060 + Prettier table-cell compatibility | configuring markdownlint MD060 in a repo that also runs Prettier |
 | ENV-001 | PATH-shim guard in plugin scripts | a plugin script invokes bare `python3`/`pip`/coreutils via PATH |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
 | TEST-001 | Canonical test frameworks by language | implementing unit tests for a plugin |
@@ -230,6 +231,24 @@ export GIT_CONFIG_NOSYSTEM=1
 - up-docs commit `bacf529` (file-level bash reference, helpers.bash lines 8-15)
 
 **Related:** TEST-001, TEST-002
+
+## DOC-004. MD060 + Prettier table-cell compatibility
+
+**Applies when:** configuring markdownlint MD060 (`table-column-style`) in a repo that also runs Prettier as the Markdown formatter. **Rule:** Use `"MD060": { "style": "leading_and_trailing", "aligned_delimiter": false }` — do not use `"any"` (standard default) and do not disable the rule.
+
+```json
+// .markdownlint.json
+"MD060": { "style": "leading_and_trailing", "aligned_delimiter": false }
+```
+
+**Why:** Prettier renders every table cell with exactly one leading + one trailing space, including empty cells (`|  |`). `MD060: { style: "any" }` auto-infers column style per table and treats empty cells as `"compact"`, producing up to 152 violations in a repo with auto-generated index tables. `leading_and_trailing` accepts Prettier's output exactly (0 violations) while keeping table-column linting active. Disabling the rule would drop table consistency enforcement entirely. Full decision context in `docs/decisions/adr-0001-prettier-jsts-scope.md`.
+
+**Sources:**
+
+- `docs/decisions/adr-0001-prettier-jsts-scope.md` (ADR-0001, revised 2026-06-14)
+- Session 2026-06-14 (markdown-tooling → project-standards v3.0.0)
+
+**Related:** DOC-001
 
 ## ENV-001. PATH-shim guard in plugin scripts
 

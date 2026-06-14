@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-12 (uv-strict-python v0.2.0 released; release-pipeline PATH-shim fix committed, release pending)
+**Last updated:** 2026-06-14 (markdown-tooling → project-standards v3.0.0; commit `2d196df`)
 
 ## Session Instructions
 
@@ -12,10 +12,9 @@
 
 ### (none)
 
-## Recently closed (this session, 2026-06-12)
+## Recently closed (this session, 2026-06-14)
 
-- **uv-strict-python v0.2.0 released** (tag + GitHub release, `c981da1`). Conformance review vs project-standards found 1 direct conflict + drift → fixed (`e57850f`); features (`9d5761b`): scope-gated shims (Python projects only, `.local.md` override), BasedPyright LSP (`.lsp.json`), standard-sync drift test (byte-parity vs adopt bundle + SKILL.md sync pin), scaffold templates, tests→`tests/` (`missing_tests` waiver removed). 50 bats green.
-- **Bug 8 fixed, unreleased** (`4f9fd1c`, `19595e2`): uv-strict-python shims blocked bare `python3` in 7 release-pipeline scripts (`detect-unreleased.sh` misreported "not a monorepo" mid-release) and 6 up-docs scripts (`commit-candidates.sh` snapshot failed during live pre-flight) → PATH guard added (ENV-001). Both fixes committed; both plugins' releases pending.
+- **markdown-tooling standard bumped to project-standards v3.0.0** (`2d196df`): `.github/workflows/lint-markdown.yml` caller pin `@v2` → `@v3`; MD060 enabled at `{style:leading_and_trailing, aligned_delimiter:false}` (Prettier-compatible; `{style:any}` gave 152 violations); `prettier --write .` formatted 15 pre-existing-dirty files; 30 pre-existing markdownlint errors cleared (MD031 in up-docs-llm-wiki plan, MD040 in uv-strict-python uv-commands.md). Gate clean: `markdownlint-cli2 **/*.md` 0 errors, `prettier --check .` passes. ADR-0001 revised to supersede the original MD060-disable. `docs/standards-refresh-ledger.md` scratch file created (safe to delete).
 
 Detail in `sessions/2026-06.md`.
 

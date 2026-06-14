@@ -20,7 +20,7 @@ Plugin authoring and release workspace for Claude Code / Codex plugins.
 
 ## Markdown & Structured-Text Tooling
 
-This repository follows the Markdown Tooling Standard. Prettier formats the structured-text it supports (`md`/`json`/`jsonc`/`yaml`/`code-workspace`); markdownlint lints Markdown structure only. JS/TS source is excluded from Prettier, and MD060 is disabled — both recorded in [`docs/decisions/adr-0001-prettier-jsts-scope.md`](docs/decisions/adr-0001-prettier-jsts-scope.md). Do not introduce a competing formatter or linter.
+This repository follows the Markdown Tooling Standard (project-standards v3.0.0). Prettier formats the structured-text it supports (`md`/`json`/`jsonc`/`yaml`/`code-workspace`); markdownlint lints Markdown structure only. JS/TS source is excluded from Prettier via `.prettierignore`. MD060 is enabled at `{style: "leading_and_trailing", aligned_delimiter: false}` (Prettier-compatible; the standard's `{style: "any"}` conflicts with Prettier's empty-cell rendering). Both deviations recorded in [`docs/decisions/adr-0001-prettier-jsts-scope.md`](docs/decisions/adr-0001-prettier-jsts-scope.md). Do not introduce a competing formatter or linter.
 
 ### Fix pass
 
