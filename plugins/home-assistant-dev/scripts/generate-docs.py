@@ -7,6 +7,9 @@ Analyzes the integration code and generates:
 
 This builds output programmatically from the integration code; it does NOT read
 templates/docs/*.template (those are manual-fill reference templates that may differ).
+It is a standalone CLI: the /generate-integration command produces docs inline and does
+not invoke this script — run it manually to (re)generate docs for an existing integration
+(also exercised in tests/e2e/E2E_CHECKLIST.md section 3.4).
 
 Usage:
     python generate-docs.py <path/to/custom_components/domain>
