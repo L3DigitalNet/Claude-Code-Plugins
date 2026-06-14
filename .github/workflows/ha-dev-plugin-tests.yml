@@ -89,6 +89,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify committed bundle matches source
+        run: |
+          if ! git diff --exit-code -- dist/server.bundle.cjs; then
+            echo "::error::dist/server.bundle.cjs is stale — run 'npm run build' in mcp-server and commit the result."
+            exit 1
+          fi
+
   structural-validation:
     name: Plugin Structure
     runs-on: ubuntu-latest
