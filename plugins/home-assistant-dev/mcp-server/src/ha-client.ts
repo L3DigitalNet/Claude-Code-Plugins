@@ -321,6 +321,10 @@ export class HaClient {
       throw new Error("Not connected to Home Assistant");
     }
 
+    // The home-assistant-js-websocket callService helper has no separate `target`
+    // argument, so entity_id/device_id/area_id are folded into the service data. HA
+    // accepts entity_id this way; device_id/area_id are forwarded the same way and rely
+    // on HA resolving them from the service data.
     const serviceData = {
       ...data,
       ...target,
@@ -385,20 +389,29 @@ export class HaClient {
     }
 
     if (filters?.integration) {
-      // Get config entries to map integration domains
-      const configEntries = await this.connection.sendMessagePromise<
-        Array<{ entry_id: string; domain: string }>
-      >({ type: "config_entries/get" });
+      try {
+        // config_entries/get is admin-only; on a non-admin long-lived token it rejects.
+        const configEntries = await this.connection.sendMessagePromise<
+          Array<{ entry_id: string; domain: string }>
+        >({ type: "config_entries/get" });
 
-      const integrationEntries = new Set(
-        configEntries
-          .filter((e) => e.domain === filters.integration)
-          .map((e) => e.entry_id)
-      );
+        const integrationEntries = new Set(
+          configEntries
+            .filter((e) => e.domain === filters.integration)
+            .map((e) => e.entry_id)
+        );
 
-      devices = devices.filter((d) =>
-        d.config_entries.some((e) => integrationEntries.has(e))
-      );
+        devices = devices.filter((d) =>
+          d.config_entries.some((e) => integrationEntries.has(e))
+        );
+      } catch (error) {
+        // Skip the integration filter rather than failing the whole getDevices call —
+        // config_entries/get requires an admin token, which the connection may lack.
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(
+          `ha_get_devices: integration filter skipped (config_entries/get failed, needs admin token): ${message}`
+        );
+      }
     }
 
     return devices;
@@ -429,6 +442,10 @@ export class HaClient {
         first_occurred: number;
       }>
     >({ type: "system_log/list" });
+
+    if (!Array.isArray(logEntries)) {
+      return [];
+    }
 
     const levelPriority: Record<string, number> = {
       DEBUG: 0,
@@ -467,7 +484,7 @@ export class HaClient {
 
         // Domain filter
         if (filters?.domain) {
-          const source = entry.source[0];
+          const source = entry.source?.[0] ?? "";
           if (!source.includes(filters.domain)) {
             return false;
           }
@@ -478,7 +495,7 @@ export class HaClient {
       .map((entry) => ({
         timestamp: new Date(entry.timestamp * 1000).toISOString(),
         level: entry.level as HaLogEntry["level"],
-        source: entry.source[0],
+        source: entry.source?.[0] ?? "unknown",
         message: entry.message,
       }));
 
