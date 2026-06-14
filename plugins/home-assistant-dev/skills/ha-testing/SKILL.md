@@ -29,6 +29,13 @@ import pytest
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Load custom_components during tests (fixture provided by PHCC)."""
+    yield
+
+
 MOCK_CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_USERNAME: "admin",
