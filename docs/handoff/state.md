@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-14 (markdown-tooling → project-standards v3.0.0; commit `2d196df`)
+**Last updated:** 2026-06-14 (home-assistant-dev — all 284 review findings implemented; `2375c3c..4cfa41d`, unreleased)
 
 ## Session Instructions
 
@@ -14,8 +14,7 @@
 
 ## Recently closed (this session, 2026-06-14)
 
-- **markdown-tooling standard bumped to project-standards v3.0.0** (`2d196df`): `.github/workflows/lint-markdown.yml` caller pin `@v2` → `@v3`; MD060 enabled at `{style:leading_and_trailing, aligned_delimiter:false}` (Prettier-compatible; `{style:any}` gave 152 violations); `prettier --write .` formatted 15 pre-existing-dirty files; 30 pre-existing markdownlint errors cleared (MD031 in up-docs-llm-wiki plan, MD040 in uv-strict-python uv-commands.md). Gate clean: `markdownlint-cli2 **/*.md` 0 errors, `prettier --check .` passes. ADR-0001 revised to supersede the original MD060-disable. `docs/standards-refresh-ledger.md` scratch detection ledger created, then removed during the same session's drift-convergence cleanup.
-- **Docs converged — `/up-docs:all` + a `/up-docs:drift` convergence loop** (9 audit rounds → `converged`; `4de7fd0`, `49168e1`, `c85bbf6`, `be6b966`): propagated to repo + wiki (MD060×Prettier gotcha → `646a73f` on CT 103); ~30 ground-truthed handoff/CI fixes (qdev `2.0.0`→`2.0.2`, README `6`→`7` plugins, Haiku→Sonnet labels, retired-`testing` triggers, CHANGELOG dedup, test counts); removed an orphaned CI workflow + the scratch ledger; 2 Notion drifts fixed (llm-wiki remote, resume 7 plugins).
+- **home-assistant-dev — all 284 review findings implemented** (`2375c3c..4cfa41d`, 185 commits this session, GPG-signed; **unreleased** — no version bump, ships with next `home-assistant-dev` release). Every finding from the full-spectrum review (7 Critical / 38 High / 93 Medium / 146 Low) across MCP server (TS), Python scripts, 27 skills, examples, templates, docs. Method: parallel Workflow fan-out (one agent per file, edit + self-verify, parent commits by explicit path) + central `tsc`/`jest` + single bundle rebuild — see memory `feedback_parallel_bulk_implementation`. Notable: F1 `ws` WebSocket polyfill; F155 removed the dead MCP doc-cache (`saveToCache`/`loadFromCache`/`CACHE_DIR` + `docsTtlHours` plumbing); F147×F160 (new `config_flow.py`-presence check broke manifest fixtures → fixed the test helper); F167 added `validate-strings.test.ts` (85% cov). Verified: `tsc` 0, jest **41/41** + coverage, `run_tests.sh --skip-ha` **14/14**, prettier/markdownlint clean, bundle fresh.
 
 Detail in `sessions/2026-06.md`.
 
