@@ -91,9 +91,15 @@ PATTERNS: list[Pattern] = [
         message="Use asyncio.sleep instead of blocking time.sleep",
         severity="error",
     ),
+    # Intentionally narrow: only flags open(...).read(...) chained on one line.
+    # The argument class allows one level of nested parens so calls like
+    # open(os.path.join(a, b)).read() still match (a bare [^)]+ stopped at the
+    # first ")" and missed the trailing .read). It deliberately does NOT catch
+    # the f = open(...) / f.read() split-across-lines form to avoid the false
+    # positives that a bare "open(" would produce on non-async/sync setup code.
     Pattern(
         name="blocking-open",
-        pattern=re.compile(r"\bopen\s*\([^)]+\)\.read\s*\("),
+        pattern=re.compile(r"\bopen\s*\((?:[^()]|\([^()]*\))+\)\.read\s*\("),
         message="Use aiofiles or hass.async_add_executor_job for file I/O",
         severity="warning",
     ),
@@ -104,39 +110,42 @@ PATTERNS: list[Pattern] = [
         severity="error",
     ),
     # Deprecated type syntax (Python 3.9+ has native generics)
+    # Leading (?<![.\w]) anchors to a typing-alias context: it rejects dotted
+    # attribute access (foo.Set[...], module.List[...]) that \b would falsely
+    # flag, since "." is a word boundary but not a deprecated typing import.
     Pattern(
         name="typing-List",
-        pattern=re.compile(r"\bList\s*\["),
+        pattern=re.compile(r"(?<![.\w])List\s*\["),
         message="Use list[] instead of List[] (Python 3.9+)",
         severity="warning",
     ),
     Pattern(
         name="typing-Dict",
-        pattern=re.compile(r"\bDict\s*\["),
+        pattern=re.compile(r"(?<![.\w])Dict\s*\["),
         message="Use dict[] instead of Dict[] (Python 3.9+)",
         severity="warning",
     ),
     Pattern(
         name="typing-Optional",
-        pattern=re.compile(r"\bOptional\s*\["),
+        pattern=re.compile(r"(?<![.\w])Optional\s*\["),
         message="Use X | None instead of Optional[X] (Python 3.10+)",
         severity="warning",
     ),
     Pattern(
         name="typing-Union",
-        pattern=re.compile(r"\bUnion\s*\["),
+        pattern=re.compile(r"(?<![.\w])Union\s*\["),
         message="Use X | Y instead of Union[X, Y] (Python 3.10+)",
         severity="warning",
     ),
     Pattern(
         name="typing-Tuple",
-        pattern=re.compile(r"\bTuple\s*\["),
+        pattern=re.compile(r"(?<![.\w])Tuple\s*\["),
         message="Use tuple[] instead of Tuple[] (Python 3.9+)",
         severity="warning",
     ),
     Pattern(
         name="typing-Set",
-        pattern=re.compile(r"\bSet\s*\["),
+        pattern=re.compile(r"(?<![.\w])Set\s*\["),
         message="Use set[] instead of Set[] (Python 3.9+)",
         severity="warning",
     ),
@@ -215,6 +224,67 @@ FILE_LEVEL_CHECKS: list[tuple[str, Callable[[str], bool], str, str]] = [
 ]
 
 
+def _strip_inline_comment(line: str) -> str:
+    """Remove a trailing ``#`` comment, ignoring ``#`` inside string literals.
+
+    Walks the line tracking single/double quote state so a ``#`` that lives
+    inside a string (e.g. ``url = "http://x#y"``) is preserved and only a real
+    code comment is dropped. Returns the line up to the comment marker.
+    """
+    in_quote = ""  # the active quote char, or "" when outside a string
+    escaped = False
+    for idx, char in enumerate(line):
+        if in_quote:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == in_quote:
+                in_quote = ""
+        elif char in ("'", '"'):
+            in_quote = char
+        elif char == "#":
+            return line[:idx]
+    return line
+
+
+def _toggle_docstring(
+    line: str, in_docstring: bool, delim: str
+) -> tuple[bool, str, bool]:
+    """Update triple-quote docstring state for one line.
+
+    Args:
+        line: The raw source line.
+        in_docstring: Whether a triple-quoted block was already open.
+        delim: The opening triple-quote (``\"\"\"`` or ``'''``) when open.
+
+    Returns:
+        (new_in_docstring, new_delim, line_in_docstring) where the last value
+        is True when this line falls inside a docstring region and should be
+        skipped by the per-line pattern checks.
+    """
+    # If a block is already open, this line is inside it; it stays inside
+    # unless the closing delimiter appears.
+    if in_docstring:
+        if delim in line:
+            return False, "", True
+        return True, delim, True
+
+    # Not currently open: detect a docstring that opens on this line.
+    for candidate in ('"""', "'''"):
+        first = line.find(candidate)
+        if first == -1:
+            continue
+        # Single-line docstring (opens and closes on the same line) — treat the
+        # whole line as a docstring region but leave state closed.
+        if line.find(candidate, first + len(candidate)) != -1:
+            return False, "", True
+        # Opens a multi-line block that continues onto following lines.
+        return True, candidate, True
+
+    return False, "", False
+
+
 def check_file(file_path: Path, patterns: list[Pattern]) -> list[Match]:
     """Check a file for anti-patterns.
 
@@ -234,16 +304,30 @@ def check_file(file_path: Path, patterns: list[Pattern]) -> list[Match]:
         return matches
 
     # Per-line pattern checks
+    in_docstring = False  # True while inside a triple-quoted block
+    docstring_delim = ""  # the """ or ''' that opened the current block
     for line_num, line in enumerate(lines, 1):
         # Skip comments for most patterns
         stripped = line.lstrip()
         is_comment = stripped.startswith("#")
 
+        # Track triple-quote (docstring) state so example code inside docstrings
+        # (e.g. a `time.sleep(` snippet) is not reported as a real anti-pattern.
+        # _toggle_docstring returns whether THIS line lies in a docstring region
+        # and updates the open/closed state for following lines.
+        in_docstring, docstring_delim, line_in_docstring = _toggle_docstring(
+            line, in_docstring, docstring_delim
+        )
+
+        # Strip an inline trailing comment so a `# requests.get(` example after
+        # real code is not flagged; preserves the leading-# whole-comment case.
+        scan_line = _strip_inline_comment(line)
+
         for pattern in patterns:
-            if pattern.skip_in_comments and is_comment:
+            if pattern.skip_in_comments and (is_comment or line_in_docstring):
                 continue
 
-            if pattern.pattern.search(line):
+            if pattern.pattern.search(scan_line):
                 matches.append(
                     Match(
                         file=file_path,
@@ -262,8 +346,12 @@ def check_file(file_path: Path, patterns: list[Pattern]) -> list[Match]:
                     line_num=1,
                     line="(file-level check)",
                     pattern=Pattern(
+                        # Non-matching sentinel: this Pattern is only a carrier
+                        # for the file-level result. re.compile("") matched every
+                        # line, so any accidental reuse in the per-line loop would
+                        # flag the whole file; r"(?!)" never matches.
                         name=name,
-                        pattern=re.compile(""),
+                        pattern=re.compile(r"(?!)"),
                         message=message,
                         severity=severity,
                     ),
