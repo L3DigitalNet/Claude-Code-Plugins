@@ -168,8 +168,11 @@ async def async_create_fix_flow(
 # Remove when issue is resolved
 ir.async_delete_issue(hass, DOMAIN, "firmware_update_available")
 
-# Remove all issues for an entry (e.g., on unload)
-ir.async_delete_issue(hass, DOMAIN, f"reauth_required_{entry.entry_id}")
+# Remove every issue this integration may have created for an entry (e.g., on unload).
+# async_delete_issue has no "delete all for entry" variant, so delete each known
+# per-entry id; a no-op if the issue does not exist.
+for prefix in ("firmware_", "auth_", "reauth_required_"):
+    ir.async_delete_issue(hass, DOMAIN, f"{prefix}{entry.entry_id}")
 ```
 
 ## Complete Example
