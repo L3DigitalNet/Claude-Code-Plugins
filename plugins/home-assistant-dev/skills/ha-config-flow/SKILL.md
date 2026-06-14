@@ -5,7 +5,7 @@ description: Home Assistant config flow for initial integration setup. Use when 
 
 # Home Assistant Config Flow Development
 
-Config flows are **mandatory** for all new integrations. They provide a guided UI-based setup experience that replaces YAML configuration.
+Config flows are required for the Integration Quality Scale (Bronze+) and for any integration that connects to a device or service. They provide a guided UI-based setup experience that replaces YAML configuration.
 
 ## config_flow.py Template (2025)
 
@@ -110,13 +110,12 @@ class InvalidAuth(Exception):
 			"invalid_auth": "Authentication failed.",
 			"unknown": "Unexpected error occurred."
 		},
-		"abort": {
-			"already_configured": "This device is already configured.",
-			"reauth_successful": "Re-authentication successful."
-		}
+		"abort": { "already_configured": "This device is already configured." }
 	}
 }
 ```
+
+The `reauth_successful` abort string belongs with the reauth flow in ha-options-flow; add it here only when that reauth step is implemented.
 
 ## Key Rules
 
