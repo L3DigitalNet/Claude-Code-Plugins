@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 from typing import Any, Callable
 
 from homeassistant.config_entries import ConfigEntry
@@ -112,7 +113,6 @@ class PushCoordinator:
                     continue
 
                 # Simulated push data
-                import random
                 self.data = {
                     "temperature": round(20 + random.uniform(-2, 2), 1),
                     "motion": random.choice([True, False]),
