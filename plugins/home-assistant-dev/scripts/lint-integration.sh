@@ -9,7 +9,7 @@
 #   - mypy (type checking, if configured)
 #   - Custom pattern checks
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,7 +18,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Default to current directory or custom_components
-if [ -n "$1" ]; then
+if [ -n "${1:-}" ]; then
     TARGET="$1"
 elif [ -d "custom_components" ]; then
     TARGET="custom_components"
@@ -115,8 +115,12 @@ echo ""
 echo "----------------------------------------"
 echo "Validating manifest.json..."
 echo "----------------------------------------"
-MANIFEST=$(find "$TARGET" -name "manifest.json" -type f | head -1)
-if [ -n "$MANIFEST" ]; then
+# Validate every manifest.json under the target, not just the first match —
+# a multi-integration repo would otherwise report false-green on unchecked files.
+MANIFEST_FOUND=0
+while IFS= read -r MANIFEST; do
+    MANIFEST_FOUND=1
+    echo "  $MANIFEST"
     if [ -f "$SCRIPT_DIR/validate-manifest.py" ]; then
         if python3 "$SCRIPT_DIR/validate-manifest.py" "$MANIFEST"; then
             echo -e "${GREEN}✓ manifest.json is valid${NC}"
@@ -126,14 +130,15 @@ if [ -n "$MANIFEST" ]; then
         fi
     else
         # Basic JSON validation
-        if python3 -c "import json; json.load(open('$MANIFEST'))" 2>/dev/null; then
+        if python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$MANIFEST" 2>/dev/null; then
             echo -e "${GREEN}✓ manifest.json is valid JSON${NC}"
         else
             echo -e "${RED}✗ manifest.json is invalid JSON${NC}"
             ERRORS=$((ERRORS + 1))
         fi
     fi
-else
+done < <(find "$TARGET" -name "manifest.json" -type f)
+if [ "$MANIFEST_FOUND" -eq 0 ]; then
     echo -e "${YELLOW}⚠ No manifest.json found${NC}"
 fi
 echo ""
@@ -142,8 +147,11 @@ echo ""
 echo "----------------------------------------"
 echo "Validating strings.json..."
 echo "----------------------------------------"
-STRINGS=$(find "$TARGET" -name "strings.json" -type f | head -1)
-if [ -n "$STRINGS" ]; then
+# Validate every strings.json under the target, not just the first match.
+STRINGS_FOUND=0
+while IFS= read -r STRINGS; do
+    STRINGS_FOUND=1
+    echo "  $STRINGS"
     if [ -f "$SCRIPT_DIR/validate-strings.py" ]; then
         if python3 "$SCRIPT_DIR/validate-strings.py" "$STRINGS"; then
             echo -e "${GREEN}✓ strings.json is valid${NC}"
@@ -153,14 +161,15 @@ if [ -n "$STRINGS" ]; then
         fi
     else
         # Basic JSON validation
-        if python3 -c "import json; json.load(open('$STRINGS'))" 2>/dev/null; then
+        if python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$STRINGS" 2>/dev/null; then
             echo -e "${GREEN}✓ strings.json is valid JSON${NC}"
         else
             echo -e "${RED}✗ strings.json is invalid JSON${NC}"
             ERRORS=$((ERRORS + 1))
         fi
     fi
-else
+done < <(find "$TARGET" -name "strings.json" -type f)
+if [ "$STRINGS_FOUND" -eq 0 ]; then
     echo -e "${YELLOW}⚠ No strings.json found${NC}"
 fi
 echo ""
