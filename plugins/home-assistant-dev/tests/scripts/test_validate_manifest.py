@@ -49,8 +49,9 @@ class TestValidateManifest:
         
         returncode, stdout, stderr = run_validator(manifest_path, is_custom=True)
         
-        # Should report missing fields
-        assert "missing" in stdout.lower() or "required" in stdout.lower() or returncode != 0
+        # Should report missing fields as an error, naming the absent field.
+        assert "[ERROR]" in stdout
+        assert "Missing required field" in stdout
 
     @pytest.mark.unit
     def test_invalid_iot_class(self, temp_manifest, valid_manifest):
@@ -70,7 +71,7 @@ class TestValidateManifest:
         
         returncode, stdout, stderr = run_validator(manifest_path, is_custom=True)
         
-        assert "version" in stdout.lower()
+        assert "[ERROR]" in stdout and "version" in stdout.lower()
 
     @pytest.mark.unit
     def test_codeowner_without_at(self, temp_manifest, valid_manifest):
