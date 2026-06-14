@@ -103,7 +103,7 @@ Manual tests to verify the plugin works correctly with Claude Code.
 ### 3.1 validate-manifest.py
 
 ```bash
-python scripts/validate-manifest.py examples/polling-hub/custom_components/example_hub/manifest.json
+python3 scripts/validate-manifest.py examples/polling-hub/custom_components/example_hub/manifest.json
 ```
 
 **Expected:** No errors, possibly warnings
@@ -111,7 +111,7 @@ python scripts/validate-manifest.py examples/polling-hub/custom_components/examp
 ### 3.2 validate-strings.py
 
 ```bash
-python scripts/validate-strings.py examples/polling-hub/custom_components/example_hub/strings.json
+python3 scripts/validate-strings.py examples/polling-hub/custom_components/example_hub/strings.json
 ```
 
 **Expected:** Valid output, steps synced
@@ -119,7 +119,7 @@ python scripts/validate-strings.py examples/polling-hub/custom_components/exampl
 ### 3.3 check-patterns.py
 
 ```bash
-python scripts/check-patterns.py examples/polling-hub/custom_components/example_hub/
+python3 scripts/check-patterns.py examples/polling-hub/custom_components/example_hub/
 ```
 
 **Expected:** No errors (examples should be clean)
@@ -127,7 +127,7 @@ python scripts/check-patterns.py examples/polling-hub/custom_components/example_
 ### 3.4 generate-docs.py
 
 ```bash
-python scripts/generate-docs.py examples/polling-hub/custom_components/example_hub/
+python3 scripts/generate-docs.py examples/polling-hub/custom_components/example_hub/
 ```
 
 **Expected:** Generates README.md and info.md
