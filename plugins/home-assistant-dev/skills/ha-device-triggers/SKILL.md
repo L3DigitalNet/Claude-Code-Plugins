@@ -109,6 +109,37 @@ async def async_attach_trigger(
     )
 ```
 
+## Optional: Validation and Capabilities
+
+The module-level `TRIGGER_SCHEMA` above already satisfies validation — HA's
+device-automation loader accepts **either** a module-level `TRIGGER_SCHEMA` **or** an
+`async_validate_trigger_config` coroutine. Use the coroutine form instead when
+validation must be dynamic (e.g. valid types depend on the device), and add
+`async_get_trigger_capabilities` when a trigger exposes extra fields (subtypes, a
+hold duration) in the UI:
+
+```python
+from homeassistant.helpers import config_validation as cv
+
+
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config — alternative to a module-level TRIGGER_SCHEMA."""
+    return TRIGGER_SCHEMA(config)
+
+
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
+    """Return extra option fields shown for a trigger (e.g. a hold duration)."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional("for"): cv.positive_time_period_dict}
+        )
+    }
+```
+
 ## Firing Triggers
 
 When your device generates an event, fire it from the coordinator or entity:
