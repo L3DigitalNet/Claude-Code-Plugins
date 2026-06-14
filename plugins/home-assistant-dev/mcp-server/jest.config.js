@@ -30,9 +30,9 @@ export default {
     // Unit-testable (read in-memory DOCS_INDEX / parse static JSON, no live HA) — tests TODO.
     // Until those tests exist these are excluded so the threshold is not skewed by 0% coverage;
     // once tested, drop them here so the threshold guards them (F167/F170).
+    // validate-strings.ts is now covered by validate-strings.test.ts (F167) — kept guarded.
     '!src/tools/docs-*.ts',
     '!src/tools/check-patterns.ts',
-    '!src/tools/validate-strings.ts',
     // Server infrastructure — requires a running server to exercise
     '!src/ha-client.ts',
     '!src/config.ts',
