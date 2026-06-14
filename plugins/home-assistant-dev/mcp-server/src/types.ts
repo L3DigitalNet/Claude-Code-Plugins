@@ -163,7 +163,7 @@ export interface HaGetLogsOutput {
 // Documentation types
 export interface DocsSearchInput {
   query: string;
-  section?: "core" | "frontend" | "architecture" | "api";
+  section?: "core";
   limit?: number;
 }
 

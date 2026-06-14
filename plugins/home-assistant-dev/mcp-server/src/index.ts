@@ -144,7 +144,7 @@ const TOOLS: Tool[] = [
       type: "object",
       properties: {
         query: { type: "string", description: "Search query" },
-        section: { type: "string", enum: ["core", "frontend", "architecture", "api"], description: "Documentation section" },
+        section: { type: "string", enum: ["core"], description: "Documentation section (only 'core' docs are indexed)" },
         limit: { type: "number", description: "Max results (default: 5)" },
       },
       required: ["query"],
