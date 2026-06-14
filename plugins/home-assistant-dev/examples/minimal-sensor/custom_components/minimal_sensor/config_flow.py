@@ -21,7 +21,10 @@ class MinimalSensorConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            # Set unique ID to prevent duplicates
+            # Set unique ID to prevent duplicates.
+            # Demo only: production integrations should derive unique_id from a
+            # stable hardware id (serial/MAC), not a user-supplied display name —
+            # renaming a name-keyed entity makes HA treat it as a new device.
             await self.async_set_unique_id(user_input[CONF_NAME].lower())
             self._abort_if_unique_id_configured()
 
