@@ -2,12 +2,12 @@
  * docs_examples tool - Get code examples for common patterns
  */
 
-interface ExampleInput {
+export interface ExampleInput {
   pattern: string;
   style?: "minimal" | "full";
 }
 
-interface ExampleOutput {
+export interface ExampleOutput {
   pattern: string;
   description: string;
   code: string;
@@ -386,13 +386,21 @@ class MySwitch(MyEntity, SwitchEntity):
   },
 };
 
+/**
+ * Single source of truth for the pattern keys docs_examples can serve.
+ * Derived from EXAMPLES so the schema enum in index.ts cannot advertise a
+ * pattern that EXAMPLES lacks (root cause of the prior key-mismatch drift).
+ * index.ts must build its `pattern` enum from this export, not a hand-written list.
+ */
+export const EXAMPLE_PATTERNS = Object.keys(EXAMPLES) as readonly string[];
+
 export async function handleDocsExamples(input: ExampleInput): Promise<ExampleOutput> {
   const pattern = input.pattern.toLowerCase();
   const style = input.style || "minimal";
 
   const examples = EXAMPLES[pattern];
   if (!examples) {
-    const available = Object.keys(EXAMPLES).join(", ");
+    const available = EXAMPLE_PATTERNS.join(", ");
     throw new Error(
       `Unknown pattern: ${pattern}. Available patterns: ${available}`
     );
