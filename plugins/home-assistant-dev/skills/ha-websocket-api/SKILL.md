@@ -34,8 +34,11 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DOMAIN
 
 
-async def async_setup_api(hass: HomeAssistant) -> None:
-    """Set up WebSocket API."""
+# Plain `def`, not a coroutine: async_register_command is synchronous, so there
+# is no async work to await here.
+@callback
+def async_setup_api(hass: HomeAssistant) -> None:
+    """Register WebSocket API commands."""
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_device_data)
     websocket_api.async_register_command(hass, websocket_subscribe_updates)
@@ -64,6 +67,11 @@ def websocket_get_devices(
             })
 
     connection.send_result(msg["id"], {"devices": devices})
+
+
+# A command decorated with only @callback (like the one above) must be fully
+# synchronous and non-blocking: it must do no awaiting and no blocking I/O. Any
+# I/O requires @websocket_api.async_response and an `async def` handler.
 
 
 @websocket_api.websocket_command(
@@ -97,19 +105,36 @@ async def websocket_get_device_data(
 
 ## Registering the API
 
+`async_register_command` is global (it registers on `hass`, not per config entry) and raises if the same command type is registered twice, so it must run exactly once. Register WebSocket commands in the integration's top-level `async_setup` (called once globally) rather than in `async_setup_entry` (called per entry). If you can only register from `async_setup_entry`, gate it with an explicit one-time flag that is independent of the per-entry `hass.data[DOMAIN]` store — do not reuse `DOMAIN not in hass.data` for this, since populating that store before or after the check makes registration either never happen or double-register.
+
 ```python
 # __init__.py
 from .api import async_setup_api
+from .const import DOMAIN
+
+# Dedicated one-time guard key, independent of the per-entry hass.data[DOMAIN] store.
+WS_REGISTERED = f"{DOMAIN}_ws_registered"
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up integration (runs once, globally)."""
+    # Register WebSocket commands exactly once.
+    async_setup_api(hass)
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up integration."""
+    """Set up a config entry."""
     # ... your setup code ...
 
-    # Register WebSocket API (only once)
-    if DOMAIN not in hass.data:
-        await async_setup_api(hass)
+    # If commands can only be registered here, use the dedicated guard — not
+    # `DOMAIN not in hass.data` — so a second entry cannot double-register.
+    if not hass.data.get(WS_REGISTERED):
+        async_setup_api(hass)
+        hass.data[WS_REGISTERED] = True
 
     # ... rest of setup ...
+    return True
 ```
 
 ## Subscription Commands
@@ -143,12 +168,23 @@ async def websocket_subscribe_updates(
             )
         )
 
-    # Subscribe to coordinator updates
+    # Subscribe to every matching coordinator and collect their unsub callables.
+    # Storing only the last one would leak every other listener — exactly the
+    # memory leak Best Practice #5 warns against.
+    unsubs = []
     for coordinator in hass.data.get(DOMAIN, {}).values():
         if device_id is None or device_id in coordinator.devices:
-            unsub = coordinator.async_add_listener(async_handle_update)
-            # Unsubscribe when connection closes
-            connection.subscriptions[msg["id"]] = unsub
+            unsubs.append(coordinator.async_add_listener(async_handle_update))
+
+    @callback
+    def _unsub_all() -> None:
+        """Unsubscribe from all matching coordinators."""
+        for unsub in unsubs:
+            unsub()
+
+    # Register the combined unsubscribe before sending the result so it is in
+    # place before any event can fire.
+    connection.subscriptions[msg["id"]] = _unsub_all
 
     # Send initial confirmation
     connection.send_result(msg["id"])
@@ -156,12 +192,18 @@ async def websocket_subscribe_updates(
 
 ## Error Handling
 
+Catch only the specific exceptions you can map to a meaningful client error code. For the catch-all branch, log the exception server-side with `_LOGGER.exception` and send a generic, non-leaking message — never `str(err)`, which can expose sensitive internals to the WS client. In practice you usually do not need the catch-all at all: `websocket_api` already wraps unhandled exceptions and reports `ERR_UNKNOWN_ERROR` for you.
+
 ```python
+import logging
+
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_UNKNOWN_ERROR,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 @websocket_api.websocket_command({...})
 @websocket_api.async_response
@@ -178,8 +220,14 @@ async def websocket_command(
         connection.send_error(msg["id"], ERR_INVALID_FORMAT, str(err))
     except KeyError:
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Resource not found")
-    except Exception as err:
-        connection.send_error(msg["id"], ERR_UNKNOWN_ERROR, str(err))
+    except Exception:
+        # Log the real error server-side; return a generic message so internals
+        # never leak to the WS client. (Often unnecessary: websocket_api already
+        # wraps unhandled exceptions as ERR_UNKNOWN_ERROR.)
+        _LOGGER.exception("Unexpected error handling %s", msg["type"])
+        connection.send_error(
+            msg["id"], ERR_UNKNOWN_ERROR, "An unexpected error occurred"
+        )
 ```
 
 ## Requiring Authentication
@@ -265,6 +313,6 @@ async def test_websocket_get_devices(
 
 ## Related Skills
 
-- Frontend panels → See Home Assistant docs
+- Data source for commands → `ha-coordinator`
+- Entity platforms → `ha-entity-platforms`
 - Service actions → `ha-service-actions`
-- Coordinator → `ha-coordinator`
