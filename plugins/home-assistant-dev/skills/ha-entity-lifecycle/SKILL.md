@@ -15,7 +15,12 @@ description: Entity lifecycle and device/entity registries in Home Assistant. Us
 6. **Removal**: `async_will_remove_from_hass` for cleanup
 
 ```python
-class MyEntity(CoordinatorEntity):
+from homeassistant.helpers.restore_state import RestoreEntity
+
+
+# async_get_last_state() comes from RestoreEntity — it is NOT on CoordinatorEntity
+# or the base Entity, so the restore mixin must be added.
+class MyEntity(CoordinatorEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         # Restore previous state
