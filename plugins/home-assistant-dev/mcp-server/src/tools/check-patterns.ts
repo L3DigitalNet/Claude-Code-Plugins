@@ -109,14 +109,6 @@ const PATTERNS: Pattern[] = [
     severity: "warning",
   },
 
-  // Missing annotations
-  {
-    name: "missing-future-annotations",
-    pattern: /^(?!from __future__ import annotations).*\bdef\b/gm,
-    message: "Add 'from __future__ import annotations' at top of file",
-    severity: "warning",
-  },
-
   // Blocking I/O - additional
   {
     name: "blocking-open",
@@ -197,6 +189,24 @@ async function checkFile(filePath: string): Promise<PatternIssue[]> {
         fix: pattern.fix,
       });
     }
+  }
+
+  // File-level check: the future-annotations import must be evaluated per FILE,
+  // not per line. The old per-line PATTERN false-positived on every `def` even
+  // when the import was present at the top of the file. Mirrors the Python
+  // check-patterns.py FILE_LEVEL_CHECKS: warn once when a typed def exists
+  // without the import.
+  if (
+    !content.includes("from __future__ import annotations") &&
+    /\bdef\s+\w+\s*\([^)]*:\s*\w+/.test(content)
+  ) {
+    issues.push({
+      file: filePath,
+      line: 1,
+      pattern: "missing-future-annotations",
+      message: "Add 'from __future__ import annotations' at top of file",
+      severity: "warning",
+    });
   }
 
   return issues;
