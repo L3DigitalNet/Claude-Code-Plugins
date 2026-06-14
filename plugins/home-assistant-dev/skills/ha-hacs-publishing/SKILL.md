@@ -37,6 +37,8 @@ jobs:
         uses: home-assistant/actions/hassfest@master
 ```
 
+The `hacs/action@main` and `home-assistant/actions/hassfest@master` floating refs are intentional — these are the officially recommended values per HACS guidance, so do not "fix" them blindly. Note the trade-off: floating refs make the validation workflow non-reproducible and a supply-chain surface (a breaking change in those actions silently breaks your CI). Pinning to a release SHA/tag is the safer practice if you prefer reproducibility over auto-tracking upstream.
+
 ## README.md Template
 
 ```markdown
@@ -56,10 +58,10 @@ Home Assistant integration for My Device.
 ### HACS (Recommended)
 
 1. Open HACS in Home Assistant
-2. Click "Integrations"
-3. Click the three dots menu → "Custom repositories"
-4. Add `https://github.com/user/repo` as category "Integration"
-5. Click "My Integration" → "Download"
+2. Open the three-dots menu (top-right) → "Custom repositories"
+3. Add `https://github.com/user/repo` with type "Integration"
+4. Search the HACS dashboard for "My Integration" and open it
+5. Use the "Download" button (bottom-right) to install it
 6. Restart Home Assistant
 
 ### Manual
