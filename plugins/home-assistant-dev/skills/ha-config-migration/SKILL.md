@@ -40,6 +40,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data=new_data, version=2, minor_version=0
         )
 
+    # async_update_entry mutates `entry` in place, so this branch sees version=2 within
+    # the same call — the checks run sequentially (a 1->2->2.1 migration cascades).
     if entry.version == 2 and entry.minor_version < 1:
         # Minor version migration (non-breaking additions)
         new_options = {**entry.options}
