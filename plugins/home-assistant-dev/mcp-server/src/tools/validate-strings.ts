@@ -128,16 +128,19 @@ export async function handleValidateStrings(
     }
   }
 
+  // Aborts are reported under missing_errors, so they must also count toward validity.
+  const allMissingErrors = [...missingErrors, ...missingAborts];
+
   const valid =
     missingSteps.length === 0 &&
-    missingErrors.length === 0 &&
+    allMissingErrors.length === 0 &&
     missingDataDescriptions.length === 0;
 
   return {
     valid,
     missing_steps: missingSteps,
     orphaned_steps: orphanedSteps,
-    missing_errors: [...missingErrors, ...missingAborts],
+    missing_errors: allMissingErrors,
     missing_data_descriptions: missingDataDescriptions,
   };
 }
