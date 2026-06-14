@@ -136,6 +136,8 @@ mypy .
 grep '{domain}' config/home-assistant.log | tail -20
 ```
 
+The `tail`/`grep` commands above target the `config/home-assistant.log` file present on Core/venv installs. On HA OS / Supervised / Container installs there is no shell access to that path — view logs via Settings → System → Logs, or run `ha core logs` (HA OS/Supervised) / `docker logs homeassistant` (Container).
+
 ## Workflow
 
 1. **Reproduce** — exact steps
