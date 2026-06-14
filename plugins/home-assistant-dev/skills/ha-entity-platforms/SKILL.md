@@ -16,6 +16,7 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+# {Name}ConfigEntry is the `type {Name}ConfigEntry = ConfigEntry[{Name}Coordinator]` alias defined in __init__.py (see ha-integration-scaffold).
 from . import {Name}ConfigEntry
 from .coordinator import {Name}Coordinator
 
@@ -138,6 +139,7 @@ class {Name}Sensor({Name}Entity, SensorEntity):
 
 ```python
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.exceptions import HomeAssistantError
 
 class {Name}Switch({Name}Entity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.SWITCH
@@ -155,11 +157,19 @@ class {Name}Switch({Name}Entity, SwitchEntity):
         return data.get(self._key)
 
     async def async_turn_on(self, **kwargs) -> None:
-        await self.coordinator.client.async_set_switch(self._device_id, self._key, True)
+        # Translate library errors to HomeAssistantError so HA surfaces a meaningful
+        # failure to the user and the optimistic state is reconciled on the next refresh.
+        try:
+            await self.coordinator.client.async_set_switch(self._device_id, self._key, True)
+        except {Name}Error as err:
+            raise HomeAssistantError(f"Failed to turn on {self._key}: {err}") from err
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
-        await self.coordinator.client.async_set_switch(self._device_id, self._key, False)
+        try:
+            await self.coordinator.client.async_set_switch(self._device_id, self._key, False)
+        except {Name}Error as err:
+            raise HomeAssistantError(f"Failed to turn off {self._key}: {err}") from err
         await self.coordinator.async_request_refresh()
 ```
 
