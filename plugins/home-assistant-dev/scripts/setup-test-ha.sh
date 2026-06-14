@@ -387,13 +387,12 @@ complete_onboarding() {
     local user_response
     user_response=$(curl -s -X POST "${HA_URL}/api/onboarding/users" \
         -H "Content-Type: application/json" \
-        -d "{
-            \"client_id\": \"${CLIENT_ID}\",
-            \"name\": \"Test User\",
-            \"username\": \"${USERNAME}\",
-            \"password\": \"${PASSWORD}\",
-            \"language\": \"en\"
-        }" 2>/dev/null)
+        -d "$(jq -n \
+            --arg client_id "$CLIENT_ID" \
+            --arg username "$USERNAME" \
+            --arg password "$PASSWORD" \
+            '{client_id: $client_id, name: "Test User", username: $username, password: $password, language: "en"}')" \
+        2>/dev/null)
 
     local auth_code
     auth_code=$(echo "$user_response" | jq -r '.auth_code // empty' 2>/dev/null)
@@ -427,13 +426,11 @@ complete_onboarding() {
     fi
 
     # Save tokens to workspace
-    cat > "$TOKENS_FILE" <<JSON
-{
-    "access_token": "${access_token}",
-    "refresh_token": "${refresh_token}",
-    "token_type": "Bearer"
-}
-JSON
+    jq -n \
+        --arg access_token "$access_token" \
+        --arg refresh_token "$refresh_token" \
+        '{access_token: $access_token, refresh_token: $refresh_token, token_type: "Bearer"}' \
+        > "$TOKENS_FILE"
     chmod 600 "$TOKENS_FILE"
     pass "Access tokens obtained and saved to ${TOKENS_FILE}"
 
@@ -553,15 +550,16 @@ create_llat() {
 
     # Use inline Python script to create LLAT via WebSocket
     local llat
-    llat=$(python3 <<PYTHON
+    llat=$(HA_ACCESS_TOKEN="$access_token" HA_PORT="$PORT" python3 <<'PYTHON'
 import asyncio
 import aiohttp
 import json
+import os
 import sys
 
 async def create_llat():
-    access_token = "${access_token}"
-    ws_url = "ws://localhost:${PORT}/api/websocket"
+    access_token = os.environ["HA_ACCESS_TOKEN"]
+    ws_url = f"ws://localhost:{os.environ['HA_PORT']}/api/websocket"
 
     try:
         async with aiohttp.ClientSession() as session:
