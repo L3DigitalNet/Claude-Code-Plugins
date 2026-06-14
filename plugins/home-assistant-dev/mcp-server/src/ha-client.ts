@@ -34,6 +34,8 @@ export class HaClient {
   private statesCache: Map<string, HaState> = new Map();
   private statesCacheTime: number = 0;
   private unsubscribe: (() => void) | null = null;
+  private servicesCache: HaService[] | null = null;
+  private servicesCacheTime: number = 0;
 
   constructor(config: ServerConfig) {
     this.config = config;
@@ -260,38 +262,46 @@ export class HaClient {
       throw new Error("Not connected to Home Assistant");
     }
 
-    const hassServices: HassServices = await getServices(this.connection);
-    const services: HaService[] = [];
+    // Cache the full catalog with the same TTL as states — it rarely changes, and
+    // validateServiceCall (every ha_call_service, including dry-runs) reads it.
+    const cacheAge = (Date.now() - this.servicesCacheTime) / 1000;
+    let allServices: HaService[];
 
-    for (const [serviceDomain, domainServices] of Object.entries(hassServices)) {
-      if (domain && serviceDomain !== domain) {
-        continue;
-      }
+    if (this.servicesCache && cacheAge < this.config.cache.statesTtlSeconds) {
+      allServices = this.servicesCache;
+    } else {
+      const hassServices: HassServices = await getServices(this.connection);
+      allServices = [];
 
-      for (const [serviceName, serviceData] of Object.entries(domainServices)) {
-        const fields: Record<string, HaServiceField> = {};
-        for (const [fieldName, fieldData] of Object.entries(serviceData.fields || {})) {
-          fields[fieldName] = {
-            name: fieldData.name || fieldName,
-            description: fieldData.description || "",
-            required: fieldData.required || false,
-            example: fieldData.example,
-            selector: fieldData.selector,
-          };
+      for (const [serviceDomain, domainServices] of Object.entries(hassServices)) {
+        for (const [serviceName, serviceData] of Object.entries(domainServices)) {
+          const fields: Record<string, HaServiceField> = {};
+          for (const [fieldName, fieldData] of Object.entries(serviceData.fields || {})) {
+            fields[fieldName] = {
+              name: fieldData.name || fieldName,
+              description: fieldData.description || "",
+              required: fieldData.required || false,
+              example: fieldData.example,
+              selector: fieldData.selector,
+            };
+          }
+
+          allServices.push({
+            domain: serviceDomain,
+            service: serviceName,
+            name: serviceData.name || serviceName,
+            description: serviceData.description || "",
+            fields,
+            target: serviceData.target,
+          });
         }
-
-        services.push({
-          domain: serviceDomain,
-          service: serviceName,
-          name: serviceData.name || serviceName,
-          description: serviceData.description || "",
-          fields,
-          target: serviceData.target,
-        });
       }
+
+      this.servicesCache = allServices;
+      this.servicesCacheTime = Date.now();
     }
 
-    return services;
+    return domain ? allServices.filter((s) => s.domain === domain) : allServices;
   }
 
   /**
