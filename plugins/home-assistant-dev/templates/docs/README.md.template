@@ -3,6 +3,27 @@ Reference template for manual / Claude-driven documentation authoring. This file
 NOT read by scripts/generate-docs.py, which generates README.md programmatically from
 the integration code — edits here do not change generated output. generate-docs.py is
 the source of truth for generated docs.
+
+PLACEHOLDERS — find-and-replace every `{token}` below before shipping (a manual copier
+who misses one ships the literal `{token}` string). The full set across all doc/testing
+templates is: {name} {description} {domain} {features} {platforms} {min_ha_version}
+{requirements} {github_user} {github_repo} {license} {configuration_options} {entities}
+{troubleshooting} {integration_name}. Tokens used in THIS file:
+
+  {name}                  — human-readable integration name (e.g. "My Integration")
+  {description}           — one-line summary of what the integration does
+  {domain}               — custom_components folder/domain slug (e.g. "my_integration")
+  {features}             — Markdown bullet list of headline features
+  {github_user}          — GitHub owner/org of the repo
+  {github_repo}          — GitHub repository name
+  {configuration_options} — Markdown describing config-flow / options-flow settings
+  {entities}             — Markdown list/table of entities the integration creates
+  {troubleshooting}      — Markdown troubleshooting section (common issues + fixes)
+  {license}              — SPDX license id or name (e.g. "MIT")
+
+When generate-docs.py fills a README it hardcodes some of these (License=MIT, a fixed
+troubleshooting block) and ignores this template — so this manifest is the contract for
+MANUAL copiers and for validating the generator's placeholder coverage.
 -->
 
 # {name}
