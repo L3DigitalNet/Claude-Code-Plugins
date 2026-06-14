@@ -71,6 +71,8 @@ async def async_turn_on(self, **kwargs) -> None:
 ```python
 import asyncio
 
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
 async def async_get_data(self) -> dict:
     try:
         async with asyncio.timeout(10):
