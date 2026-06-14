@@ -23,13 +23,11 @@ Exclude noisy entities from history to reduce database size:
 class MyDiagnosticSensor(SensorEntity):
     """Sensor that shouldn't be recorded."""
 
-    _attr_entity_registry_enabled_default = False  # Disabled by default
+    # Disabling an entity keeps it out of the recorder; hiding only removes it from the
+    # UI (it is still recorded). For true recorder exclusion, use the recorder config below.
+    _attr_entity_registry_enabled_default = False  # Disabled (and not recorded) by default
+    _attr_entity_registry_visible_default = False  # Hidden from the UI by default
     _attr_should_poll = True
-
-    @property
-    def entity_registry_visible_default(self) -> bool:
-        """Hide from UI by default."""
-        return False
 ```
 
 Or use recorder configuration in the user's config:
@@ -41,7 +39,8 @@ recorder:
     entity_globs:
       - sensor.my_integration_debug_*
     domains:
-      - my_integration_diagnostic
+      # `domains` takes entity domains (sensor, switch, ...), not the integration name.
+      - sensor
 ```
 
 ## Long-Term Statistics
