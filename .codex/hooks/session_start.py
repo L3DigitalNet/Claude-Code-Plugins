@@ -7,7 +7,8 @@ each Claude-managed repo as a byte-identical copy by scripts/handoff/install-glo
 verified by hash by scripts/handoff/validate-layout.sh. Do NOT hand-edit the per-repo copy:
 divergent copies were the 2026-05-29 hook-drift finding this version eliminates.
 
-Emits lean startup context (docs/state.md + git branch/log/status + pointers) as JSON
+Emits lean startup context (docs/handoff/state.md, with legacy docs/state.md fallback,
+plus git branch/log/status + pointers) as JSON
 `additionalContext` (Claude) or plain text on stdout (Codex — a documented context path
 that avoids render bug #16933; `systemMessage` is rejected per official docs as a UI warning,
 not context). Harness detected by `$CLAUDE_PROJECT_DIR` presence; the root is canonicalized
@@ -18,8 +19,8 @@ v3.0 fixes over the drifted per-repo copies:
 - Resolves the project root explicitly ($CLAUDE_PROJECT_DIR -> stdin `cwd` -> ".")
   instead of assuming the process cwd is the repo root. A SessionStart hook is not
   guaranteed to run from the project root.
-- Truncates docs/state.md by *bytes* on a UTF-8 boundary (never splits a multibyte
-  character), not by character count.
+- Truncates the resolved state.md by *bytes* on a UTF-8 boundary (never splits a
+  multibyte character), not by character count.
 - Truncation is not silent: it appends a one-line note to additionalContext.
 
 v3.2 additions:
