@@ -85,6 +85,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 **Single-threaded event loop**: All async code shares one loop. Never block it.
 
-**Immutable state**: `hass.states.get()` returns a frozen snapshot.
+**Snapshot state**: `hass.states.get()` returns a point-in-time snapshot — treat it as read-only; the state machine replaces State objects rather than mutating them.
 
 **Integration isolation**: Each integration manages its lifecycle via config entries. Store coordinator in `entry.runtime_data` (not `hass.data`).
