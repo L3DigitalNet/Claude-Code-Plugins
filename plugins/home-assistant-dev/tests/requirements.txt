@@ -1,7 +1,9 @@
 # Test dependencies for HA Dev Plugin
 pytest>=8.0.0
-pytest-asyncio>=0.23.0
 pytest-cov>=4.1.0
+
+# Frontmatter parsing in test_plugin_structure.py (matches run_tests.sh install)
+pyyaml>=6.0
 
 # For validation tests that check code examples
 # (ast module is built-in, no extra deps needed)
