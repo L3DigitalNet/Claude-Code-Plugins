@@ -65,6 +65,11 @@ Finally, ask for the GitHub username:
 
 > "What is your **GitHub username** (used for `codeowners` in manifest.json)?"
 
+Then validate and compute the file count before proceeding:
+
+- Validate `{domain}` against the regex `^[a-z][a-z0-9_]*$` (lowercase letters, digits, and underscores only, starting with a letter). If it does not match, re-prompt for the domain until a valid value is given — do not proceed with an invalid domain.
+- Compute `{N}` = 8 fixed base files (`manifest.json`, `__init__.py`, `const.py`, `config_flow.py`, `coordinator.py`, `entity.py`, `strings.json`, `translations/en.json`) + 1 per selected platform from the Platforms multi-select. Use this value for the `{N}` placeholders in the confirm gate (Step 2) and the completion summary (Step 4).
+
 ## Step 2: Confirm Before Writing
 
 Before writing any files, display a summary and confirm:
