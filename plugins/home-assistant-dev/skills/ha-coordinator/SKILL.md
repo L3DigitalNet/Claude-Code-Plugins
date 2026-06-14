@@ -42,8 +42,10 @@ class {Name}Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(
                 seconds=entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)
             ),
-            always_update=False,  # Only notify when data changes
+            always_update=False,  # Safe only if returned data has value-based __eq__ (plain dict/dataclass); use True otherwise
         )
+        # MyClient, AuthenticationError, RateLimitError are placeholders for your integration's API library:
+        # from my_api import MyClient, AuthenticationError, RateLimitError
         self.client = MyClient(
             host=entry.data["host"],
             username=entry.data["username"],
@@ -116,7 +118,7 @@ async def _async_update_data(self):
 
 ### `always_update=False`
 
-Set when your data supports Python `__eq__` comparison (dicts, dataclasses). Prevents unnecessary state writes when data hasn't changed.
+The HA default is `always_update=True`. Set `False` only when your returned data has a value-based `__eq__` (plain dicts, dataclasses) so change is meaningfully detected; for mutable objects reused across cycles, or objects without value-based `__eq__`, `False` silently drops real updates and entities go stale. Prevents unnecessary state writes when data hasn't changed.
 
 ### `retry_after` (HA 2025.11+)
 
@@ -126,7 +128,7 @@ For rate-limited APIs, the coordinator respects `Retry-After` headers automatica
 
 If `async_request_refresh()` is called during an update, a new update is queued after the current one completes — no more dropped refresh requests.
 
-## Using in **init**.py
+## Using in `__init__.py`
 
 ```python
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
