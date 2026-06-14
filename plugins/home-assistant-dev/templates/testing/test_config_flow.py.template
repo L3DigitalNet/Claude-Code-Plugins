@@ -19,7 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.{domain}.const import DOMAIN
-from custom_components.{domain}.config_flow import CannotConnect, InvalidAuth
+from custom_components.{domain}.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+    {config_flow_class},  # replace with your ConfigFlow subclass, e.g. AcmeConfigFlow
+)
 
 from .conftest import MOCK_CONFIG
 
@@ -104,9 +108,12 @@ async def test_user_flow_already_configured(
     )
     existing_entry.add_to_hass(hass)
 
-    # Mock validation to return same unique_id
-    with patch(
-        f"custom_components.{DOMAIN}.config_flow.{DOMAIN.title()}ConfigFlow._async_validate_input",
+    # Mock validation to return the same unique_id. Patch the imported ConfigFlow
+    # subclass directly — do NOT rebuild the class name from DOMAIN.title(), which
+    # keeps underscores for multi-word domains and yields a class that does not exist.
+    with patch.object(
+        {config_flow_class},
+        "_async_validate_input",
         return_value={"title": "Test", "unique_id": "existing_unique_id"},
     ):
         result = await hass.config_entries.flow.async_init(
