@@ -154,7 +154,7 @@ All 19 skills have well-defined descriptions that match their test prompts:
 | validateServiceCall: fake service | PASS | Service fake.missing not found |
 | Safety: homeassistant.stop blocked | PASS |  |
 | Safety: light.turn_on allowed (dry_run) | PASS |  |
-| Safety: getSafetyInfo() | PASS | calls=true, dryRun=false, blocked=6 |
+| Safety: getSafetyInfo() | PASS | calls=true, dryRun=false, blocked=7 (example config's 6 blockedServices ∪ 3 ALWAYS_BLOCKED, 2 overlapping) |
 | Safety: input_boolean is safe | PASS |  |
 | Safety: homeassistant is not safe | PASS |  |
 | Safety: redacts api_key | PASS |  |
