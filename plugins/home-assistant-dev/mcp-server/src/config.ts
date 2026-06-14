@@ -35,7 +35,6 @@ export const DEFAULT_CONFIG: ServerConfig = {
     requireDryRun: true,
   },
   cache: {
-    docsTtlHours: 24,
     statesTtlSeconds: 30,
   },
   features: {
@@ -74,7 +73,6 @@ const partialConfigSchema = z
       .partial(),
     cache: z
       .object({
-        docsTtlHours: z.number(),
         statesTtlSeconds: z.number(),
       })
       .partial(),
@@ -248,9 +246,6 @@ export function validateConfig(config: ServerConfig): string[] {
     }
   }
 
-  if (config.cache.docsTtlHours < 1) {
-    errors.push("Docs cache TTL must be at least 1 hour");
-  }
 
   if (config.cache.statesTtlSeconds < 5) {
     errors.push("States cache TTL must be at least 5 seconds");

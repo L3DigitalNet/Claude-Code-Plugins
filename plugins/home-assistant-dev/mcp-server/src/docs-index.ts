@@ -6,9 +6,6 @@
  */
 
 import MiniSearch from "minisearch";
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { homedir } from "os";
-import { join } from "path";
 import type { ServerConfig, DocsSearchResult } from "./types.js";
 
 interface DocPage {
@@ -127,16 +124,16 @@ const DOCS_INDEX: DocPage[] = [
   },
 ];
 
-const CACHE_DIR = join(homedir(), ".cache", "ha-dev-mcp", "docs");
-
 export class DocsIndex {
   private searchIndex: MiniSearch<DocPage>;
   private docs: Map<string, DocPage> = new Map();
-  private config: ServerConfig["cache"];
+  // Secondary index keyed by doc id so getSnippet resolves a search result's
+  // id -> DocPage in O(1) instead of an O(n) DOCS_INDEX scan per result.
+  private docsById: Map<string, DocPage> = new Map();
 
-  constructor(config: ServerConfig["cache"]) {
-    this.config = config;
-
+  // Accepts the cache config block for constructor-signature parity with the other
+  // components, but no longer reads it: offline doc caching (docsTtlHours) was removed.
+  constructor(_config: ServerConfig["cache"]) {
     // Initialize search index
     this.searchIndex = new MiniSearch({
       fields: ["title", "content"],
@@ -151,6 +148,7 @@ export class DocsIndex {
     // Index pre-built docs
     for (const doc of DOCS_INDEX) {
       this.docs.set(doc.path, doc);
+      this.docsById.set(doc.id, doc);
     }
     this.searchIndex.addAll(DOCS_INDEX);
   }
@@ -186,24 +184,34 @@ export class DocsIndex {
    * Get a snippet around the matched query
    */
   private getSnippet(docId: string, query: string): string {
-    const doc = this.docs.get(
-      DOCS_INDEX.find((d) => d.id === docId)?.path || ""
-    );
+    const doc = this.docsById.get(docId);
     if (!doc) return "";
 
     const content = doc.content;
-    const queryLower = query.toLowerCase();
     const contentLower = content.toLowerCase();
 
-    const matchIndex = contentLower.indexOf(queryLower);
+    // MiniSearch matches per term, so anchor the snippet on the earliest
+    // matching query TERM rather than the whole query as a contiguous
+    // substring (multi-term queries almost never appear verbatim in content).
+    let matchIndex = -1;
+    let matchLength = 0;
+    for (const term of query.toLowerCase().split(/\s+/)) {
+      if (!term) continue;
+      const termIndex = contentLower.indexOf(term);
+      if (termIndex !== -1 && (matchIndex === -1 || termIndex < matchIndex)) {
+        matchIndex = termIndex;
+        matchLength = term.length;
+      }
+    }
+
     if (matchIndex === -1) {
-      // Return first 200 chars if no direct match
+      // Return first 200 chars if no term matches
       return content.slice(0, 200) + "...";
     }
 
     // Get context around match
     const start = Math.max(0, matchIndex - 50);
-    const end = Math.min(content.length, matchIndex + query.length + 150);
+    const end = Math.min(content.length, matchIndex + matchLength + 150);
 
     let snippet = content.slice(start, end);
     if (start > 0) snippet = "..." + snippet;
@@ -232,14 +240,9 @@ export class DocsIndex {
       };
     }
 
-    // Check cache
-    const cached = await this.loadFromCache(path);
-    if (cached) {
-      return cached;
-    }
-
-    // In production, fetch from developers.home-assistant.io
-    // For now, return null for unknown pages
+    // Only the bundled DOCS_INDEX pages are served. Offline caching / live
+    // retrieval from developers.home-assistant.io is not implemented, so an
+    // unknown path has no source: return null.
     return null;
   }
 
@@ -262,49 +265,4 @@ export class DocsIndex {
     return related;
   }
 
-  /**
-   * Load page from cache
-   */
-  private async loadFromCache(path: string): Promise<{
-    title: string;
-    content: string;
-    lastUpdated: string;
-    related: string[];
-  } | null> {
-    try {
-      const cachePath = join(CACHE_DIR, `${path.replace(/\//g, "_")}.json`);
-      const content = await readFile(cachePath, "utf-8");
-      const cached = JSON.parse(content);
-
-      // Check if cache is still valid
-      const cacheAge =
-        (Date.now() - new Date(cached.cachedAt).getTime()) / (1000 * 60 * 60);
-      if (cacheAge > this.config.docsTtlHours) {
-        return null;
-      }
-
-      return cached.data;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Save page to cache
-   */
-  private async saveToCache(
-    path: string,
-    data: { title: string; content: string; lastUpdated: string; related: string[] }
-  ): Promise<void> {
-    try {
-      await mkdir(CACHE_DIR, { recursive: true });
-      const cachePath = join(CACHE_DIR, `${path.replace(/\//g, "_")}.json`);
-      await writeFile(
-        cachePath,
-        JSON.stringify({ cachedAt: new Date().toISOString(), data })
-      );
-    } catch {
-      // Ignore cache write errors
-    }
-  }
 }

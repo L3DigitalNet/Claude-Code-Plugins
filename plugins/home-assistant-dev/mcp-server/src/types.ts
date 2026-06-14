@@ -15,7 +15,6 @@ export interface ServerConfig {
     requireDryRun: boolean;
   };
   cache: {
-    docsTtlHours: number;
     statesTtlSeconds: number;
   };
   features: {

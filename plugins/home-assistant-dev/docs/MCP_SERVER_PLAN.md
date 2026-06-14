@@ -430,7 +430,7 @@ The loader (`mcp-server/src/config.ts`) reads **camelCase** keys via a strict Zo
 		],
 		"requireDryRun": true
 	},
-	"cache": { "docsTtlHours": 24, "statesTtlSeconds": 30 },
+	"cache": { "statesTtlSeconds": 30 },
 	"features": {
 		"enableDocsTools": true,
 		"enableHaTools": true,

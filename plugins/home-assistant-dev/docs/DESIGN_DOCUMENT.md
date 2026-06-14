@@ -563,7 +563,6 @@ interface MCPConfig {
 	}
 	cache: {
 		statesTtlSeconds: number // Default: 30
-		docsTtlHours: number // Default: 24
 	}
 }
 ```

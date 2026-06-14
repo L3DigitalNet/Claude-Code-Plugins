@@ -306,7 +306,7 @@ describe('DocsIndex', () => {
 	let index: DocsIndex
 
 	beforeEach(() => {
-		index = new DocsIndex({ docsTtlHours: 24, statesTtlSeconds: 30 })
+		index = new DocsIndex({ statesTtlSeconds: 30 })
 	})
 
 	it('finds DataUpdateCoordinator documentation', () => {

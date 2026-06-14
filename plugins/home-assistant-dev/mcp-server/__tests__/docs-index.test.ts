@@ -7,7 +7,6 @@ import type { DocsSearchResult } from '../src/types.js';
 
 describe('DocsIndex', () => {
   const defaultCacheConfig = {
-    docsTtlHours: 24,
     statesTtlSeconds: 30,
   };
 
