@@ -51,17 +51,27 @@ custom_components/{domain}/
 }
 ```
 
-**Required fields (Core + HACS):**
+**Always required:**
 
 - `domain`: lowercase, underscores only, matches folder name
-- `name`: human-readable (omit for core integrations)
-- `version`: SemVer (required for custom integrations)
+- `name`: human-readable
 - `codeowners`: GitHub usernames with `@` prefix
-- `config_flow`: always `true` for new integrations
 - `documentation`: URL to integration docs
-- `integration_type`: `hub` (gateway), `device` (single device), `service` (cloud)
 - `iot_class`: `local_polling`, `local_push`, `cloud_polling`, `cloud_push`, `calculated`
-- `issue_tracker`: URL for bug reports (**required for HACS**)
+- `integration_type`: most common values are `hub` (gateway/multiple devices), `device` (single device), `service` (cloud service); full set is `device`, `entity` (single entity), `hardware`, `helper` (logic-only helper), `hub`, `service`, `system`, `virtual`; defaults to `hub` when omitted
+
+**Required for custom/HACS distribution:**
+
+- `version`: SemVer (required for custom integrations)
+- `issue_tracker`: URL for bug reports
+
+The hard HACS requirements are `domain`, `name`, `codeowners`, `documentation`, `issue_tracker`, and `version`.
+
+**Optional:**
+
+- `config_flow`: set `true` for new integrations (omit for YAML-only legacy)
+- `dependencies`: may be an empty array, but the key is not mandatory
+- `requirements`: may be an empty array, but the key is not mandatory
 
 ## **init**.py Template (2025 Pattern)
 
@@ -100,7 +110,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: {Name}ConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: {Name}ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # Listeners registered via entry.async_on_unload(...) are cleaned automatically;
+        # any client/session must be closed explicitly here to avoid leaking connections.
+        await entry.runtime_data.client.async_close()
+    return unload_ok
 ```
 
 ## const.py Template
@@ -115,7 +129,7 @@ DEFAULT_SCAN_INTERVAL: Final = 30
 
 ## Python Version Requirements
 
-- Home Assistant 2025.2+ requires **Python 3.13**
+- HA 2025.2+ ships on **Python 3.13**; develop and test against 3.13
 - Use modern type syntax: `list[str]` not `List[str]`
 - Use `from __future__ import annotations` in every file
 - All I/O must be async
