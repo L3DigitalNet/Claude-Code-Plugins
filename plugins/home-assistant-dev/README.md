@@ -19,9 +19,9 @@ Two commands generate integrations at selectable quality tiers. Twenty-seven ski
 ## Requirements
 
 - Claude Code (any recent version)
-- Python 3.12+ (HA 2025+ requires Python 3.13 for new integrations)
+- Python 3.13 (required for HA 2025+ integrations; the validation scripts themselves run on 3.12+)
 - Home Assistant development environment for integration testing (optional; required only for MCP server live connection features)
-- Node.js 18+ (bundled MCP server is pre-built; no `npm install` needed post-install)
+- Node.js 20+ (the bundled MCP server is built with esbuild `--target=node20`; it is pre-built, so no `npm install` is needed post-install)
 
 ## Installation
 
@@ -53,13 +53,13 @@ flowchart TD
     B --> E[Collects type / IoT class / platforms / tier]
     C --> F[Collects domain / type / platforms]
 
-    E --> G[ha-integration-dev agent]
-    F --> G
+    E -->|Writes files| I[custom_components/domain/]
+    F -->|Writes files| I
 
     D --> H[Relevant skill loads into context]
-    H --> G
+    H --> G[ha-integration-dev agent]
+    G -->|Writes files| I
 
-    G -->|Writes files| I[custom_components/domain/]
     I -->|PostToolUse hook fires| J[post-write-hook.sh dispatcher]
 
     J -->|manifest.json| K[validate-manifest.py]
@@ -89,7 +89,7 @@ Validation runs on every write via the PostToolUse hook; warnings appear inline 
 
 | Command | Description |
 | --- | --- |
-| `generate-integration` | Fully guided generation of a complete integration. Collects type, IoT class, platforms, optional features (options flow, reauth, diagnostics, discovery), and target quality tier (Bronze/Silver/Gold). Generates all required files plus HACS metadata. |
+| `generate-integration` | Fully guided generation of a complete integration. Collects integration name, domain, type, IoT class, platforms, optional features (options flow, reauth, diagnostics, discovery), GitHub username, and target quality tier (Bronze/Silver/Gold). Generates all required files plus HACS metadata. |
 | `scaffold-integration` | Faster scaffold targeting Silver tier. Collects domain, integration type, platforms, and GitHub username, then generates the standard file set without tier selection. |
 
 Invoke as `/home-assistant-dev:generate-integration` or `/home-assistant-dev:scaffold-integration`.
@@ -159,15 +159,15 @@ Skills load automatically when conversation content matches their trigger patter
 
 | Agent | Description |
 | --- | --- |
-| `ha-integration-dev` | Full integration development specialist. Enforces DataUpdateCoordinator, config flow, `runtime_data`, unique IDs, and device info patterns. Guides architecture decisions and produces working examples. Loaded skills: `ha-architecture`, `ha-integration-scaffold`, `ha-config-flow`, `ha-coordinator`, `ha-entity-platforms`, `ha-service-actions`, `ha-async-patterns`. |
-| `ha-integration-reviewer` | Code reviewer against Integration Quality Scale standards. Runs `ruff` and `mypy` if available, then produces a structured report with Critical Issues, Warnings, and Suggestions, each with specific before/after code examples. Loaded skills: `ha-quality-review`, `ha-testing`, `ha-debugging`. |
-| `ha-integration-debugger` | Systematic debugging specialist. Categorizes issues (config flow, coordinator, entity, async, import), isolates root cause, provides targeted before/after fixes, and suggests regression tests. Loaded skills: `ha-debugging`, `ha-coordinator`, `ha-async-patterns`. |
+| `ha-integration-dev` | Full integration development specialist. Enforces DataUpdateCoordinator, config flow, `runtime_data`, unique IDs, and device info patterns. Guides architecture decisions and produces working examples. Skill domains this agent draws on (auto-activated): `ha-architecture`, `ha-integration-scaffold`, `ha-config-flow`, `ha-coordinator`, `ha-entity-platforms`, `ha-service-actions`, `ha-async-patterns`. |
+| `ha-integration-reviewer` | Code reviewer against Integration Quality Scale standards. Runs `ruff` and `mypy` if available, then produces a structured report with Critical Issues, Warnings, and Suggestions, each with specific before/after code examples. Skill domains this agent draws on (auto-activated): `ha-quality-review`, `ha-testing`, `ha-debugging`. |
+| `ha-integration-debugger` | Systematic debugging specialist. Categorizes issues (config flow, coordinator, entity, async, import), isolates root cause, provides targeted before/after fixes, and suggests regression tests. Skill domains this agent draws on (auto-activated): `ha-debugging`, `ha-coordinator`, `ha-async-patterns`. |
 
 ## Hooks
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `post-write-hook.sh` | `PostToolUse` (Write, Edit, MultiEdit, NotebookEdit) | Dispatcher that reads the modified file path from stdin JSON and routes to the appropriate validation script. Validates `manifest.json` only for paths under `custom_components/` or `integrations/`. Runs `validate-strings.py` on `strings.json` and `config_flow.py`. Runs `check-patterns.py` on any `.py` file under `custom_components/`. Validation failures surface as warnings in the agent context; the hook never blocks writes. |
+| `post-write-hook.sh` | `PostToolUse` (Write, Edit, MultiEdit) | Dispatcher that reads the modified file path from stdin JSON and routes to the appropriate validation script. Validates `manifest.json` only for paths under `custom_components/` or `integrations/`. Runs `validate-strings.py` on `strings.json` and `config_flow.py`. Runs `check-patterns.py` on any `.py` file under `custom_components/` except `config_flow.py` (which is routed to `validate-strings.py` instead, since the `case` dispatcher matches it first). Validation failures surface as warnings in the agent context; the hook never blocks writes. |
 
 ## MCP Server
 
@@ -202,7 +202,7 @@ The `ha-dev-mcp` MCP server (`mcp-server/dist/server.bundle.cjs`) provides 12 to
 
 ## Planned Features
 
-No unreleased features are currently staged in the changelog.
+See the [Unreleased] section of the [changelog](CHANGELOG.md) for any staged-but-unreleased features.
 
 ## Known Issues
 
