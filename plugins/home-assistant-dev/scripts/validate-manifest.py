@@ -110,23 +110,26 @@ def validate_manifest(manifest_path: Path, is_custom: bool = True) -> list[Valid
     # Validate domain
     if "domain" in manifest:
         domain = manifest["domain"]
-        if not DOMAIN_PATTERN.match(domain):
-            errors.append(
-                ValidationError(
-                    "domain",
-                    f"Invalid domain '{domain}'. Must be lowercase with underscores only.",
+        if not isinstance(domain, str):
+            errors.append(ValidationError("domain", "Must be a string"))
+        else:
+            if not DOMAIN_PATTERN.match(domain):
+                errors.append(
+                    ValidationError(
+                        "domain",
+                        f"Invalid domain '{domain}'. Must be lowercase with underscores only.",
+                    )
                 )
-            )
 
-        # Check domain matches directory name
-        expected_dir = manifest_path.parent.name
-        if domain != expected_dir:
-            errors.append(
-                ValidationError(
-                    "domain",
-                    f"Domain '{domain}' does not match directory name '{expected_dir}'",
+            # Check domain matches directory name
+            expected_dir = manifest_path.parent.name
+            if domain != expected_dir:
+                errors.append(
+                    ValidationError(
+                        "domain",
+                        f"Domain '{domain}' does not match directory name '{expected_dir}'",
+                    )
                 )
-            )
 
     # Validate integration_type
     if "integration_type" in manifest:
@@ -155,7 +158,9 @@ def validate_manifest(manifest_path: Path, is_custom: bool = True) -> list[Valid
     # Validate version format (for custom integrations)
     if is_custom and "version" in manifest:
         version = manifest["version"]
-        if not SEMVER_PATTERN.match(version):
+        if not isinstance(version, str):
+            errors.append(ValidationError("version", "Must be a string"))
+        elif not SEMVER_PATTERN.match(version):
             errors.append(
                 ValidationError(
                     "version",
@@ -174,7 +179,11 @@ def validate_manifest(manifest_path: Path, is_custom: bool = True) -> list[Valid
             )
         else:
             for owner in codeowners:
-                if not owner.startswith("@"):
+                if not isinstance(owner, str):
+                    errors.append(
+                        ValidationError("codeowners", "Each codeowner must be a string")
+                    )
+                elif not owner.startswith("@"):
                     errors.append(
                         ValidationError(
                             "codeowners",
@@ -197,7 +206,9 @@ def validate_manifest(manifest_path: Path, is_custom: bool = True) -> list[Valid
     for url_field in ["documentation", "issue_tracker"]:
         if url_field in manifest:
             url = manifest[url_field]
-            if not url.startswith(("http://", "https://")):
+            if not isinstance(url, str):
+                errors.append(ValidationError(url_field, "Must be a string"))
+            elif not url.startswith(("http://", "https://")):
                 errors.append(
                     ValidationError(url_field, f"Invalid URL format: {url}")
                 )
