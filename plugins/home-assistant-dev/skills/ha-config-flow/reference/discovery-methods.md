@@ -50,6 +50,8 @@ async def async_step_zeroconf(
 **config_flow.py:**
 
 ```python
+from urllib.parse import urlparse
+
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 async def async_step_ssdp(
@@ -59,7 +61,7 @@ async def async_step_ssdp(
     await self.async_set_unique_id(unique_id)
     self._abort_if_unique_id_configured()
 
-    self._host = discovery_info.ssdp_headers.get("_host", "")
+    self._host = urlparse(discovery_info.ssdp_location).hostname
     self._name = discovery_info.upnp.get("friendlyName", "Unknown")
     return await self.async_step_confirm()
 ```
