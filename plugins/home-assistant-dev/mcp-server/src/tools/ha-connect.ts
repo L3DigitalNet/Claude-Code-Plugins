@@ -22,7 +22,7 @@ export async function handleHaConnect(
     throw new Error("Home Assistant token is required");
   }
 
-  await client.connect(url, token);
+  await client.connect(url, token, input.verify_ssl);
 
   return client;
 }

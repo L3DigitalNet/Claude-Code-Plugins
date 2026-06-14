@@ -41,7 +41,11 @@ export class HaClient {
   /**
    * Connect to Home Assistant
    */
-  async connect(url: string, token: string): Promise<HaConnectOutput> {
+  async connect(
+    url: string,
+    token: string,
+    verifySsl?: boolean
+  ): Promise<HaConnectOutput> {
     // Normalize URL - keep as http(s):// for the HA WS library
     // The library converts to ws:// internally
     const hassUrl = url.replace(/\/$/, "");
@@ -49,10 +53,21 @@ export class HaClient {
     const auth = createLongLivedTokenAuth(hassUrl, token);
 
     // home-assistant-js-websocket calls the global `WebSocket`, which Node only
-    // exposes as a stable global from v21+. Polyfill from `ws` so connecting
-    // works on the supported Node 18/20 floor (engines: node >=18).
-    globalThis.WebSocket ??= (await import("ws"))
-      .WebSocket as unknown as typeof globalThis.WebSocket;
+    // exposes as a stable global from v21+, and the native global cannot relax
+    // TLS verification. Always back it with `ws` (works on the Node 18/20 floor);
+    // when verifySsl is false, use a subclass that passes rejectUnauthorized:false
+    // so self-signed-cert HA instances over https are reachable.
+    const verify = verifySsl ?? this.config.homeAssistant.verifySsl;
+    const { WebSocket: WsWebSocket } = await import("ws");
+    globalThis.WebSocket = (
+      verify
+        ? WsWebSocket
+        : class extends WsWebSocket {
+            constructor(address: string | URL, protocols?: string | string[]) {
+              super(address, protocols, { rejectUnauthorized: false });
+            }
+          }
+    ) as unknown as typeof globalThis.WebSocket;
 
     try {
       this.connection = await createConnection({ auth });
