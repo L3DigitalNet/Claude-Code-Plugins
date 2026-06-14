@@ -669,7 +669,11 @@ write_mcp_config() {
     "blockedServices": [
       "homeassistant.restart",
       "homeassistant.stop",
-      "homeassistant.reload_all"
+      "homeassistant.reload_all",
+      "homeassistant.reload_core_config",
+      "persistent_notification.dismiss_all",
+      "system_log.clear",
+      "recorder.purge"
     ],
     "requireDryRun": false
   },
