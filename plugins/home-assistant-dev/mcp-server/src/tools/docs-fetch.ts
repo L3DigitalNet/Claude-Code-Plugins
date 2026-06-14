@@ -22,6 +22,13 @@ export async function handleDocsFetch(
     title: page.title,
     content: page.content,
     last_updated: page.lastUpdated,
-    related: page.related,
+    // page.related is a list of internal index paths (e.g. "core/runtime-data").
+    // Normalize to the same developers.home-assistant.io URL form that docs_search
+    // emits so 'related' is consistent across tools. The trailing path segment after
+    // /docs/ is exactly what docs_fetch's `path` input expects, so a consumer can
+    // re-feed it directly.
+    related: page.related.map(
+      (relatedPath) => `https://developers.home-assistant.io/docs/${relatedPath}`
+    ),
   };
 }
