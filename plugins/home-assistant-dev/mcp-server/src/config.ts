@@ -143,9 +143,20 @@ export function loadEnvConfig(): PartialServerConfig {
     config.safety = { allowServiceCalls: true };
   }
 
-  // Feature flags - emit only the field env sets
+  // Feature flags - emit only the fields env sets. index.ts filters tools on all three
+  // feature flags, so each needs a matching env override for parity.
+  const features: Partial<ServerConfig["features"]> = {};
   if (process.env.HA_DEV_MCP_DISABLE_HA_TOOLS === "true") {
-    config.features = { enableHaTools: false };
+    features.enableHaTools = false;
+  }
+  if (process.env.HA_DEV_MCP_DISABLE_DOCS_TOOLS === "true") {
+    features.enableDocsTools = false;
+  }
+  if (process.env.HA_DEV_MCP_DISABLE_VALIDATION_TOOLS === "true") {
+    features.enableValidationTools = false;
+  }
+  if (Object.keys(features).length > 0) {
+    config.features = features;
   }
 
   return config;
