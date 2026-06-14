@@ -53,6 +53,8 @@ HACS requires these fields in `manifest.json`:
 - `documentation` — URL to docs
 - `issue_tracker` — URL for bug reports
 
+The list above is the HACS-metadata-required set. Separately, `integration_type` and `iot_class` are required by hassfest, and the HACS validation action runs hassfest — so a HACS-targeting repo needs them too (`iot_class` must be one of the accepted values; `integration_type` is validated strictly when present).
+
 ## hacs.json Configuration
 
 Create `hacs.json` in repository root:
@@ -61,7 +63,7 @@ Create `hacs.json` in repository root:
 { "name": "My Integration", "homeassistant": "2024.1.0" }
 ```
 
-### All hacs.json Options
+### Common hacs.json Options
 
 | Key | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -71,6 +73,7 @@ Create `hacs.json` in repository root:
 | `content_in_root` | bool | No | Set `true` if files not in custom_components/ |
 | `zip_release` | bool | No | Set `true` if using zipped releases |
 | `filename` | string | No | Main file name (for zip_release) |
+| `render_readme` | bool | No | Render the README in the HACS info panel |
 | `country` | string/array | No | ISO country codes (e.g., "US" or ["US", "CA"]) |
 | `hide_default_branch` | bool | No | Hide default branch from version list |
 | `persistent_directory` | string | No | Directory to preserve during updates |
