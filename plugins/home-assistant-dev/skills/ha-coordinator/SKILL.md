@@ -75,10 +75,10 @@ class {Name}Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         except ConnectionError as err:
             raise UpdateFailed(f"Connection error: {err}") from err
         except RateLimitError as err:
-            # 2025.10+: retry_after delays next attempt
+            # HA 2025.11+: retry_after defers the next scheduled refresh
             raise UpdateFailed(
                 f"Rate limited: {err}",
-                translation_key="rate_limited",
+                retry_after=err.retry_after,
             ) from err
         except TimeoutError as err:
             raise UpdateFailed(f"Timeout: {err}") from err
@@ -118,7 +118,7 @@ async def _async_update_data(self):
 
 Set when your data supports Python `__eq__` comparison (dicts, dataclasses). Prevents unnecessary state writes when data hasn't changed.
 
-### `retry_after` (HA 2025.10+)
+### `retry_after` (HA 2025.11+)
 
 For rate-limited APIs, the coordinator respects `Retry-After` headers automatically. Ignored during first refresh (ConfigEntryNotReady handles that).
 
