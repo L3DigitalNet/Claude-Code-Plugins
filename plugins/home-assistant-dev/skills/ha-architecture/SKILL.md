@@ -56,11 +56,11 @@ if state is not None:
     last_changed = state.last_changed
 ```
 
-Special state values: `"unavailable"` (coordinator failed/device offline), `"unknown"` (no data yet).
+Special state values (`STATE_UNAVAILABLE` / `STATE_UNKNOWN` from `homeassistant.const`): `"unavailable"` (entity cannot be reached — device offline, push connection lost, or coordinator update failed), `"unknown"` (entity exists but has no value yet).
 
 ## Service Registry (Actions)
 
-Services (now called "actions" in UI) control devices. Register in `async_setup`, not `async_setup_entry`:
+Services (now called "actions" in UI) control devices. Register integration-wide services once — in `async_setup` if they must exist independent of any config entry, otherwise in `async_setup_entry` guarded so they register only once (e.g. via `hass.services.has_service`). Unregister in `async_unload_entry` only when removing the last entry.
 
 ```python
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
