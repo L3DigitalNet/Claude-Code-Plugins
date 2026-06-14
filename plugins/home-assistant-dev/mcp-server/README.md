@@ -153,7 +153,7 @@ The server includes multiple layers of protection for service calls:
 
 1. **Disabled by Default**: `allowServiceCalls: false`
 2. **Dry-Run Mode**: Validates without executing (default)
-3. **Blocklist**: Dangerous services are always blocked
+3. **Blocklist**: Always-blocked services and your configured `blockedServices` are refused; other state-changing services execute but return a warning
 4. **Safe Domains**: Helper entities (input\_\*, counter, timer) bypass dry-run
 
 #### Always Blocked Services

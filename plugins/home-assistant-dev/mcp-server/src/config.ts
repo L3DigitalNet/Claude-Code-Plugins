@@ -30,6 +30,7 @@ export const DEFAULT_CONFIG: ServerConfig = {
       "homeassistant.reload_core_config",
       "persistent_notification.dismiss_all",
       "system_log.clear",
+      "recorder.purge",
     ],
     requireDryRun: true,
   },
