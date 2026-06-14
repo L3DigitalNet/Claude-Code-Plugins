@@ -179,7 +179,7 @@ async function main() {
   // Test 11: getDevices
   try {
     const devices = await client.getDevices();
-    record("getDevices: accessible", true, `${devices.length} devices`);
+    record("getDevices: accessible", Array.isArray(devices), `${devices.length} devices`);
 
     if (devices.length > 0) {
       const sample = devices[0];
@@ -193,7 +193,7 @@ async function main() {
   // Test 12: getLogs
   try {
     const logs = await client.getLogs();
-    record("getLogs: accessible", true, `${logs.length} log entries`);
+    record("getLogs: accessible", Array.isArray(logs), `${logs.length} log entries`);
   } catch (e) {
     // system_log may be empty on fresh install
     if (e.message.includes("Unknown command")) {
