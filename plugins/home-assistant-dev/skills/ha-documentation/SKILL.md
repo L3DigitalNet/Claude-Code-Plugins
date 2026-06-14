@@ -99,7 +99,6 @@ automation:
         data:
           message: 'Temperature dropped below 18°C'
 ```
-````
 
 ## Troubleshooting
 
@@ -128,8 +127,7 @@ automation:
 ## License
 
 MIT
-
-````yaml
+````
 
 ## HACS info.md Template
 
@@ -153,7 +151,7 @@ MIT
 - ✅ Options flow for settings
 - ✅ Diagnostics support
 - ✅ Automatic reconnection
-````
+```
 
 ## Documentation Best Practices
 
