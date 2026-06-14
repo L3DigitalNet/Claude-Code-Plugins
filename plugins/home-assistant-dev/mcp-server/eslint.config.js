@@ -11,6 +11,26 @@ export default tseslint.config(
     },
   },
   {
+    // Register Jest globals for test files so `eslint .` does not flag them as
+    // no-undef. The `globals` package is not a dependency here, so the Jest
+    // global set is declared inline. Lint script only runs `eslint src/`, so
+    // tests are reached only by a future whole-tree `eslint .` invocation.
+    files: ['__tests__/**/*.ts'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly',
+      },
+    },
+  },
+  {
     ignores: ['dist/', 'node_modules/', 'coverage/'],
   }
 );
