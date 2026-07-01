@@ -4,17 +4,18 @@
 
 **Goal:** Merge the `author-master-spec` and `autonomous-phase-execution` skills into a new `spec-pipeline` plugin with a deterministic `specpipe` validator CLI, templates, and utility commands.
 
-**Architecture:** A standard marketplace plugin (`plugins/spec-pipeline/`) whose two skills gate their expensive reviews behind a stdlib-only Python CLI. The CLI (`specpipe`) shares one parser layer (`grammar.py`) with the templates, so authored artifacts always parse. Lazy CLI dispatch means each subcommand only imports its own module.
+**Architecture:** A standard marketplace plugin (`plugins/spec-pipeline/`) whose two skills gate their expensive reviews behind a stdlib-only Python CLI. The CLI (`specpipe`) is a plain package directory — no pyproject/venv/lockfile — imported via `PYTHONPATH` and run with `uv run --no-project`, so no invocation ever writes into the plugin tree. It shares one parser layer (`grammar.py`) with the templates, so authored artifacts always parse. Lazy CLI dispatch means each subcommand only imports its own module.
 
-**Tech Stack:** Python ≥ 3.11 (stdlib only at runtime), uv, hatchling (build backend), pytest (dev only), bash test wrapper, JSON/Markdown plugin surfaces.
+**Tech Stack:** Python ≥ 3.11 (stdlib only at runtime, no packaging), uv (interpreter supply only, `--no-project`), pytest (dev only, via `--with`), bash test wrapper, JSON/Markdown plugin surfaces.
 
 **Spec:** `docs/superpowers/specs/2026-07-01-spec-pipeline-plugin-design.md` (governs on conflict).
 
 ## Global Constraints
 
 - Repo root for all paths: `/home/chris/projects/Claude-Code-Plugins`. All file paths below are relative to it.
-- `specpipe` runtime code uses **Python stdlib only** — `dependencies = []` in pyproject; pytest enters via `--with pytest` at test time only.
-- Canonical CLI invocation (used verbatim in skills/commands/README): `uv run --directory ${CLAUDE_PLUGIN_ROOT}/scripts/specpipe python -m specpipe <subcommand> …`
+- `specpipe` runtime code uses **Python stdlib only**, with **no Python project machinery** (no `pyproject.toml`, venv, or lockfile) — `uv run` against a project would write `.venv/`+`uv.lock` into the plugin root, which must stay clean (installed-plugin cache is not for persistent state). pytest enters via `--with pytest` at test time only.
+- Canonical CLI invocation (used verbatim in skills/commands/README): `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe <subcommand> …`
+- No specpipe invocation may dirty the plugin tree: `git status --short plugins/spec-pipeline/scripts/specpipe` stays empty after any run (Task 14 verifies).
 - Exit codes: `0` clean · `1` findings/failure · `2` bad invocation (argparse default).
 - Test command for every task: `bash plugins/spec-pipeline/tests/run_tests.sh` (created in Task 2). Run it from the repo root.
 - Never `git add -A` / `git add .` — stage by explicit path. Plain `git commit` (a global hook enforces author email + GPG signing; never override `GIT_*_EMAIL`).
@@ -27,7 +28,7 @@
 | --- | --- | --- |
 | `plugins/spec-pipeline/.claude-plugin/plugin.json` | manifest | Task 1 |
 | `plugins/spec-pipeline/references/*.md` (4 files) | reference docs | Task 1 |
-| `plugins/spec-pipeline/scripts/specpipe/pyproject.toml` | project config | Task 2 |
+| `specpipe/__init__.py` (plain package dir — no pyproject/venv/lock) | package | Task 2 |
 | `specpipe/findings.py` (`Finding`, `exit_code`, `report`) | module | Task 2 |
 | `specpipe/__main__.py` (`build_parser`, `main`) | CLI dispatch | Task 2 |
 | `plugins/spec-pipeline/tests/run_tests.sh` | test wrapper | Task 2 |
@@ -126,49 +127,39 @@ git commit -m "feat(spec-pipeline): scaffold plugin, dedupe shared references, r
 
 **Files:**
 
-- Create: `plugins/spec-pipeline/scripts/specpipe/pyproject.toml`
 - Create: `plugins/spec-pipeline/scripts/specpipe/specpipe/__init__.py`
 - Create: `plugins/spec-pipeline/scripts/specpipe/specpipe/findings.py`
 - Create: `plugins/spec-pipeline/scripts/specpipe/specpipe/__main__.py`
 - Create: `plugins/spec-pipeline/tests/run_tests.sh`
 - Test: `plugins/spec-pipeline/tests/test_findings.py`, `plugins/spec-pipeline/tests/test_cli.py`
 
+(Deliberately NO `pyproject.toml`/venv/lockfile — the package is imported via `PYTHONPATH` so no uv project sync ever writes into the plugin tree.)
+
 **Interfaces:**
 
 - Consumes: nothing.
 - Produces: `Finding(severity, code, message, location="")` dataclass; constants `ERROR = "error"`, `WARNING = "warning"`; `exit_code(findings: list[Finding]) -> int`; `report(findings, as_json: bool = False) -> str`; `build_parser() -> argparse.ArgumentParser`; `main(argv: list[str] | None = None) -> int`. Every later module registers as a `"module:function"` handler string and exposes `cmd_*(args) -> int`.
 
-- [ ] **Step 1: Write the test wrapper and project config (scaffolding the tests need)**
+- [ ] **Step 1: Write the test wrapper and package init (scaffolding the tests need)**
 
 `plugins/spec-pipeline/tests/run_tests.sh`:
 
 ```bash
 #!/usr/bin/env bash
-# Runs the specpipe pytest suite with the package installed in an ephemeral
-# uv env. Always invoke this wrapper, never bare pytest (import path).
+# Runs the specpipe pytest suite. specpipe is a plain stdlib package imported
+# via PYTHONPATH — deliberately NO pyproject/venv/lock, so uv never writes
+# into the plugin tree (--no-project skips lock/sync; pytest comes from an
+# ephemeral --with env in uv's cache). Always invoke this wrapper, never bare
+# pytest (import path).
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
-exec uv run --directory "$PLUGIN_ROOT/scripts/specpipe" --with pytest pytest "$SCRIPT_DIR" "$@"
+export PYTHONPATH="$PLUGIN_ROOT/scripts/specpipe${PYTHONPATH:+:$PYTHONPATH}"
+exec uv run --no-project --with pytest pytest "$SCRIPT_DIR" "$@"
 ```
 
 ```bash
 chmod +x plugins/spec-pipeline/tests/run_tests.sh
-```
-
-`plugins/spec-pipeline/scripts/specpipe/pyproject.toml`:
-
-```toml
-[project]
-name = "specpipe"
-version = "0.1.0"
-description = "Deterministic validators and state ops for the spec-pipeline plugin"
-requires-python = ">=3.11"
-dependencies = []
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 ```
 
 `plugins/spec-pipeline/scripts/specpipe/specpipe/__init__.py`:
@@ -369,7 +360,11 @@ def build_parser() -> argparse.ArgumentParser:
     rr.add_argument("--audit", required=True)
     rr.add_argument("--framework", choices=["pytest", "generic"], default="pytest",
                     help="pytest: reject collection/import errors as non-RED; "
-                         "generic: any non-zero exit is RED (bats/Jest/other)")
+                         "generic: bats/Jest/other runners (pair with "
+                         "--expect-failure-regex to keep fails-for-the-right-reason)")
+    rr.add_argument("--expect-failure-regex",
+                    help="generic framework: output must match this regex for RED "
+                         "to count (the expected failing assertion / missing symbol)")
     rr.add_argument("--timeout", type=float, default=600.0)
     rr.set_defaults(handler="specpipe.evidence:cmd_record_red")
 
@@ -1734,7 +1729,7 @@ git commit -m "feat(spec-pipeline): plan validator — TDD step order, anti-patt
 **Interfaces:**
 
 - Consumes: nothing from specpipe (subprocess + filesystem only).
-- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction on the excerpt, single `O_APPEND` write. `framework="generic"` skips pytest collection-error detection (any non-zero exit is RED) and says so in the evidence label. Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
+- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0, expect_failure_regex: str | None = None) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction on the excerpt, single `O_APPEND` write. `framework="generic"` (bats/Jest/other) keeps fails-for-the-right-reason via `expect_failure_regex` — output must match it or RED is REJECTED; without a regex, any non-zero exit is accepted and the label says verification was unavailable. Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1836,6 +1831,22 @@ def test_generic_framework_accepts_plain_failure(tmp_path):
     cmd = f'"{sys.executable}" -c "raise SystemExit(3)"'
     assert evidence.record(cmd, "T1", audit, "red", framework="generic") == 0
     assert "generic" in audit.read_text(encoding="utf-8")
+
+
+def test_generic_expect_failure_regex_matched(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "print(\'boom_assert failed\'); raise SystemExit(1)"'
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic",
+                           expect_failure_regex="boom_assert") == 0
+    assert "signature matched" in audit.read_text(encoding="utf-8")
+
+
+def test_generic_expect_failure_regex_unmatched_rejected(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "print(\'segfault-ish runner crash\'); raise SystemExit(1)"'
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic",
+                           expect_failure_regex="boom_assert") == 1
+    assert "REJECTED" in audit.read_text(encoding="utf-8")
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -1904,7 +1915,8 @@ def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str
 
 
 def record(cmd: str, task: str, audit: Path, expect: str,
-           framework: str = "pytest", timeout: float = 600.0) -> int:
+           framework: str = "pytest", timeout: float = 600.0,
+           expect_failure_regex: str | None = None) -> int:
     try:
         argv = shlex.split(cmd)
     except ValueError as exc:
@@ -1938,8 +1950,19 @@ def record(cmd: str, task: str, audit: Path, expect: str,
             print("RED NOT ESTABLISHED: collection/import/syntax error — a test that "
                   "errors on collection has not established RED; fix the test first")
             return 1
-        label = ("RED" if framework == "pytest"
-                 else "RED (generic framework — collection-error detection unavailable)")
+        if framework == "generic" and expect_failure_regex:
+            if not re.search(expect_failure_regex, output):
+                _append(audit, task, "RED (REJECTED — expected failure signature "
+                        f"/{expect_failure_regex}/ not found)", cmd,
+                        proc.returncode, output)
+                print("RED NOT ESTABLISHED: command failed, but not for the expected "
+                      f"reason (output does not match /{expect_failure_regex}/)")
+                return 1
+            label = "RED (generic — expected failure signature matched)"
+        elif framework == "generic":
+            label = "RED (generic — failure-reason verification unavailable)"
+        else:
+            label = "RED"
         _append(audit, task, label, cmd, proc.returncode, output)
         print(f"RED established for task {task} (exit {proc.returncode}); "
               f"evidence appended to {audit}")
@@ -1956,7 +1979,8 @@ def record(cmd: str, task: str, audit: Path, expect: str,
 
 def cmd_record_red(args) -> int:
     return record(args.cmd, args.task, Path(args.audit), "red",
-                  framework=args.framework, timeout=args.timeout)
+                  framework=args.framework, timeout=args.timeout,
+                  expect_failure_regex=args.expect_failure_regex)
 
 
 def cmd_record_green(args) -> int:
@@ -2602,9 +2626,9 @@ Each edit is an exact old → new replacement.
 ```markdown
 ## Validator gates (specpipe)
 
-Structural gates run through the bundled specpipe CLI:
+Structural gates run through the bundled specpipe CLI (a plain stdlib package — the invocation never writes into the plugin tree):
 
-`uv run --directory ${CLAUDE_PLUGIN_ROOT}/scripts/specpipe python -m specpipe <subcommand> …`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe <subcommand> …`
 
 (Below, `specpipe <subcommand>` abbreviates that invocation.) Errors (exit 1) MUST be fixed and the validator re-run clean BEFORE the gate's workflow/Codex pass — the deterministic pass is free; do not spend panel review on structural defects. Warnings may be accepted with a one-line recorded justification in the artifact. Validator failures are NOT halt conditions: fix and re-run.
 
@@ -2822,7 +2846,7 @@ allowed-tools: Bash, Read, Glob, Grep
 
 Validate the artifact at the path given in $ARGUMENTS with the specpipe CLI:
 
-`uv run --directory ${CLAUDE_PLUGIN_ROOT}/scripts/specpipe python -m specpipe validate …`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe validate …`
 
 1. Determine the artifact kind — from the second argument if given, otherwise infer: a file with `## Phase <n> —` entries is a phase-plan; one with `### Task <n>:` tasks is a plan; one with a `## Cross-cutting decision register` section is a master spec; one with `## Provenance & governance` is a phase spec. If the kind is ambiguous, ask.
 2. Run the matching subcommand: `validate phase-plan <path>` · `validate spec <path> --kind master` · `validate spec <path> --kind phase --master <master-path>` (locate the master via the phase-plan's `Master spec:` line or ask) · `validate plan <path>`.
@@ -2840,7 +2864,7 @@ allowed-tools: Bash, Read, Glob
 
 Show project phase status via the specpipe CLI:
 
-`uv run --directory ${CLAUDE_PLUGIN_ROOT}/scripts/specpipe python -m specpipe status <path>`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe status <path>`
 
 Use the path from $ARGUMENTS; if omitted, default to `docs/handoff/phase-plan.md`, and if that does not exist, locate the phase-plan file per the project's handoff convention (search for a file with `## Phase <n> —` entries under the project's state/docs layout). Present the table (id → status → depends_on → title), the resolved next phase, and any round counters. If no phase resolves as next, explain why (all complete, or a dependency chain is blocked — name the blocking phase).
 ```
@@ -2856,7 +2880,7 @@ allowed-tools: Bash, Read, Glob
 
 Scaffold the layout the execute-phase skill expects, via the specpipe CLI:
 
-`uv run --directory ${CLAUDE_PLUGIN_ROOT}/scripts/specpipe python -m specpipe init-project --dir <target>`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe init-project --dir <target>`
 
 Use the directory from $ARGUMENTS, defaulting to the current project root. If the project already keeps agent state somewhere other than `docs/handoff/` (check for an existing handoff/state convention first), pass `--handoff-dir <relative-path>` so the phase plan and audit dir land inside that convention. The operation is idempotent and never overwrites existing files — report what was created vs skipped. Afterwards, point at the created `docs/handoff/phase-plan.md` and note that `/spec-pipeline:author` fills it from a project brief.
 ```
@@ -2889,7 +2913,7 @@ Every artifact gate runs the bundled `specpipe` CLI first: structural defects (m
 
 ## The specpipe CLI
 
-Stdlib-only Python, invoked via uv. All subcommands support `--json`; exit codes are `0` clean, `1` findings/failure, `2` bad invocation.
+Stdlib-only Python with no packaging at all — a plain package directory imported via `PYTHONPATH` and run with `uv run --no-project`, so no invocation ever writes a venv or lockfile into the plugin. All subcommands support `--json`; exit codes are `0` clean, `1` findings/failure, `2` bad invocation.
 
 | Subcommand | Enforces |
 | --- | --- |
@@ -2899,7 +2923,7 @@ Stdlib-only Python, invoked via uv. All subcommands support `--json`; exit codes
 | `next-phase` | First pending phase whose dependencies are complete — computed, not re-read |
 | `set-status` | Legal status transitions only, atomic rewrite |
 | `status` | Phase table + round counters |
-| `record-red` / `record-green` | Runs the test command, rejects collection errors as RED, appends evidence to the committed audit trail |
+| `record-red` / `record-green` | Runs the test command under the safety contract (argv/no-shell, timeout, output cap, redaction), rejects collection errors as RED (pytest) or unmatched `--expect-failure-regex` (generic), appends evidence to the committed audit trail |
 | `rounds` | Codex convergence round caps (spec 3 / plan 3 / final 5) |
 | `init-project` | Idempotent handoff scaffolding |
 
@@ -2913,7 +2937,7 @@ The `docs/handoff/` paths are greenfield defaults, not requirements: the skills 
 
 ## Requirements
 
-- [uv](https://docs.astral.sh/uv/) on PATH (runs the stdlib-only specpipe CLI; no third-party deps to resolve)
+- [uv](https://docs.astral.sh/uv/) on PATH (supplies the interpreter via `--no-project`; specpipe itself has zero deps and no packaging)
 - Python ≥ 3.11
 - The review gates hard-require a `/codex-review` skill (Codex CLI) and ultracode workflow support; the skills HALT if unavailable
 
@@ -2923,7 +2947,7 @@ The `docs/handoff/` paths are greenfield defaults, not requirements: the skills 
 - `commands/` — thin wrappers over specpipe
 - `references/` — the shared spec/plan construction standards (the review rubric)
 - `templates/` — artifact templates; their headings are the exact grammar specpipe validates
-- `scripts/specpipe/` — the validator CLI (pytest suite in `tests/`)
+- `scripts/specpipe/` — the validator CLI, a plain stdlib package (pytest suite in `tests/`; no pyproject/venv/lock by design)
 ```
 
 - [ ] **Step 3: Write CHANGELOG.md**
@@ -2996,6 +3020,9 @@ Expected: all pass (`--strict` treats runtime-tolerated warnings as errors — f
 ! grep -rn 'agent-configs' plugins/spec-pipeline/skills plugins/spec-pipeline/commands
 # AC5: exactly the four deduped references
 ls plugins/spec-pipeline/references | sort   # expect the 4 standard files
+# AC9: the canonical invocation leaves the plugin tree clean (no venv/lock/cache writes)
+PYTHONPATH="$PWD/plugins/spec-pipeline/scripts/specpipe" uv run --no-project python -m specpipe --help >/dev/null
+test -z "$(git status --short plugins/spec-pipeline/scripts/specpipe)" && echo "AC9 clean"
 # AC2 evidence: suite green (step 1). AC1/AC6: marketplace validator (step 2).
 ```
 

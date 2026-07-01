@@ -57,9 +57,8 @@ plugins/spec-pipeline/
 │   ├── phase-spec.md
 │   ├── implementation-plan.md
 │   └── phase-plan.md
-├── scripts/specpipe/               # Python package (stdlib-only), uv-invoked
-│   ├── pyproject.toml
-│   └── specpipe/…
+├── scripts/specpipe/               # plain Python package dir (stdlib-only, no pyproject/venv/lock)
+│   └── specpipe/…                  # imported via PYTHONPATH; run via uv run --no-project
 └── tests/                          # pytest suite (conventions.md TEST-001)
 ```
 
@@ -67,7 +66,7 @@ Key structural decisions:
 
 - **Skills for the two heavy surfaces, commands for the three thin ones.** The skills carry process + references; the utilities are one-paragraph wrappers that invoke specpipe, render its output faithfully (findings grouped by severity, exit code reported, `--json` available on request), and never swallow a non-zero exit. Mirrors release-pipeline's heavy/thin split.
 - Both skills keep `model: opus`, `disable-model-invocation: true`, `allowed-tools`, and argument hints. Reference paths change from `./references/` to `${CLAUDE_PLUGIN_ROOT}/references/`.
-- `specpipe` is **stdlib-only** (argparse, re, json, pathlib, subprocess). Zero third-party deps means `uv run` has nothing to resolve — deterministic and fast on every machine. Invocation: `uv run --directory ${CLAUDE_PLUGIN_ROOT}/scripts/specpipe python -m specpipe …`.
+- `specpipe` is **stdlib-only** (argparse, re, json, pathlib, shlex, subprocess) and deliberately has **no Python project machinery** — no `pyproject.toml`, no venv, no lockfile. It is a plain package directory imported via `PYTHONPATH`, because `uv run` against a project would lock/sync and write `.venv/`+`uv.lock` into the plugin root — which dirties the source repo and is brittle in the installed-plugin cache (`${CLAUDE_PLUGIN_ROOT}` must not receive persistent state). Canonical invocation: `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe …` (uv supplies a suitable interpreter without touching the plugin tree; runtime floor Python ≥ 3.11). Acceptance includes a clean-tree proof: after any specpipe invocation, `git status --short plugins/spec-pipeline/scripts/specpipe` is empty.
 
 ### Rejected alternatives
 
@@ -94,7 +93,7 @@ Key structural decisions:
 | `next-phase <phase-plan>` | **Resume-first** deterministic resolution: an existing `in_progress` phase is returned before any `pending` one, flagged `resume: true` (the recovery path after an interrupted session — the skill reassesses that phase's partial state instead of starting a new phase). Otherwise: first `pending` entry whose `depends_on` are all `complete`. Outputs id/title/resume-flag/JSON; exit 1 if none resolvable (all done, or blocked graph). |
 | `set-status <phase-plan> --id N --to <status>` | Legal transitions only: `pending→in_progress`, `in_progress→complete`, `in_progress→blocked`, `blocked→in_progress`, and the recovery transition `in_progress→pending` (abandon a wedged/stale run so the phase can be re-resolved cleanly). Atomic file rewrite (temp + rename). Illegal transition = exit 1, file untouched. |
 | `status <phase-plan> [--state <path>]` | Rendered table: id → title → depends_on → status; next phase (resume-aware); round counters. State file resolution: explicit `--state`, else upward search from the phase-plan's directory for `.spec-pipeline/state.json` — deterministic regardless of invocation cwd or handoff layout. |
-| `record-red --cmd <test-cmd> --task <id> --audit <path> [--framework pytest\|generic] [--timeout N]` | Runs the command under the execution-safety contract (below). Asserts **non-zero exit** AND — for the default `pytest` framework — that the failure is a genuine assertion/missing-symbol failure, not a collection/import/syntax error (pytest collection-error signatures). `--framework generic` (for bats/Jest/other runners) accepts any non-zero exit as RED and notes in the evidence block that collection-error detection was unavailable. Appends an evidence block (task, command, timestamp, failure excerpt) to the audit file. Collection error, unexpected pass, or timeout = exit 1. |
+| `record-red --cmd <test-cmd> --task <id> --audit <path> [--framework pytest\|generic] [--expect-failure-regex <re>] [--timeout N]` | Runs the command under the execution-safety contract (below). Asserts **non-zero exit** AND — for the default `pytest` framework — that the failure is a genuine assertion/missing-symbol failure, not a collection/import/syntax error (pytest collection-error signatures). `--framework generic` (bats/Jest/other runners) preserves the fails-for-the-right-reason rule via `--expect-failure-regex`: when given, the output must match it (e.g. the expected failing assertion or "not defined" message) or RED is REJECTED; without a regex, any non-zero exit is accepted and the evidence block notes that failure-reason verification was unavailable. Appends an evidence block (task, command, timestamp, failure excerpt) to the audit file. Collection error, unmatched expectation, unexpected pass, or timeout = exit 1. |
 | `record-green --cmd <test-cmd> --task <id> --audit <path> [--timeout N]` | Runs the command under the same contract; asserts exit 0; appends the passing evidence block. |
 | `rounds <state-file> --gate spec\|plan\|final (--increment\|--check)` | Round counters with caps 3/3/5. `--increment` past the cap = exit 1 (the skill's signal to stop looping and record open findings). |
 | `init-project [--dir <path>] [--handoff-dir <rel>]` | Scaffolds the minimal handoff layout the executor expects + an empty `phase-plan.md` from the template; appends `.spec-pipeline/` to `.gitignore`. Idempotent — never overwrites existing files. `--handoff-dir` (default `docs/handoff`) targets projects whose state layout differs. |
@@ -107,6 +106,7 @@ The test command runs subprocess output into a **committed** audit file, so its 
 - **cwd** is the invocation directory; the skills invoke from the target project root.
 - **Timeout** default 600 s (`--timeout` overrides). A timeout is a rejected gate (exit 1) and is recorded in the audit trail as such.
 - **Output cap:** capture is truncated to 64 KiB before the last-30-lines excerpt is taken, so a runaway process cannot bloat the audit file.
+- **Failure-reason verification** for non-pytest runners: the plan supplies `--expect-failure-regex` per generic-framework task so RED still means "failed for the right reason", mirroring the pytest collection-error rule.
 - **Best-effort secret redaction** on the excerpt before append: common token shapes (`ghp_…`/`github_pat_…`, `AKIA…`, `xox[a-z]-…`, `sk-…`, `Bearer <jwt>`, `hvs.…`) are replaced with `[REDACTED]`. Best-effort by design — the skill-level rule remains that only test/verification commands from the reviewed plan may be passed, never arbitrary shell.
 - **Append** is a single `O_APPEND` write (atomic for the sequential single-session use the skills perform; concurrent writers are out of scope).
 - Rejected attempts (unexpected pass, collection error, timeout, failed GREEN) are ALSO appended, labelled `REJECTED` — the trail is honest about failed gates.
@@ -182,7 +182,8 @@ Four templates derived jointly from the reference standards and the specpipe gra
 5. `references/` contains exactly one `spec-construction.md` (deduped) and the three sibling standards, unmodified in content.
 6. Marketplace entry and plugin manifest pass both `validate-marketplace.sh` and `claude plugin validate --strict plugins/spec-pipeline`; version 0.1.0.
 7. Recovery semantics hold under test: a stale `in_progress` phase resumes via `next-phase`; `in_progress→pending` abandons cleanly; illegal transitions leave the phase-plan byte-identical.
-8. Evidence capture is safe under test: shell metacharacters are inert, timeouts reject the gate, secret-shaped output is redacted before the excerpt is appended.
+8. Evidence capture is safe under test: shell metacharacters are inert, timeouts reject the gate, secret-shaped output is redacted before the excerpt is appended, and a generic-framework RED with an unmatched `--expect-failure-regex` is rejected.
+9. specpipe invocations leave the plugin tree clean: after running the canonical invocation, `git status --short plugins/spec-pipeline/scripts/specpipe` is empty (no `.venv/`, `uv.lock`, or cache writes).
 
 ## Out of scope / follow-ups
 
@@ -196,3 +197,4 @@ Four templates derived jointly from the reference standards and the specpipe gra
 | Round | Verdict | Findings → resolution |
 | --- | --- | --- |
 | 1 (2026-07-01, `docs/codex-reviews/2026-07-01-182633-codex-spec-review-round1.md`) | Needs major correction (3 blocking / 3 medium) | SA-001 scope-coverage contradiction → goals narrowed; coverage explicitly review-only, v2 candidate noted. SA-002 stranded `in_progress` → resume-first `next-phase`, `in_progress→pending` recovery transition, skill resume semantics. SA-003 unsafe evidence capture → execution-safety contract (argv/no-shell, timeout, output cap, redaction, O_APPEND). SA-004 pytest-specific RED → `--framework pytest\|generic` boundary. SA-005 state resolution → `status --state` + upward search. SA-006 stale validator claim → corrected; `claude plugin validate --strict` added to acceptance. |
+| 2 (2026-07-01, `docs/codex-reviews/2026-07-01-183657-codex-spec-review-round2.md`) | Needs minor correction (0 blocking / 2 medium; SA-001/002/003/005/006 resolved) | SA-004 residual (generic RED weaker than fails-for-the-right-reason) → `--expect-failure-regex` contract for generic frameworks. SA-NEW-001 (`uv run --directory` would lock/sync `.venv`+`uv.lock` into the plugin root) → dropped Python project machinery entirely; plain package dir + `PYTHONPATH` + `uv run --no-project`; clean-tree acceptance criterion added. |
