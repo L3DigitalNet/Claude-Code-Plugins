@@ -1517,6 +1517,15 @@ def test_missing_run_fail_step_is_tdd_error(tmp_path):
     assert any(f.code == "PLAN-TDD-ORDER" for f in _errors(tmp_path, bad))
 
 
+def test_commit_before_green_is_tdd_error(tmp_path):
+    # the only commit lands before the RED→GREEN chain completes
+    bad = VALID_PLAN.replace("- [ ] **Step 5: Commit**", "- [ ] **Step 5: Wrap up**")
+    bad = bad.replace(
+        "- [ ] **Step 2: Run test to verify it fails**",
+        "- [ ] **Step 2: Commit**\n\n- [ ] **Step 2: Run test to verify it fails**")
+    assert any(f.code == "PLAN-TDD-ORDER" for f in _errors(tmp_path, bad))
+
+
 def test_no_tdd_marker_downgrades_to_warning(tmp_path):
     bad = VALID_PLAN.replace(
         "- [ ] **Step 2: Run test to verify it fails**",
@@ -1607,10 +1616,15 @@ def classify(step_title: str) -> str:
 def _tdd_ok(kinds: list[str]) -> bool:
     want = ["test-write", "run-fail", "implement", "run-pass"]
     idx = 0
+    commit_after_pass = False
     for k in kinds:
         if idx < len(want) and k == want[idx]:
             idx += 1
-    return idx == len(want) and "commit" in kinds
+        elif k == "commit" and idx == len(want):
+            # a commit only counts once the full RED→GREEN chain has completed;
+            # commit-before-green must not satisfy the gate
+            commit_after_pass = True
+    return idx == len(want) and commit_after_pass
 
 
 def validate_plan(path: Path) -> list[Finding]:
@@ -1678,7 +1692,8 @@ def validate_plan(path: Path) -> list[Finding]:
         elif not _tdd_ok(kinds):
             findings.append(Finding(ERROR, "PLAN-TDD-ORDER",
                             f"Task {t['num']} steps must run write-test → run-fail → "
-                            "implement → run-pass and include a commit step", at))
+                            "implement → run-pass, with a commit step AFTER the "
+                            "passing run", at))
 
     for phrase in grammar.PLAN_ANTI_PATTERNS:
         hits = [lineno for lineno, line in plain if phrase in line.lower()]
@@ -1732,7 +1747,7 @@ git commit -m "feat(spec-pipeline): plan validator — TDD step order, anti-patt
 **Interfaces:**
 
 - Consumes: nothing from specpipe (subprocess + filesystem only).
-- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0, expect_failure_regex: str | None = None) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction over the WHOLE evidence block (recorded command string included, rejected attempts included), single `O_APPEND` write. `framework="generic"` (bats/Jest/other) keeps fails-for-the-right-reason via `expect_failure_regex`, which is MANDATORY with generic — output must match it or RED is REJECTED (exit 1); generic without a regex is a bad invocation (exit 2, nothing runs, nothing recorded). Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
+- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0, expect_failure_regex: str | None = None) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction over the WHOLE evidence block (recorded command string included, rejected attempts included), single `O_APPEND` write. RED demands a **positive failure signature**, never just a non-zero exit: pytest mode requires a `N failed`/`FAILED` marker (so "no tests ran", usage errors, and arbitrary failing commands are REJECTED) on top of the collection-error rejection; `framework="generic"` (bats/Jest/other) keeps fails-for-the-right-reason via `expect_failure_regex`, which is MANDATORY with generic — output must match it or RED is REJECTED (exit 1); generic without a regex is a bad invocation (exit 2, nothing runs, nothing recorded). Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1834,11 +1849,45 @@ def test_secret_output_redacted(tmp_path):
 def test_command_string_redacted(tmp_path):
     audit = tmp_path / "audit.md"
     token = "ghp_" + "b" * 30
-    cmd = f'"{sys.executable}" -c "raise SystemExit(1)" {token}'  # token as argv arg
-    assert evidence.record(cmd, "T1", audit, "red") == 0
+    script = tmp_path / "fail.py"
+    script.write_text("print('boom')\nraise SystemExit(1)\n", encoding="utf-8")
+    cmd = f'"{sys.executable}" "{script}" {token}'  # token as an argv arg
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic",
+                           expect_failure_regex="boom") == 0
     content = audit.read_text(encoding="utf-8")
     assert "[REDACTED]" in content
     assert "ghp_" not in content  # redaction covers the recorded cmd line too
+
+
+def test_pytest_red_rejects_arbitrary_nonzero(tmp_path):
+    # a non-pytest failing command must not pass as pytest RED evidence
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "raise SystemExit(1)"'
+    assert evidence.record(cmd, "T1", audit, "red") == 1
+    assert "no test-failure signature" in audit.read_text(encoding="utf-8")
+
+
+def test_pytest_red_rejects_no_tests_ran(tmp_path):
+    # pytest exit 5 (no tests collected) is non-zero but proves nothing
+    f = _project(tmp_path, "test_empty.py", "# intentionally no tests\n")
+    audit = tmp_path / "audit.md"
+    assert evidence.record(_pytest_cmd(f), "T1", audit, "red") == 1
+    assert "REJECTED" in audit.read_text(encoding="utf-8")
+
+
+def test_timeout_with_partial_output_still_recorded(tmp_path):
+    # TimeoutExpired.stdout/stderr are BYTES even with text=True — the handler
+    # must decode, not crash, and still record the rejected gate
+    audit = tmp_path / "audit.md"
+    script = tmp_path / "noisy.py"
+    script.write_text(
+        "import sys, time\nprint('partial output', flush=True)\n"
+        "print('warn', file=sys.stderr, flush=True)\ntime.sleep(5)\n",
+        encoding="utf-8")
+    cmd = f'"{sys.executable}" "{script}"'
+    assert evidence.record(cmd, "T1", audit, "green", timeout=1.0) == 1
+    content = audit.read_text(encoding="utf-8")
+    assert "timeout" in content and "partial output" in content
 
 
 def test_generic_without_regex_is_bad_invocation(tmp_path):
@@ -1881,10 +1930,12 @@ close-out report cites. Because the audit file is committed, execution is
 constrained: shlex argv with no shell (metacharacters inert), timeout, 64 KiB
 capture cap, best-effort secret redaction over the whole evidence block
 (command string included), single O_APPEND write. Encodes the skill rule that
-RED must fail for the RIGHT reason: pytest collection/import errors are
-rejected, and --framework generic requires --expect-failure-regex (no
-verification-free RED path exists). Rejected attempts are appended too
-(labelled REJECTED) so the trail is honest about failed gates.
+RED must fail for the RIGHT reason via positive signatures: pytest mode needs
+a 'N failed'/'FAILED' marker and rejects collection/import errors, "no tests
+ran", and arbitrary non-zero commands; --framework generic requires
+--expect-failure-regex (no verification-free RED path exists). Rejected
+attempts are appended too (labelled REJECTED) so the trail is honest about
+failed gates.
 """
 from __future__ import annotations
 
@@ -1897,6 +1948,10 @@ from pathlib import Path
 COLLECTION_ERROR_RE = re.compile(
     r"errors? during collection|ImportError while importing|INTERNALERROR"
     r"|error collecting|SyntaxError: invalid syntax", re.I)
+# RED needs a POSITIVE pytest failure marker, not merely a non-zero exit —
+# "no tests ran" (exit 5), usage/config errors (exit 4), and arbitrary
+# failing commands must never pass as TDD evidence.
+PYTEST_FAILURE_RE = re.compile(r"^FAILED |\b\d+ failed\b", re.M)
 # Best-effort shapes of common credentials; the primary defense is the skill
 # rule that only reviewed-plan test commands are ever passed here.
 REDACTION_RES = [
@@ -1916,6 +1971,14 @@ def _redact(text: str) -> str:
     for pattern in REDACTION_RES:
         text = pattern.sub("[REDACTED]", text)
     return text
+
+
+def _to_text(v) -> str:
+    # subprocess.TimeoutExpired captures stdout/stderr as BYTES even under
+    # text=True (documented behavior) — decode defensively.
+    if v is None:
+        return ""
+    return v.decode("utf-8", "replace") if isinstance(v, bytes) else v
 
 
 def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str) -> None:
@@ -1956,7 +2019,10 @@ def record(cmd: str, task: str, audit: Path, expect: str,
         print(f"ERROR: command not found: {argv[0]}")
         return 1
     except subprocess.TimeoutExpired as exc:
-        output = (exc.stdout or "") + ("\n" + exc.stderr if exc.stderr else "")
+        output = _to_text(exc.stdout)
+        stderr_text = _to_text(exc.stderr)
+        if stderr_text:
+            output += "\n" + stderr_text
         _append(audit, task, f"{expect.upper()} (REJECTED — timeout after {timeout:g}s)",
                 cmd, -1, output)
         print(f"GATE NOT ESTABLISHED: command timed out after {timeout:g}s")
@@ -1973,6 +2039,13 @@ def record(cmd: str, task: str, audit: Path, expect: str,
                     proc.returncode, output)
             print("RED NOT ESTABLISHED: collection/import/syntax error — a test that "
                   "errors on collection has not established RED; fix the test first")
+            return 1
+        if framework == "pytest" and not PYTEST_FAILURE_RE.search(output):
+            _append(audit, task, "RED (REJECTED — no test-failure signature)", cmd,
+                    proc.returncode, output)
+            print("RED NOT ESTABLISHED: non-zero exit but no pytest failure marker "
+                  "('N failed' / 'FAILED') — no failing test was proven (no tests "
+                  "ran, usage/config error, or non-pytest command)")
             return 1
         if framework == "generic":
             if not re.search(expect_failure_regex, output):
@@ -2935,7 +3008,7 @@ Every artifact gate runs the bundled `specpipe` CLI first: structural defects (m
 
 ## The specpipe CLI
 
-Stdlib-only Python with no packaging at all — a plain package directory imported via `PYTHONPATH` and run with `uv run --no-project`, so no invocation ever writes a venv or lockfile into the plugin. All subcommands support `--json`; exit codes are `0` clean, `1` findings/failure, `2` bad invocation.
+Stdlib-only Python with no packaging at all — a plain package directory imported via `PYTHONPATH` and run with `uv run --no-project`, so no invocation ever writes a venv or lockfile into the plugin. Query subcommands (`validate`, `next-phase`, `status`) support `--json`; state operations speak via exit codes and stable single-line output. Exit codes are `0` clean, `1` findings/failure, `2` bad invocation.
 
 | Subcommand | Enforces |
 | --- | --- |
@@ -3028,12 +3101,14 @@ Run: `bash plugins/spec-pipeline/tests/run_tests.sh -v` Expected: PASS — every
 ```bash
 bash scripts/validate-marketplace.sh
 claude plugin validate --strict plugins/spec-pipeline
-npm run format               # prettier --write (repo config)
+npm run format                                  # prettier --write (repo config)
+npx markdownlint-cli2 --fix "**/*.md"           # repo contract: fix pass before check
 npm run format:check
 npx markdownlint-cli2 "plugins/spec-pipeline/**/*.md"
+git status --short                              # note every file the fixers rewrote
 ```
 
-Expected: all pass (`--strict` treats runtime-tolerated warnings as errors — fix anything it reports). If `format` rewrote files, re-run the test suite (templates are conformance-tested) and include the reformatted files in the commit.
+Expected: all pass (`--strict` treats runtime-tolerated warnings as errors — fix anything it reports). If the format/fix passes rewrote files, re-run the test suite (templates are conformance-tested) and carry the full rewritten-file list forward to Step 5's commit.
 
 - [ ] **Step 3: Acceptance-criteria spot checks (from the spec)**
 
@@ -3057,8 +3132,10 @@ In `docs/handoff/specs-plans.md`: change the 2026-07-01 spec row's status from `
 
 - [ ] **Step 5: Commit**
 
+Stage `docs/handoff/specs-plans.md` PLUS every file the Step 2 format/fix passes rewrote (from the `git status --short` inventory) — by explicit path, never `git add -A`:
+
 ```bash
-git add docs/handoff/specs-plans.md
+git add docs/handoff/specs-plans.md <each-rewritten-path>
 git commit -m "docs(handoff): spec-pipeline design implemented; index the implementation plan"
 ```
 
