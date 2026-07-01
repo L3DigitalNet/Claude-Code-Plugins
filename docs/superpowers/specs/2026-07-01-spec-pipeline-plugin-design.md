@@ -1,7 +1,7 @@
 # spec-pipeline Plugin — Design
 
 - **Date:** 2026-07-01
-- **Status:** Draft — pending user spec review
+- **Status:** Approved 2026-07-01 — plan in progress
 - **Decisions locked during brainstorm:** name `spec-pipeline`; validators only (no enforcement hooks); utility commands `/validate`, `/status`, `/init-project`; Codex/ultracode review dependencies stay hard-required; architecture = single `specpipe` Python CLI.
 
 ## Overview
