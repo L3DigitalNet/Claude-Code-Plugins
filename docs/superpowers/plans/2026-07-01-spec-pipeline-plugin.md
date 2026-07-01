@@ -363,8 +363,9 @@ def build_parser() -> argparse.ArgumentParser:
                          "generic: bats/Jest/other runners (pair with "
                          "--expect-failure-regex to keep fails-for-the-right-reason)")
     rr.add_argument("--expect-failure-regex",
-                    help="generic framework: output must match this regex for RED "
-                         "to count (the expected failing assertion / missing symbol)")
+                    help="REQUIRED with --framework generic: output must match this "
+                         "regex for RED to count (the expected failing assertion / "
+                         "missing symbol); enforced in the handler")
     rr.add_argument("--timeout", type=float, default=600.0)
     rr.set_defaults(handler="specpipe.evidence:cmd_record_red")
 
@@ -1729,7 +1730,7 @@ git commit -m "feat(spec-pipeline): plan validator — TDD step order, anti-patt
 **Interfaces:**
 
 - Consumes: nothing from specpipe (subprocess + filesystem only).
-- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0, expect_failure_regex: str | None = None) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction on the excerpt, single `O_APPEND` write. `framework="generic"` (bats/Jest/other) keeps fails-for-the-right-reason via `expect_failure_regex` — output must match it or RED is REJECTED; without a regex, any non-zero exit is accepted and the label says verification was unavailable. Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
+- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0, expect_failure_regex: str | None = None) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction over the WHOLE evidence block (recorded command string included, rejected attempts included), single `O_APPEND` write. `framework="generic"` (bats/Jest/other) keeps fails-for-the-right-reason via `expect_failure_regex`, which is MANDATORY with generic — output must match it or RED is REJECTED (exit 1); generic without a regex is a bad invocation (exit 2, nothing runs, nothing recorded). Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1802,8 +1803,9 @@ def test_audit_parent_dirs_created(tmp_path):
 def test_shell_metacharacters_are_inert(tmp_path):
     marker = tmp_path / "pwned.txt"
     audit = tmp_path / "audit.md"
-    cmd = f'"{sys.executable}" -c "exit(1)" ; touch "{marker}"'
-    evidence.record(cmd, "T1", audit, "red", framework="generic")
+    cmd = f'"{sys.executable}" -c "print(\'boom\'); exit(1)" ; touch "{marker}"'
+    evidence.record(cmd, "T1", audit, "red", framework="generic",
+                    expect_failure_regex="boom")
     assert not marker.exists()  # ';' was an argv token, not a shell operator
 
 
@@ -1820,17 +1822,28 @@ def test_secret_output_redacted(tmp_path):
     script.write_text("print('token ghp_" + "a" * 30 + "')\nraise SystemExit(1)\n",
                       encoding="utf-8")
     cmd = f'"{sys.executable}" "{script}"'
-    assert evidence.record(cmd, "T1", audit, "red", framework="generic") == 0
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic",
+                           expect_failure_regex="token") == 0
     content = audit.read_text(encoding="utf-8")
     assert "[REDACTED]" in content
     assert "ghp_" not in content
 
 
-def test_generic_framework_accepts_plain_failure(tmp_path):
+def test_command_string_redacted(tmp_path):
+    audit = tmp_path / "audit.md"
+    token = "ghp_" + "b" * 30
+    cmd = f'"{sys.executable}" -c "raise SystemExit(1)" {token}'  # token as argv arg
+    assert evidence.record(cmd, "T1", audit, "red") == 0
+    content = audit.read_text(encoding="utf-8")
+    assert "[REDACTED]" in content
+    assert "ghp_" not in content  # redaction covers the recorded cmd line too
+
+
+def test_generic_without_regex_is_bad_invocation(tmp_path):
     audit = tmp_path / "audit.md"
     cmd = f'"{sys.executable}" -c "raise SystemExit(3)"'
-    assert evidence.record(cmd, "T1", audit, "red", framework="generic") == 0
-    assert "generic" in audit.read_text(encoding="utf-8")
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic") == 2
+    assert not audit.exists()  # rejected before anything ran or was recorded
 
 
 def test_generic_expect_failure_regex_matched(tmp_path):
@@ -1864,11 +1877,12 @@ Runs the task's test command, asserts the expected outcome, and appends the
 captured excerpt to the phase audit file — the committed RED→GREEN trail the
 close-out report cites. Because the audit file is committed, execution is
 constrained: shlex argv with no shell (metacharacters inert), timeout, 64 KiB
-capture cap, best-effort secret redaction, single O_APPEND write. Encodes the
-skill rule that a test erroring on collection/import has NOT established RED
-(pytest framework; --framework generic skips that check and says so in the
-label). Rejected attempts are appended too (labelled REJECTED) so the trail
-is honest about failed gates.
+capture cap, best-effort secret redaction over the whole evidence block
+(command string included), single O_APPEND write. Encodes the skill rule that
+RED must fail for the RIGHT reason: pytest collection/import errors are
+rejected, and --framework generic requires --expect-failure-regex (no
+verification-free RED path exists). Rejected attempts are appended too
+(labelled REJECTED) so the trail is honest about failed gates.
 """
 from __future__ import annotations
 
@@ -1907,8 +1921,10 @@ def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str
     capped = output[-CAPTURE_CAP:]
     tail = "\n".join(_redact(capped).strip().split("\n")[-TAIL_LINES:])
     stamp = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+    # Redaction covers the WHOLE block — the command string can carry a token
+    # (e.g. a test env arg) just as easily as the output can.
     block = (f"\n## Task {task} — {label}\n\n"
-             f"- time: {stamp}\n- cmd: `{cmd}`\n- exit: {code}\n\n"
+             f"- time: {stamp}\n- cmd: `{_redact(cmd)}`\n- exit: {code}\n\n"
              f"```text\n{tail}\n```\n")
     with audit.open("a", encoding="utf-8") as fh:  # single O_APPEND write
         fh.write(block)
@@ -1917,6 +1933,12 @@ def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str
 def record(cmd: str, task: str, audit: Path, expect: str,
            framework: str = "pytest", timeout: float = 600.0,
            expect_failure_regex: str | None = None) -> int:
+    if framework == "generic" and expect == "red" and not expect_failure_regex:
+        # No verification-free RED path: generic runners must state the
+        # expected failure signature, mirroring pytest's collection-error rule.
+        print("ERROR: --framework generic requires --expect-failure-regex "
+              "(the expected failing-assertion / missing-symbol signature)")
+        return 2
     try:
         argv = shlex.split(cmd)
     except ValueError as exc:
@@ -1950,7 +1972,7 @@ def record(cmd: str, task: str, audit: Path, expect: str,
             print("RED NOT ESTABLISHED: collection/import/syntax error — a test that "
                   "errors on collection has not established RED; fix the test first")
             return 1
-        if framework == "generic" and expect_failure_regex:
+        if framework == "generic":
             if not re.search(expect_failure_regex, output):
                 _append(audit, task, "RED (REJECTED — expected failure signature "
                         f"/{expect_failure_regex}/ not found)", cmd,
@@ -1959,8 +1981,6 @@ def record(cmd: str, task: str, audit: Path, expect: str,
                       f"reason (output does not match /{expect_failure_regex}/)")
                 return 1
             label = "RED (generic — expected failure signature matched)"
-        elif framework == "generic":
-            label = "RED (generic — failure-reason verification unavailable)"
         else:
             label = "RED"
         _append(audit, task, label, cmd, proc.returncode, output)
