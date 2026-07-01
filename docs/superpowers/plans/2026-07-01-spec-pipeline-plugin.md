@@ -14,8 +14,8 @@
 
 - Repo root for all paths: `/home/chris/projects/Claude-Code-Plugins`. All file paths below are relative to it.
 - `specpipe` runtime code uses **Python stdlib only**, with **no Python project machinery** (no `pyproject.toml`, venv, or lockfile) — `uv run` against a project would write `.venv/`+`uv.lock` into the plugin root, which must stay clean (installed-plugin cache is not for persistent state). pytest enters via `--with pytest` at test time only.
-- Canonical CLI invocation (used verbatim in skills/commands/README): `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe <subcommand> …`
-- No specpipe invocation may dirty the plugin tree: `git status --short plugins/spec-pipeline/scripts/specpipe` stays empty after any run (Task 14 verifies).
+- Canonical CLI invocation (used verbatim in skills/commands/README): `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe <subcommand> …`
+- No specpipe invocation may dirty the plugin tree — including gitignored artifacts: `git status --short --ignored plugins/spec-pipeline` stays empty and no `.venv`/`uv.lock`/cache dirs appear under the plugin after any run (Task 14 verifies).
 - Exit codes: `0` clean · `1` findings/failure · `2` bad invocation (argparse default).
 - Test command for every task: `bash plugins/spec-pipeline/tests/run_tests.sh` (created in Task 2). Run it from the repo root.
 - Never `git add -A` / `git add .` — stage by explicit path. Plain `git commit` (a global hook enforces author email + GPG signing; never override `GIT_*_EMAIL`).
@@ -155,7 +155,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 export PYTHONPATH="$PLUGIN_ROOT/scripts/specpipe${PYTHONPATH:+:$PYTHONPATH}"
-exec uv run --no-project --with pytest pytest "$SCRIPT_DIR" "$@"
+# Keep the plugin tree free of generated state (AC9): no bytecode, no pytest cache.
+export PYTHONDONTWRITEBYTECODE=1
+exec uv run --no-project --with pytest pytest -p no:cacheprovider "$SCRIPT_DIR" "$@"
 ```
 
 ```bash
@@ -2648,7 +2650,7 @@ Each edit is an exact old → new replacement.
 
 Structural gates run through the bundled specpipe CLI (a plain stdlib package — the invocation never writes into the plugin tree):
 
-`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe <subcommand> …`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe <subcommand> …`
 
 (Below, `specpipe <subcommand>` abbreviates that invocation.) Errors (exit 1) MUST be fixed and the validator re-run clean BEFORE the gate's workflow/Codex pass — the deterministic pass is free; do not spend panel review on structural defects. Warnings may be accepted with a one-line recorded justification in the artifact. Validator failures are NOT halt conditions: fix and re-run.
 
@@ -2866,7 +2868,7 @@ allowed-tools: Bash, Read, Glob, Grep
 
 Validate the artifact at the path given in $ARGUMENTS with the specpipe CLI:
 
-`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe validate …`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe validate …`
 
 1. Determine the artifact kind — from the second argument if given, otherwise infer: a file with `## Phase <n> —` entries is a phase-plan; one with `### Task <n>:` tasks is a plan; one with a `## Cross-cutting decision register` section is a master spec; one with `## Provenance & governance` is a phase spec. If the kind is ambiguous, ask.
 2. Run the matching subcommand: `validate phase-plan <path>` · `validate spec <path> --kind master` · `validate spec <path> --kind phase --master <master-path>` (locate the master via the phase-plan's `Master spec:` line or ask) · `validate plan <path>`.
@@ -2884,7 +2886,7 @@ allowed-tools: Bash, Read, Glob
 
 Show project phase status via the specpipe CLI:
 
-`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe status <path>`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe status <path>`
 
 Use the path from $ARGUMENTS; if omitted, default to `docs/handoff/phase-plan.md`, and if that does not exist, locate the phase-plan file per the project's handoff convention (search for a file with `## Phase <n> —` entries under the project's state/docs layout). Present the table (id → status → depends_on → title), the resolved next phase, and any round counters. If no phase resolves as next, explain why (all complete, or a dependency chain is blocked — name the blocking phase).
 ```
@@ -2900,7 +2902,7 @@ allowed-tools: Bash, Read, Glob
 
 Scaffold the layout the execute-phase skill expects, via the specpipe CLI:
 
-`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -m specpipe init-project --dir <target>`
+`PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe init-project --dir <target>`
 
 Use the directory from $ARGUMENTS, defaulting to the current project root. If the project already keeps agent state somewhere other than `docs/handoff/` (check for an existing handoff/state convention first), pass `--handoff-dir <relative-path>` so the phase plan and audit dir land inside that convention. The operation is idempotent and never overwrites existing files — report what was created vs skipped. Afterwards, point at the created `docs/handoff/phase-plan.md` and note that `/spec-pipeline:author` fills it from a project brief.
 ```
@@ -3040,9 +3042,12 @@ Expected: all pass (`--strict` treats runtime-tolerated warnings as errors — f
 ! grep -rn 'agent-configs' plugins/spec-pipeline/skills plugins/spec-pipeline/commands
 # AC5: exactly the four deduped references
 ls plugins/spec-pipeline/references | sort   # expect the 4 standard files
-# AC9: the canonical invocation leaves the plugin tree clean (no venv/lock/cache writes)
-PYTHONPATH="$PWD/plugins/spec-pipeline/scripts/specpipe" uv run --no-project python -m specpipe --help >/dev/null
-test -z "$(git status --short plugins/spec-pipeline/scripts/specpipe)" && echo "AC9 clean"
+# AC9: the canonical invocation leaves the plugin tree clean — INCLUDING gitignored
+# artifacts (plain git status is silent on ignored .venv/ etc., which is exactly
+# the forbidden state)
+PYTHONPATH="$PWD/plugins/spec-pipeline/scripts/specpipe" uv run --no-project python -B -m specpipe --help >/dev/null
+test -z "$(git status --short --ignored plugins/spec-pipeline)" && echo "AC9 status clean"
+test -z "$(find plugins/spec-pipeline \( -name .venv -o -name uv.lock -o -name .pytest_cache -o -name .ruff_cache -o -name __pycache__ \))" && echo "AC9 no generated artifacts"
 # AC2 evidence: suite green (step 1). AC1/AC6: marketplace validator (step 2).
 ```
 
