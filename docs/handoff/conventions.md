@@ -12,6 +12,7 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | DOC-002 | Session start | starting work in this repo |
 | DOC-003 | Convention changes | adding or revising a repo convention |
 | DOC-004 | MD060 + Prettier table-cell compatibility | configuring markdownlint MD060 in a repo that also runs Prettier |
+| DOC-005 | Generated review artifacts are lint-exempt | committing verbatim generated markdown (Codex audits) into the lint-enforced doc tree |
 | ENV-001 | PATH-shim guard in plugin scripts | a plugin script invokes bare `python3`/`pip`/coreutils via PATH |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
 | TEST-001 | Canonical test frameworks by language | implementing unit tests for a plugin |
@@ -249,6 +250,18 @@ export GIT_CONFIG_NOSYSTEM=1
 - Session 2026-06-14 (markdown-tooling → project-standards v3.0.0)
 
 **Related:** DOC-001
+
+## DOC-005. Generated review artifacts are lint-exempt
+
+**Applies when:** committing verbatim generated markdown — Codex audit reports under `docs/codex-reviews/` — into this lint-enforced doc tree. **Rule:** keep the artifacts byte-verbatim and exempt the directory from both formatters instead of hand-editing generated output: `.markdownlint-cli2.jsonc` carries `"ignores": ["docs/codex-reviews/**"]` and `.prettierignore` carries `docs/codex-reviews/`.
+
+**Why:** the audits are evidence — the review ledger in each spec cites them by path, and reformatting/hand-fixing generated output both churns every future audit commit and breaks the "this is exactly what the reviewer said" property. Exempting the directory keeps `npx markdownlint-cli2 "**/*.md"` and `npm run format:check` green without touching the artifacts.
+
+**Sources:**
+
+- Session 2026-07-01 (spec-pipeline design cycle — first committed Codex audits in this repo)
+
+**Related:** DOC-001, DOC-004
 
 ## ENV-001. PATH-shim guard in plugin scripts
 

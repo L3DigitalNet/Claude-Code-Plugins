@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-06-14 (home-assistant-dev — all 284 review findings implemented; `2375c3c..4cfa41d`, unreleased)
+**Last updated:** 2026-07-01 (spec-pipeline plugin designed + planned; both Codex-converged; implement next session)
 
 ## Session Instructions
 
@@ -12,10 +12,12 @@
 
 ### (none)
 
-## Recently closed (this session, 2026-06-14)
+## In flight
 
-- **home-assistant-dev — all 284 review findings implemented** (`2375c3c..4cfa41d`, 185 commits this session, GPG-signed; **unreleased** — no version bump, ships with next `home-assistant-dev` release). Every finding from the full-spectrum review (7 Critical / 38 High / 93 Medium / 146 Low) across MCP server (TS), Python scripts, 27 skills, examples, templates, docs. Method: parallel Workflow fan-out (one agent per file, edit + self-verify, parent commits by explicit path) + central `tsc`/`jest` + single bundle rebuild — see memory `feedback_parallel_bulk_implementation`. Notable: F1 `ws` WebSocket polyfill; F155 removed the dead MCP doc-cache (`saveToCache`/`loadFromCache`/`CACHE_DIR` + `docsTtlHours` plumbing); F147×F160 (new `config_flow.py`-presence check broke manifest fixtures → fixed the test helper); F167 added `validate-strings.test.ts` (85% cov). Verified: `tsc` 0, jest **41/41** + coverage, `run_tests.sh --skip-ha` **14/14**, prettier/markdownlint clean, bundle fresh.
+- **spec-pipeline plugin — ready to implement.** Spec `docs/superpowers/specs/2026-07-01-spec-pipeline-plugin-design.md` (Codex-converged, 4 rounds, in-doc ledger) + plan `docs/superpowers/plans/2026-07-01-spec-pipeline-plugin.md` (14 TDD tasks, Codex-converged 2 rounds, r2 clean; plan header carries review status). Execute via `superpowers:subagent-driven-development` (recommended) or `executing-plans`. After implementation: live smoke, `/release-pipeline:release` 0.1.0, then user decides deprecation of the two source skills in `agent-configs`.
 
-Detail in `sessions/2026-06.md`.
+## Recently closed (this session, 2026-07-01)
+
+- **spec-pipeline design cycle** — merged `author-master-spec` + `autonomous-phase-execution` design into one plugin spec with a stdlib-only `specpipe` validator CLI (structural gates before every review pass, resume-safe phase state, safety-contracted RED/GREEN evidence capture). Full adversarial loop: spec r1–r4, plan r1–r2 (clean); audits in `docs/codex-reviews/` (now lint-exempt as generated evidence). Detail in `sessions/2026-07.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->

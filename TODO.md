@@ -23,6 +23,7 @@ This document is the user's visible task list alongside the v3 handoff system. U
 
 ## Agent Tracked Tasks
 
+- [ ] **Execute the spec-pipeline implementation plan** — `docs/superpowers/plans/2026-07-01-spec-pipeline-plugin.md` (14 TDD tasks; spec + plan both Codex-converged 2026-07-01). Subagent-driven recommended. Then live smoke, `/release-pipeline:release` 0.1.0, and ask the user about deprecating `author-master-spec` + `autonomous-phase-execution` in `agent-configs`.
 - [ ] **project-standards follow-ups from the 2026-06-12 uv-strict-python conformance review** (fixes belong in that repo): (1) python-coding §31 claims "No compact agent summary … exists today" but the plugin ships one at `skills/uv-strict-python/references/coding-standard.md` — acknowledge it or note plugin summaries; (2) README §6 dev group is unpinned while the adopt-CLI bundle pins `pytest>=9.0` / `ruff>=0.9.0` — reconcile the two.
 - [ ] **Verify uv-strict-python BasedPyright LSP loads** (after next session's cache sync picks up v0.2.0): `/reload-plugins`, then check the `/plugin` Errors tab. Needs `basedpyright-langserver` on PATH or uvx fallback.
 - [ ] **Release release-pipeline** (5 commits pending, incl. Bug 8 PATH-shim hardening `4f9fd1c`) — `/release-pipeline:release`.

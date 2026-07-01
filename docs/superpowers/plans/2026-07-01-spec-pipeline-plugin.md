@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-07-01-spec-pipeline-plugin-design.md` (governs on conflict).
 
+**Review status:** Codex-converged 2026-07-01 — spec 4 rounds (SA-001..006, SA-NEW-001/002 resolved), plan 2 rounds (CR-001..005 resolved, round 2 clean). Audits in `docs/codex-reviews/`.
+
 ## Global Constraints
 
 - Repo root for all paths: `/home/chris/projects/Claude-Code-Plugins`. All file paths below are relative to it.
