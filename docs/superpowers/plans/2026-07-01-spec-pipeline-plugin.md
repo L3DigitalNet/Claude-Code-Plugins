@@ -358,6 +358,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     st = sub.add_parser("status", help="render phase table + round counters")
     st.add_argument("path")
+    st.add_argument("--state", help="explicit state.json path (default: upward "
+                                    "search from the phase-plan for .spec-pipeline/state.json)")
     st.add_argument("--json", action="store_true")
     st.set_defaults(handler="specpipe.phaseplan:cmd_status")
 
@@ -365,12 +367,17 @@ def build_parser() -> argparse.ArgumentParser:
     rr.add_argument("--cmd", required=True)
     rr.add_argument("--task", required=True)
     rr.add_argument("--audit", required=True)
+    rr.add_argument("--framework", choices=["pytest", "generic"], default="pytest",
+                    help="pytest: reject collection/import errors as non-RED; "
+                         "generic: any non-zero exit is RED (bats/Jest/other)")
+    rr.add_argument("--timeout", type=float, default=600.0)
     rr.set_defaults(handler="specpipe.evidence:cmd_record_red")
 
     rg = sub.add_parser("record-green", help="run test cmd, assert pass, append evidence")
     rg.add_argument("--cmd", required=True)
     rg.add_argument("--task", required=True)
     rg.add_argument("--audit", required=True)
+    rg.add_argument("--timeout", type=float, default=600.0)
     rg.set_defaults(handler="specpipe.evidence:cmd_record_green")
 
     ro = sub.add_parser("rounds", help="review-round counters vs caps (3/3/5)")
@@ -492,6 +499,7 @@ def test_placeholder_re():
 
 def test_transitions_and_caps():
     assert ("pending", "in_progress") in grammar.LEGAL_TRANSITIONS
+    assert ("in_progress", "pending") in grammar.LEGAL_TRANSITIONS  # recovery
     assert ("pending", "complete") not in grammar.LEGAL_TRANSITIONS
     assert grammar.ROUND_CAPS == {"spec": 3, "plan": 3, "final": 5}
 ````
@@ -534,6 +542,7 @@ LEGAL_TRANSITIONS = {
     ("pending", "in_progress"),
     ("in_progress", "complete"),
     ("in_progress", "blocked"),
+    ("in_progress", "pending"),  # recovery: abandon a stale/wedged run cleanly
     ("blocked", "in_progress"),
 }
 ROUND_CAPS = {"spec": 3, "plan": 3, "final": 5}
@@ -914,7 +923,7 @@ git commit -m "feat(spec-pipeline): phase-plan parser and structural/graph valid
 **Interfaces:**
 
 - Consumes: `parse`, `Phase`, `PHASE_HEADING_RE`, `FIELD_RE` from Task 4; `grammar.LEGAL_TRANSITIONS`, `grammar.ROUND_CAPS`.
-- Produces: `next_phase(path) -> Phase | None`; `set_status(path, phase_id: int, to: str) -> str | None` (error message or None; atomic rewrite); `cmd_next_phase`, `cmd_set_status`, `cmd_status` (each `(args) -> int`). The skills call these via the CLI.
+- Produces: `next_phase(path) -> Phase | None` (**resume-first**: an `in_progress` phase is returned before any `pending` one); `set_status(path, phase_id: int, to: str) -> str | None` (error message or None; atomic rewrite; includes the `in_progress→pending` recovery transition); `cmd_next_phase` (reports `resume` when returning an `in_progress` phase), `cmd_set_status`, `cmd_status` (resolves the state file from `--state` or upward search). The skills call these via the CLI.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -936,6 +945,13 @@ def test_next_phase_resolves_deps_complete(tmp_path):
     f = _write(tmp_path)
     p = phaseplan.next_phase(f)
     assert p is not None and p.id == 2
+
+
+def test_next_phase_resume_first(tmp_path):
+    # a stale in_progress phase from an interrupted session wins over pending
+    text = VALID.replace("- **status:** complete", "- **status:** in_progress")
+    p = phaseplan.next_phase(_write(tmp_path, text))
+    assert p is not None and p.id == 1 and p.status == "in_progress"
 
 
 def test_next_phase_blocked_by_incomplete_dep(tmp_path):
@@ -968,6 +984,32 @@ def test_set_status_unknown_phase(tmp_path):
     assert "not found" in phaseplan.set_status(f, 9, "in_progress")
 
 
+def test_set_status_abandon_recovery(tmp_path):
+    f = _write(tmp_path)
+    assert phaseplan.set_status(f, 2, "in_progress") is None
+    assert phaseplan.set_status(f, 2, "pending") is None  # abandon a wedged run
+    assert phaseplan.parse(f.read_text(encoding="utf-8"))[1].status == "pending"
+
+
+def test_cli_next_phase_reports_resume(tmp_path, capsys):
+    text = VALID.replace("- **status:** pending", "- **status:** in_progress")
+    f = _write(tmp_path, text)
+    assert main(["next-phase", str(f)]) == 0
+    assert "RESUME" in capsys.readouterr().out
+
+
+def test_status_finds_state_by_upward_search(tmp_path, capsys):
+    proj = tmp_path / "proj"
+    (proj / "docs" / "handoff").mkdir(parents=True)
+    f = proj / "docs" / "handoff" / "phase-plan.md"
+    f.write_text(VALID, encoding="utf-8")
+    (proj / ".spec-pipeline").mkdir()
+    (proj / ".spec-pipeline" / "state.json").write_text(
+        '{"rounds": {"spec": 2, "plan": 0, "final": 0}}', encoding="utf-8")
+    assert main(["status", str(f)]) == 0
+    assert "spec=2/3" in capsys.readouterr().out
+
+
 def test_cli_next_phase_exit_codes(tmp_path, capsys):
     f = _write(tmp_path)
     assert main(["next-phase", str(f)]) == 0
@@ -993,9 +1035,18 @@ Append to `plugins/spec-pipeline/scripts/specpipe/specpipe/phaseplan.py`:
 
 ```python
 def next_phase(path: Path) -> Phase | None:
-    """First pending phase (by id) whose dependencies are all complete."""
+    """Resume-first resolution.
+
+    An existing in_progress phase (a prior session was interrupted mid-phase)
+    is returned before any pending one — the caller resumes or abandons it via
+    set-status in_progress->pending. Otherwise: first pending phase (by id)
+    whose dependencies are all complete.
+    """
     phases = sorted(parse(path.read_text(encoding="utf-8")), key=lambda p: p.id)
     by_id = {p.id: p for p in phases}
+    for p in phases:
+        if p.status == "in_progress":
+            return p
     for p in phases:
         if p.status != "pending":
             continue
@@ -1046,9 +1097,19 @@ def _safe_deps(p: Phase) -> list[int]:
         return []
 
 
-def _load_rounds() -> dict:
-    state = Path(".spec-pipeline/state.json")
-    if not state.exists():
+def _find_state(start: Path) -> Path | None:
+    """Upward search from `start` for .spec-pipeline/state.json — deterministic
+    regardless of invocation cwd or the project's handoff layout."""
+    for d in [start, *start.parents]:
+        candidate = d / ".spec-pipeline" / "state.json"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _load_rounds(plan_path: Path, explicit: str | None) -> dict:
+    state = Path(explicit) if explicit else _find_state(plan_path.resolve().parent)
+    if state is None or not state.exists():
         return {}
     try:
         return json.loads(state.read_text(encoding="utf-8")).get("rounds", {})
@@ -1062,11 +1123,13 @@ def cmd_next_phase(args) -> int:
         print('{"next": null}' if args.json
               else "no resolvable pending phase (all complete, or blocked)")
         return 1
+    resume = p.status == "in_progress"
     if args.json:
-        print(json.dumps({"next": {"id": p.id, "title": p.title,
+        print(json.dumps({"next": {"id": p.id, "title": p.title, "resume": resume,
                                    "depends_on": _safe_deps(p)}}))
     else:
-        print(f"next phase: {p.id} — {p.title}")
+        label = "RESUME in_progress phase" if resume else "next phase"
+        print(f"{label}: {p.id} — {p.title}")
     return 0
 
 
@@ -1083,7 +1146,7 @@ def cmd_status(args) -> int:
     path = Path(args.path)
     phases = sorted(parse(path.read_text(encoding="utf-8")), key=lambda p: p.id)
     nxt = next_phase(path)
-    rounds = _load_rounds()
+    rounds = _load_rounds(path, args.state)
     if args.json:
         print(json.dumps({
             "phases": [{"id": p.id, "title": p.title, "status": p.status,
@@ -1671,7 +1734,7 @@ git commit -m "feat(spec-pipeline): plan validator — TDD step order, anti-patt
 **Interfaces:**
 
 - Consumes: nothing from specpipe (subprocess + filesystem only).
-- Produces: `record(cmd: str, task: str, audit: Path, expect: str) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Rejected attempts are ALSO appended to the audit file (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
+- Produces: `record(cmd: str, task: str, audit: Path, expect: str, framework: str = "pytest", timeout: float = 600.0) -> int` (`expect` in `{"red","green"}`); `cmd_record_red(args) -> int`; `cmd_record_green(args) -> int`. Execution-safety contract (the audit file is committed): `shlex.split` argv with `shell=False` (metacharacters inert), timeout rejects the gate, capture capped at 64 KiB before excerpting, best-effort secret redaction on the excerpt, single `O_APPEND` write. `framework="generic"` skips pytest collection-error detection (any non-zero exit is RED) and says so in the evidence label. Rejected attempts are ALSO appended (labelled REJECTED) — the trail shows failures to establish RED, not just successes.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1739,6 +1802,40 @@ def test_audit_parent_dirs_created(tmp_path):
     audit = tmp_path / "docs" / "handoff" / "audit" / "phase-1.md"
     assert evidence.record(_pytest_cmd(f), "T1", audit, "red") == 0
     assert audit.exists()
+
+
+def test_shell_metacharacters_are_inert(tmp_path):
+    marker = tmp_path / "pwned.txt"
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "exit(1)" ; touch "{marker}"'
+    evidence.record(cmd, "T1", audit, "red", framework="generic")
+    assert not marker.exists()  # ';' was an argv token, not a shell operator
+
+
+def test_timeout_rejects_gate(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "import time; time.sleep(5)"'
+    assert evidence.record(cmd, "T1", audit, "green", timeout=0.5) == 1
+    assert "timeout" in audit.read_text(encoding="utf-8")
+
+
+def test_secret_output_redacted(tmp_path):
+    audit = tmp_path / "audit.md"
+    script = tmp_path / "leak.py"
+    script.write_text("print('token ghp_" + "a" * 30 + "')\nraise SystemExit(1)\n",
+                      encoding="utf-8")
+    cmd = f'"{sys.executable}" "{script}"'
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic") == 0
+    content = audit.read_text(encoding="utf-8")
+    assert "[REDACTED]" in content
+    assert "ghp_" not in content
+
+
+def test_generic_framework_accepts_plain_failure(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "raise SystemExit(3)"'
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic") == 0
+    assert "generic" in audit.read_text(encoding="utf-8")
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -1750,40 +1847,84 @@ Run: `bash plugins/spec-pipeline/tests/run_tests.sh` Expected: FAIL — `ModuleN
 `plugins/spec-pipeline/scripts/specpipe/specpipe/evidence.py`:
 
 ````python
-"""RED/GREEN evidence capture.
+"""RED/GREEN evidence capture under the execution-safety contract.
 
 Runs the task's test command, asserts the expected outcome, and appends the
 captured excerpt to the phase audit file — the committed RED→GREEN trail the
-close-out report cites. Encodes the skill rule that a test erroring on
-collection/import has NOT established RED. Rejected attempts are appended
-too (labelled REJECTED) so the trail is honest about failed gates.
+close-out report cites. Because the audit file is committed, execution is
+constrained: shlex argv with no shell (metacharacters inert), timeout, 64 KiB
+capture cap, best-effort secret redaction, single O_APPEND write. Encodes the
+skill rule that a test erroring on collection/import has NOT established RED
+(pytest framework; --framework generic skips that check and says so in the
+label). Rejected attempts are appended too (labelled REJECTED) so the trail
+is honest about failed gates.
 """
 from __future__ import annotations
 
 import datetime
 import re
+import shlex
 import subprocess
 from pathlib import Path
 
 COLLECTION_ERROR_RE = re.compile(
     r"errors? during collection|ImportError while importing|INTERNALERROR"
     r"|error collecting|SyntaxError: invalid syntax", re.I)
+# Best-effort shapes of common credentials; the primary defense is the skill
+# rule that only reviewed-plan test commands are ever passed here.
+REDACTION_RES = [
+    re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"),
+    re.compile(r"github_pat_[A-Za-z0-9_]{20,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"xox[a-z]-[A-Za-z0-9-]{10,}"),
+    re.compile(r"\bsk-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"\bhvs\.[A-Za-z0-9_-]{20,}"),
+    re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._-]{20,}"),
+]
 TAIL_LINES = 30
+CAPTURE_CAP = 64 * 1024  # bytes of combined output kept before excerpting
+
+
+def _redact(text: str) -> str:
+    for pattern in REDACTION_RES:
+        text = pattern.sub("[REDACTED]", text)
+    return text
 
 
 def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str) -> None:
     audit.parent.mkdir(parents=True, exist_ok=True)
-    tail = "\n".join(output.strip().split("\n")[-TAIL_LINES:])
+    capped = output[-CAPTURE_CAP:]
+    tail = "\n".join(_redact(capped).strip().split("\n")[-TAIL_LINES:])
     stamp = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
     block = (f"\n## Task {task} — {label}\n\n"
              f"- time: {stamp}\n- cmd: `{cmd}`\n- exit: {code}\n\n"
              f"```text\n{tail}\n```\n")
-    with audit.open("a", encoding="utf-8") as fh:
+    with audit.open("a", encoding="utf-8") as fh:  # single O_APPEND write
         fh.write(block)
 
 
-def record(cmd: str, task: str, audit: Path, expect: str) -> int:
-    proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+def record(cmd: str, task: str, audit: Path, expect: str,
+           framework: str = "pytest", timeout: float = 600.0) -> int:
+    try:
+        argv = shlex.split(cmd)
+    except ValueError as exc:
+        print(f"ERROR: cannot parse command: {exc}")
+        return 1
+    if not argv:
+        print("ERROR: empty command")
+        return 1
+    try:
+        proc = subprocess.run(argv, shell=False, capture_output=True, text=True,
+                              timeout=timeout)
+    except FileNotFoundError:
+        print(f"ERROR: command not found: {argv[0]}")
+        return 1
+    except subprocess.TimeoutExpired as exc:
+        output = (exc.stdout or "") + ("\n" + exc.stderr if exc.stderr else "")
+        _append(audit, task, f"{expect.upper()} (REJECTED — timeout after {timeout:g}s)",
+                cmd, -1, output)
+        print(f"GATE NOT ESTABLISHED: command timed out after {timeout:g}s")
+        return 1
     output = proc.stdout + ("\n" + proc.stderr if proc.stderr else "")
     if expect == "red":
         if proc.returncode == 0:
@@ -1791,13 +1932,15 @@ def record(cmd: str, task: str, audit: Path, expect: str) -> int:
                     proc.returncode, output)
             print("RED NOT ESTABLISHED: command passed (expected a failing test)")
             return 1
-        if COLLECTION_ERROR_RE.search(output):
+        if framework == "pytest" and COLLECTION_ERROR_RE.search(output):
             _append(audit, task, "RED (REJECTED — collection error)", cmd,
                     proc.returncode, output)
             print("RED NOT ESTABLISHED: collection/import/syntax error — a test that "
                   "errors on collection has not established RED; fix the test first")
             return 1
-        _append(audit, task, "RED", cmd, proc.returncode, output)
+        label = ("RED" if framework == "pytest"
+                 else "RED (generic framework — collection-error detection unavailable)")
+        _append(audit, task, label, cmd, proc.returncode, output)
         print(f"RED established for task {task} (exit {proc.returncode}); "
               f"evidence appended to {audit}")
         return 0
@@ -1812,11 +1955,13 @@ def record(cmd: str, task: str, audit: Path, expect: str) -> int:
 
 
 def cmd_record_red(args) -> int:
-    return record(args.cmd, args.task, Path(args.audit), "red")
+    return record(args.cmd, args.task, Path(args.audit), "red",
+                  framework=args.framework, timeout=args.timeout)
 
 
 def cmd_record_green(args) -> int:
-    return record(args.cmd, args.task, Path(args.audit), "green")
+    return record(args.cmd, args.task, Path(args.audit), "green",
+                  timeout=args.timeout)
 ````
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -2548,7 +2693,7 @@ new:   version: '2.0'
 with:
 
 ```text
-- Resolve the next phase deterministically: `specpipe next-phase docs/handoff/phase-plan.md` (first pending entry whose dependencies are complete) from the project's handoff phase-plan file — the status-tracking projection of the master spec's build-plan section. Statuses live in the plan file; phase definitions live in the master; on conflict the master governs. Mark it active with `specpipe set-status docs/handoff/phase-plan.md --id <id> --to in_progress` and reset round counters with `specpipe rounds .spec-pipeline/state.json --reset`.
+- Resolve the next phase deterministically: `specpipe next-phase docs/handoff/phase-plan.md` (resume-first: an in_progress phase from an interrupted session is returned before any pending one) from the project's handoff phase-plan file — the status-tracking projection of the master spec's build-plan section. Statuses live in the plan file; phase definitions live in the master; on conflict the master governs. If it reports RESUME, reassess that phase's partial state — committed tasks stand, continue from the first incomplete task — or abandon an unsalvageable run with `specpipe set-status docs/handoff/phase-plan.md --id <id> --to pending` and re-resolve. For a fresh phase, mark it active with `specpipe set-status docs/handoff/phase-plan.md --id <id> --to in_progress` and reset round counters with `specpipe rounds .spec-pipeline/state.json --reset`.
 ```
 
 (c) Step 2 spec authoring — replace this bullet:
@@ -2836,12 +2981,13 @@ Run: `bash plugins/spec-pipeline/tests/run_tests.sh -v` Expected: PASS — every
 
 ```bash
 bash scripts/validate-marketplace.sh
+claude plugin validate --strict plugins/spec-pipeline
 npm run format               # prettier --write (repo config)
 npm run format:check
 npx markdownlint-cli2 "plugins/spec-pipeline/**/*.md"
 ```
 
-Expected: all pass. If `format` rewrote files, re-run the test suite (templates are conformance-tested) and include the reformatted files in the commit.
+Expected: all pass (`--strict` treats runtime-tolerated warnings as errors — fix anything it reports). If `format` rewrote files, re-run the test suite (templates are conformance-tested) and include the reformatted files in the commit.
 
 - [ ] **Step 3: Acceptance-criteria spot checks (from the spec)**
 
