@@ -35,7 +35,7 @@ They share an explicit producer/consumer contract (master spec → phase plan �
 
 ### Plugin layout
 
-```
+```text
 plugins/spec-pipeline/
 ├── .claude-plugin/plugin.json      # name, description, version 0.1.0, L3DigitalNet author
 ├── README.md
@@ -97,7 +97,7 @@ Key structural decisions:
 | `record-red --cmd <test-cmd> --task <id> --audit <path>` | Runs the command via subprocess. Asserts **non-zero exit** AND that the failure is a genuine assertion/missing-symbol failure, not a collection/import/syntax error (pytest collection-error signatures). Appends an evidence block (task, command, timestamp, failure excerpt) to the audit file. Collection error or unexpected pass = exit 1. |
 | `record-green --cmd <test-cmd> --task <id> --audit <path>` | Runs the command; asserts exit 0; appends the passing evidence block. |
 | `rounds <state-file> --gate spec\|plan\|final (--increment\|--check)` | Round counters with caps 3/3/5. `--increment` past the cap = exit 1 (the skill's signal to stop looping and record open findings). |
-| `init-project [--dir <path>]` | Scaffolds the minimal handoff layout the executor expects + an empty `phase-plan.md` from the template; appends `.spec-pipeline/` to `.gitignore`. Idempotent — never overwrites existing files. |
+| `init-project [--dir <path>] [--handoff-dir <rel>]` | Scaffolds the minimal handoff layout the executor expects + an empty `phase-plan.md` from the template; appends `.spec-pipeline/` to `.gitignore`. Idempotent — never overwrites existing files. `--handoff-dir` (default `docs/handoff`) targets projects whose state layout differs. |
 
 ### Heading grammar (closes a real ambiguity)
 
@@ -112,6 +112,8 @@ The prose standards name sections but never pin exact headings. specpipe defines
 | Transient run state (round counters) | `.spec-pipeline/state.json` | No — gitignored by `init-project` |
 
 Statuses live in the plan file; phase definitions live in the master spec; on conflict the master governs (unchanged from the current contract). Phase ids remain STABLE — never renumbered once execution begins.
+
+**Non-handoff-v3 projects:** the paths above are the **greenfield defaults**, not requirements. The skills keep their existing rule — identify the project's handoff/state layout and conform to it — and `specpipe` is layout-agnostic by construction: every subcommand takes the phase-plan/audit path as an explicit argument. `init-project --handoff-dir` scaffolds into a non-default location; the audit directory always sits beside the phase-plan file (`<handoff-dir>/audit/`).
 
 ## Skill changes (the merge)
 
