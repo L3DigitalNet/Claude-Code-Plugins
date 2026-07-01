@@ -6,5 +6,8 @@
 	// matches CI. CI passes `globs` explicitly because the action's own default is
 	// the non-recursive `*.{md,markdown}`.
 	"globs": ["**/*.md"],
-	"gitignore": true
+	"gitignore": true,
+	// docs/codex-reviews/ holds verbatim Codex audit output (codex-review skill,
+	// read-only passes); kept as evidence, not authored prose — exempt from style rules.
+	"ignores": ["docs/codex-reviews/**"]
 }

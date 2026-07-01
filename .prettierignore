@@ -9,3 +9,6 @@
 *.jsx
 *.mjs
 *.cjs
+
+# Verbatim Codex audit artifacts (codex-review skill output) — evidence, not authored prose.
+docs/codex-reviews/
