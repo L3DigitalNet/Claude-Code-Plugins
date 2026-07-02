@@ -15,6 +15,7 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | DOC-005 | Generated review artifacts are lint-exempt | committing verbatim generated markdown (Codex audits) into the lint-enforced doc tree |
 | ENV-001 | PATH-shim guard in plugin scripts | a plugin script invokes bare `python3`/`pip`/coreutils via PATH |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
+| PLUGIN-002 | No-packaging Python CLI in plugins | a plugin bundles a Python CLI/tool that runs from the installed-plugin cache |
 | TEST-001 | Canonical test frameworks by language | implementing unit tests for a plugin |
 | TEST-002 | Bats wrapper for gnu env compatibility | running bats-core tests on Fedora 44+ with gnu env |
 | TEST-003 | Tmpdir test repos disable git hooks | a test creates a tmpdir git repo and runs `git commit` against it |
@@ -282,3 +283,21 @@ export PATH="/usr/bin:/bin:$PATH"
 - release-pipeline commit `4f9fd1c` (all 7 python3-invoking scripts), up-docs `d4119ae` (`run-bats.sh`) and `19595e2` (all 6 python3-invoking scripts), uv-strict-python `tests/run.sh`
 
 **Related:** TEST-002, BRANCH-001
+
+## PLUGIN-002. No-packaging Python CLI in plugins
+
+**Applies when:** a plugin bundles a Python CLI/tool that runs from the installed-plugin cache.
+
+**Rule:** Ship it as a plain package directory (no `pyproject.toml`, venv, or lockfile) and invoke via:
+
+```bash
+PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/<tool>" uv run --no-project python -B -m <tool> <subcommand>
+```
+
+Test wrapper adds `--with pytest -p no:cacheprovider` and exports `PYTHONDONTWRITEBYTECODE=1`. Acceptance check: `git status --short --ignored plugins/<plugin>` stays empty after any invocation (plain `git status` is silent on ignored `.venv/` — exactly the forbidden state).
+
+**Why:** `uv run` against a project writes `.venv/` + `uv.lock` into the plugin root; the installed-plugin cache is not for persistent state and a marketplace refresh wipes it. `--no-project` + `PYTHONPATH` gives a zero-artifact runtime; `python -B` + no-cacheprovider keep bytecode/pytest caches out too. Contrast with the qt-suite MCP pattern (bash wrapper + `uv run --with deps`) which is for long-running servers with deps — PLUGIN-002 is for stdlib-only CLIs.
+
+**Sources:** spec-pipeline `scripts/specpipe/` + `tests/run_tests.sh` (spec SA-NEW-001/002, 2026-07-01 design cycle; implemented 2026-07-02).
+
+**Related:** ENV-001, TEST-001

@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-07-01 (spec-pipeline plugin designed + planned; both Codex-converged; implement next session)
+**Last updated:** 2026-07-02 (spec-pipeline plugin implemented, reviewed READY-TO-MERGE, pushed; release + smoke next)
 
 ## Session Instructions
 
@@ -14,10 +14,10 @@
 
 ## In flight
 
-- **spec-pipeline plugin — ready to implement.** Spec `docs/superpowers/specs/2026-07-01-spec-pipeline-plugin-design.md` (Codex-converged, 4 rounds, in-doc ledger) + plan `docs/superpowers/plans/2026-07-01-spec-pipeline-plugin.md` (14 TDD tasks, Codex-converged 2 rounds, r2 clean; plan header carries review status). Execute via `superpowers:subagent-driven-development` (recommended) or `executing-plans`. After implementation: live smoke, `/release-pipeline:release` 0.1.0, then user decides deprecation of the two source skills in `agent-configs`.
+- **spec-pipeline 0.1.0 release pending.** Plugin implemented and on `main` (commits `44ad1fd..4842a7f`, 101/101 tests, all gates green, final review READY TO MERGE). Next: live smoke in a fresh session (install/cache sync first), `/release-pipeline:release` 0.1.0, then user decides deprecation of `author-master-spec` + `autonomous-phase-execution` in `agent-configs`. 0.1.x hygiene backlog in TODO.md.
 
-## Recently closed (this session, 2026-07-01)
+## Recently closed (this session, 2026-07-02)
 
-- **spec-pipeline design cycle** — merged `author-master-spec` + `autonomous-phase-execution` design into one plugin spec with a stdlib-only `specpipe` validator CLI (structural gates before every review pass, resume-safe phase state, safety-contracted RED/GREEN evidence capture). Full adversarial loop: spec r1–r4, plan r1–r2 (clean); audits in `docs/codex-reviews/` (now lint-exempt as generated evidence). Detail in `sessions/2026-07.md`.
+- **spec-pipeline plugin implemented** — all 14 plan tasks via subagent-driven development (fresh implementer + reviewer per task, final whole-branch review on top). specpipe CLI (stdlib-only, PYTHONPATH + `uv run --no-project`, 101 tests), templates, migrated skills, commands, docs, marketplace entry. Final review found 2 Important defects in plan-authored code (fence-unaware citation scan; uncaught `re.error` breaking exit-2 contract) — fixed with regression tests in `4842a7f`. Detail in `sessions/2026-07.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->

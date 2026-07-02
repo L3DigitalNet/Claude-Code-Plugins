@@ -71,6 +71,7 @@ Claude-Code-Plugins/
 │   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
 │   ├── qt-suite/                     # Qt development and testing toolkit
 │   ├── release-pipeline/             # Autonomous release pipeline
+│   ├── spec-pipeline/                # Spec-driven autonomous dev pipeline + specpipe validator CLI (added 2026-07-02)
 │   ├── test-driver/                  # Proactive testing via gap analysis and convergence
 │   ├── up-docs/                      # Three-layer documentation updater + drift analysis
 │   └── uv-strict-python/             # Python tooling standard (uv, Ruff, BasedPyright strict; added 2026-06-09)
