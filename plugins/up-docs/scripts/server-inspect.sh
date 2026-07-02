@@ -9,8 +9,10 @@ set -euo pipefail
 
 # Shim guard (ENV-001): uv-strict-python PATH shims intercept bare python3 in
 # Python-project sessions — system dirs must win. Harmless on the remote LXC.
-export PATH="/usr/bin:/bin:$PATH"
-PYTHON=$(command -v python3 2>/dev/null || command -v python 2>/dev/null) \
+# Scoped to this one lookup (not exported) so it doesn't clobber the caller's
+# PATH for ssh/ss below — tests PATH-stub those, and a global prepend of
+# /usr/bin:/bin would shadow the stubs with the real binaries.
+PYTHON=$(PATH="/usr/bin:/bin:$PATH" command -v python3 2>/dev/null || PATH="/usr/bin:/bin:$PATH" command -v python 2>/dev/null) \
   || { echo '{"error":"python3 not found"}' >&2; exit 1; }
 
 HOST="${1:?Usage: server-inspect.sh <host> <service-type>}"
