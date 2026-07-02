@@ -1,0 +1,6 @@
+{
+	"name": "spec-pipeline",
+	"description": "Spec-driven autonomous development pipeline: author a master spec, decompose it into phases, and execute each phase under TDD — with deterministic specpipe validator gates in front of every review pass.",
+	"version": "0.1.0",
+	"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" }
+}
