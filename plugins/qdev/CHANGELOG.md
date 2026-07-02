@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.3] - 2026-07-02
+
+### Fixed
+- adopt project-standards v3.0.0 (pin @v3, MD060, format)
+
+
 ## [2.0.2] - 2026-06-12
 
 ### Changed
