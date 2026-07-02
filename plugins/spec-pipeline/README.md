@@ -47,7 +47,7 @@ The `docs/handoff/` paths are greenfield defaults, not requirements: the skills 
 
 - [uv](https://docs.astral.sh/uv/) on PATH (supplies the interpreter via `--no-project`; specpipe itself has zero deps and no packaging)
 - Python ≥ 3.11
-- The review gates hard-require a `/codex-review` skill (Codex CLI) and ultracore workflow support; the skills HALT if unavailable
+- The review gates hard-require a `/codex-review` skill (Codex CLI) and ultracode workflow support; the skills HALT if unavailable
 
 ## Layout
 
