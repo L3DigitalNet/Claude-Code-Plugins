@@ -9,7 +9,7 @@ Operational guide for the **Python Tooling SSOT Standard**: one small, strict, b
 
 This plugin operationalizes the **Python Tooling** standard — toolchain, layout, and the verification gate. Code _shape_ and agent-behavior rules (error handling, side-effect boundaries, trust boundaries, prohibited behaviors) live in the companion **Python Coding** standard, summarized in [coding-standard.md](./references/coding-standard.md). A green gate on badly shaped code is not done — read both.
 
-> **Sync pin:** mirrors `project-standards` python-tooling (contract v1.0, README at commit `79daeae`, 2026-06-12) and the python-coding draft v0.4 (commit `a14ac7d`). The standards repo is canonical; if it has moved past these commits, prefer it and re-sync this plugin.
+> **Sync pin:** mirrors `project-standards` python-tooling (contract v1.0, README at commit `6cf2228`, 2026-07-01) and the python-coding draft v0.4 (commit `6cf2228`). The standards repo is canonical; if it has moved past these commits, prefer it and re-sync this plugin.
 
 ## When to Use This Skill
 
@@ -115,7 +115,7 @@ cd myproject
 uv add requests rich
 
 # Standard dev toolchain (flat dev group)
-uv add --dev basedpyright "coverage[toml]" pip-audit pytest pytest-cov ruff
+uv add --dev basedpyright "coverage[toml]" pip-audit pytest ruff
 
 # Run code and tools through uv (never activate the venv)
 uv run python -m myproject
@@ -183,7 +183,7 @@ dependencies = []
 
 [dependency-groups]
 # pytest floor backs minversion; ruff floor matches the adopt-CLI bundle
-dev = ["basedpyright", "coverage[toml]", "pip-audit", "pytest>=9.0", "pytest-cov", "ruff>=0.9.0"]
+dev = ["basedpyright", "coverage[toml]", "pip-audit", "pytest>=9.0", "ruff>=0.14"]
 
 [build-system]
 requires = ["uv_build>=0.11,<0.12"]

@@ -18,15 +18,16 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-# Floors match the adopt-CLI bundle: pytest>=9.0 backs minversion below;
-# ruff>=0.9.0 guarantees the 2025 stable style the curated select set assumes.
+# pytest floor matches [tool.pytest.ini_options].minversion; ruff>=0.14 is the first
+# release with non-preview py314 target-version support (0.9-0.11 reject "py314").
+# pytest-cov is intentionally absent: the gate measures coverage with coverage.py
+# directly, and a second coverage entry point creates competing instructions.
 dev = [
     "basedpyright",
     "coverage[toml]",
     "pip-audit",
     "pytest>=9.0",
-    "pytest-cov",
-    "ruff>=0.9.0",
+    "ruff>=0.14",
 ]
 
 [build-system]

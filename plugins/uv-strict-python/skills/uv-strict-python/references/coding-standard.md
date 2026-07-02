@@ -2,7 +2,7 @@
 
 Companion to the toolchain in this skill. The **Tooling** standard defines the gate that runs; this **Coding** standard defines how code must be _shaped_ before that gate is meaningful. A green gate on badly shaped code is not done.
 
-This is a compact normative summary of the canonical Python Coding Standard **draft v0.4** (`project-standards` commit `a14ac7d`, 2026-06-12 — a reference-only draft; expect it to evolve). It uses RFC 2119 keywords (**MUST**, **MUST NOT**, **SHOULD**, **MAY**) and **must not be read as weakening** the canonical standard, which holds the rationale, sources, and full detail. Where this summary and the canonical standard disagree, the canonical standard wins.
+This is a compact normative summary of the canonical Python Coding Standard **draft v0.4** (`project-standards` commit `6cf2228`, 2026-07-01 — a reference-only draft; expect it to evolve). It uses RFC 2119 keywords (**MUST**, **MUST NOT**, **SHOULD**, **MAY**) and **must not be read as weakening** the canonical standard, which holds the rationale, sources, and full detail. Where this summary and the canonical standard disagree, the canonical standard wins.
 
 > Core rule: code is not acceptable merely because it passes the tools. It MUST also be explicit, testable, observable, and easy for a future agent to change safely.
 
@@ -46,7 +46,7 @@ Type-ignore: MUST NOT use broad `# type: ignore`. If unavoidable, use `# pyright
 
 ## Error handling
 
-- Raise exceptions for invalid states. Catch only to recover, retry, translate, add context, or present at a boundary. MUST NOT catch broad `Exception` except at an application boundary; MUST NOT swallow exceptions or return `None`/`False`/`[]` to hide failure.
+- Raise exceptions for invalid states. Catch only to recover, retry, translate, add context, or present at a boundary. MUST NOT catch broad `Exception` except at an application boundary; MUST NOT swallow exceptions or return `None`/`False`/`[]` to hide failure. Narrow carve-out: a cleanup-and-re-raise handler MAY catch `BaseException` when cleanup must also run on `KeyboardInterrupt`/`SystemExit` (e.g. an atomic-write finally-path); it MUST re-raise and MUST carry a justifying comment.
 - Preserve context with `raise ... from exc`; use `raise ... from None` only to deliberately drop noisy low-level detail. Error messages MUST include the operation/identifier but never secrets. Test exception paths that matter.
 
 ## Logging and observability

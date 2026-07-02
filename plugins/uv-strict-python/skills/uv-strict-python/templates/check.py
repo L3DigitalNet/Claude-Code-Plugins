@@ -4,6 +4,12 @@ Mirrors the full CI check suite (format → lint → type-check → test → cov
 so developers and agents can run a single command to replicate what CI will see.
 """
 
+# Byte-identical twin contract: this file exists at BOTH
+# src/project_standards/bundles/python-tooling/check.py (the adopt bundle
+# artifact) and scripts/check.py (this repo's dogfooded copy).
+# test_adopt_dogfood.py asserts byte equality — edit both copies together or
+# that test fails in CI.
+
 import subprocess
 import sys
 from collections.abc import Sequence
