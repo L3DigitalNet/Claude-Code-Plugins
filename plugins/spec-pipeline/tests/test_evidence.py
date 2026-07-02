@@ -141,6 +141,14 @@ def test_generic_without_regex_is_bad_invocation(tmp_path):
     assert not audit.exists()  # rejected before anything ran or was recorded
 
 
+def test_generic_invalid_regex_is_bad_invocation(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "raise SystemExit(1)"'
+    assert evidence.record(cmd, "T1", audit, "red", framework="generic",
+                           expect_failure_regex="([unclosed") == 2
+    assert not audit.exists()  # rejected before anything ran or was recorded
+
+
 def test_generic_expect_failure_regex_matched(tmp_path):
     audit = tmp_path / "audit.md"
     cmd = f'"{sys.executable}" -c "print(\'boom_assert failed\'); raise SystemExit(1)"'

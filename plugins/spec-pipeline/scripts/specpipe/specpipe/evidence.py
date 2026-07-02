@@ -80,6 +80,12 @@ def record(cmd: str, task: str, audit: Path, expect: str,
         print("ERROR: --framework generic requires --expect-failure-regex "
               "(the expected failing-assertion / missing-symbol signature)")
         return 2
+    if expect_failure_regex:
+        try:
+            re.compile(expect_failure_regex)
+        except re.error as exc:
+            print(f"ERROR: invalid --expect-failure-regex: {exc}")
+            return 2
     try:
         argv = shlex.split(cmd)
     except ValueError as exc:

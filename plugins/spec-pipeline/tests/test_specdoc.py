@@ -84,6 +84,13 @@ def test_phase_dangling_decision(tmp_path):
     assert len(dangling) == 1 and "D9" in dangling[0].message
 
 
+def test_phase_dangling_decision_ignores_fenced_mention(tmp_path):
+    cites = "Implements D1 per the master.\n\n```\nD9\n```\n"
+    findings = _validate(tmp_path, _phase_text(cites=cites), "phase", _master_text())
+    codes = [f.code for f in _errors(findings)]
+    assert "SPEC-DANGLING-DECISION" not in codes
+
+
 def test_phase_requires_master(tmp_path):
     codes = [f.code for f in _errors(_validate(tmp_path, _phase_text(), "phase"))]
     assert "SPEC-NO-MASTER" in codes

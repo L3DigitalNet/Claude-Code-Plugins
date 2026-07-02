@@ -46,3 +46,9 @@ def test_corrupt_state_recovers(tmp_path):
     state = tmp_path / "state.json"
     state.write_text("{not json", encoding="utf-8")
     assert cmd_rounds(_args(state, gate="plan", increment=True)) == 0
+
+
+def test_non_dict_state_recovers(tmp_path):
+    state = tmp_path / "state.json"
+    state.write_text("[1]", encoding="utf-8")
+    assert cmd_rounds(_args(state, gate="plan", increment=True)) == 0

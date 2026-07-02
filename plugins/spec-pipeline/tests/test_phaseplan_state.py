@@ -47,6 +47,13 @@ def test_set_status_illegal_leaves_file_untouched(tmp_path):
     assert f.read_text(encoding="utf-8") == before
 
 
+def test_set_status_preserves_file_mode(tmp_path):
+    f = _write(tmp_path)
+    f.chmod(0o644)
+    assert phaseplan.set_status(f, 2, "in_progress") is None
+    assert f.stat().st_mode & 0o777 == 0o644
+
+
 def test_set_status_unknown_phase(tmp_path):
     f = _write(tmp_path)
     assert "not found" in phaseplan.set_status(f, 9, "in_progress")

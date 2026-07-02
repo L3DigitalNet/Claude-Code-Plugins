@@ -34,7 +34,8 @@ def master_decision_ids(text: str) -> set[str]:
     reg = grammar.find_section(sections, "Cross-cutting decision register")
     if reg is None:
         return set()
-    return set(grammar.DECISION_ID_RE.findall(reg[2]))
+    plain = "\n".join(line for _, line in grammar.strip_fences(reg[2]))
+    return set(grammar.DECISION_ID_RE.findall(plain))
 
 
 def validate_spec(path: Path, kind: str, master: Path | None = None) -> list[Finding]:
@@ -66,7 +67,8 @@ def validate_spec(path: Path, kind: str, master: Path | None = None) -> list[Fin
                             str(path)))
         else:
             known = master_decision_ids(master.read_text(encoding="utf-8"))
-            cited = set(grammar.DECISION_ID_RE.findall(text))
+            plain_text = "\n".join(line for _, line in grammar.strip_fences(text))
+            cited = set(grammar.DECISION_ID_RE.findall(plain_text))
             for missing in sorted(cited - known):
                 findings.append(Finding(ERROR, "SPEC-DANGLING-DECISION",
                                 f"cites {missing}, which the master's cross-cutting "

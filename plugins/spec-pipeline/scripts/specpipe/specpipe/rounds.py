@@ -20,6 +20,8 @@ def _load(state: Path) -> dict:
             data = json.loads(state.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             data = {}  # corrupt transient state: recover by resetting
+        if not isinstance(data, dict):
+            data = {}  # valid but non-object JSON: recover by resetting
     rounds = data.setdefault("rounds", {})
     for gate in ROUND_CAPS:
         rounds.setdefault(gate, 0)

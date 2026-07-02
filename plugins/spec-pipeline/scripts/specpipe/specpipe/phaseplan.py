@@ -198,6 +198,7 @@ def set_status(path: Path, phase_id: int, to: str) -> str | None:
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines))
+    os.chmod(tmp, path.stat().st_mode & 0o777)  # mkstemp is 0600; preserve the original mode
     os.replace(tmp, path)
     return None
 
