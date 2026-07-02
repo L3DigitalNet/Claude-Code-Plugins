@@ -29,6 +29,9 @@ LEGAL_TRANSITIONS = {
     ("in_progress", "blocked"),
     ("in_progress", "pending"),  # recovery: abandon a stale/wedged run cleanly
     ("blocked", "in_progress"),
+    ("blocked", "pending"),  # shelve a blocked phase back to the pool
+    # complete is terminal by design: reopening a finished phase is a deliberate
+    # manual edit of the plan file, not a transition set-status will perform.
 }
 ROUND_CAPS = {"spec": 3, "plan": 3, "final": 5}
 
@@ -38,6 +41,12 @@ PLAN_ANTI_PATTERNS = ["similar to task", "write tests for the above", "same as a
 DECISION_ID_RE = re.compile(r"\bD\d+\b")
 
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
+
+
+def phrase_re(phrase: str) -> re.Pattern[str]:
+    """Word-boundary, case-insensitive matcher for a scan phrase — "should"
+    must not flag "shoulder". Used for RED_FLAG_PHRASES and PLAN_ANTI_PATTERNS."""
+    return re.compile(rf"\b{re.escape(phrase)}\b", re.I)
 
 
 def _norm(title: str) -> str:

@@ -98,3 +98,41 @@ def test_cli_status_renders_table(tmp_path, capsys):
     assert main(["status", str(f)]) == 0
     out = capsys.readouterr().out
     assert "Foundation" in out and "Core logic" in out and "next:" in out
+
+
+def test_find_state_stops_at_git_root(tmp_path):
+    # a stray state.json ABOVE the repo boundary must not be adopted
+    (tmp_path / ".spec-pipeline").mkdir()
+    (tmp_path / ".spec-pipeline" / "state.json").write_text(
+        '{"rounds": {"spec": 1}}', encoding="utf-8")
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+    (repo / "docs" / "handoff").mkdir(parents=True)
+    f = repo / "docs" / "handoff" / "phase-plan.md"
+    f.write_text(VALID, encoding="utf-8")
+    assert phaseplan._load_rounds(f, None) == {}
+
+
+def test_next_phase_reason_all_complete(tmp_path, capsys):
+    done = _write(tmp_path, VALID.replace("- **status:** pending", "- **status:** complete"))
+    assert main(["next-phase", str(done), "--json"]) == 1
+    assert '"reason": "all_complete"' in capsys.readouterr().out
+
+
+def test_next_phase_reason_blocked(tmp_path, capsys):
+    blocked = _write(tmp_path, VALID.replace("- **status:** complete", "- **status:** blocked"))
+    assert main(["next-phase", str(blocked), "--json"]) == 1
+    assert '"reason": "blocked"' in capsys.readouterr().out
+
+
+def test_status_json_filters_unknown_round_keys(tmp_path, capsys):
+    proj = tmp_path / "proj"
+    (proj / "docs" / "handoff").mkdir(parents=True)
+    f = proj / "docs" / "handoff" / "phase-plan.md"
+    f.write_text(VALID, encoding="utf-8")
+    (proj / ".spec-pipeline").mkdir()
+    (proj / ".spec-pipeline" / "state.json").write_text(
+        '{"rounds": {"spec": 1, "bogus": 9}}', encoding="utf-8")
+    assert main(["status", str(f), "--json"]) == 0
+    out = capsys.readouterr().out
+    assert "bogus" not in out and '"spec": 1' in out

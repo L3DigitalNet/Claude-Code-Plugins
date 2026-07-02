@@ -73,6 +73,13 @@ def test_red_flag_phrases_warn(tmp_path):
     assert "SPEC-RED-FLAG" in warns
 
 
+def test_red_flag_requires_word_boundary(tmp_path):
+    text = _master_text().replace("Section content.", "Shoulder the load.", 1)
+    warns = [f.code for f in _validate(tmp_path, text, "master")
+             if f.severity == WARNING]
+    assert "SPEC-RED-FLAG" not in warns
+
+
 def test_valid_phase_no_errors(tmp_path):
     assert _errors(_validate(tmp_path, _phase_text(), "phase", _master_text())) == []
 

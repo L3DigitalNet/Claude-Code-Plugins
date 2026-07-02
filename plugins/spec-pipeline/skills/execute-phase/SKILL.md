@@ -9,7 +9,7 @@ compatibility: Claude Code
 license: MIT
 metadata:
   author: Chris Purcell
-  version: '2.0'
+  version: '2.1'
 ---
 
 # Autonomous Phase Execution
@@ -19,6 +19,7 @@ Execute the next phase of the project named in $ARGUMENTS end-to-end, autonomous
 ## Preconditions (verify before starting)
 
 - Session permission mode permits unattended workflow runs. If a review workflow's first run prompts for approval, approve with "don't ask again for this path" so later phases run silently.
+- The `/codex-review` skill (Codex CLI) and ultracode workflow support are available — the review gates hard-require both. If either is missing, HALT; do not substitute an ad-hoc review and mark the gate passed.
 - Working tree is clean or its state is understood. Note current branch.
 
 ## Orchestration model
@@ -106,6 +107,7 @@ Work the plan task-by-task. The plan already contains each task's failing-test c
 
 ## HALT CONDITIONS (the only reasons to stop and ask)
 
+- `/codex-review` or ultracode workflow support is unavailable — the review gates hard-require them (see Preconditions).
 - A design decision is genuinely irreversible AND has no defensible default.
 - A test/review failure indicates a spec-level contradiction that cannot be resolved without redefining phase scope.
 - Push fails for an auth/remote reason requiring human intervention.

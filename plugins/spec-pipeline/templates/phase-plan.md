@@ -4,7 +4,9 @@ Master spec: `{{master-spec path}}`
 
 <!-- Statuses live HERE; phase definitions live in the master spec's build
      plan — on conflict the master governs. Phase ids are STABLE: never
-     renumber once execution begins; append or split instead. -->
+     renumber once execution begins; append or split instead. `complete` is
+     terminal: reopening a finished phase is a deliberate manual edit of this
+     file (set-status refuses it) — prefer appending a follow-up phase. -->
 
 ## Phase 1 — {{TITLE}}
 

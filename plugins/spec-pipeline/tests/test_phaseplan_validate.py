@@ -94,3 +94,24 @@ def test_two_in_progress(tmp_path):
 
 def test_empty_file(tmp_path):
     assert any(f.code == "PP-EMPTY" for f in _errors("# nothing here\n", tmp_path))
+
+
+FENCED_EXAMPLE = """
+```markdown
+## Phase 99 — Example only
+- **status:** in_progress
+```
+"""
+
+
+def test_fenced_example_phase_ignored(tmp_path):
+    text = VALID + FENCED_EXAMPLE
+    assert [p.id for p in phaseplan.parse(text)] == [1, 2]
+    assert _errors(text, tmp_path) == []
+
+
+def test_cycle_detected(tmp_path):
+    # 1 -> [2] and 2 -> [1]: PP-FORWARD-DEP fires AND the graph genuinely cycles
+    cyclic = VALID.replace("- **depends_on:** []", "- **depends_on:** [2]")
+    codes = [f.code for f in _errors(cyclic, tmp_path)]
+    assert "PP-CYCLE" in codes and "PP-FORWARD-DEP" in codes

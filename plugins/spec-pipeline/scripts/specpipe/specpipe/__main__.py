@@ -68,10 +68,18 @@ def build_parser() -> argparse.ArgumentParser:
     rr.add_argument("--timeout", type=float, default=600.0)
     rr.set_defaults(handler="specpipe.evidence:cmd_record_red")
 
-    rg = sub.add_parser("record-green", help="run test cmd, assert pass, append evidence")
+    rg = sub.add_parser("record-green", help="run test cmd, assert genuine pass, append evidence")
     rg.add_argument("--cmd", required=True)
     rg.add_argument("--task", required=True)
     rg.add_argument("--audit", required=True)
+    rg.add_argument("--framework", choices=["pytest", "generic"], default="pytest",
+                    help="pytest: require a positive 'N passed' marker (exit 0 "
+                         "alone proves nothing); generic: bats/Jest/other runners "
+                         "(pair with --expect-success-regex)")
+    rg.add_argument("--expect-success-regex",
+                    help="REQUIRED with --framework generic: output must match this "
+                         "regex for GREEN to count (the runner's success signature); "
+                         "enforced in the handler")
     rg.add_argument("--timeout", type=float, default=600.0)
     rg.set_defaults(handler="specpipe.evidence:cmd_record_green")
 
@@ -92,6 +100,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if sys.version_info < (3, 11):
+        # `uv run --no-project python` takes whatever interpreter uv discovers;
+        # fail crisply instead of with an arbitrary traceback mid-gate.
+        version = ".".join(str(n) for n in sys.version_info[:3])
+        print(f"ERROR: specpipe requires Python >= 3.11 (running {version})")
+        return 2
     args = build_parser().parse_args(argv)
     mod_name, fn_name = args.handler.split(":")
     handler = getattr(import_module(mod_name), fn_name)

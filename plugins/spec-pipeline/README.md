@@ -31,7 +31,7 @@ Stdlib-only Python with no packaging at all — a plain package directory import
 | `next-phase` | First pending phase whose dependencies are complete — computed, not re-read |
 | `set-status` | Legal status transitions only, atomic rewrite |
 | `status` | Phase table + round counters |
-| `record-red` / `record-green` | Runs the test command under the safety contract (argv/no-shell, timeout, output cap, redaction), rejects collection errors as RED (pytest) or unmatched `--expect-failure-regex` (generic), appends evidence to the committed audit trail |
+| `record-red` / `record-green` | Runs the test command under the safety contract (argv/no-shell, timeout, output cap, redaction), requires positive signatures in both directions — pytest `N failed`/`N passed` markers, or `--expect-failure-regex`/`--expect-success-regex` for generic runners — and appends evidence to the committed audit trail |
 | `rounds` | Codex convergence round caps (spec 3 / plan 3 / final 5) |
 | `init-project` | Idempotent handoff scaffolding |
 
@@ -46,7 +46,7 @@ The `docs/handoff/` paths are greenfield defaults, not requirements: the skills 
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/) on PATH (supplies the interpreter via `--no-project`; specpipe itself has zero deps and no packaging)
-- Python ≥ 3.11
+- Python ≥ 3.11 (enforced — the CLI exits 2 with a clear message on older interpreters)
 - The review gates hard-require a `/codex-review` skill (Codex CLI) and ultracode workflow support; the skills HALT if unavailable
 
 ## Layout

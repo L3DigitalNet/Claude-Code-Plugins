@@ -9,7 +9,7 @@ compatibility: Claude Code
 license: MIT
 metadata:
   author: Chris Purcell
-  version: '2.0'
+  version: '2.1'
 ---
 
 # Master Spec Authoring
@@ -19,6 +19,7 @@ Author the canonical spec for $ARGUMENTS and decompose it into ordered phases fo
 ## Preconditions
 
 - A project brief exists: a path via $ARGUMENTS, the current conversation, or a notes doc. If the brief is too thin to derive a defensible scope and architecture, that is a genuine HALT — ask for the missing intent rather than inventing a project.
+- The `/codex-review` skill (Codex CLI) and ultracode workflow support are available — the review gates hard-require both. If either is missing, HALT; do not substitute an ad-hoc review and mark the gate passed.
 - Working tree clean or understood; note branch (likely a fresh repo).
 - Identify the project's handoff/state layout (Agent Handoff System) and existing conventions. Conform to them. If greenfield, this skill establishes the minimal layout the sibling skill expects.
 
@@ -128,6 +129,7 @@ Phase ids are STABLE: the sibling references phases by plan id across sessions. 
 
 ## HALT CONDITIONS
 
+- `/codex-review` or ultracode workflow support is unavailable — the review gates hard-require them (see Preconditions).
 - The brief is too thin to derive a defensible scope/architecture — ask for the missing intent.
 - The architecture checkpoint (step 2) — the single deliberate stop, unless running fully unattended by prior agreement.
 - An architectural decision is genuinely irreversible AND has no defensible default.

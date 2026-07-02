@@ -27,3 +27,19 @@ def test_bad_invocation_exits_2():
     with pytest.raises(SystemExit) as exc:
         build_parser().parse_args(["validate", "spec", "x.md"])  # missing --kind
     assert exc.value.code == 2
+
+
+def test_record_green_accepts_generic_framework_flags():
+    args = build_parser().parse_args(
+        ["record-green", "--cmd", "true", "--task", "T1", "--audit", "a.md",
+         "--framework", "generic", "--expect-success-regex", "ok"])
+    assert args.framework == "generic" and args.expect_success_regex == "ok"
+
+
+def test_old_python_rejected(monkeypatch, capsys):
+    import sys
+
+    from specpipe.__main__ import main
+    monkeypatch.setattr(sys, "version_info", (3, 9, 7, "final", 0))
+    assert main(["status", "x.md"]) == 2
+    assert "requires Python" in capsys.readouterr().out

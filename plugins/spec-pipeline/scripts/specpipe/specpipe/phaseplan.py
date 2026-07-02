@@ -27,6 +27,7 @@ class Phase:
     line: int  # 1-based line number of the heading
     fields: dict[str, str] = field(default_factory=dict)
     acceptance_count: int = 0
+    status_line: int = 0  # 1-based line of the status field; 0 = absent
 
     @property
     def status(self) -> str:
@@ -44,7 +45,15 @@ def parse(text: str) -> list[Phase]:
     phases: list[Phase] = []
     current: Phase | None = None
     last_field: str | None = None
+    fence = False
     for lineno, line in enumerate(text.split("\n"), 1):
+        # Fenced blocks are opaque, same rule as grammar.split_sections: an
+        # example phase entry inside a fence must not become a real phase.
+        if line.lstrip().startswith("```"):
+            fence = not fence
+            continue
+        if fence:
+            continue
         m = PHASE_HEADING_RE.match(line)
         if m:
             current = Phase(int(m.group(1)), m.group(2), lineno)
@@ -56,6 +65,8 @@ def parse(text: str) -> list[Phase]:
         f = FIELD_RE.match(line)
         if f:
             current.fields[f.group(1)] = f.group(2).strip()
+            if f.group(1) == "status":
+                current.status_line = lineno
             last_field = f.group(1)
             continue
         if last_field == "acceptance" and ACCEPT_ITEM_RE.match(line):
@@ -185,16 +196,10 @@ def set_status(path: Path, phase_id: int, to: str) -> str | None:
         return f"'{to}' is not a valid status {grammar.PHASE_STATUSES}"
     if (target.status, to) not in grammar.LEGAL_TRANSITIONS:
         return f"illegal transition {target.status} -> {to} for phase {phase_id}"
-    lines = text.split("\n")
-    for i in range(target.line, len(lines)):  # 0-based i starts just past the heading
-        if PHASE_HEADING_RE.match(lines[i]):
-            return f"phase {phase_id} has no status line"
-        m = FIELD_RE.match(lines[i])
-        if m and m.group(1) == "status":
-            lines[i] = f"- **status:** {to}"
-            break
-    else:
+    if target.status_line == 0:
         return f"phase {phase_id} has no status line"
+    lines = text.split("\n")
+    lines[target.status_line - 1] = f"- **status:** {to}"  # parse() is fence-aware
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines))
@@ -212,11 +217,15 @@ def _safe_deps(p: Phase) -> list[int]:
 
 def _find_state(start: Path) -> Path | None:
     """Upward search from `start` for .spec-pipeline/state.json — deterministic
-    regardless of invocation cwd or the project's handoff layout."""
+    regardless of invocation cwd or the project's handoff layout. Stops at the
+    repo boundary (.git may be a dir, or a file in worktrees) so a stray
+    state.json outside the project is never adopted."""
     for d in [start, *start.parents]:
         candidate = d / ".spec-pipeline" / "state.json"
         if candidate.exists():
             return candidate
+        if (d / ".git").exists():
+            return None
     return None
 
 
@@ -231,10 +240,20 @@ def _load_rounds(plan_path: Path, explicit: str | None) -> dict:
 
 
 def cmd_next_phase(args) -> int:
-    p = next_phase(Path(args.path))
+    path = Path(args.path)
+    p = next_phase(path)
     if p is None:
-        print('{"next": null}' if args.json
-              else "no resolvable pending phase (all complete, or blocked)")
+        # Distinguish the happy path (project done) from a stuck one so an
+        # autonomous caller need not diff phase tables to tell them apart.
+        phases = parse(path.read_text(encoding="utf-8"))
+        done = bool(phases) and all(ph.status == "complete" for ph in phases)
+        reason = "all_complete" if done else "blocked"
+        if args.json:
+            print(json.dumps({"next": None, "reason": reason}))
+        else:
+            print("all phases complete" if done else
+                  "no resolvable pending phase (a dependency chain is blocked "
+                  "or the plan is malformed)")
         return 1
     resume = p.status == "in_progress"
     if args.json:
@@ -265,7 +284,8 @@ def cmd_status(args) -> int:
             "phases": [{"id": p.id, "title": p.title, "status": p.status,
                         "depends_on": _safe_deps(p)} for p in phases],
             "next": nxt.id if nxt else None,
-            "rounds": rounds,
+            # same known-gate filter as the text renderer below
+            "rounds": {k: v for k, v in rounds.items() if k in grammar.ROUND_CAPS},
         }, indent=2))
         return 0
     print(f"{'id':>3}  {'status':<12} {'depends_on':<12} title")

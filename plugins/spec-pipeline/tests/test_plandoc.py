@@ -144,3 +144,34 @@ def test_forward_reference_warns(tmp_path):
 def test_placeholder_is_error(tmp_path):
     bad = VALID_PLAN + "\nRemaining work: TBD\n"
     assert any(f.code == "PLAN-PLACEHOLDER" for f in _errors(tmp_path, bad))
+
+
+def test_classify_implement_step_naming_a_test_symbol():
+    # "test" inside a symbol name must not shadow the implement classification
+    assert plandoc.classify("Implement run_tests helper") == "implement"
+
+
+def test_implement_step_with_test_symbol_not_tdd_error(tmp_path):
+    ok = VALID_PLAN.replace("- [ ] **Step 3: Implement parse_record**",
+                            "- [ ] **Step 3: Implement run_tests_helper**")
+    assert not any(f.code == "PLAN-TDD-ORDER" for f in _errors(tmp_path, ok))
+
+
+def test_anti_pattern_requires_word_boundary(tmp_path):
+    ok = VALID_PLAN + "\nThis wiring is dissimilar to task boundaries elsewhere.\n"
+    assert not any(f.code == "PLAN-ANTI-PATTERN" for f in _errors(tmp_path, ok))
+
+
+def test_empty_symbol_table_warns(tmp_path):
+    bad = VALID_PLAN.replace("| `parse_record` | function | Task 1 |\n", "")
+    warns = [f.code for f in _findings(tmp_path, bad) if f.severity == WARNING]
+    assert "PLAN-EMPTY-SYMBOLS" in warns
+
+
+def test_forward_ref_requires_word_boundary(tmp_path):
+    # `cord` (Task 2) appears only inside `parse_record` in Task 1 — no warning
+    two = VALID_PLAN.replace(
+        "| `parse_record` | function | Task 1 |",
+        "| `parse_record` | function | Task 1 |\n| `cord` | function | Task 2 |")
+    warns = [f.code for f in _findings(tmp_path, two) if f.severity == WARNING]
+    assert "PLAN-FORWARD-REF" not in warns

@@ -8,10 +8,12 @@ capture cap, best-effort secret redaction over the whole evidence block
 (command string included), single O_APPEND write. Encodes the skill rule that
 RED must fail for the RIGHT reason via positive signatures: pytest mode needs
 a 'N failed'/'FAILED' marker and rejects collection/import errors, "no tests
-ran", and arbitrary non-zero commands; --framework generic requires
---expect-failure-regex (no verification-free RED path exists). Rejected
-attempts are appended too (labelled REJECTED) so the trail is honest about
-failed gates.
+ran", and arbitrary non-zero commands; GREEN symmetrically needs a 'N passed'
+marker (exit 0 from a command that ran no tests proves nothing); --framework
+generic requires --expect-failure-regex / --expect-success-regex (no
+verification-free path exists in either direction). A supplied regex is
+always enforced, pytest mode included. Rejected attempts are appended too
+(labelled REJECTED) so the trail is honest about failed gates.
 """
 from __future__ import annotations
 
@@ -21,6 +23,12 @@ import shlex
 import subprocess
 from pathlib import Path
 
+# Accepted limitation: this scans the WHOLE combined output, so a genuinely
+# failing test whose captured stdout embeds one of these phrases as DATA is
+# falsely rejected. Anchoring to pytest's summary lines can't fully fix it
+# (captured stdout is echoed verbatim at line starts); rephrase the test
+# output if it ever bites. Conservative by design — a false reject costs a
+# re-run; a false accept forges the audit trail.
 COLLECTION_ERROR_RE = re.compile(
     r"errors? during collection|ImportError while importing|INTERNALERROR"
     r"|error collecting|SyntaxError: invalid syntax", re.I)
@@ -28,6 +36,9 @@ COLLECTION_ERROR_RE = re.compile(
 # "no tests ran" (exit 5), usage/config errors (exit 4), and arbitrary
 # failing commands must never pass as TDD evidence.
 PYTEST_FAILURE_RE = re.compile(r"^FAILED |\b\d+ failed\b", re.M)
+# GREEN symmetrically needs 'N passed' — a typo'd command exiting 0 without
+# running any tests must never record GREEN evidence.
+PYTEST_PASS_RE = re.compile(r"\b\d+ passed\b")
 # Best-effort shapes of common credentials; the primary defense is the skill
 # rule that only reviewed-plan test commands are ever passed here.
 REDACTION_RES = [
@@ -59,8 +70,11 @@ def _to_text(v) -> str:
 
 def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str) -> None:
     audit.parent.mkdir(parents=True, exist_ok=True)
-    capped = output[-CAPTURE_CAP:]
-    tail = "\n".join(_redact(capped).strip().split("\n")[-TAIL_LINES:])
+    # Redact BEFORE capping: slicing first could amputate a token's prefix at
+    # the cap boundary, leaving the rest of the secret unrecognizable to the
+    # patterns but still sensitive.
+    capped = _redact(output)[-CAPTURE_CAP:]
+    tail = "\n".join(capped.strip().split("\n")[-TAIL_LINES:])
     stamp = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
     # Redaction covers the WHOLE block — the command string can carry a token
     # (e.g. a test env arg) just as easily as the output can.
@@ -73,19 +87,27 @@ def _append(audit: Path, task: str, label: str, cmd: str, code: int, output: str
 
 def record(cmd: str, task: str, audit: Path, expect: str,
            framework: str = "pytest", timeout: float = 600.0,
-           expect_failure_regex: str | None = None) -> int:
-    if framework == "generic" and expect == "red" and not expect_failure_regex:
-        # No verification-free RED path: generic runners must state the
-        # expected failure signature, mirroring pytest's collection-error rule.
-        print("ERROR: --framework generic requires --expect-failure-regex "
-              "(the expected failing-assertion / missing-symbol signature)")
-        return 2
-    if expect_failure_regex:
-        try:
-            re.compile(expect_failure_regex)
-        except re.error as exc:
-            print(f"ERROR: invalid --expect-failure-regex: {exc}")
+           expect_failure_regex: str | None = None,
+           expect_success_regex: str | None = None) -> int:
+    if framework == "generic":
+        # No verification-free path in either direction: generic runners must
+        # state the expected signature, mirroring pytest's positive markers.
+        if expect == "red" and not expect_failure_regex:
+            print("ERROR: --framework generic requires --expect-failure-regex "
+                  "(the expected failing-assertion / missing-symbol signature)")
             return 2
+        if expect == "green" and not expect_success_regex:
+            print("ERROR: --framework generic requires --expect-success-regex "
+                  "(the runner's success signature, e.g. 'ok \\d+' for bats)")
+            return 2
+    for flag, pattern in (("--expect-failure-regex", expect_failure_regex),
+                          ("--expect-success-regex", expect_success_regex)):
+        if pattern:
+            try:
+                re.compile(pattern)
+            except re.error as exc:
+                print(f"ERROR: invalid {flag}: {exc}")
+                return 2
     try:
         argv = shlex.split(cmd)
     except ValueError as exc:
@@ -129,17 +151,17 @@ def record(cmd: str, task: str, audit: Path, expect: str,
                   "('N failed' / 'FAILED') — no failing test was proven (no tests "
                   "ran, usage/config error, or non-pytest command)")
             return 1
-        if framework == "generic":
-            if not re.search(expect_failure_regex, output):
-                _append(audit, task, "RED (REJECTED — expected failure signature "
-                        f"/{expect_failure_regex}/ not found)", cmd,
-                        proc.returncode, output)
-                print("RED NOT ESTABLISHED: command failed, but not for the expected "
-                      f"reason (output does not match /{expect_failure_regex}/)")
-                return 1
-            label = "RED (generic — expected failure signature matched)"
-        else:
-            label = "RED"
+        # A supplied regex is enforced under BOTH frameworks — never silently
+        # ignored; for generic it is the sole fails-for-the-right-reason check.
+        if expect_failure_regex and not re.search(expect_failure_regex, output):
+            _append(audit, task, "RED (REJECTED — expected failure signature "
+                    f"/{expect_failure_regex}/ not found)", cmd,
+                    proc.returncode, output)
+            print("RED NOT ESTABLISHED: command failed, but not for the expected "
+                  f"reason (output does not match /{expect_failure_regex}/)")
+            return 1
+        label = ("RED (generic — expected failure signature matched)"
+                 if framework == "generic" else "RED")
         _append(audit, task, label, cmd, proc.returncode, output)
         print(f"RED established for task {task} (exit {proc.returncode}); "
               f"evidence appended to {audit}")
@@ -149,7 +171,23 @@ def record(cmd: str, task: str, audit: Path, expect: str,
                 proc.returncode, output)
         print(f"GREEN NOT ESTABLISHED: command failed (exit {proc.returncode})")
         return 1
-    _append(audit, task, "GREEN", cmd, proc.returncode, output)
+    if framework == "pytest" and not PYTEST_PASS_RE.search(output):
+        _append(audit, task, "GREEN (REJECTED — no pytest pass marker)", cmd,
+                proc.returncode, output)
+        print("GREEN NOT ESTABLISHED: exit 0 but no pytest pass marker "
+              "('N passed') — no passing test was proven (wrong command, "
+              "no tests ran, or non-pytest runner: use --framework generic)")
+        return 1
+    if expect_success_regex and not re.search(expect_success_regex, output):
+        _append(audit, task, "GREEN (REJECTED — expected success signature "
+                f"/{expect_success_regex}/ not found)", cmd,
+                proc.returncode, output)
+        print("GREEN NOT ESTABLISHED: command passed, but output does not match "
+              f"/{expect_success_regex}/")
+        return 1
+    label = ("GREEN (generic — expected success signature matched)"
+             if framework == "generic" else "GREEN")
+    _append(audit, task, label, cmd, proc.returncode, output)
     print(f"GREEN recorded for task {task}; evidence appended to {audit}")
     return 0
 
@@ -162,4 +200,5 @@ def cmd_record_red(args) -> int:
 
 def cmd_record_green(args) -> int:
     return record(args.cmd, args.task, Path(args.audit), "green",
-                  timeout=args.timeout)
+                  framework=args.framework, timeout=args.timeout,
+                  expect_success_regex=args.expect_success_regex)

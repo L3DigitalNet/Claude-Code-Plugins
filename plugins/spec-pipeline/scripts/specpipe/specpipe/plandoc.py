@@ -26,10 +26,12 @@ def classify(step_title: str) -> str:
         return "run-fail"
     if ("run" in t or "verify" in t) and "pass" in t:
         return "run-pass"
-    if "test" in t:
-        return "test-write"
+    # "implement" before "test": an implement step naming a test-ish symbol
+    # ("Implement run_tests helper") must not be classified as test-write.
     if "implement" in t:
         return "implement"
+    if "test" in t:
+        return "test-write"
     if "commit" in t:
         return "commit"
     return "other"
@@ -71,6 +73,10 @@ def validate_plan(path: Path) -> list[Finding]:
         m = SYMBOL_ROW_RE.match(line)
         if m:
             symbols.append((m.group(1), int(m.group(2))))
+    if grammar.find_section(sections, "File Structure") is not None and not symbols:
+        findings.append(Finding(WARNING, "PLAN-EMPTY-SYMBOLS",
+                        "File Structure section contains no symbol rows "
+                        "(| `symbol` | kind | Task N |)", loc))
 
     # Task boundaries are fence-aware; bodies keep fenced lines (symbol usage
     # lives inside code blocks), steps are matched outside fences only.
@@ -118,7 +124,8 @@ def validate_plan(path: Path) -> list[Finding]:
                             "passing run", at))
 
     for phrase in grammar.PLAN_ANTI_PATTERNS:
-        hits = [lineno for lineno, line in plain if phrase in line.lower()]
+        rx = grammar.phrase_re(phrase)
+        hits = [lineno for lineno, line in plain if rx.search(line)]
         if hits:
             findings.append(Finding(ERROR, "PLAN-ANTI-PATTERN",
                             f'anti-pattern "{phrase}" ({len(hits)}x, first at line '
@@ -131,8 +138,10 @@ def validate_plan(path: Path) -> list[Finding]:
     # Heuristic: a symbol referenced in a task earlier than the one the
     # file-structure table says introduces it. Warning — prose mentions count.
     for sym, intro in symbols:
+        # lookarounds, not `in`: symbol `cord` must not match inside `parse_record`
+        sym_rx = re.compile(rf"(?<!\w){re.escape(sym)}(?!\w)")
         for t in tasks:
-            if t["num"] < intro and sym in "\n".join(t["body"]):
+            if t["num"] < intro and sym_rx.search("\n".join(t["body"])):
                 findings.append(Finding(WARNING, "PLAN-FORWARD-REF",
                                 f"`{sym}` (introduced in Task {intro}) referenced in "
                                 f"Task {t['num']}", f"{loc}:{t['line']}"))

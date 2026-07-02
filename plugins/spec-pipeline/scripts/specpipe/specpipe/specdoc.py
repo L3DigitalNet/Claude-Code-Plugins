@@ -21,7 +21,8 @@ def _scan_common(path: Path, text: str) -> list[Finding]:
             findings.append(Finding(ERROR, "SPEC-PLACEHOLDER",
                             f"placeholder text: {line.strip()[:80]}", f"{path}:{lineno}"))
     for phrase in grammar.RED_FLAG_PHRASES:
-        hits = [lineno for lineno, line in lines if phrase in line.lower()]
+        rx = grammar.phrase_re(phrase)
+        hits = [lineno for lineno, line in lines if rx.search(line)]
         if hits:
             findings.append(Finding(WARNING, "SPEC-RED-FLAG",
                             f'"{phrase}" appears {len(hits)}x — replace with a concrete '

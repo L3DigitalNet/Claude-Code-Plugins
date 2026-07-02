@@ -163,3 +163,52 @@ def test_generic_expect_failure_regex_unmatched_rejected(tmp_path):
     assert evidence.record(cmd, "T1", audit, "red", framework="generic",
                            expect_failure_regex="boom_assert") == 1
     assert "REJECTED" in audit.read_text(encoding="utf-8")
+
+
+def test_green_pytest_requires_pass_marker(tmp_path):
+    # exit 0 from a command that ran no tests must not forge GREEN evidence
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "pass"'
+    assert evidence.record(cmd, "T1", audit, "green") == 1
+    assert "REJECTED" in audit.read_text(encoding="utf-8")
+
+
+def test_green_generic_without_regex_is_bad_invocation(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "print(\'ok\')"'
+    assert evidence.record(cmd, "T1", audit, "green", framework="generic") == 2
+    assert not audit.exists()
+
+
+def test_green_generic_success_regex_matched(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "print(\'ok 5 tests, 0 failures\')"'
+    assert evidence.record(cmd, "T1", audit, "green", framework="generic",
+                           expect_success_regex="ok 5") == 0
+    assert "GREEN" in audit.read_text(encoding="utf-8")
+
+
+def test_green_generic_success_regex_unmatched_rejected(tmp_path):
+    audit = tmp_path / "audit.md"
+    cmd = f'"{sys.executable}" -c "print(\'command completed\')"'
+    assert evidence.record(cmd, "T1", audit, "green", framework="generic",
+                           expect_success_regex="ok \\d+ tests") == 1
+    assert "REJECTED" in audit.read_text(encoding="utf-8")
+
+
+def test_red_pytest_honors_expect_failure_regex(tmp_path):
+    # a supplied regex must be enforced, not silently ignored, under pytest too
+    f = _project(tmp_path, "test_fail.py", FAILING)
+    audit = tmp_path / "audit.md"
+    assert evidence.record(_pytest_cmd(f), "T1", audit, "red",
+                           expect_failure_regex="definitely_not_in_output") == 1
+    assert "REJECTED" in audit.read_text(encoding="utf-8")
+
+
+def test_token_straddling_capture_cap_still_redacted(tmp_path):
+    # the cap boundary must not amputate a token's prefix before redaction runs
+    audit = tmp_path / "audit.md"
+    token = "ghp_" + "a" * 36
+    output = "x" * 100 + token + "b" * (evidence.CAPTURE_CAP - 30)
+    evidence._append(audit, "T1", "RED", "cmd", 1, output)
+    assert "aaaaaaaa" not in audit.read_text(encoding="utf-8")

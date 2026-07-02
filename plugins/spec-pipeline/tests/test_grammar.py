@@ -61,5 +61,13 @@ def test_placeholder_re():
 def test_transitions_and_caps():
     assert ("pending", "in_progress") in grammar.LEGAL_TRANSITIONS
     assert ("in_progress", "pending") in grammar.LEGAL_TRANSITIONS  # recovery
+    assert ("blocked", "pending") in grammar.LEGAL_TRANSITIONS  # shelve a blocked phase
     assert ("pending", "complete") not in grammar.LEGAL_TRANSITIONS
+    assert ("complete", "pending") not in grammar.LEGAL_TRANSITIONS  # complete is terminal
     assert grammar.ROUND_CAPS == {"spec": 3, "plan": 3, "final": 5}
+
+
+def test_phrase_re_word_boundaries():
+    assert grammar.phrase_re("should").search("it should work")
+    assert not grammar.phrase_re("should").search("shoulder the load")
+    assert not grammar.phrase_re("similar to task").search("dissimilar to task wording")
