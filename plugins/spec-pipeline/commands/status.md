@@ -4,6 +4,8 @@ argument-hint: '[phase-plan-path]'
 allowed-tools: Bash, Read, Glob
 ---
 
+# /spec-pipeline:status
+
 Show project phase status via the specpipe CLI:
 
 `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe status <path>`

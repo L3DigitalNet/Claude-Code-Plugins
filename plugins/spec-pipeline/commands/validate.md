@@ -4,6 +4,8 @@ argument-hint: '[path] [master|phase|plan|phase-plan]'
 allowed-tools: Bash, Read, Glob, Grep
 ---
 
+# /spec-pipeline:validate
+
 Validate the artifact at the path given in $ARGUMENTS with the specpipe CLI:
 
 `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe validate …`

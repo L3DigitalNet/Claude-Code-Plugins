@@ -9,7 +9,7 @@ This document is the rubric the review gates check against: the author writes to
 
 ## Required structure
 
-Scale each section to its complexity (a few sentences if straightforward; longer where nuanced). Omit a section only with an explicit "N/A — <reason>". The altitude addendums add required sections on top of these.
+Scale each section to its complexity (a few sentences if straightforward; longer where nuanced). Omit a section only with an explicit `"N/A — <reason>"`. The altitude addendums add required sections on top of these.
 
 - Overview — problem statement; goals; explicit non-goals.
 - Architecture — components, boundaries, key technical decisions with rationale.

@@ -4,6 +4,8 @@ argument-hint: '[target-dir]'
 allowed-tools: Bash, Read, Glob
 ---
 
+# /spec-pipeline:init-project
+
 Scaffold the layout the execute-phase skill expects, via the specpipe CLI:
 
 `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/scripts/specpipe" uv run --no-project python -B -m specpipe init-project --dir <target>`
