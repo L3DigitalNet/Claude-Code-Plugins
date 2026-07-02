@@ -144,3 +144,135 @@ def cmd_validate(args) -> int:
     findings = validate(Path(args.path))
     print(report(findings, args.json))
     return exit_code(findings)
+
+
+def next_phase(path: Path) -> Phase | None:
+    """Resume-first resolution.
+
+    An existing in_progress phase (a prior session was interrupted mid-phase)
+    is returned before any pending one — the caller resumes or abandons it via
+    set-status in_progress->pending. Otherwise: first pending phase (by id)
+    whose dependencies are all complete.
+    """
+    phases = sorted(parse(path.read_text(encoding="utf-8")), key=lambda p: p.id)
+    by_id = {p.id: p for p in phases}
+    for p in phases:
+        if p.status == "in_progress":
+            return p
+    for p in phases:
+        if p.status != "pending":
+            continue
+        try:
+            deps = p.depends_on
+        except ValueError:
+            continue  # malformed entries are the validator's finding, not ours
+        if all(d in by_id and by_id[d].status == "complete" for d in deps):
+            return p
+    return None
+
+
+def set_status(path: Path, phase_id: int, to: str) -> str | None:
+    """Apply a legal status transition. Returns an error message, or None.
+
+    Atomic: writes a sibling temp file and os.replace()s it, so a crash can
+    never leave a half-written phase plan.
+    """
+    text = path.read_text(encoding="utf-8")
+    target = next((p for p in parse(text) if p.id == phase_id), None)
+    if target is None:
+        return f"phase {phase_id} not found"
+    if to not in grammar.PHASE_STATUSES:
+        return f"'{to}' is not a valid status {grammar.PHASE_STATUSES}"
+    if (target.status, to) not in grammar.LEGAL_TRANSITIONS:
+        return f"illegal transition {target.status} -> {to} for phase {phase_id}"
+    lines = text.split("\n")
+    for i in range(target.line, len(lines)):  # 0-based i starts just past the heading
+        if PHASE_HEADING_RE.match(lines[i]):
+            return f"phase {phase_id} has no status line"
+        m = FIELD_RE.match(lines[i])
+        if m and m.group(1) == "status":
+            lines[i] = f"- **status:** {to}"
+            break
+    else:
+        return f"phase {phase_id} has no status line"
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+    os.replace(tmp, path)
+    return None
+
+
+def _safe_deps(p: Phase) -> list[int]:
+    try:
+        return p.depends_on
+    except ValueError:
+        return []
+
+
+def _find_state(start: Path) -> Path | None:
+    """Upward search from `start` for .spec-pipeline/state.json — deterministic
+    regardless of invocation cwd or the project's handoff layout."""
+    for d in [start, *start.parents]:
+        candidate = d / ".spec-pipeline" / "state.json"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _load_rounds(plan_path: Path, explicit: str | None) -> dict:
+    state = Path(explicit) if explicit else _find_state(plan_path.resolve().parent)
+    if state is None or not state.exists():
+        return {}
+    try:
+        return json.loads(state.read_text(encoding="utf-8")).get("rounds", {})
+    except json.JSONDecodeError:
+        return {}
+
+
+def cmd_next_phase(args) -> int:
+    p = next_phase(Path(args.path))
+    if p is None:
+        print('{"next": null}' if args.json
+              else "no resolvable pending phase (all complete, or blocked)")
+        return 1
+    resume = p.status == "in_progress"
+    if args.json:
+        print(json.dumps({"next": {"id": p.id, "title": p.title, "resume": resume,
+                                   "depends_on": _safe_deps(p)}}))
+    else:
+        label = "RESUME in_progress phase" if resume else "next phase"
+        print(f"{label}: {p.id} — {p.title}")
+    return 0
+
+
+def cmd_set_status(args) -> int:
+    err = set_status(Path(args.path), args.id, args.to)
+    if err:
+        print(f"ERROR: {err}")
+        return 1
+    print(f"phase {args.id} -> {args.to}")
+    return 0
+
+
+def cmd_status(args) -> int:
+    path = Path(args.path)
+    phases = sorted(parse(path.read_text(encoding="utf-8")), key=lambda p: p.id)
+    nxt = next_phase(path)
+    rounds = _load_rounds(path, args.state)
+    if args.json:
+        print(json.dumps({
+            "phases": [{"id": p.id, "title": p.title, "status": p.status,
+                        "depends_on": _safe_deps(p)} for p in phases],
+            "next": nxt.id if nxt else None,
+            "rounds": rounds,
+        }, indent=2))
+        return 0
+    print(f"{'id':>3}  {'status':<12} {'depends_on':<12} title")
+    for p in phases:
+        print(f"{p.id:>3}  {p.status:<12} {str(_safe_deps(p)):<12} {p.title}")
+    print(f"next: {f'{nxt.id} — {nxt.title}' if nxt else '(none resolvable)'}")
+    if rounds:
+        print("rounds:", ", ".join(
+            f"{k}={v}/{grammar.ROUND_CAPS[k]}" for k, v in rounds.items()
+            if k in grammar.ROUND_CAPS))
+    return 0
