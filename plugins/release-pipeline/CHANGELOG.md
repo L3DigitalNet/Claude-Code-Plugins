@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.3] - 2026-07-02
+
+### Changed
+- markdownlint --fix auto-fixable rules
+- one-time Prettier normalization
+
+### Fixed
+- scope python3 PATH guard, fix 4 scripts missing hooksPath
+- harden script PATH against uv-strict-python shims
+- final structural fixes — markdownlint now 0
+- scripted structural fixes (MD036/MD040/MD025)
+
+
 ## [Unreleased]
 
 ### Fixed

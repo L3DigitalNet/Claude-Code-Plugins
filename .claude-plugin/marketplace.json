@@ -20,7 +20,7 @@
     {
       "name": "release-pipeline",
       "description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
-      "version": "2.2.2",
+      "version": "2.2.3",
       "author": {
         "name": "L3DigitalNet",
         "url": "https://github.com/L3DigitalNet"
