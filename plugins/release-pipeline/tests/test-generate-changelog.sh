@@ -49,6 +49,9 @@ REPO="$TMPDIR_TEST/repo"
 git init "$REPO" >/dev/null 2>&1
 git -C "$REPO" config user.email "test@example.com"
 git -C "$REPO" config user.name "Test"
+# Workstation's global pre-commit hook enforces a noreply-email regex and
+# rejects test@example.com — silent failure here leaves HEAD unwritten (TEST-003).
+git -C "$REPO" config core.hooksPath /dev/null
 # User's global tag.gpgsign=true forces signed-annotated tags; override to
 # plain lightweight tags so `git tag v1.0.0` succeeds without a message.
 git -C "$REPO" config tag.gpgsign false
@@ -108,6 +111,9 @@ mkdir -p "$REPO2/plugins/myplugin"
 git init "$REPO2" >/dev/null 2>&1
 git -C "$REPO2" config user.email "test@example.com"
 git -C "$REPO2" config user.name "Test"
+# Workstation's global pre-commit hook enforces a noreply-email regex and
+# rejects test@example.com — silent failure here leaves HEAD unwritten (TEST-003).
+git -C "$REPO2" config core.hooksPath /dev/null
 git -C "$REPO2" config tag.gpgsign false
 git -C "$REPO2" config tag.forceSignAnnotated false
 echo "initial" > "$REPO2/plugins/myplugin/file.txt"

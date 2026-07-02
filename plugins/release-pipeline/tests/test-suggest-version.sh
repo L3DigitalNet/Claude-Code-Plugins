@@ -22,6 +22,9 @@ setup_repo() {
   git init "$dir" >/dev/null 2>&1
   git -C "$dir" config user.email "test@example.com"
   git -C "$dir" config user.name "Test"
+  # Workstation's global pre-commit hook enforces a noreply-email regex and
+  # rejects test@example.com — silent failure here leaves HEAD unwritten (TEST-003).
+  git -C "$dir" config core.hooksPath /dev/null
   # User's global tag.gpgsign=true forces signed-annotated tags; override to
   # plain lightweight tags so `git tag v1.0.0` succeeds without a message.
   git -C "$dir" config tag.gpgsign false

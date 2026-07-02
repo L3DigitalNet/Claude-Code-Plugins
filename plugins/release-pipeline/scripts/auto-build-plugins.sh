@@ -2,7 +2,10 @@
 
 # Shim guard: uv-strict-python's PATH shims intercept bare python3 in
 # Python-project sessions — system dirs must win for the JSON helpers.
-export PATH="/usr/bin:/bin:$PATH"
+# Scoped to the python3 call sites below (not exported globally) so it doesn't
+# also shadow `npm` resolution later in the script — an earlier global export
+# here defeated the AB5 test's npm stub by putting real /usr/bin/npm first.
+system_path="/usr/bin:/bin:$PATH"
 # auto-build-plugins.sh — PreToolUse hook on Bash.
 #
 # When a git commit is about to run, checks if any staged TypeScript source
@@ -21,7 +24,7 @@ set -euo pipefail
 input=$(cat)
 
 # Extract the bash command being run. Fail open if parsing fails.
-cmd=$(printf '%s' "$input" | python3 -c "
+cmd=$(printf '%s' "$input" | PATH="$system_path" python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 print(d.get('tool_input', {}).get('command', ''))
@@ -31,7 +34,7 @@ print(d.get('tool_input', {}).get('command', ''))
 printf '%s' "$cmd" | grep -qE 'git\s+commit' || exit 0
 
 # Find the git repo root from the session's cwd
-cwd=$(printf '%s' "$input" | python3 -c "
+cwd=$(printf '%s' "$input" | PATH="$system_path" python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 print(d.get('cwd', ''))
@@ -65,7 +68,7 @@ while IFS= read -r file; do
     [ -f "$pkg_json" ] || continue
 
     # Check for a "build" script in package.json
-    has_build=$(python3 -c "
+    has_build=$(PATH="$system_path" python3 -c "
 import json, sys
 try:
     d = json.load(open('$pkg_json'))

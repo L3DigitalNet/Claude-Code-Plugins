@@ -56,6 +56,9 @@ mkdir -p "$REPO/.claude-plugin"
 git init "$REPO" >/dev/null 2>&1
 git -C "$REPO" config user.email "test@example.com"
 git -C "$REPO" config user.name "Test"
+# Workstation's global pre-commit hook enforces a noreply-email regex and
+# rejects test@example.com — silent failure here leaves HEAD unwritten (TEST-003).
+git -C "$REPO" config core.hooksPath /dev/null
 # User's global tag.gpgsign=true forces signed-annotated tags; override to
 # plain lightweight tags so `git tag plugin-a/v1.0.0` succeeds without a message.
 git -C "$REPO" config tag.gpgsign false

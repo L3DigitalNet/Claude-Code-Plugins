@@ -34,6 +34,9 @@ REPO="$TMPDIR_TEST/repo"
 git init "$REPO" >/dev/null 2>&1
 git -C "$REPO" config user.email "test@example.com"
 git -C "$REPO" config user.name "Test"
+# Workstation's global pre-commit hook enforces a noreply-email regex and
+# rejects test@example.com — silent failure here leaves HEAD unwritten (TEST-003).
+git -C "$REPO" config core.hooksPath /dev/null
 echo "initial" > "$REPO/file.txt"
 git -C "$REPO" add .
 git -C "$REPO" commit -m "initial commit" >/dev/null 2>&1
