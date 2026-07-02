@@ -3,6 +3,7 @@
 ## [0.2.0] - 2026-07-02
 
 ### Added
+
 - utility commands, README, changelog
 - migrate author + execute-phase skills with specpipe validator gates
 - idempotent init-project scaffolding
@@ -18,11 +19,11 @@
 - scaffold plugin, dedupe shared references, register in marketplace
 
 ### Fixed
+
 - apply fable-review findings R-001..R-015
 - fence-aware citation scan, regex exit-2 guard, mode-preserving rewrite, non-dict state recovery
 - resolve markdownlint MD041/MD033 gate failures
 - correct ultracode term in README requirements
-
 
 ## 0.1.0 — 2026-07-01
 

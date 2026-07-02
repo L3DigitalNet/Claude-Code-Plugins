@@ -1,6 +1,6 @@
 # Handoff
 
-**Last updated:** 2026-07-02 pm (spec-pipeline fable-review R-001..R-015 all fixed, 122 tests, pushed; release + smoke next)
+**Last updated:** 2026-07-02 evening (all 7 marketplace plugins released and current; ENV-001 refined + Bug 9 recorded)
 
 ## Session Instructions
 
@@ -14,10 +14,10 @@
 
 ## In flight
 
-- **spec-pipeline 0.1.0 release pending.** Implemented, fable-reviewed, all 15 findings fixed (`ec74a16`, 122/122 tests, all gates green). Next: live smoke in a fresh session (install/cache sync first), `/release-pipeline:release` 0.1.0, then user decides deprecation of `author-master-spec` + `autonomous-phase-execution` in `agent-configs`. Remaining 0.1.x hygiene backlog in TODO.md.
+- **spec-pipeline post-release follow-ups.** Released as v0.2.0. Still open: live smoke test in a fresh session (install/cache sync first), then user decides deprecation of `author-master-spec` + `autonomous-phase-execution` in `agent-configs`. Remaining 0.1.x hygiene backlog in TODO.md.
 
-## Recently closed (this session, 2026-07-02 pm)
+## Recently closed (this session, 2026-07-02 evening)
 
-- **spec-pipeline fable-review + all 15 findings fixed** (`ec74a16`, pushed). 0C/0H/4M/11L; Mediums: implement-vs-test step misclassification, GREEN accepted any exit-0 (now needs `N passed` / `--expect-success-regex`), fence-unaware `phaseplan.parse`, README HALT claim unbacked by the skills. 21 RED-first regression tests → 122 total; R-012 (collection-phrase-as-data) documented as accepted limitation. Skills bumped to v2.1. Detail in `sessions/2026-07.md`.
+- **All 7 marketplace plugins released.** Two batch passes: pass 1 released spec-pipeline v0.2.0, home-assistant-dev v2.2.11, qt-suite v0.3.4, qdev v2.0.3 clean; quarantined release-pipeline, up-docs, uv-strict-python on real pre-flight test failures. Root-caused and fixed all 3 (Bug 9: ENV-001's global PATH guard shadowed npm/ssh test stubs in `auto-build-plugins.sh`/`server-inspect.sh`; uv-strict-python re-synced to `project-standards@6cf2228`), swept the other 11 ENV-001-guarded scripts (none exposed), then pass 2 released release-pipeline v2.2.3, up-docs v0.13.1, uv-strict-python v0.2.1 clean. `detect-unreleased.sh` confirms zero plugins remain unreleased. Detail in `sessions/2026-07.md`.
 
 <!-- 2 KB cap (enforced by propagate-repo): keep ONLY the current session's close here. Older closes live as rows in docs/handoff/sessions/<YYYY-MM>.md. -->

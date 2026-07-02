@@ -266,21 +266,23 @@ export GIT_CONFIG_NOSYSTEM=1
 
 ## ENV-001. PATH-shim guard in plugin scripts
 
-**Applies when:** a plugin script (hook, helper, test runner) invokes bare `python3`, `pip`, or coreutils (`find`/`grep`) resolved via PATH. **Rule:** Prepend the system directories to PATH at the top of the script, immediately after the shebang/`set` line, so shims never win:
+**Applies when:** a plugin script (hook, helper, test runner) invokes bare `python3`, `pip`, or coreutils (`find`/`grep`) resolved via PATH. **Rule:** Prepend the system directories to PATH at the top of the script, immediately after the shebang/`set` line, so shims never win — **but only if python3/pip/coreutils are the last external commands the script needs from PATH.** If the script also shells out to any other externally-stubbable command later (`npm`, `ssh`, `gh`, anything a test fixture might intercept), scope the override to the specific call site(s) instead of exporting it globally:
 
 ```bash
-# Shim guard: PATH shims (uv-strict-python python3/pip interceptors,
-# interactive find→fd / grep→ugrep accelerators) must not win over the
-# system binaries this script's logic depends on.
+# Safe when nothing else external runs after this: global export is fine.
 export PATH="/usr/bin:/bin:$PATH"
+
+# Unsafe if the script also calls npm/ssh/etc. downstream — scope it instead:
+system_path="/usr/bin:/bin:$PATH"
+cmd=$(printf '%s' "$input" | PATH="$system_path" python3 -c "...")
 ```
 
-**Why:** Two shim families live on this workstation's PATH: interactive search accelerators (`find`→fd, `grep`→ugrep — Bug 7, false-green bats) and uv-strict-python's session shims (`python3`/`pip`/`pipx` exit 1 with a "use uv" message — Bug 8, false-negative `detect-unreleased.sh` during a live release). `$(...)` captures swallow the shim's stderr, so the symptom is a wrong answer, not a visible error. Scripts must self-harden rather than depend on the caller's PATH; uv-strict-python 0.2.0's project-type gating reduces exposure but doesn't eliminate it (Python repos still get shims, and other shims exist).
+**Why:** Two shim families live on this workstation's PATH: interactive search accelerators (`find`→fd, `grep`→ugrep — Bug 7, false-green bats) and uv-strict-python's session shims (`python3`/`pip`/`pipx` exit 1 with a "use uv" message — Bug 8, false-negative `detect-unreleased.sh` during a live release). `$(...)` captures swallow the shim's stderr, so the symptom is a wrong answer, not a visible error. Scripts must self-harden rather than depend on the caller's PATH; uv-strict-python 0.2.0's project-type gating reduces exposure but doesn't eliminate it (Python repos still get shims, and other shims exist). But the global-export fix itself has a blast radius: it also shadows any *other* command a test fixture PATH-stubs (Bug 9 — `auto-build-plugins.sh`'s `npm` and `server-inspect.sh`'s `ssh` both got shadowed by the real binary, defeating the tests' fault injection). Scope the override when in doubt.
 
 **Sources:**
 
-- Bug 007 (find/grep shims neutered bats discovery) and Bug 008 (python3 shim broke release-pipeline scripts and up-docs scripts)
-- release-pipeline commit `4f9fd1c` (all 7 python3-invoking scripts), up-docs `d4119ae` (`run-bats.sh`) and `19595e2` (all 6 python3-invoking scripts), uv-strict-python `tests/run.sh`
+- Bug 007 (find/grep shims neutered bats discovery), Bug 008 (python3 shim broke release-pipeline scripts and up-docs scripts), Bug 009 (the global-export fix itself shadowed npm/ssh test stubs in two scripts)
+- release-pipeline commit `4f9fd1c` (original 7-script guard) → `ba975a4` (scoped `auto-build-plugins.sh`); up-docs `d4119ae` (`run-bats.sh`) and `19595e2` (original 6-script guard) → `c0919f9` (scoped `server-inspect.sh`); uv-strict-python `tests/run.sh` (safe as global — top-level bats launcher, no other downstream external calls)
 
 **Related:** TEST-002, BRANCH-001
 
