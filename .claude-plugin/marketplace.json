@@ -1,72 +1,99 @@
 {
-	"name": "l3digitalnet-plugins",
-	"description": "Curated collection of Claude Code plugins for enhanced development workflows",
-	"owner": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-	"plugins": [
-		{
-			"name": "home-assistant-dev",
-			"description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
-			"version": "2.2.10",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
-			"source": "./plugins/home-assistant-dev"
-		},
-		{
-			"name": "release-pipeline",
-			"description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
-			"version": "2.2.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
-			"source": "./plugins/release-pipeline"
-		},
-		{
-			"name": "qt-suite",
-			"description": "Qt development and testing toolkit: proactive specialist agents, 16 domain references, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
-			"version": "0.3.3",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/qt-suite",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
-		},
-		{
-			"name": "test-driver",
-			"description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
-			"version": "0.6.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"category": "testing",
-			"source": "./plugins/test-driver",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/test-driver"
-		},
-		{
-			"name": "up-docs",
-			"description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation plus drift audit, all on Sonnet. Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
-			"version": "0.13.0",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/up-docs",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
-		},
-		{
-			"name": "qdev",
-			"description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
-			"version": "2.0.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/qdev",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
-		},
-		{
-			"name": "uv-strict-python",
-			"description": "Python Tooling SSOT Standard: uv + Ruff + BasedPyright (strict) + pytest/coverage + pip-audit. Operationalizes a single, strict, boring toolchain that behaves identically in CLI, VS Code, and CI. Use when creating Python projects, migrating to uv, auditing conformance, or replacing legacy tooling.",
-			"version": "0.2.0",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/uv-strict-python",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/uv-strict-python"
-		},
-		{
-			"name": "spec-pipeline",
-			"description": "Spec-driven autonomous development pipeline: author a master spec, decompose into phases, execute each phase under TDD with deterministic specpipe validator gates (structure, dependency graphs, decision-id citations, TDD step order, RED/GREEN evidence, round caps) in front of every review pass.",
-			"version": "0.1.0",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"source": "./plugins/spec-pipeline",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/spec-pipeline"
-		}
-	]
+  "name": "l3digitalnet-plugins",
+  "description": "Curated collection of Claude Code plugins for enhanced development workflows",
+  "owner": {
+    "name": "L3DigitalNet",
+    "url": "https://github.com/L3DigitalNet"
+  },
+  "plugins": [
+    {
+      "name": "home-assistant-dev",
+      "description": "Comprehensive Home Assistant integration development toolkit with 27 skills, MCP server for live HA connection, automated validation, example integrations, and project templates",
+      "version": "2.2.10",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
+      "source": "./plugins/home-assistant-dev"
+    },
+    {
+      "name": "release-pipeline",
+      "description": "Interactive release pipeline: context-aware menu for quick merge, full semver release, plugin release, status checks, dry runs, and changelog preview",
+      "version": "2.2.2",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
+      "source": "./plugins/release-pipeline"
+    },
+    {
+      "name": "qt-suite",
+      "description": "Qt development and testing toolkit: proactive specialist agents, 16 domain references, scaffolding commands, and headless GUI testing via Qt Pilot MCP for PySide6, PyQt6, and C++/Qt projects.",
+      "version": "0.3.3",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/qt-suite",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
+    },
+    {
+      "name": "test-driver",
+      "description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
+      "version": "0.6.2",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "category": "testing",
+      "source": "./plugins/test-driver",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/test-driver"
+    },
+    {
+      "name": "up-docs",
+      "description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation plus drift audit, all on Sonnet. Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
+      "version": "0.13.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/up-docs",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/up-docs"
+    },
+    {
+      "name": "qdev",
+      "description": "Deep web research for development decisions: /research dispatches a Sonnet subagent for a dual-source sweep (Tavily-first recall, Brave/Serper cross-checks, Context7 docs gating, footgun corroboration) and persists a structured, frontmatter-indexed report under docs/research/. User-initiated only.",
+      "version": "2.0.2",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/qdev",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qdev"
+    },
+    {
+      "name": "uv-strict-python",
+      "description": "Python Tooling SSOT Standard: uv + Ruff + BasedPyright (strict) + pytest/coverage + pip-audit. Operationalizes a single, strict, boring toolchain that behaves identically in CLI, VS Code, and CI. Use when creating Python projects, migrating to uv, auditing conformance, or replacing legacy tooling.",
+      "version": "0.2.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/uv-strict-python",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/uv-strict-python"
+    },
+    {
+      "name": "spec-pipeline",
+      "description": "Spec-driven autonomous development pipeline: author a master spec, decompose into phases, execute each phase under TDD with deterministic specpipe validator gates (structure, dependency graphs, decision-id citations, TDD step order, RED/GREEN evidence, round caps) in front of every review pass.",
+      "version": "0.2.0",
+      "author": {
+        "name": "L3DigitalNet",
+        "url": "https://github.com/L3DigitalNet"
+      },
+      "source": "./plugins/spec-pipeline",
+      "homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/spec-pipeline"
+    }
+  ]
 }
