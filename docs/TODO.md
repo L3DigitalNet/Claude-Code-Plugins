@@ -18,9 +18,9 @@ Instructions for AI agents:
 
 ## Agent tasks
 
-- [ ] Restore the full-repository Prettier and markdownlint gates.
+- [ ] Emit Prettier-clean frontmatter from `plugins/qdev/scripts/build_research_index.py`.
 
-  A fresh 2026-07-09 check reports Prettier drift in 10 pre-existing files and 27 markdownlint errors. The remaining files are marketplace metadata, handoff knowledge, and plugin changelogs; migration-owned files pass targeted checks.
+  `yaml.safe_dump` writes block sequences flush (`- item`) but Prettier wants two-space indent, so regenerating `docs/research/index.md` breaks the format gate. The committed index is currently clean and current; this only surfaces on regen. Ships with a qdev release (plugin code change).
 
 - [ ] Complete the `spec-pipeline` post-release follow-ups.
 
