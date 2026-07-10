@@ -10,7 +10,7 @@
 
 ## Recently Removed (2026-07-10)
 
-release-pipeline — deleted from `plugins/` and the marketplace catalog. Removal spanned both planes: repo (`plugins/release-pipeline/`, `.claude-plugin/marketplace.json`, `.claude/settings.json`, README/CLAUDE/AGENTS/BRANCH_PROTECTION/copilot-instructions, `docs/`, `docs/handoff/`) and live Claude Code state (`installed_plugins.json`, plugin cache, catalog clone). Unlike prior removals, **all 13 tags (`release-pipeline/v1.0.0`…`v2.2.3`) and their 5 GitHub releases were deleted** (local + remote), not retained. Plugin releases are now a manual git-tag + `gh release create` process — see [BRANCH_PROTECTION.md](../../BRANCH_PROTECTION.md).
+release-pipeline — deleted from `plugins/` and the marketplace catalog. Removal spanned both planes: repo (`plugins/release-pipeline/`, `.claude-plugin/marketplace.json`, `.claude/settings.json`, README/CLAUDE/AGENTS/BRANCH_PROTECTION/copilot-instructions, `docs/`, `docs/handoff/`) and live Claude Code state (`installed_plugins.json`, plugin cache, catalog clone). Unlike prior removals, **all 13 tags (`release-pipeline/v1.0.0`…`v2.2.3`) and all 13 GitHub releases were deleted** (local + remote), not retained. Plugin releases are now a manual git-tag + `gh release create` process — see [BRANCH_PROTECTION.md](../../BRANCH_PROTECTION.md).
 
 test-driver — deleted from `plugins/` and the marketplace catalog. **All 7 tags (`test-driver/v0.1.0`…`v0.6.2`) and their 7 GitHub releases were deleted** (local + remote). The now-orphaned `.release-waivers.json` (a release-pipeline pre-flight artifact, unused after that plugin's removal) was deleted in the same pass. Live state cleaned: `installed_plugins.json` (llm-wiki project-scope entry) + plugin cache + catalog clone.
 
