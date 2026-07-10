@@ -5,6 +5,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 ## [2.2.11] - 2026-07-02
 
 ### Changed
+
 - polling-hub tests package + scope note + gitignore (F201)
 - document MCP server env-var precedence in §5 (F266)
 - rebuild dist bundle for review-finding source changes
@@ -32,6 +33,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - one-time Prettier normalization
 
 ### Fixed
+
 - correct getSafetyInfo blocked count to 7 (F133)
 - docs-index snippet/index perf + remove dead doc cache (F151, F152, F153, F155)
 - validate-strings aborts affect validity + parity (F146, F150)
@@ -167,7 +169,7 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - repair README/info.md template fence nesting (F36)
 - modern trigger/action keys in README-template automation (F35)
 - drop BluetoothServiceInfo from 2025.1 relocation list (F30)
-- read SSDP host from ssdp_location, not ssdp_headers _host (F29)
+- read SSDP host from ssdp_location, not ssdp_headers \_host (F29)
 - use async_register_platform_entity_service helper (F28)
 - use UpdateFailed retry_after, correct to HA 2025.11 (F26, F27)
 - correct async_add_executor_job positional example (F25)
@@ -185,8 +187,8 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - make safety README accurate about blocked vs warned services (F11)
 - stop env layer clobbering file-level safety config (F9)
 - validate config file structure before merging (F8)
-- pass config_entry to polling-hub coordinator super().__init__ (F202)
-- pass config_entry to coordinator super().__init__ (F7)
+- pass config_entry to polling-hub coordinator super().**init** (F202)
+- pass config_entry to coordinator super().**init** (F7)
 - add missing push-integration binary_sensor platform (F6)
 - enable custom integrations in polling-hub tests + ha-testing template (F5)
 - add missing polling-hub switch + binary_sensor platforms (F4, F20)
@@ -196,7 +198,6 @@ All notable changes to the Home Assistant Development Plugin are documented here
 - bump typescript-eslint to ^8.60.1 for TypeScript 6 compat
 - final structural fixes — markdownlint now 0
 - scripted structural fixes (MD036/MD040/MD025)
-
 
 ## [Unreleased]
 

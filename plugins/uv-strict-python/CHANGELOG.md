@@ -7,9 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.2.1] - 2026-07-02
 
 ### Fixed
+
 - re-sync standards to project-standards@6cf2228
 - adopt project-standards v3.0.0 (pin @v3, MD060, format)
-
 
 ## [0.2.0] - 2026-06-12
 

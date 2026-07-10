@@ -7,13 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [0.13.1] - 2026-07-02
 
 ### Changed
+
 - converge drift round 2 — counts, changelog dedup, retire testing CI
 
 ### Fixed
+
 - scope python3 PATH guard in server-inspect.sh
 - adopt project-standards v3.0.0 (pin @v3, MD060, format)
 - ENV-001 PATH-shim guard in all six python3-invoking scripts
-
 
 ## [Unreleased]
 

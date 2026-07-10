@@ -7,8 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.3.4] - 2026-07-02
 
 ### Changed
-- Add comprehensive references for Python tooling standards
 
+- Add comprehensive references for Python tooling standards
 
 ## [0.3.3] - 2026-06-08
 

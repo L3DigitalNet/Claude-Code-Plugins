@@ -31,7 +31,7 @@ def main():
     out = ['# Bug Index', '',
            'Generated from frontmatter. Regenerate with `python3 docs/handoff/bugs/_regen_index.py`.', '',
            '| # | Date | Title | Services | Status |',
-           '|---|---|---|---|---|']
+           '| --- | --- | --- | --- | --- |']
     for r in rows:
         out.append('| ' + ' | '.join(str(x) for x in r) + ' |')
     (BUGS / 'INDEX.md').write_text('\n'.join(out) + '\n')

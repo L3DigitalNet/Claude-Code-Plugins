@@ -37,4 +37,3 @@ Instructions for AI agents:
 - [ ] Repair the red Home Assistant MCP end-to-end CI job.
 
   The test container's demo integration loads no entities, so 10 assertions for entities such as `light.bed_light` fail while 13 pass. The other four Home Assistant jobs pass; this is a pre-existing environment or onboarding issue.
-
