@@ -1,4 +1,9 @@
 {
+	"enabledPlugins": {
+		"skill-creator@claude-plugins-official": true,
+		"plugin-dev@claude-plugins-official": true,
+		"release-pipeline@l3digitalnet-plugins": true
+	},
 	"hooks": {
 		"SessionStart": [
 			{
@@ -6,16 +11,13 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_start.py\"",
-						"timeout": 30
+						"command": "${CLAUDE_PROJECT_DIR}/.agents/hooks/agent-handoff/session_start.py",
+						"args": [],
+						"timeout": 10,
+						"statusMessage": "Loading agent handoff state..."
 					}
 				]
 			}
 		]
-	},
-	"enabledPlugins": {
-		"skill-creator@claude-plugins-official": true,
-		"plugin-dev@claude-plugins-official": true,
-		"release-pipeline@l3digitalnet-plugins": true
 	}
 }

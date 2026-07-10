@@ -1,29 +1,10 @@
-# Codex SessionStart hook registration — tracked source.
-#
-# install-globals.sh copies this into each Codex-managed repo as .codex/config.toml.
-# It registers the shared hook (the SAME script as Claude's, installed at
-# .codex/hooks/session_start.py). The hook detects Codex by the ABSENCE of
-# $CLAUDE_PROJECT_DIR and emits the context as PLAIN TEXT on stdout — a documented
-# SessionStart context path that avoids the additionalContext-JSON render bug
-# openai/codex#16933. (systemMessage is rejected: official docs class it a UI warning.)
-#
-# The command is GIT-ROOT-ANCHORED (SA-002): a relative .codex/hooks/... path is
-# resolved against the session cwd before the script runs, so a subdirectory launch
-# would fail. bash -c + $(git rev-parse --show-toplevel) resolves from any subdir;
-# stdin (the SessionStart payload) is inherited through to python3.
-#
-# Assumes Codex is launched INSIDE a git worktree: outside one, `git rev-parse` fails and
-# the substituted path becomes "/.codex/hooks/session_start.py" (rooted at /), so the hook
-# does not load. The installer only drops this into git-managed repos, so that is an edge
-# case; note the hook's own git_toplevel() falls back to the launch cwd, but this
-# registration command has no such fallback.
-#
-# Keep this file to the [hooks] table ONLY: a real repo .codex/config.toml may also
-# carry model/approval/mcp_servers tables, and the installer must never clobber those
-# (it skips a bespoke config and reports it for a manual [hooks] merge).
+# BEGIN agent-handoff managed codex hook
 [[hooks.SessionStart]]
+matcher = "startup|resume|clear|compact"
+
 [[hooks.SessionStart.hooks]]
-type          = "command"
-command       = "bash -c 'python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/session_start.py\"'"
-timeout       = 30
-statusMessage = "Loading handoff state…"
+type = "command"
+command = '"$(git rev-parse --show-toplevel)/.agents/hooks/agent-handoff/session_start.py"'
+timeout = 10
+statusMessage = "Loading agent handoff state..."
+# END agent-handoff managed codex hook

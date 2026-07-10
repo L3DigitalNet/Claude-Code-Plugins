@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-**Session startup:** state is injected by the SessionStart hook (see `.claude/hooks/session_start.py`).
+**Session startup:** Agent Handoff injects state through the shared repo-local SessionStart hook.
 
 **Branch workflow:** Direct commit to `main`. No `testing` branch. Use `/release-pipeline:release` for plugin releases (version bump + tag + GitHub release). See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for full rules.
 
@@ -15,3 +15,10 @@
 - `docs/handoff/bugs/` — per-file bug KB (grep by service or tag)
 - `docs/handoff/specs-plans.md` — pointer into `docs/plans/`
 - per-plugin tests: `plugins/<plugin>/tests/` (frameworks by language per `docs/handoff/conventions.md` TEST-001)
+
+<!-- BEGIN agent-handoff managed instructions -->
+Use the repo-local `$agent-handoff` skill at startup and closeout.
+Do not reread `docs/handoff/state.md` when SessionStart already injected it.
+Keep current status and tasks in `docs/STATUS.md` and `docs/TODO.md`; route durable facts through `docs/handoff/`.
+At closeout, update only changed facts, preserve user-authored work, store credential references only, and run relevant validation.
+<!-- END agent-handoff managed instructions -->

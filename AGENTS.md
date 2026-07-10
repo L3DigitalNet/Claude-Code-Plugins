@@ -1,6 +1,6 @@
 # Codex Instructions for Claude-Code-Plugins
 
-**Session state:** read `docs/handoff/state.md`, then this file, then `docs/handoff/conventions.md`.
+**Session state:** Agent Handoff SessionStart injects `docs/handoff/state.md`; do not reread it when injected. Then use this file and `docs/handoff/conventions.md`.
 
 **Full conventions reference:** [`docs/handoff/conventions.md`](docs/handoff/conventions.md) - LLM-targeted pattern library. Every convention follows the six-field schema (Applies-when / Rule / Code / Why / Sources / Related) with a Quick Reference table at the top for O(1) lookup. Do not introduce new patterns without checking conventions first.
 
@@ -47,3 +47,10 @@ Do not claim completion if either command fails.
 - Prettier owns physical formatting. Do not fight its output or hand-format.
 - markdownlint owns Markdown structure. Do not disable a rule to silence a warning — fix the Markdown.
 - Do not edit `.prettierrc.json` or `.markdownlint.json` to bypass a check without a documented ADR exception.
+
+<!-- BEGIN agent-handoff managed instructions -->
+Use the repo-local `$agent-handoff` skill at startup and closeout.
+Do not reread `docs/handoff/state.md` when SessionStart already injected it.
+Keep current status and tasks in `docs/STATUS.md` and `docs/TODO.md`; route durable facts through `docs/handoff/`.
+At closeout, update only changed facts, preserve user-authored work, store credential references only, and run relevant validation.
+<!-- END agent-handoff managed instructions -->

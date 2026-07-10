@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agent Handoff"
+  short_description: "Maintain repository-local session knowledge."
+  default_prompt: "Use $agent-handoff to route project facts, maintain session continuity, and close out this repository safely."
+
+policy:
+  allow_implicit_invocation: true

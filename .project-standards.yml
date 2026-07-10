@@ -4,3 +4,12 @@
 # standards are NOT adopted in this cycle and are intentionally absent here.
 markdown_tooling:
   version: "1.0"
+
+# BEGIN agent-handoff managed config
+agent_handoff:
+  version: "1.0"
+  startup: automatic
+  harnesses:
+    - claude-code
+    - codex
+# END agent-handoff managed config

@@ -1,0 +1,19 @@
+{
+  "standard": "agent-handoff",
+  "version": "1.0",
+  "startup": "automatic",
+  "harnesses": [
+    "claude-code",
+    "codex"
+  ],
+  "managed": {
+    ".agents/hooks/agent-handoff/session_start.py": "db2aad1965561c9d491eff3dc99520768bc4b3f89c2ee7e15ac922381bf15780",
+    ".agents/skills/agent-handoff/SKILL.md": "c82840849af5f806f2e8779cc0a7180e583b2549304c29503c91ffdd48b11de4",
+    ".agents/skills/agent-handoff/agents/openai.yaml": "1b78fb94b81aad4df0bbf149a6d4c47b887fbe31e19818723bde5579ec33413c",
+    ".claude/settings.json#agent-handoff": "824f897caa9eef5e7d50921e8eda3ece3f6d5f77e514fa58809751bacc4b2ac1",
+    ".codex/config.toml#agent-handoff": "5bbb4848ed60e24a978b4e4a5623e00db276d20d2f200abfa5ed72492680fb8e",
+    ".project-standards.yml#agent-handoff": "76e336572e00bacac96bc694285c389c442a23e3e94aab6b986c0917e7544c11",
+    "AGENTS.md#agent-handoff": "8598a7759d6b9c95704ee73d03de1cfff44bedf898615d320563a493a7850da8",
+    "CLAUDE.md#agent-handoff": "8598a7759d6b9c95704ee73d03de1cfff44bedf898615d320563a493a7850da8"
+  }
+}
