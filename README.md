@@ -10,7 +10,6 @@ A Claude Code plugin marketplace. Plugins cover the full development lifecycle: 
   - [Available Plugins](#available-plugins)
   - [Principles](#principles)
     - [Home Assistant Dev](#home-assistant-dev)
-    - [Release Pipeline](#release-pipeline)
     - [Qt Suite](#qt-suite)
     - [qdev](#qdev)
     - [Test Driver](#test-driver)
@@ -39,7 +38,7 @@ Or using the full URL:
 Then install individual plugins:
 
 ```bash
-/plugin install release-pipeline@l3digitalnet-plugins
+/plugin install home-assistant-dev@l3digitalnet-plugins
 ```
 
 ### Staying Up to Date
@@ -69,7 +68,6 @@ When auto-update is enabled, Claude Code refreshes the marketplace catalog and u
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [qdev](#qdev) | Commands + Agents | `/research` | Deep web research for development decisions: dual-source sweeps with Context7 docs gating, persisted as cited reports under `docs/research/` |
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
-| [Release Pipeline](#release-pipeline) | Commands + Skills | `/release` | Semver releases with pre-flight checks and changelog generation |
 | [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
 | [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (all Sonnet: repo, wiki, Notion propagators & drift auditor) from session context, plus full infrastructure drift analysis |
 | [uv-strict-python](#uv-strict-python) | Skills | (AI-invoked) | Configures Python projects to the Python Tooling SSOT Standard (uv, Ruff, BasedPyright strict, pytest+coverage, pip-audit) |
@@ -113,30 +111,6 @@ These principles apply across all plugins in this collection. Individual plugins
 ```
 
 **Learn more:** [plugins/home-assistant-dev/README.md](plugins/home-assistant-dev/README.md)
-
----
-
-### Release Pipeline
-
-**Autonomous release pipeline**: quick merge or full semver release with parallel pre-flight checks, changelog generation, and GitHub release creation.
-
-**Features:**
-
-- Seven modes available, from a quick merge to a batch release of all unreleased plugins at once; there is no testing branch (retired 2026-05-07)
-- Parallel pre-flight agents (test runner, docs auditor, git validator)
-- Automatic changelog generation from conventional commits
-- Version bumping across Python, Node.js, Rust, and plugin manifests
-- GitHub release creation with release notes
-- Human-in-the-loop approval gates at critical stages
-- Fail-fast with rollback guidance on errors
-
-**Install:**
-
-```bash
-/plugin install release-pipeline@l3digitalnet-plugins
-```
-
-**Learn more:** [plugins/release-pipeline/README.md](plugins/release-pipeline/README.md)
 
 ---
 
@@ -252,7 +226,7 @@ The marketplace standardizes test frameworks per language — bats for bash, pyt
 
 ```bash
 # Bash plugins
-cd plugins/release-pipeline && ./tests/run-bats.sh
+cd plugins/up-docs && ./tests/run-bats.sh
 
 # Python plugins
 pytest plugins/home-assistant-dev/tests/ -m unit
@@ -310,7 +284,6 @@ Claude-Code-Plugins/
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── qdev/                    # Deep web research (research sweeps via qdev-researcher)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
-│   ├── release-pipeline/        # Autonomous release pipeline
 │   ├── test-driver/             # Proactive testing via gap analysis and convergence
 │   ├── up-docs/                 # Three-layer documentation updater (repo, wiki, Notion)
 │   └── uv-strict-python/        # Python tooling standard (uv, Ruff, BasedPyright strict)
@@ -330,7 +303,7 @@ To add a plugin to this marketplace:
 2. Add entry to `.claude-plugin/marketplace.json` (version must match the plugin's own `plugin.json`)
 3. Validate with `./scripts/validate-marketplace.sh`
 4. Commit directly to `main` and push
-5. To publish a tagged release with GitHub release notes, run `/release-pipeline:release` and pick the appropriate mode
+5. To publish a tagged release: bump `plugin.json` + `marketplace.json`, update the CHANGELOG, commit, then `git tag <name>/vX.Y.Z && git push --tags && gh release create <name>/vX.Y.Z` (see [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md))
 
 **Branch workflow:** Direct commit to `main`. There is no `testing` branch. Local pre-commit hooks (noreply email enforcement, marketplace validation) provide guardrails. See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for full rules.
 

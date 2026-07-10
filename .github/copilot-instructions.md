@@ -17,15 +17,13 @@ Direct commit to `main`. There is no `testing` branch — that convention was re
 
 - Noreply email pre-commit hook (rejects non-noreply commit authors)
 - `./scripts/validate-marketplace.sh` (manifest + marketplace consistency)
-- `/release-pipeline:release` pre-flight (3 parallel agents check tests/docs/git before any tag)
 
 ### Directory Structure
 
 ````text
 ├── .claude-plugin/marketplace.json  # Marketplace catalog (source of truth)
 ├── plugins/                         # All plugins
-│   ├── release-pipeline/            # Tagged-release orchestrator
-│   └── ...                          # Other plugins
+│   └── ...                          # home-assistant-dev, qt-suite, up-docs, …
 ├── scripts/
 │   └── validate-marketplace.sh      # Marketplace validation
 └── BRANCH_PROTECTION.md             # Branch workflow doc
@@ -64,8 +62,9 @@ git add plugins/my-plugin .claude-plugin/marketplace.json
 git commit -m "Add my-plugin v1.0.0"
 git push origin main
 
-# To publish a tagged release with GitHub release notes:
-# /release-pipeline:release  → pick "Plugin Release"
+# To publish a tagged release: bump plugin.json + marketplace.json, update
+# CHANGELOG, commit, then: git tag <name>/vX.Y.Z && git push --tags &&
+# gh release create <name>/vX.Y.Z
 ````
 
 ### Updating Existing Plugins
@@ -87,7 +86,7 @@ git add plugins/agent-orchestrator .claude-plugin/marketplace.json
 git commit -m "Update agent-orchestrator to v1.0.1"
 git push origin main
 
-# To tag + publish: /release-pipeline:release  → pick "Plugin Release"
+# To tag + publish: git tag <name>/vX.Y.Z && git push --tags && gh release create <name>/vX.Y.Z
 ```
 
 ## Key Architectural Patterns
@@ -237,11 +236,15 @@ claude --plugin-dir ./plugins/plugin-name
 ### Tagged Release
 
 ```bash
-# Run the release pipeline; it handles version bump + changelog + tag + GitHub release
-/release-pipeline:release
-# Pick mode based on scope:
-#   "Plugin Release" — release a single plugin
-#   "Batch Release"  — release every plugin with unreleased commits
+# Manual release (bump + changelog + tag + GitHub release)
+# 1. Bump plugins/<name>/.claude-plugin/plugin.json and the matching
+#    .claude-plugin/marketplace.json entry (must agree); update the CHANGELOG
+./scripts/validate-marketplace.sh
+git add plugins/<name> .claude-plugin/marketplace.json
+git commit -m "Release <name> vX.Y.Z"
+git tag <name>/vX.Y.Z
+git push origin main --tags
+gh release create <name>/vX.Y.Z --title "<name> vX.Y.Z" --notes "See CHANGELOG.md"
 ```
 
 ## Important Rules
@@ -250,6 +253,6 @@ claude --plugin-dir ./plugins/plugin-name
 2. **Validate marketplace consistency** — `./scripts/validate-marketplace.sh` before pushing changes that touch any plugin manifest
 3. **Version synchronization** — `plugins/<name>/.claude-plugin/plugin.json` and the matching entry in `.claude-plugin/marketplace.json` must always agree
 4. **Test locally first** — `claude --plugin-dir ./plugins/<name>` before pushing
-5. **Use the release pipeline for tagged releases** — `/release-pipeline:release` handles bump + changelog + tag + GitHub release together
+5. **Tagged releases are manual** — bump `plugin.json` + `marketplace.json`, update the CHANGELOG, commit, then tag `<name>/vX.Y.Z`, push `--tags`, and `gh release create`
 
 See [BRANCH_PROTECTION.md](../BRANCH_PROTECTION.md) for complete workflow documentation.

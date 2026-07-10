@@ -169,7 +169,7 @@ exec bash "$BATS_ROOT/libexec/bats-core/bats" "$@"
 
 ## BRANCH-001. Direct commit to `main`
 
-**Applies when:** committing or releasing in this repo. **Rule:** Direct commit to `main`. There is no `testing` branch and no merge step. Local pre-commit hooks (noreply email enforcement, `scripts/validate-marketplace.sh`) provide the guardrails server-side branch protection used to provide. For tagged plugin releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`.
+**Applies when:** committing or releasing in this repo. **Rule:** Direct commit to `main`. There is no `testing` branch and no merge step. Local pre-commit hooks (noreply email enforcement, `scripts/validate-marketplace.sh`) provide the guardrails server-side branch protection used to provide. Tagged plugin releases are manual: bump `plugin.json` + `marketplace.json`, update the CHANGELOG, commit, tag `<name>/vX.Y.Z`, push `--tags`, and `gh release create`.
 
 ```bash
 # Routine commit
@@ -179,11 +179,12 @@ git add <specific files>
 git commit -m "..."
 git push origin main
 
-# Tagged release
-/release-pipeline:release   # → pick "Plugin Release" or "Batch Release"
+# Tagged release (manual)
+git tag <name>/vX.Y.Z && git push origin main --tags
+gh release create <name>/vX.Y.Z --title "<name> vX.Y.Z" --notes "See CHANGELOG.md"
 ```
 
-**Why:** Single-developer repo. The previous `testing` → `main` merge convention was retired 2026-05-07 along with deletion of the `testing` branch (local + remote) and removal of GitHub `lock_branch` protection on `main`. The release pipeline orchestrates the version-bump / changelog / tag / GitHub-release ceremony when a plugin is ready to ship; routine edits don't need that ceremony.
+**Why:** Single-developer repo. The previous `testing` → `main` merge convention was retired 2026-05-07 along with deletion of the `testing` branch (local + remote) and removal of GitHub `lock_branch` protection on `main`. Releasing a plugin is a manual version-bump / changelog / tag / GitHub-release ceremony; routine edits don't need that ceremony.
 
 **Sources:**
 
@@ -277,7 +278,7 @@ system_path="/usr/bin:/bin:$PATH"
 cmd=$(printf '%s' "$input" | PATH="$system_path" python3 -c "...")
 ```
 
-**Why:** Two shim families live on this workstation's PATH: interactive search accelerators (`find`→fd, `grep`→ugrep — Bug 7, false-green bats) and uv-strict-python's session shims (`python3`/`pip`/`pipx` exit 1 with a "use uv" message — Bug 8, false-negative `detect-unreleased.sh` during a live release). `$(...)` captures swallow the shim's stderr, so the symptom is a wrong answer, not a visible error. Scripts must self-harden rather than depend on the caller's PATH; uv-strict-python 0.2.0's project-type gating reduces exposure but doesn't eliminate it (Python repos still get shims, and other shims exist). But the global-export fix itself has a blast radius: it also shadows any *other* command a test fixture PATH-stubs (Bug 9 — `auto-build-plugins.sh`'s `npm` and `server-inspect.sh`'s `ssh` both got shadowed by the real binary, defeating the tests' fault injection). Scope the override when in doubt.
+**Why:** Two shim families live on this workstation's PATH: interactive search accelerators (`find`→fd, `grep`→ugrep — Bug 7, false-green bats) and uv-strict-python's session shims (`python3`/`pip`/`pipx` exit 1 with a "use uv" message — Bug 8, false-negative `detect-unreleased.sh` during a live release). `$(...)` captures swallow the shim's stderr, so the symptom is a wrong answer, not a visible error. Scripts must self-harden rather than depend on the caller's PATH; uv-strict-python 0.2.0's project-type gating reduces exposure but doesn't eliminate it (Python repos still get shims, and other shims exist). But the global-export fix itself has a blast radius: it also shadows any _other_ command a test fixture PATH-stubs (Bug 9 — `auto-build-plugins.sh`'s `npm` and `server-inspect.sh`'s `ssh` both got shadowed by the real binary, defeating the tests' fault injection). Scope the override when in doubt.
 
 **Sources:**
 

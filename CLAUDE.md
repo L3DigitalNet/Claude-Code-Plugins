@@ -2,7 +2,7 @@
 
 **Session startup:** Agent Handoff injects state through the shared repo-local SessionStart hook.
 
-**Branch workflow:** Direct commit to `main`. No `testing` branch. Use `/release-pipeline:release` for plugin releases (version bump + tag + GitHub release). See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for full rules.
+**Branch workflow:** Direct commit to `main`. No `testing` branch. Plugin releases are manual — bump `plugins/<name>/.claude-plugin/plugin.json` and its matching `.claude-plugin/marketplace.json` entry, then commit, tag `<name>/vX.Y.Z`, push, and `gh release create`. See [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for full rules.
 
 **Document layout (read on demand):**
 

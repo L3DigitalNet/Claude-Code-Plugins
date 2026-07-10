@@ -13,7 +13,7 @@
 
 ## Handoff Gotchas
 
-- **Branch workflow:** Direct commit to `main`. No `testing` branch — that convention was retired 2026-05-07. Local pre-commit hooks (noreply email, marketplace validation) provide the guardrails branch protection used to provide. For tagged plugin releases, use `/release-pipeline:release`.
+- **Branch workflow:** Direct commit to `main`. No `testing` branch — that convention was retired 2026-05-07. Local pre-commit hooks (noreply email, marketplace validation) provide the guardrails branch protection used to provide. Tagged plugin releases are manual (bump `plugin.json` + `marketplace.json`, commit, tag `<name>/vX.Y.Z`, push, `gh release create`).
 - **Marketplace cache:** `~/.claude/plugins/marketplaces/l3digitalnet-plugins/` is a git clone. Editing source repo `.claude-plugin/marketplace.json` does NOT auto-update cache — manually `git fetch && git reset --hard origin/main` or re-add the marketplace.
 - **Plugin removal requires three updates:** `settings.json` (enabledPlugins), `installed_plugins.json` (load source of truth), and plugin cache directory. Editing settings.json alone leaves the plugin loaded.
 - **MCP server .mcp.json is flat format, not wrapped:** `{"server-name": {"command": "..."}}` not `{"mcpServers": {"server-name": ...}}`. Incorrect format causes "invalid mcp" errors.
@@ -70,7 +70,6 @@ Claude-Code-Plugins/
 │   ├── home-assistant-dev/           # HA integration dev toolkit + MCP server
 │   ├── qdev/                         # Deep web research (commands/research.md + qdev-researcher; research-KB scripts under scripts/)
 │   ├── qt-suite/                     # Qt development and testing toolkit
-│   ├── release-pipeline/             # Autonomous release pipeline
 │   ├── spec-pipeline/                # Spec-driven autonomous dev pipeline + specpipe validator CLI (added 2026-07-02)
 │   ├── test-driver/                  # Proactive testing via gap analysis and convergence
 │   ├── up-docs/                      # Three-layer documentation updater + drift analysis
@@ -127,7 +126,7 @@ CI runs the full matrix automatically on push to `main`.
 3. Add `CHANGELOG.md` (Keep a Changelog format: Added, Changed, Fixed, Removed, Security)
 4. Create `README.md` from `docs/plugin-readme-template.md` — fill in all required sections; delete optional sections that don't apply
 5. Run `./scripts/validate-marketplace.sh`
-6. Commit + push directly to `main`. For tagged releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`.
+6. Commit + push directly to `main`. For tagged releases (version bump + changelog + tag + GitHub release), see BRANCH-001 / [BRANCH_PROTECTION.md](../../BRANCH_PROTECTION.md).
 
 **Updating a plugin — both files must change together:**
 
@@ -142,14 +141,7 @@ CI runs the full matrix automatically on push to `main`.
 git add <specific files> && git commit -m "..." && git push origin main
 ```
 
-For tagged plugin releases (with version bump + changelog + GitHub release), use `/release-pipeline:release`. See [BRANCH_PROTECTION.md](../../BRANCH_PROTECTION.md).
-
-## Release Pipeline
-
-- Reconcile existing remote tags gracefully — compare local vs remote before pushing; never fail on pre-existing tags.
-- Handle API 400 errors with retry logic; save progress so releases can be resumed.
-- When releasing plugins: expect pre-existing tags or dirty state from prior sessions. Check remote tags before pushing; handle selective staging carefully when unrelated changes are present.
-- When the user waives pre-flight failures (dirty tree, missing tests, email config), proceed without re-asking — these are intentional overrides.
+For tagged plugin releases (version bump + changelog + tag `<name>/vX.Y.Z` + `gh release create`), see [BRANCH_PROTECTION.md](../../BRANCH_PROTECTION.md).
 
 ## Key Architectural Patterns
 

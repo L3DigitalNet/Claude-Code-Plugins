@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# PATH-prepended stub for npm. Behavior controlled by NPM_STUB_MODE.
-#   success — prints what was invoked, exit 0 (default)
-#   fail    — emits stderr "build failed", exit 1
-case "${NPM_STUB_MODE:-success}" in
-  success) echo "npm-stub: $*"; exit 0 ;;
-  fail)    echo "npm-stub: build failed" >&2; exit 1 ;;
-  *)       echo "npm-stub: unknown mode '${NPM_STUB_MODE}'" >&2; exit 1 ;;
-esac

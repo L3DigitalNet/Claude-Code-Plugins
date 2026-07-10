@@ -97,12 +97,12 @@ This is the canonical format used by L3DigitalNet:
 	"owner": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
 	"plugins": [
 		{
-			"name": "release-pipeline",
-			"description": "Interactive release pipeline: quick merge, full semver release, plugin release, status checks, dry runs.",
-			"version": "2.2.0",
+			"name": "home-assistant-dev",
+			"description": "Comprehensive Home Assistant integration development toolkit.",
+			"version": "2.2.11",
 			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/release-pipeline",
-			"source": "./plugins/release-pipeline"
+			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/home-assistant-dev",
+			"source": "./plugins/home-assistant-dev"
 		},
 		{
 			"name": "external-tool",
