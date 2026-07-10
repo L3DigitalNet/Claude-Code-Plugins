@@ -12,7 +12,6 @@ A Claude Code plugin marketplace. Plugins cover the full development lifecycle: 
     - [Home Assistant Dev](#home-assistant-dev)
     - [Qt Suite](#qt-suite)
     - [qdev](#qdev)
-    - [Test Driver](#test-driver)
     - [Up Docs](#up-docs)
     - [uv-strict-python](#uv-strict-python)
   - [Testing \& Validation](#testing--validation)
@@ -68,7 +67,6 @@ When auto-update is enabled, Claude Code refreshes the marketplace catalog and u
 | [Home Assistant Dev](#home-assistant-dev) | Commands + Skills + MCP | varies | Full HA integration development toolkit with 27 skills |
 | [qdev](#qdev) | Commands + Agents | `/research` | Deep web research for development decisions: dual-source sweeps with Context7 docs gating, persisted as cited reports under `docs/research/` |
 | [Qt Suite](#qt-suite) | MCP + Commands + Skills + Agents | `/qt-suite:scaffold`, `/qt-suite:coverage`, `/qt-suite:visual` | Complete Qt development and testing toolkit: proactive agents, 16 skills, scaffolding, and headless GUI testing |
-| [Test Driver](#test-driver) | Commands + Skills | `/test-driver:analyze`, `/test-driver:status` | Proactive testing via gap analysis, convergence loops, and persistent status tracking |
 | [Up Docs](#up-docs) | Skills + Agents | `/up-docs:repo`, `/up-docs:wiki`, `/up-docs:notion`, `/up-docs:all`, `/up-docs:drift` | Update documentation across three layers via dispatched sub-agents (all Sonnet: repo, wiki, Notion propagators & drift auditor) from session context, plus full infrastructure drift analysis |
 | [uv-strict-python](#uv-strict-python) | Skills | (AI-invoked) | Configures Python projects to the Python Tooling SSOT Standard (uv, Ruff, BasedPyright strict, pytest+coverage, pip-audit) |
 
@@ -152,28 +150,6 @@ These principles apply across all plugins in this collection. Individual plugins
 ```
 
 **Learn more:** [plugins/qdev/README.md](plugins/qdev/README.md)
-
----
-
-### Test Driver
-
-**Proactive testing awareness and gap filling**: always-on testing mindset that suggests gap analysis at natural breakpoints, finds missing tests across six categories, and iterates through a convergence loop until everything passes.
-
-**Features:**
-
-- Always-on testing-mindset skill triggers at natural breakpoints
-- Six-category gap analysis (unit, integration, e2e, contract, security, UI)
-- Convergence loop with oscillation detection
-- Stack profiles for FastAPI, Django, PySide6, Home Assistant, and Swift
-- Persistent test status tracking across sessions
-
-**Install:**
-
-```bash
-/plugin install test-driver@l3digitalnet-plugins
-```
-
-**Learn more:** [plugins/test-driver/README.md](plugins/test-driver/README.md)
 
 ---
 
@@ -280,11 +256,11 @@ This repository also serves as a development workspace for creating new plugins.
 Claude-Code-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
-├── plugins/                     # All plugin implementations (7 plugins)
+├── plugins/                     # All plugin implementations (6 plugins)
 │   ├── home-assistant-dev/      # Home Assistant integration dev toolkit
 │   ├── qdev/                    # Deep web research (research sweeps via qdev-researcher)
 │   ├── qt-suite/                # Qt development and testing toolkit (agents, skills, MCP)
-│   ├── test-driver/             # Proactive testing via gap analysis and convergence
+│   ├── spec-pipeline/           # Spec-driven autonomous dev pipeline + specpipe validator
 │   ├── up-docs/                 # Three-layer documentation updater (repo, wiki, Notion)
 │   └── uv-strict-python/        # Python tooling standard (uv, Ruff, BasedPyright strict)
 ├── scripts/

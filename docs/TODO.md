@@ -38,6 +38,3 @@ Instructions for AI agents:
 
   The test container's demo integration loads no entities, so 10 assertions for entities such as `light.bed_light` fail while 13 pass. The other four Home Assistant jobs pass; this is a pre-existing environment or onboarding issue.
 
-- [ ] Remove or refresh the stale `noreply_email` entry in `.release-waivers.json`.
-
-  Its reason says the GitHub noreply address is not configured, but `fix-git-email.sh` now reports the address as compliant without the waiver.

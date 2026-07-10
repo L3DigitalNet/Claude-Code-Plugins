@@ -20,15 +20,6 @@
 			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/qt-suite"
 		},
 		{
-			"name": "test-driver",
-			"description": "Teaches Claude to proactively drive thorough testing via gap analysis, convergence loops, and persistent status tracking. Framework-agnostic core with stack-specific profiles.",
-			"version": "0.6.2",
-			"author": { "name": "L3DigitalNet", "url": "https://github.com/L3DigitalNet" },
-			"category": "testing",
-			"source": "./plugins/test-driver",
-			"homepage": "https://github.com/L3DigitalNet/Claude-Code-Plugins/tree/main/plugins/test-driver"
-		},
-		{
 			"name": "up-docs",
 			"description": "Update documentation across three layers (repo, llm-wiki, Notion) via sub-agent propagation plus drift audit, all on Sonnet. Five commands for targeted updates and comprehensive drift analysis with four-phase convergence.",
 			"version": "0.13.1",
