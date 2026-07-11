@@ -22,7 +22,7 @@ Root pattern: an agent prompt that duplicates an external spec in prose silently
 
 ## Fix
 
-Fixed in up-docs **v0.9.0** (2026-05-30) by executing [`docs/plans/2026-05-30-up-docs-handoff-v3-alignment.md`](../plans/2026-05-30-up-docs-handoff-v3-alignment.md):
+Fixed in up-docs **v0.9.0** (2026-05-30) by executing `docs/plans/2026-05-30-up-docs-handoff-v3-alignment.md` (deleted — see `docs/handoff/specs-plans.md`):
 
 - **T1+T2** (`1db1220`): AGENTS.md remediation emits the v3 three-line block (`Session state:` / `Full conventions reference:` / `Detailed review workflows:`); AGENTS.reviews.md drops the V1/V2 fallback; bug-body template gains `## Lesson`. New `tests/prompt-conformance.bats` guards both as grep assertions.
 - **T3–T6** (`a36efa4`): CLAUDE.md (≤2048) / AGENTS.md (≤4096) byte caps; `docs/specs-plans.md` audit; route-first state.md over-cap trim; bug-index regen verified with `git diff --exit-code`.

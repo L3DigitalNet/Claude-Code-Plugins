@@ -13,6 +13,7 @@ Short, scannable pattern library for future LLM sessions. Check this file before
 | DOC-003 | Convention changes | adding or revising a repo convention |
 | DOC-004 | MD060 + Prettier table-cell compatibility | configuring markdownlint MD060 in a repo that also runs Prettier |
 | DOC-005 | Generated review artifacts are lint-exempt | committing verbatim generated markdown (Codex audits) into the lint-enforced doc tree |
+| DOC-006 | Plans and reviews are ephemeral | an implementation plan finishes executing, or a review's findings are resolved |
 | ENV-001 | PATH-shim guard in plugin scripts | a plugin script invokes bare `python3`/`pip`/coreutils via PATH |
 | PLUGIN-001 | Plugin-namespaced `subagent_type` | a plugin skill dispatches a plugin-defined agent via the Agent tool |
 | PLUGIN-002 | No-packaging Python CLI in plugins | a plugin bundles a Python CLI/tool that runs from the installed-plugin cache |
@@ -255,7 +256,7 @@ export GIT_CONFIG_NOSYSTEM=1
 
 ## DOC-005. Generated review artifacts are lint-exempt
 
-**Applies when:** committing verbatim generated markdown — Codex audit reports under `docs/codex-reviews/` — into this lint-enforced doc tree. **Rule:** keep the artifacts byte-verbatim and exempt the directory from both formatters instead of hand-editing generated output: `.markdownlint-cli2.jsonc` carries `"ignores": ["docs/codex-reviews/**"]` and `.prettierignore` carries `docs/codex-reviews/`.
+**Applies when:** committing verbatim generated markdown — Codex audit reports under `docs/codex-reviews/` — into this lint-enforced doc tree. **Rule:** keep the artifacts byte-verbatim and exempt the directory from both formatters instead of hand-editing generated output: `.markdownlint-cli2.jsonc` carries `"ignores": ["docs/codex-reviews/**"]` and `.prettierignore` carries `docs/codex-reviews/`. These artifacts are ephemeral (DOC-006): delete them once their findings are resolved and the target spec/plan records the outcome; the directory exemptions stay in place for the next transient batch.
 
 **Why:** the audits are evidence — the review ledger in each spec cites them by path, and reformatting/hand-fixing generated output both churns every future audit commit and breaks the "this is exactly what the reviewer said" property. Exempting the directory keeps `npx markdownlint-cli2 "**/*.md"` and `npm run format:check` green without touching the artifacts.
 
@@ -263,7 +264,27 @@ export GIT_CONFIG_NOSYSTEM=1
 
 - Session 2026-07-01 (spec-pipeline design cycle — first committed Codex audits in this repo)
 
-**Related:** DOC-001, DOC-004
+**Related:** DOC-001, DOC-004, DOC-006
+
+## DOC-006. Plans and reviews are ephemeral
+
+**Applies when:** an implementation plan finishes executing, or a Codex/review artifact's findings are all resolved. **Rule:** Delete the plan and the review artifacts. **Specs and designs are the retained historical record** — never delete a spec that is still referenced or that records a shipped decision. In `docs/handoff/specs-plans.md`, keep the deleted plan's row as a tombstone (`(deleted — <date>)`) carrying its release/outcome; specs and designs stay as live links.
+
+```text
+docs/plans/*-plan.md, docs/superpowers/plans/    → ephemeral: delete when executed
+docs/plans/*-design.md, docs/superpowers/specs/  → retained record: keep
+docs/codex-reviews/                              → ephemeral: delete when findings resolved
+docs/research/                                   → knowledge base: keep
+```
+
+**Why:** Plans and reviews are process scaffolding for one implementation cycle. Once the work ships, the spec (what was decided) plus the code and CHANGELOG (what was built) are the durable record; retained stale plans/reviews only add retrieval noise for future sessions. This supersedes the earlier retain-everything approach on 2026-07-10. Tombstone rows preserve the plan→release linkage without keeping the file.
+
+**Sources:**
+
+- project-standards housekeeping workflow (`docs/workflows/housekeeping.md`) — "Plans are ephemeral; specs are the historical record."
+- 2026-07-10 housekeeping pass (deleted 8 executed plans + 6 resolved Codex reviews).
+
+**Related:** DOC-005, DOC-003
 
 ## ENV-001. PATH-shim guard in plugin scripts
 
