@@ -52,6 +52,13 @@ def _cell(value) -> str:
         text = " ".join(str(v) for v in value)
     else:
         text = "" if value is None else str(value)
+    # An empty value must render as an em dash, not an empty `|  |` cell:
+    # markdownlint MD060 (table-column-style) rejects ambiguous empty cells,
+    # so a tag-less/related-less report would red-fail every consumer repo's
+    # lint CI on regeneration (bit homelab 2026-07-05..10; same lesson as the
+    # homelab bugs-INDEX generator, 2026-06-14).
+    if not text.strip():
+        return "—"
     # Escape table delimiters so a report field can't inject columns or rows
     # into the generated index (`|` -> `\|`; newlines collapsed to spaces).
     return text.replace("|", "\\|").replace("\r", " ").replace("\n", " ")
@@ -62,7 +69,12 @@ def render_index(rows: list[dict]) -> str:
     updated = max((str(r.get("updated", "")) for r in rows), default="")
     fm = {
         "schema_version": "1.0",
-        "id": "research-index",
+        # project-standards v3 validate-id requires {doc_type}-{base36-6}-{slug}.
+        # The token is FIXED, not random: the id must be stable across
+        # regenerations (and every consumer repo's index sharing it is fine —
+        # id uniqueness is checked per-repo). Matches the id already committed
+        # in consumer repos (homelab docs/research/index.md, 2026-07-10).
+        "id": "index-7x8u66-research-index",
         "title": "Research Index",
         "description": "Generated index of qdev research reports. Do not edit by hand.",
         "doc_type": "index",

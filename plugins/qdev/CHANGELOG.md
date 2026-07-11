@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.4] - 2026-07-10
+
+### Fixed
+
+- `build_research_index.py`: empty table cells now render an em dash (markdownlint MD060 rejects ambiguous `|  |` cells) and the index id is v3 `validate-id`-compliant (`index-7x8u66-research-index`, fixed token, stable across regenerations) — the old output red-failed consumer repos' Lint/Validate CI on every regeneration (homelab, 2026-07-05..10)
+
 ## [2.0.3] - 2026-07-02
 
 ### Fixed

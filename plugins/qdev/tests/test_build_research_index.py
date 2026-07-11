@@ -120,3 +120,46 @@ def test_regeneration_is_idempotent(tmp_path):
     gen.main(["build_research_index.py", str(tmp_path)])
     second = (tmp_path / "index.md").read_text(encoding="utf-8")
     assert first == second
+
+
+def test_empty_field_renders_em_dash_not_blank_cell(tmp_path):
+    # markdownlint MD060 rejects ambiguous empty `|  |` cells; a report with no
+    # related entries must render `—` so consumer-repo lint CI stays green
+    # (homelab redness 2026-07-05..10).
+    _report(tmp_path, "2026-01-01-alpha", "2026-01-01")  # related: [] in _report
+    gen.main(["build_research_index.py", str(tmp_path)])
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    row = next(
+        line for line in index.splitlines()
+        if line.startswith("|") and "2026-01-01-alpha" in line
+    )
+    assert "|  |" not in row
+    assert "— |" in row
+
+
+def test_cell_empty_values_all_render_em_dash():
+    assert gen._cell(None) == "—"
+    assert gen._cell("") == "—"
+    assert gen._cell([]) == "—"
+    assert gen._cell("   ") == "—"
+    assert gen._cell(["x"]) == "x"  # non-empty values unchanged
+
+
+def test_index_id_is_v3_validate_id_compliant(tmp_path):
+    # project-standards v3: id must be {doc_type}-{base36-6}-{slug}. The old
+    # hardcoded `research-index` red-failed every consumer repo's Validate CI.
+    gen.main(["build_research_index.py", str(tmp_path)])
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    m = re.search(r"^id: (\S+)$", index, re.M)
+    assert m, "index frontmatter must carry an id"
+    assert re.fullmatch(r"index-[0-9a-z]{6}-[a-z0-9-]+", m.group(1)), m.group(1)
+
+
+def test_index_id_is_stable_across_regenerations(tmp_path):
+    # The token must be FIXED — a random token would churn the id (and break
+    # consumer-repo references) on every regeneration.
+    gen.main(["build_research_index.py", str(tmp_path)])
+    first = (tmp_path / "index.md").read_text(encoding="utf-8")
+    gen.main(["build_research_index.py", str(tmp_path)])
+    assert (tmp_path / "index.md").read_text(encoding="utf-8") == first
+    assert "index-7x8u66-research-index" in first
