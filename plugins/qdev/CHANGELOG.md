@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.5] - 2026-07-10
+
+### Fixed
+
+- `build_research_index.py`: frontmatter block sequences are now Prettier-indented (`tags:` + 2-space `- item`) — PyYAML's flush-left default failed consumer repos' Format CI on every regeneration (third generator defect found in the 2026-07-10 sweep)
+
 ## [2.0.4] - 2026-07-10
 
 ### Fixed

@@ -24,6 +24,20 @@ import yaml
 from _frontmatter import read_frontmatter
 
 INDEX_NAME = "index.md"
+
+
+class _IndentedDumper(yaml.SafeDumper):
+    """SafeDumper that indents block sequences under their mapping key.
+
+    PyYAML's default emits `tags:\\n- research` (flush-left), but Prettier's
+    canonical Markdown-frontmatter style is `tags:\\n  - research` — so a
+    default-dumped index red-failed consumer repos' Format CI on every
+    regeneration (third defect found in the 2026-07-10 sweep, after the
+    MD060 empty cells and the non-v3 id).
+    """
+
+    def increase_indent(self, flow: bool = False, indentless: bool = False):
+        return super().increase_indent(flow, False)
 _COLUMNS = ("id", "title", "created", "updated", "status", "confidence", "tags", "related")
 
 
@@ -85,7 +99,9 @@ def render_index(rows: list[dict]) -> str:
         "aliases": [],
         "related": [],
     }
-    header = "---\n" + yaml.safe_dump(fm, sort_keys=False).strip() + "\n---\n"
+    header = ("---\n"
+              + yaml.dump(fm, Dumper=_IndentedDumper, sort_keys=False).strip()
+              + "\n---\n")
     lines = [
         "",
         "# Research Index",

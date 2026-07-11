@@ -163,3 +163,12 @@ def test_index_id_is_stable_across_regenerations(tmp_path):
     gen.main(["build_research_index.py", str(tmp_path)])
     assert (tmp_path / "index.md").read_text(encoding="utf-8") == first
     assert "index-7x8u66-research-index" in first
+
+
+def test_frontmatter_sequences_are_prettier_indented(tmp_path):
+    # Prettier's canonical frontmatter style indents block sequences; PyYAML's
+    # flush-left default fails consumer repos' Format CI on every regen.
+    gen.main(["build_research_index.py", str(tmp_path)])
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    assert "tags:\n  - research\n  - index\n" in index
+    assert "\n- research" not in index
