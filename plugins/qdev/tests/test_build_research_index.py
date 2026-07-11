@@ -172,3 +172,44 @@ def test_frontmatter_sequences_are_prettier_indented(tmp_path):
     index = (tmp_path / "index.md").read_text(encoding="utf-8")
     assert "tags:\n  - research\n  - index\n" in index
     assert "\n- research" not in index
+
+
+def test_existing_index_id_and_description_survive_regen(tmp_path):
+    # A consumer repo's own valid id + hand-tuned description must not be
+    # clobbered by regeneration (agent-configs carries index-rnj440-…).
+    _report(tmp_path, "2026-01-01-alpha", "2026-01-01")
+    (tmp_path / "index.md").write_text(textwrap.dedent("""\
+        ---
+        schema_version: '1.0'
+        id: 'index-rnj440-research-index'
+        title: Research Index
+        description: Custom per-repo description.
+        doc_type: index
+        status: active
+        created: '2026-01-01'
+        updated: '2026-01-01'
+        tags:
+          - research
+          - index
+        aliases: []
+        related: []
+        ---
+
+        # Research Index
+        """), encoding="utf-8")
+    gen.main(["build_research_index.py", str(tmp_path)])
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    assert "index-rnj440-research-index" in index
+    assert "index-7x8u66-research-index" not in index
+    assert "Custom per-repo description." in index
+
+
+def test_invalid_existing_id_is_replaced_with_default(tmp_path):
+    # The pre-v3 hardcoded 'research-index' id fails validate-id; regen must
+    # replace it with the compliant fixed default, not preserve it.
+    (tmp_path / "index.md").write_text(
+        "---\nid: research-index\ndescription: keep me\n---\n", encoding="utf-8")
+    gen.main(["build_research_index.py", str(tmp_path)])
+    index = (tmp_path / "index.md").read_text(encoding="utf-8")
+    assert "id: index-7x8u66-research-index" in index
+    assert "keep me" in index

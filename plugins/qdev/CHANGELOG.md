@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.6] - 2026-07-10
+
+### Fixed
+
+- `build_research_index.py`: regeneration now preserves an existing index's valid v3 id and hand-tuned description (consumer repos carry their own ids — e.g. agent-configs `index-rnj440-…`; clobbering the id would churn per-repo references). The fixed-token default only seeds a fresh or invalid-id index
+
 ## [2.0.5] - 2026-07-10
 
 ### Fixed

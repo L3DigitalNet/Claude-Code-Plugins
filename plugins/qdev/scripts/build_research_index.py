@@ -16,6 +16,7 @@ Usage: uv run build_research_index.py <research-dir>      # e.g. docs/research
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -78,19 +79,27 @@ def _cell(value) -> str:
     return text.replace("|", "\\|").replace("\r", " ").replace("\n", " ")
 
 
-def render_index(rows: list[dict]) -> str:
+_ID_RE = r"index-[0-9a-z]{6}-[a-z0-9][a-z0-9-]*"
+
+
+def render_index(rows: list[dict], existing: dict | None = None) -> str:
     created = min((str(r.get("created", "")) for r in rows), default="")
     updated = max((str(r.get("updated", "")) for r in rows), default="")
+    existing = existing or {}
+    # Preserve a consumer repo's own id/description across regenerations: the
+    # id is referenced per-repo (validate-references) and MUST NOT churn, and
+    # repos hand-tune the description. The fixed-token default only seeds a
+    # FRESH index (project-standards v3 validate-id format; a fixed token —
+    # never random — so back-to-back regens stay idempotent).
+    existing_id = str(existing.get("id") or "")
+    doc_id = existing_id if re.fullmatch(_ID_RE, existing_id) else "index-7x8u66-research-index"
+    description = str(existing.get("description") or "") \
+        or "Generated index of qdev research reports. Do not edit by hand."
     fm = {
         "schema_version": "1.0",
-        # project-standards v3 validate-id requires {doc_type}-{base36-6}-{slug}.
-        # The token is FIXED, not random: the id must be stable across
-        # regenerations (and every consumer repo's index sharing it is fine —
-        # id uniqueness is checked per-repo). Matches the id already committed
-        # in consumer repos (homelab docs/research/index.md, 2026-07-10).
-        "id": "index-7x8u66-research-index",
+        "id": doc_id,
         "title": "Research Index",
-        "description": "Generated index of qdev research reports. Do not edit by hand.",
+        "description": description,
         "doc_type": "index",
         "status": "active",
         "created": created or "1970-01-01",
@@ -123,7 +132,16 @@ def main(argv: list[str]) -> int:
         print(f"not a directory: {research_dir}", file=sys.stderr)
         return 2
     rows = collect_reports(research_dir)
-    (research_dir / INDEX_NAME).write_text(render_index(rows), encoding="utf-8")
+    # Existing-index frontmatter feeds id/description preservation; a missing
+    # or unparseable index simply seeds the defaults.
+    existing = None
+    index_path = research_dir / INDEX_NAME
+    if index_path.exists():
+        try:
+            existing = read_frontmatter(index_path)
+        except (yaml.YAMLError, OSError, UnicodeDecodeError):
+            existing = None
+    (research_dir / INDEX_NAME).write_text(render_index(rows, existing), encoding="utf-8")
     print(f"index: {len(rows)} report(s) -> {research_dir / INDEX_NAME}")
     return 0
 
