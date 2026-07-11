@@ -4,7 +4,7 @@
 
 - Run the `spec-pipeline` live smoke test after plugin installation and cache sync.
 - Obtain the user's decision on deprecating the two source skills in `agent-configs`.
-- Reconcile the remaining plugin, standards, LSP, CI, and release-waiver tasks in `docs/TODO.md`.
+- Work the remaining `docs/TODO.md` agent queue: qdev research-index generator (non-Prettier YAML), uv-strict-python LSP verify + project-standards reconcile, HA MCP CI.
 
 ## Active incidents
 
