@@ -18,10 +18,6 @@ Instructions for AI agents:
 
 ## Agent tasks
 
-- [ ] Emit Prettier-clean frontmatter from `plugins/qdev/scripts/build_research_index.py`.
-
-  `yaml.safe_dump` writes block sequences flush (`- item`) but Prettier wants two-space indent, so regenerating `docs/research/index.md` breaks the format gate. The committed index is currently clean and current; this only surfaces on regen. Ships with a qdev release (plugin code change).
-
 - [ ] Complete the `spec-pipeline` post-release follow-ups.
 
   Run a live smoke test in a fresh session after plugin installation and cache sync. Ask the user whether to deprecate `author-master-spec` and `autonomous-phase-execution` in `agent-configs`. Remaining hygiene: add `~~~` fence support, dedicated PLAN-NO-FILE-STRUCTURE/INTERFACES/TASKS tests, consistent `plugin.json` key order, and the AC5 lint delta in `references/spec-construction.md`.
